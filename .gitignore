@@ -14,7 +14,7 @@ coverage
 
 .DS_Store
 .idea
-.vscode
+# .vscode
 
 *.log
 *.tsbuildinfo

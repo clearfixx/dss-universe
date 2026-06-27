@@ -1,0 +1,39 @@
+{
+  // ============================================================
+  // DSS Universe Workspace Settings
+  // Shared editor configuration for all developers.
+  // ============================================================
+
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+
+  "files.eol": "\n",
+
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  "typescript.tsdk": "node_modules/typescript/lib",
+
+  "editor.bracketPairColorization.enabled": true,
+
+  "editor.guides.bracketPairs": true,
+
+  "editor.minimap.enabled": false,
+
+  "explorer.confirmDelete": false,
+
+  "git.confirmSync": false,
+
+  "git.autofetch": true,
+
+  "eslint.validate": ["javascript", "typescript", "typescriptreact"],
+
+  "prettier.requireConfig": true,
+
+  "terminal.integrated.defaultProfile.windows": "PowerShell"
+}
