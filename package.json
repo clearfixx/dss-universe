@@ -10,9 +10,35 @@
     "lint": "turbo lint",
     "format": "prettier --write .",
     "typecheck": "turbo typecheck",
-    "clean": "turbo clean && rm -rf node_modules"
+    "clean": "turbo clean && rm -rf node_modules",
+    "api:db:generate": "pnpm --filter api db:generate",
+    "api:db:migrate": "pnpm --filter api db:migrate",
+    "api:db:deploy": "pnpm --filter api db:deploy",
+    "api:db:push": "pnpm --filter api db:push",
+    "api:db:reset": "pnpm --filter api db:reset",
+    "api:db:seed": "pnpm --filter api db:seed",
+    "api:db:studio": "pnpm --filter api db:studio",
+    "api:dev": "pnpm --filter api dev",
+    "api:build": "pnpm --filter api build",
+    "api:lint": "pnpm --filter api lint",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:restart": "docker compose down && docker compose up -d",
+    "db:ps": "docker compose ps",
+    "db:logs": "docker compose logs -f",
+    "db:pgadmin": "start http://localhost:5050",
+    "api:prisma:generate": "pnpm --filter api prisma generate",
+    "api:prisma:migrate": "pnpm --filter api prisma migrate dev",
+    "api:prisma:studio": "pnpm --filter api prisma studio",
+    "api:seed": "pnpm --filter api db:seed"
   },
   "devDependencies": {
+    "@nestjs/cli": "^11.0.23",
+    "@types/pg": "^8.20.0",
     "turbo": "latest"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.8.0",
+    "pg": "^8.22.0"
   }
 }

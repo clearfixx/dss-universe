@@ -13,3 +13,9 @@ Developer Space Station Universe.
 - `packages/types` — shared TypeScript types
 - `packages/eslint-config` — shared ESLint config
 - `packages/tsconfig` — shared TypeScript config
+
+## Project Standards
+
+Development rules are documented in:
+
+- [Coding Standards](./docs/CODING_STANDARDS.md)
