@@ -10,4 +10,3 @@ import { JwtStrategy } from './strategies/jwt.strategy';
   exports: [JwtModule, RolesGuard],
 })
 export class AuthCoreModule {}
-

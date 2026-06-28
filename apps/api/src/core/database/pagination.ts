@@ -21,5 +21,3 @@ export function getPagination(params: PaginationParams): PaginationResult {
     take: limit,
   };
 }
-
-

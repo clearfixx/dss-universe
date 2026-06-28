@@ -6,4 +6,3 @@ export type JwtPayload = {
   username: string;
   role: Role;
 };
-

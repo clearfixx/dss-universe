@@ -15,4 +15,3 @@ export const Authenticated = (...roles: UserRole[]) => {
 
   return applyDecorators(...decorators);
 };
-

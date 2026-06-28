@@ -14,4 +14,3 @@ export interface UsersRepository {
     refreshTokenHash: string | null,
   ): Promise<User>;
 }
-

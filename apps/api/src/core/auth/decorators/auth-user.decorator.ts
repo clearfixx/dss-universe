@@ -10,4 +10,3 @@ export const AuthUser = createParamDecorator(
     return request.user;
   },
 );
-

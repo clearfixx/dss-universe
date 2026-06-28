@@ -6,4 +6,3 @@ export class EmailAlreadyExistsException extends ConflictException {
     super(AUTH_ERRORS.EMAIL_ALREADY_EXISTS);
   }
 }
-

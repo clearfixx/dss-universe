@@ -25,4 +25,3 @@ export class UsersService {
     return this.usersRepository.findByEmail(email);
   }
 }
-

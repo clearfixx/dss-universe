@@ -36,4 +36,3 @@ import { AuthorizationModule } from '@api/core/authorization';
   controllers: [AppController],
 })
 export class AppModule {}
-

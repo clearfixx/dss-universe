@@ -9,22 +9,20 @@
 
 export { AuthorizationModule } from './authorization.module';
 
-export { ROLE_PERMISSIONS } from './constants/role-permissions';
-
 export {
   PERMISSIONS_KEY,
   RequirePermissions,
 } from './decorators/require-permissions.decorator';
 
+export type {
+  PermissionKey,
+  PermissionName,
+} from './enums/permission.registry';
+
 export {
   PERMISSION_LIST,
   PERMISSIONS,
   Permission,
-} from './enums/permission.registry';
-
-export type {
-  PermissionKey,
-  PermissionName,
 } from './enums/permission.registry';
 
 export { PermissionsGuard } from './guards/permissions.guard';

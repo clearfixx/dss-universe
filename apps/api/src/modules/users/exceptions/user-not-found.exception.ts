@@ -6,5 +6,3 @@ export class UserNotFoundException extends NotFoundException {
     super(USER_ERRORS.NOT_FOUND);
   }
 }
-
-

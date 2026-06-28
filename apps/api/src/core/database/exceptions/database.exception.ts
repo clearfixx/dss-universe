@@ -9,5 +9,3 @@ export class DatabaseException extends InternalServerErrorException {
     });
   }
 }
-
-

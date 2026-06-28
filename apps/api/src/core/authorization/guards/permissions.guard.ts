@@ -37,10 +37,7 @@ import { Reflector } from '@nestjs/core';
 import { PERMISSIONS_KEY } from '../decorators/require-permissions.decorator';
 import { PermissionKey } from '../enums/permission.registry';
 import { PermissionsService } from '../services/permissions.service';
-
-type UserWithRoles = {
-  roles?: string[];
-};
+import type { AuthenticatedRequest } from '@api/core/auth';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -58,15 +55,25 @@ export class PermissionsGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
-    const user = request.user as UserWithRoles | undefined;
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    const user = request.user;
 
-    if (!user?.roles?.length) {
+    const roleNames = user?.roles?.length
+      ? user.roles
+      : user?.role
+        ? [user.role]
+        : [];
+
+    if (!roleNames.length) {
+      throw new ForbiddenException('User roles were not found.');
+    }
+
+    if (!roleNames.length) {
       throw new ForbiddenException('User roles were not found.');
     }
 
     const hasAllPermissions = await this.permissionsService.hasAllPermissions(
-      user.roles,
+      roleNames,
       requiredPermissions,
     );
 

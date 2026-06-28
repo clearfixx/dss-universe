@@ -6,4 +6,3 @@ export class InvalidCredentialsException extends UnauthorizedException {
     super(AUTH_ERRORS.INVALID_CREDENTIALS);
   }
 }
-

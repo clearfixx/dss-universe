@@ -16,5 +16,3 @@ import { validationSchema } from '@api/core/config/validation.schema';
   ],
 })
 export class ConfigurationModule {}
-
-

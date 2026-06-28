@@ -9,4 +9,3 @@ export type AuthResponse = {
   user: SafeUser;
   tokens: AuthTokens;
 };
-

@@ -32,4 +32,3 @@ export class PrismaUsersRepository implements UsersRepository {
     });
   }
 }
-

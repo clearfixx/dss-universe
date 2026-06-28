@@ -25,5 +25,3 @@ export const validationSchema = Joi.object({
   MAIL_USER: Joi.string().allow('').optional(),
   MAIL_PASSWORD: Joi.string().allow('').optional(),
 });
-
-
