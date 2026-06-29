@@ -6,11 +6,12 @@
  * 📄 File: authenticated-request.type.ts
  *
  * 🎯 Purpose:
- * Типізує HTTP Request після проходження JWT authentication.
+ * Types HTTP requests after successful JWT authentication.
  *
- * 🧠 Why?
- * Express Request сам по собі не знає про request.user.
- * Але JwtStrategy додає user у request, тому ми описуємо це явно.
+ * 🧠 Responsibilities:
+ * • extends Express Request with DSS authenticated user;
+ * • provides a shared request contract for guards, decorators, and controllers;
+ * • keeps request.user typing centralized in Auth Core.
  *
  * 🏗️ Architecture:
  * JwtStrategy
@@ -20,24 +21,22 @@
  * Guards / Controllers / Interceptors
  *
  * ⚠️ Important:
- * Цей тип належить Auth Core, бо саме Auth створює identity.
+ * Auth Core owns identity shape.
+ * Authorization may read permissions from it, but must not redefine it.
+ *
+ * 💡 Notes:
+ * If request.user is missing after JwtAuthGuard,
+ * something has gone very wrong near the airlock. 🛰️
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
- */
-/**
- * DSS File Passport 🛰️
- * File: apps/api/src/core/auth/types/authenticated-request.type.ts
- * Purpose: Express request type with authenticated DSS user.
- * Phase: 2.4.5 — RBAC Core Migration
- * Architecture: Auth request contract
  */
 
 import type { Request } from 'express';
 
 import type { AuthenticatedUser } from './authenticated-user.type';
 
-export type AuthenticatedRequest = Request & {
+export type AuthenticatedRequest = Omit<Request, 'user'> & {
   user?: AuthenticatedUser;
 };
 

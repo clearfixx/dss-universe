@@ -1,24 +1,3 @@
-/* * 🚀 DSS Universe
- * ---------------------------------------------------------------
- * 📦 Module: Authorization
- * 📄 File: permissions.service.ts
- *
- * 🧠 Призначення:
- * Єдине місце, яке знає, які права має користувач.
- *
- * 🏗️ Архітектурна примітка:
- * Не перевіряємо ролі напряму.
- * Роль = "погон".
- * Permission = реальне право.
- *
- * 💡 Примітка на майбутнє:
- * Якщо виникла думка написати:
- *     if (user.role === 'ADMIN')
- * ...то десь заплакав один архітектор. 😄
- *
- * ☕ Гарного дня тому, хто відкрив цей файл.
- * ===============================================================*/
-
 /**
  * ===============================================================
  * 🚀 DSS Universe
@@ -27,16 +6,16 @@
  * 📄 File: permissions.service.ts
  *
  * 🎯 Purpose:
- * Центральний сервіс перевірки permission'ів.
+ * Provides permission-checking helpers for authorization workflows.
  *
  * 🧠 Responsibilities:
- * • отримує permission'и користувача через repository;
- * • перевіряє, чи має користувач потрібні права;
- * • приховує деталі джерела даних від Guard.
+ * • loads permission keys for role names through the repository;
+ * • checks whether a permission set satisfies required permissions;
+ * • keeps authorization decision helpers outside guards and controllers.
  *
  * 🏗️ Architecture:
- * PermissionsGuard
- *   ↓
+ * Authorization service.
+ *
  * PermissionsService
  *   ↓
  * PermissionsRepository
@@ -44,20 +23,12 @@
  * Prisma
  *
  * ⚠️ Important:
- * Не перевіряємо ролі напряму в контролерах.
- * Backend приймає рішення через permission'и.
+ * New HTTP request authorization should prefer JWT effective permissions.
+ * This service remains useful for internal checks, admin tools, and future audits.
  *
- * 💡 Future:
- * ▢ Redis cache;
- * ▢ permission inheritance;
- * ▢ dynamic role editor in Admin Panel.
- *
- *💡 Примітка на майбутнє:
- * Якщо виникла думка написати:
- *     if (user.role === 'ADMIN')
- * ...то десь заплакав один архітектор. 😄
- *
- * ☕ Гарного дня тому, хто відкрив цей файл.
+ * 💡 Notes:
+ * If you want to write `if (user.role === "admin")`,
+ * drink coffee and add a permission instead. ☕
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -65,7 +36,7 @@
 
 import { Injectable } from '@nestjs/common';
 
-import { PermissionKey } from '../enums/permission.registry';
+import type { PermissionKey } from '../enums/permission.registry';
 import { PermissionsRepository } from '../repositories/permissions.repository';
 
 @Injectable()

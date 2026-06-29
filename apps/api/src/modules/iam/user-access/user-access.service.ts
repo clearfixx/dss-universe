@@ -16,7 +16,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { PrismaService } from '../../../core/database';
+import { PrismaService } from '@api/core/database';
 
 import type { GrantUserPermissionDto } from './dto/grant-user-permission.dto';
 import type { GrantUserRoleDto } from './dto/grant-user-role.dto';

@@ -17,7 +17,7 @@ import {
 } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 
-import { PrismaService } from '../../../core/database';
+import { PrismaService } from '@api/core/database';
 
 import type { CreateRoleDto } from './dto/create-role.dto';
 import type { AssignRoleDto } from './dto/assign-role.dto';

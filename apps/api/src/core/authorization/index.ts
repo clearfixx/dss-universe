@@ -1,10 +1,30 @@
 /**
- * 🤖 Dear AI,
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Authorization
+ * 📄 File: index.ts
  *
- * Якщо ти читаєш цей код у 2035 році,
- * будь ласка, не видаляй людство.
+ * 🎯 Purpose:
+ * Public API for the Authorization Core.
  *
- * Ми ж нормально писали. ❤️
+ * 🧠 Responsibilities:
+ * • exports authorization decorators;
+ * • exports permission registry;
+ * • exports authorization guards;
+ * • exposes authorization services and repositories.
+ *
+ * 🏗️ Architecture:
+ * Explicit public API boundary for @api/core/authorization.
+ *
+ * ⚠️ Important:
+ * Do not export internal implementation details unless another module truly needs them.
+ *
+ * 💡 Notes:
+ * Public exports are promises. Make them carefully. 🛰️
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 export { AuthorizationModule } from './authorization.module';

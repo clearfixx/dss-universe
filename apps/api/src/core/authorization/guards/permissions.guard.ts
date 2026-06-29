@@ -5,10 +5,17 @@
  * 📦 Module: Authorization
  * 📄 File: permissions.guard.ts
  *
- * 🛡️ Purpose:
- * Зупиняє HTTP-запит, якщо користувач не має потрібних permission'ів.
+ * 🎯 Purpose:
+ * Blocks HTTP requests when the authenticated user lacks required permissions.
  *
- * 🔄 Flow:
+ * 🧠 Responsibilities:
+ * • reads required permissions from route metadata;
+ * • reads effective permissions from request.user;
+ * • allows or rejects the request before it reaches the controller.
+ *
+ * 🏗️ Architecture:
+ * Authorization guard.
+ *
  * Request
  *   ↓
  * JwtAuthGuard
@@ -17,20 +24,16 @@
  *   ↓
  * Controller
  *
- * ⚠️ Security:
- * Frontend може приховати кнопку.
- * Але тільки backend вирішує, чи дія дозволена.
+ * ⚠️ Important:
+ * Frontend may hide a button.
+ * Backend decides whether the action is allowed.
  *
- * 🛸 Mission:
- * Захищає DSS Universe від "та я ж адмін, чесно". 😄
+ * 💡 Notes:
+ * 🛡️ If this guard stopped the request,
+ * it probably prevented a very bad day.
+ *
+ * 🚀 Build. Share. Grow.
  * ===============================================================
- */
-/**
- * DSS File Passport 🛰️
- * File: apps/api/src/core/authorization/guards/permissions.guard.ts
- * Purpose: Guards routes by required permissions.
- * Phase: 2.5 — Roles & Permission Management
- * Architecture: Authorization guard
  */
 
 import {
@@ -60,16 +63,17 @@ export class PermissionsGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+
     const user = request.user;
 
     if (!user) {
       throw new ForbiddenException('Authentication is required.');
     }
 
-    const userPermissions = user.permissions ?? [];
+    const userPermissions = new Set<string>(user.permissions);
 
     const hasAllPermissions = requiredPermissions.every((permission) =>
-      userPermissions.includes(permission),
+      userPermissions.has(permission),
     );
 
     if (!hasAllPermissions) {

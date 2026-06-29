@@ -14,9 +14,8 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import type { JwtSignOptions } from '@nestjs/jwt';
-import { PrismaService } from '../../../core/database';
-
-import type { JwtPayload } from '../../../core/auth/types/jwt-payload.type';
+import type { JwtPayload } from '@api/core/auth';
+import { PrismaService } from '@api/core/database';
 
 type TokenUserInput = {
   id: string;
