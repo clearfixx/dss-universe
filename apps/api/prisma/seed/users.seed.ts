@@ -1,63 +1,103 @@
-import * as bcrypt from 'bcrypt';
-
-import { UserRole } from '@prisma/client';
-
-import { prisma } from '../client';
+/**
+ * DSS File Passport 🛰️
+ * File: apps/api/prisma/seed/users.seed.ts
+ * Purpose: Seeds base DSS users.
+ * Phase: 2.4.5 — RBAC Core Migration
+ * Architecture: Database seed
+ *
+ * Notes:
+ * - Users no longer own enum roles directly.
+ * - Roles are assigned through user_roles. Much cleaner. Much less cursed. ☕
+ */
 
 import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
-/**
- * Створює базових користувачів для локальної розробки.
- */
-export async function seedUsers(prisma: PrismaClient) {
-  console.log('🌱 Seeding users...');
+const ADMIN_EMAIL = 'admin@dss.local';
+const USER_EMAIL = 'user@dss.local';
 
-  const adminPasswordHash = await bcrypt.hash('Admin123!', 10);
-  const userPasswordHash = await bcrypt.hash('User123!', 10);
-
-  // ---------------------------------------------------------------------------
-  // Administrator
-  // ---------------------------------------------------------------------------
-
-  await prisma.user.upsert({
-    where: {
-      email: 'admin@dss.local',
-    },
-    update: {
-      passwordHash: adminPasswordHash,
-      role: UserRole.ADMIN,
-      displayName: 'Administrator',
-    },
+export async function seedUsers(prisma: PrismaClient): Promise<void> {
+  const adminRole = await prisma.role.upsert({
+    where: { name: 'admin' },
+    update: {},
     create: {
-      email: 'admin@dss.local',
+      name: 'admin',
+      label: 'Administrator',
+      description: 'System administrator role.',
+      isSystem: true,
+    },
+  });
+
+  const userRole = await prisma.role.upsert({
+    where: { name: 'user' },
+    update: {},
+    create: {
+      name: 'user',
+      label: 'User',
+      description: 'Default user role.',
+      isSystem: true,
+    },
+  });
+
+  const passwordHash = await bcrypt.hash('Password123!', 10);
+
+  const admin = await prisma.user.upsert({
+    where: { email: ADMIN_EMAIL },
+    update: {
       username: 'admin',
-      displayName: 'Administrator',
-      passwordHash: adminPasswordHash,
-      role: UserRole.ADMIN,
-    },
-  });
-
-  // ---------------------------------------------------------------------------
-  // Regular user
-  // ---------------------------------------------------------------------------
-
-  await prisma.user.upsert({
-    where: {
-      email: 'user@dss.local',
-    },
-    update: {
-      passwordHash: userPasswordHash,
-      role: UserRole.USER,
-      displayName: 'Regular User',
+      displayName: 'DSS Admin',
+      passwordHash,
     },
     create: {
-      email: 'user@dss.local',
-      username: 'user',
-      displayName: 'Regular User',
-      passwordHash: userPasswordHash,
-      role: UserRole.USER,
+      email: ADMIN_EMAIL,
+      username: 'admin',
+      displayName: 'DSS Admin',
+      passwordHash,
     },
   });
 
-  console.log('✅ Users seeded');
+  const user = await prisma.user.upsert({
+    where: { email: USER_EMAIL },
+    update: {
+      username: 'user',
+      displayName: 'DSS User',
+      passwordHash,
+    },
+    create: {
+      email: USER_EMAIL,
+      username: 'user',
+      displayName: 'DSS User',
+      passwordHash,
+    },
+  });
+
+  await prisma.userRole.upsert({
+    where: {
+      userId_roleId: {
+        userId: admin.id,
+        roleId: adminRole.id,
+      },
+    },
+    update: {},
+    create: {
+      userId: admin.id,
+      roleId: adminRole.id,
+    },
+  });
+
+  await prisma.userRole.upsert({
+    where: {
+      userId_roleId: {
+        userId: user.id,
+        roleId: userRole.id,
+      },
+    },
+    update: {},
+    create: {
+      userId: user.id,
+      roleId: userRole.id,
+    },
+  });
+
+  console.log('Users seeded');
 }

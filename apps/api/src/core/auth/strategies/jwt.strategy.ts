@@ -1,23 +1,35 @@
+/**
+ * DSS File Passport 🛰️
+ * File: apps/api/src/core/auth/strategies/jwt.strategy.ts
+ * Purpose: JWT strategy for validating access tokens.
+ * Phase: 2.4.5 — RBAC Core Migration
+ * Architecture: Auth strategy
+ */
+
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { JwtPayload } from '../types/jwt-payload.type';
+
+import type { AuthenticatedUser } from '../types/authenticated-user.type';
+import type { JwtPayload } from '../types/jwt-payload.type';
+
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
-  constructor(configService: ConfigService) {
+export class JwtStrategy extends PassportStrategy(Strategy) {
+  constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
+      ignoreExpiration: false,
+      secretOrKey: process.env.JWT_ACCESS_SECRET ?? 'dev-access-secret',
     });
   }
 
-  validate(payload: JwtPayload) {
+  validate(payload: JwtPayload): AuthenticatedUser {
     return {
       id: payload.sub,
       email: payload.email,
       username: payload.username,
-      role: payload.role,
+      roles: payload.roles ?? [],
+      permissions: payload.permissions ?? [],
     };
   }
 }

@@ -23,6 +23,19 @@
  * ===============================================================
  */
 
+/**
+ * DSS File Passport 🛰️
+ * File: apps/api/prisma/seed/role-permissions.seed.ts
+ * Purpose: Assigns base permissions to system roles.
+ * Phase: 2.5 — Roles & Permission Management
+ * Architecture: Database seed
+ *
+ * Notes:
+ * - Backend checks permissions, not role names.
+ * - Role names are lowercase identifiers.
+ * - If you want `if (role === "ADMIN")`, drink coffee and walk away. ☕
+ */
+
 import { PrismaClient } from '@prisma/client';
 
 import {
@@ -32,9 +45,9 @@ import {
 } from '../../src/core/authorization';
 
 const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
-  USER: [Permission.UsersRead],
+  user: [Permission.UsersRead],
 
-  MODERATOR: [
+  moderator: [
     Permission.UsersRead,
     Permission.UsersUpdate,
     Permission.UsersBan,
@@ -44,7 +57,7 @@ const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     Permission.PermissionsRead,
   ],
 
-  ADMIN: [
+  admin: [
     Permission.UsersRead,
     Permission.UsersCreate,
     Permission.UsersUpdate,
@@ -63,11 +76,11 @@ const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     Permission.SystemSettingsUpdate,
   ],
 
-  OWNER: PERMISSION_LIST.map((permission) => permission.key),
+  owner: PERMISSION_LIST.map((permission) => permission.key),
 };
 
-export async function seedRolePermissions(prisma: PrismaClient) {
-  console.log('🔐 Seeding role permissions...');
+export async function seedRolePermissions(prisma: PrismaClient): Promise<void> {
+  console.log('Seeding role permissions...');
 
   for (const [roleName, permissionKeys] of Object.entries(ROLE_PERMISSIONS)) {
     const role = await prisma.role.findUnique({
@@ -77,7 +90,7 @@ export async function seedRolePermissions(prisma: PrismaClient) {
     });
 
     if (!role) {
-      console.warn(`⚠️ Role not found: ${roleName}`);
+      console.warn(`Role not found: ${roleName}`);
       continue;
     }
 
@@ -89,7 +102,7 @@ export async function seedRolePermissions(prisma: PrismaClient) {
       });
 
       if (!permission) {
-        console.warn(`⚠️ Permission not found: ${permissionKey}`);
+        console.warn(`Permission not found: ${permissionKey}`);
         continue;
       }
 
@@ -109,5 +122,5 @@ export async function seedRolePermissions(prisma: PrismaClient) {
     }
   }
 
-  console.log('✅ Role permissions seeded');
+  console.log('Role permissions seeded');
 }

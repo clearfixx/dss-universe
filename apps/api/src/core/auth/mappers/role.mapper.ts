@@ -1,21 +1,21 @@
-import { UserRole } from '@prisma/client';
-
-import { Role } from '../enums/role.enum';
+/**
+ * DSS File Passport 🛰️
+ * File: apps/api/src/core/auth/mappers/role.mapper.ts
+ * Purpose: Normalizes role names for auth checks.
+ * Phase: 2.4.5 — RBAC Core Migration
+ * Architecture: Compatibility mapper
+ *
+ * Notes:
+ * - Old enum-based roles are gone.
+ * - This mapper now only normalizes DB role names.
+ */
 
 export class RoleMapper {
-  static toCore(role: UserRole): Role {
-    switch (role) {
-      case UserRole.USER:
-        return Role.USER;
+  static toCore(roleName: string): string {
+    return roleName.trim().toLowerCase();
+  }
 
-      case UserRole.MODERATOR:
-        return Role.MODERATOR;
-
-      case UserRole.ADMIN:
-        return Role.ADMIN;
-
-      case UserRole.OWNER:
-        return Role.OWNER;
-    }
+  static manyToCore(roleNames: string[]): string[] {
+    return roleNames.map((roleName) => this.toCore(roleName));
   }
 }

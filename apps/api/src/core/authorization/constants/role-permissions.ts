@@ -1,26 +1,28 @@
-import { UserRole } from '@prisma/client';
+/**
+ * DSS File Passport 🛰️
+ * File: apps/api/src/core/authorization/constants/role-permissions.ts
+ * Purpose: Legacy fallback permissions for known system roles.
+ * Phase: 2.4.5 — RBAC Core Migration
+ * Architecture: Authorization compatibility layer
+ */
 
-import { Permission, PermissionKey } from '../enums/permission.registry';
+import { Permission, type PermissionKey } from './permission.constants';
 
-export const ROLE_PERMISSIONS: Record<UserRole, PermissionKey[]> = {
-  [UserRole.USER]: [Permission.UsersRead],
+export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
+  user: [Permission.UsersRead],
 
-  [UserRole.MODERATOR]: [
+  moderator: [
     Permission.UsersRead,
     Permission.UsersUpdate,
-    Permission.UsersBan,
-
     Permission.RolesRead,
-
     Permission.PermissionsRead,
   ],
 
-  [UserRole.ADMIN]: [
+  admin: [
     Permission.UsersRead,
     Permission.UsersCreate,
     Permission.UsersUpdate,
     Permission.UsersDelete,
-    Permission.UsersBan,
 
     Permission.RolesRead,
     Permission.RolesCreate,
@@ -28,11 +30,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, PermissionKey[]> = {
     Permission.RolesDelete,
 
     Permission.PermissionsRead,
-    Permission.PermissionsManage,
-
-    Permission.SystemSettingsRead,
-    Permission.SystemSettingsUpdate,
+    Permission.PermissionsCreate,
+    Permission.PermissionsUpdate,
+    Permission.PermissionsDelete,
   ],
 
-  [UserRole.OWNER]: [...Object.values(Permission)],
+  owner: Object.values(Permission),
 };

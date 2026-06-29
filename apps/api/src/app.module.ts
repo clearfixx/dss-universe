@@ -17,6 +17,7 @@ import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AppController } from './app.controller';
 import { AuthorizationModule } from '@api/core/authorization';
+import { IamModule } from './modules/iam';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { AuthorizationModule } from '@api/core/authorization';
     UsersModule,
     AuthModule,
     AuthorizationModule,
+    IamModule,
   ],
   providers: [
     {

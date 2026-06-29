@@ -25,17 +25,20 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+/**
+ * DSS File Passport 🛰️
+ * File: apps/api/src/core/auth/types/authenticated-request.type.ts
+ * Purpose: Express request type with authenticated DSS user.
+ * Phase: 2.4.5 — RBAC Core Migration
+ * Architecture: Auth request contract
+ */
 
 import type { Request } from 'express';
 
-export type AuthenticatedRequestUser = {
-  id?: string;
-  email?: string;
-  username?: string;
-  role?: string;
-  roles?: string[];
+import type { AuthenticatedUser } from './authenticated-user.type';
+
+export type AuthenticatedRequest = Request & {
+  user?: AuthenticatedUser;
 };
 
-export interface AuthenticatedRequest extends Request {
-  user?: AuthenticatedRequestUser;
-}
+export type AuthenticatedRequestUser = AuthenticatedUser;
