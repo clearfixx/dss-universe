@@ -35,5 +35,6 @@
 
   "prettier.requireConfig": true,
 
-  "terminal.integrated.defaultProfile.windows": "PowerShell"
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "editor.fontSize": 14
 }
