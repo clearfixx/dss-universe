@@ -1,9 +1,31 @@
 /**
- * DSS File Passport 🛰️
- * File: apps/api/src/core/auth/index.ts
- * Purpose: Public API for Auth Core.
- * Phase: 2.5.9 — Architecture Cleanup
- * Architecture: Explicit exports
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🔐 Module: Authentication
+ * 📄 File: index.ts
+ *
+ * 🎯 Purpose:
+ * Public API for Auth Core.
+ *
+ * 🧠 Responsibilities:
+ * • exports auth module;
+ * • exports auth decorators and guards;
+ * • exports auth strategy;
+ * • exposes shared authentication contracts.
+ *
+ * 🏗️ Architecture:
+ * Explicit public API boundary for @api/core/auth.
+ *
+ * ⚠️ Important:
+ * Do not export internal implementation details unless another module truly needs them.
+ *
+ * 💡 Notes:
+ * Public exports are promises.
+ * Break them carefully. 🛰️
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 export { AuthCoreModule } from './auth-core.module';

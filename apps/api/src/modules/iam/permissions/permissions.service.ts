@@ -1,13 +1,38 @@
 /**
- * DSS File Passport 🛰️
- * File: apps/api/src/modules/iam/permissions/permissions.service.ts
- * Purpose: Business logic for permission management.
- * Phase: 2.5 — Roles & Permission Management
- * Architecture: IAM service
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🛡️ Module: IAM Permissions
+ * 📄 File: permissions.service.ts
  *
- * Notes:
- * - Permissions are tiny strings with scary power.
- * - Treat them like keys to the station airlock. 🛰️
+ * 🎯 Purpose:
+ * Coordinates permission management operations.
+ *
+ * 🧠 Responsibilities:
+ * • creates permissions;
+ * • reads permission records;
+ * • updates permission metadata;
+ * • deletes permissions when safe.
+ *
+ * 🏗️ Architecture:
+ * IAM business service.
+ *
+ * PermissionsController
+ *   ↓
+ * PermissionsService
+ *   ↓
+ * Prisma
+ *
+ * ⚠️ Important:
+ * Permission keys are authorization contracts.
+ * Rename them carefully.
+ *
+ * 💡 Notes:
+ * Tiny strings.
+ * Big consequences. 🛰️
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 import {

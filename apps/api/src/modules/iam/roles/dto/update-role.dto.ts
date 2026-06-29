@@ -1,8 +1,30 @@
 /**
- * DSS File Passport 🛰️
- * File: apps/api/src/modules/iam/roles/dto/update-role.dto.ts
- * Purpose: DTO for updating IAM roles.
- * Phase: 2.5 — Roles & Permission Management
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🛡️ Module: IAM Roles
+ * 📄 File: update-role.dto.ts
+ *
+ * 🎯 Purpose:
+ * Defines the request contract for updating a role.
+ *
+ * 🧠 Responsibilities:
+ * • validates optional role name changes;
+ * • validates label updates;
+ * • validates description updates.
+ *
+ * 🏗️ Architecture:
+ * IAM role DTO.
+ *
+ * ⚠️ Important:
+ * System role changes are additionally protected by IamSafetyService.
+ *
+ * 💡 Notes:
+ * Optional fields are allowed here.
+ * Optional architecture is not. 😄
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 import { IsOptional, IsString, Matches, MaxLength } from 'class-validator';

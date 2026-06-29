@@ -1,9 +1,38 @@
 /**
- * DSS File Passport 🛰️
- * File: apps/api/src/core/auth/strategies/jwt.strategy.ts
- * Purpose: JWT strategy for validating access tokens.
- * Phase: 2.4.5 — RBAC Core Migration
- * Architecture: Auth strategy
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🔐 Module: Authentication
+ * 📄 File: jwt.strategy.ts
+ *
+ * 🎯 Purpose:
+ * Validates access tokens and creates the authenticated request user.
+ *
+ * 🧠 Responsibilities:
+ * • extracts JWT from Authorization Bearer header;
+ * • validates token expiration and signature;
+ * • maps JwtPayload into AuthenticatedUser.
+ *
+ * 🏗️ Architecture:
+ * Passport JWT strategy.
+ *
+ * TokenService
+ *   ↓
+ * JWT
+ *   ↓
+ * JwtStrategy
+ *   ↓
+ * request.user
+ *
+ * ⚠️ Important:
+ * This strategy must stay aligned with TokenService and JwtPayload.
+ *
+ * 💡 Notes:
+ * If this strategy accepts the token,
+ * the airlock opens. Make sure it opens for the right astronaut. 🧑‍🚀
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 import { Injectable } from '@nestjs/common';

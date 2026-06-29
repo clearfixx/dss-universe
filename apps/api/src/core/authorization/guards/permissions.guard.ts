@@ -2,7 +2,7 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: Authorization
+ * 🛡️ Module: Authorization
  * 📄 File: permissions.guard.ts
  *
  * 🎯 Purpose:
@@ -29,8 +29,8 @@
  * Backend decides whether the action is allowed.
  *
  * 💡 Notes:
- * 🛡️ If this guard stopped the request,
- * it probably prevented a very bad day.
+ * If this guard stopped the request,
+ * it probably prevented a very bad day. 🛡️
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -63,7 +63,6 @@ export class PermissionsGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-
     const user = request.user;
 
     if (!user) {

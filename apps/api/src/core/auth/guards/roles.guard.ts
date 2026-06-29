@@ -1,13 +1,31 @@
 /**
- * DSS File Passport 🛰️
- * File: apps/api/src/core/auth/guards/roles.guard.ts
- * Purpose: Legacy guard for role-based route access.
- * Phase: 2.5.9 — Architecture Cleanup
- * Architecture: Auth guard
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🔐 Module: Authentication
+ * 📄 File: roles.guard.ts
  *
- * Notes:
- * - Prefer PermissionsGuard for new backend authorization.
- * - Roles are useful for grouping permissions, not for final access checks.
+ * 🎯 Purpose:
+ * Protects routes using legacy role-based access checks.
+ *
+ * 🧠 Responsibilities:
+ * • reads required role metadata;
+ * • compares required roles with authenticated user roles;
+ * • blocks requests without matching roles.
+ *
+ * 🏗️ Architecture:
+ * Legacy authentication guard.
+ *
+ * ⚠️ Important:
+ * Prefer PermissionsGuard for new backend authorization.
+ * Roles are useful for grouping permissions, not for final access checks.
+ *
+ * 💡 Notes:
+ * This guard stays only as a bridge.
+ * Bridges are useful, but nobody should build a city on one. 🌉
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 import {

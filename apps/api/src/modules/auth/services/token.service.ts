@@ -1,13 +1,37 @@
 /**
- * DSS File Passport 🛰️
- * File: apps/api/src/modules/auth/services/token.service.ts
- * Purpose: Issues JWT access and refresh tokens.
- * Phase: 2.4.5 — RBAC Core Migration
- * Architecture: Auth token service
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🔐 Module: Authentication
+ * 📄 File: token.service.ts
  *
- * Notes:
- * - Tokens now contain database-driven roles and permissions.
- * - The token does not guess. The token asks Prisma. 🛰️
+ * 🎯 Purpose:
+ * Issues JWT access and refresh tokens for authenticated users.
+ *
+ * 🧠 Responsibilities:
+ * • builds access-token payloads from database-driven roles and permissions;
+ * • signs access and refresh tokens;
+ * • keeps token generation separate from login business logic.
+ *
+ * 🏗️ Architecture:
+ * AuthService
+ *   ↓
+ * TokenService
+ *   ↓
+ * Prisma / JwtService
+ *   ↓
+ * Access Token + Refresh Token
+ *
+ * ⚠️ Important:
+ * Access tokens must include effective permissions.
+ * PermissionsGuard depends on this contract.
+ *
+ * 💡 Notes:
+ * The token does not guess.
+ * The token asks Prisma. 🛰️
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 import { Injectable } from '@nestjs/common';

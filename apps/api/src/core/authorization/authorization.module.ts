@@ -2,23 +2,37 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: Authorization
+ * 🛡️ Module: Authorization
  * 📄 File: authorization.module.ts
  *
  * 🎯 Purpose:
- * Збирає інфраструктуру permission-based authorization.
+ * Assembles the permission-based authorization infrastructure.
  *
- * 📦 Contains:
- * • PermissionsGuard;
- * • PermissionsService;
- * • PermissionsRepository;
- * • AuthorizationTestController.
+ * 🧠 Responsibilities:
+ * • registers PermissionsGuard;
+ * • registers PermissionsService;
+ * • registers PermissionsRepository;
+ * • exposes AuthorizationTestController for development verification.
  *
- * 🔗 Dependencies:
- * PrismaModule потрібен репозиторію для доступу до БД.
+ * 🏗️ Architecture:
+ * Core authorization module.
  *
- * 🛰️ Якщо Nest знову скаже "can't resolve dependencies" —
- * перевір imports. Він не злий, він просто педант. 😄
+ * Authenticated request
+ *   ↓
+ * PermissionsGuard
+ *   ↓
+ * Permission metadata
+ *   ↓
+ * Controller
+ *
+ * ⚠️ Important:
+ * PrismaModule is required by PermissionsRepository for database access.
+ *
+ * 💡 Notes:
+ * If Nest says "can't resolve dependencies",
+ * check module imports. It is not angry. It is just very literal. 😄
+ *
+ * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 

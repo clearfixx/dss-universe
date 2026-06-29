@@ -1,9 +1,31 @@
 /**
- * DSS File Passport 🛰️
- * File: apps/api/src/modules/iam/user-access/index.ts
- * Purpose: Public API for direct user access management.
- * Phase: 2.5 — Roles & Permission Management
- * Architecture: Explicit folder exports
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🛡️ Module: IAM User Access
+ * 📄 File: index.ts
+ *
+ * 🎯 Purpose:
+ * Public API for the IAM user access feature slice.
+ *
+ * 🧠 Responsibilities:
+ * • exports UserAccessController;
+ * • exports UserAccessService;
+ * • exports user-access DTOs and types;
+ * • keeps user-access feature imports explicit.
+ *
+ * 🏗️ Architecture:
+ * Feature-slice public API boundary.
+ *
+ * ⚠️ Important:
+ * User access combines roles and direct permissions.
+ *
+ * 💡 Notes:
+ * This is the airlock manifest.
+ * No random passengers. 🧑‍🚀
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 export { UserAccessController } from './user-access.controller';

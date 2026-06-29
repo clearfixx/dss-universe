@@ -2,26 +2,28 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: Authorization
+ * 🛡️ Module: Authorization
  * 📄 File: index.ts
  *
  * 🎯 Purpose:
- * Public API for the Authorization Core.
+ * Public API for Authorization Core.
  *
  * 🧠 Responsibilities:
- * • exports authorization decorators;
+ * • exports authorization module;
+ * • exports permission decorators;
  * • exports permission registry;
- * • exports authorization guards;
- * • exposes authorization services and repositories.
+ * • exports authorization guards, services, and repositories.
  *
  * 🏗️ Architecture:
  * Explicit public API boundary for @api/core/authorization.
  *
  * ⚠️ Important:
- * Do not export internal implementation details unless another module truly needs them.
+ * Public exports are contracts.
+ * Do not expose internals without a reason.
  *
  * 💡 Notes:
- * Public exports are promises. Make them carefully. 🛰️
+ * If another module imports from here,
+ * this file becomes part of its architecture map. 🛰️
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================

@@ -1,13 +1,37 @@
 /**
- * DSS File Passport 🛰️
- * File: apps/api/prisma/seed/users.seed.ts
- * Purpose: Seeds base DSS users.
- * Phase: 2.4.5 — RBAC Core Migration
- * Architecture: Database seed
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🌱 Module: Database Seed
+ * 📄 File: users.seed.ts
  *
- * Notes:
- * - Users no longer own enum roles directly.
- * - Roles are assigned through user_roles. Much cleaner. Much less cursed. ☕
+ * 🎯 Purpose:
+ * Seeds base DSS development users.
+ *
+ * 🧠 Responsibilities:
+ * • creates default admin and user accounts;
+ * • hashes development passwords;
+ * • assigns default roles through user-role relations.
+ *
+ * 🏗️ Architecture:
+ * Database seed.
+ *
+ * Users
+ *   ↓
+ * UserRole
+ *   ↓
+ * Role
+ *
+ * ⚠️ Important:
+ * Users no longer own enum roles directly.
+ * Roles are assigned through user-role relations.
+ *
+ * 💡 Notes:
+ * Default users are for development.
+ * Production should not trust seed comfort food. 🍪
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 import { PrismaClient } from '@prisma/client';

@@ -2,7 +2,7 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: Authorization
+ * 🛡️ Module: Authorization
  * 📄 File: require-permissions.decorator.ts
  *
  * 🎯 Purpose:
@@ -10,11 +10,17 @@
  *
  * 🧠 Responsibilities:
  * • stores permission requirements on route handlers;
- * • provides metadata consumed by PermissionsGuard;
+ * • exposes metadata consumed by PermissionsGuard;
  * • keeps controller authorization declarations readable.
  *
  * 🏗️ Architecture:
- * Authorization decorator. Does not perform access checks directly.
+ * Authorization decorator.
+ *
+ * Controller method
+ *   ↓
+ * @RequirePermissions(...)
+ *   ↓
+ * PermissionsGuard
  *
  * ⚠️ Important:
  * This decorator declares requirements.

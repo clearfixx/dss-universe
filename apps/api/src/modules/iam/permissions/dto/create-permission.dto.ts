@@ -1,8 +1,30 @@
 /**
- * DSS File Passport 🛰️
- * File: apps/api/src/modules/iam/permissions/dto/create-permission.dto.ts
- * Purpose: DTO for creating permissions.
- * Phase: 2.5 — Roles & Permission Management
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🛡️ Module: IAM Permissions
+ * 📄 File: create-permission.dto.ts
+ *
+ * 🎯 Purpose:
+ * Defines the request contract for creating a permission.
+ *
+ * 🧠 Responsibilities:
+ * • validates permission key;
+ * • validates permission label;
+ * • validates optional permission description.
+ *
+ * 🏗️ Architecture:
+ * IAM permission DTO.
+ *
+ * ⚠️ Important:
+ * Permission keys should use stable dot notation.
+ *
+ * 💡 Notes:
+ * DTO is a contract.
+ * If it changes, the API changed too. 📝
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 import { IsOptional, IsString, Matches, MaxLength } from 'class-validator';

@@ -1,13 +1,39 @@
 /**
- * DSS File Passport 🛰️
- * File: apps/api/src/modules/iam/user-access/user-access.service.ts
- * Purpose: Business logic for user roles and direct permissions.
- * Phase: 2.5 — Roles & Permission Management
- * Architecture: IAM service
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🛡️ Module: IAM User Access
+ * 📄 File: user-access.service.ts
  *
- * Notes:
- * - This service answers: "What access does this user actually have?"
- * - It is the airlock manifest. No random passengers. 🧑‍🚀
+ * 🎯 Purpose:
+ * Coordinates user role and direct permission assignments.
+ *
+ * 🧠 Responsibilities:
+ * • returns user access summaries;
+ * • grants roles to users;
+ * • revokes roles from users;
+ * • grants direct permissions to users;
+ * • revokes direct permissions from users;
+ * • calculates effective permissions.
+ *
+ * 🏗️ Architecture:
+ * IAM business service.
+ *
+ * UserAccessController
+ *   ↓
+ * UserAccessService
+ *   ↓
+ * Prisma
+ *
+ * ⚠️ Important:
+ * Effective permissions combine role permissions and direct permissions.
+ *
+ * 💡 Notes:
+ * This service answers:
+ * "What access does this user actually have?" 🧭
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 import {

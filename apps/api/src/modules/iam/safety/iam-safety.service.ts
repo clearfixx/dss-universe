@@ -1,15 +1,38 @@
 /**
- * DSS File Passport 🛰️
- * File: apps/api/src/modules/iam/safety/iam-safety.service.ts
- * Purpose: Centralized safety checks for dangerous IAM operations.
- * Phase: 2.5 — Roles & Permission Management
- * Architecture: Safety boundary for roles and permissions
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🛡️ Module: IAM Safety
+ * 📄 File: iam-safety.service.ts
  *
- * Notes:
- * - This service exists to prevent "oops, no admins left" incidents.
- * - Future maintainer: coffee first, delete buttons second. ☕
+ * 🎯 Purpose:
+ * Protects critical IAM entities from unsafe mutations.
+ *
+ * 🧠 Responsibilities:
+ * • prevents protected system roles from deletion;
+ * • prevents unsafe renaming of critical roles;
+ * • centralizes IAM safety checks.
+ *
+ * 🏗️ Architecture:
+ * IAM safety service.
+ *
+ * RolesService
+ *   ↓
+ * IamSafetyService
+ *   ↓
+ * Safety rules
+ *
+ * ⚠️ Important:
+ * Safety rules should be explicit and boring.
+ * Boring security is good security.
+ *
+ * 💡 Notes:
+ * Roles are boring until someone deletes admin.
+ * That is why this file exists. 🛡️
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
-
 import { BadRequestException, Injectable } from '@nestjs/common';
 
 import type { ProtectedRole } from './types/protected-role.type';

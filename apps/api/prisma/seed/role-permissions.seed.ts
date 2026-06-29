@@ -2,13 +2,20 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: Database Seed
+ * 🌱 Module: Database Seed
  * 📄 File: role-permissions.seed.ts
  *
  * 🎯 Purpose:
- * Прив'язує permission'и до базових системних ролей.
+ * Assigns base permissions to system roles.
  *
- * 🧠 Architecture:
+ * 🧠 Responsibilities:
+ * • maps system roles to permission keys;
+ * • creates missing role-permission assignments;
+ * • keeps seeded RBAC defaults predictable.
+ *
+ * 🏗️ Architecture:
+ * Database seed.
+ *
  * Role
  *   ↓
  * RolePermission
@@ -16,24 +23,14 @@
  * Permission
  *
  * ⚠️ Important:
- * Backend перевіряє permission'и, а не назву ролі.
+ * Backend checks permissions, not role names.
  *
- * 💡 Якщо хочеться написати if (role === 'ADMIN'),
- * значить час випити каву і повернутися до permission'ів. ☕
+ * 💡 Notes:
+ * If you want `if (role === "admin")`,
+ * drink coffee and add a permission instead. ☕
+ *
+ * 🚀 Build. Share. Grow.
  * ===============================================================
- */
-
-/**
- * DSS File Passport 🛰️
- * File: apps/api/prisma/seed/role-permissions.seed.ts
- * Purpose: Assigns base permissions to system roles.
- * Phase: 2.5 — Roles & Permission Management
- * Architecture: Database seed
- *
- * Notes:
- * - Backend checks permissions, not role names.
- * - Role names are lowercase identifiers.
- * - If you want `if (role === "ADMIN")`, drink coffee and walk away. ☕
  */
 
 import { PrismaClient } from '@prisma/client';

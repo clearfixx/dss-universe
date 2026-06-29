@@ -1,8 +1,30 @@
 /**
- * DSS File Passport 🛰️
- * File: apps/api/src/modules/iam/permissions/dto/update-permission.dto.ts
- * Purpose: DTO for updating permissions.
- * Phase: 2.5 — Roles & Permission Management
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🛡️ Module: IAM Permissions
+ * 📄 File: update-permission.dto.ts
+ *
+ * 🎯 Purpose:
+ * Defines the request contract for updating a permission.
+ *
+ * 🧠 Responsibilities:
+ * • validates optional permission key changes;
+ * • validates label updates;
+ * • validates description updates.
+ *
+ * 🏗️ Architecture:
+ * IAM permission DTO.
+ *
+ * ⚠️ Important:
+ * Permission key changes may affect existing tokens and protected routes.
+ *
+ * 💡 Notes:
+ * Optional fields are fine.
+ * Optional security thinking is not. 😄
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 import { IsOptional, IsString, Matches, MaxLength } from 'class-validator';

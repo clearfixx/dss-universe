@@ -1,9 +1,39 @@
 /**
- * DSS File Passport 🛰️
- * File: apps/api/src/modules/iam/user-access/user-access.controller.ts
- * Purpose: HTTP endpoints for user access management.
- * Phase: 2.5 — Roles & Permission Management
- * Architecture: Thin controller
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🛡️ Module: IAM User Access
+ * 📄 File: user-access.controller.ts
+ *
+ * 🎯 Purpose:
+ * Exposes HTTP endpoints for user access management.
+ *
+ * 🧠 Responsibilities:
+ * • returns user access summaries;
+ * • grants and revokes user roles;
+ * • grants and revokes direct user permissions;
+ * • protects endpoints with JWT and permission guards.
+ *
+ * 🏗️ Architecture:
+ * Thin controller.
+ *
+ * Request
+ *   ↓
+ * JwtAuthGuard
+ *   ↓
+ * PermissionsGuard
+ *   ↓
+ * UserAccessService
+ *
+ * ⚠️ Important:
+ * Do not move access business rules into this controller.
+ *
+ * 💡 Notes:
+ * Controller checks tickets.
+ * Service updates the manifest. 🛰️
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 import {

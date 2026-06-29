@@ -2,7 +2,7 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: Authorization
+ * 🛡️ Module: Authorization
  * 📄 File: permissions.service.ts
  *
  * 🎯 Purpose:

@@ -1,13 +1,38 @@
 /**
- * DSS File Passport 🛰️
- * File: apps/api/src/modules/iam/roles/roles.service.ts
- * Purpose: Business logic for role management.
- * Phase: 2.5 — Roles & Permission Management
- * Architecture: IAM service
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🛡️ Module: IAM Roles
+ * 📄 File: roles.service.ts
  *
- * Notes:
- * - Roles are boring until someone deletes admin.
- * - That is why Safety exists. ☕
+ * 🎯 Purpose:
+ * Coordinates role management operations and role-permission assignments.
+ *
+ * 🧠 Responsibilities:
+ * • creates, reads, updates, and deletes roles;
+ * • assigns permissions to roles;
+ * • revokes permissions from roles;
+ * • protects system roles through IAM safety checks.
+ *
+ * 🏗️ Architecture:
+ * IAM business service.
+ *
+ * RolesController
+ *   ↓
+ * RolesService
+ *   ↓
+ * Prisma / IamSafetyService
+ *
+ * ⚠️ Important:
+ * Backend authorization checks permissions, not role names.
+ * Roles are containers for permissions.
+ *
+ * 💡 Notes:
+ * Roles are boring until someone deletes admin.
+ * That is why safety exists. ☕
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 import {

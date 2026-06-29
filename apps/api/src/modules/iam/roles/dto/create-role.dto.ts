@@ -1,8 +1,30 @@
 /**
- * DSS File Passport 🛰️
- * File: apps/api/src/modules/iam/roles/dto/create-role.dto.ts
- * Purpose: DTO for creating IAM roles.
- * Phase: 2.5 — Roles & Permission Management
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🛡️ Module: IAM Roles
+ * 📄 File: create-role.dto.ts
+ *
+ * 🎯 Purpose:
+ * Defines the request contract for creating a role.
+ *
+ * 🧠 Responsibilities:
+ * • validates role name;
+ * • validates role label and description;
+ * • optionally accepts initial permission assignments.
+ *
+ * 🏗️ Architecture:
+ * IAM role DTO.
+ *
+ * ⚠️ Important:
+ * Role names are lowercase identifiers.
+ *
+ * 💡 Notes:
+ * DTO is a contract.
+ * If it changes, the API changed too. 📝
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 import {

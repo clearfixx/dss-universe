@@ -1,13 +1,30 @@
 /**
- * DSS File Passport 🛰️
- * File: apps/api/src/core/auth/decorators/authenticated.decorator.ts
- * Purpose: Composes authentication and optional legacy role guards.
- * Phase: 2.5.9 — Architecture Cleanup
- * Architecture: Auth decorator
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🔐 Module: Authentication
+ * 📄 File: authenticated.decorator.ts
  *
- * Notes:
- * - Prefer JwtAuthGuard + PermissionsGuard + RequirePermissions for new code.
- * - Role-based access remains only as a compatibility bridge.
+ * 🎯 Purpose:
+ * Composes JWT authentication and optional legacy role protection.
+ *
+ * 🧠 Responsibilities:
+ * • applies JwtAuthGuard;
+ * • applies RolesGuard for legacy role checks;
+ * • attaches role metadata when roles are provided.
+ *
+ * 🏗️ Architecture:
+ * Convenience auth decorator.
+ *
+ * ⚠️ Important:
+ * Prefer JwtAuthGuard + PermissionsGuard + RequirePermissions for new code.
+ * This decorator remains as a compatibility bridge.
+ *
+ * 💡 Notes:
+ * Useful shortcut. Not a security philosophy. 🛰️
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 import { applyDecorators, UseGuards } from '@nestjs/common';

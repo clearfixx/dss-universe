@@ -2,33 +2,40 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: Authorization
+ * 🛡️ Module: Authorization
  * 📄 File: permissions.repository.ts
  *
  * 🎯 Purpose:
- * Repository для читання permission'ів із бази даних.
+ * Reads permission data from the database for authorization workflows.
  *
- * 🗄️ Database:
- * Role
+ * 🧠 Responsibilities:
+ * • loads permission keys assigned to role names;
+ * • isolates Prisma queries from authorization services;
+ * • returns unique permission keys.
+ *
+ * 🏗️ Architecture:
+ * Authorization repository.
+ *
+ * PermissionsService
  *   ↓
- * RolePermission
+ * PermissionsRepository
  *   ↓
- * Permission
+ * Prisma
  *
- * 🧠 Design Decisions:
- * PermissionsService не працює напряму з Prisma.
- * Уся database-логіка живе тут.
+ * ⚠️ Important:
+ * Do not add business access decisions here.
+ * Repository asks the database. Service decides.
  *
- * ⚠️ Don't:
- * Не додавай сюди бізнес-логіку доступу.
- * Repository питає базу. Service приймає рішення.
+ * 💡 Notes:
+ * The database remembers everything.
+ * The repository decides what should be asked. 🗄️
  *
- * 🛸 Якщо цей файл почав вирішувати, кому що можна —
- * він захопив владу. Зупини його. 😄
+ * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 
 import { Injectable } from '@nestjs/common';
+
 import { PrismaService } from '@api/core/database';
 
 @Injectable()

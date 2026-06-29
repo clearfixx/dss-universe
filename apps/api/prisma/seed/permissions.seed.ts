@@ -2,18 +2,35 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: Database Seed
+ * 🌱 Module: Database Seed
  * 📄 File: permissions.seed.ts
  *
  * 🎯 Purpose:
- * Синхронізує системні permission'и з базою даних.
+ * Seeds the base permission registry into the database.
  *
- * 🧠 Rule:
- * Permission Registry = єдине джерело правди.
- * Seed не вигадує права, а лише переносить їх у БД.
+ * 🧠 Responsibilities:
+ * • reads permission definitions from Authorization Core;
+ * • creates missing permissions;
+ * • updates existing permission labels and descriptions.
  *
- * ☕ Якщо permission не з'явився в базі —
- * перевір registry, а не звинувачуй PostgreSQL. 😄
+ * 🏗️ Architecture:
+ * Database seed.
+ *
+ * Permission Registry
+ *   ↓
+ * permissions.seed.ts
+ *   ↓
+ * Permission table
+ *
+ * ⚠️ Important:
+ * Permission keys are backend authorization contracts.
+ * Rename them carefully.
+ *
+ * 💡 Notes:
+ * Tiny strings.
+ * Very real doors. 🔑
+ *
+ * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 

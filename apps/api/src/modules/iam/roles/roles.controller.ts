@@ -1,9 +1,38 @@
 /**
- * DSS File Passport 🛰️
- * File: apps/api/src/modules/iam/roles/roles.controller.ts
- * Purpose: HTTP endpoints for role management.
- * Phase: 2.5 — Roles & Permission Management
- * Architecture: Thin controller
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🛡️ Module: IAM Roles
+ * 📄 File: roles.controller.ts
+ *
+ * 🎯 Purpose:
+ * Exposes HTTP endpoints for role management.
+ *
+ * 🧠 Responsibilities:
+ * • receives role management requests;
+ * • protects endpoints with JWT and permission guards;
+ * • delegates role operations to RolesService.
+ *
+ * 🏗️ Architecture:
+ * Thin controller.
+ *
+ * Request
+ *   ↓
+ * JwtAuthGuard
+ *   ↓
+ * PermissionsGuard
+ *   ↓
+ * RolesService
+ *
+ * ⚠️ Important:
+ * Do not move role business rules into this controller.
+ *
+ * 💡 Notes:
+ * Controller is a dispatcher,
+ * not the council of space elders. 🧑‍🚀
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 import {

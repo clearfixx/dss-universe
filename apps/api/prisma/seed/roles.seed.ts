@@ -2,32 +2,36 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: Database Seed
+ * 🌱 Module: Database Seed
  * 📄 File: roles.seed.ts
  *
  * 🎯 Purpose:
- * Створює базові системні ролі DSS Universe.
+ * Seeds base system roles for DSS Universe.
  *
- * 🧠 Rule:
- * Роль = "погон".
- * Permission = що реально дозволено з цим погоном робити.
+ * 🧠 Responsibilities:
+ * • creates lowercase system roles;
+ * • updates system role labels and descriptions;
+ * • removes legacy uppercase role records.
  *
- * 🎖️ Не кожен із погоном — адмірал.
- * Але OWNER точно сидить у Mission Control. 😄
+ * 🏗️ Architecture:
+ * Database seed.
+ *
+ * Role definitions
+ *   ↓
+ * roles.seed.ts
+ *   ↓
+ * Role table
+ *
+ * ⚠️ Important:
+ * Role names are lowercase identifiers.
+ * Labels are human-readable names.
+ *
+ * 💡 Notes:
+ * If role names start yelling in CAPS again,
+ * the seed is probably haunted. 👻
+ *
+ * 🚀 Build. Share. Grow.
  * ===============================================================
- */
-
-/**
- * DSS File Passport 🛰️
- * File: apps/api/prisma/seed/roles.seed.ts
- * Purpose: Seeds base system roles for DSS Universe.
- * Phase: 2.5 — Roles & Permission Management
- * Architecture: Database seed
- *
- * Notes:
- * - Role names are lowercase system identifiers.
- * - Labels are human-readable names.
- * - If role names start yelling in CAPS again, the seed is haunted. 👻
  */
 
 import { PrismaClient } from '@prisma/client';

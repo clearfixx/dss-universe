@@ -1,9 +1,30 @@
 /**
- * DSS File Passport 🛰️
- * File: apps/api/src/modules/iam/permissions/permissions.controller.ts
- * Purpose: HTTP endpoints for permission management.
- * Phase: 2.5 — Roles & Permission Management
- * Architecture: Thin controller
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🛡️ Module: IAM Permissions
+ * 📄 File: permissions.controller.ts
+ *
+ * 🎯 Purpose:
+ * Exposes HTTP endpoints for permission management.
+ *
+ * 🧠 Responsibilities:
+ * • receives permission management requests;
+ * • protects endpoints with JWT and permission guards;
+ * • delegates permission operations to PermissionsService.
+ *
+ * 🏗️ Architecture:
+ * Thin controller.
+ *
+ * ⚠️ Important:
+ * Do not move permission business rules into this controller.
+ *
+ * 💡 Notes:
+ * Controller opens the door to the service.
+ * It does not decide who owns the keys. 🗝️
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 import {

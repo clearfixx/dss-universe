@@ -1,9 +1,30 @@
 /**
- * DSS File Passport 🛰️
- * File: apps/api/src/modules/iam/roles/types/role-with-permissions.type.ts
- * Purpose: Shared role type with attached permissions.
- * Phase: 2.5 — Roles & Permission Management
- * Architecture: IAM role typing
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🛡️ Module: IAM Roles
+ * 📄 File: role-with-permissions.type.ts
+ *
+ * 🎯 Purpose:
+ * Defines the role response shape with assigned permissions.
+ *
+ * 🧠 Responsibilities:
+ * • describes role data returned by IAM role operations;
+ * • includes assigned permission summaries;
+ * • keeps role API responses typed.
+ *
+ * 🏗️ Architecture:
+ * IAM role response contract.
+ *
+ * ⚠️ Important:
+ * This type represents public API output, not Prisma internals.
+ *
+ * 💡 Notes:
+ * Do not leak database shape by accident.
+ * APIs remember everything clients learn. 📡
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 export type RoleWithPermissions = {

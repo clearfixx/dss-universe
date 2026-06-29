@@ -1,18 +1,40 @@
 /**
  * ===============================================================
- * 🛰️ DSS Universe Permission Registry
+ * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * Єдине джерело правди для всіх permission'ів системи.
+ * 🛡️ Module: Authorization
+ * 📄 File: permission.registry.ts
  *
- * 🧠 Архітектурна примітка:
- * Permission — це не роль.
- * Permission — це конкретна дія, яку backend дозволяє або забороняє.
+ * 🎯 Purpose:
+ * Defines the central permission registry for DSS Universe.
  *
- * 🎖️ Роль = "погон".
- * 🔑 Permission = реальний ключ від дверей.
+ * 🧠 Responsibilities:
+ * • stores all known backend permission keys;
+ * • provides labels and descriptions for seeded permissions;
+ * • exposes typed permission helpers for guards, seeds, and controllers.
  *
- * Якщо хочеться написати if (user.role === 'ADMIN') —
- * зроби чай, видихни, і додай permission. 😄
+ * 🏗️ Architecture:
+ * Authorization registry.
+ *
+ * Permission Registry
+ *   ↓
+ * Seed
+ *   ↓
+ * Database
+ *   ↓
+ * JWT effective permissions
+ *   ↓
+ * PermissionsGuard
+ *
+ * ⚠️ Important:
+ * Permission is not a role.
+ * Permission is the concrete action backend allows or denies.
+ *
+ * 💡 Notes:
+ * Role = rank.
+ * Permission = real key to the door. 🔑
+ *
+ * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 

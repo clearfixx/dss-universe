@@ -1,9 +1,30 @@
 /**
- * DSS File Passport 🛰️
- * File: apps/api/src/modules/iam/roles/index.ts
- * Purpose: Public API for IAM roles.
- * Phase: 2.5 — Roles & Permission Management
- * Architecture: Explicit folder exports
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🛡️ Module: IAM Roles
+ * 📄 File: index.ts
+ *
+ * 🎯 Purpose:
+ * Public API for the IAM roles feature slice.
+ *
+ * 🧠 Responsibilities:
+ * • exports RolesController;
+ * • exports RolesService;
+ * • exports role DTOs and types;
+ * • keeps role feature imports explicit.
+ *
+ * 🏗️ Architecture:
+ * Feature-slice public API boundary.
+ *
+ * ⚠️ Important:
+ * Do not export internal helpers unless another slice truly needs them.
+ *
+ * 💡 Notes:
+ * A clean index file is a clean docking port. 🛰️
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 export { RolesController } from './roles.controller';

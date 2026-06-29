@@ -1,9 +1,29 @@
 /**
- * DSS File Passport 🛰️
- * File: apps/api/src/modules/iam/user-access/types/user-access-summary.type.ts
- * Purpose: Summary of roles and permissions assigned to a user.
- * Phase: 2.5 — Roles & Permission Management
- * Architecture: IAM user access typing
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🛡️ Module: IAM User Access
+ * 📄 File: user-access-summary.type.ts
+ *
+ * 🎯 Purpose:
+ * Defines the user access summary response shape.
+ *
+ * 🧠 Responsibilities:
+ * • describes assigned user roles;
+ * • describes direct user permissions;
+ * • describes effective permissions.
+ *
+ * 🏗️ Architecture:
+ * IAM user-access response contract.
+ *
+ * ⚠️ Important:
+ * This type represents API output, not Prisma internals.
+ *
+ * 💡 Notes:
+ * Effective permissions are what the backend actually cares about. 🛡️
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 export type UserAccessSummary = {
