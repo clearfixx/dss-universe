@@ -6,21 +6,23 @@
  * 📄 File: apps/api/src/modules/users/application/services/users.service.ts
  *
  * 🎯 Purpose:
- * Coordinates user-related business operations and exposes a safe API
- * for other modules.
+ * Coordinates user-related business operations and exposes safe user APIs
+ * for public and internal application use.
  *
  * 🧠 Responsibilities:
  * • reads users through the repository abstraction;
- * • converts user records into safe public user objects;
+ * • exposes public user data through response DTOs;
+ * • keeps internal record access available for trusted modules;
+ * • updates user profile, avatar, cover, status, and auth-related fields;
  * • throws domain-level exceptions when users are not found.
  *
  * 🏗️ Architecture:
- * Application service. Owns business logic. Does not know about HTTP
+ * Application service. Owns user use cases. Does not know about HTTP
  * and does not access Prisma directly.
  *
  * ⚠️ Important:
- * Other modules should use UsersService instead of accessing the users
- * repository or Prisma directly.
+ * Public methods should return DTOs. Internal record methods exist for
+ * trusted modules like Auth and should not leak into controllers.
  *
  * 💡 Notes:
  * 🧠 Business logic belongs here.
@@ -32,15 +34,18 @@
 
 import { Inject, Injectable } from '@nestjs/common';
 import type { UserStatus } from '@prisma/client';
+
 import { UserNotFoundException } from '../../domain/exceptions/user-not-found.exception';
 import { UserMapper } from '../../domain/mappers/user.mapper';
 import {
   USERS_REPOSITORY,
   type UsersRepository,
 } from '../../domain/repositories/users.repository.interface';
-import type { UserRecord } from '../../domain/types/user-record.type';
 import type { SafeUser } from '../../domain/types/safe-user.type';
+import type { UserRecord } from '../../domain/types/user-record.type';
 import type { UpdateUserProfileData } from '../types/update-user-profile-data.type';
+import type { UserResponseDto } from '../dto/responses';
+import { UserResponseMapper } from '../mappers';
 
 @Injectable()
 export class UsersService {
@@ -49,22 +54,22 @@ export class UsersService {
     private readonly usersRepository: UsersRepository,
   ) {}
 
-  async getById(id: string): Promise<SafeUser> {
+  async getById(id: string): Promise<UserResponseDto> {
     const user = await this.usersRepository.findById(id);
 
-    return this.toSafeUser(this.requireUser(user));
+    return this.toResponseDto(this.requireUser(user));
   }
 
-  async getByEmail(email: string): Promise<SafeUser> {
+  async getByEmail(email: string): Promise<UserResponseDto> {
     const user = await this.usersRepository.findByEmail(email);
 
-    return this.toSafeUser(this.requireUser(user));
+    return this.toResponseDto(this.requireUser(user));
   }
 
-  async getByUsername(username: string): Promise<SafeUser> {
+  async getByUsername(username: string): Promise<UserResponseDto> {
     const user = await this.usersRepository.findByUsername(username);
 
-    return this.toSafeUser(this.requireUser(user));
+    return this.toResponseDto(this.requireUser(user));
   }
 
   async exists(id: string): Promise<boolean> {
@@ -85,78 +90,85 @@ export class UsersService {
     return this.usersRepository.findByUsername(username);
   }
 
-  async markLastSeen(id: string): Promise<SafeUser> {
+  async markLastSeen(id: string): Promise<UserResponseDto> {
     const user = await this.usersRepository.updateById(id, {
       lastSeenAt: new Date(),
     });
 
-    return this.toSafeUser(user);
+    return this.toResponseDto(user);
   }
 
-  async markEmailVerified(id: string): Promise<SafeUser> {
+  async markEmailVerified(id: string): Promise<UserResponseDto> {
     const user = await this.usersRepository.updateById(id, {
       emailVerifiedAt: new Date(),
     });
 
-    return this.toSafeUser(user);
+    return this.toResponseDto(user);
   }
 
   async changePasswordHash(
     id: string,
     passwordHash: string,
-  ): Promise<SafeUser> {
+  ): Promise<UserResponseDto> {
     const user = await this.usersRepository.updateById(id, {
       passwordHash,
     });
 
-    return this.toSafeUser(user);
+    return this.toResponseDto(user);
   }
 
   async updateProfile(
     id: string,
     profile: UpdateUserProfileData,
-  ): Promise<SafeUser> {
+  ): Promise<UserResponseDto> {
     const user = await this.usersRepository.updateById(id, {
       displayName: profile.displayName,
       bio: profile.bio,
     });
 
-    return this.toSafeUser(user);
+    return this.toResponseDto(user);
   }
 
-  async changeAvatar(id: string, avatarUrl: string | null): Promise<SafeUser> {
+  async changeAvatar(
+    id: string,
+    avatarUrl: string | null,
+  ): Promise<UserResponseDto> {
     const user = await this.usersRepository.updateById(id, {
       avatarUrl,
     });
 
-    return this.toSafeUser(user);
+    return this.toResponseDto(user);
   }
 
-  async changeCover(id: string, coverUrl: string | null): Promise<SafeUser> {
+  async changeCover(
+    id: string,
+    coverUrl: string | null,
+  ): Promise<UserResponseDto> {
     const user = await this.usersRepository.updateById(id, {
       coverUrl,
     });
 
-    return this.toSafeUser(user);
+    return this.toResponseDto(user);
   }
-  async changeStatus(id: string, status: UserStatus): Promise<SafeUser> {
+
+  async changeStatus(id: string, status: UserStatus): Promise<UserResponseDto> {
     const user = await this.usersRepository.updateById(id, {
       status,
     });
 
-    return this.toSafeUser(user);
+    return this.toResponseDto(user);
   }
 
-  async getManyByIds(ids: string[]): Promise<SafeUser[]> {
+  async getManyByIds(ids: string[]): Promise<UserResponseDto[]> {
     const users = await this.usersRepository.findManyByIds(ids);
 
-    return users.map((user) => this.toSafeUser(user));
+    return users.map((user) => this.toResponseDto(user));
   }
 
-  async getPublicByUsername(username: string): Promise<SafeUser> {
+  async getPublicByUsername(username: string): Promise<UserResponseDto> {
     const user = await this.usersRepository.findPublicByUsername(username);
 
-    return this.toSafeUser(this.requireUser(user));
+    return this.toResponseDto(this.requireUser(user));
   }
 
   private requireUser(user: UserRecord | null): UserRecord {
@@ -167,12 +179,16 @@ export class UsersService {
     return user;
   }
 
-  toSafeUser(user: UserRecord): SafeUser {
+  private toSafeUser(user: UserRecord): SafeUser {
     return UserMapper.toSafeUser(user);
+  }
+
+  private toResponseDto(user: UserRecord): UserResponseDto {
+    return UserResponseMapper.toDto(this.toSafeUser(user));
   }
 }
 
 /**
  * 🛰️ UsersService is the airlock between user data and the rest of DSS.
- * Raw records stay inside. Safe users may leave the station.
+ * Raw records stay inside. Public DTOs may leave the station.
  */
