@@ -9,16 +9,19 @@
  * Implements user persistence using Prisma.
  *
  * 🧠 Responsibilities:
- * • loads users by id and email;
- * • creates users during registration;
- * • updates refresh token hashes for authentication sessions.
+ * • loads users by id, email, and username;
+ * • checks whether user email or username already exists;
+ * • creates and updates user records;
+ * • updates refresh token hashes for authentication sessions;
+ * • deletes user records when explicitly requested.
  *
  * 🏗️ Architecture:
- * Infrastructure repository. Implements the existing UsersRepository contract.
+ * Infrastructure repository.
+ * Implements the UsersRepository domain contract and hides Prisma behind it.
  *
  * ⚠️ Important:
- * This repository is still auth-compatible and returns Prisma User records.
- * Domain mapping will be introduced later during the repository refactor.
+ * This repository returns internal UserRecord objects.
+ * Controllers must never expose UserRecord directly because it contains sensitive fields.
  *
  * 💡 Notes:
  * 🗄️ The database remembers everything.
@@ -29,30 +32,61 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import { Prisma, User } from '@prisma/client';
 
 import { PrismaService } from '@api/core/database';
 
-import { UsersRepository } from '../../interfaces/users.repository.interface';
+import type { CreateUserContract } from '../../domain/contracts/create-user.contract';
+import type { UpdateUserContract } from '../../domain/contracts/update-user.contract';
+import type { UsersRepository } from '../../domain/repositories/users.repository.interface';
+import type { UserRecord } from '../../domain/types/user-record.type';
 
 @Injectable()
 export class PrismaUsersRepository implements UsersRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  findById(id: string): Promise<User | null> {
+  findById(id: string): Promise<UserRecord | null> {
     return this.prisma.user.findUnique({
       where: { id },
     });
   }
 
-  findByEmail(email: string): Promise<User | null> {
+  findByEmail(email: string): Promise<UserRecord | null> {
     return this.prisma.user.findUnique({
       where: { email },
     });
   }
 
-  create(data: Prisma.UserCreateInput): Promise<User> {
+  findByUsername(username: string): Promise<UserRecord | null> {
+    return this.prisma.user.findUnique({
+      where: { username },
+    });
+  }
+
+  async existsByEmail(email: string): Promise<boolean> {
+    const count = await this.prisma.user.count({
+      where: { email },
+    });
+
+    return count > 0;
+  }
+
+  async existsByUsername(username: string): Promise<boolean> {
+    const count = await this.prisma.user.count({
+      where: { username },
+    });
+
+    return count > 0;
+  }
+
+  create(data: CreateUserContract): Promise<UserRecord> {
     return this.prisma.user.create({
+      data,
+    });
+  }
+
+  update(id: string, data: UpdateUserContract): Promise<UserRecord> {
+    return this.prisma.user.update({
+      where: { id },
       data,
     });
   }
@@ -60,10 +94,16 @@ export class PrismaUsersRepository implements UsersRepository {
   updateRefreshTokenHash(
     userId: string,
     refreshTokenHash: string | null,
-  ): Promise<User> {
+  ): Promise<UserRecord> {
     return this.prisma.user.update({
       where: { id: userId },
       data: { refreshTokenHash },
+    });
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.user.delete({
+      where: { id },
     });
   }
 }

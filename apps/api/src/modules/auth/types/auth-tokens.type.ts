@@ -1,4 +1,4 @@
-import { SafeUser } from '../../users/types/safe-user.type';
+import { SafeUser } from '../../users/domain/types/safe-user.type';
 
 export type AuthTokens = {
   accessToken: string;

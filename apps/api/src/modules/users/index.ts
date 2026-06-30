@@ -27,12 +27,12 @@
  */
 
 export { UsersModule } from './users.module';
-export { UsersService } from './users.service';
+export { UsersService } from './application/services/users.service';
 
 export {
   USERS_REPOSITORY,
   type UsersRepository,
-} from './interfaces/users.repository.interface';
+} from './domain/repositories/users.repository.interface';
 
 /**
  * -----------------------------------------------------------------------------

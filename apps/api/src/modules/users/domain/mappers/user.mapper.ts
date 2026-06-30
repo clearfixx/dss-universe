@@ -13,12 +13,11 @@
  * =============================================================================
  */
 
-import { User } from '@prisma/client';
-
-import { SafeUser } from '../types/safe-user.type';
+import type { UserRecord } from '../types/user-record.type';
+import type { SafeUser } from '../types/safe-user.type';
 
 export class UserMapper {
-  static toSafeUser(user: User): SafeUser {
+  static toSafeUser(user: UserRecord): SafeUser {
     const { passwordHash: _passwordHash, ...safeUser } = user;
 
     void _passwordHash;

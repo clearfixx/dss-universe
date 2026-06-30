@@ -30,8 +30,8 @@ import { Module } from '@nestjs/common';
 
 import { PrismaModule } from '@api/core/database';
 
-import { UsersService } from './users.service';
-import { USERS_REPOSITORY } from './interfaces/users.repository.interface';
+import { UsersService } from './application/services/users.service';
+import { USERS_REPOSITORY } from './domain/repositories/users.repository.interface';
 import { PrismaUsersRepository } from './infrastructure/repositories/prisma-users.repository';
 import { UsersController } from './presentation/controllers/users.controller';
 

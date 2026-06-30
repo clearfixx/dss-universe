@@ -1,7 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { USERS_REPOSITORY } from '../users/interfaces/users.repository.interface';
-import type { UsersRepository } from '../users/interfaces/users.repository.interface';
-import { UserMapper } from '../users/mappers/user.mapper';
+import {
+  USERS_REPOSITORY,
+  type UsersRepository,
+} from '../users/domain/repositories/users.repository.interface';
+import { UserMapper } from '../users/domain/mappers/user.mapper';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { EmailAlreadyExistsException } from './exceptions/email-already-exists.exception';
