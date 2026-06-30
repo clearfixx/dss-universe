@@ -12,10 +12,13 @@
 
 import type { CreateUserContract } from '../contracts/create-user.contract';
 import type { UpdateUserContract } from '../contracts/update-user.contract';
+import type { UpdateUserData } from '../types/update-user-data.type';
 import type { UserRecord } from '../types/user-record.type';
 
 export interface UsersRepository {
   findById(id: string): Promise<UserRecord | null>;
+
+  updateById(id: string, data: UpdateUserData): Promise<UserRecord>;
 
   findByEmail(email: string): Promise<UserRecord | null>;
 

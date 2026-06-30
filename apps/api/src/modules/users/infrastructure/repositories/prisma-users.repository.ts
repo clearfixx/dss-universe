@@ -38,6 +38,7 @@ import { PrismaService } from '@api/core/database';
 import type { CreateUserContract } from '../../domain/contracts/create-user.contract';
 import type { UpdateUserContract } from '../../domain/contracts/update-user.contract';
 import type { UsersRepository } from '../../domain/repositories/users.repository.interface';
+import type { UpdateUserData } from '../../domain/types/update-user-data.type';
 import type { UserRecord } from '../../domain/types/user-record.type';
 
 @Injectable()
@@ -59,6 +60,13 @@ export class PrismaUsersRepository implements UsersRepository {
   findByUsername(username: string): Promise<UserRecord | null> {
     return this.prisma.user.findUnique({
       where: { username },
+    });
+  }
+
+  async updateById(id: string, data: UpdateUserData): Promise<UserRecord> {
+    return this.prisma.user.update({
+      where: { id },
+      data,
     });
   }
 
