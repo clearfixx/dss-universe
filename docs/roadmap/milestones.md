@@ -132,3 +132,16 @@ Milestones exist to celebrate meaningful achievements and provide a clear pictur
 ---
 
 **Build for years, not for weeks.**
+
+## Prisma Exception Translation Layer
+
+Status: Planned
+
+Introduce a shared exception translation layer responsible for converting
+Prisma-specific infrastructure exceptions into DSS domain exceptions.
+
+Goals:
+
+- eliminate duplicated try/catch blocks;
+- isolate Prisma implementation details;
+- provide consistent domain-level exceptions across all repositories.

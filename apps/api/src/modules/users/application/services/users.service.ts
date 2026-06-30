@@ -44,8 +44,9 @@ import {
 import type { SafeUser } from '../../domain/types/safe-user.type';
 import type { UserRecord } from '../../domain/types/user-record.type';
 import type { UpdateUserProfileData } from '../types/update-user-profile-data.type';
-import type { UserResponseDto } from '../dto/responses';
+import type { UserResponseDto } from '../dto';
 import { UserResponseMapper } from '../mappers';
+import type { ListUsersQuery } from '../contracts';
 
 @Injectable()
 export class UsersService {

@@ -28,7 +28,7 @@
 
 export { UsersModule } from './users.module';
 export { UsersService } from './application/services/users.service';
-export type { UserResponseDto } from './application/dto/responses';
+export type { UserResponseDto } from './application/dto';
 
 export {
   USERS_REPOSITORY,
