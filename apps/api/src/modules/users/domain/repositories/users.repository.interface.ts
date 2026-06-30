@@ -1,13 +1,30 @@
 /**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Users
  * 📄 File: apps/api/src/modules/users/domain/repositories/users.repository.interface.ts
  *
- * 🧠 Users Repository Contract
+ * 🎯 Purpose:
+ * Defines the persistence boundary contract for the Users module.
  *
- * This interface defines the persistence boundary for the Users module.
- * Services depend on this contract, not on Prisma, SQL, or any specific database.
+ * 🧠 Responsibilities:
+ * • declares user read/write repository operations;
+ * • keeps application services independent from Prisma;
+ * • defines the repository API used by UsersService and trusted backend modules.
  *
- * Architecture:
- * Controller → Service → UsersRepository → Infrastructure → PrismaService
+ * 🏗️ Architecture:
+ * Domain repository contract. Implemented by infrastructure repositories.
+ *
+ * ⚠️ Important:
+ * This interface must not expose Prisma-specific input or output types.
+ *
+ * 💡 Notes:
+ * 🗄️ The database remembers everything.
+ * The repository decides what should be asked.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 import type { CreateUserContract } from '../contracts/create-user.contract';
@@ -18,22 +35,24 @@ import type { UserRecord } from '../types/user-record.type';
 export interface UsersRepository {
   findById(id: string): Promise<UserRecord | null>;
 
-  updateById(id: string, data: UpdateUserData): Promise<UserRecord>;
-
   findByEmail(email: string): Promise<UserRecord | null>;
 
   findByUsername(username: string): Promise<UserRecord | null>;
+
+  findManyByIds(ids: string[]): Promise<UserRecord[]>;
+
+  findPublicByUsername(username: string): Promise<UserRecord | null>;
 
   create(data: CreateUserContract): Promise<UserRecord>;
 
   update(id: string, data: UpdateUserContract): Promise<UserRecord>;
 
+  updateById(id: string, data: UpdateUserData): Promise<UserRecord>;
+
   updateRefreshTokenHash(
     userId: string,
     refreshTokenHash: string | null,
   ): Promise<UserRecord>;
-
-  existsByUsername(username: string): Promise<boolean>;
 
   existsByEmail(email: string): Promise<boolean>;
 
@@ -43,3 +62,8 @@ export interface UsersRepository {
 }
 
 export const USERS_REPOSITORY = Symbol('USERS_REPOSITORY');
+
+/**
+ * 🛰️ UsersRepository is a boundary, not a shortcut.
+ * If Prisma leaks through here, the airlock failed.
+ */

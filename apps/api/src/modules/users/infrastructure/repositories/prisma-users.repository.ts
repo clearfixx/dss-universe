@@ -63,6 +63,24 @@ export class PrismaUsersRepository implements UsersRepository {
     });
   }
 
+  async findManyByIds(ids: string[]): Promise<UserRecord[]> {
+    return this.prisma.user.findMany({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+    });
+  }
+
+  async findPublicByUsername(username: string): Promise<UserRecord | null> {
+    return this.prisma.user.findUnique({
+      where: {
+        username,
+      },
+    });
+  }
+
   async updateById(id: string, data: UpdateUserData): Promise<UserRecord> {
     return this.prisma.user.update({
       where: { id },

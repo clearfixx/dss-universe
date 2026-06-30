@@ -147,6 +147,18 @@ export class UsersService {
     return this.toSafeUser(user);
   }
 
+  async getManyByIds(ids: string[]): Promise<SafeUser[]> {
+    const users = await this.usersRepository.findManyByIds(ids);
+
+    return users.map((user) => this.toSafeUser(user));
+  }
+
+  async getPublicByUsername(username: string): Promise<SafeUser> {
+    const user = await this.usersRepository.findPublicByUsername(username);
+
+    return this.toSafeUser(this.requireUser(user));
+  }
+
   private requireUser(user: UserRecord | null): UserRecord {
     if (!user) {
       throw new UserNotFoundException();
