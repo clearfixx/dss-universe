@@ -1,8 +1,17 @@
+/**
+ * 📄 File: apps/api/src/core/database/exceptions/prisma-error.mapper.ts
+ *
+ * DSS Universe — Prisma Error Mapper
+ *
+ * Converts Prisma persistence errors into stable HTTP exceptions.
+ */
+
 import {
   BadRequestException,
   ConflictException,
   InternalServerErrorException,
   NotFoundException,
+  type HttpException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
@@ -14,7 +23,7 @@ export function isPrismaKnownRequestError(
   return error instanceof Prisma.PrismaClientKnownRequestError;
 }
 
-export function mapPrismaError(error: unknown) {
+export function mapPrismaError(error: unknown): HttpException {
   if (!isPrismaKnownRequestError(error)) {
     return new DatabaseException();
   }

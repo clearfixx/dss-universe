@@ -1,4 +1,31 @@
-// apps/api/src/database/services/prisma.service.ts
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Database
+ * 📄 File: apps/api/src/core/database/services/prisma.service.ts
+ *
+ * 🎯 Purpose:
+ * Provides the application-wide Prisma client service and database
+ * lifecycle integration for the API.
+ *
+ * 🧠 Responsibilities:
+ * • connects Prisma during module initialization;
+ * • disconnects Prisma during module shutdown;
+ * • exposes transaction and health-check helpers;
+ * • logs Prisma query, info, warning, and error events.
+ *
+ * 🏗️ Architecture:
+ * Core database infrastructure service.
+ * Feature modules should depend on this service through repositories,
+ * not use Prisma directly from application code.
+ *
+ * ⚠️ Important:
+ * Do not place feature-specific persistence logic here.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 
 import {
   Inject,
@@ -10,6 +37,12 @@ import {
 import { Prisma, PrismaClient } from '@prisma/client';
 
 import { PRISMA_CLIENT_OPTIONS } from '../constants/database.constants';
+import type { TransactionClient } from '../transactions';
+
+type DatabaseHealthCheckResult = {
+  status: 'up' | 'down';
+  latency: number;
+};
 
 @Injectable()
 export class PrismaService
@@ -21,7 +54,7 @@ export class PrismaService
 {
   private readonly logger = new Logger(PrismaService.name);
 
-  constructor(
+  public constructor(
     @Inject(PRISMA_CLIENT_OPTIONS)
     options: Prisma.PrismaClientOptions,
   ) {
@@ -44,35 +77,35 @@ export class PrismaService
     });
   }
 
-  async onModuleInit() {
+  public async onModuleInit(): Promise<void> {
     await this.$connect();
     this.logger.log('Database connected');
   }
 
-  async onModuleDestroy() {
+  public async onModuleDestroy(): Promise<void> {
     await this.$disconnect();
     this.logger.log('Database disconnected');
   }
 
-  async transaction<T>(
-    callback: (tx: Prisma.TransactionClient) => Promise<T>,
+  public async transaction<T>(
+    callback: (tx: TransactionClient) => Promise<T>,
   ): Promise<T> {
     return this.$transaction(callback);
   }
 
-  async healthCheck() {
+  public async healthCheck(): Promise<DatabaseHealthCheckResult> {
     const startedAt = Date.now();
 
     try {
       await this.$queryRaw`SELECT 1`;
 
       return {
-        status: 'up' as const,
+        status: 'up',
         latency: Date.now() - startedAt,
       };
     } catch {
       return {
-        status: 'down' as const,
+        status: 'down',
         latency: Date.now() - startedAt,
       };
     }

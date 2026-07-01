@@ -1,20 +1,31 @@
 /**
- * -----------------------------------------------------------------------------
- * 📄 File: apps/api/src/core/index.ts
- * -----------------------------------------------------------------------------
+ * ===============================================================
+ * DSS Universe
+ * ---------------------------------------------------------------
+ * 🛰️ Layer: Core
+ * File: index.ts
  *
- * 🌌 DSS Universe
- * Core Public API
+ * Purpose:
+ * Public API for the Core layer.
  *
- * Core contains application-wide infrastructure.
+ * Responsibilities:
+ * • exports application-wide infrastructure modules;
+ * • exposes stable technical building blocks;
+ * • keeps feature modules away from direct internal core paths.
  *
- * This file is intentionally almost empty for now.
- * Infrastructure exports will be added here only after real core modules are
- * migrated into the `core` layer.
+ * 🧭 Architecture:
+ * Core contains framework integrations, technical services,
+ * infrastructure modules, and cross-cutting platform concerns.
  *
- * No business feature should ever be exported from Core.
+ * ⚠️ Important:
+ * Core must never contain business feature logic.
+ * Public exports are contracts. Treat them like airlocks. 🚪
  *
- * -----------------------------------------------------------------------------
+ * Build. Share. Grow.
+ * ===============================================================
  */
 
-// Reserved for future core public exports.
+export * from './auth';
+export * from './authorization';
+export * from './config';
+export * from './database';

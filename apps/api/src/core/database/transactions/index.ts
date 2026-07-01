@@ -1,1 +1,1 @@
-export * from './transaction.types';
+export type { TransactionClient } from './transaction-client.type';

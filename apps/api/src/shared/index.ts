@@ -12,3 +12,5 @@ export type { PaginatedResult } from './domain/types/paginated-result.type';
 
 export type { BaseQueryRepository } from './domain/repositories/base-query.repository.interface';
 export type { BaseMutationRepository } from './domain/repositories/base-mutation.repository.interface';
+export * from './application';
+export * from './domain';

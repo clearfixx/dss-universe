@@ -1,6 +1,14 @@
+/**
+ * 📄 File: apps/api/src/core/database/exceptions/prisma-exception.filter.ts
+ *
+ * DSS Universe — Prisma Exception Filter
+ *
+ * Catches Prisma errors at the HTTP boundary and returns normalized responses.
+ */
+
 import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common';
-import { Response } from 'express';
 import { Prisma } from '@prisma/client';
+import { Response } from 'express';
 
 import { mapPrismaError } from './prisma-error.mapper';
 
@@ -10,7 +18,7 @@ import { mapPrismaError } from './prisma-error.mapper';
   Prisma.PrismaClientValidationError,
 )
 export class PrismaExceptionFilter implements ExceptionFilter {
-  catch(exception: unknown, host: ArgumentsHost) {
+  public catch(exception: unknown, host: ArgumentsHost): void {
     const context = host.switchToHttp();
     const response = context.getResponse<Response>();
 

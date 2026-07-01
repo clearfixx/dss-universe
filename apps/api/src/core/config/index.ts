@@ -24,5 +24,4 @@ export {
 };
 
 export * from './configuration.module';
-export * from './configuration.module';
 export * from './validation.schema';
