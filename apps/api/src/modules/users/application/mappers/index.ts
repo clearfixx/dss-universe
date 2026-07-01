@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/modules/users/application/mappers/index.ts
  *
  * 🎯 Purpose:
- * Exposes Users application mappers from one stable entry point.
+ * Exposes Users application mappers from one stable public entry point.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================

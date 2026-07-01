@@ -14,13 +14,17 @@
 
 import type { UserStatus } from '@prisma/client';
 
-export type UserResponseDto = {
+export interface UserResponseDto {
   id: string;
   email: string;
   username: string;
   displayName: string | null;
+  bio: string | null;
   avatarUrl: string | null;
+  coverUrl: string | null;
   status: UserStatus;
-  createdAt: Date;
-  updatedAt: Date;
-};
+  emailVerifiedAt: string | null;
+  lastSeenAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}

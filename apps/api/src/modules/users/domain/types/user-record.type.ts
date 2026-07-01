@@ -9,8 +9,8 @@
  * Defines the internal user persistence record used inside backend services.
  *
  * ⚠️ Important:
- * This type may contain sensitive fields like passwordHash.
- * Never expose it directly through controllers.
+ * This type may contain authentication secrets like passwordHash
+ * and refreshTokenHash. Never expose it directly through controllers.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -24,9 +24,13 @@ export interface UserRecord {
   username: string;
   passwordHash: string;
   displayName: string | null;
+  bio: string | null;
   avatarUrl: string | null;
+  coverUrl: string | null;
   status: UserStatus;
   refreshTokenHash: string | null;
+  emailVerifiedAt: Date | null;
+  lastSeenAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }

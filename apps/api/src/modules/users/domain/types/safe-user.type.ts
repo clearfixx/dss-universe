@@ -6,10 +6,11 @@
  * 📄 File: apps/api/src/modules/users/domain/types/safe-user.type.ts
  *
  * 🎯 Purpose:
- * Defines the safe public-facing user shape returned outside the backend core.
+ * Defines the safe user shape that may leave the internal persistence boundary.
  *
  * ⚠️ Important:
- * SafeUser must never contain passwordHash.
+ * SafeUser must never contain authentication secrets such as passwordHash
+ * or refreshTokenHash.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -22,9 +23,12 @@ export interface SafeUser {
   email: string;
   username: string;
   displayName: string | null;
+  bio: string | null;
   avatarUrl: string | null;
+  coverUrl: string | null;
   status: UserStatus;
-  refreshTokenHash: string | null;
+  emailVerifiedAt: Date | null;
+  lastSeenAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }

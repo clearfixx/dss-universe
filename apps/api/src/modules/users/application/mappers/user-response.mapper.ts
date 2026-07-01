@@ -6,28 +6,26 @@
  * 📄 File: apps/api/src/modules/users/application/mappers/user-response.mapper.ts
  *
  * 🎯 Purpose:
- * Maps safe internal user objects into public user response DTOs.
+ * Maps safe user objects into public API response DTOs.
  *
  * 🧠 Responsibilities:
- * • converts SafeUser into UserResponseDto;
- * • keeps public API response shape explicit;
- * • protects controllers from internal user models.
+ * • converts safe domain user data into response DTOs;
+ * • keeps API response shape stable;
+ * • prevents internal user fields from leaking outside the application layer.
  *
  * 🏗️ Architecture:
- * Application mapper. Used by UsersService before returning public data.
+ * Application mapper.
+ * Translates domain-safe user data into an API-facing contract.
  *
  * ⚠️ Important:
- * Never expose password hashes, verification internals, or auth secrets here.
- *
- * 💡 Notes:
- * 📨 DTO is a contract. If it changes, the API changed too.
+ * This mapper must never expose authentication-sensitive fields.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 
 import type { SafeUser } from '../../domain/types/safe-user.type';
-import type { UserResponseDto } from '../dto/responses/user.response.dto';
+import type { UserResponseDto } from '../dto';
 
 export class UserResponseMapper {
   static toDto(user: SafeUser): UserResponseDto {
@@ -36,10 +34,14 @@ export class UserResponseMapper {
       email: user.email,
       username: user.username,
       displayName: user.displayName,
+      bio: user.bio,
       avatarUrl: user.avatarUrl,
+      coverUrl: user.coverUrl,
       status: user.status,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
+      emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null,
+      lastSeenAt: user.lastSeenAt?.toISOString() ?? null,
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
     };
   }
 }
