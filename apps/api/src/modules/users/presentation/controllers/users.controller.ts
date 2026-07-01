@@ -14,7 +14,8 @@
  * • delegates all business work to UsersService.
  *
  * 🏗️ Architecture:
- * Thin controller. No business logic.
+ * Thin controller.
+ * No business logic.
  *
  * ⚠️ Important:
  * Do not move user business rules into this controller.
@@ -26,10 +27,54 @@
  * ===============================================================
  */
 
-import { Controller } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+
+import { JwtAuthGuard } from '@api/core/auth';
+import {
+  Permission,
+  PermissionsGuard,
+  RequirePermissions,
+} from '@api/core/authorization';
+import type { PaginatedResult } from '@api/shared';
+
+import type { ListUsersOptions } from '../../domain';
+import type { UserResponseDto } from '../../application/dto';
+import { UsersService } from '../../application/services/users.service';
 
 @Controller('users')
-export class UsersController {}
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+
+  @Get()
+  @RequirePermissions(Permission.UsersRead)
+  list(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ): Promise<PaginatedResult<UserResponseDto>> {
+    const options: ListUsersOptions = {
+      pagination: {
+        page: this.toPositiveNumber(page, 1),
+        limit: this.toPositiveNumber(limit, 20),
+      },
+    };
+
+    return this.usersService.list(options);
+  }
+
+  private toPositiveNumber(
+    value: string | undefined,
+    fallback: number,
+  ): number {
+    const parsed = Number(value);
+
+    if (!Number.isInteger(parsed) || parsed < 1) {
+      return fallback;
+    }
+
+    return parsed;
+  }
+}
 
 /**
  * -----------------------------------------------------------------------------

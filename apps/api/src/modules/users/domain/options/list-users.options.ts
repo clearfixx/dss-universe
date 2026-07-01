@@ -3,11 +3,17 @@
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
  * 📦 Module: Users
- * 📄 File: apps/api/src/modules/users/application/contracts/queries/index.ts
+ * 📄 File: apps/api/src/modules/users/domain/options/list-users.options.ts
  *
  * 🎯 Purpose:
- * Exposes Users application query contracts.
+ * Defines repository options for listing users.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+
+import type { PaginationOptions } from '@api/shared';
+
+export type ListUsersOptions = {
+  pagination?: PaginationOptions;
+};

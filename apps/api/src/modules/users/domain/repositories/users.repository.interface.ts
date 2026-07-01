@@ -14,7 +14,8 @@
  * • defines the repository API used by UsersService and trusted backend modules.
  *
  * 🏗️ Architecture:
- * Domain repository contract. Implemented by infrastructure repositories.
+ * Domain repository contract.
+ * Implemented by infrastructure repositories.
  *
  * ⚠️ Important:
  * This interface must not expose Prisma-specific input or output types.
@@ -27,12 +28,17 @@
  * ===============================================================
  */
 
+import type { PaginatedResult } from '@api/shared';
+
 import type { CreateUserContract } from '../contracts/create-user.contract';
 import type { UpdateUserContract } from '../contracts/update-user.contract';
 import type { UpdateUserData } from '../types/update-user-data.type';
 import type { UserRecord } from '../types/user-record.type';
+import type { ListUsersOptions } from '../options';
 
 export interface UsersRepository {
+  findMany(options?: ListUsersOptions): Promise<PaginatedResult<UserRecord>>;
+
   findById(id: string): Promise<UserRecord | null>;
 
   findByEmail(email: string): Promise<UserRecord | null>;

@@ -35,6 +35,8 @@ export {
   type UsersRepository,
 } from './domain/repositories/users.repository.interface';
 
+export type { ListUsersOptions } from './domain';
+
 /**
  * -----------------------------------------------------------------------------
  * 🚀 Public APIs should be small, boring, and stable.

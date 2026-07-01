@@ -12,6 +12,5 @@
  * ===============================================================
  */
 
-export type { ListUsersQuery } from './queries';
 export type { UserListFilters } from './filters';
 export type { PaginationContract } from './pagination';

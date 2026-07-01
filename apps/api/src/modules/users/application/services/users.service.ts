@@ -46,7 +46,8 @@ import type { UserRecord } from '../../domain/types/user-record.type';
 import type { UpdateUserProfileData } from '../types/update-user-profile-data.type';
 import type { UserResponseDto } from '../dto';
 import { UserResponseMapper } from '../mappers';
-import type { ListUsersQuery } from '../contracts';
+import type { PaginatedResult } from '@api/shared';
+import type { ListUsersOptions } from '../../domain';
 
 @Injectable()
 export class UsersService {
@@ -54,6 +55,17 @@ export class UsersService {
     @Inject(USERS_REPOSITORY)
     private readonly usersRepository: UsersRepository,
   ) {}
+
+  async list(
+    options?: ListUsersOptions,
+  ): Promise<PaginatedResult<UserResponseDto>> {
+    const result = await this.usersRepository.findMany(options);
+
+    return {
+      ...result,
+      items: result.items.map((user) => this.toResponseDto(user)),
+    };
+  }
 
   async getById(id: string): Promise<UserResponseDto> {
     const user = await this.usersRepository.findById(id);

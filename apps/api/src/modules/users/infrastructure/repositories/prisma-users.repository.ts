@@ -40,6 +40,8 @@ import type { UpdateUserContract } from '../../domain/contracts/update-user.cont
 import type { UsersRepository } from '../../domain/repositories/users.repository.interface';
 import type { UpdateUserData } from '../../domain/types/update-user-data.type';
 import type { UserRecord } from '../../domain/types/user-record.type';
+import type { ListUsersOptions } from '../../domain/options';
+import type { PaginatedResult } from '@api/shared';
 
 @Injectable()
 export class PrismaUsersRepository implements UsersRepository {
@@ -125,6 +127,33 @@ export class PrismaUsersRepository implements UsersRepository {
       where: { id: userId },
       data: { refreshTokenHash },
     });
+  }
+
+  async findMany(
+    options: ListUsersOptions = {},
+  ): Promise<PaginatedResult<UserRecord>> {
+    const page = options.pagination?.page ?? 1;
+    const limit = options.pagination?.limit ?? 20;
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.user.findMany({
+        skip,
+        take: limit,
+        orderBy: {
+          createdAt: 'desc',
+        },
+      }),
+      this.prisma.user.count(),
+    ]);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async delete(id: string): Promise<void> {
