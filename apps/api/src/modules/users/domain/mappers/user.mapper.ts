@@ -1,16 +1,32 @@
 /**
- * =============================================================================
- * DSS Universe
- * -----------------------------------------------------------------------------
- * User Mapper
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Users
+ * 📄 File: apps/api/src/modules/users/domain/mappers/user.mapper.ts
  *
- * Converts internal User entities into safe public-facing user objects.
+ * 🎯 Purpose:
+ * Maps internal user records into safe user objects.
  *
- * Important:
- * passwordHash must never leave the backend mapper layer.
- * This mapper is one of the small airlocks that keeps sensitive data inside
- * the station. 🛰️
- * =============================================================================
+ * 🧠 Responsibilities:
+ * • removes sensitive user fields from safe user objects;
+ * • keeps safe user mapping consistent across the Users module;
+ * • protects upper layers from accidentally exposing authentication data.
+ *
+ * 🏗️ Architecture:
+ * Domain mapper.
+ * Converts repository records into safe domain-level user shapes.
+ *
+ * ⚠️ Important:
+ * This mapper currently removes passwordHash explicitly and keeps the rest of
+ * the UserRecord shape aligned with SafeUser.
+ *
+ * 💡 Notes:
+ * 🧩 Mappers translate between worlds.
+ * They should never own business logic.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 import type { UserRecord } from '../types/user-record.type';
@@ -25,3 +41,10 @@ export class UserMapper {
     return safeUser;
   }
 }
+
+/**
+ * -----------------------------------------------------------------------------
+ * Safe users may leave the domain boundary.
+ * Sensitive fields stay behind the airlock.
+ * -----------------------------------------------------------------------------
+ */

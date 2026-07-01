@@ -28,17 +28,13 @@
 
 export { UsersModule } from './users.module';
 export { UsersService } from './application/services/users.service';
-export type { UserResponseDto } from './application/dto';
 
 export {
   USERS_REPOSITORY,
   type UsersRepository,
 } from './domain/repositories/users.repository.interface';
 
-export type { ListUsersOptions } from './domain';
-
-/**
- * -----------------------------------------------------------------------------
+/* -----------------------------------------------------------------------------
  * 🚀 Public APIs should be small, boring, and stable.
  * That is a compliment.
  * -----------------------------------------------------------------------------

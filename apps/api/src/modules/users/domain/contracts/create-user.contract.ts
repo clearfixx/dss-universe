@@ -1,15 +1,43 @@
 /**
- * 📄 File: apps/api/src/modules/users/domain/dto/create-user.dto.ts
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Users
+ * 📄 File: apps/api/src/modules/users/domain/contracts/create-user.contract.ts
  *
- * 🧱 Create User DTO
+ * 🎯 Purpose:
+ * Defines the domain contract required to create a user.
  *
- * Internal domain-level input for creating a user.
- * This is not a controller DTO and not a Prisma type.
+ * 🧠 Responsibilities:
+ * • describes user creation data accepted by the Users repository;
+ * • keeps creation input independent from HTTP DTOs;
+ * • prevents infrastructure-specific types from leaking into domain contracts.
+ *
+ * 🏗️ Architecture:
+ * Domain contract.
+ * Used by repository boundaries and application services.
+ *
+ * ⚠️ Important:
+ * This contract is not a request DTO.
+ * HTTP, GraphQL, CLI, and seed inputs should map into this shape before reaching the domain boundary.
+ *
+ * 💡 Notes:
+ * 📝 Contract is a boundary.
+ * If it changes, every caller should understand why.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
-export interface CreateUserContract {
+export type CreateUserContract = {
   email: string;
   username: string;
-  displayName: string;
   passwordHash: string;
-}
+  displayName?: string | null;
+};
+
+/**
+ * -----------------------------------------------------------------------------
+ * User creation starts here, but transport details stay outside.
+ * -----------------------------------------------------------------------------
+ */
