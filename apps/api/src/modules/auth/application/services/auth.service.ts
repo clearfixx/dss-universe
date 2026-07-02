@@ -1,19 +1,56 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Authentication
+ * 📄 File: apps/api/src/modules/auth/application/services/auth.service.ts
+ *
+ * 🎯 Purpose:
+ * Coordinates authentication use cases such as registration, login,
+ * token refresh, and logout.
+ *
+ * 🧠 Responsibilities:
+ * • validates user credentials;
+ * • creates user accounts through the Users repository boundary;
+ * • issues access and refresh tokens;
+ * • stores refresh token hashes;
+ * • clears refresh token hashes during logout.
+ *
+ * 🏗️ Architecture:
+ * Application service.
+ * Owns authentication use cases and delegates hashing, token generation,
+ * and user persistence to dedicated services or repositories.
+ *
+ * ⚠️ Important:
+ * Never store raw passwords or raw refresh tokens.
+ *
+ * 💡 Notes:
+ * Authentication opens the airlock.
+ * Authorization decides which rooms are safe to enter.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
+
 import { Inject, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+
+import type { JwtPayload } from '@api/core/auth/types/jwt-payload.type';
+
+import { UserMapper } from '../../../users/domain/mappers/user.mapper';
 import {
   USERS_REPOSITORY,
   type UsersRepository,
-} from '../users/domain/repositories/users.repository.interface';
-import { UserMapper } from '../users/domain/mappers/user.mapper';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
-import { EmailAlreadyExistsException } from './exceptions/email-already-exists.exception';
-import { InvalidCredentialsException } from './exceptions/invalid-credentials.exception';
-import { PasswordHashService } from './services/password-hash.service';
-import { TokenService } from './services/token.service';
-import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { JwtPayload } from '@api/core/auth/types/jwt-payload.type';
+} from '../../../users/domain/repositories/users.repository.interface';
+import type { LoginDto } from '../dto/login.dto';
+import type { RefreshTokenDto } from '../dto/refresh-token.dto';
+import type { RegisterDto } from '../dto/register.dto';
+import { EmailAlreadyExistsException } from '../../domain/exceptions/email-already-exists.exception';
+import { InvalidCredentialsException } from '../../domain/exceptions/invalid-credentials.exception';
+import { PasswordHashService } from './password-hash.service';
+import { TokenService } from './token.service';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -38,8 +75,6 @@ export class AuthService {
       email: dto.email,
       username: dto.username,
       displayName: dto.displayName,
-
-      // У базу ніколи не пишемо сирий пароль — тільки хеш.
       passwordHash,
     });
 

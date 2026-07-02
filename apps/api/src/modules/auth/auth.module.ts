@@ -3,44 +3,28 @@
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
  * 📦 Module: Authentication
- * 📄 File: auth.module.ts
+ * 📄 File: apps/api/src/modules/auth/auth.module.ts
  *
- * 🧠 Призначення:
- * Збирає всі компоненти модуля авторизації:
- * контролери, сервіси та залежності.
+ * 🎯 Purpose:
+ * Wires the Authentication module dependency graph.
  *
- * 🛰️ Mission Control:
- * Якщо Nest каже:
+ * 🧠 Responsibilities:
+ * • registers the AuthController;
+ * • registers authentication application services;
+ * • imports Users, Core Auth, and Authorization dependencies.
  *
- *   "Nest can't resolve dependencies..."
+ * 🏗️ Architecture:
+ * NestJS feature module.
+ * Authentication handles login, registration, refresh, and logout.
+ * Authorization remains a separate concern.
  *
- * ...не панікуй. У 90% випадків ти просто забув
- * імпортувати потрібний Module. 😄
- *
- * 💡 Архітектурна примітка:
+ * ⚠️ Important:
  * Authentication ≠ Authorization.
+ * Do not move permissions logic into this module.
  *
- * AuthCoreModule
- *     │
- *     ├── JWT
- *     ├── Login
- *     ├── Refresh Token
- *     └── Identity
- *
- * AuthorizationModule
- *     │
- *     ├── Permissions
- *     ├── Guards
- *     ├── Policies
- *     └── Access Control
- *
- * ☕ Майбутньому Андрію:
- * Якщо дуже хочеться покласти PermissionsService
- * в AuthCoreModule...
- *
- * ...не треба. 😅
- *
- * Тримай модулі незалежними.
+ * 💡 Notes:
+ * If Nest cannot resolve dependencies,
+ * check module imports before blaming the cosmos. 🛰️
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -53,10 +37,10 @@ import { AuthorizationModule } from '@api/core/authorization';
 
 import { UsersModule } from '../users/users.module';
 
-import { AuthController } from './controllers/auth.controller';
-import { AuthService } from './auth.service';
-import { PasswordHashService } from './services/password-hash.service';
-import { TokenService } from './services/token.service';
+import { AuthService } from './application/services/auth.service';
+import { PasswordHashService } from './application/services/password-hash.service';
+import { TokenService } from './application/services/token.service';
+import { AuthController } from './presentation/controllers/auth.controller';
 
 @Module({
   imports: [UsersModule, AuthCoreModule, AuthorizationModule],

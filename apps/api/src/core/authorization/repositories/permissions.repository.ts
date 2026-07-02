@@ -3,15 +3,17 @@
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
  * 🛡️ Module: Authorization
- * 📄 File: permissions.repository.ts
+ * 📄 File: apps/api/src/core/authorization/repositories/permissions.repository.ts
  *
  * 🎯 Purpose:
- * Reads permission data from the database for authorization workflows.
+ * Reads authorization data from the database for permission workflows
+ * and access-token profile generation.
  *
  * 🧠 Responsibilities:
  * • loads permission keys assigned to role names;
+ * • loads effective user roles and permissions;
  * • isolates Prisma queries from authorization services;
- * • returns unique permission keys.
+ * • returns normalized authorization data.
  *
  * 🏗️ Architecture:
  * Authorization repository.
@@ -37,6 +39,8 @@
 import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '@api/core/database';
+
+import type { UserAccessProfile } from '../types/user-access-profile.type';
 
 @Injectable()
 export class PermissionsRepository {
@@ -69,5 +73,64 @@ export class PermissionsRepository {
     );
 
     return [...new Set<string>(permissionKeys)];
+  }
+
+  async findAccessProfileByUserId(userId: string): Promise<UserAccessProfile> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        roles: {
+          select: {
+            role: {
+              select: {
+                name: true,
+                permissions: {
+                  select: {
+                    permission: {
+                      select: {
+                        key: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        directPermissions: {
+          select: {
+            permission: {
+              select: {
+                key: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      return {
+        roles: [],
+        permissions: [],
+      };
+    }
+
+    const roles = user.roles.map(({ role }) => role.name);
+
+    const rolePermissions = user.roles.flatMap(({ role }) =>
+      role.permissions.map(({ permission }) => permission.key),
+    );
+
+    const directPermissions = user.directPermissions.map(
+      ({ permission }) => permission.key,
+    );
+
+    return {
+      roles: [...new Set<string>(roles)],
+      permissions: [
+        ...new Set<string>([...rolePermissions, ...directPermissions]),
+      ],
+    };
   }
 }

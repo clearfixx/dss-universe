@@ -3,7 +3,7 @@
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
  * 🛡️ Module: Authorization
- * 📄 File: index.ts
+ * 📄 File: apps/api/src/core/authorization/index.ts
  *
  * 🎯 Purpose:
  * Public API for Authorization Core.
@@ -12,7 +12,7 @@
  * • exports authorization module;
  * • exports permission decorators;
  * • exports permission registry;
- * • exports authorization guards, services, and repositories.
+ * • exports authorization guards, services, repositories, and types.
  *
  * 🏗️ Architecture:
  * Explicit public API boundary for @api/core/authorization.
@@ -52,3 +52,5 @@ export { PermissionsGuard } from './guards/permissions.guard';
 export { PermissionsRepository } from './repositories/permissions.repository';
 
 export { PermissionsService } from './services/permissions.service';
+
+export type { UserAccessProfile } from './types/user-access-profile.type';
