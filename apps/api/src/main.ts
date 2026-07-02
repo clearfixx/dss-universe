@@ -1,10 +1,49 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: API Bootstrap
+ * 📄 File: apps/api/src/main.ts
+ *
+ * 🎯 Purpose:
+ * Boots the DSS Universe API application and configures global
+ * runtime behavior before the server starts accepting requests.
+ *
+ * 🧠 Responsibilities:
+ * • creates the NestJS application;
+ * • applies the global API prefix;
+ * • enables graceful shutdown hooks;
+ * • configures global request validation.
+ *
+ * 🏗️ Architecture:
+ * Application bootstrap.
+ * This file wires platform-level behavior, not feature logic.
+ *
+ * ⚠️ Important:
+ * Keep business logic out of bootstrap.
+ * Global validation rules affect every HTTP endpoint.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
+
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+
 import { AppModule } from '@api/app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.setGlobalPrefix('api');
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidUnknownValues: true,
+    }),
+  );
 
   app.enableShutdownHooks();
 
@@ -17,3 +56,10 @@ bootstrap().catch((error) => {
 
   process.exit(1);
 });
+
+/**
+ * -----------------------------------------------------------------------------
+ * 🛰️ Bootstrap opens the station doors.
+ * Validation makes sure guests do not bring cosmic junk inside.
+ * -----------------------------------------------------------------------------
+ */

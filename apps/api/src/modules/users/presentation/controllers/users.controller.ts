@@ -21,7 +21,8 @@
  * Do not move user business rules into this controller.
  *
  * 💡 Notes:
- * Controller is a dispatcher, not a council of elders.
+ * Controllers dispatch requests.
+ * They should never parse, validate, or transform HTTP data manually.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -37,9 +38,10 @@ import {
 } from '@api/core/authorization';
 import type { PaginatedResult } from '@api/shared';
 
-import type { ListUsersOptions } from '../../domain';
 import type { UserResponseDto } from '../../application/dto';
 import { UsersService } from '../../application/services/users.service';
+import { ListUsersQueryDto } from '../dto/queries/list-users.query.dto';
+import { ListUsersQueryMapper } from '../mappers/list-users-query.mapper';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -49,30 +51,9 @@ export class UsersController {
   @Get()
   @RequirePermissions(Permission.UsersRead)
   list(
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query() query: ListUsersQueryDto,
   ): Promise<PaginatedResult<UserResponseDto>> {
-    const options: ListUsersOptions = {
-      pagination: {
-        page: this.toPositiveNumber(page, 1),
-        limit: this.toPositiveNumber(limit, 20),
-      },
-    };
-
-    return this.usersService.list(options);
-  }
-
-  private toPositiveNumber(
-    value: string | undefined,
-    fallback: number,
-  ): number {
-    const parsed = Number(value);
-
-    if (!Number.isInteger(parsed) || parsed < 1) {
-      return fallback;
-    }
-
-    return parsed;
+    return this.usersService.list(ListUsersQueryMapper.toOptions(query));
   }
 }
 
