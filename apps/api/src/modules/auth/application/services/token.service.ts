@@ -6,12 +6,13 @@
  * 📄 File: apps/api/src/modules/auth/application/services/token.service.ts
  *
  * 🎯 Purpose:
- * Issues JWT access and refresh tokens for authenticated users.
+ * Issues and verifies JWT tokens for authentication flows.
  *
  * 🧠 Responsibilities:
- * • builds JWT payloads from authorization access profiles;
+ * • builds access-token payloads from authorization access profiles;
  * • signs access and refresh tokens;
- * • keeps token generation separate from login business logic.
+ * • verifies refresh tokens;
+ * • keeps JWT and configuration details out of AuthService.
  *
  * 🏗️ Architecture:
  * Application service.
@@ -44,16 +45,8 @@ import { JwtService } from '@nestjs/jwt';
 import type { JwtPayload } from '@api/core/auth';
 import { PermissionsService } from '@api/core/authorization';
 
-type TokenUserInput = {
-  id: string;
-  email: string;
-  username: string;
-};
-
-type TokenPair = {
-  accessToken: string;
-  refreshToken: string;
-};
+import type { TokenPair } from '../types/token-pair.type';
+import type { TokenUser } from '../types/token-user.type';
 
 @Injectable()
 export class TokenService {
@@ -63,11 +56,11 @@ export class TokenService {
     private readonly permissionsService: PermissionsService,
   ) {}
 
-  async generateTokens(user: TokenUserInput): Promise<TokenPair> {
+  async generateTokens(user: TokenUser): Promise<TokenPair> {
     return this.signTokenPair(user);
   }
 
-  async signAccessToken(user: TokenUserInput): Promise<string> {
+  async signAccessToken(user: TokenUser): Promise<string> {
     const accessProfile =
       await this.permissionsService.getAccessProfileByUserId(user.id);
 
@@ -85,7 +78,7 @@ export class TokenService {
     });
   }
 
-  async signRefreshToken(user: TokenUserInput): Promise<string> {
+  async signRefreshToken(user: TokenUser): Promise<string> {
     return this.jwtService.signAsync(
       {
         sub: user.id,
@@ -97,7 +90,13 @@ export class TokenService {
     );
   }
 
-  async signTokenPair(user: TokenUserInput): Promise<TokenPair> {
+  async verifyRefreshToken(refreshToken: string): Promise<JwtPayload> {
+    return this.jwtService.verifyAsync<JwtPayload>(refreshToken, {
+      secret: this.getJwtRefreshSecret(),
+    });
+  }
+
+  async signTokenPair(user: TokenUser): Promise<TokenPair> {
     const [accessToken, refreshToken] = await Promise.all([
       this.signAccessToken(user),
       this.signRefreshToken(user),

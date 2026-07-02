@@ -12,17 +12,18 @@
  * 🧠 Responsibilities:
  * • validates user credentials;
  * • creates user accounts through the Users repository boundary;
- * • issues access and refresh tokens;
+ * • issues access and refresh tokens through TokenService;
  * • stores refresh token hashes;
  * • clears refresh token hashes during logout.
  *
  * 🏗️ Architecture:
  * Application service.
- * Owns authentication use cases and delegates hashing, token generation,
+ * Owns authentication use cases and delegates hashing, token handling,
  * and user persistence to dedicated services or repositories.
  *
  * ⚠️ Important:
  * Never store raw passwords or raw refresh tokens.
+ * AuthService must not know JWT secrets or sign/verify tokens directly.
  *
  * 💡 Notes:
  * Authentication opens the airlock.
@@ -33,10 +34,6 @@
  */
 
 import { Inject, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
-
-import type { JwtPayload } from '@api/core/auth/types/jwt-payload.type';
 
 import { UserMapper } from '../../../users/domain/mappers/user.mapper';
 import {
@@ -58,8 +55,6 @@ export class AuthService {
     private readonly usersRepository: UsersRepository,
     private readonly passwordHashService: PasswordHashService,
     private readonly tokenService: TokenService,
-    private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -101,35 +96,30 @@ export class AuthService {
   }
 
   async refresh(dto: RefreshTokenDto) {
-    let payload: JwtPayload;
-
     try {
-      payload = await this.jwtService.verifyAsync<JwtPayload>(
+      const payload = await this.tokenService.verifyRefreshToken(
         dto.refreshToken,
-        {
-          secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
-        },
       );
+
+      const user = await this.usersRepository.findById(payload.sub);
+
+      if (!user || !user.refreshTokenHash) {
+        throw new InvalidCredentialsException();
+      }
+
+      const isRefreshTokenValid = await this.passwordHashService.compare(
+        dto.refreshToken,
+        user.refreshTokenHash,
+      );
+
+      if (!isRefreshTokenValid) {
+        throw new InvalidCredentialsException();
+      }
+
+      return this.issueAuthResponse(user.id);
     } catch {
       throw new InvalidCredentialsException();
     }
-
-    const user = await this.usersRepository.findById(payload.sub);
-
-    if (!user || !user.refreshTokenHash) {
-      throw new InvalidCredentialsException();
-    }
-
-    const isRefreshTokenValid = await this.passwordHashService.compare(
-      dto.refreshToken,
-      user.refreshTokenHash,
-    );
-
-    if (!isRefreshTokenValid) {
-      throw new InvalidCredentialsException();
-    }
-
-    return this.issueAuthResponse(user.id);
   }
 
   async logout(userId: string) {
