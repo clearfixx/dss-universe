@@ -155,11 +155,13 @@ Implemented:
 - private/authenticated/restricted visibility;
 - reference-aware physical deletion protection;
 - domain lifecycle transition rules and tests.
+- Prisma repository bound through the Media domain contract;
+- centralized avatar, cover, content-image and attachment upload policies;
+- declared MIME type, extension and size validation.
 
 Not implemented yet:
 
-- upload policy registry and API;
-- repository/application use cases;
+- upload session orchestration and presentation API;
 - MIME inspection and processing workers;
 - signed delivery;
 - avatar vertical slice;

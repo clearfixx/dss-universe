@@ -32,6 +32,7 @@ import { MediaKind } from '../enums/media-kind.enum';
 import { MediaStatus } from '../enums/media-status.enum';
 import { MediaStorageProvider } from '../enums/media-storage-provider.enum';
 import { MediaVisibility } from '../enums/media-visibility.enum';
+import type { MediaMetadata } from '../types/media-metadata.type';
 
 export type MediaEntityProps = {
   id: string;
@@ -52,7 +53,7 @@ export type MediaEntityProps = {
   durationMs: number | null;
   altText: string | null;
   caption: string | null;
-  metadata: Record<string, unknown> | null;
+  metadata: MediaMetadata | null;
   failureCode: string | null;
   failureReason: string | null;
   readyAt: Date | null;

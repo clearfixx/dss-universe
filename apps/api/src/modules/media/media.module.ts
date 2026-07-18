@@ -26,8 +26,20 @@ import { Module } from '@nestjs/common';
 
 import { StorageModule } from '@api/core/storage';
 
+import { MediaUploadPolicyService } from './application/services/media-upload-policy.service';
+import { MEDIA_REPOSITORY } from './domain/repositories/media.repository.interface';
+import { PrismaMediaRepository } from './infrastructure/repositories/prisma-media.repository';
+
 @Module({
   imports: [StorageModule],
+  providers: [
+    MediaUploadPolicyService,
+    {
+      provide: MEDIA_REPOSITORY,
+      useClass: PrismaMediaRepository,
+    },
+  ],
+  exports: [MediaUploadPolicyService, MEDIA_REPOSITORY],
 })
 export class MediaModule {}
 

@@ -66,13 +66,14 @@ foundation package, pending its final quality gate and publication.
 - deterministic job identity with duplicate-dispatch integration coverage.
 - shared Audit Platform and observability baseline;
 - Media v1 persistence model, lifecycle state machine and relational contracts.
+- Media Prisma repository and centralized upload-policy validation.
 
 ### Work in progress — not stable
 
 - Core Storage abstraction;
 - Local Storage provider;
-- Media repository and application services;
-- upload policy and processing pipeline;
+- upload-session orchestration and Media presentation API;
+- binary MIME inspection and processing pipeline;
 - Media architecture documentation;
 - Sharp dependency;
 - Media module registration.
@@ -437,7 +438,7 @@ Primary quality risks:
 ## 10. Immediate Execution Order
 
 ```text
-1. Implement Media repository, upload policy and application foundation
+1. Implement upload-session orchestration and Media presentation API
 2. Implement Media processing and Avatar vertical slice
 3. Complete Auth sessions and User Profiles
 4. Build Theme Engine and DSS Editor foundations

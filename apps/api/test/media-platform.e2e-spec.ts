@@ -15,10 +15,19 @@ import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/core/database';
+import {
+  MEDIA_REPOSITORY,
+  type MediaRepository,
+} from '../src/modules/media/domain/repositories/media.repository.interface';
+import { MediaKind } from '../src/modules/media/domain/enums/media-kind.enum';
+import { MediaStatus } from '../src/modules/media/domain/enums/media-status.enum';
+import { MediaStorageProvider } from '../src/modules/media/domain/enums/media-storage-provider.enum';
+import { MediaVisibility } from '../src/modules/media/domain/enums/media-visibility.enum';
 
 describe('DSS Media Platform v1 schema (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
+  let mediaRepository: MediaRepository;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -27,6 +36,36 @@ describe('DSS Media Platform v1 schema (e2e)', () => {
     app = module.createNestApplication();
     await app.init();
     prisma = app.get(PrismaService);
+    mediaRepository = app.get<MediaRepository>(MEDIA_REPOSITORY);
+  });
+
+  it('persists Media through the repository boundary', async () => {
+    const suffix = `repository-${Date.now()}`;
+    const media = await mediaRepository.create({
+      kind: MediaKind.IMAGE,
+      status: MediaStatus.READY,
+      visibility: MediaVisibility.PRIVATE,
+      storageProvider: MediaStorageProvider.LOCAL,
+      bucket: 'media-test',
+      storageKey: `repository/${suffix}.webp`,
+      originalFilename: 'repository.png',
+      mimeType: 'image/webp',
+      extension: 'webp',
+      size: 1024,
+      checksum: `checksum-${suffix}`,
+    });
+
+    expect(await mediaRepository.findById(media.id)).toMatchObject({
+      id: media.id,
+      status: MediaStatus.READY,
+    });
+    expect(await mediaRepository.countActiveReferences(media.id)).toBe(0);
+
+    const deleted = await mediaRepository.softDelete(media.id);
+    expect(deleted.status).toBe(MediaStatus.DELETED);
+    expect(deleted.deletedAt).toBeInstanceOf(Date);
+
+    await prisma.media.delete({ where: { id: media.id } });
   });
 
   it('persists variants, references, upload sessions and lifecycle audit', async () => {

@@ -492,6 +492,9 @@ Delivered in the Media v1 foundation package:
 - authenticated/private/restricted visibility;
 - reference-aware database deletion protection;
 - aligned domain contracts and lifecycle transition tests.
+- Prisma repository behind the Media domain boundary;
+- centralized avatar, cover, content-image and attachment upload policies;
+- declared MIME type, extension and size validation with focused tests.
 
 ## Processing
 

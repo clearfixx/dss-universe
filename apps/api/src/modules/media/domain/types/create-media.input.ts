@@ -16,6 +16,7 @@ import { MediaKind } from '../enums/media-kind.enum';
 import { MediaStatus } from '../enums/media-status.enum';
 import { MediaStorageProvider } from '../enums/media-storage-provider.enum';
 import { MediaVisibility } from '../enums/media-visibility.enum';
+import type { MediaMetadata } from './media-metadata.type';
 
 export type CreateMediaInput = {
   ownerId?: string | null;
@@ -35,5 +36,5 @@ export type CreateMediaInput = {
   durationMs?: number | null;
   altText?: string | null;
   caption?: string | null;
-  metadata?: Record<string, unknown> | null;
+  metadata?: MediaMetadata | null;
 };
