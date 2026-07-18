@@ -67,12 +67,13 @@ foundation package, pending its final quality gate and publication.
 - shared Audit Platform and observability baseline;
 - Media v1 persistence model, lifecycle state machine and relational contracts.
 - Media Prisma repository and centralized upload-policy validation.
+- Media upload-session persistence, orchestration and authenticated GraphQL API.
 
 ### Work in progress — not stable
 
 - Core Storage abstraction;
 - Local Storage provider;
-- upload-session orchestration and Media presentation API;
+- authenticated binary upload intake;
 - binary MIME inspection and processing pipeline;
 - Media architecture documentation;
 - Sharp dependency;
@@ -438,7 +439,7 @@ Primary quality risks:
 ## 10. Immediate Execution Order
 
 ```text
-1. Implement upload-session orchestration and Media presentation API
+1. Implement binary upload intake, MIME inspection and processing queue
 2. Implement Media processing and Avatar vertical slice
 3. Complete Auth sessions and User Profiles
 4. Build Theme Engine and DSS Editor foundations

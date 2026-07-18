@@ -16,4 +16,5 @@ export * from './types/media-upload-policy.type';
 export * from './types/media-variant.type';
 export * from './types/media-metadata.type';
 export * from './exceptions/media-upload-policy.exception';
+export * from './repositories/media-upload-session.repository.interface';
 export * from './types/update-media.input';

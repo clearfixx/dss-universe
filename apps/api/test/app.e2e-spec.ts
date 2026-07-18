@@ -38,6 +38,19 @@ type RegisterErrorResponse = {
   errors?: Array<{ extensions: { code: string } }>;
 };
 
+type InitiateMediaUploadResponse = {
+  data: {
+    initiateMediaUpload: {
+      id: string;
+      policyKey: string;
+      status: string;
+      declaredMimeType: string;
+      expiresAt: string;
+    };
+  };
+  errors?: Array<{ message: string }>;
+};
+
 describe('DSS API (e2e)', () => {
   let app: INestApplication<App>;
 
@@ -196,6 +209,53 @@ describe('DSS API (e2e)', () => {
         userByUsername: {
           id: registered.data.register.user.id,
           username,
+        },
+      },
+    });
+
+    const initiatedUpload = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation InitiateMediaUpload($input: InitiateMediaUploadInput!) {
+          initiateMediaUpload(input: $input) {
+            id policyKey status declaredMimeType expiresAt
+          }
+        }`,
+        variables: {
+          input: {
+            policyKey: 'avatar',
+            originalFilename: 'commander.png',
+            declaredMimeType: 'image/png',
+            declaredSize: 2048,
+          },
+        },
+      })
+      .expect(200);
+    const uploadBody = initiatedUpload.body as InitiateMediaUploadResponse;
+
+    expect(uploadBody.errors).toBeUndefined();
+    expect(uploadBody.data.initiateMediaUpload).toMatchObject({
+      policyKey: 'avatar',
+      status: 'INITIATED',
+      declaredMimeType: 'image/png',
+    });
+    const abortedUpload = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation AbortMediaUpload($id: String!) {
+          abortMediaUpload(id: $id) { id status }
+        }`,
+        variables: { id: uploadBody.data.initiateMediaUpload.id },
+      })
+      .expect(200);
+
+    expect(abortedUpload.body).toEqual({
+      data: {
+        abortMediaUpload: {
+          id: uploadBody.data.initiateMediaUpload.id,
+          status: 'ABORTED',
         },
       },
     });

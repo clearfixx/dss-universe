@@ -18,6 +18,19 @@ type AuthTokensModel {
   refreshToken: String!
 }
 
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+input InitiateMediaUploadInput {
+  checksum: String
+  declaredMimeType: String!
+  declaredSize: Int!
+  originalFilename: String!
+  policyKey: String!
+}
+
 input LoginInput {
   email: String!
   password: String!
@@ -27,7 +40,22 @@ type LogoutResultModel {
   success: Boolean!
 }
 
+type MediaUploadSession {
+  checksum: String
+  completedAt: DateTime
+  createdAt: DateTime!
+  declaredMimeType: String!
+  declaredSize: Int!
+  expiresAt: DateTime!
+  id: String!
+  originalFilename: String!
+  policyKey: String!
+  status: String!
+}
+
 type Mutation {
+  abortMediaUpload(id: String!): MediaUploadSession!
+  initiateMediaUpload(input: InitiateMediaUploadInput!): MediaUploadSession!
   login(input: LoginInput!): AuthPayloadModel!
   logout: LogoutResultModel!
   refreshTokens(input: RefreshTokenInput!): AuthPayloadModel!
@@ -36,6 +64,7 @@ type Mutation {
 
 type Query {
   apiInfo: ApiInfo!
+  mediaUploadSession(id: String!): MediaUploadSession!
   user(id: ID!): User!
   userByUsername(username: String!): User!
   users(pagination: UsersPageInput): UsersPageModel!

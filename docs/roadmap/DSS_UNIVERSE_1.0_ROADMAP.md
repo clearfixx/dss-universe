@@ -495,6 +495,8 @@ Delivered in the Media v1 foundation package:
 - Prisma repository behind the Media domain boundary;
 - centralized avatar, cover, content-image and attachment upload policies;
 - declared MIME type, extension and size validation with focused tests.
+- owner-scoped upload-session orchestration with opaque temporary keys;
+- authenticated GraphQL initiate, inspect and abort operations.
 
 ## Processing
 

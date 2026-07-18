@@ -158,10 +158,13 @@ Implemented:
 - Prisma repository bound through the Media domain contract;
 - centralized avatar, cover, content-image and attachment upload policies;
 - declared MIME type, extension and size validation.
+- owner-scoped, short-lived upload-session orchestration;
+- authenticated GraphQL initiate, inspect and abort operations;
+- opaque temporary storage keys and upload-session persistence.
 
 Not implemented yet:
 
-- upload session orchestration and presentation API;
+- authenticated REST binary upload intake;
 - MIME inspection and processing workers;
 - signed delivery;
 - avatar vertical slice;
