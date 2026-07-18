@@ -6,3 +6,4 @@ coverage
 pnpm-lock.yaml
 apps/api/src/schema.gql
 apps/web/src/gql
+/src/schema.gql
