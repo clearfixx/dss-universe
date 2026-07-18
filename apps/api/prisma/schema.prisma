@@ -37,6 +37,13 @@ enum MediaStorage {
   R2
 }
 
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  PUBLISHED
+  FAILED
+}
+
 model User {
   id           String     @id @default(uuid())
   email        String     @unique
@@ -179,4 +186,34 @@ model Session {
 
   @@index([userId])
   @@map("sessions")
+}
+
+model OutboxEvent {
+  id            String       @id @default(uuid())
+  eventName     String
+  eventVersion  Int
+  eventCategory String
+  producer      String
+  aggregateType String?
+  aggregateId   String?
+  correlationId String?
+  causationId   String?
+  actorId       String?
+  payload       Json
+  metadata      Json?
+  status        OutboxStatus @default(PENDING)
+  occurredAt    DateTime
+  availableAt   DateTime     @default(now())
+  lockedAt      DateTime?
+  lockedBy      String?
+  publishedAt   DateTime?
+  attempts      Int          @default(0)
+  lastError     String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([status, availableAt])
+  @@index([aggregateType, aggregateId])
+  @@index([correlationId])
+  @@map("outbox_events")
 }

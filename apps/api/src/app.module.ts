@@ -64,6 +64,7 @@ import { AuthorizationModule } from '@api/core/authorization';
 import { ConfigurationModule } from '@api/core/config/configuration.module';
 import { PrismaExceptionFilter } from '@api/core/database/exceptions/prisma-exception.filter';
 import { PrismaModule } from '@api/core/database/prisma.module';
+import { EventsModule } from '@api/core/events';
 import { GraphqlCoreModule } from '@api/core/graphql';
 import { HealthModule } from '@api/health';
 
@@ -77,6 +78,7 @@ import { UsersModule } from './modules/users/users.module';
   imports: [
     ConfigurationModule,
     PrismaModule,
+    EventsModule,
     GraphqlCoreModule,
     HealthModule,
     UsersModule,

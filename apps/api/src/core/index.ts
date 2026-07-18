@@ -31,3 +31,4 @@ export * from './config';
 export * from './database';
 export * from './storage';
 export * from './graphql';
+export * from './events';

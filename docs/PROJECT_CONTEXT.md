@@ -58,6 +58,8 @@ At the time of this snapshot the branch is two commits ahead of its remote and c
 - Apollo Client/Next.js integration and generated typed operations;
 - TanStack Query/Table/Virtual, Zustand, React Hook Form and Zod foundations;
 - responsive DSS Application Shell, guest presentation, Command Deck and module shells.
+- versioned event-envelope contracts and transactional PostgreSQL outbox;
+- transaction-only outbox writer with atomic commit/rollback integration coverage.
 
 ### Work in progress — not stable
 
@@ -73,7 +75,6 @@ These changes are uncommitted and must not be treated as a finished Media implem
 
 ### Not implemented
 
-- events and transactional outbox;
 - BullMQ queues and worker application;
 - audit platform;
 - notification and email platforms;
@@ -433,13 +434,14 @@ Primary quality risks:
 ## 10. Immediate Execution Order
 
 ```text
-1. Add Events, Outbox, Redis, BullMQ and worker (Phase 4)
-2. Add Audit and Observability foundations
-3. Align Media domain and Prisma model with frozen Media v1
-4. Implement Media processing and Avatar vertical slice
-5. Complete Auth sessions and User Profiles
-6. Build Theme Engine and DSS Editor foundations
-7. Continue product modules in the canonical roadmap order
+1. Add Redis, BullMQ, dispatcher and worker (next Phase 4 package)
+2. Add idempotent consumers, retries and dead-letter operations
+3. Add Audit and Observability foundations
+4. Align Media domain and Prisma model with frozen Media v1
+5. Implement Media processing and Avatar vertical slice
+6. Complete Auth sessions and User Profiles
+7. Build Theme Engine and DSS Editor foundations
+8. Continue product modules in the canonical roadmap order
 ```
 
 Phases 1–3 were completed on 2026-07-18. The active roadmap stage is Phase 4 — Core Platform Services.

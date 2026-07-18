@@ -1,21 +1,37 @@
-# Core / events
+# Core Events and Transactional Outbox
 
-Reserved for the DSS Universe events infrastructure.
+## Purpose
 
-## Responsibility
+Core Events defines versioned event envelopes and the durable write boundary used for cross-module and external side effects.
 
-This directory contains application-wide infrastructure related to events.
+## Atomicity rule
 
-## Must contain
+`OutboxWriterService.append()` requires an existing Prisma `TransactionClient`. A feature must write its primary state and the matching outbox event in the same transaction.
 
-- infrastructure
-- framework integrations
-- technical services
+```text
+Application use case
+  -> Prisma transaction
+      -> write primary state
+      -> append outbox event
+  -> commit both or roll back both
+```
 
-## Must not contain
+Writing an outbox event through the root Prisma client is intentionally unsupported.
 
-- business logic
-- feature modules
-- domain rules
+## Envelope
 
-This directory is intentionally created as part of the DSS Platform Foundation.
+Every durable event has:
+
+- unique event ID;
+- stable name and positive schema version;
+- category: domain, integration or system;
+- producer;
+- occurrence timestamp;
+- JSON payload;
+- optional aggregate, actor, correlation and causation context.
+
+## Current boundary
+
+This package persists pending events. Dispatching to BullMQ, locking, retries, dead-letter behavior and idempotent consumers belong to the next Phase 4 package.
+
+🚀 Build. Share. Grow.

@@ -294,6 +294,12 @@ Phase 3 met this Definition of Done on 2026-07-18. The active delivery stage is 
 
 # Phase 4 — Core Platform Services
 
+## Status
+
+```text
+IN PROGRESS — Events and transactional outbox foundation delivered 2026-07-18
+```
+
 ## Goal
 
 Implement the shared capabilities required by Media and all product modules.
@@ -307,6 +313,17 @@ Implement the shared capabilities required by Media and all product modules.
 - idempotent consumers;
 - correlation and causation IDs;
 - retry and dead-letter behavior.
+
+Delivered in the first Phase 4 package:
+
+- versioned JSON-safe event envelope and factory;
+- explicit domain/integration/system event categories;
+- PostgreSQL outbox lifecycle schema and focused migration;
+- transaction-only `OutboxWriterService`;
+- correlation, causation, actor and aggregate context;
+- integration proof that primary data and events commit or roll back together.
+
+The dispatcher, BullMQ delivery, retries, dead-letter operations and consumer idempotency remain in the Redis/Jobs/Worker package.
 
 ## Redis, Jobs and Worker
 
