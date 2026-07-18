@@ -10,13 +10,27 @@
 
 If you are new to the project, read the documents in the following order.
 
-1. `../CONSTITUTION.md`
-2. `../ENGINEERING.md`
-3. `development/workflow.md`
-4. `development/branching.md`
-5. `architecture/overview.md`
+1. `PROJECT_CONTEXT.md`
+2. `roadmap/DSS_UNIVERSE_1.0_ROADMAP.md`
+3. `architecture/SYSTEM_DESIGN.md`
+4. `development/onboarding.md`
+5. `development/QUALITY_GATE.md`
 
 This reading order introduces the project's philosophy before diving into implementation details.
+
+## Current Canonical Documents
+
+For current product and architecture work, use these sources first:
+
+1. `PROJECT_CONTEXT.md` — actual repository and implementation snapshot;
+2. `roadmap/DSS_UNIVERSE_1.0_ROADMAP.md` — approved 1.0 scope and delivery sequence;
+3. `product/MODULE_MAP.md` — canonical product names, routes and ownership;
+4. `architecture/SYSTEM_DESIGN.md` — approved platform architecture;
+5. `design/MOCKUP_CATALOG.md` — canonical/supporting/historical mockup classification;
+6. `adr/` — accepted architecture decisions.
+7. `development/QUALITY_GATE.md` — mandatory verification and test strategy.
+
+Older roadmap and architecture files are historical references when they conflict with these documents.
 
 ---
 

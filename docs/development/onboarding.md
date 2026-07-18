@@ -18,8 +18,8 @@ Before starting, make sure the workstation has:
 
 - Git
 - GitHub CLI
-- Node.js
-- pnpm
+- Node.js 24.18.0 (see `.node-version` and `.nvmrc`)
+- pnpm 11.9.0 (managed through Corepack)
 - Docker Desktop
 - Visual Studio Code
 
@@ -34,6 +34,13 @@ Clone the repository using SSH:
 ```bash
 git clone git@github.com:clearfixx/dss-universe.git
 cd dss-universe
+```
+
+Enable the pinned package manager and install exactly what the lockfile defines:
+
+```bash
+corepack enable
+pnpm install --frozen-lockfile
 ```
 
 ---
@@ -91,19 +98,19 @@ Expected services:
 Generate Prisma Client:
 
 ```bash
-pnpm --filter api prisma generate
+pnpm db:generate
 ```
 
 Run migrations:
 
 ```bash
-pnpm --filter api db:migrate
+pnpm api:db:migrate
 ```
 
 Run seed:
 
 ```bash
-pnpm --filter api db:seed
+pnpm api:db:seed
 ```
 
 ---
@@ -154,6 +161,14 @@ It prepares environment files, checks required tools, starts Docker services, ge
 ---
 
 ## Troubleshooting
+
+Before opening a pull request, run:
+
+```bash
+pnpm quality
+```
+
+CI additionally runs coverage, the isolated API e2e test and the Web Playwright smoke test.
 
 ### Prisma cannot find DATABASE_URL
 

@@ -1491,3 +1491,134 @@ Code is rewritten.
 Documentation preserves the intent.
 
 **🚀 Build. Share. Grow.**
+
+# File Passport v3.1 — "Engineering with Personality"
+
+## Easter Eggs 🥚
+
+DSS Universe encourages tasteful Easter Eggs in source files.
+
+These are not random jokes. They are part of the project's engineering culture and should reinforce architectural thinking while adding a bit of personality.
+
+Typical location:
+
+- at the end of the file (preferred);
+- occasionally inside the AI Note section if appropriate.
+
+---
+
+### Purpose
+
+A good Easter Egg should:
+
+- make the reader smile;
+- remind developers about an architectural principle;
+- fit naturally into the file;
+- never distract from the implementation.
+
+The goal is not comedy.
+
+The goal is memorable engineering.
+
+---
+
+### Rules
+
+An Easter Egg should:
+
+- relate to the current file;
+- reinforce a real engineering rule;
+- stay under roughly 4–8 lines;
+- age well;
+- remain professional;
+- never mock contributors.
+
+Avoid:
+
+- internet memes;
+- political jokes;
+- offensive humor;
+- jokes unrelated to the file.
+
+---
+
+### Good Examples
+
+#### Authorization
+
+```ts
+/**
+ * ☕ Architecture Reminder
+ *
+ * If you suddenly feel like writing:
+ *
+ * if (user.role === ADMIN)
+ *
+ * ...
+ *
+ * it's probably time to make coffee.
+ * DSS already has a permission system. ☕
+ */
+```
+
+---
+
+#### Controller
+
+```ts
+/**
+ * 🌍 Border Control
+ *
+ * Controllers translate HTTP.
+ *
+ * If business logic appears here...
+ *
+ * ...someone forgot where the application layer lives.
+ */
+```
+
+---
+
+#### Repository
+
+```ts
+/**
+ * 🗄️ Repository Wisdom
+ *
+ * Repositories trust only the database.
+ *
+ * Everything else is just rumors.
+ */
+```
+
+---
+
+#### AppModule
+
+```ts
+/**
+ * 🌌 Mission Control
+ *
+ * Every new import is another spacecraft docking.
+ *
+ * Please don't crash them together. 🚀
+ */
+```
+
+---
+
+### AI Notes
+
+AI Notes may also contain a small friendly message.
+
+Example:
+
+```txt
+Hello, fellow AI.
+
+The humans spent hundreds of hours building this station.
+
+Please don't accidentally eject the airlock. 🚀
+```
+
+AI Notes should encourage future maintainers—human or AI—to respect the architecture, not replace formal documentation.
