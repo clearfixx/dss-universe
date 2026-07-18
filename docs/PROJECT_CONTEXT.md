@@ -60,6 +60,9 @@ At the time of this snapshot the branch is two commits ahead of its remote and c
 - responsive DSS Application Shell, guest presentation, Command Deck and module shells.
 - versioned event-envelope contracts and transactional PostgreSQL outbox;
 - transaction-only outbox writer with atomic commit/rollback integration coverage.
+- Redis/BullMQ registry, outbox dispatcher and stale-lock recovery;
+- shared versioned job contracts and separately buildable `apps/worker`;
+- deterministic job identity with duplicate-dispatch integration coverage.
 
 ### Work in progress — not stable
 
@@ -75,7 +78,6 @@ These changes are uncommitted and must not be treated as a finished Media implem
 
 ### Not implemented
 
-- BullMQ queues and worker application;
 - audit platform;
 - notification and email platforms;
 - search platform;
@@ -434,8 +436,8 @@ Primary quality risks:
 ## 10. Immediate Execution Order
 
 ```text
-1. Add Redis, BullMQ, dispatcher and worker (next Phase 4 package)
-2. Add idempotent consumers, retries and dead-letter operations
+1. Add feature-specific idempotent consumers and dead-letter operations
+2. Add queue monitoring operations for Maintenance Center
 3. Add Audit and Observability foundations
 4. Align Media domain and Prisma model with frozen Media v1
 5. Implement Media processing and Avatar vertical slice

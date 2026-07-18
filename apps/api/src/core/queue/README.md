@@ -1,6 +1,6 @@
-# Core / queue
+# Core Queue
 
-Reserved for the DSS Universe queue infrastructure.
+Owns BullMQ queues and the PostgreSQL outbox dispatcher. Jobs use deterministic event IDs, bounded retries and exponential backoff.
 
 ## Responsibility
 

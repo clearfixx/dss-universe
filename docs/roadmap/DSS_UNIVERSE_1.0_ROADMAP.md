@@ -335,6 +335,16 @@ The dispatcher, BullMQ delivery, retries, dead-letter operations and consumer id
 - scheduled jobs;
 - job monitoring and retry operations.
 
+Delivered in the second Phase 4 package:
+
+- shared Redis connection lifecycle;
+- BullMQ registry and versioned `@dss/jobs` contracts;
+- conditional outbox claiming and automatic dispatch loop;
+- deterministic event-based job identity;
+- retry/backoff configuration and stale-lock recovery;
+- separately buildable `apps/worker` runtime;
+- PostgreSQL → BullMQ → worker integration coverage with duplicate protection.
+
 ## Audit
 
 - immutable audit records;

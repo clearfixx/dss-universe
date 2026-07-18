@@ -32,3 +32,5 @@ export * from './database';
 export * from './storage';
 export * from './graphql';
 export * from './events';
+export * from './cache';
+export * from './queue';

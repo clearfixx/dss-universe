@@ -1,21 +1,3 @@
-# Core / cache
+# Core Redis
 
-Reserved for the DSS Universe cache infrastructure.
-
-## Responsibility
-
-This directory contains application-wide infrastructure related to cache.
-
-## Must contain
-
-- infrastructure
-- framework integrations
-- technical services
-
-## Must not contain
-
-- business logic
-- feature modules
-- domain rules
-
-This directory is intentionally created as part of the DSS Platform Foundation.
+Owns the shared Redis connection lifecycle. Feature modules use platform cache and queue services instead of creating independent clients.

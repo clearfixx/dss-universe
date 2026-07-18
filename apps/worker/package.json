@@ -1,0 +1,31 @@
+{
+  "name": "@dss/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src test --max-warnings=0",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "test:cov": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@dss/jobs": "workspace:*",
+    "bullmq": "^5.80.6",
+    "ioredis": "^5.11.1"
+  },
+  "devDependencies": {
+    "@dss/eslint-config": "workspace:*",
+    "@dss/tsconfig": "workspace:*",
+    "@vitest/coverage-v8": "^4.0.18",
+    "eslint": "^9.18.0",
+    "tsx": "^4.22.4",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.62.0",
+    "vitest": "^4.0.18"
+  }
+}
