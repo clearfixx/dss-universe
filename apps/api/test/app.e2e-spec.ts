@@ -65,6 +65,25 @@ describe('DSS API (e2e)', () => {
       .expect({ app: 'DSS Universe API', status: 'ok' });
   });
 
+  it('exposes separate liveness and dependency readiness with request IDs', async () => {
+    const live = await request(app.getHttpServer())
+      .get('/api/health/live')
+      .set('x-request-id', 'dss-health-proof')
+      .expect(200);
+    expect(live.headers['x-request-id']).toBe('dss-health-proof');
+    expect(live.body).toMatchObject({ status: 'ok', service: 'dss-api' });
+
+    const ready = await request(app.getHttpServer())
+      .get('/api/health/ready')
+      .expect(200);
+    expect(ready.body).toMatchObject({
+      status: 'ok',
+      database: { status: 'up' },
+      redis: { status: 'up' },
+      queues: { status: 'up' },
+    });
+  });
+
   it('exposes the GraphQL transport status query', async () => {
     const response = await request(app.getHttpServer())
       .post('/api/graphql')

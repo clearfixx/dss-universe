@@ -436,7 +436,7 @@ Primary quality risks:
 ## 10. Immediate Execution Order
 
 ```text
-1. Add structured logging and Observability foundations
+1. Repair the repository-wide Prettier quality gate
 2. Align Media domain and Prisma model with frozen Media v1
 3. Implement Media processing and Avatar vertical slice
 4. Complete Auth sessions and User Profiles
@@ -444,9 +444,9 @@ Primary quality risks:
 6. Continue product modules in the canonical roadmap order
 ```
 
-Phases 1–3 were completed on 2026-07-18. Phase 4 Events, Outbox, Redis, Jobs,
-Worker recovery and Audit Platform are delivered. The active Phase 4 package is
-Logging and Observability Baseline.
+Phases 1–4 were completed on 2026-07-18. The shared Events, Outbox, Redis, Jobs,
+Worker recovery, Audit and Observability platforms are delivered. After the
+repository formatting gate is repaired, the active delivery stage is Phase 5.
 
 ---
 

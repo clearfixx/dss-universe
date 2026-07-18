@@ -68,6 +68,7 @@ import { PrismaModule } from '@api/core/database/prisma.module';
 import { EventsModule } from '@api/core/events';
 import { GraphqlCoreModule } from '@api/core/graphql';
 import { QueueModule } from '@api/core/queue';
+import { ObservabilityModule } from '@api/core/observability';
 import { HealthModule } from '@api/health';
 
 import { AppController } from './app.controller';
@@ -81,6 +82,7 @@ import { UsersModule } from './modules/users/users.module';
     ConfigurationModule,
     PrismaModule,
     AuditModule,
+    ObservabilityModule,
     EventsModule,
     QueueModule,
     GraphqlCoreModule,

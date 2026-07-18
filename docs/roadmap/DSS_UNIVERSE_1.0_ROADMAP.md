@@ -297,7 +297,7 @@ Phase 3 met this Definition of Done on 2026-07-18. The active delivery stage is 
 ## Status
 
 ```text
-IN PROGRESS — Events, queues, recovery and Audit delivered 2026-07-18; Observability next
+COMPLETED — 2026-07-18
 ```
 
 ## Goal
@@ -379,12 +379,25 @@ Delivered in the Audit Platform package:
 - PostgreSQL, Redis and worker health;
 - error tracking.
 
+Delivered in the final Phase 4 package:
+
+- request-scoped structured Pino logs for the API and structured worker logs;
+- generated or propagated `x-request-id` response correlation;
+- redaction of authorization, cookie and credential fields;
+- OpenTelemetry Node SDK and automatic HTTP, Express, PostgreSQL and runtime instrumentation;
+- low-cardinality HTTP request counters and duration histograms;
+- separate liveness and dependency readiness endpoints;
+- PostgreSQL, Redis, BullMQ and worker-heartbeat visibility;
+- structured exception capture ready for an OTLP observability backend.
+
 ## Definition of Done
 
 - one demonstrated transaction writes domain data and outbox event atomically;
 - worker processes an idempotent job;
 - retries and failures are observable;
 - sensitive application action creates an audit entry.
+
+Phase 4 met this Definition of Done on 2026-07-18. The active delivery stage is Phase 5.
 
 ---
 

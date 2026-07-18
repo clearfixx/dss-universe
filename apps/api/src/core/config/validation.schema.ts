@@ -19,6 +19,9 @@ export const validationSchema = Joi.object({
   REDIS_HOST: Joi.string().default('localhost'),
   REDIS_PORT: Joi.number().default(6379),
   OUTBOX_DISPATCH_INTERVAL_MS: Joi.number().integer().min(0).default(1000),
+  LOG_LEVEL: Joi.string()
+    .valid('fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent')
+    .default('info'),
 
   OPENAI_API_KEY: Joi.string().allow('').optional(),
 
