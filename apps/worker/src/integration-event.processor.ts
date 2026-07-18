@@ -1,11 +1,12 @@
 import type { Job } from "bullmq";
-import {
-  processIntegrationEvent as processEvent,
-  type IntegrationEventJob,
-} from "@dss/jobs";
+import { IdempotentIntegrationEventProcessor, type IntegrationEventHandler,
+  type IntegrationEventJob, type ProcessedEventStore } from "@dss/jobs";
 
-export async function processIntegrationEvent(
-  job: Job<IntegrationEventJob>,
-): Promise<{ eventId: string }> {
-  return processEvent(job.data);
+export function createIntegrationEventProcessor(
+  store: ProcessedEventStore,
+  handler: IntegrationEventHandler = async () => undefined,
+  consumerName = "dss.worker.integration-events.v1",
+): (job: Job<IntegrationEventJob>) => Promise<{ eventId: string; duplicate: boolean }> {
+  const processor = new IdempotentIntegrationEventProcessor(consumerName, store, handler);
+  return (job) => processor.process(job.data);
 }

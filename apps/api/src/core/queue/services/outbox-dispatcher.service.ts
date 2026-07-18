@@ -33,6 +33,16 @@ export class OutboxDispatcherService {
             eventId: event.id,
             eventName: event.eventName,
             eventVersion: event.eventVersion,
+            category: event.eventCategory,
+            producer: event.producer,
+            payload: event.payload,
+            occurredAt: event.occurredAt.toISOString(),
+            ...(event.metadata ? { metadata: event.metadata } : {}),
+            ...(event.aggregateType
+              ? { aggregateType: event.aggregateType }
+              : {}),
+            ...(event.aggregateId ? { aggregateId: event.aggregateId } : {}),
+            ...(event.actorId ? { actorId: event.actorId } : {}),
             ...(event.correlationId
               ? { correlationId: event.correlationId }
               : {}),

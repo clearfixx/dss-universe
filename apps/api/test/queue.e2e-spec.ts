@@ -49,7 +49,7 @@ describe('Outbox queue delivery (e2e)', () => {
       DSS_QUEUE_NAMES.INTEGRATION_EVENTS,
       (job) => {
         processed += 1;
-        return processIntegrationEvent(job.data);
+        return Promise.resolve(processIntegrationEvent(job.data));
       },
       { connection: { host: '127.0.0.1', port: 6380 } },
     );

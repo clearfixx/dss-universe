@@ -344,6 +344,9 @@ importers:
       ioredis:
         specifier: ^5.11.1
         version: 5.11.1
+      pg:
+        specifier: ^8.22.0
+        version: 8.22.0
     devDependencies:
       '@dss/eslint-config':
         specifier: workspace:*
@@ -351,6 +354,9 @@ importers:
       '@dss/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
+      '@types/pg':
+        specifier: ^8.20.0
+        version: 8.20.0
       '@vitest/coverage-v8':
         specifier: ^4.0.18
         version: 4.1.10(vitest@4.1.10)
@@ -12345,7 +12351,7 @@ snapshots:
       obug: 2.1.4
       std-env: 4.2.0
       tinyrainbow: 3.1.0
-      vitest: 4.1.10(@types/node@26.0.1)(@vitest/coverage-v8@4.1.10)(jsdom@28.1.0(@noble/hashes@1.8.0))(vite@8.1.5(@types/node@26.0.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))
+      vitest: 4.1.10(@types/node@20.19.43)(@vitest/coverage-v8@4.1.10)(jsdom@28.1.0(@noble/hashes@1.8.0))(vite@8.1.5(@types/node@20.19.43)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))
 
   '@vitest/expect@4.1.10':
     dependencies:

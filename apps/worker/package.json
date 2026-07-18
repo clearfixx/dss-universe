@@ -16,11 +16,13 @@
   "dependencies": {
     "@dss/jobs": "workspace:*",
     "bullmq": "^5.80.6",
-    "ioredis": "^5.11.1"
+    "ioredis": "^5.11.1",
+    "pg": "^8.22.0"
   },
   "devDependencies": {
     "@dss/eslint-config": "workspace:*",
     "@dss/tsconfig": "workspace:*",
+    "@types/pg": "^8.20.0",
     "@vitest/coverage-v8": "^4.0.18",
     "eslint": "^9.18.0",
     "tsx": "^4.22.4",
