@@ -14,5 +14,7 @@
 
 export enum MediaVisibility {
   PUBLIC = 'PUBLIC',
+  AUTHENTICATED = 'AUTHENTICATED',
   PRIVATE = 'PRIVATE',
+  RESTRICTED = 'RESTRICTED',
 }

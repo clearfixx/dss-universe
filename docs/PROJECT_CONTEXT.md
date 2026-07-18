@@ -32,7 +32,8 @@ The detailed system design supplied during planning is still a canonical draft a
 feature/developer-onboarding
 ```
 
-At the time of this snapshot the branch is two commits ahead of its remote and contains uncommitted Media/Storage work.
+At the time of this snapshot the active branch contains the first Media v1
+foundation package, pending its final quality gate and publication.
 
 ### Stable implemented foundation
 
@@ -63,18 +64,21 @@ At the time of this snapshot the branch is two commits ahead of its remote and c
 - Redis/BullMQ registry, outbox dispatcher and stale-lock recovery;
 - shared versioned job contracts and separately buildable `apps/worker`;
 - deterministic job identity with duplicate-dispatch integration coverage.
+- shared Audit Platform and observability baseline;
+- Media v1 persistence model, lifecycle state machine and relational contracts.
 
 ### Work in progress — not stable
 
 - Core Storage abstraction;
 - Local Storage provider;
-- Media domain skeleton;
-- initial Prisma `Media` model;
+- Media repository and application services;
+- upload policy and processing pipeline;
 - Media architecture documentation;
 - Sharp dependency;
 - Media module registration.
 
-These changes are uncommitted and must not be treated as a finished Media implementation.
+The Media persistence and domain foundation is implemented. Upload orchestration,
+processing and delivery remain work in progress.
 
 ### Not implemented
 
@@ -390,19 +394,16 @@ The committed schema has:
 - RolePermission;
 - Session.
 
-The WIP schema adds a simplified Media model.
+The schema contains the aligned Media v1 foundation.
 
 Known mismatches with the approved design:
 
 - Auth still stores one `refreshTokenHash` on User while Session is not used by the auth lifecycle;
 - User uses `avatarUrl`/`coverUrl` instead of Media references;
-- Media lacks variants, references, upload sessions, audit and full lifecycle states;
-- only PUBLIC/PRIVATE visibility exists in WIP Media;
+- Media repository and application workflows are not yet implemented;
+- upload sessions are modeled but not yet orchestrated;
 - roles and custom access groups are not yet separated;
-- no sanctions, appeals, reputation, points, titles, followers or wall models exist;
-- no event/outbox/audit models exist.
-
-Do not create a Media migration until its model is aligned with the frozen Media v1 specification.
+- sanctions, appeals, reputation, points, titles, followers and wall models remain planned.
 
 ---
 
@@ -436,7 +437,7 @@ Primary quality risks:
 ## 10. Immediate Execution Order
 
 ```text
-1. Align Media domain and Prisma model with frozen Media v1
+1. Implement Media repository, upload policy and application foundation
 2. Implement Media processing and Avatar vertical slice
 3. Complete Auth sessions and User Profiles
 4. Build Theme Engine and DSS Editor foundations

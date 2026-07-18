@@ -483,6 +483,16 @@ WIP SKELETON; ARCHITECTURE FROZEN
 - quotas and limits;
 - cleanup and retention.
 
+Delivered in the Media v1 foundation package:
+
+- final media and upload lifecycle enums;
+- `Media`, `MediaVariant`, `MediaReference`, `MediaUploadSession` and `MediaAuditLog` schema;
+- Local, MinIO and S3-compatible provider identities;
+- bucket plus opaque storage-key addressing without permanent domain URLs;
+- authenticated/private/restricted visibility;
+- reference-aware database deletion protection;
+- aligned domain contracts and lifecycle transition tests.
+
 ## Processing
 
 - BullMQ media queues;

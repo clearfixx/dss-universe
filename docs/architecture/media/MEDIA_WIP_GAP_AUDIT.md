@@ -1,10 +1,10 @@
 # DSS Media Platform — WIP Gap Audit
 
-> Status: Phase 1 reconciliation result
+> Status: Resolved by Media v1 foundation package on 2026-07-18
 >
 > Audited: 2026-07-18
 >
-> Code state: uncommitted WIP; do not migrate or extend before Phase 6 plan
+> Code state: historical audit; retained as the decision record that guided the first Media v1 migration
 
 ## Scope
 
@@ -21,6 +21,13 @@ Compared:
 The WIP demonstrates the correct high-level separation — Media owns meaning, Core Storage owns physical persistence — but its current model is only an early skeleton. It must not be treated as the approved Media v1 data model or upload pipeline.
 
 No WIP source file was modified during this audit.
+
+## Resolution
+
+The blocking persistence and domain gaps identified here are now resolved by
+the focused `add_media_platform_v1` migration and the aligned Media domain
+contract. Upload transport, processing, delivery and Avatar remain subsequent
+vertical packages; the original simplified `path/url` model was never migrated.
 
 ## What Aligns
 

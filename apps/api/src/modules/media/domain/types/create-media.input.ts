@@ -13,16 +13,18 @@
  */
 
 import { MediaKind } from '../enums/media-kind.enum';
-import { MediaStorage } from '../enums/media-storage.enum';
+import { MediaStatus } from '../enums/media-status.enum';
+import { MediaStorageProvider } from '../enums/media-storage-provider.enum';
 import { MediaVisibility } from '../enums/media-visibility.enum';
 
 export type CreateMediaInput = {
   ownerId?: string | null;
   kind: MediaKind;
+  status?: MediaStatus;
   visibility: MediaVisibility;
-  storage: MediaStorage;
-  path: string;
-  filename: string;
+  storageProvider: MediaStorageProvider;
+  bucket: string;
+  storageKey: string;
   originalFilename: string;
   mimeType: string;
   extension: string;
@@ -30,4 +32,8 @@ export type CreateMediaInput = {
   checksum: string;
   width?: number | null;
   height?: number | null;
+  durationMs?: number | null;
+  altText?: string | null;
+  caption?: string | null;
+  metadata?: Record<string, unknown> | null;
 };

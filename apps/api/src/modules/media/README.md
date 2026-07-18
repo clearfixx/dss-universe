@@ -145,23 +145,25 @@ Avatar-specific behavior belongs to the user/profile use case layer, but the upl
 
 Current Status
 
-Phase 2.6.7 starts with the Media module skeleton.
+Media v1 persistence and domain foundations are implemented.
 
 Implemented:
 
-module folder structure;
-NestJS MediaModule;
-Core Storage dependency;
-architecture documentation.
+- frozen media and upload lifecycle enums;
+- storage-provider, bucket and opaque storage-key identity;
+- Media, MediaVariant, MediaReference, MediaUploadSession and MediaAuditLog persistence;
+- private/authenticated/restricted visibility;
+- reference-aware physical deletion protection;
+- domain lifecycle transition rules and tests.
 
 Not implemented yet:
 
-Media database model;
-media repository;
-upload endpoint;
-image processing;
-avatar API;
-media lifecycle cleanup.
+- upload policy registry and API;
+- repository/application use cases;
+- MIME inspection and processing workers;
+- signed delivery;
+- avatar vertical slice;
+- retention and cleanup jobs.
 Architecture Rule
 
 Do not duplicate Core Storage inside Media.

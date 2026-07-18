@@ -28,13 +28,36 @@ enum MediaKind {
 
 enum MediaVisibility {
   PUBLIC
+  AUTHENTICATED
   PRIVATE
+  RESTRICTED
 }
 
-enum MediaStorage {
+enum MediaStorageProvider {
   LOCAL
+  MINIO
   S3
-  R2
+}
+
+enum MediaStatus {
+  PENDING
+  UPLOADING
+  PROCESSING
+  READY
+  FAILED
+  REJECTED
+  QUARANTINED
+  DELETING
+  DELETED
+}
+
+enum MediaUploadStatus {
+  INITIATED
+  UPLOADING
+  COMPLETED
+  ABORTED
+  EXPIRED
+  FAILED
 }
 
 enum OutboxStatus {
@@ -67,7 +90,8 @@ model User {
   coverUrl     String?
   status       UserStatus @default(ACTIVE)
 
-  media Media[]
+  media               Media[]
+  mediaUploadSessions MediaUploadSession[]
 
   roles             UserRole[]
   directPermissions UserPermission[]
@@ -84,32 +108,130 @@ model User {
 }
 
 model Media {
-  id               String          @id @default(uuid())
-  ownerId          String?
-  kind             MediaKind
-  visibility       MediaVisibility @default(PUBLIC)
-  storage          MediaStorage    @default(LOCAL)
-  path             String
-  filename         String
+  id              String               @id @default(uuid())
+  ownerId         String?
+  kind            MediaKind
+  status          MediaStatus          @default(PENDING)
+  visibility      MediaVisibility      @default(PRIVATE)
+  storageProvider MediaStorageProvider @default(LOCAL)
+  bucket          String
+  storageKey      String
   originalFilename String
-  mimeType         String
-  extension        String
-  size             Int
-  checksum         String
-  width            Int?
-  height           Int?
-  deletedAt        DateTime?
+  mimeType        String
+  extension       String
+  size            Int
+  checksum        String
+  width           Int?
+  height          Int?
+  durationMs      Int?
+  altText         String?
+  caption         String?
+  metadata        Json?
+  failureCode     String?
+  failureReason   String?
+  readyAt         DateTime?
+  deletedAt       DateTime?
 
   owner User? @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  variants MediaVariant[]
+  references MediaReference[]
+  auditLogs MediaAuditLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([ownerId])
+  @@unique([storageProvider, bucket, storageKey])
   @@index([kind])
+  @@index([status, createdAt])
   @@index([visibility])
   @@index([deletedAt])
   @@map("media")
+}
+
+model MediaVariant {
+  id              String               @id @default(uuid())
+  mediaId         String
+  name            String
+  storageProvider MediaStorageProvider
+  bucket          String
+  storageKey      String
+  mimeType        String
+  extension       String
+  size            Int
+  checksum        String
+  width           Int?
+  height          Int?
+  metadata        Json?
+  createdAt       DateTime             @default(now())
+
+  media Media @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@unique([mediaId, name])
+  @@unique([storageProvider, bucket, storageKey])
+  @@index([mediaId])
+  @@map("media_variants")
+}
+
+model MediaReference {
+  id         String    @id @default(uuid())
+  mediaId    String
+  targetType String
+  targetId   String
+  purpose    String
+  createdBy  String?
+  createdAt  DateTime  @default(now())
+  removedAt  DateTime?
+
+  media Media @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+
+  @@index([mediaId, removedAt])
+  @@index([targetType, targetId, purpose, removedAt])
+  @@map("media_references")
+}
+
+model MediaUploadSession {
+  id               String               @id @default(uuid())
+  ownerId          String?
+  policyKey        String
+  status           MediaUploadStatus    @default(INITIATED)
+  storageProvider  MediaStorageProvider @default(LOCAL)
+  bucket           String
+  temporaryKey     String
+  originalFilename String
+  declaredMimeType String
+  declaredSize     Int
+  checksum         String?
+  metadata         Json?
+  expiresAt        DateTime
+  completedAt      DateTime?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  owner User? @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
+  @@unique([storageProvider, bucket, temporaryKey])
+  @@index([ownerId, status])
+  @@index([status, expiresAt])
+  @@map("media_upload_sessions")
+}
+
+model MediaAuditLog {
+  id            String   @id @default(uuid())
+  mediaId       String
+  action        String
+  actorId       String?
+  reason        String?
+  correlationId String?
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  media Media @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@index([mediaId, createdAt])
+  @@index([actorId, createdAt])
+  @@index([correlationId])
+  @@map("media_audit_logs")
 }
 
 model Role {
