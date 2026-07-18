@@ -11,6 +11,8 @@ build
 .turbo
 
 coverage
+playwright-report
+test-results
 
 .DS_Store
 .idea

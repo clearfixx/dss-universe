@@ -1,0 +1,118 @@
+name: Quality Gate
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, types, schema, tests, build
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: dss_test
+          POSTGRES_PASSWORD: dss_test
+          POSTGRES_DB: dss_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U dss_test -d dss_test"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 15
+
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://dss_test:dss_test@127.0.0.1:5433/dss_test
+      JWT_ACCESS_SECRET: dss-ci-access-secret-not-for-production
+      JWT_REFRESH_SECRET: dss-ci-refresh-secret-not-for-production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate architecture
+        run: pnpm architecture:check
+
+      - name: Validate and generate Prisma client
+        run: pnpm db:validate && pnpm db:generate
+
+      - name: Apply database migrations
+        run: pnpm --filter @dss/api db:deploy
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests with coverage
+        run: pnpm test:cov
+
+      - name: API end-to-end tests
+        run: pnpm --filter @dss/api test:e2e
+
+      - name: Validate generated GraphQL operations
+        run: pnpm graphql:check
+
+      - name: Build
+        run: pnpm build
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: |
+            apps/api/coverage
+            apps/web/coverage
+          if-no-files-found: ignore
+
+  web-e2e:
+    name: Web smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @dss/web exec playwright install --with-deps chromium
+      - run: pnpm --filter @dss/web test:e2e
+
+  security:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm audit --audit-level high

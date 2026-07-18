@@ -1,5 +1,11 @@
 {
   "name": "@dss/tsconfig",
   "version": "0.0.1",
-  "private": true
+  "private": true,
+  "files": ["base.json", "nest.json", "next.json"],
+  "exports": {
+    "./base.json": "./base.json",
+    "./nest.json": "./nest.json",
+    "./next.json": "./next.json"
+  }
 }

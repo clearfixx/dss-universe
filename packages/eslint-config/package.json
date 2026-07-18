@@ -1,5 +1,13 @@
 {
   "name": "@dss/eslint-config",
   "version": "0.0.1",
-  "private": true
+  "private": true,
+  "type": "module",
+  "files": ["base.mjs"],
+  "exports": {
+    ".": "./base.mjs"
+  },
+  "peerDependencies": {
+    "eslint": "^9.0.0"
+  }
 }
