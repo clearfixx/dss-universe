@@ -36,6 +36,7 @@ import {
   type MediaUploadSessionRepository,
 } from '../../domain/repositories/media-upload-session.repository.interface';
 import type { MediaUploadSession } from '../../domain/types/media-upload-session.type';
+import type { MediaMetadata } from '../../domain/types/media-metadata.type';
 import type { InitiateMediaUpload } from '../types/initiate-media-upload.type';
 import { MediaUploadPolicyService } from './media-upload-policy.service';
 
@@ -97,5 +98,14 @@ export class MediaUploadSessionService {
     }
 
     return this.sessions.updateStatus(session.id, MediaUploadStatus.ABORTED);
+  }
+
+  updateStatus(
+    sessionId: string,
+    status: MediaUploadStatus,
+    completedAt: Date | null = null,
+    metadata: MediaMetadata | null = null,
+  ): Promise<MediaUploadSession> {
+    return this.sessions.updateStatus(sessionId, status, completedAt, metadata);
   }
 }

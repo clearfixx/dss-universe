@@ -497,6 +497,9 @@ Delivered in the Media v1 foundation package:
 - declared MIME type, extension and size validation with focused tests.
 - owner-scoped upload-session orchestration with opaque temporary keys;
 - authenticated GraphQL initiate, inspect and abort operations.
+- authenticated REST binary intake with content-based MIME inspection;
+- exact size and optional SHA-256 verification with compensating cleanup;
+- typed BullMQ media-processing queue and worker boundary.
 
 ## Processing
 

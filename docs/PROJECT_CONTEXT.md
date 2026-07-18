@@ -73,8 +73,8 @@ foundation package, pending its final quality gate and publication.
 
 - Core Storage abstraction;
 - Local Storage provider;
-- authenticated binary upload intake;
-- binary MIME inspection and processing pipeline;
+- image transformation and permanent Media record creation;
+- malware scanning and quarantine pipeline;
 - Media architecture documentation;
 - Sharp dependency;
 - Media module registration.
@@ -439,8 +439,8 @@ Primary quality risks:
 ## 10. Immediate Execution Order
 
 ```text
-1. Implement binary upload intake, MIME inspection and processing queue
-2. Implement Media processing and Avatar vertical slice
+1. Implement image transformation and permanent Media/variant creation
+2. Implement the Avatar vertical slice
 3. Complete Auth sessions and User Profiles
 4. Build Theme Engine and DSS Editor foundations
 5. Continue product modules in the canonical roadmap order

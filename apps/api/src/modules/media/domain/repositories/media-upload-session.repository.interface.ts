@@ -13,6 +13,7 @@
  */
 
 import type { MediaUploadStatus } from '../enums/media-upload-status.enum';
+import type { MediaMetadata } from '../types/media-metadata.type';
 import type {
   CreateMediaUploadSessionInput,
   MediaUploadSession,
@@ -29,5 +30,6 @@ export interface MediaUploadSessionRepository {
     id: string,
     status: MediaUploadStatus,
     completedAt?: Date | null,
+    metadata?: MediaMetadata | null,
   ): Promise<MediaUploadSession>;
 }

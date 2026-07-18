@@ -1,11 +1,27 @@
 export const DSS_QUEUE_NAMES = {
   INTEGRATION_EVENTS: "dss.integration-events",
   INTEGRATION_EVENTS_DEAD_LETTER: "dss.integration-events.dead-letter",
+  MEDIA_PROCESSING: "dss.media-processing",
 } as const;
 export const DSS_JOB_NAMES = {
   DISPATCH_INTEGRATION_EVENT: "dispatch-integration-event.v1",
   DEAD_LETTER_INTEGRATION_EVENT: "dead-letter-integration-event.v1",
+  PROCESS_MEDIA_UPLOAD: "process-media-upload.v1",
 } as const;
+
+export type MediaProcessingJob = {
+  uploadSessionId: string;
+  ownerId: string;
+  policyKey: string;
+  storageProvider: string;
+  bucket: string;
+  temporaryKey: string;
+  originalFilename: string;
+  mimeType: string;
+  size: number;
+  checksum: string;
+  queuedAt: string;
+};
 export type IntegrationEventJob = {
   eventId: string;
   eventName: string;

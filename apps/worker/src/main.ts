@@ -6,10 +6,12 @@ import {
   DSS_QUEUE_NAMES,
   type DeadLetterIntegrationEventJob,
   type IntegrationEventJob,
+  type MediaProcessingJob,
 } from "@dss/jobs";
 import { DeadLetterService } from "./dead-letter.service.js";
 import { createIntegrationEventProcessor } from "./integration-event.processor.js";
 import { PostgresProcessedEventStore } from "./processed-event.store.js";
+import { processMediaUpload } from "./media-processing.processor.js";
 
 const connection = new Redis({
   host: process.env.REDIS_HOST ?? "localhost",
@@ -32,6 +34,11 @@ const worker = new Worker<IntegrationEventJob>(
   createIntegrationEventProcessor(new PostgresProcessedEventStore(pool)),
   { connection },
 );
+const mediaWorker = new Worker<MediaProcessingJob>(
+  DSS_QUEUE_NAMES.MEDIA_PROCESSING,
+  processMediaUpload,
+  { connection },
+);
 worker.on("failed", (job, error) => {
   if (!job || job.attemptsMade < (job.opts.attempts ?? 1)) return;
   void deadLetters.record({
@@ -52,6 +59,18 @@ worker.on("completed", (job, result) => {
     "Integration event processed",
   );
 });
+mediaWorker.on("failed", (job, error) => {
+  logger.error(
+    { jobId: job?.id, uploadSessionId: job?.data.uploadSessionId, err: error },
+    "Media processing job failed",
+  );
+});
+mediaWorker.on("completed", (job) => {
+  logger.info(
+    { jobId: job.id, uploadSessionId: job.data.uploadSessionId },
+    "Media upload accepted for processing",
+  );
+});
 
 const heartbeat = setInterval(() => {
   void connection.set(
@@ -66,6 +85,7 @@ heartbeat.unref();
 async function shutdown(): Promise<void> {
   clearInterval(heartbeat);
   await worker.close();
+  await mediaWorker.close();
   await deadLetterQueue.close();
   await pool.end();
   await connection.quit();

@@ -16,10 +16,18 @@ import { ValidationPipe, type INestApplication } from '@nestjs/common';
 import { GraphQLSchemaHost } from '@nestjs/graphql';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { printSchema } from 'graphql';
+import { rm } from 'node:fs/promises';
+import { join } from 'node:path';
 import request from 'supertest';
 import type { App } from 'supertest/types';
 
 import { AppModule } from './../src/app.module';
+
+const E2E_UPLOADS_DIR = `.e2e-uploads-${process.pid}`;
+const PNG_1X1 = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+  'base64',
+);
 
 type GraphqlErrorResponse = {
   errors: Array<{ extensions: { code: string } }>;
@@ -55,6 +63,7 @@ describe('DSS API (e2e)', () => {
   let app: INestApplication<App>;
 
   beforeAll(async () => {
+    process.env.DSS_UPLOADS_DIR = E2E_UPLOADS_DIR;
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -259,9 +268,57 @@ describe('DSS API (e2e)', () => {
         },
       },
     });
+
+    const binarySession = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation InitiateMediaUpload($input: InitiateMediaUploadInput!) {
+          initiateMediaUpload(input: $input) { id status }
+        }`,
+        variables: {
+          input: {
+            policyKey: 'avatar',
+            originalFilename: 'commander.png',
+            declaredMimeType: 'image/png',
+            declaredSize: PNG_1X1.length,
+          },
+        },
+      })
+      .expect(200);
+    const binarySessionBody = binarySession.body as {
+      data: { initiateMediaUpload: { id: string; status: string } };
+      errors?: Array<{ message: string }>;
+    };
+    expect(binarySessionBody.errors).toBeUndefined();
+
+    const binaryUpload = await request(app.getHttpServer())
+      .put(
+        `/api/media/uploads/${binarySessionBody.data.initiateMediaUpload.id}/content`,
+      )
+      .set('Authorization', 'Bearer ' + accessToken)
+      .attach('file', PNG_1X1, {
+        filename: 'commander.png',
+        contentType: 'image/png',
+      })
+      .expect(200);
+
+    expect(binaryUpload.body).toMatchObject({
+      id: binarySessionBody.data.initiateMediaUpload.id,
+      policyKey: 'avatar',
+      status: 'COMPLETED',
+      declaredMimeType: 'image/png',
+    });
+    expect(binaryUpload.body).not.toHaveProperty('temporaryKey');
+    expect(binaryUpload.body).not.toHaveProperty('bucket');
   });
 
   afterAll(async () => {
     await app.close();
+    await rm(join(process.cwd(), E2E_UPLOADS_DIR), {
+      recursive: true,
+      force: true,
+    });
+    delete process.env.DSS_UPLOADS_DIR;
   });
 });

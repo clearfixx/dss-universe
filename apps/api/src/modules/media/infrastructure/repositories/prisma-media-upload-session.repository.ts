@@ -20,6 +20,7 @@ import { PrismaService } from '@api/core/database';
 import type { MediaUploadStatus } from '../../domain/enums/media-upload-status.enum';
 import type { MediaUploadSessionRepository } from '../../domain/repositories/media-upload-session.repository.interface';
 import type { CreateMediaUploadSessionInput } from '../../domain/types/media-upload-session.type';
+import type { MediaMetadata } from '../../domain/types/media-metadata.type';
 import { PrismaMediaUploadSessionMapper } from '../mappers/prisma-media-upload-session.mapper';
 
 @Injectable()
@@ -46,10 +47,11 @@ export class PrismaMediaUploadSessionRepository implements MediaUploadSessionRep
     id: string,
     status: MediaUploadStatus,
     completedAt: Date | null = null,
+    metadata: MediaMetadata | null = null,
   ) {
     const record = await this.prisma.mediaUploadSession.update({
       where: { id },
-      data: { status, completedAt },
+      data: { status, completedAt, metadata: metadata ?? undefined },
     });
     return PrismaMediaUploadSessionMapper.toDomain(record);
   }

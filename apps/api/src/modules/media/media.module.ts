@@ -28,15 +28,20 @@ import { StorageModule } from '@api/core/storage';
 
 import { MediaUploadPolicyService } from './application/services/media-upload-policy.service';
 import { MediaUploadSessionService } from './application/services/media-upload-session.service';
+import { MediaBinaryUploadService } from './application/services/media-binary-upload.service';
+import { MediaMimeInspectionService } from './application/services/media-mime-inspection.service';
 import { MEDIA_UPLOAD_SESSION_REPOSITORY } from './domain/repositories/media-upload-session.repository.interface';
 import { MEDIA_REPOSITORY } from './domain/repositories/media.repository.interface';
 import { PrismaMediaUploadSessionRepository } from './infrastructure/repositories/prisma-media-upload-session.repository';
 import { PrismaMediaRepository } from './infrastructure/repositories/prisma-media.repository';
 import { MediaResolver } from './presentation/graphql/resolvers/media.resolver';
+import { MediaUploadController } from './presentation/http/media-upload.controller';
 
 @Module({
   imports: [StorageModule],
   providers: [
+    MediaBinaryUploadService,
+    MediaMimeInspectionService,
     MediaUploadPolicyService,
     MediaUploadSessionService,
     MediaResolver,
@@ -49,6 +54,7 @@ import { MediaResolver } from './presentation/graphql/resolvers/media.resolver';
       useClass: PrismaMediaUploadSessionRepository,
     },
   ],
+  controllers: [MediaUploadController],
   exports: [
     MediaUploadPolicyService,
     MediaUploadSessionService,

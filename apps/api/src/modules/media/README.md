@@ -161,11 +161,16 @@ Implemented:
 - owner-scoped, short-lived upload-session orchestration;
 - authenticated GraphQL initiate, inspect and abort operations;
 - opaque temporary storage keys and upload-session persistence.
+- authenticated multipart binary intake through a dedicated REST boundary;
+- binary signature inspection for the Media v1 allowlist;
+- exact size and optional SHA-256 checksum verification;
+- compensating cleanup when persistence or queueing fails;
+- typed BullMQ media-processing jobs and worker boundary validation.
 
 Not implemented yet:
 
-- authenticated REST binary upload intake;
-- MIME inspection and processing workers;
+- image transformation and permanent Media record creation;
+- malware scanning for document attachments;
 - signed delivery;
 - avatar vertical slice;
 - retention and cleanup jobs.
