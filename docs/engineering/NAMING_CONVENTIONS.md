@@ -396,22 +396,22 @@ Variables should express intent.
 Good:
 
 ```ts
-currentUser
-permissions
-isOwner
-createdUser
-forumTopic
+currentUser;
+permissions;
+isOwner;
+createdUser;
+forumTopic;
 ```
 
 Avoid:
 
 ```ts
-data
-obj
-item
-tmp
-value
-result2
+data;
+obj;
+item;
+tmp;
+value;
+result2;
 ```
 
 Temporary names should exist only for a few lines.

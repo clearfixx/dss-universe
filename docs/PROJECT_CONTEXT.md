@@ -436,17 +436,17 @@ Primary quality risks:
 ## 10. Immediate Execution Order
 
 ```text
-1. Repair the repository-wide Prettier quality gate
-2. Align Media domain and Prisma model with frozen Media v1
-3. Implement Media processing and Avatar vertical slice
-4. Complete Auth sessions and User Profiles
-5. Build Theme Engine and DSS Editor foundations
-6. Continue product modules in the canonical roadmap order
+1. Align Media domain and Prisma model with frozen Media v1
+2. Implement Media processing and Avatar vertical slice
+3. Complete Auth sessions and User Profiles
+4. Build Theme Engine and DSS Editor foundations
+5. Continue product modules in the canonical roadmap order
 ```
 
 Phases 1–4 were completed on 2026-07-18. The shared Events, Outbox, Redis, Jobs,
-Worker recovery, Audit and Observability platforms are delivered. After the
-repository formatting gate is repaired, the active delivery stage is Phase 5.
+Worker recovery, Audit and Observability platforms are delivered. The
+repository-wide formatting gate is operational, and the active delivery stage
+is Phase 5.
 
 ---
 

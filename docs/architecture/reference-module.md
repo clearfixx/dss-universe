@@ -218,13 +218,13 @@ Other modules must import Users functionality only through this file.
 Good
 
 ```ts
-import { UsersService } from '@api/modules/users';
+import { UsersService } from "@api/modules/users";
 ```
 
 Bad
 
 ```ts
-import { UsersService } from '@api/modules/users/application/services/users.service';
+import { UsersService } from "@api/modules/users/application/services/users.service";
 ```
 
 Internal folder structure must remain private.
@@ -298,11 +298,11 @@ Avoid transport-specific models.
 Bad
 
 ```ts
-findMany(queryDto)
+findMany(queryDto);
 
-findMany(httpQuery)
+findMany(httpQuery);
 
-findMany(restRequest)
+findMany(restRequest);
 ```
 
 Options belong to the Domain.

@@ -49,7 +49,7 @@ It gives every source file a small piece of architectural memory.
 
 Bad:
 
-```ts
+````ts
 /**
  * Purpose:
  * Role service.
@@ -521,7 +521,7 @@ Their purpose is to reinforce important architectural ideas.
 /**
  * 🛰️ Never change seed order without coffee and a good reason.
  */
-```
+````
 
 ---
 
@@ -831,6 +831,7 @@ If every file contains a joke, they stop being memorable.
  * ===============================================================
  */
 ```
+
 ## 10. Passport Levels
 
 Not every file requires the same amount of documentation.

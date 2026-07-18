@@ -55,3 +55,4 @@ users.read
 roles.create
 permissions.manage
 blog.create
+```

@@ -270,3 +270,4 @@ When an endpoint changes, update Swagger in the same commit.
 Do not postpone Swagger updates.
 
 If Swagger becomes outdated, it becomes technical debt.
+```

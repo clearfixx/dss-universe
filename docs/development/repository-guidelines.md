@@ -43,11 +43,11 @@ delete()
 ## Avoid
 
 ```ts
-save()
+save();
 
-patch()
+patch();
 
-replace()
+replace();
 ```
 
 ---

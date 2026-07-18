@@ -151,24 +151,24 @@ The same server response must not be independently cached in Apollo, TanStack Qu
 
 ## 8. Data Ownership
 
-| Data | Owner | Derived consumers |
-| --- | --- | --- |
-| Accounts and profiles | Users | Search, Members, Feed, Gamification |
-| Credentials and sessions | Authentication / IAM | Security Deck, Audit |
-| Roles, permissions, groups | Authorization / IAM | Every protected module |
-| Media metadata and lifecycle | DSS Media Platform | Every file-consuming module |
-| News | News | Search, Feed, Notifications, Gamification |
-| Research publications | Research Lab | Search, Feed, Notifications |
-| Collaborative knowledge | Knowledge Forge | Search, Feed, Gamification |
-| Topics and replies | Community Hub | Search, Feed, Notifications, Gamification |
-| Courses and progress | Academy | Command Deck, Feed, Gamification |
-| Private messages | Communications | Notifications |
-| Tickets and releases | Support Center | Notifications, Mission Control |
-| Reputation, points, levels, titles | Gamification | Profiles, Members, Command Deck |
-| Sanctions and appeals | Moderation | IAM, Security Deck, Content Gates |
-| Notifications | Notification Platform | Web/email delivery |
-| Search documents | Search Platform | Web search |
-| Audit records | Audit Platform | Mission Control and Security Deck |
+| Data                               | Owner                 | Derived consumers                         |
+| ---------------------------------- | --------------------- | ----------------------------------------- |
+| Accounts and profiles              | Users                 | Search, Members, Feed, Gamification       |
+| Credentials and sessions           | Authentication / IAM  | Security Deck, Audit                      |
+| Roles, permissions, groups         | Authorization / IAM   | Every protected module                    |
+| Media metadata and lifecycle       | DSS Media Platform    | Every file-consuming module               |
+| News                               | News                  | Search, Feed, Notifications, Gamification |
+| Research publications              | Research Lab          | Search, Feed, Notifications               |
+| Collaborative knowledge            | Knowledge Forge       | Search, Feed, Gamification                |
+| Topics and replies                 | Community Hub         | Search, Feed, Notifications, Gamification |
+| Courses and progress               | Academy               | Command Deck, Feed, Gamification          |
+| Private messages                   | Communications        | Notifications                             |
+| Tickets and releases               | Support Center        | Notifications, Mission Control            |
+| Reputation, points, levels, titles | Gamification          | Profiles, Members, Command Deck           |
+| Sanctions and appeals              | Moderation            | IAM, Security Deck, Content Gates         |
+| Notifications                      | Notification Platform | Web/email delivery                        |
+| Search documents                   | Search Platform       | Web search                                |
+| Audit records                      | Audit Platform        | Mission Control and Security Deck         |
 
 ## 9. Events, Transactions and Jobs
 

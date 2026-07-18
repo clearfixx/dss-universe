@@ -39,3 +39,4 @@ But implementation code should stay clean.
 Rule
 
 Funny comments belong mostly in file headers, not inside business logic.
+```

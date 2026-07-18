@@ -68,11 +68,11 @@ delete()
 ### Not allowed
 
 ```ts
-save()
+save();
 
-patch()
+patch();
 
-replace()
+replace();
 ```
 
 ### Reason

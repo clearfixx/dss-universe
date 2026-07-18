@@ -1,5 +1,4 @@
-﻿
-DSS Universe Backend Style
+﻿DSS Universe Backend Style
 Backend principles
 Authentication and Authorization are separate systems.
 Auth answers: "Who is this user?"

@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+.next
+.turbo
+pnpm-lock.yaml
+apps/api/src/schema.gql
+apps/web/src/gql

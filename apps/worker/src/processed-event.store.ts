@@ -16,13 +16,22 @@ export class PostgresProcessedEventStore implements ProcessedEventStore {
     );
     return (result.rowCount ?? 0) > 0;
   }
-  async markProcessed(event: IntegrationEventJob, consumerName: string): Promise<void> {
+  async markProcessed(
+    event: IntegrationEventJob,
+    consumerName: string,
+  ): Promise<void> {
     await this.pool.query(
       `INSERT INTO "processed_events"
        ("id", "eventId", "consumerName", "eventName", "eventVersion")
        VALUES ($1, $2, $3, $4, $5)
        ON CONFLICT ("eventId", "consumerName") DO NOTHING`,
-      [randomUUID(), event.eventId, consumerName, event.eventName, event.eventVersion],
+      [
+        randomUUID(),
+        event.eventId,
+        consumerName,
+        event.eventName,
+        event.eventVersion,
+      ],
     );
   }
 }

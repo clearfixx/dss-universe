@@ -68,12 +68,12 @@ The Domain layer is the heart of the application.
 
 Domain code must not depend on:
 
-* NestJS
-* Prisma
-* HTTP
-* Controllers
-* Database implementation
-* Framework-specific features
+- NestJS
+- Prisma
+- HTTP
+- Controllers
+- Database implementation
+- Framework-specific features
 
 Domain should be pure TypeScript whenever possible.
 
@@ -89,11 +89,11 @@ Business rules should not.
 
 Examples:
 
-* Prisma
-* PostgreSQL
-* Redis
-* Queue implementation
-* Mail provider
+- Prisma
+- PostgreSQL
+- Redis
+- Queue implementation
+- Mail provider
 
 should all be replaceable without rewriting business logic.
 
@@ -103,9 +103,9 @@ should all be replaceable without rewriting business logic.
 
 Controllers should:
 
-* validate requests;
-* call application services;
-* return responses.
+- validate requests;
+- call application services;
+- return responses.
 
 Controllers should never contain business logic.
 
@@ -117,10 +117,10 @@ Application services coordinate business operations.
 
 They may:
 
-* call repositories;
-* call other services;
-* execute use cases;
-* enforce business workflows.
+- call repositories;
+- call other services;
+- execute use cases;
+- enforce business workflows.
 
 They should not contain infrastructure-specific code.
 
@@ -132,11 +132,11 @@ Repositories are responsible only for persistence.
 
 Repositories should not:
 
-* validate HTTP requests;
-* build responses;
-* send emails;
-* perform authorization;
-* know about controllers.
+- validate HTTP requests;
+- build responses;
+- send emails;
+- perform authorization;
+- know about controllers.
 
 ---
 
@@ -146,9 +146,9 @@ Mappers convert one representation into another.
 
 Examples:
 
-* Entity → DTO
-* Prisma Model → Domain Model
-* Domain Model → Response
+- Entity → DTO
+- Prisma Model → Domain Model
+- Domain Model → Response
 
 Mappers should never contain business rules.
 
@@ -186,16 +186,16 @@ The Core layer contains application-wide infrastructure.
 
 Examples:
 
-* Auth
-* Config
-* Database
-* Security
-* Cache
-* Logger
-* Queue
-* Mail
-* Scheduler
-* Events
+- Auth
+- Config
+- Database
+- Security
+- Cache
+- Logger
+- Queue
+- Mail
+- Scheduler
+- Events
 
 Core must not contain business logic.
 
@@ -207,12 +207,12 @@ Shared contains reusable building blocks.
 
 Shared may contain:
 
-* common types;
-* repository contracts;
-* exceptions;
-* constants;
-* utilities;
-* value objects.
+- common types;
+- repository contracts;
+- exceptions;
+- constants;
+- utilities;
+- value objects.
 
 Shared must remain business-neutral.
 

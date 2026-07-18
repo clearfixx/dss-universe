@@ -62,7 +62,7 @@ Dependencies should always point inward.
 Allowed:
 
 ```ts
-import { PaginationOptions } from '@/shared/domain';
+import { PaginationOptions } from "@/shared/domain";
 ```
 
 ---
@@ -72,7 +72,7 @@ import { PaginationOptions } from '@/shared/domain';
 Allowed:
 
 ```ts
-import { DatabaseService } from '@/core/database';
+import { DatabaseService } from "@/core/database";
 ```
 
 ---
@@ -82,7 +82,7 @@ import { DatabaseService } from '@/core/database';
 Allowed:
 
 ```ts
-import { UsersService } from '../application/services/users.service';
+import { UsersService } from "../application/services/users.service";
 ```
 
 ---
@@ -92,7 +92,7 @@ import { UsersService } from '../application/services/users.service';
 Allowed:
 
 ```ts
-import type { UsersQueryRepository } from '../domain/repositories/users-query.repository.interface';
+import type { UsersQueryRepository } from "../domain/repositories/users-query.repository.interface";
 ```
 
 ---
@@ -102,7 +102,7 @@ import type { UsersQueryRepository } from '../domain/repositories/users-query.re
 Allowed:
 
 ```ts
-import type { UsersMutationRepository } from '../domain/repositories/users-mutation.repository.interface';
+import type { UsersMutationRepository } from "../domain/repositories/users-mutation.repository.interface";
 ```
 
 ---
@@ -114,7 +114,7 @@ import type { UsersMutationRepository } from '../domain/repositories/users-mutat
 Forbidden:
 
 ```ts
-import { UsersService } from '@/modules/users';
+import { UsersService } from "@/modules/users";
 ```
 
 Shared must never know that business modules exist.
@@ -126,7 +126,7 @@ Shared must never know that business modules exist.
 Forbidden:
 
 ```ts
-import { DatabaseService } from '@/core/database';
+import { DatabaseService } from "@/core/database";
 ```
 
 Shared must remain infrastructure-neutral.
@@ -138,7 +138,7 @@ Shared must remain infrastructure-neutral.
 Forbidden:
 
 ```ts
-import { UsersService } from '@/modules/users';
+import { UsersService } from "@/modules/users";
 ```
 
 Core should never contain business dependencies.
@@ -150,7 +150,7 @@ Core should never contain business dependencies.
 Forbidden:
 
 ```ts
-import { PrismaService } from '@/core/database';
+import { PrismaService } from "@/core/database";
 ```
 
 The domain must not know how persistence works.
@@ -162,7 +162,7 @@ The domain must not know how persistence works.
 Forbidden:
 
 ```ts
-import { UserResponseDto } from '../presentation/dto';
+import { UserResponseDto } from "../presentation/dto";
 ```
 
 The domain should not know about HTTP.
@@ -174,7 +174,7 @@ The domain should not know about HTTP.
 Forbidden:
 
 ```ts
-import { CreateUserDto } from '../presentation/dto';
+import { CreateUserDto } from "../presentation/dto";
 ```
 
 Application services should use application DTOs instead.
@@ -192,13 +192,13 @@ index.ts
 Preferred:
 
 ```ts
-import { UsersService } from '@/modules/users';
+import { UsersService } from "@/modules/users";
 ```
 
 Avoid:
 
 ```ts
-import { UsersService } from '@/modules/users/application/services/users.service';
+import { UsersService } from "@/modules/users/application/services/users.service";
 ```
 
 ---
@@ -210,13 +210,13 @@ Deep imports are discouraged.
 Good:
 
 ```ts
-import { SafeUser } from '@/modules/users';
+import { SafeUser } from "@/modules/users";
 ```
 
 Bad:
 
 ```ts
-import { SafeUser } from '@/modules/users/application/types/safe-user.type';
+import { SafeUser } from "@/modules/users/application/types/safe-user.type";
 ```
 
 The only acceptable reason for a deep import is when no public API exists yet.
@@ -232,7 +232,7 @@ Relative imports are preferred.
 Example:
 
 ```ts
-import { UserMapper } from '../mappers/user.mapper';
+import { UserMapper } from "../mappers/user.mapper";
 ```
 
 Avoid long alias chains inside one module.
@@ -246,13 +246,13 @@ Business modules should not access each other's internals.
 Allowed:
 
 ```ts
-import { UsersService } from '@/modules/users';
+import { UsersService } from "@/modules/users";
 ```
 
 Forbidden:
 
 ```ts
-import { UserMapper } from '@/modules/users/application/mappers/user.mapper';
+import { UserMapper } from "@/modules/users/application/mappers/user.mapper";
 ```
 
 If another module needs something, export it intentionally.
@@ -351,14 +351,14 @@ Recommended order:
 Example:
 
 ```ts
-import { Injectable } from '@nestjs/common';
+import { Injectable } from "@nestjs/common";
 
-import { DatabaseService } from '@/core/database';
-import { PaginationOptions } from '@/shared/domain';
+import { DatabaseService } from "@/core/database";
+import { PaginationOptions } from "@/shared/domain";
 
-import { UsersService } from '@/modules/users';
+import { UsersService } from "@/modules/users";
 
-import { UserMapper } from '../mappers/user.mapper';
+import { UserMapper } from "../mappers/user.mapper";
 ```
 
 ---

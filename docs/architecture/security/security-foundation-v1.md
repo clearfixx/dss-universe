@@ -78,25 +78,24 @@ RBAC Model
 The security model is now completely database-driven.
 
 User
-    │
-    ├──────────────┐
-    │              │
-UserRole     UserPermission
-    │              │
-    ▼              ▼
- Role        Permission
-    │
+│
+├──────────────┐
+│ │
+UserRole UserPermission
+│ │
+▼ ▼
+Role Permission
+│
 RolePermission
-    │
-    ▼
+│
+▼
 Permission
 
 Effective permissions are calculated as:
 
-Permissions from Roles
-            +
+Permissions from Roles +
 Direct User Permissions
-            =
+=
 Effective Permissions
 Database
 
@@ -234,14 +233,14 @@ Security is no longer a feature of the application.
 It is now part of the platform itself.
 
 Architecture Status
-Component	Status
-Authentication	✅ Complete
-Authorization	✅ Complete
-IAM	✅ Complete
-RBAC	✅ Complete
-Database Model	✅ Complete
-Seed System	✅ Complete
-Engineering Rules	✅ Complete
+Component Status
+Authentication ✅ Complete
+Authorization ✅ Complete
+IAM ✅ Complete
+RBAC ✅ Complete
+Database Model ✅ Complete
+Seed System ✅ Complete
+Engineering Rules ✅ Complete
 Security Foundation v1
 
 STATUS: ✅ COMPLETE

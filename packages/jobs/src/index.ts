@@ -32,7 +32,10 @@ export type DeadLetterIntegrationEventJob = {
 
 export type ProcessedEventStore = {
   hasProcessed(eventId: string, consumerName: string): Promise<boolean>;
-  markProcessed(event: IntegrationEventJob, consumerName: string): Promise<void>;
+  markProcessed(
+    event: IntegrationEventJob,
+    consumerName: string,
+  ): Promise<void>;
 };
 
 export type IntegrationEventHandler = (
@@ -46,7 +49,9 @@ export class IdempotentIntegrationEventProcessor {
     private readonly handler: IntegrationEventHandler,
   ) {}
 
-  async process(data: IntegrationEventJob): Promise<{ eventId: string; duplicate: boolean }> {
+  async process(
+    data: IntegrationEventJob,
+  ): Promise<{ eventId: string; duplicate: boolean }> {
     processIntegrationEvent(data);
     if (await this.store.hasProcessed(data.eventId, this.consumerName)) {
       return { eventId: data.eventId, duplicate: true };
