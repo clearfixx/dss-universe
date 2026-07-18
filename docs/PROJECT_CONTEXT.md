@@ -436,17 +436,17 @@ Primary quality risks:
 ## 10. Immediate Execution Order
 
 ```text
-1. Add feature-specific idempotent consumers and dead-letter operations
-2. Add queue monitoring operations for Maintenance Center
-3. Add Audit and Observability foundations
-4. Align Media domain and Prisma model with frozen Media v1
-5. Implement Media processing and Avatar vertical slice
-6. Complete Auth sessions and User Profiles
-7. Build Theme Engine and DSS Editor foundations
-8. Continue product modules in the canonical roadmap order
+1. Add structured logging and Observability foundations
+2. Align Media domain and Prisma model with frozen Media v1
+3. Implement Media processing and Avatar vertical slice
+4. Complete Auth sessions and User Profiles
+5. Build Theme Engine and DSS Editor foundations
+6. Continue product modules in the canonical roadmap order
 ```
 
-Phases 1–3 were completed on 2026-07-18. The active roadmap stage is Phase 4 — Core Platform Services.
+Phases 1–3 were completed on 2026-07-18. Phase 4 Events, Outbox, Redis, Jobs,
+Worker recovery and Audit Platform are delivered. The active Phase 4 package is
+Logging and Observability Baseline.
 
 ---
 

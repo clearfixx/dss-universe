@@ -1,6 +1,8 @@
 # Core Queue
 
-Owns BullMQ queues and the PostgreSQL outbox dispatcher. Jobs use deterministic event IDs, bounded retries and exponential backoff.
+Owns BullMQ queues, the PostgreSQL outbox dispatcher, idempotency markers,
+dead-letter persistence and operator recovery services. Jobs use deterministic
+event IDs, bounded retries and exponential backoff.
 
 ## Responsibility
 

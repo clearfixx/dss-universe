@@ -44,6 +44,18 @@ enum OutboxStatus {
   FAILED
 }
 
+enum AuditActorType {
+  USER
+  SYSTEM
+  SERVICE
+}
+
+enum AuditResult {
+  SUCCESS
+  FAILURE
+  DENIED
+}
+
 model User {
   id           String     @id @default(uuid())
   email        String     @unique
@@ -248,4 +260,28 @@ model DeadLetterEvent {
   @@index([eventId])
   @@index([resolvedAt, failedAt])
   @@map("dead_letter_events")
+}
+
+model AuditRecord {
+  id            String         @id @default(uuid())
+  action        String
+  actorType     AuditActorType
+  actorId       String?
+  targetType    String?
+  targetId      String?
+  result        AuditResult    @default(SUCCESS)
+  reason        String?
+  correlationId String?
+  requestId     String?
+  ipAddress     String?
+  userAgent     String?
+  metadata      Json?
+  occurredAt    DateTime       @default(now())
+  createdAt     DateTime       @default(now())
+
+  @@index([action, occurredAt])
+  @@index([actorId, occurredAt])
+  @@index([targetType, targetId, occurredAt])
+  @@index([correlationId])
+  @@map("audit_records")
 }

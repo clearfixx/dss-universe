@@ -21,6 +21,9 @@ PostgreSQL outbox -> API dispatcher -> Redis / BullMQ -> apps/worker
 - enqueue failure records the error and returns the row to `PENDING`;
 - stale processing locks are recovered automatically;
 - jobs use five attempts, exponential backoff and retained results.
+- consumers persist stable `(eventId, consumerName)` markers;
+- terminal failures are persisted and copied to a dead-letter queue;
+- queue metrics, failed-job inspection and explicit retry are available through the platform service.
 
 ## Configuration
 
@@ -28,4 +31,4 @@ PostgreSQL outbox -> API dispatcher -> Redis / BullMQ -> apps/worker
 - `REDIS_PORT`, default `6379`;
 - `OUTBOX_DISPATCH_INTERVAL_MS`, default `1000`; use `0` in tests or dedicated-dispatcher deployments.
 
-Feature-specific consumers, dead-letter operations and Maintenance Center monitoring remain subsequent Phase 4 work.
+Maintenance Center presentation and feature-specific handlers remain product work; the shared recovery contract is implemented.

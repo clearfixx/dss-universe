@@ -38,7 +38,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
-import { JwtAuthGuard } from '@api/core/auth';
+import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
 import {
   Permission,
   PermissionsGuard,
@@ -56,8 +56,11 @@ export class PermissionsController {
 
   @Post()
   @RequirePermissions(Permission.PermissionsManage)
-  create(@Body() dto: CreatePermissionDto) {
-    return this.permissionsService.create(dto);
+  create(
+    @Body() dto: CreatePermissionDto,
+    @AuthUser() actor: AuthenticatedUser,
+  ) {
+    return this.permissionsService.create(dto, actor.id);
   }
 
   @Get()

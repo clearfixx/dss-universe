@@ -297,7 +297,7 @@ Phase 3 met this Definition of Done on 2026-07-18. The active delivery stage is 
 ## Status
 
 ```text
-IN PROGRESS — Events and transactional outbox foundation delivered 2026-07-18
+IN PROGRESS — Events, queues, recovery and Audit delivered 2026-07-18; Observability next
 ```
 
 ## Goal
@@ -323,7 +323,7 @@ Delivered in the first Phase 4 package:
 - correlation, causation, actor and aggregate context;
 - integration proof that primary data and events commit or roll back together.
 
-The dispatcher, BullMQ delivery, retries, dead-letter operations and consumer idempotency remain in the Redis/Jobs/Worker package.
+Dispatcher, BullMQ delivery, retries, dead-letter operations and consumer idempotency are delivered in the subsequent Phase 4 queue packages.
 
 ## Redis, Jobs and Worker
 
@@ -345,6 +345,14 @@ Delivered in the second Phase 4 package:
 - separately buildable `apps/worker` runtime;
 - PostgreSQL → BullMQ → worker integration coverage with duplicate protection.
 
+Delivered in the third Phase 4 package:
+
+- PostgreSQL consumer idempotency markers with stable versioned consumer identity;
+- complete versioned event envelopes delivered to workers;
+- terminal-failure persistence and a dedicated dead-letter queue;
+- queue metrics, failed-job inspection and explicit operator retry;
+- worker-level duplicate processing proof and queue recovery documentation.
+
 ## Audit
 
 - immutable audit records;
@@ -352,6 +360,15 @@ Delivered in the second Phase 4 package:
 - sensitive-data redaction;
 - request/correlation linkage;
 - application contract used by IAM, Auth, Media and moderation.
+
+Delivered in the Audit Platform package:
+
+- immutable indexed PostgreSQL audit records and focused migration;
+- actor, target, result, reason, request, network and correlation context;
+- recursive sensitive-data redaction before persistence;
+- transaction-only `AuditWriterService` contract;
+- IAM permission creation as the first sensitive application integration;
+- commit, rollback and redaction integration coverage.
 
 ## Logging and Observability Baseline
 

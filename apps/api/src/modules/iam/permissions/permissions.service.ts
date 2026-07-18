@@ -42,15 +42,19 @@ import {
 } from '@nestjs/common';
 
 import { PrismaService } from '@api/core/database';
+import { AuditWriterService } from '@api/core/audit';
 
 import type { CreatePermissionDto } from './dto/create-permission.dto';
 import type { UpdatePermissionDto } from './dto/update-permission.dto';
 
 @Injectable()
 export class PermissionsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly audit: AuditWriterService,
+  ) {}
 
-  async create(dto: CreatePermissionDto) {
+  async create(dto: CreatePermissionDto, actorId?: string) {
     const existingPermission = await this.prisma.permission.findUnique({
       where: { key: dto.key },
       select: { id: true },
@@ -60,12 +64,23 @@ export class PermissionsService {
       throw new ConflictException(`Permission "${dto.key}" already exists.`);
     }
 
-    return this.prisma.permission.create({
-      data: {
-        key: dto.key,
-        label: dto.label,
-        description: dto.description,
-      },
+    return this.prisma.transaction(async (transaction) => {
+      const permission = await transaction.permission.create({
+        data: {
+          key: dto.key,
+          label: dto.label,
+          description: dto.description,
+        },
+      });
+      await this.audit.append(transaction, {
+        action: 'iam.permission.created',
+        actorType: actorId ? 'USER' : 'SYSTEM',
+        actorId,
+        targetType: 'Permission',
+        targetId: permission.id,
+        metadata: { key: permission.key, label: permission.label },
+      });
+      return permission;
     });
   }
 

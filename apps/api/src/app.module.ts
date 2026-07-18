@@ -61,6 +61,7 @@ import { Module } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 
 import { AuthorizationModule } from '@api/core/authorization';
+import { AuditModule } from '@api/core/audit';
 import { ConfigurationModule } from '@api/core/config/configuration.module';
 import { PrismaExceptionFilter } from '@api/core/database/exceptions/prisma-exception.filter';
 import { PrismaModule } from '@api/core/database/prisma.module';
@@ -79,6 +80,7 @@ import { UsersModule } from './modules/users/users.module';
   imports: [
     ConfigurationModule,
     PrismaModule,
+    AuditModule,
     EventsModule,
     QueueModule,
     GraphqlCoreModule,
