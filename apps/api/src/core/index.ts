@@ -29,3 +29,5 @@ export * from './auth';
 export * from './authorization';
 export * from './config';
 export * from './database';
+export * from './storage';
+export * from './graphql';

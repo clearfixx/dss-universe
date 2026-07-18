@@ -41,11 +41,12 @@ import { AuthService } from './application/services/auth.service';
 import { PasswordHashService } from './application/services/password-hash.service';
 import { TokenService } from './application/services/token.service';
 import { AuthController } from './presentation/controllers/auth.controller';
+import { AuthResolver } from './presentation/graphql/resolvers/auth.resolver';
 
 @Module({
   imports: [UsersModule, AuthCoreModule, AuthorizationModule],
   controllers: [AuthController],
-  providers: [AuthService, PasswordHashService, TokenService],
+  providers: [AuthService, PasswordHashService, TokenService, AuthResolver],
   exports: [AuthService],
 })
 export class AuthModule {}

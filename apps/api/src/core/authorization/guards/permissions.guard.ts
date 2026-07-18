@@ -43,6 +43,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { GqlExecutionContext } from '@nestjs/graphql';
 
 import type { AuthenticatedRequest } from '@api/core/auth';
 
@@ -62,7 +63,12 @@ export class PermissionsGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    const request =
+      context.getType<string>() === 'graphql'
+        ? GqlExecutionContext.create(context).getContext<{
+            req: AuthenticatedRequest;
+          }>().req
+        : context.switchToHttp().getRequest<AuthenticatedRequest>();
     const user = request.user;
 
     if (!user) {

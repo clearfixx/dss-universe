@@ -17,6 +17,26 @@ enum UserStatus {
   DELETED
 }
 
+enum MediaKind {
+  IMAGE
+  VIDEO
+  AUDIO
+  DOCUMENT
+  ARCHIVE
+  OTHER
+}
+
+enum MediaVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum MediaStorage {
+  LOCAL
+  S3
+  R2
+}
+
 model User {
   id           String     @id @default(uuid())
   email        String     @unique
@@ -27,6 +47,8 @@ model User {
   avatarUrl    String?
   coverUrl     String?
   status       UserStatus @default(ACTIVE)
+
+  media Media[]
 
   roles             UserRole[]
   directPermissions UserPermission[]
@@ -40,6 +62,35 @@ model User {
   updatedAt DateTime @updatedAt
 
   @@map("users")
+}
+
+model Media {
+  id               String          @id @default(uuid())
+  ownerId          String?
+  kind             MediaKind
+  visibility       MediaVisibility @default(PUBLIC)
+  storage          MediaStorage    @default(LOCAL)
+  path             String
+  filename         String
+  originalFilename String
+  mimeType         String
+  extension        String
+  size             Int
+  checksum         String
+  width            Int?
+  height           Int?
+  deletedAt        DateTime?
+
+  owner User? @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([kind])
+  @@index([visibility])
+  @@index([deletedAt])
+  @@map("media")
 }
 
 model Role {

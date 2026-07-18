@@ -34,12 +34,16 @@ import { UsersService } from './application/services/users.service';
 import { USERS_REPOSITORY } from './domain/repositories/users.repository.interface';
 import { PrismaUsersRepository } from './infrastructure/repositories/prisma-users.repository';
 import { UsersController } from './presentation/controllers/users.controller';
+import { UserByIdLoader } from './presentation/graphql/loaders/user-by-id.loader';
+import { UsersResolver } from './presentation/graphql/resolvers/users.resolver';
 
 @Module({
   imports: [PrismaModule],
   controllers: [UsersController],
   providers: [
     UsersService,
+    UsersResolver,
+    UserByIdLoader,
     {
       provide: USERS_REPOSITORY,
       useClass: PrismaUsersRepository,

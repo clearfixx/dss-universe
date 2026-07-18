@@ -1,29 +1,188 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: API Test Infrastructure
+ * 📄 File: apps/api/test/app.e2e-spec.ts
+ *
+ * 🎯 Purpose:
+ * Verifies REST compatibility and the GraphQL Auth/Users vertical slice.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
+
+import { ValidationPipe, type INestApplication } from '@nestjs/common';
+import { GraphQLSchemaHost } from '@nestjs/graphql';
+import { Test, type TestingModule } from '@nestjs/testing';
+import { printSchema } from 'graphql';
 import request from 'supertest';
-import { App } from 'supertest/types';
+import type { App } from 'supertest/types';
+
 import { AppModule } from './../src/app.module';
 
-describe('AppController (e2e)', () => {
+type GraphqlErrorResponse = {
+  errors: Array<{ extensions: { code: string } }>;
+};
+
+type RegisterResponse = {
+  data: {
+    register: {
+      user: { id: string; email: string; username: string };
+      tokens: { accessToken: string };
+    };
+  };
+};
+
+type RegisterErrorResponse = {
+  errors?: Array<{ extensions: { code: string } }>;
+};
+
+describe('DSS API (e2e)', () => {
   let app: INestApplication<App>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.setGlobalPrefix('api');
+    app.useGlobalPipes(
+      new ValidationPipe({
+        transform: true,
+        whitelist: true,
+        forbidUnknownValues: true,
+      }),
+    );
     await app.init();
   });
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
+  it('preserves the REST application status endpoint', async () => {
+    await request(app.getHttpServer())
+      .get('/api')
       .expect(200)
-      .expect('Hello World!');
+      .expect({ app: 'DSS Universe API', status: 'ok' });
   });
 
-  afterEach(async () => {
+  it('exposes the GraphQL transport status query', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .send({ query: '{ apiInfo { name status transport } }' })
+      .expect(200);
+
+    expect(response.body).toEqual({
+      data: {
+        apiInfo: {
+          name: 'DSS Universe API',
+          status: 'ok',
+          transport: 'graphql',
+        },
+      },
+    });
+  });
+
+  it('generates a deterministic schema without authentication secrets', () => {
+    const schema = printSchema(app.get(GraphQLSchemaHost).schema);
+
+    expect(schema).toContain('type Viewer');
+    expect(schema).toContain('register(input: RegisterInput!)');
+    expect(schema).toContain('users(pagination: UsersPageInput)');
+    expect(schema).not.toContain('passwordHash');
+    expect(schema).not.toContain('refreshTokenHash');
+  });
+
+  it('returns a stable unauthenticated GraphQL error code', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .send({ query: '{ viewer { id } }' })
+      .expect(200);
+    const body = response.body as GraphqlErrorResponse;
+
+    expect(body.errors[0]?.extensions.code).toBe('UNAUTHENTICATED');
+  });
+
+  it('rejects GraphQL operations above the complexity limit', async () => {
+    const fields = Array.from(
+      { length: 251 },
+      (_, index) => `status${index}: apiInfo { status }`,
+    ).join('\n');
+    const response = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .send({ query: `{ ${fields} }` })
+      .expect(400);
+
+    const body = response.body as GraphqlErrorResponse;
+
+    expect(body.errors).toBeDefined();
+  });
+
+  it('registers and resolves the authenticated viewer through GraphQL', async () => {
+    const suffix = String(Date.now()) + Math.random().toString(16).slice(2);
+    const username = 'astronaut-' + suffix;
+    const email = username + '@dss.test';
+    const registration = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .send({
+        query: `mutation {
+          register(input: {
+            email: "${email}"
+            username: "${username}"
+            displayName: "Phase Three Astronaut"
+            password: "dss-test-password"
+          }) {
+            user { id email username }
+            tokens { accessToken }
+          }
+        }`,
+      });
+    const registered = registration.body as RegisterResponse;
+    const registrationError = registration.body as RegisterErrorResponse;
+
+    expect(registrationError.errors).toBeUndefined();
+    expect(registration.status).toBe(200);
+    const accessToken = registered.data.register.tokens.accessToken;
+
+    expect(registered.data.register.user.email).toBe(email);
+
+    const viewer = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({ query: '{ viewer { id email username } }' })
+      .expect(200);
+
+    expect(viewer.body).toEqual({
+      data: {
+        viewer: registered.data.register.user,
+      },
+    });
+
+    const userLookup = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .set('Content-Type', 'application/json')
+      .send(
+        JSON.stringify({
+          query:
+            'query UserByUsername($username: String!) { userByUsername(username: $username) { id username } }',
+          variables: { username },
+        }),
+      );
+
+    expect(userLookup.body).not.toHaveProperty('errors');
+    expect(userLookup.status).toBe(200);
+
+    expect(userLookup.body).toEqual({
+      data: {
+        userByUsername: {
+          id: registered.data.register.user.id,
+          username,
+        },
+      },
+    });
+  });
+
+  afterAll(async () => {
     await app.close();
   });
 });

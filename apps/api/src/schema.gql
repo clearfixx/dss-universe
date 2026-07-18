@@ -1,0 +1,94 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type ApiInfo {
+  name: String!
+  status: String!
+  transport: String!
+}
+
+type AuthPayloadModel {
+  tokens: AuthTokensModel!
+  user: Viewer!
+}
+
+type AuthTokensModel {
+  accessToken: String!
+  refreshToken: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+type LogoutResultModel {
+  success: Boolean!
+}
+
+type Mutation {
+  login(input: LoginInput!): AuthPayloadModel!
+  logout: LogoutResultModel!
+  refreshTokens(input: RefreshTokenInput!): AuthPayloadModel!
+  register(input: RegisterInput!): AuthPayloadModel!
+}
+
+type Query {
+  apiInfo: ApiInfo!
+  user(id: ID!): User!
+  userByUsername(username: String!): User!
+  users(pagination: UsersPageInput): UsersPageModel!
+  viewer: Viewer!
+}
+
+input RefreshTokenInput {
+  refreshToken: String!
+}
+
+input RegisterInput {
+  displayName: String!
+  email: String!
+  password: String!
+  username: String!
+}
+
+type User {
+  avatarUrl: String
+  bio: String
+  coverUrl: String
+  createdAt: String!
+  displayName: String
+  id: ID!
+  lastSeenAt: String
+  status: String!
+  username: String!
+}
+
+input UsersPageInput {
+  limit: Int! = 20
+  page: Int! = 1
+}
+
+type UsersPageModel {
+  items: [User!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+type Viewer {
+  avatarUrl: String
+  bio: String
+  coverUrl: String
+  createdAt: String!
+  displayName: String
+  email: String!
+  emailVerifiedAt: String
+  id: ID!
+  lastSeenAt: String
+  status: String!
+  updatedAt: String!
+  username: String!
+}
