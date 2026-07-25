@@ -35,6 +35,58 @@ export type MediaProcessingVariantSpec = {
   height?: number;
   fit: "cover" | "inside";
 };
+
+export function isMediaProcessingJob(
+  value: unknown,
+): value is MediaProcessingJob {
+  if (!isRecord(value)) return false;
+  return (
+    isNonEmptyString(value.mediaId) &&
+    isNonEmptyString(value.uploadSessionId) &&
+    isNonEmptyString(value.ownerId) &&
+    isNonEmptyString(value.policyKey) &&
+    isNonEmptyString(value.storageProvider) &&
+    isNonEmptyString(value.bucket) &&
+    isNonEmptyString(value.temporaryKey) &&
+    isNonEmptyString(value.originalFilename) &&
+    isNonEmptyString(value.mimeType) &&
+    Number.isSafeInteger(value.size) &&
+    typeof value.size === "number" &&
+    value.size > 0 &&
+    typeof value.checksum === "string" &&
+    /^[a-f0-9]{64}$/.test(value.checksum) &&
+    typeof value.scanRequired === "boolean" &&
+    (value.processingKind === "IMAGE" ||
+      value.processingKind === "PASSTHROUGH") &&
+    isNonEmptyString(value.destinationKey) &&
+    Array.isArray(value.variants) &&
+    value.variants.every(isMediaProcessingVariantSpec) &&
+    isNonEmptyString(value.queuedAt)
+  );
+}
+
+function isMediaProcessingVariantSpec(
+  value: unknown,
+): value is MediaProcessingVariantSpec {
+  if (!isRecord(value)) return false;
+  return (
+    isNonEmptyString(value.name) &&
+    isNonEmptyString(value.storageKey) &&
+    typeof value.width === "number" &&
+    value.width > 0 &&
+    (value.height === undefined ||
+      (typeof value.height === "number" && value.height > 0)) &&
+    (value.fit === "cover" || value.fit === "inside")
+  );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0;
+}
 export type IntegrationEventJob = {
   eventId: string;
   eventName: string;

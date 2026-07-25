@@ -120,23 +120,6 @@ export class MediaBinaryUploadService {
         ownerId,
         mediaId,
       );
-      await this.media.create({
-        id: mediaId,
-        ownerId,
-        kind: policy.kind,
-        status: MediaStatus.PROCESSING,
-        visibility: policy.visibility,
-        storageProvider: session.storageProvider,
-        bucket: session.bucket,
-        storageKey: destinationKey,
-        originalFilename: session.originalFilename,
-        mimeType: isImage ? 'image/webp' : actualMimeType,
-        extension,
-        size: file.size,
-        checksum,
-        metadata: { uploadSessionId: session.id },
-      });
-
       const job: MediaProcessingJob = {
         mediaId,
         uploadSessionId: session.id,
@@ -155,6 +138,30 @@ export class MediaBinaryUploadService {
         variants,
         queuedAt: now.toISOString(),
       };
+      await this.media.create({
+        id: mediaId,
+        ownerId,
+        kind: policy.kind,
+        status: MediaStatus.PROCESSING,
+        visibility: policy.visibility,
+        storageProvider: session.storageProvider,
+        bucket: session.bucket,
+        storageKey: destinationKey,
+        originalFilename: session.originalFilename,
+        mimeType: isImage ? 'image/webp' : actualMimeType,
+        extension,
+        size: file.size,
+        checksum,
+        metadata: {
+          uploadSessionId: session.id,
+          temporaryKey: session.temporaryKey,
+          processingJob: {
+            ...job,
+            variants: job.variants.map((variant) => ({ ...variant })),
+          },
+        },
+      });
+
       await this.queues.mediaProcessing.add(
         DSS_JOB_NAMES.PROCESS_MEDIA_UPLOAD,
         job,

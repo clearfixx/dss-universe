@@ -183,10 +183,16 @@ Implemented:
 - owner and `media.restricted.read` access enforcement;
 - configurable retention with serializable orphan claiming;
 - idempotent original/variant cleanup and audited completion/failure.
+- mandatory asynchronous ClamAV scanning before permanent processing;
+- fail-closed quarantine for malware detections and scanner outages;
+- permission-protected GraphQL quarantine listing, rescan and rejection;
+- immutable processing contracts retained for safe administrative rescans;
+- audited quarantine rescan requests and rejection decisions.
 
 Not implemented yet:
 
-- malware scanning for document attachments;
+- Mission Control Media Library user interface;
+- storage usage metrics and orphan-reporting views;
 
 Architecture Rule
 
@@ -212,7 +218,6 @@ Cloudflare R2;
 image variants;
 private media;
 signed URLs;
-virus scanning;
 moderation workflows;
 CDN integration.
 

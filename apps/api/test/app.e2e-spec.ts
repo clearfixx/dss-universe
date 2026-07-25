@@ -517,6 +517,116 @@ describe('DSS API (e2e)', () => {
     await request(app.getHttpServer())
       .get(`${accessBody.data.mediaAccessUrl.url}x`)
       .expect(401);
+
+    await app.get(PrismaService).media.update({
+      where: { id: mediaId },
+      data: {
+        status: 'QUARANTINED',
+        failureCode: 'MALWARE_DETECTED',
+        failureReason: 'Eicar-Signature',
+      },
+    });
+    const deniedQuarantine = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({ query: '{ quarantinedMedia { id status failureCode } }' })
+      .expect(200);
+    expect(deniedQuarantine.body).toMatchObject({
+      data: null,
+      errors: [{ extensions: { code: 'FORBIDDEN' } }],
+    });
+
+    const quarantinePermission = await app
+      .get(PrismaService)
+      .permission.upsert({
+        where: { key: 'media.quarantine.manage' },
+        update: {},
+        create: {
+          key: 'media.quarantine.manage',
+          label: 'Manage media quarantine',
+        },
+      });
+    await app.get(PrismaService).userPermission.create({
+      data: {
+        userId: registered.data.register.user.id,
+        permissionId: quarantinePermission.id,
+      },
+    });
+    const login = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .send({
+        query: `mutation Login($input: LoginInput!) {
+          login(input: $input) { tokens { accessToken } }
+        }`,
+        variables: {
+          input: { email, password: 'dss-test-password' },
+        },
+      })
+      .expect(200);
+    const managerToken = (
+      login.body as { data: { login: { tokens: { accessToken: string } } } }
+    ).data.login.tokens.accessToken;
+
+    const quarantineList = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + managerToken)
+      .send({
+        query:
+          '{ quarantinedMedia(limit: 10) { id status failureCode failureReason } }',
+      })
+      .expect(200);
+    expect(quarantineList.body).toEqual({
+      data: {
+        quarantinedMedia: [
+          {
+            id: mediaId,
+            status: 'QUARANTINED',
+            failureCode: 'MALWARE_DETECTED',
+            failureReason: 'Eicar-Signature',
+          },
+        ],
+      },
+    });
+
+    const rescan = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + managerToken)
+      .send({
+        query: `mutation Rescan($mediaId: ID!) {
+          rescanQuarantinedMedia(mediaId: $mediaId) { id status }
+        }`,
+        variables: { mediaId },
+      })
+      .expect(200);
+    expect(rescan.body).toEqual({
+      data: {
+        rescanQuarantinedMedia: { id: mediaId, status: 'QUARANTINED' },
+      },
+    });
+
+    const rejected = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + managerToken)
+      .send({
+        query: `mutation Reject($mediaId: ID!) {
+          rejectQuarantinedMedia(mediaId: $mediaId) { id status }
+        }`,
+        variables: { mediaId },
+      })
+      .expect(200);
+    expect(rejected.body).toEqual({
+      data: {
+        rejectQuarantinedMedia: { id: mediaId, status: 'REJECTED' },
+      },
+    });
+    const rescanJobs = await app
+      .get(QueueRegistryService)
+      .mediaProcessing.getJobs(['waiting', 'delayed']);
+    await Promise.all(
+      rescanJobs
+        .filter((job) => job.data.mediaId === mediaId)
+        .map((job) => job.remove()),
+    );
     await queuedJob?.remove();
   });
 

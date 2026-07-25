@@ -510,6 +510,9 @@ Delivered in the Media v1 foundation package:
 - mandatory asynchronous ClamAV scanning for every upload;
 - fail-closed quarantine on detected malware or scanner outage;
 - safe quarantine rescan transition and terminal-status idempotency.
+- `media.quarantine.manage` permission with admin and owner defaults;
+- GraphQL quarantine listing, rescan, and rejection operations;
+- application-layer authorization and immutable audit records for quarantine decisions.
 
 ## Processing — delivered foundation
 
@@ -536,9 +539,8 @@ Delivered in the Media v1 foundation package:
 
 ## Completion
 
-- admin Media Library;
+- Mission Control Media Library interface;
 - failed-job retry;
-- admin quarantine review, rescan and rejection controls;
 - orphan detection;
 - storage metrics.
 

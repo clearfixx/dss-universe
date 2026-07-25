@@ -16,7 +16,7 @@
  */
 
 import { UseGuards } from '@nestjs/common';
-import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, ID, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 
 import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
 
@@ -30,6 +30,9 @@ import { UserGraphqlMapper } from '../../../../users/presentation/graphql/mapper
 import { ViewerModel } from '../../../../users/presentation/graphql/models/viewer.model';
 import { MediaAccessService } from '../../../application/services/media-access.service';
 import { MediaAccessModel } from '../models/media-access.model';
+import { MediaQuarantineService } from '../../../application/services/media-quarantine.service';
+import { MediaQuarantineModel } from '../models/media-quarantine.model';
+import { MediaQuarantineGraphqlMapper } from '../mappers/media-quarantine-graphql.mapper';
 
 @Resolver()
 @UseGuards(JwtAuthGuard)
@@ -39,6 +42,7 @@ export class MediaResolver {
     private readonly avatars: AvatarService,
     private readonly users: UsersService,
     private readonly access: MediaAccessService,
+    private readonly quarantine: MediaQuarantineService,
   ) {}
 
   @Mutation(() => MediaUploadSessionModel)
@@ -96,5 +100,35 @@ export class MediaResolver {
     @Args('variantName') variantName: string,
   ): Promise<MediaAccessModel> {
     return this.access.issue(user, mediaId, variantName);
+  }
+
+  @Query(() => [MediaQuarantineModel])
+  async quarantinedMedia(
+    @AuthUser() user: AuthenticatedUser,
+    @Args('limit', { type: () => Int, defaultValue: 25 }) limit: number,
+  ): Promise<MediaQuarantineModel[]> {
+    return (await this.quarantine.list(user, limit)).map((media) =>
+      MediaQuarantineGraphqlMapper.toModel(media),
+    );
+  }
+
+  @Mutation(() => MediaQuarantineModel)
+  async rescanQuarantinedMedia(
+    @AuthUser() user: AuthenticatedUser,
+    @Args('mediaId', { type: () => ID }) mediaId: string,
+  ): Promise<MediaQuarantineModel> {
+    return MediaQuarantineGraphqlMapper.toModel(
+      await this.quarantine.requestRescan(user, mediaId),
+    );
+  }
+
+  @Mutation(() => MediaQuarantineModel)
+  async rejectQuarantinedMedia(
+    @AuthUser() user: AuthenticatedUser,
+    @Args('mediaId', { type: () => ID }) mediaId: string,
+  ): Promise<MediaQuarantineModel> {
+    return MediaQuarantineGraphqlMapper.toModel(
+      await this.quarantine.reject(user, mediaId),
+    );
   }
 }

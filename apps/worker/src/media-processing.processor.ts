@@ -5,7 +5,7 @@
  */
 
 import type { Job } from "bullmq";
-import type { MediaProcessingJob } from "@dss/jobs";
+import { isMediaProcessingJob, type MediaProcessingJob } from "@dss/jobs";
 import type {
   MediaFileProcessor,
   MediaMalwareScanner,
@@ -87,18 +87,7 @@ export function createMediaProcessingProcessor(
 }
 
 export function validateMediaProcessingJob(data: MediaProcessingJob): void {
-  if (
-    !data.mediaId ||
-    !data.uploadSessionId ||
-    !data.ownerId ||
-    !data.temporaryKey ||
-    !data.destinationKey ||
-    !data.mimeType ||
-    typeof data.scanRequired !== "boolean" ||
-    !Number.isSafeInteger(data.size) ||
-    data.size <= 0 ||
-    !/^[a-f0-9]{64}$/.test(data.checksum)
-  ) {
+  if (!isMediaProcessingJob(data)) {
     throw new Error("Invalid media processing job.");
   }
 }

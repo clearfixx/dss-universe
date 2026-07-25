@@ -29,6 +29,7 @@ export interface MediaRepository {
   create(input: CreateMediaInput): Promise<MediaEntity>;
   findById(id: string): Promise<MediaEntity | null>;
   findByOwnerId(ownerId: string): Promise<MediaEntity[]>;
+  findQuarantined(limit: number): Promise<MediaEntity[]>;
   update(id: string, input: UpdateMediaInput): Promise<MediaEntity>;
   softDelete(id: string): Promise<MediaEntity>;
   countActiveReferences(id: string): Promise<number>;
@@ -46,4 +47,9 @@ export interface MediaRepository {
   ): Promise<MediaCleanupCandidate[]>;
   completeCleanup(mediaId: string): Promise<void>;
   recordCleanupFailure(mediaId: string, reason: string): Promise<void>;
+  recordQuarantineRescan(mediaId: string, actorId: string): Promise<void>;
+  rejectQuarantined(
+    mediaId: string,
+    actorId: string,
+  ): Promise<MediaEntity | null>;
 }

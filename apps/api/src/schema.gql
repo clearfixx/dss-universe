@@ -45,6 +45,19 @@ type MediaAccess {
   url: String!
 }
 
+type MediaQuarantineItem {
+  createdAt: DateTime!
+  failureCode: String
+  failureReason: String
+  id: ID!
+  mimeType: String!
+  originalFilename: String!
+  ownerId: ID
+  size: Int!
+  status: String!
+  updatedAt: DateTime!
+}
+
 type MediaUploadSession {
   checksum: String
   completedAt: DateTime
@@ -65,7 +78,9 @@ type Mutation {
   logout: LogoutResultModel!
   refreshTokens(input: RefreshTokenInput!): AuthPayloadModel!
   register(input: RegisterInput!): AuthPayloadModel!
+  rejectQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
   removeViewerAvatar: Viewer!
+  rescanQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
   setViewerAvatar(mediaId: ID!): Viewer!
 }
 
@@ -73,6 +88,7 @@ type Query {
   apiInfo: ApiInfo!
   mediaAccessUrl(mediaId: ID!, variantName: String!): MediaAccess!
   mediaUploadSession(id: String!): MediaUploadSession!
+  quarantinedMedia(limit: Int! = 25): [MediaQuarantineItem!]!
   user(id: ID!): User!
   userByUsername(username: String!): User!
   users(pagination: UsersPageInput): UsersPageModel!

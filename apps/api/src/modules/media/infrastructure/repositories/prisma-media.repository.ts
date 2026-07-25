@@ -61,6 +61,15 @@ export class PrismaMediaRepository implements MediaRepository {
     return records.map((record) => PrismaMediaMapper.toDomain(record));
   }
 
+  async findQuarantined(limit: number) {
+    const records = await this.prisma.media.findMany({
+      where: { status: MediaStatus.QUARANTINED, deletedAt: null },
+      orderBy: { updatedAt: 'desc' },
+      take: limit,
+    });
+    return records.map((record) => PrismaMediaMapper.toDomain(record));
+  }
+
   async update(id: string, input: UpdateMediaInput) {
     const record = await this.prisma.media.update({
       where: { id },
@@ -198,6 +207,7 @@ export class PrismaMediaRepository implements MediaRepository {
             mediaId: candidate.id,
             storageKeys: [
               candidate.storageKey,
+              ...this.temporaryStorageKeys(candidate.metadata),
               ...candidate.variants.map(({ storageKey }) => storageKey),
             ],
           });
@@ -240,5 +250,59 @@ export class PrismaMediaRepository implements MediaRepository {
         reason,
       }),
     );
+  }
+
+  async recordQuarantineRescan(
+    mediaId: string,
+    actorId: string,
+  ): Promise<void> {
+    await this.prisma.$transaction((transaction) =>
+      this.audit.append(transaction, {
+        action: 'media.quarantine.rescan_requested',
+        actorType: 'USER',
+        actorId,
+        targetType: 'Media',
+        targetId: mediaId,
+      }),
+    );
+  }
+
+  async rejectQuarantined(
+    mediaId: string,
+    actorId: string,
+  ): Promise<ReturnType<typeof PrismaMediaMapper.toDomain> | null> {
+    return this.prisma.$transaction(async (transaction) => {
+      const result = await transaction.media.updateMany({
+        where: { id: mediaId, status: MediaStatus.QUARANTINED },
+        data: { status: MediaStatus.REJECTED },
+      });
+      if (result.count !== 1) return null;
+      const record = await transaction.media.findUniqueOrThrow({
+        where: { id: mediaId },
+      });
+      await this.audit.append(transaction, {
+        action: 'media.quarantine.rejected',
+        actorType: 'USER',
+        actorId,
+        targetType: 'Media',
+        targetId: mediaId,
+        reason: record.failureReason ?? undefined,
+      });
+      return PrismaMediaMapper.toDomain(record);
+    });
+  }
+
+  private temporaryStorageKeys(metadata: Prisma.JsonValue): string[] {
+    if (
+      metadata === null ||
+      Array.isArray(metadata) ||
+      typeof metadata !== 'object'
+    ) {
+      return [];
+    }
+    const temporaryKey = metadata.temporaryKey;
+    return typeof temporaryKey === 'string' && temporaryKey.length > 0
+      ? [temporaryKey]
+      : [];
   }
 }

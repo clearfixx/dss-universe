@@ -70,6 +70,12 @@ export const PERMISSIONS = {
     label: 'Read restricted media',
     description: 'Allows access to restricted media owned by other users.',
   },
+  MediaQuarantineManage: {
+    key: 'media.quarantine.manage',
+    label: 'Manage media quarantine',
+    description:
+      'Allows reviewing, rescanning, and rejecting quarantined media.',
+  },
 
   RolesRead: {
     key: 'roles.read',
