@@ -73,6 +73,7 @@ const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     Permission.SystemSettingsUpdate,
     Permission.MediaQuarantineManage,
     Permission.MediaLibraryRead,
+    Permission.MediaJobsManage,
   ],
 
   owner: PERMISSION_LIST.map((permission) => permission.key),

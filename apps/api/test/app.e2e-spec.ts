@@ -554,11 +554,21 @@ describe('DSS API (e2e)', () => {
         label: 'Read Media Library',
       },
     });
+    const jobsPermission = await app.get(PrismaService).permission.upsert({
+      where: { key: 'media.jobs.manage' },
+      update: {},
+      create: {
+        key: 'media.jobs.manage',
+        label: 'Manage media jobs',
+      },
+    });
     await app.get(PrismaService).userPermission.createMany({
-      data: [quarantinePermission, libraryPermission].map((permission) => ({
-        userId: registered.data.register.user.id,
-        permissionId: permission.id,
-      })),
+      data: [quarantinePermission, libraryPermission, jobsPermission].map(
+        (permission) => ({
+          userId: registered.data.register.user.id,
+          permissionId: permission.id,
+        }),
+      ),
     });
     const login = await request(app.getHttpServer())
       .post('/api/graphql')
@@ -694,6 +704,44 @@ describe('DSS API (e2e)', () => {
         rejectQuarantinedMedia: { id: mediaId, status: 'REJECTED' },
       },
     });
+    await app.get(PrismaService).media.update({
+      where: { id: mediaId },
+      data: {
+        status: 'FAILED',
+        failureCode: 'PROCESSING_FAILED',
+        failureReason: 'Synthetic retry proof',
+      },
+    });
+    const retry = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + managerToken)
+      .send({
+        query: `mutation RetryFailedMedia($mediaId: ID!) {
+          retryFailedMedia(mediaId: $mediaId) {
+            id status failureCode
+          }
+        }`,
+        variables: { mediaId },
+      })
+      .expect(200);
+    expect(retry.body).toEqual({
+      data: {
+        retryFailedMedia: {
+          id: mediaId,
+          status: 'PROCESSING',
+          failureCode: null,
+        },
+      },
+    });
+    await expect(
+      app.get(PrismaService).auditRecord.count({
+        where: {
+          actorId: registered.data.register.user.id,
+          action: 'media.processing.retry_requested',
+          targetId: mediaId,
+        },
+      }),
+    ).resolves.toBe(1);
     const rescanJobs = await app
       .get(QueueRegistryService)
       .mediaProcessing.getJobs(['waiting', 'delayed']);

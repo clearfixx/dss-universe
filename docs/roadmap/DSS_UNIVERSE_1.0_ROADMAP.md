@@ -516,6 +516,8 @@ Delivered in the Media v1 foundation package:
 - `media.library.read` permission with admin and owner defaults;
 - cursor-paginated GraphQL Media Library with lifecycle, ownership, visibility, search and orphan filters;
 - aggregate original/variant storage usage and failed/quarantined/orphan counters.
+- `media.jobs.manage` permission and GraphQL retry for failed processing;
+- atomic FAILED-to-PROCESSING claims, immutable job-contract reuse, audit and queue-failure compensation.
 
 ## Processing — delivered foundation
 
@@ -543,7 +545,6 @@ Delivered in the Media v1 foundation package:
 ## Completion
 
 - Mission Control Media Library interface;
-- failed-job retry;
 
 ## Definition of Done
 

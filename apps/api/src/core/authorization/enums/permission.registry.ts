@@ -81,6 +81,11 @@ export const PERMISSIONS = {
     label: 'Read Media Library',
     description: 'Allows browsing Media Library records and storage metrics.',
   },
+  MediaJobsManage: {
+    key: 'media.jobs.manage',
+    label: 'Manage media jobs',
+    description: 'Allows retrying failed Media processing jobs.',
+  },
 
   RolesRead: {
     key: 'roles.read',

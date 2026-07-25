@@ -47,6 +47,7 @@ import { MediaUrlSignerService } from './application/services/media-url-signer.s
 import { MediaRetentionService } from './application/services/media-retention.service';
 import { MediaQuarantineService } from './application/services/media-quarantine.service';
 import { MediaLibraryService } from './application/services/media-library.service';
+import { MediaJobService } from './application/services/media-job.service';
 
 @Module({
   imports: [StorageModule, UsersModule],
@@ -58,6 +59,7 @@ import { MediaLibraryService } from './application/services/media-library.servic
     MediaRetentionService,
     MediaQuarantineService,
     MediaLibraryService,
+    MediaJobService,
     MediaBinaryUploadService,
     MediaMimeInspectionService,
     MediaUploadPolicyService,

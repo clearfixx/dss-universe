@@ -197,6 +197,8 @@ Not implemented yet:
 
 - Mission Control Media Library user interface;
 - failed-job inspection and retry controls;
+- permission-protected failed processing retry with an audited lifecycle claim;
+- queue-dispatch compensation that restores a retryable FAILED state;
 
 Architecture Rule
 

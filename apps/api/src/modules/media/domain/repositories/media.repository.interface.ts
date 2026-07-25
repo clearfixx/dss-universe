@@ -53,6 +53,15 @@ export interface MediaRepository {
   completeCleanup(mediaId: string): Promise<void>;
   recordCleanupFailure(mediaId: string, reason: string): Promise<void>;
   recordQuarantineRescan(mediaId: string, actorId: string): Promise<void>;
+  claimFailedRetry(
+    mediaId: string,
+    actorId: string,
+  ): Promise<MediaEntity | null>;
+  recordFailedRetryQueueFailure(
+    mediaId: string,
+    actorId: string,
+    reason: string,
+  ): Promise<void>;
   rejectQuarantined(
     mediaId: string,
     actorId: string,

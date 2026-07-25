@@ -359,6 +359,60 @@ export class PrismaMediaRepository implements MediaRepository {
     );
   }
 
+  async claimFailedRetry(
+    mediaId: string,
+    actorId: string,
+  ): Promise<ReturnType<typeof PrismaMediaMapper.toDomain> | null> {
+    return this.prisma.$transaction(async (transaction) => {
+      const result = await transaction.media.updateMany({
+        where: { id: mediaId, status: MediaStatus.FAILED },
+        data: {
+          status: MediaStatus.PROCESSING,
+          failureCode: null,
+          failureReason: null,
+        },
+      });
+      if (result.count !== 1) return null;
+      const record = await transaction.media.findUniqueOrThrow({
+        where: { id: mediaId },
+      });
+      await this.audit.append(transaction, {
+        action: 'media.processing.retry_requested',
+        actorType: 'USER',
+        actorId,
+        targetType: 'Media',
+        targetId: mediaId,
+      });
+      return PrismaMediaMapper.toDomain(record);
+    });
+  }
+
+  async recordFailedRetryQueueFailure(
+    mediaId: string,
+    actorId: string,
+    reason: string,
+  ): Promise<void> {
+    await this.prisma.$transaction(async (transaction) => {
+      await transaction.media.updateMany({
+        where: { id: mediaId, status: MediaStatus.PROCESSING },
+        data: {
+          status: MediaStatus.FAILED,
+          failureCode: 'RETRY_QUEUE_FAILED',
+          failureReason: reason.slice(0, 2_000),
+        },
+      });
+      await this.audit.append(transaction, {
+        action: 'media.processing.retry_queue_failed',
+        actorType: 'USER',
+        actorId,
+        targetType: 'Media',
+        targetId: mediaId,
+        result: 'FAILURE',
+        reason,
+      });
+    });
+  }
+
   async rejectQuarantined(
     mediaId: string,
     actorId: string,

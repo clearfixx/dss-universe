@@ -37,9 +37,11 @@ import { MediaLibraryService } from '../../../application/services/media-library
 import { MediaLibraryInput } from '../inputs/media-library.input';
 import {
   MediaLibraryConnectionModel,
+  MediaLibraryItemModel,
   MediaLibraryMetricsModel,
 } from '../models/media-library.model';
 import { MediaLibraryGraphqlMapper } from '../mappers/media-library-graphql.mapper';
+import { MediaJobService } from '../../../application/services/media-job.service';
 
 @Resolver()
 @UseGuards(JwtAuthGuard)
@@ -51,6 +53,7 @@ export class MediaResolver {
     private readonly access: MediaAccessService,
     private readonly quarantine: MediaQuarantineService,
     private readonly library: MediaLibraryService,
+    private readonly jobs: MediaJobService,
   ) {}
 
   @Mutation(() => MediaUploadSessionModel)
@@ -162,5 +165,15 @@ export class MediaResolver {
     @AuthUser() user: AuthenticatedUser,
   ): Promise<MediaLibraryMetricsModel> {
     return this.library.metrics(user);
+  }
+
+  @Mutation(() => MediaLibraryItemModel)
+  async retryFailedMedia(
+    @AuthUser() user: AuthenticatedUser,
+    @Args('mediaId', { type: () => ID }) mediaId: string,
+  ): Promise<MediaLibraryItemModel> {
+    return MediaLibraryGraphqlMapper.toItem(
+      await this.jobs.retryFailed(user, mediaId),
+    );
   }
 }

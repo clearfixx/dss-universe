@@ -157,6 +157,7 @@ type Mutation {
   rejectQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
   removeViewerAvatar: Viewer!
   rescanQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
+  retryFailedMedia(mediaId: ID!): MediaLibraryItem!
   setViewerAvatar(mediaId: ID!): Viewer!
 }
 
