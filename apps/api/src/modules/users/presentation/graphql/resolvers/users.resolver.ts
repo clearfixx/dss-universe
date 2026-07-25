@@ -13,7 +13,7 @@
  */
 
 import { NotFoundException, UseGuards } from '@nestjs/common';
-import { Args, ID, Query, Resolver } from '@nestjs/graphql';
+import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 
 import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
 import {
@@ -29,6 +29,7 @@ import { UserGraphqlMapper } from '../mappers/user-graphql.mapper';
 import { UserModel } from '../models/user.model';
 import { UsersPageModel } from '../models/users-page.model';
 import { ViewerModel } from '../models/viewer.model';
+import { UpdateViewerProfileInput } from '../inputs/update-viewer-profile.input';
 
 @Resolver(() => UserModel)
 export class UsersResolver {
@@ -42,6 +43,16 @@ export class UsersResolver {
   async viewer(@AuthUser() authenticated: AuthenticatedUser) {
     const user = await this.usersService.getById(authenticated.id);
 
+    return UserGraphqlMapper.viewerFromResponse(user);
+  }
+
+  @Mutation(() => ViewerModel)
+  @UseGuards(JwtAuthGuard)
+  async updateViewerProfile(
+    @AuthUser() authenticated: AuthenticatedUser,
+    @Args('input') input: UpdateViewerProfileInput,
+  ): Promise<ViewerModel> {
+    const user = await this.usersService.updateProfile(authenticated.id, input);
     return UserGraphqlMapper.viewerFromResponse(user);
   }
 

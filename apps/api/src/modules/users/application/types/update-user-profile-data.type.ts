@@ -16,6 +16,10 @@
 export type UpdateUserProfileData = Partial<{
   displayName: string | null;
   bio: string | null;
+  location: string | null;
+  website: string | null;
+  technologies: string[];
+  interests: string[];
 }>;
 
 /**

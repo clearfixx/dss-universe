@@ -77,17 +77,20 @@ Dates should be serialized as strings for HTTP responses.
 
 Current Boundary
 
-The Users module currently owns the user account foundation:
+The Users module currently owns the user account and profile foundation:
 
 identity fields;
-profile foundation fields;
+profile identity, biography, location and website;
+technology and interest collections;
 status;
 email verification timestamp;
 last seen timestamp;
 authentication-related internal hashes.
 
-Full profile behavior belongs to a future profile-focused phase.
-Do not keep expanding Users during Phase 2.6.5.
+Profile updates are exposed through the authenticated GraphQL viewer boundary.
+Avatar and cover binaries belong to DSS Media Platform.
+Social relationships, privacy policies and profile walls are separate Phase 7
+packages and must not be improvised inside controllers.
 
 Notes
 

@@ -26,6 +26,10 @@ const user: UserRecord = {
   passwordHash: 'secret-password-hash',
   displayName: 'Astronaut',
   bio: 'Exploring DSS Universe',
+  location: null,
+  website: null,
+  technologies: [],
+  interests: [],
   avatarUrl: null,
   coverUrl: null,
   status: UserStatus.ACTIVE,
@@ -80,13 +84,24 @@ describe('UsersService', () => {
     });
 
     const result = await service.updateProfile(user.id, {
-      displayName: 'Commander',
+      displayName: '  Commander  ',
       bio: user.bio,
+      location: '  Kyiv, Ukraine ',
+      website: ' https://dss.example ',
+      technologies: [' TypeScript ', 'typescript', 'NestJS'],
+      interests: [' Space '],
     });
 
     expect(usersRepository.updateById.mock.calls).toContainEqual([
       user.id,
-      { displayName: 'Commander', bio: user.bio },
+      {
+        displayName: 'Commander',
+        bio: user.bio,
+        location: 'Kyiv, Ukraine',
+        website: 'https://dss.example',
+        technologies: ['typescript', 'NestJS'],
+        interests: ['Space'],
+      },
     ]);
     expect(result.displayName).toBe('Commander');
   });

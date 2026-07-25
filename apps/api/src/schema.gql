@@ -159,6 +159,7 @@ type Mutation {
   rescanQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
   retryFailedMedia(mediaId: ID!): MediaLibraryItem!
   setViewerAvatar(mediaId: ID!): Viewer!
+  updateViewerProfile(input: UpdateViewerProfileInput!): Viewer!
 }
 
 type Query {
@@ -185,6 +186,15 @@ input RegisterInput {
   username: String!
 }
 
+input UpdateViewerProfileInput {
+  bio: String
+  displayName: String
+  interests: [String!]
+  location: String
+  technologies: [String!]
+  website: String
+}
+
 type User {
   avatarUrl: String
   bio: String
@@ -192,9 +202,13 @@ type User {
   createdAt: String!
   displayName: String
   id: ID!
+  interests: [String!]!
   lastSeenAt: String
+  location: String
   status: String!
+  technologies: [String!]!
   username: String!
+  website: String
 }
 
 input UsersPageInput {
@@ -219,8 +233,12 @@ type Viewer {
   email: String!
   emailVerifiedAt: String
   id: ID!
+  interests: [String!]!
   lastSeenAt: String
+  location: String
   status: String!
+  technologies: [String!]!
   updatedAt: String!
   username: String!
+  website: String
 }

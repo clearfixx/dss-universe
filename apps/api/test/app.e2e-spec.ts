@@ -215,6 +215,41 @@ describe('DSS API (e2e)', () => {
       },
     });
 
+    const updatedProfile = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation UpdateViewerProfile($input: UpdateViewerProfileInput!) {
+          updateViewerProfile(input: $input) {
+            id displayName bio location website technologies interests
+          }
+        }`,
+        variables: {
+          input: {
+            displayName: '  Commander Andrii  ',
+            bio: 'Building the DSS Universe',
+            location: '  Kyiv, Ukraine ',
+            website: 'https://dss.example/profile',
+            technologies: [' TypeScript ', 'typescript', 'NestJS'],
+            interests: ['Open source', ' Space '],
+          },
+        },
+      })
+      .expect(200);
+    expect(updatedProfile.body).toEqual({
+      data: {
+        updateViewerProfile: {
+          id: registered.data.register.user.id,
+          displayName: 'Commander Andrii',
+          bio: 'Building the DSS Universe',
+          location: 'Kyiv, Ukraine',
+          website: 'https://dss.example/profile',
+          technologies: ['typescript', 'NestJS'],
+          interests: ['Open source', 'Space'],
+        },
+      },
+    });
+
     const userLookup = await request(app.getHttpServer())
       .post('/api/graphql')
       .set('Authorization', 'Bearer ' + accessToken)
@@ -222,7 +257,7 @@ describe('DSS API (e2e)', () => {
       .send(
         JSON.stringify({
           query:
-            'query UserByUsername($username: String!) { userByUsername(username: $username) { id username } }',
+            'query UserByUsername($username: String!) { userByUsername(username: $username) { id username location technologies } }',
           variables: { username },
         }),
       );
@@ -235,6 +270,8 @@ describe('DSS API (e2e)', () => {
         userByUsername: {
           id: registered.data.register.user.id,
           username,
+          location: 'Kyiv, Ukraine',
+          technologies: ['typescript', 'NestJS'],
         },
       },
     });

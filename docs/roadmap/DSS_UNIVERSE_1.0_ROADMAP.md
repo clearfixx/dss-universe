@@ -557,6 +557,21 @@ Delivered in the Media v1 foundation package:
 
 # Phase 7 — Users, Profiles, Social Graph and Members Directory
 
+## Status
+
+```text
+IN PROGRESS
+```
+
+Delivered in the Profile Foundation package:
+
+- optional location and HTTPS/HTTP website fields;
+- bounded technology and interest collections;
+- whitespace normalization and case-insensitive duplicate removal;
+- owner-authenticated GraphQL profile mutation;
+- public profile projection through the existing Users boundary;
+- clean PostgreSQL migration plus unit and E2E coverage.
+
 ## Profile
 
 - avatar and cover through Media;
@@ -681,7 +696,44 @@ All points use a reversible ledger. Deleted/moderated/unpublished content may re
 
 ---
 
-# Phase 9 — Shared Content, Editor, Content Gates and Activity Feed
+# Phase 9 — Interaction Platform, Shared Content, Editor, Content Gates and Activity Feed
+
+## Interaction Target Registry
+
+- one canonical target identity for News, Community Hub, Research Lab,
+  Knowledge Forge, Academy, profile walls and future modules;
+- real foreign-key ownership for shared interactions instead of unconstrained
+  `targetType + targetId` records;
+- domain modules register targets and remain responsible for their own
+  publication, locking and visibility policies;
+- shared capabilities operate only after the owning domain authorizes the
+  requested action;
+- counters are rebuildable projections, never the sole source of truth.
+
+## Interaction bounded contexts
+
+- Comments owns comment bodies, reply trees, edit history, mentions,
+  tombstones, reports and moderation annotations;
+- Reactions owns idempotent content reactions and vote aggregates;
+- Bookmarks owns private saved-item relationships;
+- Reputation owns a separate immutable and reversible user-to-user ledger;
+- Content Access owns reusable `ALL`/`ANY` gates and entitlement evaluation;
+- Community Points remains distinct from direct Reputation;
+- a content vote never changes author reputation implicitly unless an explicit,
+  audited domain rule creates a separate ledger entry.
+
+## Cross-module architecture rules
+
+- News, Community Hub, Research Lab, Knowledge Forge and Academy must not
+  create private duplicate comment, reaction or bookmark tables;
+- the first forum post, news body, article revision and lesson content remain
+  entities of their owning modules rather than generic comments;
+- Media attachments use DSS Media Platform references;
+- moderation and sanctions remain owned by the Moderation platform;
+- unauthorized gated content is removed at the API boundary, not merely hidden
+  by the frontend;
+- public interaction content uses tombstones and audit trails; security
+  secrets, sessions, tokens and caches follow their required deletion rules.
 
 ## DSS Editor
 
@@ -697,7 +749,8 @@ All points use a reversible ledger. Deleted/moderated/unpublished content may re
 
 ## Comments, reactions and bookmarks
 
-- reusable comment capability where domain-appropriate;
+- reusable Comment, Reaction and Bookmark modules backed by Interaction
+  Targets;
 - top-level comment plus replies for content modules;
 - edit history, tombstones, mentions, reports and moderation;
 - reactions/votes with idempotent records;

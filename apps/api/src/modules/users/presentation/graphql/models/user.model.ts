@@ -29,6 +29,18 @@ export class UserModel {
   bio!: string | null;
 
   @Field(() => String, { nullable: true })
+  location!: string | null;
+
+  @Field(() => String, { nullable: true })
+  website!: string | null;
+
+  @Field(() => [String])
+  technologies!: string[];
+
+  @Field(() => [String])
+  interests!: string[];
+
+  @Field(() => String, { nullable: true })
   avatarUrl!: string | null;
 
   @Field(() => String, { nullable: true })

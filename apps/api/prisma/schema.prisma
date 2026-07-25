@@ -80,19 +80,23 @@ enum AuditResult {
 }
 
 model User {
-  id           String     @id @default(uuid())
-  email        String     @unique
-  username     String     @unique
-  passwordHash String
-  displayName  String?
-  bio          String?
-  avatarUrl    String?
+  id            String     @id @default(uuid())
+  email         String     @unique
+  username      String     @unique
+  passwordHash  String
+  displayName   String?
+  bio           String?
+  location      String?
+  website       String?
+  technologies  String[]   @default([])
+  interests     String[]   @default([])
+  avatarUrl     String?
   avatarMediaId String?    @unique
-  coverUrl     String?
-  status       UserStatus @default(ACTIVE)
+  coverUrl      String?
+  status        UserStatus @default(ACTIVE)
 
-  media               Media[] @relation("MediaOwner")
-  avatarMedia         Media?  @relation("UserAvatar", fields: [avatarMediaId], references: [id], onDelete: SetNull)
+  media               Media[]              @relation("MediaOwner")
+  avatarMedia         Media?               @relation("UserAvatar", fields: [avatarMediaId], references: [id], onDelete: SetNull)
   mediaUploadSessions MediaUploadSession[]
 
   roles             UserRole[]
@@ -110,41 +114,41 @@ model User {
 }
 
 model Media {
-  id              String               @id @default(uuid())
-  ownerId         String?
-  kind            MediaKind
-  status          MediaStatus          @default(PENDING)
-  visibility      MediaVisibility      @default(PRIVATE)
-  storageProvider MediaStorageProvider @default(LOCAL)
-  bucket          String
-  storageKey      String
+  id               String               @id @default(uuid())
+  ownerId          String?
+  kind             MediaKind
+  status           MediaStatus          @default(PENDING)
+  visibility       MediaVisibility      @default(PRIVATE)
+  storageProvider  MediaStorageProvider @default(LOCAL)
+  bucket           String
+  storageKey       String
   originalFilename String
-  mimeType        String
-  extension       String
-  size            Int
-  checksum        String
-  width           Int?
-  height          Int?
-  durationMs      Int?
-  altText         String?
-  caption         String?
-  metadata        Json?
-  failureCode     String?
-  failureReason   String?
-  readyAt         DateTime?
-  deletedAt       DateTime?
+  mimeType         String
+  extension        String
+  size             Int
+  checksum         String
+  width            Int?
+  height           Int?
+  durationMs       Int?
+  altText          String?
+  caption          String?
+  metadata         Json?
+  failureCode      String?
+  failureReason    String?
+  readyAt          DateTime?
+  deletedAt        DateTime?
 
-  owner User? @relation("MediaOwner", fields: [ownerId], references: [id], onDelete: SetNull)
-  avatarFor User? @relation("UserAvatar")
-  variants MediaVariant[]
+  owner      User?            @relation("MediaOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  avatarFor  User?            @relation("UserAvatar")
+  variants   MediaVariant[]
   references MediaReference[]
-  auditLogs MediaAuditLog[]
+  auditLogs  MediaAuditLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([ownerId])
   @@unique([storageProvider, bucket, storageKey])
+  @@index([ownerId])
   @@index([kind])
   @@index([status, createdAt])
   @@index([visibility])
@@ -356,12 +360,12 @@ model OutboxEvent {
 }
 
 model ProcessedEvent {
-  id            String   @id @default(uuid())
-  eventId       String
-  consumerName  String
-  eventName     String
-  eventVersion  Int
-  processedAt   DateTime @default(now())
+  id           String   @id @default(uuid())
+  eventId      String
+  consumerName String
+  eventName    String
+  eventVersion Int
+  processedAt  DateTime @default(now())
 
   @@unique([eventId, consumerName])
   @@index([consumerName, processedAt])
@@ -369,7 +373,7 @@ model ProcessedEvent {
 }
 
 model DeadLetterEvent {
-  id           String   @id @default(uuid())
+  id           String    @id @default(uuid())
   eventId      String
   sourceJobId  String?
   eventName    String
@@ -380,7 +384,7 @@ model DeadLetterEvent {
   attempts     Int
   failedAt     DateTime
   resolvedAt   DateTime?
-  createdAt    DateTime @default(now())
+  createdAt    DateTime  @default(now())
 
   @@index([eventId])
   @@index([resolvedAt, failedAt])

@@ -20,6 +20,10 @@ export type UpdateUserData = Partial<{
   username: string;
   displayName: string | null;
   bio: string | null;
+  location: string | null;
+  website: string | null;
+  technologies: string[];
+  interests: string[];
   avatarUrl: string | null;
   coverUrl: string | null;
   status: UserStatus;

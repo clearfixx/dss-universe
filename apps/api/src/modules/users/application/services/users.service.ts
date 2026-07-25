@@ -135,8 +135,12 @@ export class UsersService {
     profile: UpdateUserProfileData,
   ): Promise<UserResponseDto> {
     const user = await this.usersRepository.updateById(id, {
-      displayName: profile.displayName,
-      bio: profile.bio,
+      displayName: this.cleanOptionalText(profile.displayName),
+      bio: this.cleanOptionalText(profile.bio),
+      location: this.cleanOptionalText(profile.location),
+      website: this.cleanOptionalText(profile.website),
+      technologies: this.cleanTags(profile.technologies),
+      interests: this.cleanTags(profile.interests),
     });
 
     return this.toResponseDto(user);
@@ -198,6 +202,26 @@ export class UsersService {
 
   private toResponseDto(user: UserRecord): UserResponseDto {
     return UserResponseMapper.toDto(this.toSafeUser(user));
+  }
+
+  private cleanOptionalText(
+    value: string | null | undefined,
+  ): string | null | undefined {
+    if (value === undefined || value === null) return value;
+    const cleaned = value.trim();
+    return cleaned.length > 0 ? cleaned : null;
+  }
+
+  private cleanTags(values: string[] | undefined): string[] | undefined {
+    if (!values) return undefined;
+    const unique = new Map<string, string>();
+    for (const value of values) {
+      const cleaned = value.trim();
+      if (cleaned.length > 0) {
+        unique.set(cleaned.toLocaleLowerCase('en-US'), cleaned);
+      }
+    }
+    return [...unique.values()];
   }
 }
 
