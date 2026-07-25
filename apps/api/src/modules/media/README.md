@@ -188,11 +188,15 @@ Implemented:
 - permission-protected GraphQL quarantine listing, rescan and rejection;
 - immutable processing contracts retained for safe administrative rescans;
 - audited quarantine rescan requests and rejection decisions.
+- permission-protected Media Library GraphQL catalog;
+- opaque cursor pagination with filename, MIME, checksum, owner, lifecycle and visibility filters;
+- orphan-only filtering without exposing physical storage coordinates;
+- aggregate original, variant and lifecycle storage metrics.
 
 Not implemented yet:
 
 - Mission Control Media Library user interface;
-- storage usage metrics and orphan-reporting views;
+- failed-job inspection and retry controls;
 
 Architecture Rule
 

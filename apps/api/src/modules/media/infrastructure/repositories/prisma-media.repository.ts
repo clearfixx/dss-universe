@@ -30,6 +30,7 @@ import type { MediaCleanupCandidate } from '../../domain/types/media-cleanup-can
 import type { MediaRepository } from '../../domain/repositories/media.repository.interface';
 import type { CreateMediaInput } from '../../domain/types/create-media.input';
 import type { UpdateMediaInput } from '../../domain/types/update-media.input';
+import type { MediaLibraryQuery } from '../../domain/types/media-library-query.type';
 import { PrismaMediaMapper } from '../mappers/prisma-media.mapper';
 
 @Injectable()
@@ -68,6 +69,97 @@ export class PrismaMediaRepository implements MediaRepository {
       take: limit,
     });
     return records.map((record) => PrismaMediaMapper.toDomain(record));
+  }
+
+  async browseLibrary(query: MediaLibraryQuery) {
+    const where: Prisma.MediaWhereInput = {
+      ...(query.search
+        ? {
+            OR: [
+              {
+                originalFilename: {
+                  contains: query.search,
+                  mode: 'insensitive',
+                },
+              },
+              { mimeType: { contains: query.search, mode: 'insensitive' } },
+              { checksum: { contains: query.search, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+      ...(query.ownerId ? { ownerId: query.ownerId } : {}),
+      ...(query.status ? { status: query.status } : {}),
+      ...(query.kind ? { kind: query.kind } : {}),
+      ...(query.visibility ? { visibility: query.visibility } : {}),
+      ...(query.orphaned
+        ? {
+            references: { none: { removedAt: null } },
+            avatarFor: null,
+          }
+        : {}),
+      ...(query.cursor
+        ? {
+            AND: [
+              {
+                OR: [
+                  { createdAt: { lt: query.cursor.createdAt } },
+                  {
+                    createdAt: query.cursor.createdAt,
+                    id: { lt: query.cursor.id },
+                  },
+                ],
+              },
+            ],
+          }
+        : {}),
+    };
+    const records = await this.prisma.media.findMany({
+      where,
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: query.first + 1,
+    });
+    const hasNextPage = records.length > query.first;
+    return {
+      items: records
+        .slice(0, query.first)
+        .map((record) => PrismaMediaMapper.toDomain(record)),
+      hasNextPage,
+    };
+  }
+
+  async getLibraryMetrics() {
+    const [media, variants, orphanedMedia, failedMedia, quarantinedMedia] =
+      await Promise.all([
+        this.prisma.media.aggregate({
+          where: { status: { not: MediaStatus.DELETED } },
+          _count: { _all: true },
+          _sum: { size: true },
+        }),
+        this.prisma.mediaVariant.aggregate({
+          where: { media: { status: { not: MediaStatus.DELETED } } },
+          _sum: { size: true },
+        }),
+        this.prisma.media.count({
+          where: {
+            status: { not: MediaStatus.DELETED },
+            references: { none: { removedAt: null } },
+            avatarFor: null,
+          },
+        }),
+        this.prisma.media.count({ where: { status: MediaStatus.FAILED } }),
+        this.prisma.media.count({ where: { status: MediaStatus.QUARANTINED } }),
+      ]);
+    const originalBytes = media._sum.size ?? 0;
+    const variantBytes = variants._sum.size ?? 0;
+    return {
+      totalMedia: media._count._all,
+      originalBytes,
+      variantBytes,
+      totalBytes: originalBytes + variantBytes,
+      orphanedMedia,
+      failedMedia,
+      quarantinedMedia,
+    };
   }
 
   async update(id: string, input: UpdateMediaInput) {

@@ -76,6 +76,11 @@ export const PERMISSIONS = {
     description:
       'Allows reviewing, rescanning, and rejecting quarantined media.',
   },
+  MediaLibraryRead: {
+    key: 'media.library.read',
+    label: 'Read Media Library',
+    description: 'Allows browsing Media Library records and storage metrics.',
+  },
 
   RolesRead: {
     key: 'roles.read',

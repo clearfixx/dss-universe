@@ -513,6 +513,9 @@ Delivered in the Media v1 foundation package:
 - `media.quarantine.manage` permission with admin and owner defaults;
 - GraphQL quarantine listing, rescan, and rejection operations;
 - application-layer authorization and immutable audit records for quarantine decisions.
+- `media.library.read` permission with admin and owner defaults;
+- cursor-paginated GraphQL Media Library with lifecycle, ownership, visibility, search and orphan filters;
+- aggregate original/variant storage usage and failed/quarantined/orphan counters.
 
 ## Processing — delivered foundation
 
@@ -541,8 +544,6 @@ Delivered in the Media v1 foundation package:
 
 - Mission Control Media Library interface;
 - failed-job retry;
-- orphan detection;
-- storage metrics.
 
 ## Definition of Done
 

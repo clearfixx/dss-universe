@@ -45,6 +45,63 @@ type MediaAccess {
   url: String!
 }
 
+enum MediaKind {
+  ARCHIVE
+  AUDIO
+  DOCUMENT
+  IMAGE
+  OTHER
+  VIDEO
+}
+
+type MediaLibraryConnection {
+  items: [MediaLibraryItem!]!
+  pageInfo: MediaLibraryPageInfo!
+}
+
+input MediaLibraryInput {
+  after: String
+  first: Int! = 25
+  kind: MediaKind
+  orphaned: Boolean
+  ownerId: String
+  search: String
+  status: MediaStatus
+  visibility: MediaVisibility
+}
+
+type MediaLibraryItem {
+  createdAt: DateTime!
+  extension: String!
+  failureCode: String
+  height: Int
+  id: ID!
+  kind: MediaKind!
+  mimeType: String!
+  originalFilename: String!
+  ownerId: ID
+  size: Int!
+  status: MediaStatus!
+  updatedAt: DateTime!
+  visibility: MediaVisibility!
+  width: Int
+}
+
+type MediaLibraryMetrics {
+  failedMedia: Int!
+  originalBytes: Float!
+  orphanedMedia: Int!
+  quarantinedMedia: Int!
+  totalBytes: Float!
+  totalMedia: Int!
+  variantBytes: Float!
+}
+
+type MediaLibraryPageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+}
+
 type MediaQuarantineItem {
   createdAt: DateTime!
   failureCode: String
@@ -58,6 +115,18 @@ type MediaQuarantineItem {
   updatedAt: DateTime!
 }
 
+enum MediaStatus {
+  DELETED
+  DELETING
+  FAILED
+  PENDING
+  PROCESSING
+  QUARANTINED
+  READY
+  REJECTED
+  UPLOADING
+}
+
 type MediaUploadSession {
   checksum: String
   completedAt: DateTime
@@ -69,6 +138,13 @@ type MediaUploadSession {
   originalFilename: String!
   policyKey: String!
   status: String!
+}
+
+enum MediaVisibility {
+  AUTHENTICATED
+  PRIVATE
+  PUBLIC
+  RESTRICTED
 }
 
 type Mutation {
@@ -87,6 +163,8 @@ type Mutation {
 type Query {
   apiInfo: ApiInfo!
   mediaAccessUrl(mediaId: ID!, variantName: String!): MediaAccess!
+  mediaLibrary(input: MediaLibraryInput): MediaLibraryConnection!
+  mediaLibraryMetrics: MediaLibraryMetrics!
   mediaUploadSession(id: String!): MediaUploadSession!
   quarantinedMedia(limit: Int! = 25): [MediaQuarantineItem!]!
   user(id: ID!): User!

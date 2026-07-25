@@ -546,11 +546,19 @@ describe('DSS API (e2e)', () => {
           label: 'Manage media quarantine',
         },
       });
-    await app.get(PrismaService).userPermission.create({
-      data: {
-        userId: registered.data.register.user.id,
-        permissionId: quarantinePermission.id,
+    const libraryPermission = await app.get(PrismaService).permission.upsert({
+      where: { key: 'media.library.read' },
+      update: {},
+      create: {
+        key: 'media.library.read',
+        label: 'Read Media Library',
       },
+    });
+    await app.get(PrismaService).userPermission.createMany({
+      data: [quarantinePermission, libraryPermission].map((permission) => ({
+        userId: registered.data.register.user.id,
+        permissionId: permission.id,
+      })),
     });
     const login = await request(app.getHttpServer())
       .post('/api/graphql')
@@ -587,6 +595,73 @@ describe('DSS API (e2e)', () => {
         ],
       },
     });
+
+    const mediaLibrary = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + managerToken)
+      .send({
+        query: `query MediaLibrary($input: MediaLibraryInput) {
+          mediaLibrary(input: $input) {
+            items { id kind status visibility originalFilename }
+            pageInfo { hasNextPage endCursor }
+          }
+          mediaLibraryMetrics {
+            totalMedia originalBytes variantBytes totalBytes
+            orphanedMedia failedMedia quarantinedMedia
+          }
+        }`,
+        variables: {
+          input: {
+            first: 10,
+            search: 'commander',
+            status: 'QUARANTINED',
+            orphaned: true,
+          },
+        },
+      })
+      .expect(200);
+    const libraryBody = mediaLibrary.body as {
+      data: {
+        mediaLibrary: {
+          items: Array<{
+            id: string;
+            kind: string;
+            status: string;
+            visibility: string;
+            originalFilename: string;
+          }>;
+          pageInfo: { hasNextPage: boolean; endCursor: string | null };
+        };
+        mediaLibraryMetrics: {
+          totalMedia: number;
+          originalBytes: number;
+          variantBytes: number;
+          totalBytes: number;
+          orphanedMedia: number;
+          failedMedia: number;
+          quarantinedMedia: number;
+        };
+      };
+      errors?: Array<{ message: string }>;
+    };
+    expect(libraryBody.errors).toBeUndefined();
+    expect(libraryBody.data.mediaLibrary.items).toEqual([
+      {
+        id: mediaId,
+        kind: 'IMAGE',
+        status: 'QUARANTINED',
+        visibility: 'PRIVATE',
+        originalFilename: 'commander.png',
+      },
+    ]);
+    expect(libraryBody.data.mediaLibrary.pageInfo.hasNextPage).toBe(false);
+    expect(typeof libraryBody.data.mediaLibrary.pageInfo.endCursor).toBe(
+      'string',
+    );
+    expect(libraryBody.data.mediaLibraryMetrics).toMatchObject({
+      quarantinedMedia: 1,
+    });
+    expect(libraryBody.data.mediaLibraryMetrics.totalBytes).toBeGreaterThan(0);
 
     const rescan = await request(app.getHttpServer())
       .post('/api/graphql')

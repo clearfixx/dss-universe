@@ -33,6 +33,13 @@ import { MediaAccessModel } from '../models/media-access.model';
 import { MediaQuarantineService } from '../../../application/services/media-quarantine.service';
 import { MediaQuarantineModel } from '../models/media-quarantine.model';
 import { MediaQuarantineGraphqlMapper } from '../mappers/media-quarantine-graphql.mapper';
+import { MediaLibraryService } from '../../../application/services/media-library.service';
+import { MediaLibraryInput } from '../inputs/media-library.input';
+import {
+  MediaLibraryConnectionModel,
+  MediaLibraryMetricsModel,
+} from '../models/media-library.model';
+import { MediaLibraryGraphqlMapper } from '../mappers/media-library-graphql.mapper';
 
 @Resolver()
 @UseGuards(JwtAuthGuard)
@@ -43,6 +50,7 @@ export class MediaResolver {
     private readonly users: UsersService,
     private readonly access: MediaAccessService,
     private readonly quarantine: MediaQuarantineService,
+    private readonly library: MediaLibraryService,
   ) {}
 
   @Mutation(() => MediaUploadSessionModel)
@@ -130,5 +138,29 @@ export class MediaResolver {
     return MediaQuarantineGraphqlMapper.toModel(
       await this.quarantine.reject(user, mediaId),
     );
+  }
+
+  @Query(() => MediaLibraryConnectionModel)
+  async mediaLibrary(
+    @AuthUser() user: AuthenticatedUser,
+    @Args('input', { nullable: true }) input?: MediaLibraryInput,
+  ): Promise<MediaLibraryConnectionModel> {
+    const result = await this.library.browse(user, input);
+    return {
+      items: result.items.map((media) =>
+        MediaLibraryGraphqlMapper.toItem(media),
+      ),
+      pageInfo: {
+        hasNextPage: result.hasNextPage,
+        endCursor: result.endCursor,
+      },
+    };
+  }
+
+  @Query(() => MediaLibraryMetricsModel)
+  mediaLibraryMetrics(
+    @AuthUser() user: AuthenticatedUser,
+  ): Promise<MediaLibraryMetricsModel> {
+    return this.library.metrics(user);
   }
 }
