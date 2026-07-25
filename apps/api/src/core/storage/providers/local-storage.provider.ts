@@ -27,7 +27,7 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 
 import type {
@@ -67,6 +67,11 @@ export class LocalStorageProvider implements StorageProvider {
     await rm(absolutePath, {
       force: true,
     });
+  }
+
+  async read(path: string): Promise<Buffer> {
+    const safePath = this.normalizeRelativePath(path);
+    return readFile(this.resolveWithinRoot(safePath));
   }
 
   private normalizeRelativePath(value: string): string {

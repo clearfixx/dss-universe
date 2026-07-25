@@ -139,6 +139,8 @@ describe('DSS API (e2e)', () => {
     expect(schema).toContain('type Viewer');
     expect(schema).toContain('register(input: RegisterInput!)');
     expect(schema).toContain('users(pagination: UsersPageInput)');
+    expect(schema).toContain('setViewerAvatar(mediaId: ID!)');
+    expect(schema).toContain('removeViewerAvatar: Viewer!');
     expect(schema).not.toContain('passwordHash');
     expect(schema).not.toContain('refreshTokenHash');
   });
@@ -363,6 +365,112 @@ describe('DSS API (e2e)', () => {
       'avatar-256',
       'avatar-64',
     ]);
+
+    const mediaId = processingJob.data.mediaId;
+    const setAvatar = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation SetViewerAvatar($mediaId: ID!) {
+          setViewerAvatar(mediaId: $mediaId) { id avatarUrl }
+        }`,
+        variables: { mediaId },
+      })
+      .expect(200);
+
+    expect(setAvatar.body).toEqual({
+      data: {
+        setViewerAvatar: {
+          id: registered.data.register.user.id,
+          avatarUrl: `/api/media/public/${mediaId}/avatar-256`,
+        },
+      },
+    });
+
+    await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query:
+          'mutation SetViewerAvatar($mediaId: ID!) { setViewerAvatar(mediaId: $mediaId) { id } }',
+        variables: { mediaId },
+      })
+      .expect(200);
+
+    const deliveredAvatar = await request(app.getHttpServer())
+      .get(`/api/media/public/${mediaId}/avatar-256`)
+      .expect(200)
+      .expect('Content-Type', /image\/webp/);
+    expect(deliveredAvatar.headers['cache-control']).toContain('immutable');
+    expect(deliveredAvatar.body).toBeInstanceOf(Buffer);
+
+    const avatarState = await app.get(PrismaService).user.findUniqueOrThrow({
+      where: { id: registered.data.register.user.id },
+      include: {
+        avatarMedia: true,
+      },
+    });
+    expect(avatarState.avatarMediaId).toBe(mediaId);
+    expect(avatarState.avatarMedia?.id).toBe(mediaId);
+    await expect(
+      app.get(PrismaService).mediaReference.count({
+        where: {
+          mediaId,
+          targetId: avatarState.id,
+          purpose: 'avatar',
+          removedAt: null,
+        },
+      }),
+    ).resolves.toBe(1);
+    await expect(
+      app.get(PrismaService).mediaReference.count({
+        where: {
+          mediaId,
+          targetId: avatarState.id,
+          purpose: 'avatar',
+        },
+      }),
+    ).resolves.toBe(2);
+
+    const removeAvatar = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: 'mutation { removeViewerAvatar { id avatarUrl } }',
+      })
+      .expect(200);
+    expect(removeAvatar.body).toEqual({
+      data: {
+        removeViewerAvatar: {
+          id: registered.data.register.user.id,
+          avatarUrl: `/api/media/avatars/fallback/${username}.svg`,
+        },
+      },
+    });
+
+    await expect(
+      app.get(PrismaService).auditRecord.count({
+        where: {
+          actorId: registered.data.register.user.id,
+          action: { in: ['user.avatar.assigned', 'user.avatar.removed'] },
+        },
+      }),
+    ).resolves.toBe(3);
+    await expect(
+      app.get(PrismaService).mediaReference.count({
+        where: {
+          mediaId,
+          targetId: registered.data.register.user.id,
+          purpose: 'avatar',
+          removedAt: null,
+        },
+      }),
+    ).resolves.toBe(0);
+
+    await request(app.getHttpServer())
+      .get(`/api/media/avatars/fallback/${username}.svg`)
+      .expect(200)
+      .expect('Content-Type', /image\/svg\+xml/);
     await queuedJob?.remove();
   });
 

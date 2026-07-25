@@ -135,11 +135,12 @@ First Consumer
 
 The first consumer of the Media Platform is avatar support.
 
-Planned avatar endpoints:
+Avatar API:
 
-POST   /users/me/avatar
-DELETE /users/me/avatar
-GET    /users/:id/avatar
+GraphQL mutation setViewerAvatar(mediaId: ID!)
+GraphQL mutation removeViewerAvatar
+GET /media/public/:mediaId/:variantName
+GET /media/avatars/fallback/:seed.svg
 
 Avatar-specific behavior belongs to the user/profile use case layer, but the uploaded file itself belongs to Media.
 
@@ -173,12 +174,15 @@ Implemented:
 - retry-safe processing and explicit FAILED state persistence;
 - shared absolute local-storage root with path traversal protection.
 - bounded Sharp input pixels and fail-fast decoding for hostile image payloads.
+- atomic User-to-Media avatar assignment through GraphQL;
+- active MediaReference replacement and immutable avatar audit records;
+- cached public WEBP variant delivery without exposing storage paths;
+- deterministic SVG fallback avatars.
 
 Not implemented yet:
 
 - malware scanning for document attachments;
 - signed delivery;
-- avatar vertical slice;
 - retention and cleanup jobs.
 Architecture Rule
 

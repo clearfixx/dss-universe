@@ -16,7 +16,7 @@
  */
 
 import { UseGuards } from '@nestjs/common';
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 
 import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
 
@@ -24,11 +24,19 @@ import { MediaUploadSessionService } from '../../../application/services/media-u
 import { InitiateMediaUploadInput } from '../inputs/initiate-media-upload.input';
 import { MediaUploadSessionGraphqlMapper } from '../mappers/media-upload-session-graphql.mapper';
 import { MediaUploadSessionModel } from '../models/media-upload-session.model';
+import { AvatarService } from '../../../application/services/avatar.service';
+import { UsersService } from '../../../../users/application/services/users.service';
+import { UserGraphqlMapper } from '../../../../users/presentation/graphql/mappers/user-graphql.mapper';
+import { ViewerModel } from '../../../../users/presentation/graphql/models/viewer.model';
 
 @Resolver()
 @UseGuards(JwtAuthGuard)
 export class MediaResolver {
-  constructor(private readonly sessions: MediaUploadSessionService) {}
+  constructor(
+    private readonly sessions: MediaUploadSessionService,
+    private readonly avatars: AvatarService,
+    private readonly users: UsersService,
+  ) {}
 
   @Mutation(() => MediaUploadSessionModel)
   async initiateMediaUpload(
@@ -55,5 +63,26 @@ export class MediaResolver {
   ): Promise<MediaUploadSessionModel> {
     const session = await this.sessions.abort(user.id, id);
     return MediaUploadSessionGraphqlMapper.toModel(session);
+  }
+
+  @Mutation(() => ViewerModel)
+  async setViewerAvatar(
+    @AuthUser() user: AuthenticatedUser,
+    @Args('mediaId', { type: () => ID }) mediaId: string,
+  ): Promise<ViewerModel> {
+    await this.avatars.assign(user.id, mediaId);
+    return UserGraphqlMapper.viewerFromResponse(
+      await this.users.getById(user.id),
+    );
+  }
+
+  @Mutation(() => ViewerModel)
+  async removeViewerAvatar(
+    @AuthUser() user: AuthenticatedUser,
+  ): Promise<ViewerModel> {
+    await this.avatars.remove(user.id);
+    return UserGraphqlMapper.viewerFromResponse(
+      await this.users.getById(user.id),
+    );
   }
 }

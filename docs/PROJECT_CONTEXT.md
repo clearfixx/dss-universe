@@ -71,6 +71,9 @@ foundation package, pending its final quality gate and publication.
 - secure binary intake and typed Media processing queue;
 - Sharp WEBP transformation and policy-driven Media variants;
 - permanent PROCESSING → READY/FAILED Media persistence.
+- GraphQL avatar assignment/removal with `User.avatarMediaId`;
+- atomic MediaReference replacement and audit records;
+- immutable public avatar-variant delivery and deterministic fallback avatars.
 
 ### Work in progress — not stable
 
@@ -81,8 +84,9 @@ foundation package, pending its final quality gate and publication.
 - Sharp dependency;
 - Media module registration.
 
-The Media persistence, upload orchestration and image-processing foundation is
-implemented. Avatar integration, security scanning and delivery remain work in progress.
+The Media persistence, upload orchestration, image-processing and Avatar
+vertical slice are implemented. Security scanning, private/signed delivery,
+retention and cleanup remain work in progress.
 
 ### Not implemented
 
@@ -441,8 +445,8 @@ Primary quality risks:
 ## 10. Immediate Execution Order
 
 ```text
-1. Implement the Avatar vertical slice
-2. Implement signed/public Media delivery and retention cleanup
+1. Implement private/signed Media delivery and retention cleanup
+2. Complete cover/content-image consumer integration
 3. Complete Auth sessions and User Profiles
 4. Build Theme Engine and DSS Editor foundations
 5. Continue product modules in the canonical roadmap order

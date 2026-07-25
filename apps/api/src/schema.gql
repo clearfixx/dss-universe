@@ -60,6 +60,8 @@ type Mutation {
   logout: LogoutResultModel!
   refreshTokens(input: RefreshTokenInput!): AuthPayloadModel!
   register(input: RegisterInput!): AuthPayloadModel!
+  removeViewerAvatar: Viewer!
+  setViewerAvatar(mediaId: ID!): Viewer!
 }
 
 type Query {

@@ -45,6 +45,10 @@ export class StorageService {
     return this.storageProvider.save(input);
   }
 
+  read(path: string): Promise<Buffer> {
+    return this.storageProvider.read(path);
+  }
+
   delete(path: string): Promise<void> {
     return this.storageProvider.delete(path);
   }

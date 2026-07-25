@@ -19,6 +19,7 @@
 import { MediaEntity } from '../entities/media.entity';
 import { CreateMediaInput } from '../types/create-media.input';
 import { UpdateMediaInput } from '../types/update-media.input';
+import type { MediaVariant } from '../types/media-variant.type';
 
 export const MEDIA_REPOSITORY = Symbol('MEDIA_REPOSITORY');
 
@@ -29,4 +30,8 @@ export interface MediaRepository {
   update(id: string, input: UpdateMediaInput): Promise<MediaEntity>;
   softDelete(id: string): Promise<MediaEntity>;
   countActiveReferences(id: string): Promise<number>;
+  findPublicVariant(
+    mediaId: string,
+    variantName: string,
+  ): Promise<MediaVariant | null>;
 }

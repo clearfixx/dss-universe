@@ -25,6 +25,7 @@
 import { Module } from '@nestjs/common';
 
 import { StorageModule } from '@api/core/storage';
+import { UsersModule } from '../users/users.module';
 
 import { MediaUploadPolicyService } from './application/services/media-upload-policy.service';
 import { MediaUploadSessionService } from './application/services/media-upload-session.service';
@@ -36,10 +37,17 @@ import { PrismaMediaUploadSessionRepository } from './infrastructure/repositorie
 import { PrismaMediaRepository } from './infrastructure/repositories/prisma-media.repository';
 import { MediaResolver } from './presentation/graphql/resolvers/media.resolver';
 import { MediaUploadController } from './presentation/http/media-upload.controller';
+import { AvatarService } from './application/services/avatar.service';
+import { MediaDeliveryService } from './application/services/media-delivery.service';
+import { AVATAR_REPOSITORY } from './domain/repositories/avatar.repository.interface';
+import { PrismaAvatarRepository } from './infrastructure/repositories/prisma-avatar.repository';
+import { MediaDeliveryController } from './presentation/http/media-delivery.controller';
 
 @Module({
-  imports: [StorageModule],
+  imports: [StorageModule, UsersModule],
   providers: [
+    AvatarService,
+    MediaDeliveryService,
     MediaBinaryUploadService,
     MediaMimeInspectionService,
     MediaUploadPolicyService,
@@ -53,9 +61,14 @@ import { MediaUploadController } from './presentation/http/media-upload.controll
       provide: MEDIA_UPLOAD_SESSION_REPOSITORY,
       useClass: PrismaMediaUploadSessionRepository,
     },
+    {
+      provide: AVATAR_REPOSITORY,
+      useClass: PrismaAvatarRepository,
+    },
   ],
-  controllers: [MediaUploadController],
+  controllers: [MediaUploadController, MediaDeliveryController],
   exports: [
+    AvatarService,
     MediaUploadPolicyService,
     MediaUploadSessionService,
     MEDIA_REPOSITORY,

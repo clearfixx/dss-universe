@@ -24,7 +24,7 @@ export class UserGraphqlMapper {
       username: user.username,
       displayName: user.displayName,
       bio: user.bio,
-      avatarUrl: user.avatarUrl,
+      avatarUrl: user.avatarUrl ?? this.fallbackAvatarUrl(user.username),
       coverUrl: user.coverUrl,
       status: user.status,
       lastSeenAt: user.lastSeenAt,
@@ -47,7 +47,7 @@ export class UserGraphqlMapper {
       username: user.username,
       displayName: user.displayName,
       bio: user.bio,
-      avatarUrl: user.avatarUrl,
+      avatarUrl: user.avatarUrl ?? this.fallbackAvatarUrl(user.username),
       coverUrl: user.coverUrl,
       status: user.status,
       lastSeenAt: user.lastSeenAt?.toISOString() ?? null,
@@ -56,5 +56,9 @@ export class UserGraphqlMapper {
       emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null,
       updatedAt: user.updatedAt.toISOString(),
     };
+  }
+
+  private static fallbackAvatarUrl(username: string): string {
+    return `/api/media/avatars/fallback/${encodeURIComponent(username)}.svg`;
   }
 }

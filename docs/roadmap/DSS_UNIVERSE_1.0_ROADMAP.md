@@ -515,7 +515,7 @@ Delivered in the Media v1 foundation package:
 - idempotent retry;
 - failure and quarantine flows.
 
-## Avatar vertical slice
+## Avatar vertical slice — delivered
 
 - `USER_AVATAR` policy;
 - original plus 64/128/256 variants;
@@ -523,7 +523,7 @@ Delivered in the Media v1 foundation package:
 - `avatarMediaId` instead of `avatarUrl`;
 - public delivery;
 - previous-avatar reference removal;
-- retention and cleanup;
+- retention and cleanup remains a follow-up lifecycle package;
 - default fallback;
 - audit and tests.
 

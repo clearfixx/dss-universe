@@ -23,6 +23,7 @@ import type { Prisma } from '@prisma/client';
 import { PrismaService } from '@api/core/database';
 
 import { MediaStatus } from '../../domain/enums/media-status.enum';
+import { MediaStorageProvider } from '../../domain/enums/media-storage-provider.enum';
 import type { MediaRepository } from '../../domain/repositories/media.repository.interface';
 import type { CreateMediaInput } from '../../domain/types/create-media.input';
 import type { UpdateMediaInput } from '../../domain/types/update-media.input';
@@ -75,5 +76,28 @@ export class PrismaMediaRepository implements MediaRepository {
     return this.prisma.mediaReference.count({
       where: { mediaId: id, removedAt: null },
     });
+  }
+
+  async findPublicVariant(mediaId: string, variantName: string) {
+    const variant = await this.prisma.mediaVariant.findFirst({
+      where: {
+        mediaId,
+        name: variantName,
+        media: {
+          status: MediaStatus.READY,
+          visibility: 'PUBLIC',
+          deletedAt: null,
+        },
+      },
+    });
+
+    return variant
+      ? {
+          ...variant,
+          storageProvider:
+            variant.storageProvider as unknown as MediaStorageProvider,
+          metadata: PrismaMediaMapper.toMetadata(variant.metadata),
+        }
+      : null;
   }
 }

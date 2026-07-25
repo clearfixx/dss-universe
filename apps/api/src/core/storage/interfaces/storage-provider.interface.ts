@@ -25,6 +25,7 @@ export type SavedFile = {
 
 export interface StorageProvider {
   save(input: SaveFileInput): Promise<SavedFile>;
+  read(path: string): Promise<Buffer>;
   delete(path: string): Promise<void>;
 }
 
