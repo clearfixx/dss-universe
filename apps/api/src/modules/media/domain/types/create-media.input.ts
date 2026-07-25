@@ -19,6 +19,7 @@ import { MediaVisibility } from '../enums/media-visibility.enum';
 import type { MediaMetadata } from './media-metadata.type';
 
 export type CreateMediaInput = {
+  id?: string;
   ownerId?: string | null;
   kind: MediaKind;
   status?: MediaStatus;

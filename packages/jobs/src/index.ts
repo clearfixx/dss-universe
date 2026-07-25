@@ -10,6 +10,7 @@ export const DSS_JOB_NAMES = {
 } as const;
 
 export type MediaProcessingJob = {
+  mediaId: string;
   uploadSessionId: string;
   ownerId: string;
   policyKey: string;
@@ -20,7 +21,18 @@ export type MediaProcessingJob = {
   mimeType: string;
   size: number;
   checksum: string;
+  processingKind: "IMAGE" | "PASSTHROUGH";
+  destinationKey: string;
+  variants: MediaProcessingVariantSpec[];
   queuedAt: string;
+};
+
+export type MediaProcessingVariantSpec = {
+  name: string;
+  storageKey: string;
+  width: number;
+  height?: number;
+  fit: "cover" | "inside";
 };
 export type IntegrationEventJob = {
   eventId: string;

@@ -18,10 +18,18 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import { printSchema } from 'graphql';
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
+import { Pool } from 'pg';
 import request from 'supertest';
+import type { Job } from 'bullmq';
+import type { MediaProcessingJob } from '@dss/jobs';
 import type { App } from 'supertest/types';
 
 import { AppModule } from './../src/app.module';
+import { PrismaService } from './../src/core/database';
+import { QueueRegistryService } from './../src/core/queue';
+import { LocalMediaFileProcessor } from '../../worker/src/local-media-file.processor';
+import { createMediaProcessingProcessor } from '../../worker/src/media-processing.processor';
+import { PostgresMediaProcessingStore } from '../../worker/src/postgres-media-processing.store';
 
 const E2E_UPLOADS_DIR = `.e2e-uploads-${process.pid}`;
 const PNG_1X1 = Buffer.from(
@@ -61,6 +69,7 @@ type InitiateMediaUploadResponse = {
 
 describe('DSS API (e2e)', () => {
   let app: INestApplication<App>;
+  let processingPool: Pool;
 
   beforeAll(async () => {
     process.env.DSS_UPLOADS_DIR = E2E_UPLOADS_DIR;
@@ -78,6 +87,7 @@ describe('DSS API (e2e)', () => {
       }),
     );
     await app.init();
+    processingPool = new Pool({ connectionString: process.env.DATABASE_URL });
   });
 
   it('preserves the REST application status endpoint', async () => {
@@ -311,10 +321,54 @@ describe('DSS API (e2e)', () => {
     });
     expect(binaryUpload.body).not.toHaveProperty('temporaryKey');
     expect(binaryUpload.body).not.toHaveProperty('bucket');
+
+    const uploadSessionId = binarySessionBody.data.initiateMediaUpload.id;
+    const queuedJob = await app
+      .get(QueueRegistryService)
+      .mediaProcessing.getJob(uploadSessionId);
+    expect(queuedJob).not.toBeNull();
+    const processingJob = queuedJob as Job<MediaProcessingJob>;
+    expect(processingJob.data).toMatchObject({
+      uploadSessionId,
+      processingKind: 'IMAGE',
+      variants: [
+        { name: 'avatar-64' },
+        { name: 'avatar-128' },
+        { name: 'avatar-256' },
+      ],
+    });
+
+    const processMedia = createMediaProcessingProcessor(
+      new PostgresMediaProcessingStore(processingPool),
+      new LocalMediaFileProcessor(join(process.cwd(), E2E_UPLOADS_DIR)),
+    );
+    await expect(processMedia(processingJob)).resolves.toEqual({
+      mediaId: processingJob.data.mediaId,
+      duplicate: false,
+    });
+
+    const processedMedia = await app.get(PrismaService).media.findUnique({
+      where: { id: processingJob.data.mediaId },
+      include: { variants: { orderBy: { name: 'asc' } } },
+    });
+    expect(processedMedia).toMatchObject({
+      status: 'READY',
+      mimeType: 'image/webp',
+      extension: 'webp',
+      width: 1,
+      height: 1,
+    });
+    expect(processedMedia?.variants.map((variant) => variant.name)).toEqual([
+      'avatar-128',
+      'avatar-256',
+      'avatar-64',
+    ]);
+    await queuedJob?.remove();
   });
 
   afterAll(async () => {
     await app.close();
+    await processingPool.end();
     await rm(join(process.cwd(), E2E_UPLOADS_DIR), {
       recursive: true,
       force: true,

@@ -11,7 +11,9 @@ import {
 import { DeadLetterService } from "./dead-letter.service.js";
 import { createIntegrationEventProcessor } from "./integration-event.processor.js";
 import { PostgresProcessedEventStore } from "./processed-event.store.js";
-import { processMediaUpload } from "./media-processing.processor.js";
+import { LocalMediaFileProcessor } from "./local-media-file.processor.js";
+import { createMediaProcessingProcessor } from "./media-processing.processor.js";
+import { PostgresMediaProcessingStore } from "./postgres-media-processing.store.js";
 
 const connection = new Redis({
   host: process.env.REDIS_HOST ?? "localhost",
@@ -36,7 +38,10 @@ const worker = new Worker<IntegrationEventJob>(
 );
 const mediaWorker = new Worker<MediaProcessingJob>(
   DSS_QUEUE_NAMES.MEDIA_PROCESSING,
-  processMediaUpload,
+  createMediaProcessingProcessor(
+    new PostgresMediaProcessingStore(pool),
+    new LocalMediaFileProcessor(),
+  ),
   { connection },
 );
 worker.on("failed", (job, error) => {

@@ -28,7 +28,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
-import { join, normalize } from 'node:path';
+import { dirname, isAbsolute, relative, resolve } from 'node:path';
 
 import type {
   SavedFile,
@@ -38,15 +38,17 @@ import type {
 
 @Injectable()
 export class LocalStorageProvider implements StorageProvider {
-  private readonly uploadsRoot = process.env.DSS_UPLOADS_DIR ?? 'uploads';
+  private readonly uploadsRoot = resolve(
+    process.env.DSS_UPLOADS_DIR ?? resolve(process.cwd(), 'uploads'),
+  );
 
   async save(input: SaveFileInput): Promise<SavedFile> {
     const safeDirectory = this.normalizeRelativePath(input.directory);
     const safeFilename = this.normalizeRelativePath(input.filename);
-    const relativePath = join(safeDirectory, safeFilename);
-    const absolutePath = join(process.cwd(), this.uploadsRoot, relativePath);
+    const relativePath = `${safeDirectory}/${safeFilename}`;
+    const absolutePath = this.resolveWithinRoot(relativePath);
 
-    await mkdir(join(process.cwd(), this.uploadsRoot, safeDirectory), {
+    await mkdir(dirname(absolutePath), {
       recursive: true,
     });
 
@@ -60,7 +62,7 @@ export class LocalStorageProvider implements StorageProvider {
 
   async delete(path: string): Promise<void> {
     const safePath = this.normalizeRelativePath(path);
-    const absolutePath = join(process.cwd(), this.uploadsRoot, safePath);
+    const absolutePath = this.resolveWithinRoot(safePath);
 
     await rm(absolutePath, {
       force: true,
@@ -68,9 +70,20 @@ export class LocalStorageProvider implements StorageProvider {
   }
 
   private normalizeRelativePath(value: string): string {
-    const normalized = normalize(value).replace(/^(\.\.(\/|\\|$))+/, '');
+    return value.replaceAll('\\', '/').replace(/^\/+/, '');
+  }
 
-    return normalized.replace(/^\/+|^\\+/, '');
+  private resolveWithinRoot(path: string): string {
+    const absolutePath = resolve(this.uploadsRoot, path);
+    const relativePath = relative(this.uploadsRoot, absolutePath);
+    if (
+      isAbsolute(relativePath) ||
+      relativePath === '..' ||
+      relativePath.startsWith('../')
+    ) {
+      throw new Error('Storage path escapes the configured uploads root.');
+    }
+    return absolutePath;
   }
 }
 

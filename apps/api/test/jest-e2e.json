@@ -5,9 +5,20 @@
   "setupFiles": ["<rootDir>/setup-env.ts"],
   "testRegex": ".e2e-spec.ts$",
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
+    "^.+\\.(t|j)s$": [
+      "ts-jest",
+      {
+        "useESM": false,
+        "tsconfig": {
+          "module": "CommonJS",
+          "moduleResolution": "Node",
+          "resolvePackageJsonExports": false
+        }
+      }
+    ]
   },
   "moduleNameMapper": {
-    "^@api/(.*)$": "<rootDir>/../src/$1"
+    "^@api/(.*)$": "<rootDir>/../src/$1",
+    "^(\\.{1,2}/.*)\\.js$": "$1"
   }
 }

@@ -21,6 +21,7 @@ import type { StorageService } from '@api/core/storage';
 import { MediaStorageProvider } from '../../domain/enums/media-storage-provider.enum';
 import { MediaUploadStatus } from '../../domain/enums/media-upload-status.enum';
 import type { MediaUploadSession } from '../../domain/types/media-upload-session.type';
+import type { MediaRepository } from '../../domain/repositories/media.repository.interface';
 import { MediaBinaryUploadService } from './media-binary-upload.service';
 import type { MediaMimeInspectionService } from './media-mime-inspection.service';
 import { MediaUploadPolicyService } from './media-upload-policy.service';
@@ -59,12 +60,14 @@ describe('MediaBinaryUploadService', () => {
   const queues = {
     mediaProcessing: { add: queueAdd, remove: queueRemove },
   };
+  const media = { create: jest.fn(), update: jest.fn() };
   const service = new MediaBinaryUploadService(
     sessions as unknown as MediaUploadSessionService,
     new MediaUploadPolicyService(),
     mimeInspection as unknown as MediaMimeInspectionService,
     storage as unknown as StorageService,
     queues as unknown as QueueRegistryService,
+    media as unknown as MediaRepository,
   );
 
   beforeEach(() => {
@@ -82,6 +85,8 @@ describe('MediaBinaryUploadService', () => {
     storage.delete.mockResolvedValue(undefined);
     queueAdd.mockResolvedValue({ id: SESSION.id });
     queueRemove.mockResolvedValue(1);
+    media.create.mockResolvedValue(undefined);
+    media.update.mockResolvedValue(undefined);
   });
 
   it('stores inspected content and queues a typed processing job', async () => {
@@ -112,6 +117,14 @@ describe('MediaBinaryUploadService', () => {
         checksum: CHECKSUM,
       }),
       expect.objectContaining({ jobId: SESSION.id, attempts: 3 }),
+    );
+    expect(media.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ownerId: 'owner-1',
+        status: 'PROCESSING',
+        kind: 'DOCUMENT',
+        mimeType: 'text/plain',
+      }),
     );
   });
 
@@ -155,6 +168,10 @@ describe('MediaBinaryUploadService', () => {
     expect(sessions.updateStatus).toHaveBeenLastCalledWith(
       SESSION.id,
       MediaUploadStatus.FAILED,
+    );
+    expect(media.update).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ status: 'FAILED' }),
     );
   });
 

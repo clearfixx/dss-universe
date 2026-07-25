@@ -500,8 +500,11 @@ Delivered in the Media v1 foundation package:
 - authenticated REST binary intake with content-based MIME inspection;
 - exact size and optional SHA-256 verification with compensating cleanup;
 - typed BullMQ media-processing queue and worker boundary.
+- permanent PROCESSING Media identity before queue dispatch;
+- Sharp WEBP conversion, EXIF auto-rotation and policy-driven variants;
+- atomic READY/variant persistence with idempotent retries and FAILED state.
 
-## Processing
+## Processing — delivered foundation
 
 - BullMQ media queues;
 - Sharp processing worker;

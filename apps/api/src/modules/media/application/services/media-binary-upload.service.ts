@@ -28,17 +28,29 @@ import {
 } from '@nestjs/common';
 import { createHash } from 'node:crypto';
 import { basename, dirname } from 'node:path';
-import { DSS_JOB_NAMES, type MediaProcessingJob } from '@dss/jobs';
+import { randomUUID } from 'node:crypto';
+import {
+  DSS_JOB_NAMES,
+  type MediaProcessingJob,
+  type MediaProcessingVariantSpec,
+} from '@dss/jobs';
 
 import { QueueRegistryService } from '@api/core/queue';
 import { StorageService } from '@api/core/storage';
 
 import { MediaUploadStatus } from '../../domain/enums/media-upload-status.enum';
+import { MediaKind } from '../../domain/enums/media-kind.enum';
+import { MediaStatus } from '../../domain/enums/media-status.enum';
+import {
+  MEDIA_REPOSITORY,
+  type MediaRepository,
+} from '../../domain/repositories/media.repository.interface';
 import type { MediaUploadSession } from '../../domain/types/media-upload-session.type';
 import type { UploadedMediaFile } from '../types/uploaded-media-file.type';
 import { MediaMimeInspectionService } from './media-mime-inspection.service';
 import { MediaUploadPolicyService } from './media-upload-policy.service';
 import { MediaUploadSessionService } from './media-upload-session.service';
+import { Inject } from '@nestjs/common';
 
 @Injectable()
 export class MediaBinaryUploadService {
@@ -48,6 +60,8 @@ export class MediaBinaryUploadService {
     private readonly mimeInspection: MediaMimeInspectionService,
     private readonly storage: StorageService,
     private readonly queues: QueueRegistryService,
+    @Inject(MEDIA_REPOSITORY)
+    private readonly media: MediaRepository,
   ) {}
 
   async accept(
@@ -85,6 +99,7 @@ export class MediaBinaryUploadService {
     await this.sessions.updateStatus(session.id, MediaUploadStatus.UPLOADING);
     let stored = false;
     let queued = false;
+    let mediaId: string | null = null;
 
     try {
       await this.storage.save({
@@ -94,7 +109,36 @@ export class MediaBinaryUploadService {
       });
       stored = true;
 
+      mediaId = randomUUID();
+      const isImage = policy.kind === MediaKind.IMAGE;
+      const extension = isImage
+        ? 'webp'
+        : session.originalFilename.split('.').pop()?.toLowerCase() || 'bin';
+      const destinationKey = `media/${ownerId}/${mediaId}/original.${extension}`;
+      const variants = this.getVariantSpecs(
+        session.policyKey,
+        ownerId,
+        mediaId,
+      );
+      await this.media.create({
+        id: mediaId,
+        ownerId,
+        kind: policy.kind,
+        status: MediaStatus.PROCESSING,
+        visibility: policy.visibility,
+        storageProvider: session.storageProvider,
+        bucket: session.bucket,
+        storageKey: destinationKey,
+        originalFilename: session.originalFilename,
+        mimeType: isImage ? 'image/webp' : actualMimeType,
+        extension,
+        size: file.size,
+        checksum,
+        metadata: { uploadSessionId: session.id },
+      });
+
       const job: MediaProcessingJob = {
+        mediaId,
         uploadSessionId: session.id,
         ownerId,
         policyKey: session.policyKey,
@@ -105,6 +149,9 @@ export class MediaBinaryUploadService {
         mimeType: actualMimeType,
         size: file.size,
         checksum,
+        processingKind: isImage ? 'IMAGE' : 'PASSTHROUGH',
+        destinationKey,
+        variants,
         queuedAt: now.toISOString(),
       };
       await this.queues.mediaProcessing.add(
@@ -124,7 +171,7 @@ export class MediaBinaryUploadService {
         session.id,
         MediaUploadStatus.COMPLETED,
         now,
-        { actualMimeType, actualSize: file.size, checksum },
+        { actualMimeType, actualSize: file.size, checksum, mediaId },
       );
       return completedSession;
     } catch (error: unknown) {
@@ -137,9 +184,63 @@ export class MediaBinaryUploadService {
       if (queued) {
         compensations.push(this.queues.mediaProcessing.remove(session.id));
       }
+      if (mediaId) {
+        compensations.push(
+          this.media.update(mediaId, {
+            status: MediaStatus.FAILED,
+            failureCode: 'INTAKE_FAILED',
+            failureReason:
+              error instanceof Error ? error.message : 'Media intake failed.',
+          }),
+        );
+      }
       await Promise.allSettled(compensations);
       throw error;
     }
+  }
+
+  private getVariantSpecs(
+    policyKey: MediaUploadSession['policyKey'],
+    ownerId: string,
+    mediaId: string,
+  ): MediaProcessingVariantSpec[] {
+    const prefix = `media/${ownerId}/${mediaId}/variants`;
+    if (policyKey === 'avatar') {
+      return [64, 128, 256].map((size) => ({
+        name: `avatar-${size}`,
+        storageKey: `${prefix}/avatar-${size}.webp`,
+        width: size,
+        height: size,
+        fit: 'cover',
+      }));
+    }
+    if (policyKey === 'cover') {
+      return [
+        {
+          name: 'cover-640',
+          storageKey: `${prefix}/cover-640.webp`,
+          width: 640,
+          height: 240,
+          fit: 'cover',
+        },
+        {
+          name: 'cover-1280',
+          storageKey: `${prefix}/cover-1280.webp`,
+          width: 1280,
+          height: 480,
+          fit: 'cover',
+        },
+      ];
+    }
+    if (policyKey === 'content-image') {
+      return [640, 1280].map((width) => ({
+        name: `content-${width}`,
+        storageKey: `${prefix}/content-${width}.webp`,
+        width,
+        fit: 'inside',
+      }));
+    }
+    return [];
   }
 
   private assertAcceptableSession(

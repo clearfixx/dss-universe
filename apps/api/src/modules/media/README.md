@@ -166,10 +166,16 @@ Implemented:
 - exact size and optional SHA-256 checksum verification;
 - compensating cleanup when persistence or queueing fails;
 - typed BullMQ media-processing jobs and worker boundary validation.
+- permanent `Media` records created before queue dispatch;
+- Sharp WEBP conversion with EXIF-aware auto-rotation;
+- policy-driven avatar, cover and content-image variants;
+- atomic PostgreSQL READY/variant persistence;
+- retry-safe processing and explicit FAILED state persistence;
+- shared absolute local-storage root with path traversal protection.
+- bounded Sharp input pixels and fail-fast decoding for hostile image payloads.
 
 Not implemented yet:
 
-- image transformation and permanent Media record creation;
 - malware scanning for document attachments;
 - signed delivery;
 - avatar vertical slice;

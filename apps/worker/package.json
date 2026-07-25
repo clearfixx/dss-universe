@@ -18,11 +18,13 @@
     "bullmq": "^5.80.6",
     "ioredis": "^5.11.1",
     "pg": "^8.22.0",
-    "pino": "^10.3.1"
+    "pino": "^10.3.1",
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
     "@dss/eslint-config": "workspace:*",
     "@dss/tsconfig": "workspace:*",
+    "@types/node": "^24.13.2",
     "@types/pg": "^8.20.0",
     "@vitest/coverage-v8": "^4.0.18",
     "eslint": "^9.18.0",

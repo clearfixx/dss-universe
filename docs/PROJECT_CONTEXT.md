@@ -68,19 +68,21 @@ foundation package, pending its final quality gate and publication.
 - Media v1 persistence model, lifecycle state machine and relational contracts.
 - Media Prisma repository and centralized upload-policy validation.
 - Media upload-session persistence, orchestration and authenticated GraphQL API.
+- secure binary intake and typed Media processing queue;
+- Sharp WEBP transformation and policy-driven Media variants;
+- permanent PROCESSING → READY/FAILED Media persistence.
 
 ### Work in progress — not stable
 
 - Core Storage abstraction;
 - Local Storage provider;
-- image transformation and permanent Media record creation;
 - malware scanning and quarantine pipeline;
 - Media architecture documentation;
 - Sharp dependency;
 - Media module registration.
 
-The Media persistence and domain foundation is implemented. Upload orchestration,
-processing and delivery remain work in progress.
+The Media persistence, upload orchestration and image-processing foundation is
+implemented. Avatar integration, security scanning and delivery remain work in progress.
 
 ### Not implemented
 
@@ -439,8 +441,8 @@ Primary quality risks:
 ## 10. Immediate Execution Order
 
 ```text
-1. Implement image transformation and permanent Media/variant creation
-2. Implement the Avatar vertical slice
+1. Implement the Avatar vertical slice
+2. Implement signed/public Media delivery and retention cleanup
 3. Complete Auth sessions and User Profiles
 4. Build Theme Engine and DSS Editor foundations
 5. Continue product modules in the canonical roadmap order
