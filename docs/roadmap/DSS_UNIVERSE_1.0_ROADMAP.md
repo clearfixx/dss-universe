@@ -464,7 +464,7 @@ Phase 4 met this Definition of Done on 2026-07-18. The active delivery stage is 
 ## Status
 
 ```text
-WIP SKELETON; ARCHITECTURE FROZEN
+COMPLETE
 ```
 
 ## Foundation
@@ -518,6 +518,9 @@ Delivered in the Media v1 foundation package:
 - aggregate original/variant storage usage and failed/quarantined/orphan counters.
 - `media.jobs.manage` permission and GraphQL retry for failed processing;
 - atomic FAILED-to-PROCESSING claims, immutable job-contract reuse, audit and queue-failure compensation.
+- Mission Control Media Library route with authenticated server-side GraphQL;
+- storage metric cards, lifecycle/visibility/kind/search/orphan filters and forward cursor navigation;
+- permission-aware failure states and operator retry action.
 
 ## Processing — delivered foundation
 
@@ -541,10 +544,6 @@ Delivered in the Media v1 foundation package:
 - reference-aware retention and cleanup;
 - default fallback;
 - audit and tests.
-
-## Completion
-
-- Mission Control Media Library interface;
 
 ## Definition of Done
 

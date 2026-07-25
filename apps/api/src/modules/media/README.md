@@ -192,13 +192,9 @@ Implemented:
 - opaque cursor pagination with filename, MIME, checksum, owner, lifecycle and visibility filters;
 - orphan-only filtering without exposing physical storage coordinates;
 - aggregate original, variant and lifecycle storage metrics.
-
-Not implemented yet:
-
-- Mission Control Media Library user interface;
-- failed-job inspection and retry controls;
 - permission-protected failed processing retry with an audited lifecycle claim;
 - queue-dispatch compensation that restores a retryable FAILED state;
+- Mission Control interface in `apps/web` with catalog filters, metrics and retry controls.
 
 Architecture Rule
 
