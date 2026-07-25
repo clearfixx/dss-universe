@@ -507,6 +507,9 @@ Delivered in the Media v1 foundation package:
 - explicit owner and `media.restricted.read` authorization;
 - configurable, reference-aware orphan retention and idempotent physical cleanup;
 - audited cleanup claim, completion and retryable failure states.
+- mandatory asynchronous ClamAV scanning for every upload;
+- fail-closed quarantine on detected malware or scanner outage;
+- safe quarantine rescan transition and terminal-status idempotency.
 
 ## Processing — delivered foundation
 
@@ -535,7 +538,7 @@ Delivered in the Media v1 foundation package:
 
 - admin Media Library;
 - failed-job retry;
-- quarantine;
+- admin quarantine review, rescan and rejection controls;
 - orphan detection;
 - storage metrics.
 

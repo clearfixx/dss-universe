@@ -8,31 +8,79 @@ import type { Job } from "bullmq";
 import type { MediaProcessingJob } from "@dss/jobs";
 import type {
   MediaFileProcessor,
+  MediaMalwareScanner,
   MediaProcessingStore,
 } from "./media-processing.types.js";
 
 export function createMediaProcessingProcessor(
   store: MediaProcessingStore,
   files: MediaFileProcessor,
+  scanner: MediaMalwareScanner,
 ): (
   job: Job<MediaProcessingJob>,
-) => Promise<{ mediaId: string; duplicate: boolean }> {
+) => Promise<{ mediaId: string; duplicate: boolean; quarantined: boolean }> {
   return async (job) => {
     validateMediaProcessingJob(job.data);
-    if ((await store.findStatus(job.data.mediaId)) === "READY") {
-      return { mediaId: job.data.mediaId, duplicate: true };
+    const status = await store.findStatus(job.data.mediaId);
+    if (status === "READY" || status === "REJECTED" || status === "DELETED") {
+      return {
+        mediaId: job.data.mediaId,
+        duplicate: true,
+        quarantined: false,
+      };
     }
 
+    let quarantinedDuringAttempt = false;
     try {
+      if (job.data.scanRequired) {
+        let scan;
+        try {
+          scan = await scanner.scan(job.data);
+        } catch (error: unknown) {
+          const reason =
+            error instanceof Error ? error.message : "Malware scan failed.";
+          await store.markQuarantined(
+            job.data.mediaId,
+            "SCAN_UNAVAILABLE",
+            reason,
+          );
+          quarantinedDuringAttempt = true;
+          throw error;
+        }
+        if (scan.status === "INFECTED") {
+          await store.markQuarantined(
+            job.data.mediaId,
+            "MALWARE_DETECTED",
+            scan.threatName,
+          );
+          return {
+            mediaId: job.data.mediaId,
+            duplicate: false,
+            quarantined: true,
+          };
+        }
+      }
+      if (status === "QUARANTINED") {
+        await store.markProcessing(job.data.mediaId);
+      }
       const result = await files.transform(job.data);
       await store.markReady(job.data, result);
       await files.cleanupSource(job.data).catch(() => undefined);
-      return { mediaId: job.data.mediaId, duplicate: false };
+      return {
+        mediaId: job.data.mediaId,
+        duplicate: false,
+        quarantined: false,
+      };
     } catch (error: unknown) {
       const reason = error instanceof Error ? error.message : "Unknown error";
-      await store
-        .markFailed(job.data.mediaId, "PROCESSING_FAILED", reason)
-        .catch(() => undefined);
+      if (
+        !quarantinedDuringAttempt &&
+        (await store.findStatus(job.data.mediaId)) !== "QUARANTINED"
+      ) {
+        await store
+          .markFailed(job.data.mediaId, "PROCESSING_FAILED", reason)
+          .catch(() => undefined);
+      }
       throw error;
     }
   };
@@ -46,6 +94,7 @@ export function validateMediaProcessingJob(data: MediaProcessingJob): void {
     !data.temporaryKey ||
     !data.destinationKey ||
     !data.mimeType ||
+    typeof data.scanRequired !== "boolean" ||
     !Number.isSafeInteger(data.size) ||
     data.size <= 0 ||
     !/^[a-f0-9]{64}$/.test(data.checksum)

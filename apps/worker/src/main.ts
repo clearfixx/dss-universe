@@ -14,6 +14,7 @@ import { PostgresProcessedEventStore } from "./processed-event.store.js";
 import { LocalMediaFileProcessor } from "./local-media-file.processor.js";
 import { createMediaProcessingProcessor } from "./media-processing.processor.js";
 import { PostgresMediaProcessingStore } from "./postgres-media-processing.store.js";
+import { ClamAvMediaMalwareScanner } from "./clamav-media-malware.scanner.js";
 
 const connection = new Redis({
   host: process.env.REDIS_HOST ?? "localhost",
@@ -41,6 +42,7 @@ const mediaWorker = new Worker<MediaProcessingJob>(
   createMediaProcessingProcessor(
     new PostgresMediaProcessingStore(pool),
     new LocalMediaFileProcessor(),
+    new ClamAvMediaMalwareScanner(),
   ),
   { connection },
 );
@@ -70,9 +72,13 @@ mediaWorker.on("failed", (job, error) => {
     "Media processing job failed",
   );
 });
-mediaWorker.on("completed", (job) => {
+mediaWorker.on("completed", (job, result) => {
   logger.info(
-    { jobId: job.id, uploadSessionId: job.data.uploadSessionId },
+    {
+      jobId: job.id,
+      uploadSessionId: job.data.uploadSessionId,
+      quarantined: result.quarantined,
+    },
     "Media upload accepted for processing",
   );
 });

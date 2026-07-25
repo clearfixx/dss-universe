@@ -21,6 +21,7 @@ export type MediaProcessingJob = {
   mimeType: string;
   size: number;
   checksum: string;
+  scanRequired: boolean;
   processingKind: "IMAGE" | "PASSTHROUGH";
   destinationKey: string;
   variants: MediaProcessingVariantSpec[];

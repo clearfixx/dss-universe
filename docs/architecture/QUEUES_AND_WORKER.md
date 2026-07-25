@@ -2,7 +2,7 @@
 
 > Status: Phase 4 foundation implemented
 >
-> Updated: 2026-07-18
+> Updated: 2026-07-25
 
 ## Runtime boundary
 
@@ -30,5 +30,11 @@ PostgreSQL outbox -> API dispatcher -> Redis / BullMQ -> apps/worker
 - `REDIS_HOST`, default `localhost`;
 - `REDIS_PORT`, default `6379`;
 - `OUTBOX_DISPATCH_INTERVAL_MS`, default `1000`; use `0` in tests or dedicated-dispatcher deployments.
+- `DSS_UPLOADS_DIR`, default `uploads`;
+- `CLAMAV_HOST`, default `localhost`;
+- `CLAMAV_PORT`, default `3310`;
+- `CLAMAV_TIMEOUT_MS`, default `15000`.
+
+Every accepted Media upload is scanned asynchronously through ClamAV INSTREAM before transformation or permanent storage. The worker fails closed: detected malware and scanner outages transition the Media record to `QUARANTINED`; clean rescans can return it to `PROCESSING`. READY, REJECTED and DELETED jobs remain idempotent terminal outcomes.
 
 Maintenance Center presentation and feature-specific handlers remain product work; the shared recovery contract is implemented.

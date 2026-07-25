@@ -149,6 +149,7 @@ export class MediaBinaryUploadService {
         mimeType: actualMimeType,
         size: file.size,
         checksum,
+        scanRequired: true,
         processingKind: isImage ? 'IMAGE' : 'PASSTHROUGH',
         destinationKey,
         variants,

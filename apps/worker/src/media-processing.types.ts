@@ -22,8 +22,14 @@ export type MediaProcessingResult = {
   variants: ProcessedMediaFile[];
 };
 
+export type MediaMalwareScanResult =
+  | { status: "CLEAN" }
+  | { status: "INFECTED"; threatName: string };
+
 export interface MediaProcessingStore {
   findStatus(mediaId: string): Promise<string | null>;
+  markProcessing(mediaId: string): Promise<void>;
+  markQuarantined(mediaId: string, code: string, reason: string): Promise<void>;
   markReady(
     job: MediaProcessingJob,
     result: MediaProcessingResult,
@@ -34,4 +40,8 @@ export interface MediaProcessingStore {
 export interface MediaFileProcessor {
   transform(job: MediaProcessingJob): Promise<MediaProcessingResult>;
   cleanupSource(job: MediaProcessingJob): Promise<void>;
+}
+
+export interface MediaMalwareScanner {
+  scan(job: MediaProcessingJob): Promise<MediaMalwareScanResult>;
 }

@@ -49,6 +49,7 @@ describe("LocalMediaFileProcessor", () => {
       mimeType: "image/png",
       size: (await readFile(sourcePath)).length,
       checksum: "a".repeat(64),
+      scanRequired: false,
       processingKind: "IMAGE",
       variants: [
         {

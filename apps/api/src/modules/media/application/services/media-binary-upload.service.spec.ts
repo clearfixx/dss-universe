@@ -115,6 +115,7 @@ describe('MediaBinaryUploadService', () => {
         uploadSessionId: SESSION.id,
         mimeType: 'text/plain',
         checksum: CHECKSUM,
+        scanRequired: true,
       }),
       expect.objectContaining({ jobId: SESSION.id, attempts: 3 }),
     );

@@ -348,10 +348,12 @@ describe('DSS API (e2e)', () => {
     const processMedia = createMediaProcessingProcessor(
       new PostgresMediaProcessingStore(processingPool),
       new LocalMediaFileProcessor(join(process.cwd(), E2E_UPLOADS_DIR)),
+      { scan: () => Promise.resolve({ status: 'CLEAN' as const }) },
     );
     await expect(processMedia(processingJob)).resolves.toEqual({
       mediaId: processingJob.data.mediaId,
       duplicate: false,
+      quarantined: false,
     });
 
     const processedMedia = await app.get(PrismaService).media.findUnique({

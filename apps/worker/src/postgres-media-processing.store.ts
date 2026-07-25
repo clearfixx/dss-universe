@@ -23,6 +23,30 @@ export class PostgresMediaProcessingStore implements MediaProcessingStore {
     return result.rows[0]?.status ?? null;
   }
 
+  async markProcessing(mediaId: string): Promise<void> {
+    await this.pool.query(
+      `UPDATE "media" SET "status" = 'PROCESSING'::"MediaStatus",
+        "failureCode" = NULL, "failureReason" = NULL, "updatedAt" = NOW()
+       WHERE "id" = $1 AND "status" = 'QUARANTINED'::"MediaStatus"`,
+      [mediaId],
+    );
+  }
+
+  async markQuarantined(
+    mediaId: string,
+    code: string,
+    reason: string,
+  ): Promise<void> {
+    await this.pool.query(
+      `UPDATE "media" SET "status" = 'QUARANTINED'::"MediaStatus",
+        "failureCode" = $2, "failureReason" = $3, "updatedAt" = NOW()
+       WHERE "id" = $1 AND "status" IN (
+         'PROCESSING'::"MediaStatus", 'QUARANTINED'::"MediaStatus"
+       )`,
+      [mediaId, code, reason.slice(0, 2_000)],
+    );
+  }
+
   async markReady(
     job: MediaProcessingJob,
     result: MediaProcessingResult,
@@ -63,7 +87,7 @@ export class PostgresMediaProcessingStore implements MediaProcessingStore {
           "mimeType" = $3, "extension" = $4, "size" = $5, "checksum" = $6,
           "width" = $7, "height" = $8, "readyAt" = NOW(), "updatedAt" = NOW(),
           "failureCode" = NULL, "failureReason" = NULL
-         WHERE "id" = $1`,
+         WHERE "id" = $1 AND "status" = 'PROCESSING'::"MediaStatus"`,
         [
           job.mediaId,
           result.original.storageKey,
@@ -95,7 +119,7 @@ export class PostgresMediaProcessingStore implements MediaProcessingStore {
     await this.pool.query(
       `UPDATE "media" SET "status" = 'FAILED'::"MediaStatus",
         "failureCode" = $2, "failureReason" = $3, "updatedAt" = NOW()
-       WHERE "id" = $1`,
+       WHERE "id" = $1 AND "status" = 'PROCESSING'::"MediaStatus"`,
       [mediaId, code, reason.slice(0, 2_000)],
     );
   }
