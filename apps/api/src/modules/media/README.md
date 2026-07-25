@@ -178,12 +178,16 @@ Implemented:
 - active MediaReference replacement and immutable avatar audit records;
 - cached public WEBP variant delivery without exposing storage paths;
 - deterministic SVG fallback avatars.
+- visibility-aware signed delivery issued through authenticated GraphQL;
+- five-minute HMAC capabilities without bucket or storage-key disclosure;
+- owner and `media.restricted.read` access enforcement;
+- configurable retention with serializable orphan claiming;
+- idempotent original/variant cleanup and audited completion/failure.
 
 Not implemented yet:
 
 - malware scanning for document attachments;
-- signed delivery;
-- retention and cleanup jobs.
+
 Architecture Rule
 
 Do not duplicate Core Storage inside Media.

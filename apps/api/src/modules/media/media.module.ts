@@ -42,12 +42,18 @@ import { MediaDeliveryService } from './application/services/media-delivery.serv
 import { AVATAR_REPOSITORY } from './domain/repositories/avatar.repository.interface';
 import { PrismaAvatarRepository } from './infrastructure/repositories/prisma-avatar.repository';
 import { MediaDeliveryController } from './presentation/http/media-delivery.controller';
+import { MediaAccessService } from './application/services/media-access.service';
+import { MediaUrlSignerService } from './application/services/media-url-signer.service';
+import { MediaRetentionService } from './application/services/media-retention.service';
 
 @Module({
   imports: [StorageModule, UsersModule],
   providers: [
     AvatarService,
+    MediaAccessService,
     MediaDeliveryService,
+    MediaUrlSignerService,
+    MediaRetentionService,
     MediaBinaryUploadService,
     MediaMimeInspectionService,
     MediaUploadPolicyService,

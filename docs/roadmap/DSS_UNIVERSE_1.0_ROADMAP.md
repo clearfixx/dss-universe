@@ -503,6 +503,10 @@ Delivered in the Media v1 foundation package:
 - permanent PROCESSING Media identity before queue dispatch;
 - Sharp WEBP conversion, EXIF auto-rotation and policy-driven variants;
 - atomic READY/variant persistence with idempotent retries and FAILED state.
+- GraphQL-issued signed delivery for authenticated/private/restricted media;
+- explicit owner and `media.restricted.read` authorization;
+- configurable, reference-aware orphan retention and idempotent physical cleanup;
+- audited cleanup claim, completion and retryable failure states.
 
 ## Processing — delivered foundation
 
@@ -523,13 +527,12 @@ Delivered in the Media v1 foundation package:
 - `avatarMediaId` instead of `avatarUrl`;
 - public delivery;
 - previous-avatar reference removal;
-- retention and cleanup remains a follow-up lifecycle package;
+- reference-aware retention and cleanup;
 - default fallback;
 - audit and tests.
 
 ## Completion
 
-- private/restricted access;
 - admin Media Library;
 - failed-job retry;
 - quarantine;

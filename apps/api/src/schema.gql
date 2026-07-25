@@ -40,6 +40,11 @@ type LogoutResultModel {
   success: Boolean!
 }
 
+type MediaAccess {
+  expiresAt: DateTime!
+  url: String!
+}
+
 type MediaUploadSession {
   checksum: String
   completedAt: DateTime
@@ -66,6 +71,7 @@ type Mutation {
 
 type Query {
   apiInfo: ApiInfo!
+  mediaAccessUrl(mediaId: ID!, variantName: String!): MediaAccess!
   mediaUploadSession(id: String!): MediaUploadSession!
   user(id: ID!): User!
   userByUsername(username: String!): User!

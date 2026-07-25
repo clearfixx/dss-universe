@@ -27,6 +27,8 @@ import type { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/core/database';
 import { QueueRegistryService } from './../src/core/queue';
+import { StorageService } from './../src/core/storage';
+import { MediaRetentionService } from './../src/modules/media/application/services/media-retention.service';
 import { LocalMediaFileProcessor } from '../../worker/src/local-media-file.processor';
 import { createMediaProcessingProcessor } from '../../worker/src/media-processing.processor';
 import { PostgresMediaProcessingStore } from '../../worker/src/postgres-media-processing.store';
@@ -141,6 +143,9 @@ describe('DSS API (e2e)', () => {
     expect(schema).toContain('users(pagination: UsersPageInput)');
     expect(schema).toContain('setViewerAvatar(mediaId: ID!)');
     expect(schema).toContain('removeViewerAvatar: Viewer!');
+    expect(schema).toContain(
+      'mediaAccessUrl(mediaId: ID!, variantName: String!): MediaAccess!',
+    );
     expect(schema).not.toContain('passwordHash');
     expect(schema).not.toContain('refreshTokenHash');
   });
@@ -471,7 +476,113 @@ describe('DSS API (e2e)', () => {
       .get(`/api/media/avatars/fallback/${username}.svg`)
       .expect(200)
       .expect('Content-Type', /image\/svg\+xml/);
+
+    await app.get(PrismaService).media.update({
+      where: { id: mediaId },
+      data: { visibility: 'PRIVATE' },
+    });
+    await request(app.getHttpServer())
+      .get(`/api/media/public/${mediaId}/avatar-256`)
+      .expect(404);
+
+    const access = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `query MediaAccess($mediaId: ID!, $variantName: String!) {
+          mediaAccessUrl(mediaId: $mediaId, variantName: $variantName) {
+            url expiresAt
+          }
+        }`,
+        variables: { mediaId, variantName: 'avatar-256' },
+      })
+      .expect(200);
+    const accessBody = access.body as {
+      data: { mediaAccessUrl: { url: string; expiresAt: string } };
+      errors?: Array<{ message: string }>;
+    };
+    expect(accessBody.errors).toBeUndefined();
+    expect(accessBody.data.mediaAccessUrl.url).toMatch(
+      /^\/api\/media\/signed\//,
+    );
+    expect(accessBody.data.mediaAccessUrl.url).not.toContain('processed/');
+
+    await request(app.getHttpServer())
+      .get(accessBody.data.mediaAccessUrl.url)
+      .expect(200)
+      .expect('Cache-Control', 'private, no-store')
+      .expect('Content-Type', /image\/webp/);
+    await request(app.getHttpServer())
+      .get(`${accessBody.data.mediaAccessUrl.url}x`)
+      .expect(401);
     await queuedJob?.remove();
+  });
+
+  it('purges only claimed unreferenced media after retention', async () => {
+    const storage = app.get(StorageService);
+    const retention = app.get(MediaRetentionService);
+    const prisma = app.get(PrismaService);
+    const original = await storage.save({
+      buffer: Buffer.from('old-original'),
+      directory: 'cleanup',
+      filename: `original-${Date.now()}.webp`,
+    });
+    const variant = await storage.save({
+      buffer: Buffer.from('old-variant'),
+      directory: 'cleanup',
+      filename: `variant-${Date.now()}.webp`,
+    });
+    const oldDate = new Date('2026-05-01T00:00:00.000Z');
+    const media = await prisma.media.create({
+      data: {
+        kind: 'IMAGE',
+        status: 'READY',
+        visibility: 'PRIVATE',
+        storageProvider: 'LOCAL',
+        bucket: 'media',
+        storageKey: original.path,
+        originalFilename: 'old.webp',
+        mimeType: 'image/webp',
+        extension: 'webp',
+        size: 12,
+        checksum: 'old-original-checksum',
+        readyAt: oldDate,
+        createdAt: oldDate,
+        variants: {
+          create: {
+            name: 'content-640',
+            storageProvider: 'LOCAL',
+            bucket: 'media',
+            storageKey: variant.path,
+            mimeType: 'image/webp',
+            extension: 'webp',
+            size: 11,
+            checksum: 'old-variant-checksum',
+          },
+        },
+      },
+    });
+
+    await expect(
+      retention.runOnce(new Date('2026-07-25T00:00:00.000Z')),
+    ).resolves.toBeGreaterThanOrEqual(1);
+    const cleaned = await prisma.media.findUniqueOrThrow({
+      where: { id: media.id },
+    });
+    expect(cleaned.status).toBe('DELETED');
+    expect(cleaned.deletedAt).toBeInstanceOf(Date);
+    await expect(storage.read(original.path)).rejects.toThrow();
+    await expect(storage.read(variant.path)).rejects.toThrow();
+    await expect(
+      prisma.auditRecord.count({
+        where: {
+          targetId: media.id,
+          action: {
+            in: ['media.cleanup.claimed', 'media.cleanup.completed'],
+          },
+        },
+      }),
+    ).resolves.toBe(2);
   });
 
   afterAll(async () => {

@@ -54,4 +54,16 @@ export class MediaDeliveryController {
       .toUpperCase();
     return `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><rect width="256" height="256" rx="128" fill="#20134a"/><text x="128" y="145" text-anchor="middle" font-family="system-ui,sans-serif" font-size="72" font-weight="700" fill="#a78bfa">${initials || 'DSS'}</text></svg>`;
   }
+
+  @Get('signed/:token')
+  async signedVariant(
+    @Param('token') token: string,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<StreamableFile> {
+    const media = await this.delivery.signedVariant(token);
+    response.type(media.mimeType);
+    response.setHeader('ETag', `"${media.checksum}"`);
+    response.setHeader('Cache-Control', 'private, no-store');
+    return new StreamableFile(media.content);
+  }
 }

@@ -12,6 +12,13 @@ export const validationSchema = Joi.object({
 
   JWT_ACCESS_SECRET: Joi.string().required(),
   JWT_REFRESH_SECRET: Joi.string().required(),
+  MEDIA_SIGNING_SECRET: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string().min(32).required(),
+    otherwise: Joi.string()
+      .min(32)
+      .default('development-media-signing-secret-change-me'),
+  }),
 
   JWT_ACCESS_EXPIRES_IN: Joi.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: Joi.string().default('7d'),
@@ -19,6 +26,11 @@ export const validationSchema = Joi.object({
   REDIS_HOST: Joi.string().default('localhost'),
   REDIS_PORT: Joi.number().default(6379),
   OUTBOX_DISPATCH_INTERVAL_MS: Joi.number().integer().min(0).default(1000),
+  MEDIA_RETENTION_DAYS: Joi.number().integer().min(1).default(30),
+  MEDIA_CLEANUP_INTERVAL_MS: Joi.number()
+    .integer()
+    .min(0)
+    .default(60 * 60 * 1000),
   LOG_LEVEL: Joi.string()
     .valid('fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent')
     .default('info'),

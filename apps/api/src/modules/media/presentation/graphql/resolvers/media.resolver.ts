@@ -28,6 +28,8 @@ import { AvatarService } from '../../../application/services/avatar.service';
 import { UsersService } from '../../../../users/application/services/users.service';
 import { UserGraphqlMapper } from '../../../../users/presentation/graphql/mappers/user-graphql.mapper';
 import { ViewerModel } from '../../../../users/presentation/graphql/models/viewer.model';
+import { MediaAccessService } from '../../../application/services/media-access.service';
+import { MediaAccessModel } from '../models/media-access.model';
 
 @Resolver()
 @UseGuards(JwtAuthGuard)
@@ -36,6 +38,7 @@ export class MediaResolver {
     private readonly sessions: MediaUploadSessionService,
     private readonly avatars: AvatarService,
     private readonly users: UsersService,
+    private readonly access: MediaAccessService,
   ) {}
 
   @Mutation(() => MediaUploadSessionModel)
@@ -84,5 +87,14 @@ export class MediaResolver {
     return UserGraphqlMapper.viewerFromResponse(
       await this.users.getById(user.id),
     );
+  }
+
+  @Query(() => MediaAccessModel)
+  mediaAccessUrl(
+    @AuthUser() user: AuthenticatedUser,
+    @Args('mediaId', { type: () => ID }) mediaId: string,
+    @Args('variantName') variantName: string,
+  ): Promise<MediaAccessModel> {
+    return this.access.issue(user, mediaId, variantName);
   }
 }

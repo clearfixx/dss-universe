@@ -12,7 +12,7 @@
  * ===============================================================
  */
 
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 
 import { AuditWriterService } from '@api/core/audit';
 import { PrismaService } from '@api/core/database';
@@ -63,6 +63,20 @@ export class PrismaAvatarRepository implements AvatarRepository {
 
   async assign(input: AvatarAssignment): Promise<void> {
     await this.prisma.$transaction(async (transaction) => {
+      const media = await transaction.media.findUnique({
+        where: { id: input.mediaId },
+        select: { ownerId: true, status: true, visibility: true },
+      });
+      if (
+        !media ||
+        media.ownerId !== input.userId ||
+        media.status !== 'READY' ||
+        media.visibility !== 'PUBLIC'
+      ) {
+        throw new ConflictException(
+          'Avatar media changed before it could be assigned.',
+        );
+      }
       await transaction.mediaReference.updateMany({
         where: {
           targetType: TARGET_TYPE,

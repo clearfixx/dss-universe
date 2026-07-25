@@ -21,9 +21,12 @@ import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 
 import { PrismaService } from '@api/core/database';
+import { AuditWriterService } from '@api/core/audit';
 
 import { MediaStatus } from '../../domain/enums/media-status.enum';
 import { MediaStorageProvider } from '../../domain/enums/media-storage-provider.enum';
+import { MediaVisibility } from '../../domain/enums/media-visibility.enum';
+import type { MediaCleanupCandidate } from '../../domain/types/media-cleanup-candidate.type';
 import type { MediaRepository } from '../../domain/repositories/media.repository.interface';
 import type { CreateMediaInput } from '../../domain/types/create-media.input';
 import type { UpdateMediaInput } from '../../domain/types/update-media.input';
@@ -31,7 +34,10 @@ import { PrismaMediaMapper } from '../mappers/prisma-media.mapper';
 
 @Injectable()
 export class PrismaMediaRepository implements MediaRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly audit: AuditWriterService,
+  ) {}
 
   async create(input: CreateMediaInput) {
     const data: Prisma.MediaUncheckedCreateInput = {
@@ -99,5 +105,140 @@ export class PrismaMediaRepository implements MediaRepository {
           metadata: PrismaMediaMapper.toMetadata(variant.metadata),
         }
       : null;
+  }
+
+  async findDeliveryCandidate(mediaId: string, variantName: string) {
+    const variant = await this.prisma.mediaVariant.findFirst({
+      where: {
+        mediaId,
+        name: variantName,
+        media: { deletedAt: null },
+      },
+      include: {
+        media: {
+          select: {
+            ownerId: true,
+            status: true,
+            visibility: true,
+          },
+        },
+      },
+    });
+
+    return variant
+      ? {
+          mediaId: variant.mediaId,
+          ownerId: variant.media.ownerId,
+          status: variant.media.status as MediaStatus,
+          visibility: variant.media.visibility as MediaVisibility,
+          variantName: variant.name,
+          storageKey: variant.storageKey,
+          mimeType: variant.mimeType,
+          checksum: variant.checksum,
+        }
+      : null;
+  }
+
+  claimCleanupCandidates(olderThan: Date, limit: number) {
+    return this.prisma.$transaction(
+      async (transaction) => {
+        const candidates = await transaction.media.findMany({
+          where: {
+            OR: [
+              {
+                status: {
+                  in: [
+                    MediaStatus.READY,
+                    MediaStatus.FAILED,
+                    MediaStatus.REJECTED,
+                  ],
+                },
+                createdAt: { lt: olderThan },
+              },
+              { status: MediaStatus.DELETING },
+            ],
+            references: { none: { removedAt: null } },
+            avatarFor: null,
+          },
+          include: {
+            variants: { select: { storageKey: true } },
+          },
+          orderBy: { createdAt: 'asc' },
+          take: limit,
+        });
+
+        const claimed: MediaCleanupCandidate[] = [];
+        for (const candidate of candidates) {
+          const result = await transaction.media.updateMany({
+            where: {
+              id: candidate.id,
+              status: {
+                in: [
+                  MediaStatus.READY,
+                  MediaStatus.FAILED,
+                  MediaStatus.REJECTED,
+                  MediaStatus.DELETING,
+                ],
+              },
+              references: { none: { removedAt: null } },
+              avatarFor: null,
+            },
+            data: { status: MediaStatus.DELETING },
+          });
+          if (result.count !== 1) {
+            continue;
+          }
+          await this.audit.append(transaction, {
+            action: 'media.cleanup.claimed',
+            actorType: 'SYSTEM',
+            targetType: 'Media',
+            targetId: candidate.id,
+          });
+          claimed.push({
+            mediaId: candidate.id,
+            storageKeys: [
+              candidate.storageKey,
+              ...candidate.variants.map(({ storageKey }) => storageKey),
+            ],
+          });
+        }
+        return claimed;
+      },
+      { isolationLevel: 'Serializable' },
+    );
+  }
+
+  async completeCleanup(mediaId: string): Promise<void> {
+    await this.prisma.$transaction(async (transaction) => {
+      const result = await transaction.media.updateMany({
+        where: { id: mediaId, status: MediaStatus.DELETING },
+        data: {
+          status: MediaStatus.DELETED,
+          deletedAt: new Date(),
+        },
+      });
+      if (result.count !== 1) {
+        return;
+      }
+      await this.audit.append(transaction, {
+        action: 'media.cleanup.completed',
+        actorType: 'SYSTEM',
+        targetType: 'Media',
+        targetId: mediaId,
+      });
+    });
+  }
+
+  async recordCleanupFailure(mediaId: string, reason: string): Promise<void> {
+    await this.prisma.$transaction((transaction) =>
+      this.audit.append(transaction, {
+        action: 'media.cleanup.failed',
+        actorType: 'SYSTEM',
+        targetType: 'Media',
+        targetId: mediaId,
+        result: 'FAILURE',
+        reason,
+      }),
+    );
   }
 }

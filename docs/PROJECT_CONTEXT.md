@@ -74,6 +74,8 @@ foundation package, pending its final quality gate and publication.
 - GraphQL avatar assignment/removal with `User.avatarMediaId`;
 - atomic MediaReference replacement and audit records;
 - immutable public avatar-variant delivery and deterministic fallback avatars.
+- short-lived signed delivery for authenticated/private/restricted Media;
+- configurable, reference-aware retention and audited physical cleanup.
 
 ### Work in progress — not stable
 
@@ -84,9 +86,10 @@ foundation package, pending its final quality gate and publication.
 - Sharp dependency;
 - Media module registration.
 
-The Media persistence, upload orchestration, image-processing and Avatar
-vertical slice are implemented. Security scanning, private/signed delivery,
-retention and cleanup remain work in progress.
+The Media persistence, upload orchestration, image-processing, Avatar,
+visibility-aware delivery and retention cleanup vertical slices are
+implemented. Security scanning, quarantine operations and the administrative
+Media Library remain work in progress.
 
 ### Not implemented
 
@@ -445,8 +448,9 @@ Primary quality risks:
 ## 10. Immediate Execution Order
 
 ```text
-1. Implement private/signed Media delivery and retention cleanup
-2. Complete cover/content-image consumer integration
+1. Implement malware scanning and quarantine operations
+2. Implement the administrative Media Library and storage metrics
+3. Complete cover/content-image consumer integration
 3. Complete Auth sessions and User Profiles
 4. Build Theme Engine and DSS Editor foundations
 5. Continue product modules in the canonical roadmap order

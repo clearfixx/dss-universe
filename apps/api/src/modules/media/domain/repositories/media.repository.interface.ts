@@ -20,6 +20,8 @@ import { MediaEntity } from '../entities/media.entity';
 import { CreateMediaInput } from '../types/create-media.input';
 import { UpdateMediaInput } from '../types/update-media.input';
 import type { MediaVariant } from '../types/media-variant.type';
+import type { MediaDeliveryCandidate } from '../types/media-delivery-candidate.type';
+import type { MediaCleanupCandidate } from '../types/media-cleanup-candidate.type';
 
 export const MEDIA_REPOSITORY = Symbol('MEDIA_REPOSITORY');
 
@@ -34,4 +36,14 @@ export interface MediaRepository {
     mediaId: string,
     variantName: string,
   ): Promise<MediaVariant | null>;
+  findDeliveryCandidate(
+    mediaId: string,
+    variantName: string,
+  ): Promise<MediaDeliveryCandidate | null>;
+  claimCleanupCandidates(
+    olderThan: Date,
+    limit: number,
+  ): Promise<MediaCleanupCandidate[]>;
+  completeCleanup(mediaId: string): Promise<void>;
+  recordCleanupFailure(mediaId: string, reason: string): Promise<void>;
 }

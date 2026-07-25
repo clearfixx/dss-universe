@@ -65,6 +65,12 @@ export const PERMISSIONS = {
     description: 'Allows banning or restricting user accounts.',
   },
 
+  MediaRestrictedRead: {
+    key: 'media.restricted.read',
+    label: 'Read restricted media',
+    description: 'Allows access to restricted media owned by other users.',
+  },
+
   RolesRead: {
     key: 'roles.read',
     label: 'Read roles',
