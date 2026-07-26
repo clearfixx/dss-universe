@@ -64,6 +64,7 @@ describe('UserSocialGraphService', () => {
       showOnlineStatus: true,
       allowFollowers: false,
       showFollows: true,
+      allowWallPosts: true,
     });
 
     await expect(service.follow('user-1', 'user-2')).rejects.toMatchObject({
@@ -85,6 +86,7 @@ describe('UserSocialGraphService', () => {
       showOnlineStatus: true,
       allowFollowers: true,
       showFollows: true,
+      allowWallPosts: true,
     });
     summaries.mockResolvedValue(
       new Map([

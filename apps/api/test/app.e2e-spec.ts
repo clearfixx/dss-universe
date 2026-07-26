@@ -341,7 +341,7 @@ describe('DSS API (e2e)', () => {
         query: `query {
           viewerPrivacySettings {
             profileVisibility showLocation showWebsite showSocialLinks
-            showLastSeen showOnlineStatus allowFollowers showFollows
+            showLastSeen showOnlineStatus allowFollowers showFollows allowWallPosts
           }
         }`,
       })
@@ -357,6 +357,7 @@ describe('DSS API (e2e)', () => {
           showOnlineStatus: true,
           allowFollowers: true,
           showFollows: true,
+          allowWallPosts: true,
         },
       },
     });
@@ -370,7 +371,7 @@ describe('DSS API (e2e)', () => {
         ) {
           updateViewerPrivacy(input: $input) {
             profileVisibility showLocation showWebsite showSocialLinks
-            showLastSeen showOnlineStatus allowFollowers showFollows
+            showLastSeen showOnlineStatus allowFollowers showFollows allowWallPosts
           }
         }`,
         variables: {
@@ -383,6 +384,7 @@ describe('DSS API (e2e)', () => {
             showOnlineStatus: true,
             allowFollowers: true,
             showFollows: true,
+            allowWallPosts: true,
           },
         },
       });
@@ -447,6 +449,115 @@ describe('DSS API (e2e)', () => {
         },
       },
     });
+
+    const wallPostResult = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation CreateWallPost($input: CreateWallPostInput!) {
+          createProfileWallPost(input: $input) {
+            id profileOwnerId authorId body imageMediaId isDeleted
+          }
+        }`,
+        variables: {
+          input: {
+            profileOwnerId: registered.data.register.user.id,
+            body: '  First transmission from the Profile Wall.  ',
+          },
+        },
+      })
+      .expect(200);
+    const wallPostBody = wallPostResult.body as {
+      data: {
+        createProfileWallPost: {
+          id: string;
+          profileOwnerId: string;
+          body: string;
+          isDeleted: boolean;
+        };
+      };
+    };
+    expect(wallPostBody.data.createProfileWallPost).toMatchObject({
+      profileOwnerId: registered.data.register.user.id,
+      body: 'First transmission from the Profile Wall.',
+      isDeleted: false,
+    });
+
+    const removedWallPost = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation RemoveWallPost($postId: ID!) {
+          removeProfileWallPost(postId: $postId, reason: "Owner cleanup") {
+            id body imageMediaId isDeleted deletedAt
+          }
+        }`,
+        variables: {
+          postId: wallPostBody.data.createProfileWallPost.id,
+        },
+      })
+      .expect(200);
+    const removedWallPostBody = removedWallPost.body as {
+      data: {
+        removeProfileWallPost: {
+          id: string;
+          body: string | null;
+          imageMediaId: string | null;
+          isDeleted: boolean;
+          deletedAt: string | null;
+        };
+      };
+    };
+    expect(removedWallPostBody.data.removeProfileWallPost).toMatchObject({
+      id: wallPostBody.data.createProfileWallPost.id,
+      body: null,
+      imageMediaId: null,
+      isDeleted: true,
+    });
+    expect(
+      typeof removedWallPostBody.data.removeProfileWallPost.deletedAt,
+    ).toBe('string');
+
+    const wallHistory = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `query ProfileWall($profileOwnerId: ID!) {
+          profileWall(
+            profileOwnerId: $profileOwnerId
+            pagination: { page: 1, limit: 10 }
+          ) {
+            total items { id body isDeleted }
+          }
+        }`,
+        variables: { profileOwnerId: registered.data.register.user.id },
+      })
+      .expect(200);
+    expect(wallHistory.body).toEqual({
+      data: {
+        profileWall: {
+          total: 1,
+          items: [
+            {
+              id: wallPostBody.data.createProfileWallPost.id,
+              body: null,
+              isDeleted: true,
+            },
+          ],
+        },
+      },
+    });
+    await expect(
+      app.get(PrismaService).auditRecord.count({
+        where: {
+          actorId: registered.data.register.user.id,
+          targetId: wallPostBody.data.createProfileWallPost.id,
+          action: {
+            in: ['user.wall.post_created', 'user.wall.post_deleted'],
+          },
+        },
+      }),
+    ).resolves.toBe(2);
 
     const followResult = await request(app.getHttpServer())
       .post('/api/graphql')

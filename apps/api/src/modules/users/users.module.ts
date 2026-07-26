@@ -53,6 +53,9 @@ import { USER_BLOCK_REPOSITORY } from './domain/repositories/user-block.reposito
 import { PrismaUserBlockRepository } from './infrastructure/repositories/prisma-user-block.repository';
 import { UserPresenceService } from './application/services/user-presence.service';
 import { UserPresenceInterceptor } from './presentation/interceptors/user-presence.interceptor';
+import { UserWallService } from './application/services/user-wall.service';
+import { USER_WALL_REPOSITORY } from './domain/repositories/user-wall.repository.interface';
+import { PrismaUserWallRepository } from './infrastructure/repositories/prisma-user-wall.repository';
 
 @Module({
   imports: [PrismaModule],
@@ -68,6 +71,7 @@ import { UserPresenceInterceptor } from './presentation/interceptors/user-presen
     UserSocialGraphLoader,
     UserBlockService,
     UserPresenceService,
+    UserWallService,
     {
       provide: APP_INTERCEPTOR,
       useClass: UserPresenceInterceptor,
@@ -91,6 +95,10 @@ import { UserPresenceInterceptor } from './presentation/interceptors/user-presen
     {
       provide: USER_BLOCK_REPOSITORY,
       useClass: PrismaUserBlockRepository,
+    },
+    {
+      provide: USER_WALL_REPOSITORY,
+      useClass: PrismaUserWallRepository,
     },
   ],
   exports: [UsersService, UserPrivacyService, USERS_REPOSITORY],

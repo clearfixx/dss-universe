@@ -38,6 +38,7 @@ export const DEFAULT_USER_PRIVACY_SETTINGS: UpdateUserPrivacySettings = {
   showOnlineStatus: true,
   allowFollowers: true,
   showFollows: true,
+  allowWallPosts: true,
 };
 
 @Injectable()
@@ -94,6 +95,7 @@ export class UserPrivacyService {
         showOnlineStatus: true,
         allowFollowers: true,
         showFollows: true,
+        allowWallPosts: true,
       };
     }
     if (settings.profileVisibility === 'PRIVATE') {
@@ -105,6 +107,7 @@ export class UserPrivacyService {
         showLastSeen: false,
         showOnlineStatus: false,
         showFollows: false,
+        allowWallPosts: false,
       };
     }
     return settings;

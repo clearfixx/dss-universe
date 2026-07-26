@@ -18,6 +18,12 @@ type AuthTokensModel {
   refreshToken: String!
 }
 
+input CreateWallPostInput {
+  body: String
+  imageMediaId: ID
+  profileOwnerId: ID!
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -182,6 +188,7 @@ enum MembersDirectorySort {
 type Mutation {
   abortMediaUpload(id: String!): MediaUploadSession!
   blockUser(userId: ID!): UserBlockResult!
+  createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
   followUser(userId: ID!): UserSocialGraphSummary!
   initiateMediaUpload(input: InitiateMediaUploadInput!): MediaUploadSession!
   login(input: LoginInput!): AuthPayloadModel!
@@ -189,6 +196,7 @@ type Mutation {
   refreshTokens(input: RefreshTokenInput!): AuthPayloadModel!
   register(input: RegisterInput!): AuthPayloadModel!
   rejectQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
+  removeProfileWallPost(postId: ID!, reason: String): ProfileWallPost!
   removeViewerAvatar: Viewer!
   removeViewerCover: Viewer!
   rescanQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
@@ -208,6 +216,26 @@ enum ProfileVisibility {
   PUBLIC
 }
 
+type ProfileWallPage {
+  items: [ProfileWallPost!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+type ProfileWallPost {
+  authorId: ID!
+  body: String
+  createdAt: String!
+  deletedAt: String
+  id: ID!
+  imageMediaId: ID
+  isDeleted: Boolean!
+  profileOwnerId: ID!
+  updatedAt: String!
+}
+
 type Query {
   apiInfo: ApiInfo!
   blockedUsers(pagination: UsersPageInput): UsersPageModel!
@@ -218,6 +246,7 @@ type Query {
   mediaLibraryMetrics: MediaLibraryMetrics!
   mediaUploadSession(id: String!): MediaUploadSession!
   members(input: MembersDirectoryInput): MembersDirectoryPage!
+  profileWall(pagination: UsersPageInput, profileOwnerId: ID!): ProfileWallPage!
   quarantinedMedia(limit: Int! = 25): [MediaQuarantineItem!]!
   user(id: ID!): User!
   userByUsername(username: String!): User!
@@ -239,6 +268,7 @@ input RegisterInput {
 
 input UpdateUserPrivacyInput {
   allowFollowers: Boolean!
+  allowWallPosts: Boolean!
   profileVisibility: ProfileVisibility!
   showFollows: Boolean!
   showLastSeen: Boolean!
@@ -288,6 +318,7 @@ type UserBlockResult {
 
 type UserPrivacySettings {
   allowFollowers: Boolean!
+  allowWallPosts: Boolean!
   profileVisibility: ProfileVisibility!
   showFollows: Boolean!
   showLastSeen: Boolean!

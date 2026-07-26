@@ -67,6 +67,7 @@ describe('UserPrivacyService', () => {
       showOnlineStatus: false,
       allowFollowers: true,
       showFollows: false,
+      allowWallPosts: false,
     });
 
     await expect(service.visibilityFor('user-1', 'user-1')).resolves.toEqual(
@@ -93,6 +94,7 @@ describe('UserPrivacyService', () => {
       showOnlineStatus: true,
       allowFollowers: true,
       showFollows: true,
+      allowWallPosts: true,
     });
 
     await expect(service.visibilityFor('user-1', 'user-2')).resolves.toEqual(

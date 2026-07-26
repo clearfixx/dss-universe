@@ -110,6 +110,10 @@ active-member search, deterministic sorting, and bounded pagination.
 Presence is ephemeral Redis TTL state refreshed by authenticated activity.
 Durable last-seen writes are throttled, Redis failures are fail-open for
 product requests, and online state is always filtered through profile privacy.
+Profile Wall owns bounded text/image posts, profile privacy and block
+enforcement, Media references, immutable audit and public tombstones.
+Comments and reactions remain shared platform concerns and are not duplicated
+inside the Users module.
 
 Notes
 

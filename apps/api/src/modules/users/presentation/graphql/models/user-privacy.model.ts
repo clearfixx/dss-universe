@@ -41,4 +41,7 @@ export class UserPrivacyModel {
 
   @Field()
   showFollows!: boolean;
+
+  @Field()
+  allowWallPosts!: boolean;
 }

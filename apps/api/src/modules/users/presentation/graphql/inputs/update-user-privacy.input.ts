@@ -61,4 +61,8 @@ export class UpdateUserPrivacyInput {
   @Field()
   @IsBoolean()
   showFollows!: boolean;
+
+  @Field()
+  @IsBoolean()
+  allowWallPosts!: boolean;
 }

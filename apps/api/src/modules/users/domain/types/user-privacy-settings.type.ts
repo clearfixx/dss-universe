@@ -26,6 +26,7 @@ export type UserPrivacySettings = {
   showOnlineStatus: boolean;
   allowFollowers: boolean;
   showFollows: boolean;
+  allowWallPosts: boolean;
 };
 
 export type UpdateUserPrivacySettings = Omit<UserPrivacySettings, 'userId'>;

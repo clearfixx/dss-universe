@@ -116,6 +116,8 @@ model User {
   following         UserFollow[]         @relation("UserFollowing")
   blockedUsers      UserBlock[]          @relation("UserBlocker")
   blockedByUsers    UserBlock[]          @relation("UserBlocked")
+  wallPosts         UserWallPost[]       @relation("ProfileWallOwner")
+  authoredWallPosts UserWallPost[]       @relation("ProfileWallAuthor")
 
   refreshTokenHash String?
   emailVerifiedAt  DateTime?
@@ -137,12 +139,34 @@ model UserPrivacySettings {
   showOnlineStatus  Boolean           @default(true)
   allowFollowers    Boolean           @default(true)
   showFollows       Boolean           @default(true)
+  allowWallPosts    Boolean           @default(true)
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_privacy_settings")
+}
+
+model UserWallPost {
+  id             String    @id @default(uuid())
+  profileOwnerId String
+  authorId       String
+  body           String?
+  imageMediaId   String?
+  deletedAt      DateTime?
+  deletedById    String?
+  deleteReason   String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  profileOwner User @relation("ProfileWallOwner", fields: [profileOwnerId], references: [id], onDelete: Cascade)
+  author       User @relation("ProfileWallAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([profileOwnerId, createdAt, id])
+  @@index([authorId, createdAt])
+  @@index([deletedAt])
+  @@map("user_wall_posts")
 }
 
 model UserFollow {

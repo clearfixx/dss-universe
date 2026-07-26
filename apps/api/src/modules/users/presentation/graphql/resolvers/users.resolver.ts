@@ -62,6 +62,11 @@ import {
 import { MembersDirectoryPageModel } from '../models/members-directory-page.model';
 import { UserStatus } from '@prisma/client';
 import { UserPresenceService } from '../../../application/services/user-presence.service';
+import { UserWallService } from '../../../application/services/user-wall.service';
+import { CreateWallPostInput } from '../inputs/create-wall-post.input';
+import { UserWallPostModel } from '../models/user-wall-post.model';
+import { UserWallPageModel } from '../models/user-wall-page.model';
+import type { UserWallPost } from '../../../domain/types/user-wall-post.type';
 
 @Resolver(() => UserModel)
 export class UsersResolver {
@@ -75,6 +80,7 @@ export class UsersResolver {
     private readonly graphLoader: UserSocialGraphLoader,
     private readonly blocks: UserBlockService,
     private readonly presence: UserPresenceService,
+    private readonly wall: UserWallService,
   ) {}
 
   @Query(() => ViewerModel)
@@ -307,6 +313,53 @@ export class UsersResolver {
     };
   }
 
+  @Mutation(() => UserWallPostModel)
+  @UseGuards(JwtAuthGuard)
+  async createProfileWallPost(
+    @AuthUser() authenticated: AuthenticatedUser,
+    @Args('input') input: CreateWallPostInput,
+  ): Promise<UserWallPostModel> {
+    return this.toWallPost(
+      await this.wall.create(
+        authenticated.id,
+        input.profileOwnerId,
+        input.body,
+        input.imageMediaId,
+      ),
+    );
+  }
+
+  @Query(() => UserWallPageModel)
+  @UseGuards(JwtAuthGuard)
+  async profileWall(
+    @AuthUser() authenticated: AuthenticatedUser,
+    @Args('profileOwnerId', { type: () => ID }) profileOwnerId: string,
+    @Args('pagination', { nullable: true }) pagination?: UsersPageInput,
+  ): Promise<UserWallPageModel> {
+    const result = await this.wall.list(
+      authenticated.id,
+      profileOwnerId,
+      pagination?.page,
+      pagination?.limit,
+    );
+    return {
+      ...result,
+      items: result.items.map((post) => this.toWallPost(post)),
+    };
+  }
+
+  @Mutation(() => UserWallPostModel)
+  @UseGuards(JwtAuthGuard)
+  async removeProfileWallPost(
+    @AuthUser() authenticated: AuthenticatedUser,
+    @Args('postId', { type: () => ID }) postId: string,
+    @Args('reason', { nullable: true }) reason?: string,
+  ): Promise<UserWallPostModel> {
+    return this.toWallPost(
+      await this.wall.remove(authenticated.id, postId, reason),
+    );
+  }
+
   private async visibleSocialLinks(
     userId: string,
     viewerId: string,
@@ -328,6 +381,15 @@ export class UsersResolver {
     return {
       ...result,
       items: result.items.map((user) => UserGraphqlMapper.fromResponse(user)),
+    };
+  }
+
+  private toWallPost(post: UserWallPost): UserWallPostModel {
+    return {
+      ...post,
+      deletedAt: post.deletedAt?.toISOString() ?? null,
+      createdAt: post.createdAt.toISOString(),
+      updatedAt: post.updatedAt.toISOString(),
     };
   }
 }

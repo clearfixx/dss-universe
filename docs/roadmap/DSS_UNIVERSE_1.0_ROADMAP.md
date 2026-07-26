@@ -586,6 +586,11 @@ Delivered in the Profile Foundation package:
   deterministic sorting and bounded GraphQL pagination.
 - Redis TTL user presence with throttled durable last-seen updates;
 - batched, privacy-enforced online status for profiles and Members Directory.
+- Profile Wall text/image posts backed by DSS Media references;
+- profile privacy, block enforcement, owner/author removal, audit and
+  non-destructive tombstones;
+- comments and reactions intentionally deferred to the shared interaction
+  modules rather than duplicated inside Users.
 
 ## Profile
 

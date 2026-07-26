@@ -77,6 +77,7 @@ describe('UserPresenceService', () => {
             showOnlineStatus: true,
             allowFollowers: true,
             showFollows: true,
+            allowWallPosts: true,
           },
         ],
         [
@@ -91,6 +92,7 @@ describe('UserPresenceService', () => {
             showOnlineStatus: false,
             allowFollowers: true,
             showFollows: true,
+            allowWallPosts: true,
           },
         ],
       ]),
@@ -122,6 +124,7 @@ describe('UserPresenceService', () => {
             showOnlineStatus: false,
             allowFollowers: false,
             showFollows: false,
+            allowWallPosts: false,
           },
         ],
       ]),
