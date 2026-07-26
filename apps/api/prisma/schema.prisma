@@ -114,6 +114,8 @@ model User {
   privacySettings   UserPrivacySettings?
   followers         UserFollow[]         @relation("UserFollowers")
   following         UserFollow[]         @relation("UserFollowing")
+  blockedUsers      UserBlock[]          @relation("UserBlocker")
+  blockedByUsers    UserBlock[]          @relation("UserBlocked")
 
   refreshTokenHash String?
   emailVerifiedAt  DateTime?
@@ -158,6 +160,23 @@ model UserFollow {
   @@index([followerId, deletedAt, createdAt])
   @@index([followingId, deletedAt, createdAt])
   @@map("user_follows")
+}
+
+model UserBlock {
+  id        String    @id @default(uuid())
+  blockerId String
+  blockedId String
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  blocker User @relation("UserBlocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("UserBlocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId, deletedAt, createdAt])
+  @@index([blockedId, deletedAt])
+  @@map("user_blocks")
 }
 
 model UserSocialLink {

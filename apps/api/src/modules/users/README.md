@@ -102,6 +102,9 @@ The social graph owns reversible follow edges, batched follower/following
 counters, bounded lists, owner policy enforcement, and immutable audit entries.
 Mutual follows may later be projected as friends without creating a second
 relationship graph.
+User blocks are reversible safety edges. Creating a block atomically disables
+follow edges in both directions, and central enforcement prevents either user
+from recreating the relationship until the blocker removes the block.
 
 Notes
 

@@ -580,6 +580,8 @@ Delivered in the Profile Foundation package:
 - enforced private-profile redaction for extended fields and social links.
 - reversible follow/unfollow edges with follower and following counters;
 - privacy-aware paginated social graph lists, batched GraphQL resolution and audit.
+- reversible user blocks with owner-only lists and immutable audit;
+- atomic bidirectional follow cleanup and centralized follow enforcement.
 
 ## Profile
 

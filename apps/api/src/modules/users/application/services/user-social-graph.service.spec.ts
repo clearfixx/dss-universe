@@ -16,6 +16,7 @@ import type { UserSocialGraphRepository } from '../../domain/repositories/user-s
 import type { UserPrivacyService } from './user-privacy.service';
 import { UserSocialGraphService } from './user-social-graph.service';
 import type { UsersService } from './users.service';
+import type { UserBlockService } from './user-block.service';
 
 describe('UserSocialGraphService', () => {
   const follow: jest.MockedFunction<UserSocialGraphRepository['follow']> =
@@ -36,7 +37,10 @@ describe('UserSocialGraphService', () => {
     get: jest.fn(),
     visibilityFor: jest.fn(),
   } as unknown as jest.Mocked<UserPrivacyService>;
-  const service = new UserSocialGraphService(graph, users, privacy);
+  const blocks = {
+    isBlocked: jest.fn().mockResolvedValue(false),
+  } as unknown as jest.Mocked<UserBlockService>;
+  const service = new UserSocialGraphService(graph, users, privacy, blocks);
 
   beforeEach(() => jest.clearAllMocks());
 
@@ -49,6 +53,7 @@ describe('UserSocialGraphService', () => {
 
   it('enforces the target allow-followers policy', async () => {
     users.exists.mockResolvedValue(true);
+    blocks.isBlocked.mockResolvedValue(false);
     privacy.get.mockResolvedValue({
       userId: 'user-2',
       profileVisibility: 'PUBLIC',
@@ -69,6 +74,7 @@ describe('UserSocialGraphService', () => {
 
   it('creates a follow and returns the updated target summary', async () => {
     users.exists.mockResolvedValue(true);
+    blocks.isBlocked.mockResolvedValue(false);
     privacy.get.mockResolvedValue({
       userId: 'user-2',
       profileVisibility: 'PUBLIC',

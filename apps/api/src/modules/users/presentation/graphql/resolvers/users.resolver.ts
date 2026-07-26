@@ -53,6 +53,8 @@ import type { UserPrivacySettings } from '../../../domain/types/user-privacy-set
 import { UserSocialGraphService } from '../../../application/services/user-social-graph.service';
 import { UserSocialGraphLoader } from '../loaders/user-social-graph.loader';
 import { UserSocialGraphModel } from '../models/user-social-graph.model';
+import { UserBlockService } from '../../../application/services/user-block.service';
+import { UserBlockResultModel } from '../models/user-block-result.model';
 
 @Resolver(() => UserModel)
 export class UsersResolver {
@@ -64,6 +66,7 @@ export class UsersResolver {
     private readonly privacy: UserPrivacyService,
     private readonly graph: UserSocialGraphService,
     private readonly graphLoader: UserSocialGraphLoader,
+    private readonly blocks: UserBlockService,
   ) {}
 
   @Query(() => ViewerModel)
@@ -146,6 +149,40 @@ export class UsersResolver {
     @Args('userId', { type: () => ID }) userId: string,
   ): Promise<UserSocialGraphModel> {
     return this.graph.unfollow(authenticated.id, userId);
+  }
+
+  @Mutation(() => UserBlockResultModel)
+  @UseGuards(JwtAuthGuard)
+  async blockUser(
+    @AuthUser() authenticated: AuthenticatedUser,
+    @Args('userId', { type: () => ID }) userId: string,
+  ): Promise<UserBlockResultModel> {
+    await this.blocks.block(authenticated.id, userId);
+    return { userId, blocked: true };
+  }
+
+  @Mutation(() => UserBlockResultModel)
+  @UseGuards(JwtAuthGuard)
+  async unblockUser(
+    @AuthUser() authenticated: AuthenticatedUser,
+    @Args('userId', { type: () => ID }) userId: string,
+  ): Promise<UserBlockResultModel> {
+    await this.blocks.unblock(authenticated.id, userId);
+    return { userId, blocked: false };
+  }
+
+  @Query(() => UsersPageModel)
+  @UseGuards(JwtAuthGuard)
+  async blockedUsers(
+    @AuthUser() authenticated: AuthenticatedUser,
+    @Args('pagination', { nullable: true }) pagination?: UsersPageInput,
+  ): Promise<UsersPageModel> {
+    const result = await this.blocks.list(
+      authenticated.id,
+      pagination?.page,
+      pagination?.limit,
+    );
+    return this.toUsersPage(result);
   }
 
   @Query(() => UsersPageModel)

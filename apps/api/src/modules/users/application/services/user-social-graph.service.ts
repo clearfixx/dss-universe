@@ -34,6 +34,7 @@ import type { UserSocialGraphSummary } from '../../domain/types/user-social-grap
 import type { UserResponseDto } from '../dto';
 import { UserPrivacyService } from './user-privacy.service';
 import { UsersService } from './users.service';
+import { UserBlockService } from './user-block.service';
 
 @Injectable()
 export class UserSocialGraphService {
@@ -42,6 +43,7 @@ export class UserSocialGraphService {
     private readonly graph: UserSocialGraphRepository,
     private readonly users: UsersService,
     private readonly privacy: UserPrivacyService,
+    private readonly blocks: UserBlockService,
   ) {}
 
   async follow(
@@ -53,6 +55,11 @@ export class UserSocialGraphService {
     }
     if (!(await this.users.exists(targetId))) {
       throw new BadRequestException('The user to follow does not exist.');
+    }
+    if (await this.blocks.isBlocked(actorId, targetId)) {
+      throw new ForbiddenException(
+        'This follow is not allowed because a user block exists.',
+      );
     }
     if (!(await this.privacy.get(targetId)).allowFollowers) {
       throw new ForbiddenException('This user is not accepting followers.');

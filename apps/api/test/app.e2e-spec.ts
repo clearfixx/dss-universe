@@ -521,6 +521,118 @@ describe('DSS API (e2e)', () => {
     };
     expect(hiddenFollowersBody.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
 
+    const blockResult = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation BlockUser($userId: ID!) {
+          blockUser(userId: $userId) { userId blocked }
+        }`,
+        variables: { userId: visitor.data.register.user.id },
+      })
+      .expect(200);
+    expect(blockResult.body).toEqual({
+      data: {
+        blockUser: {
+          userId: visitor.data.register.user.id,
+          blocked: true,
+        },
+      },
+    });
+
+    const blockedList = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `query {
+          blockedUsers(pagination: { page: 1, limit: 10 }) {
+            total items { id username }
+          }
+        }`,
+      })
+      .expect(200);
+    expect(blockedList.body).toEqual({
+      data: {
+        blockedUsers: {
+          total: 1,
+          items: [
+            {
+              id: visitor.data.register.user.id,
+              username: visitorUsername,
+            },
+          ],
+        },
+      },
+    });
+    await expect(
+      app.get(PrismaService).userFollow.count({
+        where: {
+          OR: [
+            {
+              followerId: visitor.data.register.user.id,
+              followingId: registered.data.register.user.id,
+            },
+            {
+              followerId: registered.data.register.user.id,
+              followingId: visitor.data.register.user.id,
+            },
+          ],
+          deletedAt: null,
+        },
+      }),
+    ).resolves.toBe(0);
+
+    const deniedFollow = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set(
+        'Authorization',
+        'Bearer ' + visitor.data.register.tokens.accessToken,
+      )
+      .send({
+        query: `mutation FollowUser($userId: ID!) {
+          followUser(userId: $userId) { followerCount }
+        }`,
+        variables: { userId: registered.data.register.user.id },
+      })
+      .expect(200);
+    const deniedFollowBody = deniedFollow.body as {
+      errors?: Array<{ extensions?: { code?: string } }>;
+    };
+    expect(deniedFollowBody.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+
+    await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation UnblockUser($userId: ID!) {
+          unblockUser(userId: $userId) { userId blocked }
+        }`,
+        variables: { userId: visitor.data.register.user.id },
+      })
+      .expect(200)
+      .expect({
+        data: {
+          unblockUser: {
+            userId: visitor.data.register.user.id,
+            blocked: false,
+          },
+        },
+      });
+
+    await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set(
+        'Authorization',
+        'Bearer ' + visitor.data.register.tokens.accessToken,
+      )
+      .send({
+        query: `mutation FollowUser($userId: ID!) {
+          followUser(userId: $userId) { followerCount }
+        }`,
+        variables: { userId: registered.data.register.user.id },
+      })
+      .expect(200);
+
     const unfollowResult = await request(app.getHttpServer())
       .post('/api/graphql')
       .set(
@@ -544,6 +656,15 @@ describe('DSS API (e2e)', () => {
           actorId: visitor.data.register.user.id,
           targetId: registered.data.register.user.id,
           action: { in: ['user.follow.created', 'user.follow.removed'] },
+        },
+      }),
+    ).resolves.toBe(3);
+    await expect(
+      app.get(PrismaService).auditRecord.count({
+        where: {
+          actorId: registered.data.register.user.id,
+          targetId: visitor.data.register.user.id,
+          action: { in: ['user.block.created', 'user.block.removed'] },
         },
       }),
     ).resolves.toBe(2);

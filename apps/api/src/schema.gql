@@ -149,6 +149,7 @@ enum MediaVisibility {
 
 type Mutation {
   abortMediaUpload(id: String!): MediaUploadSession!
+  blockUser(userId: ID!): UserBlockResult!
   followUser(userId: ID!): UserSocialGraphSummary!
   initiateMediaUpload(input: InitiateMediaUploadInput!): MediaUploadSession!
   login(input: LoginInput!): AuthPayloadModel!
@@ -162,6 +163,7 @@ type Mutation {
   retryFailedMedia(mediaId: ID!): MediaLibraryItem!
   setViewerAvatar(mediaId: ID!): Viewer!
   setViewerCover(mediaId: ID!): Viewer!
+  unblockUser(userId: ID!): UserBlockResult!
   unfollowUser(userId: ID!): UserSocialGraphSummary!
   updateViewerPrivacy(input: UpdateUserPrivacyInput!): UserPrivacySettings!
   updateViewerProfile(input: UpdateViewerProfileInput!): Viewer!
@@ -176,6 +178,7 @@ enum ProfileVisibility {
 
 type Query {
   apiInfo: ApiInfo!
+  blockedUsers(pagination: UsersPageInput): UsersPageModel!
   followers(pagination: UsersPageInput, userId: ID!): UsersPageModel!
   following(pagination: UsersPageInput, userId: ID!): UsersPageModel!
   mediaAccessUrl(mediaId: ID!, variantName: String!): MediaAccess!
@@ -242,6 +245,11 @@ type User {
   technologies: [String!]!
   username: String!
   website: String
+}
+
+type UserBlockResult {
+  blocked: Boolean!
+  userId: ID!
 }
 
 type UserPrivacySettings {
