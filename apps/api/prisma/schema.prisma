@@ -438,6 +438,7 @@ model Session {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+  @@index([userId, revokedAt, expiresAt])
   @@map("sessions")
 }
 

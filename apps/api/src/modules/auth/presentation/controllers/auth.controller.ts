@@ -24,13 +24,14 @@
  * ===============================================================
  */
 
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 
 import {
   Authenticated,
   AuthUser,
   JwtAuthGuard,
   type AuthenticatedUser,
+  type AuthenticatedRequest,
 } from '@api/core/auth';
 import {
   Permission,
@@ -48,13 +49,13 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
+  register(@Body() dto: RegisterDto, @Req() request: AuthenticatedRequest) {
+    return this.authService.register(dto, this.client(request));
   }
 
   @Post('login')
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+  login(@Body() dto: LoginDto, @Req() request: AuthenticatedRequest) {
+    return this.authService.login(dto, this.client(request));
   }
 
   @Post('refresh')
@@ -65,7 +66,7 @@ export class AuthController {
   @Post('logout')
   @Authenticated()
   logout(@AuthUser() user: AuthenticatedUser) {
-    return this.authService.logout(user.id);
+    return this.authService.logout(user.id, user.sessionId);
   }
 
   @Get('me')
@@ -81,6 +82,13 @@ export class AuthController {
     return {
       status: 'ok',
       message: 'Admin permissions work',
+    };
+  }
+
+  private client(request: AuthenticatedRequest) {
+    return {
+      userAgent: request.get('user-agent'),
+      ipAddress: request.ip,
     };
   }
 }

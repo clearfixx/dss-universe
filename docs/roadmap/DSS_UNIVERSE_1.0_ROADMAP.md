@@ -598,6 +598,9 @@ Delivered in the Profile Foundation package:
   durable session revocation and immutable lifecycle audit.
 - credential-confirmed email and password changes with normalized email,
   verification reset, session revocation and durable JWT version rotation.
+- session-backed access/refresh JWTs with hashed rotating refresh credentials;
+- owner-visible device sessions, current-session projection, single-session
+  revocation and atomic “revoke all others” behavior.
 
 ## Profile
 

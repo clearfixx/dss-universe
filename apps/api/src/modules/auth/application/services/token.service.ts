@@ -56,17 +56,18 @@ export class TokenService {
     private readonly permissionsService: PermissionsService,
   ) {}
 
-  async generateTokens(user: TokenUser): Promise<TokenPair> {
-    return this.signTokenPair(user);
+  async generateTokens(user: TokenUser, sessionId: string): Promise<TokenPair> {
+    return this.signTokenPair(user, sessionId);
   }
 
-  async signAccessToken(user: TokenUser): Promise<string> {
+  async signAccessToken(user: TokenUser, sessionId: string): Promise<string> {
     const accessProfile =
       await this.permissionsService.getAccessProfileByUserId(user.id);
 
     const payload: JwtPayload = {
       sub: user.id,
       ver: user.authVersion,
+      sid: sessionId,
       email: user.email,
       username: user.username,
       roles: accessProfile.roles,
@@ -79,11 +80,12 @@ export class TokenService {
     });
   }
 
-  async signRefreshToken(user: TokenUser): Promise<string> {
+  async signRefreshToken(user: TokenUser, sessionId: string): Promise<string> {
     return this.jwtService.signAsync(
       {
         sub: user.id,
         ver: user.authVersion,
+        sid: sessionId,
       },
       {
         secret: this.getJwtRefreshSecret(),
@@ -98,10 +100,10 @@ export class TokenService {
     });
   }
 
-  async signTokenPair(user: TokenUser): Promise<TokenPair> {
+  async signTokenPair(user: TokenUser, sessionId: string): Promise<TokenPair> {
     const [accessToken, refreshToken] = await Promise.all([
-      this.signAccessToken(user),
-      this.signRefreshToken(user),
+      this.signAccessToken(user, sessionId),
+      this.signRefreshToken(user, sessionId),
     ]);
 
     return {

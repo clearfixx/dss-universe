@@ -35,6 +35,7 @@
 export type JwtPayload = {
   sub: string;
   ver: number;
+  sid: string;
   email: string;
   username: string;
   roles: string[];

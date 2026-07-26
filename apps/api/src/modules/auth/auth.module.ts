@@ -42,11 +42,24 @@ import { PasswordHashService } from './application/services/password-hash.servic
 import { TokenService } from './application/services/token.service';
 import { AuthController } from './presentation/controllers/auth.controller';
 import { AuthResolver } from './presentation/graphql/resolvers/auth.resolver';
+import { AuthSessionService } from './application/services/auth-session.service';
+import { AUTH_SESSION_REPOSITORY } from './domain/repositories/auth-session.repository.interface';
+import { PrismaAuthSessionRepository } from './infrastructure/repositories/prisma-auth-session.repository';
 
 @Module({
   imports: [UsersModule, AuthCoreModule, AuthorizationModule],
   controllers: [AuthController],
-  providers: [AuthService, PasswordHashService, TokenService, AuthResolver],
+  providers: [
+    AuthService,
+    PasswordHashService,
+    TokenService,
+    AuthSessionService,
+    AuthResolver,
+    {
+      provide: AUTH_SESSION_REPOSITORY,
+      useClass: PrismaAuthSessionRepository,
+    },
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

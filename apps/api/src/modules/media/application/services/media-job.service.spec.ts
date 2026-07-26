@@ -88,6 +88,7 @@ describe('MediaJobService', () => {
   );
   const manager: AuthenticatedUser = {
     id: 'admin-1',
+    sessionId: 'session-1',
     email: 'admin@dss.test',
     username: 'admin',
     roles: [],

@@ -23,6 +23,7 @@ import type { MediaUrlSignerService } from './media-url-signer.service';
 
 const user: AuthenticatedUser = {
   id: 'user-1',
+  sessionId: 'session-1',
   email: 'user@dss.test',
   username: 'user',
   roles: [],

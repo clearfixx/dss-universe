@@ -34,6 +34,7 @@
 
 export type AuthenticatedUser = {
   id: string;
+  sessionId: string;
   email: string;
   username: string;
   roles: string[];

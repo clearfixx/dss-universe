@@ -22,11 +22,12 @@ import { JwtStrategy } from './jwt.strategy';
 describe('JwtStrategy', () => {
   const findUnique = jest.fn();
   const strategy = new JwtStrategy({
-    user: { findUnique },
+    session: { findUnique },
   } as unknown as PrismaService);
   const payload = {
     sub: 'user-1',
     ver: 0,
+    sid: 'session-1',
     email: 'astro@dss.test',
     username: 'astro',
     roles: ['user'],
@@ -35,11 +36,18 @@ describe('JwtStrategy', () => {
 
   beforeEach(() => jest.clearAllMocks());
 
+  const session = (
+    status: UserStatus = UserStatus.ACTIVE,
+    authVersion = payload.ver,
+  ) => ({
+    userId: payload.sub,
+    revokedAt: null,
+    expiresAt: new Date(Date.now() + 60_000),
+    user: { status, authVersion },
+  });
+
   it('returns the authenticated principal while the account is active', async () => {
-    findUnique.mockResolvedValue({
-      status: UserStatus.ACTIVE,
-      authVersion: payload.ver,
-    });
+    findUnique.mockResolvedValue(session());
 
     await expect(strategy.validate(payload)).resolves.toMatchObject({
       id: payload.sub,
@@ -50,7 +58,7 @@ describe('JwtStrategy', () => {
   it.each([UserStatus.DEACTIVATED, UserStatus.BANNED, UserStatus.DELETED])(
     'rejects a principal with %s status',
     async (status) => {
-      findUnique.mockResolvedValue({ status, authVersion: payload.ver });
+      findUnique.mockResolvedValue(session(status));
 
       await expect(strategy.validate(payload)).rejects.toBeInstanceOf(
         UnauthorizedException,
@@ -59,10 +67,15 @@ describe('JwtStrategy', () => {
   );
 
   it('rejects a token issued before credential rotation', async () => {
-    findUnique.mockResolvedValue({
-      status: UserStatus.ACTIVE,
-      authVersion: payload.ver + 1,
-    });
+    findUnique.mockResolvedValue(session(UserStatus.ACTIVE, payload.ver + 1));
+
+    await expect(strategy.validate(payload)).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
+  });
+
+  it('rejects a revoked session', async () => {
+    findUnique.mockResolvedValue({ ...session(), revokedAt: new Date() });
 
     await expect(strategy.validate(payload)).rejects.toBeInstanceOf(
       UnauthorizedException,

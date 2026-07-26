@@ -71,6 +71,7 @@ token refresh;
 logout;
 credential-confirmed account deactivation and reactivation;
 credential-confirmed email and password changes;
+session-backed login, refresh rotation and device revocation;
 password hashing;
 JWT token issuing.
 
@@ -80,6 +81,12 @@ current account status to remain `ACTIVE`.
 Email/password rotation increments the durable authentication version, revokes
 sessions and refresh credentials, and therefore invalidates every previously
 issued access token.
+
+Each access and refresh token carries an opaque session ID. Authentication
+accepts a JWT only while that session exists, is not revoked, has not expired,
+and still belongs to an active user with the matching authentication version.
+Owners can list safe session metadata, revoke one session, or revoke every
+other session while keeping the current device online.
 
 Authorization Core owns:
 

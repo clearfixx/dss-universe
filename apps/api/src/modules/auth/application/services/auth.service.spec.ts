@@ -20,6 +20,7 @@ import { InvalidCredentialsException } from '../../domain/exceptions/invalid-cre
 import { AuthService } from './auth.service';
 import type { PasswordHashService } from './password-hash.service';
 import type { TokenService } from './token.service';
+import type { AuthSessionService } from './auth-session.service';
 
 const user: UserRecord = {
   id: 'user-1',
@@ -62,17 +63,26 @@ describe('AuthService', () => {
     generateTokens: jest.fn(),
     verifyRefreshToken: jest.fn(),
   } as unknown as jest.Mocked<TokenService>;
+  const sessions = {
+    create: jest.fn(),
+    findActive: jest.fn(),
+    rotate: jest.fn(),
+    revoke: jest.fn(),
+    list: jest.fn(),
+    revokeOthers: jest.fn(),
+  } as unknown as jest.Mocked<AuthSessionService>;
   const service = new AuthService(
     usersRepository,
     passwordHashService,
     tokenService,
+    sessions,
   );
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('logs in with valid credentials and persists only a refresh-token hash', async () => {
+  it('logs in with valid credentials and persists a hashed device session', async () => {
     usersRepository.findByEmail.mockResolvedValue(user);
     usersRepository.findById.mockResolvedValue(user);
     passwordHashService.compare.mockResolvedValue(true);
@@ -94,9 +104,11 @@ describe('AuthService', () => {
     expect(passwordHashService.hash.mock.calls).toContainEqual([
       'refresh-token',
     ]);
-    expect(usersRepository.updateRefreshTokenHash.mock.calls).toContainEqual([
+    expect(sessions.create.mock.calls).toContainEqual([
+      expect.any(String) as string,
       user.id,
       'new-refresh-hash',
+      {},
     ]);
   });
 

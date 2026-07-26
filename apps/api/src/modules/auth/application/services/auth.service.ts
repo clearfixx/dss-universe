@@ -35,6 +35,7 @@
 
 import { Inject, Injectable } from '@nestjs/common';
 import { UserStatus } from '@prisma/client';
+import { randomUUID } from 'node:crypto';
 
 import { UserMapper } from '../../../users/domain/mappers/user.mapper';
 import {
@@ -48,6 +49,8 @@ import { EmailAlreadyExistsException } from '../../domain/exceptions/email-alrea
 import { InvalidCredentialsException } from '../../domain/exceptions/invalid-credentials.exception';
 import { PasswordHashService } from './password-hash.service';
 import { TokenService } from './token.service';
+import { AuthSessionService } from './auth-session.service';
+import type { AuthClient } from '../types/auth-client.type';
 
 @Injectable()
 export class AuthService {
@@ -56,9 +59,10 @@ export class AuthService {
     private readonly usersRepository: UsersRepository,
     private readonly passwordHashService: PasswordHashService,
     private readonly tokenService: TokenService,
+    private readonly sessions: AuthSessionService,
   ) {}
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto, client: AuthClient = {}) {
     const email = this.normalizeEmail(dto.email);
     const existingUser = await this.usersRepository.findByEmail(email);
 
@@ -75,10 +79,10 @@ export class AuthService {
       passwordHash,
     });
 
-    return this.issueAuthResponse(user.id);
+    return this.issueAuthResponse(user.id, client);
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, client: AuthClient = {}) {
     const user = await this.usersRepository.findByEmail(
       this.normalizeEmail(dto.email),
     );
@@ -96,7 +100,7 @@ export class AuthService {
       throw new InvalidCredentialsException();
     }
 
-    return this.issueAuthResponse(user.id);
+    return this.issueAuthResponse(user.id, client);
   }
 
   async refresh(dto: RefreshTokenDto) {
@@ -105,34 +109,45 @@ export class AuthService {
         dto.refreshToken,
       );
 
-      const user = await this.usersRepository.findById(payload.sub);
+      const [user, session] = await Promise.all([
+        this.usersRepository.findById(payload.sub),
+        this.sessions.findActive(payload.sid, payload.sub),
+      ]);
 
       if (
         !user ||
         user.status !== UserStatus.ACTIVE ||
-        !user.refreshTokenHash
+        user.authVersion !== payload.ver ||
+        !session
       ) {
         throw new InvalidCredentialsException();
       }
 
       const isRefreshTokenValid = await this.passwordHashService.compare(
         dto.refreshToken,
-        user.refreshTokenHash,
+        session.tokenHash,
       );
 
       if (!isRefreshTokenValid) {
         throw new InvalidCredentialsException();
       }
 
-      return this.issueAuthResponse(user.id);
+      const tokens = await this.tokenService.generateTokens(user, session.id);
+      const tokenHash = await this.passwordHashService.hash(
+        tokens.refreshToken,
+      );
+      await this.sessions.rotate(session.id, user.id, tokenHash);
+      return {
+        user: UserMapper.toSafeUser(user),
+        tokens,
+      };
     } catch {
       throw new InvalidCredentialsException();
     }
   }
 
-  async logout(userId: string) {
-    await this.usersRepository.updateRefreshTokenHash(userId, null);
-
+  async logout(userId: string, sessionId: string) {
+    await this.sessions.revoke(sessionId, userId);
     return { success: true };
   }
 
@@ -149,7 +164,7 @@ export class AuthService {
     return { success: true };
   }
 
-  async reactivateAccount(dto: LoginDto) {
+  async reactivateAccount(dto: LoginDto, client: AuthClient = {}) {
     const user = await this.usersRepository.findByEmail(
       this.normalizeEmail(dto.email),
     );
@@ -161,7 +176,7 @@ export class AuthService {
       throw new InvalidCredentialsException();
     }
     await this.usersRepository.reactivateAccount(user.id);
-    return this.issueAuthResponse(user.id);
+    return this.issueAuthResponse(user.id, client);
   }
 
   async changeEmail(userId: string, email: string, currentPassword: string) {
@@ -192,22 +207,36 @@ export class AuthService {
     return { success: true };
   }
 
-  private async issueAuthResponse(userId: string) {
+  listSessions(userId: string) {
+    return this.sessions.list(userId);
+  }
+
+  async revokeSession(userId: string, sessionId: string) {
+    await this.sessions.revoke(sessionId, userId);
+    return { success: true };
+  }
+
+  async revokeOtherSessions(userId: string, currentSessionId: string) {
+    const revokedCount = await this.sessions.revokeOthers(
+      userId,
+      currentSessionId,
+    );
+    return { success: true, revokedCount };
+  }
+
+  private async issueAuthResponse(userId: string, client: AuthClient) {
     const user = await this.usersRepository.findById(userId);
 
     if (!user || user.status !== UserStatus.ACTIVE) {
       throw new InvalidCredentialsException();
     }
 
-    const tokens = await this.tokenService.generateTokens(user);
+    const sessionId = randomUUID();
+    const tokens = await this.tokenService.generateTokens(user, sessionId);
     const refreshTokenHash = await this.passwordHashService.hash(
       tokens.refreshToken,
     );
-
-    await this.usersRepository.updateRefreshTokenHash(
-      user.id,
-      refreshTokenHash,
-    );
+    await this.sessions.create(sessionId, user.id, refreshTokenHash, client);
 
     return {
       user: UserMapper.toSafeUser(user),

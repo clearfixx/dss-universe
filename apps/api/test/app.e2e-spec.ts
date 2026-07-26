@@ -168,6 +168,9 @@ describe('DSS API (e2e)', () => {
     expect(schema).toContain(
       'changeViewerPassword(input: ChangePasswordInput!)',
     );
+    expect(schema).toContain('viewerSessions: [AuthSession!]!');
+    expect(schema).toContain('revokeViewerSession(sessionId: ID!)');
+    expect(schema).toContain('revokeOtherViewerSessions');
     expect(schema).toContain('users(pagination: UsersPageInput)');
     expect(schema).toContain('setViewerAvatar(mediaId: ID!)');
     expect(schema).toContain('removeViewerAvatar: Viewer!');
@@ -1793,6 +1796,130 @@ describe('DSS API (e2e)', () => {
         },
       }),
     ).resolves.toBe(2);
+  });
+
+  it('lists device sessions and revokes other or current sessions immediately', async () => {
+    const suffix = `${Date.now()}${Math.random().toString(16).slice(2)}`;
+    const username = `sessions-${suffix}`;
+    const email = `${username}@dss.test`;
+    const password = 'dss-session-password';
+    const registration = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('User-Agent', 'DSS Device One')
+      .send({
+        query: `mutation {
+          register(input: {
+            email: "${email}"
+            username: "${username}"
+            displayName: "Session Astronaut"
+            password: "${password}"
+          }) {
+            user { id email username }
+            tokens { accessToken }
+          }
+        }`,
+      })
+      .expect(200);
+    const first = registration.body as RegisterResponse;
+    const firstToken = first.data.register.tokens.accessToken;
+
+    const login = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('User-Agent', 'DSS Device Two')
+      .send({
+        query: `mutation Login($input: LoginInput!) {
+          login(input: $input) {
+            user { id email username }
+            tokens { accessToken }
+          }
+        }`,
+        variables: { input: { email, password } },
+      })
+      .expect(200);
+    const second = login.body as LoginResponse;
+    const secondToken = second.data.login.tokens.accessToken;
+
+    const sessions = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${secondToken}`)
+      .send({
+        query: `{
+          viewerSessions {
+            id userAgent ipAddress expiresAt createdAt current
+          }
+        }`,
+      })
+      .expect(200);
+    const sessionItems = (
+      sessions.body as {
+        data: {
+          viewerSessions: Array<{
+            id: string;
+            userAgent: string | null;
+            current: boolean;
+          }>;
+        };
+      }
+    ).data.viewerSessions;
+    expect(sessionItems).toHaveLength(2);
+    expect(sessionItems).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          userAgent: 'DSS Device One',
+          current: false,
+        }),
+        expect.objectContaining({
+          userAgent: 'DSS Device Two',
+          current: true,
+        }),
+      ]),
+    );
+
+    await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${secondToken}`)
+      .send({
+        query:
+          'mutation { revokeOtherViewerSessions { success revokedCount } }',
+      })
+      .expect(200)
+      .expect({
+        data: {
+          revokeOtherViewerSessions: { success: true, revokedCount: 1 },
+        },
+      });
+
+    const revokedFirst = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${firstToken}`)
+      .send({ query: '{ viewer { id } }' })
+      .expect(200);
+    expect(
+      (revokedFirst.body as GraphqlErrorResponse).errors[0]?.extensions.code,
+    ).toBe('UNAUTHENTICATED');
+
+    const current = sessionItems.find((session) => session.current);
+    expect(current).toBeDefined();
+    await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${secondToken}`)
+      .send({
+        query: `mutation Revoke($sessionId: ID!) {
+          revokeViewerSession(sessionId: $sessionId) { success }
+        }`,
+        variables: { sessionId: current?.id },
+      })
+      .expect(200)
+      .expect({ data: { revokeViewerSession: { success: true } } });
+
+    const revokedCurrent = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${secondToken}`)
+      .send({ query: '{ viewer { id } }' })
+      .expect(200);
+    expect(
+      (revokedCurrent.body as GraphqlErrorResponse).errors[0]?.extensions.code,
+    ).toBe('UNAUTHENTICATED');
   });
 
   afterAll(async () => {

@@ -13,6 +13,15 @@ type AuthPayloadModel {
   user: Viewer!
 }
 
+type AuthSession {
+  createdAt: DateTime!
+  current: Boolean!
+  expiresAt: DateTime!
+  id: ID!
+  ipAddress: String
+  userAgent: String
+}
+
 type AuthTokensModel {
   accessToken: String!
   refreshToken: String!
@@ -222,6 +231,8 @@ type Mutation {
   removeViewerCover: Viewer!
   rescanQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
   retryFailedMedia(mediaId: ID!): MediaLibraryItem!
+  revokeOtherViewerSessions: RevokeSessionsResultModel!
+  revokeViewerSession(sessionId: ID!): LogoutResultModel!
   setViewerAvatar(mediaId: ID!): Viewer!
   setViewerCover(mediaId: ID!): Viewer!
   unblockUser(userId: ID!): UserBlockResult!
@@ -274,6 +285,7 @@ type Query {
   users(pagination: UsersPageInput): UsersPageModel!
   viewer: Viewer!
   viewerPrivacySettings: UserPrivacySettings!
+  viewerSessions: [AuthSession!]!
 }
 
 input RefreshTokenInput {
@@ -285,6 +297,11 @@ input RegisterInput {
   email: String!
   password: String!
   username: String!
+}
+
+type RevokeSessionsResultModel {
+  revokedCount: Int!
+  success: Boolean!
 }
 
 input UpdateUserPrivacyInput {
