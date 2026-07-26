@@ -66,6 +66,10 @@ export interface UsersRepository {
 
   reactivateAccount(userId: string): Promise<UserRecord>;
 
+  changeEmail(userId: string, email: string): Promise<UserRecord>;
+
+  changePasswordHash(userId: string, passwordHash: string): Promise<UserRecord>;
+
   existsByEmail(email: string): Promise<boolean>;
 
   existsByUsername(username: string): Promise<boolean>;

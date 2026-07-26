@@ -26,6 +26,7 @@ describe('JwtStrategy', () => {
   } as unknown as PrismaService);
   const payload = {
     sub: 'user-1',
+    ver: 0,
     email: 'astro@dss.test',
     username: 'astro',
     roles: ['user'],
@@ -35,7 +36,10 @@ describe('JwtStrategy', () => {
   beforeEach(() => jest.clearAllMocks());
 
   it('returns the authenticated principal while the account is active', async () => {
-    findUnique.mockResolvedValue({ status: UserStatus.ACTIVE });
+    findUnique.mockResolvedValue({
+      status: UserStatus.ACTIVE,
+      authVersion: payload.ver,
+    });
 
     await expect(strategy.validate(payload)).resolves.toMatchObject({
       id: payload.sub,
@@ -46,13 +50,24 @@ describe('JwtStrategy', () => {
   it.each([UserStatus.DEACTIVATED, UserStatus.BANNED, UserStatus.DELETED])(
     'rejects a principal with %s status',
     async (status) => {
-      findUnique.mockResolvedValue({ status });
+      findUnique.mockResolvedValue({ status, authVersion: payload.ver });
 
       await expect(strategy.validate(payload)).rejects.toBeInstanceOf(
         UnauthorizedException,
       );
     },
   );
+
+  it('rejects a token issued before credential rotation', async () => {
+    findUnique.mockResolvedValue({
+      status: UserStatus.ACTIVE,
+      authVersion: payload.ver + 1,
+    });
+
+    await expect(strategy.validate(payload)).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
+  });
 });
 
 /**

@@ -70,12 +70,16 @@ login;
 token refresh;
 logout;
 credential-confirmed account deactivation and reactivation;
+credential-confirmed email and password changes;
 password hashing;
 JWT token issuing.
 
 Lifecycle changes invalidate authentication immediately: refresh credentials
 are cleared, durable sessions are revoked, and JWT validation requires the
 current account status to remain `ACTIVE`.
+Email/password rotation increments the durable authentication version, revokes
+sessions and refresh credentials, and therefore invalidates every previously
+issued access token.
 
 Authorization Core owns:
 

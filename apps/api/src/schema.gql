@@ -18,6 +18,16 @@ type AuthTokensModel {
   refreshToken: String!
 }
 
+input ChangeEmailInput {
+  currentPassword: String!
+  email: String!
+}
+
+input ChangePasswordInput {
+  currentPassword: String!
+  newPassword: String!
+}
+
 input CreateWallPostInput {
   body: String
   imageMediaId: ID
@@ -195,6 +205,8 @@ enum MembersDirectorySort {
 type Mutation {
   abortMediaUpload(id: String!): MediaUploadSession!
   blockUser(userId: ID!): UserBlockResult!
+  changeViewerEmail(input: ChangeEmailInput!): LogoutResultModel!
+  changeViewerPassword(input: ChangePasswordInput!): LogoutResultModel!
   createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
   deactivateAccount(input: DeactivateAccountInput!): LogoutResultModel!
   followUser(userId: ID!): UserSocialGraphSummary!

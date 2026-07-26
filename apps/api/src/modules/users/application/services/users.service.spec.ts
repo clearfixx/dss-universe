@@ -35,6 +35,7 @@ const user: UserRecord = {
   coverUrl: null,
   status: UserStatus.ACTIVE,
   deactivatedAt: null,
+  authVersion: 0,
   refreshTokenHash: 'secret-refresh-hash',
   emailVerifiedAt: new Date('2026-01-02T00:00:00.000Z'),
   lastSeenAt: null,

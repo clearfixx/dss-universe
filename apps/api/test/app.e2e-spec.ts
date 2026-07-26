@@ -66,6 +66,16 @@ type ReactivateResponse = {
   errors?: Array<{ extensions: { code: string } }>;
 };
 
+type LoginResponse = {
+  data: {
+    login: {
+      user: { id: string; email: string; username: string };
+      tokens: { accessToken: string };
+    };
+  };
+  errors?: Array<{ extensions: { code: string } }>;
+};
+
 type InitiateMediaUploadResponse = {
   data: {
     initiateMediaUpload: {
@@ -154,6 +164,10 @@ describe('DSS API (e2e)', () => {
       'deactivateAccount(input: DeactivateAccountInput!)',
     );
     expect(schema).toContain('reactivateAccount(input: LoginInput!)');
+    expect(schema).toContain('changeViewerEmail(input: ChangeEmailInput!)');
+    expect(schema).toContain(
+      'changeViewerPassword(input: ChangePasswordInput!)',
+    );
     expect(schema).toContain('users(pagination: UsersPageInput)');
     expect(schema).toContain('setViewerAvatar(mediaId: ID!)');
     expect(schema).toContain('removeViewerAvatar: Viewer!');
@@ -1650,6 +1664,131 @@ describe('DSS API (e2e)', () => {
           actorId: userId,
           action: {
             in: ['user.account.deactivated', 'user.account.reactivated'],
+          },
+        },
+      }),
+    ).resolves.toBe(2);
+  });
+
+  it('rotates authentication immediately after email and password changes', async () => {
+    const suffix = `${Date.now()}${Math.random().toString(16).slice(2)}`;
+    const username = `credentials-${suffix}`;
+    const oldEmail = `${username}@dss.test`;
+    const newEmail = `${username}-new@dss.test`;
+    const oldPassword = 'dss-old-password';
+    const newPassword = 'dss-new-password';
+    const registration = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .send({
+        query: `mutation {
+          register(input: {
+            email: "${oldEmail}"
+            username: "${username}"
+            displayName: "Credential Astronaut"
+            password: "${oldPassword}"
+          }) {
+            user { id email username }
+            tokens { accessToken }
+          }
+        }`,
+      })
+      .expect(200);
+    const registered = registration.body as RegisterResponse;
+    const userId = registered.data.register.user.id;
+    const registrationToken = registered.data.register.tokens.accessToken;
+
+    await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${registrationToken}`)
+      .send({
+        query: `mutation ChangeEmail($input: ChangeEmailInput!) {
+          changeViewerEmail(input: $input) { success }
+        }`,
+        variables: {
+          input: {
+            email: newEmail.toUpperCase(),
+            currentPassword: oldPassword,
+          },
+        },
+      })
+      .expect(200)
+      .expect({ data: { changeViewerEmail: { success: true } } });
+
+    const expiredRegistrationToken = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${registrationToken}`)
+      .send({ query: '{ viewer { id } }' })
+      .expect(200);
+    expect(
+      (expiredRegistrationToken.body as GraphqlErrorResponse).errors[0]
+        ?.extensions.code,
+    ).toBe('UNAUTHENTICATED');
+
+    const emailLogin = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .send({
+        query: `mutation Login($input: LoginInput!) {
+          login(input: $input) {
+            user { id email username }
+            tokens { accessToken }
+          }
+        }`,
+        variables: { input: { email: newEmail, password: oldPassword } },
+      })
+      .expect(200);
+    const loggedInAfterEmail = emailLogin.body as LoginResponse;
+    expect(loggedInAfterEmail.errors).toBeUndefined();
+    expect(loggedInAfterEmail.data.login.user.email).toBe(newEmail);
+
+    const emailToken = loggedInAfterEmail.data.login.tokens.accessToken;
+    await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${emailToken}`)
+      .send({
+        query: `mutation ChangePassword($input: ChangePasswordInput!) {
+          changeViewerPassword(input: $input) { success }
+        }`,
+        variables: {
+          input: {
+            currentPassword: oldPassword,
+            newPassword,
+          },
+        },
+      })
+      .expect(200)
+      .expect({ data: { changeViewerPassword: { success: true } } });
+
+    const expiredEmailToken = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${emailToken}`)
+      .send({ query: '{ viewer { id } }' })
+      .expect(200);
+    expect(
+      (expiredEmailToken.body as GraphqlErrorResponse).errors[0]?.extensions
+        .code,
+    ).toBe('UNAUTHENTICATED');
+
+    const finalLogin = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .send({
+        query: `mutation Login($input: LoginInput!) {
+          login(input: $input) {
+            user { id email username }
+            tokens { accessToken }
+          }
+        }`,
+        variables: { input: { email: newEmail, password: newPassword } },
+      })
+      .expect(200);
+    const loggedInAfterPassword = finalLogin.body as LoginResponse;
+    expect(loggedInAfterPassword.errors).toBeUndefined();
+    expect(loggedInAfterPassword.data.login.user.id).toBe(userId);
+    await expect(
+      app.get(PrismaService).auditRecord.count({
+        where: {
+          actorId: userId,
+          action: {
+            in: ['user.account.email_changed', 'user.account.password_changed'],
           },
         },
       }),

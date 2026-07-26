@@ -212,6 +212,32 @@ export class PrismaUsersRepository implements UsersRepository {
     });
   }
 
+  async changeEmail(userId: string, email: string): Promise<UserRecord> {
+    return this.changeCredentials(
+      userId,
+      {
+        email,
+        emailVerifiedAt: null,
+        authVersion: { increment: 1 },
+      },
+      'user.account.email_changed',
+    );
+  }
+
+  async changePasswordHash(
+    userId: string,
+    passwordHash: string,
+  ): Promise<UserRecord> {
+    return this.changeCredentials(
+      userId,
+      {
+        passwordHash,
+        authVersion: { increment: 1 },
+      },
+      'user.account.password_changed',
+    );
+  }
+
   async findMany(
     options: ListUsersOptions = {},
   ): Promise<PaginatedResult<UserRecord>> {
@@ -278,6 +304,32 @@ export class PrismaUsersRepository implements UsersRepository {
       default:
         return [{ createdAt: 'desc' }, { id: 'asc' }];
     }
+  }
+
+  private async changeCredentials(
+    userId: string,
+    data: Prisma.UserUpdateInput,
+    action: string,
+  ): Promise<UserRecord> {
+    return this.prisma.$transaction(async (transaction) => {
+      const now = new Date();
+      const user = await transaction.user.update({
+        where: { id: userId, status: 'ACTIVE' },
+        data: { ...data, refreshTokenHash: null },
+      });
+      await transaction.session.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: now },
+      });
+      await this.audit.append(transaction, {
+        action,
+        actorType: 'USER',
+        actorId: userId,
+        targetType: 'User',
+        targetId: userId,
+      });
+      return user;
+    });
   }
 
   async delete(id: string): Promise<void> {

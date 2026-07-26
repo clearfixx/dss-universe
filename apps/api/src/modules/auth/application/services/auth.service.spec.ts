@@ -36,6 +36,7 @@ const user: UserRecord = {
   coverUrl: null,
   status: UserStatus.ACTIVE,
   deactivatedAt: null,
+  authVersion: 0,
   refreshTokenHash: 'refresh-hash',
   emailVerifiedAt: null,
   lastSeenAt: null,
@@ -50,6 +51,8 @@ describe('AuthService', () => {
     updateRefreshTokenHash: jest.fn(),
     deactivateAccount: jest.fn(),
     reactivateAccount: jest.fn(),
+    changeEmail: jest.fn(),
+    changePasswordHash: jest.fn(),
   } as unknown as jest.Mocked<UsersRepository>;
   const passwordHashService = {
     compare: jest.fn(),
@@ -172,5 +175,47 @@ describe('AuthService', () => {
       service.login({ email: user.email, password: 'correct-password' }),
     ).rejects.toBeInstanceOf(InvalidCredentialsException);
     expect(passwordHashService.compare.mock.calls).toHaveLength(0);
+  });
+
+  it('normalizes and changes email after credential confirmation', async () => {
+    usersRepository.findById.mockResolvedValue(user);
+    usersRepository.findByEmail.mockResolvedValue(null);
+    passwordHashService.compare.mockResolvedValue(true);
+    usersRepository.changeEmail.mockResolvedValue({
+      ...user,
+      email: 'new@dss.test',
+      emailVerifiedAt: null,
+      authVersion: 1,
+    });
+
+    await expect(
+      service.changeEmail(user.id, '  NEW@DSS.TEST ', 'correct-password'),
+    ).resolves.toEqual({ success: true });
+    expect(usersRepository.changeEmail.mock.calls).toContainEqual([
+      user.id,
+      'new@dss.test',
+    ]);
+  });
+
+  it('rotates the password hash after current-password confirmation', async () => {
+    usersRepository.findById.mockResolvedValue(user);
+    passwordHashService.compare.mockResolvedValue(true);
+    passwordHashService.hash.mockResolvedValue('next-password-hash');
+    usersRepository.changePasswordHash.mockResolvedValue({
+      ...user,
+      passwordHash: 'next-password-hash',
+      authVersion: 1,
+    });
+
+    await expect(
+      service.changePassword(user.id, 'current-password', 'next-password'),
+    ).resolves.toEqual({ success: true });
+    expect(passwordHashService.hash.mock.calls).toContainEqual([
+      'next-password',
+    ]);
+    expect(usersRepository.changePasswordHash.mock.calls).toContainEqual([
+      user.id,
+      'next-password-hash',
+    ]);
   });
 });

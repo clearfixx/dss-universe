@@ -66,6 +66,7 @@ export class TokenService {
 
     const payload: JwtPayload = {
       sub: user.id,
+      ver: user.authVersion,
       email: user.email,
       username: user.username,
       roles: accessProfile.roles,
@@ -82,6 +83,7 @@ export class TokenService {
     return this.jwtService.signAsync(
       {
         sub: user.id,
+        ver: user.authVersion,
       },
       {
         secret: this.getJwtRefreshSecret(),

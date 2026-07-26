@@ -201,4 +201,44 @@ describe('PrismaUsersRepository', () => {
       }) as object,
     );
   });
+
+  it('rotates authVersion and revokes sessions when email changes', async () => {
+    const changed = { id: 'user-1', authVersion: 1 };
+    const transaction = {
+      user: { update: jest.fn().mockResolvedValue(changed) },
+      session: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
+    };
+    const prisma = {
+      $transaction: jest.fn(
+        (operation: (client: typeof transaction) => Promise<unknown>) =>
+          operation(transaction),
+      ),
+    } as unknown as PrismaService;
+    const append = jest.fn().mockResolvedValue('audit-1');
+    const repository = new PrismaUsersRepository(prisma, {
+      append,
+    } as unknown as AuditWriterService);
+
+    await expect(
+      repository.changeEmail('user-1', 'new@dss.test'),
+    ).resolves.toBe(changed);
+    expect(transaction.user.update.mock.calls).toContainEqual([
+      {
+        where: { id: 'user-1', status: 'ACTIVE' },
+        data: {
+          email: 'new@dss.test',
+          emailVerifiedAt: null,
+          authVersion: { increment: 1 },
+          refreshTokenHash: null,
+        },
+      },
+    ]);
+    expect(transaction.session.updateMany.mock.calls).toHaveLength(1);
+    expect(append.mock.calls).toContainEqual([
+      transaction,
+      expect.objectContaining({
+        action: 'user.account.email_changed',
+      }) as object,
+    ]);
+  });
 });

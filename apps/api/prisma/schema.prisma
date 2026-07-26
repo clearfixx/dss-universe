@@ -103,6 +103,7 @@ model User {
   coverMediaId  String?    @unique
   status        UserStatus @default(ACTIVE)
   deactivatedAt DateTime?
+  authVersion   Int        @default(0)
 
   media               Media[]              @relation("MediaOwner")
   avatarMedia         Media?               @relation("UserAvatar", fields: [avatarMediaId], references: [id], onDelete: SetNull)

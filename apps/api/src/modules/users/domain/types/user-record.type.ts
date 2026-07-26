@@ -33,6 +33,7 @@ export interface UserRecord {
   coverUrl: string | null;
   status: UserStatus;
   deactivatedAt: Date | null;
+  authVersion: number;
   refreshTokenHash: string | null;
   emailVerifiedAt: Date | null;
   lastSeenAt: Date | null;

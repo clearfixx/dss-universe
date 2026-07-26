@@ -119,6 +119,8 @@ inside the Users module.
 Account lifecycle supports reversible deactivation with a durable timestamp,
 atomic refresh/session revocation, immutable audit and immediate exclusion from
 public active-user queries.
+Credential changes use the same transactional boundary and rotate a durable
+authentication version so stale JWTs cannot survive an email/password change.
 
 Notes
 

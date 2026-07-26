@@ -59,7 +59,8 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    const existingUser = await this.usersRepository.findByEmail(dto.email);
+    const email = this.normalizeEmail(dto.email);
+    const existingUser = await this.usersRepository.findByEmail(email);
 
     if (existingUser) {
       throw new EmailAlreadyExistsException();
@@ -68,7 +69,7 @@ export class AuthService {
     const passwordHash = await this.passwordHashService.hash(dto.password);
 
     const user = await this.usersRepository.create({
-      email: dto.email,
+      email,
       username: dto.username,
       displayName: dto.displayName,
       passwordHash,
@@ -78,7 +79,9 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.usersRepository.findByEmail(dto.email);
+    const user = await this.usersRepository.findByEmail(
+      this.normalizeEmail(dto.email),
+    );
 
     if (!user || user.status !== UserStatus.ACTIVE) {
       throw new InvalidCredentialsException();
@@ -147,7 +150,9 @@ export class AuthService {
   }
 
   async reactivateAccount(dto: LoginDto) {
-    const user = await this.usersRepository.findByEmail(dto.email);
+    const user = await this.usersRepository.findByEmail(
+      this.normalizeEmail(dto.email),
+    );
     if (
       !user ||
       user.status !== UserStatus.DEACTIVATED ||
@@ -157,6 +162,34 @@ export class AuthService {
     }
     await this.usersRepository.reactivateAccount(user.id);
     return this.issueAuthResponse(user.id);
+  }
+
+  async changeEmail(userId: string, email: string, currentPassword: string) {
+    const normalizedEmail = this.normalizeEmail(email);
+    const user = await this.requireActiveUserWithPassword(
+      userId,
+      currentPassword,
+    );
+    if (normalizedEmail === user.email.toLowerCase()) {
+      return { success: true };
+    }
+    const existing = await this.usersRepository.findByEmail(normalizedEmail);
+    if (existing) {
+      throw new EmailAlreadyExistsException();
+    }
+    await this.usersRepository.changeEmail(userId, normalizedEmail);
+    return { success: true };
+  }
+
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    await this.requireActiveUserWithPassword(userId, currentPassword);
+    const passwordHash = await this.passwordHashService.hash(newPassword);
+    await this.usersRepository.changePasswordHash(userId, passwordHash);
+    return { success: true };
   }
 
   private async issueAuthResponse(userId: string) {
@@ -180,5 +213,24 @@ export class AuthService {
       user: UserMapper.toSafeUser(user),
       tokens,
     };
+  }
+
+  private async requireActiveUserWithPassword(
+    userId: string,
+    password: string,
+  ) {
+    const user = await this.usersRepository.findById(userId);
+    if (
+      !user ||
+      user.status !== UserStatus.ACTIVE ||
+      !(await this.passwordHashService.compare(password, user.passwordHash))
+    ) {
+      throw new InvalidCredentialsException();
+    }
+    return user;
+  }
+
+  private normalizeEmail(email: string): string {
+    return email.trim().toLowerCase();
   }
 }

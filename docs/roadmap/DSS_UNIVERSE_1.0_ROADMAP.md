@@ -596,6 +596,8 @@ Delivered in the Profile Foundation package:
 - credential-confirmed account deactivation and reactivation through GraphQL;
 - immediate access denial for non-active accounts, refresh-token clearing,
   durable session revocation and immutable lifecycle audit.
+- credential-confirmed email and password changes with normalized email,
+  verification reset, session revocation and durable JWT version rotation.
 
 ## Profile
 

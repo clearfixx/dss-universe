@@ -28,6 +28,8 @@ import { RegisterInput } from '../inputs/register.input';
 import { AuthPayloadModel } from '../models/auth-payload.model';
 import { LogoutResultModel } from '../models/logout-result.model';
 import { DeactivateAccountInput } from '../inputs/deactivate-account.input';
+import { ChangeEmailInput } from '../inputs/change-email.input';
+import { ChangePasswordInput } from '../inputs/change-password.input';
 
 @Resolver()
 export class AuthResolver {
@@ -91,5 +93,31 @@ export class AuthResolver {
       user: UserGraphqlMapper.viewerFromSafeUser(result.user),
       tokens: result.tokens,
     };
+  }
+
+  @Mutation(() => LogoutResultModel)
+  @UseGuards(JwtAuthGuard)
+  changeViewerEmail(
+    @AuthUser() user: AuthenticatedUser,
+    @Args('input') input: ChangeEmailInput,
+  ): Promise<{ success: boolean }> {
+    return this.authService.changeEmail(
+      user.id,
+      input.email,
+      input.currentPassword,
+    );
+  }
+
+  @Mutation(() => LogoutResultModel)
+  @UseGuards(JwtAuthGuard)
+  changeViewerPassword(
+    @AuthUser() user: AuthenticatedUser,
+    @Args('input') input: ChangePasswordInput,
+  ): Promise<{ success: boolean }> {
+    return this.authService.changePassword(
+      user.id,
+      input.currentPassword,
+      input.newPassword,
+    );
   }
 }
