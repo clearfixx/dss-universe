@@ -92,8 +92,11 @@ Profile updates are exposed through the authenticated GraphQL viewer boundary.
 Social-link collections are replaced transactionally, audited, and resolved
 through a request-scoped DataLoader for list safety.
 Avatar and cover binaries belong to DSS Media Platform.
-Social relationships, privacy policies and profile walls are separate Phase 7
-packages and must not be improvised inside controllers.
+Privacy policy is stored behind a dedicated repository, uses privacy-safe
+defaults, and redacts private extended profiles and social links from other
+viewers. Owners always retain access to their own data.
+Social relationships and profile walls are separate Phase 7 packages and must
+not be improvised inside controllers.
 
 Notes
 

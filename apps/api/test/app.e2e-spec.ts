@@ -334,6 +334,123 @@ describe('DSS API (e2e)', () => {
         },
       },
     });
+    const defaultPrivacy = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `query {
+          viewerPrivacySettings {
+            profileVisibility showLocation showWebsite showSocialLinks
+            showLastSeen showOnlineStatus
+          }
+        }`,
+      })
+      .expect(200);
+    expect(defaultPrivacy.body).toEqual({
+      data: {
+        viewerPrivacySettings: {
+          profileVisibility: 'PUBLIC',
+          showLocation: true,
+          showWebsite: true,
+          showSocialLinks: true,
+          showLastSeen: false,
+          showOnlineStatus: true,
+        },
+      },
+    });
+
+    const privacyUpdate = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation UpdateViewerPrivacy(
+          $input: UpdateUserPrivacyInput!
+        ) {
+          updateViewerPrivacy(input: $input) {
+            profileVisibility showLocation showWebsite showSocialLinks
+            showLastSeen showOnlineStatus
+          }
+        }`,
+        variables: {
+          input: {
+            profileVisibility: 'PRIVATE',
+            showLocation: true,
+            showWebsite: true,
+            showSocialLinks: true,
+            showLastSeen: true,
+            showOnlineStatus: true,
+          },
+        },
+      });
+    expect(privacyUpdate.status).toBe(200);
+    expect(
+      (
+        privacyUpdate.body as {
+          data: {
+            updateViewerPrivacy: { profileVisibility: string };
+          };
+        }
+      ).data.updateViewerPrivacy.profileVisibility,
+    ).toBe('PRIVATE');
+
+    const visitorUsername = 'visitor-' + suffix;
+    const visitorRegistration = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .send({
+        query: `mutation {
+          register(input: {
+            email: "${visitorUsername}@dss.test"
+            username: "${visitorUsername}"
+            displayName: "Profile Visitor"
+            password: "dss-test-password"
+          }) {
+            user { id email username }
+            tokens { accessToken }
+          }
+        }`,
+      })
+      .expect(200);
+    const visitor = visitorRegistration.body as RegisterResponse;
+    const privateProfile = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set(
+        'Authorization',
+        'Bearer ' + visitor.data.register.tokens.accessToken,
+      )
+      .send({
+        query: `query UserByUsername($username: String!) {
+          userByUsername(username: $username) {
+            username bio location website technologies interests lastSeenAt
+            socialLinks { platform url }
+          }
+        }`,
+        variables: { username },
+      })
+      .expect(200);
+    expect(privateProfile.body).toEqual({
+      data: {
+        userByUsername: {
+          username,
+          bio: null,
+          location: null,
+          website: null,
+          technologies: [],
+          interests: [],
+          lastSeenAt: null,
+          socialLinks: [],
+        },
+      },
+    });
+    await expect(
+      app.get(PrismaService).auditRecord.count({
+        where: {
+          action: 'user.profile.privacy_updated',
+          actorId: registered.data.register.user.id,
+          targetId: registered.data.register.user.id,
+        },
+      }),
+    ).resolves.toBe(1);
+
     await expect(
       app.get(PrismaService).auditRecord.count({
         where: {

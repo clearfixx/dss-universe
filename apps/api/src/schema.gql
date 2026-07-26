@@ -161,8 +161,15 @@ type Mutation {
   retryFailedMedia(mediaId: ID!): MediaLibraryItem!
   setViewerAvatar(mediaId: ID!): Viewer!
   setViewerCover(mediaId: ID!): Viewer!
+  updateViewerPrivacy(input: UpdateUserPrivacyInput!): UserPrivacySettings!
   updateViewerProfile(input: UpdateViewerProfileInput!): Viewer!
   updateViewerSocialLinks(input: UpdateViewerSocialLinksInput!): [UserSocialLink!]!
+}
+
+enum ProfileVisibility {
+  MEMBERS
+  PRIVATE
+  PUBLIC
 }
 
 type Query {
@@ -176,6 +183,7 @@ type Query {
   userByUsername(username: String!): User!
   users(pagination: UsersPageInput): UsersPageModel!
   viewer: Viewer!
+  viewerPrivacySettings: UserPrivacySettings!
 }
 
 input RefreshTokenInput {
@@ -187,6 +195,15 @@ input RegisterInput {
   email: String!
   password: String!
   username: String!
+}
+
+input UpdateUserPrivacyInput {
+  profileVisibility: ProfileVisibility!
+  showLastSeen: Boolean!
+  showLocation: Boolean!
+  showOnlineStatus: Boolean!
+  showSocialLinks: Boolean!
+  showWebsite: Boolean!
 }
 
 input UpdateViewerProfileInput {
@@ -217,6 +234,15 @@ type User {
   technologies: [String!]!
   username: String!
   website: String
+}
+
+type UserPrivacySettings {
+  profileVisibility: ProfileVisibility!
+  showLastSeen: Boolean!
+  showLocation: Boolean!
+  showOnlineStatus: Boolean!
+  showSocialLinks: Boolean!
+  showWebsite: Boolean!
 }
 
 type UserSocialLink {

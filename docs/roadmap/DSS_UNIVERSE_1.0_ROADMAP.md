@@ -576,6 +576,8 @@ Delivered in the Profile Foundation package:
   GraphQL resolution.
 - profile cover assignment and removal through DSS Media Platform;
 - canonical responsive cover variants, active-reference protection and audit.
+- owner-controlled profile privacy settings with privacy-safe defaults;
+- enforced private-profile redaction for extended fields and social links.
 
 ## Profile
 

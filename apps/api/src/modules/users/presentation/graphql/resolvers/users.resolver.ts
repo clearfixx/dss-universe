@@ -42,6 +42,13 @@ import { UpdateViewerSocialLinksInput } from '../inputs/update-viewer-social-lin
 import { UserSocialLinksService } from '../../../application/services/user-social-links.service';
 import { UserSocialLinksLoader } from '../loaders/user-social-links.loader';
 import { UserSocialLinkModel } from '../models/user-social-link.model';
+import { UserPrivacyService } from '../../../application/services/user-privacy.service';
+import {
+  ProfileVisibilityInput,
+  UpdateUserPrivacyInput,
+} from '../inputs/update-user-privacy.input';
+import { UserPrivacyModel } from '../models/user-privacy.model';
+import type { UserPrivacySettings } from '../../../domain/types/user-privacy-settings.type';
 
 @Resolver(() => UserModel)
 export class UsersResolver {
@@ -50,6 +57,7 @@ export class UsersResolver {
     private readonly userById: UserByIdLoader,
     private readonly socialLinksService: UserSocialLinksService,
     private readonly socialLinks: UserSocialLinksLoader,
+    private readonly privacy: UserPrivacyService,
   ) {}
 
   @Query(() => ViewerModel)
@@ -79,11 +87,31 @@ export class UsersResolver {
     return this.socialLinksService.replace(authenticated.id, input.links);
   }
 
+  @Query(() => UserPrivacyModel)
+  @UseGuards(JwtAuthGuard)
+  async viewerPrivacySettings(
+    @AuthUser() authenticated: AuthenticatedUser,
+  ): Promise<UserPrivacyModel> {
+    return this.toPrivacyModel(await this.privacy.get(authenticated.id));
+  }
+
+  @Mutation(() => UserPrivacyModel)
+  @UseGuards(JwtAuthGuard)
+  async updateViewerPrivacy(
+    @AuthUser() authenticated: AuthenticatedUser,
+    @Args('input') input: UpdateUserPrivacyInput,
+  ): Promise<UserPrivacyModel> {
+    return this.toPrivacyModel(
+      await this.privacy.update(authenticated.id, input),
+    );
+  }
+
   @ResolveField('socialLinks', () => [UserSocialLinkModel])
   socialLinksForUser(
     @Parent() user: UserModel,
+    @AuthUser() authenticated: AuthenticatedUser,
   ): Promise<UserSocialLinkModel[]> {
-    return this.socialLinks.load(user.id);
+    return this.visibleSocialLinks(user.id, authenticated.id);
   }
 
   @Query(() => UserModel)
@@ -100,8 +128,14 @@ export class UsersResolver {
 
   @Query(() => UserModel)
   @UseGuards(JwtAuthGuard)
-  async userByUsername(@Args('username') username: string) {
-    const user = await this.usersService.getPublicByUsername(username);
+  async userByUsername(
+    @Args('username') username: string,
+    @AuthUser() authenticated: AuthenticatedUser,
+  ) {
+    const user = await this.usersService.getPublicByUsername(
+      username,
+      authenticated.id,
+    );
 
     return UserGraphqlMapper.fromResponse(user);
   }
@@ -117,6 +151,21 @@ export class UsersResolver {
     return {
       ...result,
       items: result.items.map((user) => UserGraphqlMapper.fromResponse(user)),
+    };
+  }
+
+  private async visibleSocialLinks(
+    userId: string,
+    viewerId: string,
+  ): Promise<UserSocialLinkModel[]> {
+    const visibility = await this.privacy.visibilityFor(userId, viewerId);
+    return visibility.showSocialLinks ? this.socialLinks.load(userId) : [];
+  }
+
+  private toPrivacyModel(settings: UserPrivacySettings): UserPrivacyModel {
+    return {
+      ...settings,
+      profileVisibility: settings.profileVisibility as ProfileVisibilityInput,
     };
   }
 }

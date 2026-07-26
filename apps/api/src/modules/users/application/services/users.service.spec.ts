@@ -18,6 +18,7 @@ import { UserNotFoundException } from '../../domain/exceptions/user-not-found.ex
 import type { UsersRepository } from '../../domain/repositories/users.repository.interface';
 import type { UserRecord } from '../../domain/types/user-record.type';
 import { UsersService } from './users.service';
+import type { UserPrivacyService } from './user-privacy.service';
 
 const user: UserRecord = {
   id: 'user-1',
@@ -46,7 +47,10 @@ describe('UsersService', () => {
     findById: jest.fn(),
     updateById: jest.fn(),
   } as unknown as jest.Mocked<UsersRepository>;
-  const service = new UsersService(usersRepository);
+  const privacy = {
+    visibilityFor: jest.fn(),
+  } as unknown as jest.Mocked<UserPrivacyService>;
+  const service = new UsersService(usersRepository, privacy);
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -104,5 +108,36 @@ describe('UsersService', () => {
       },
     ]);
     expect(result.displayName).toBe('Commander');
+  });
+
+  it('redacts a private profile for another viewer', async () => {
+    usersRepository.findPublicByUsername = jest.fn().mockResolvedValue({
+      ...user,
+      location: 'Kyiv',
+      website: 'https://dss.example',
+      technologies: ['TypeScript'],
+      interests: ['Space'],
+      lastSeenAt: new Date('2026-01-03T00:00:00.000Z'),
+    });
+    privacy.visibilityFor.mockResolvedValue({
+      userId: user.id,
+      profileVisibility: 'PRIVATE',
+      showLocation: false,
+      showWebsite: false,
+      showSocialLinks: false,
+      showLastSeen: false,
+      showOnlineStatus: false,
+    });
+
+    const result = await service.getPublicByUsername(user.username, 'viewer-2');
+
+    expect(result).toMatchObject({
+      bio: null,
+      location: null,
+      website: null,
+      technologies: [],
+      interests: [],
+      lastSeenAt: null,
+    });
   });
 });

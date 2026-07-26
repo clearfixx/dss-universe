@@ -48,12 +48,14 @@ import type { UserResponseDto } from '../dto';
 import { UserResponseMapper } from '../mappers';
 import type { PaginatedResult } from '@api/shared';
 import type { ListUsersOptions } from '../../domain';
+import { UserPrivacyService } from './user-privacy.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @Inject(USERS_REPOSITORY)
     private readonly usersRepository: UsersRepository,
+    private readonly privacy: UserPrivacyService,
   ) {}
 
   async list(
@@ -182,10 +184,24 @@ export class UsersService {
     return users.map((user) => this.toResponseDto(user));
   }
 
-  async getPublicByUsername(username: string): Promise<UserResponseDto> {
+  async getPublicByUsername(
+    username: string,
+    viewerId: string,
+  ): Promise<UserResponseDto> {
     const user = await this.usersRepository.findPublicByUsername(username);
-
-    return this.toResponseDto(this.requireUser(user));
+    const response = this.toResponseDto(this.requireUser(user));
+    const visibility = await this.privacy.visibilityFor(response.id, viewerId);
+    const extendedProfileVisible =
+      response.id === viewerId || visibility.profileVisibility !== 'PRIVATE';
+    return {
+      ...response,
+      bio: extendedProfileVisible ? response.bio : null,
+      location: visibility.showLocation ? response.location : null,
+      website: visibility.showWebsite ? response.website : null,
+      technologies: extendedProfileVisible ? response.technologies : [],
+      interests: extendedProfileVisible ? response.interests : [],
+      lastSeenAt: visibility.showLastSeen ? response.lastSeenAt : null,
+    };
   }
 
   private requireUser(user: UserRecord | null): UserRecord {

@@ -17,6 +17,12 @@ enum UserStatus {
   DELETED
 }
 
+enum ProfileVisibility {
+  PUBLIC
+  MEMBERS
+  PRIVATE
+}
+
 enum MediaKind {
   IMAGE
   VIDEO
@@ -105,6 +111,7 @@ model User {
   directPermissions UserPermission[]
   sessions          Session[]
   socialLinks       UserSocialLink[]
+  privacySettings   UserPrivacySettings?
 
   refreshTokenHash String?
   emailVerifiedAt  DateTime?
@@ -114,6 +121,22 @@ model User {
   updatedAt DateTime @updatedAt
 
   @@map("users")
+}
+
+model UserPrivacySettings {
+  userId            String            @id
+  profileVisibility ProfileVisibility @default(PUBLIC)
+  showLocation      Boolean           @default(true)
+  showWebsite       Boolean           @default(true)
+  showSocialLinks   Boolean           @default(true)
+  showLastSeen      Boolean           @default(false)
+  showOnlineStatus  Boolean           @default(true)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_privacy_settings")
 }
 
 model UserSocialLink {
