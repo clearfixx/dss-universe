@@ -289,16 +289,22 @@ export class UsersResolver {
     @AuthUser() authenticated: AuthenticatedUser,
     @Args('input', { nullable: true }) input?: MembersDirectoryInput,
   ): Promise<MembersDirectoryPageModel> {
+    const onlineUserIds = input?.onlineOnly
+      ? await this.presence.visibleOnlineUserIds(authenticated.id)
+      : undefined;
     const result = await this.usersService.list({
       pagination: input,
       search: input?.search,
       sort: input?.sort ?? MembersDirectorySortInput.NEWEST,
       status: UserStatus.ACTIVE,
+      role: input?.role?.trim() || undefined,
+      userIds: onlineUserIds,
     });
-    const presence = await this.presence.visibleStatuses(
-      result.items.map((user) => user.id),
-      authenticated.id,
-    );
+    const userIds = result.items.map((user) => user.id);
+    const [presence, roles] = await Promise.all([
+      this.presence.visibleStatuses(userIds, authenticated.id),
+      this.usersService.roleNamesByUserIds(userIds),
+    ]);
 
     return {
       ...result,
@@ -308,6 +314,7 @@ export class UsersResolver {
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
         isOnline: presence.get(user.id) ?? false,
+        roles: roles.get(user.id) ?? [],
         createdAt: user.createdAt,
       })),
     };

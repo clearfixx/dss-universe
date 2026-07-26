@@ -184,6 +184,10 @@ export class UsersService {
     return users.map((user) => this.toResponseDto(user));
   }
 
+  roleNamesByUserIds(userIds: string[]): Promise<Map<string, string[]>> {
+    return this.usersRepository.findRoleNamesByUserIds(userIds);
+  }
+
   async getPublicByUsername(
     username: string,
     viewerId: string,

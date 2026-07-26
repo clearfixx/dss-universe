@@ -24,6 +24,7 @@ describe('UserPresenceService', () => {
     set: jest.fn(),
     zremrangebyscore: jest.fn(),
     zmscore: jest.fn(),
+    zrangebyscore: jest.fn(),
   };
   const users = {
     updateById: jest.fn(),
@@ -133,5 +134,48 @@ describe('UserPresenceService', () => {
     await expect(
       service.visibleStatuses(['viewer'], 'viewer'),
     ).resolves.toEqual(new Map([['viewer', true]]));
+  });
+
+  it('returns only privacy-visible users for online-only directory filters', async () => {
+    redis.zrangebyscore.mockResolvedValue(['visible', 'hidden']);
+    redis.zmscore.mockResolvedValue(['1785073000000', '1785073000000']);
+    privacy.getMany.mockResolvedValue(
+      new Map([
+        [
+          'visible',
+          {
+            userId: 'visible',
+            profileVisibility: 'PUBLIC',
+            showLocation: true,
+            showWebsite: true,
+            showSocialLinks: true,
+            showLastSeen: false,
+            showOnlineStatus: true,
+            allowFollowers: true,
+            showFollows: true,
+            allowWallPosts: true,
+          },
+        ],
+        [
+          'hidden',
+          {
+            userId: 'hidden',
+            profileVisibility: 'PRIVATE',
+            showLocation: false,
+            showWebsite: false,
+            showSocialLinks: false,
+            showLastSeen: false,
+            showOnlineStatus: false,
+            allowFollowers: false,
+            showFollows: false,
+            allowWallPosts: false,
+          },
+        ],
+      ]),
+    );
+
+    await expect(service.visibleOnlineUserIds('viewer')).resolves.toEqual([
+      'visible',
+    ]);
   });
 });

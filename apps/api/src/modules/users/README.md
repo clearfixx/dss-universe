@@ -107,6 +107,8 @@ follow edges in both directions, and central enforcement prevents either user
 from recreating the relationship until the blocker removes the block.
 The Members Directory exposes only privacy-safe identity cards and supports
 active-member search, deterministic sorting, and bounded pagination.
+It also supports IAM role filters and privacy-aware online-only filtering
+without inventing future points, reputation, level, group, or title data.
 Presence is ephemeral Redis TTL state refreshed by authenticated activity.
 Durable last-seen writes are throttled, Redis failures are fail-open for
 product requests, and online state is always filtered through profile privacy.

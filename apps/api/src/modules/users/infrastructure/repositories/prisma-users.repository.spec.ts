@@ -39,11 +39,21 @@ describe('PrismaUsersRepository', () => {
       search: '  astro  ',
       status: UserStatus.ACTIVE,
       sort: 'LAST_ACTIVE',
+      userIds: ['user-1'],
+      role: 'MODERATOR',
     });
 
     expect(user.findMany).toHaveBeenCalledWith({
       where: {
         status: UserStatus.ACTIVE,
+        id: { in: ['user-1'] },
+        roles: {
+          some: {
+            role: {
+              name: { equals: 'MODERATOR', mode: 'insensitive' },
+            },
+          },
+        },
         OR: [
           { username: { contains: 'astro', mode: 'insensitive' } },
           { displayName: { contains: 'astro', mode: 'insensitive' } },
@@ -56,11 +66,63 @@ describe('PrismaUsersRepository', () => {
     expect(user.count).toHaveBeenCalledWith({
       where: {
         status: UserStatus.ACTIVE,
+        id: { in: ['user-1'] },
+        roles: {
+          some: {
+            role: {
+              name: { equals: 'MODERATOR', mode: 'insensitive' },
+            },
+          },
+        },
         OR: [
           { username: { contains: 'astro', mode: 'insensitive' } },
           { displayName: { contains: 'astro', mode: 'insensitive' } },
         ],
       },
     });
+  });
+
+  it('creates an account and assigns the default user role atomically', async () => {
+    const createdUser = { id: 'user-1' };
+    const transaction = {
+      role: {
+        findUniqueOrThrow: jest.fn().mockResolvedValue({ id: 'role-user' }),
+      },
+      user: {
+        create: jest.fn().mockResolvedValue(createdUser),
+      },
+      userRole: {
+        create: jest.fn().mockResolvedValue({}),
+      },
+    };
+    const prisma = {
+      $transaction: jest.fn(
+        (operation: (client: typeof transaction) => Promise<unknown>) =>
+          operation(transaction),
+      ),
+    } as unknown as PrismaService;
+    const repository = new PrismaUsersRepository(prisma);
+
+    const result = await repository.create({
+      email: 'user@dss.test',
+      username: 'user',
+      passwordHash: 'hash',
+    });
+
+    expect(result).toBe(createdUser);
+    expect(transaction.role.findUniqueOrThrow.mock.calls).toContainEqual([
+      {
+        where: { name: 'user' },
+        select: { id: true },
+      },
+    ]);
+    expect(transaction.userRole.create.mock.calls).toContainEqual([
+      {
+        data: {
+          userId: 'user-1',
+          roleId: 'role-user',
+        },
+      },
+    ]);
   });
 });

@@ -27,4 +27,6 @@ export type ListUsersOptions = {
   search?: string;
   status?: UserStatus;
   sort?: ListUsersSort;
+  userIds?: string[];
+  role?: string;
 };

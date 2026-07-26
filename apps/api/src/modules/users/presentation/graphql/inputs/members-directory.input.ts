@@ -14,7 +14,13 @@
  */
 
 import { Field, InputType, registerEnumType } from '@nestjs/graphql';
-import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 
 import { UsersPageInput } from './users-page.input';
 
@@ -43,4 +49,14 @@ export class MembersDirectoryInput extends UsersPageInput {
   })
   @IsEnum(MembersDirectorySortInput)
   sort = MembersDirectorySortInput.NEWEST;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  role?: string;
+
+  @Field(() => Boolean, { defaultValue: false })
+  @IsBoolean()
+  onlineOnly = false;
 }

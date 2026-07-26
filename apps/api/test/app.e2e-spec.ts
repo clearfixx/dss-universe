@@ -685,7 +685,7 @@ describe('DSS API (e2e)', () => {
         query: `query Members($input: MembersDirectoryInput) {
           members(input: $input) {
             total page limit totalPages
-            items { id username displayName avatarUrl isOnline createdAt }
+            items { id username displayName avatarUrl isOnline roles createdAt }
           }
         }`,
         variables: {
@@ -694,6 +694,8 @@ describe('DSS API (e2e)', () => {
             limit: 10,
             search: visitorUsername.toUpperCase(),
             sort: 'USERNAME_ASC',
+            onlineOnly: true,
+            role: 'user',
           },
         },
       })
@@ -712,6 +714,7 @@ describe('DSS API (e2e)', () => {
         id: visitor.data.register.user.id,
         username: visitorUsername,
         isOnline: true,
+        roles: ['user'],
       }),
     ]);
 

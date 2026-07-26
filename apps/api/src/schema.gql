@@ -159,12 +159,15 @@ type MemberDirectoryEntry {
   displayName: String
   id: ID!
   isOnline: Boolean!
+  roles: [String!]!
   username: String!
 }
 
 input MembersDirectoryInput {
   limit: Int! = 20
+  onlineOnly: Boolean! = false
   page: Int! = 1
+  role: String
   search: String
   sort: MembersDirectorySort! = NEWEST
 }

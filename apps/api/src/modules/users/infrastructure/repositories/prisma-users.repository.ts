@@ -76,6 +76,24 @@ export class PrismaUsersRepository implements UsersRepository {
     });
   }
 
+  async findRoleNamesByUserIds(
+    userIds: string[],
+  ): Promise<Map<string, string[]>> {
+    const assignments = await this.prisma.userRole.findMany({
+      where: { userId: { in: userIds } },
+      select: {
+        userId: true,
+        role: { select: { name: true } },
+      },
+      orderBy: { assignedAt: 'asc' },
+    });
+    const result = new Map(userIds.map((userId) => [userId, [] as string[]]));
+    for (const assignment of assignments) {
+      result.get(assignment.userId)?.push(assignment.role.name);
+    }
+    return result;
+  }
+
   async findPublicByUsername(username: string): Promise<UserRecord | null> {
     return this.prisma.user.findUnique({
       where: {
@@ -108,8 +126,19 @@ export class PrismaUsersRepository implements UsersRepository {
   }
 
   create(data: CreateUserContract): Promise<UserRecord> {
-    return this.prisma.user.create({
-      data,
+    return this.prisma.$transaction(async (transaction) => {
+      const defaultRole = await transaction.role.findUniqueOrThrow({
+        where: { name: 'user' },
+        select: { id: true },
+      });
+      const user = await transaction.user.create({ data });
+      await transaction.userRole.create({
+        data: {
+          userId: user.id,
+          roleId: defaultRole.id,
+        },
+      });
+      return user;
     });
   }
 
@@ -139,6 +168,18 @@ export class PrismaUsersRepository implements UsersRepository {
     const search = options.search?.trim();
     const where: Prisma.UserWhereInput = {
       status: options.status,
+      ...(options.userIds ? { id: { in: options.userIds } } : {}),
+      ...(options.role
+        ? {
+            roles: {
+              some: {
+                role: {
+                  name: { equals: options.role, mode: 'insensitive' },
+                },
+              },
+            },
+          }
+        : {}),
       ...(search
         ? {
             OR: [

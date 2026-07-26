@@ -88,6 +88,21 @@ export class UserPresenceService {
     );
   }
 
+  async visibleOnlineUserIds(viewerId: string): Promise<string[]> {
+    const now = Date.now();
+    await this.redis.zremrangebyscore(ACTIVE_USERS_KEY, '-inf', now);
+    const activeIds = await this.redis.zrangebyscore(
+      ACTIVE_USERS_KEY,
+      now,
+      '+inf',
+      'LIMIT',
+      0,
+      10000,
+    );
+    const statuses = await this.visibleStatuses(activeIds, viewerId);
+    return activeIds.filter((userId) => statuses.get(userId) === true);
+  }
+
   private async onlineStatuses(
     userIds: string[],
   ): Promise<Map<string, boolean>> {

@@ -584,6 +584,8 @@ Delivered in the Profile Foundation package:
 - atomic bidirectional follow cleanup and centralized follow enforcement.
 - privacy-safe Members Directory foundation with active-member search,
   deterministic sorting and bounded GraphQL pagination.
+- IAM role filtering, role projections and privacy-safe online-only directory
+  filtering;
 - Redis TTL user presence with throttled durable last-seen updates;
 - batched, privacy-enforced online status for profiles and Members Directory.
 - Profile Wall text/image posts backed by DSS Media references;

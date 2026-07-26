@@ -31,6 +31,9 @@ export class MemberDirectoryEntryModel {
   @Field()
   isOnline!: boolean;
 
+  @Field(() => [String])
+  roles!: string[];
+
   @Field()
   createdAt!: string;
 }
