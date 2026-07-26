@@ -62,6 +62,10 @@ export interface UsersRepository {
     refreshTokenHash: string | null,
   ): Promise<UserRecord>;
 
+  deactivateAccount(userId: string): Promise<UserRecord>;
+
+  reactivateAccount(userId: string): Promise<UserRecord>;
+
   existsByEmail(email: string): Promise<boolean>;
 
   existsByUsername(username: string): Promise<boolean>;

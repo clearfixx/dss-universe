@@ -32,6 +32,7 @@ export interface UserRecord {
   avatarUrl: string | null;
   coverUrl: string | null;
   status: UserStatus;
+  deactivatedAt: Date | null;
   refreshTokenHash: string | null;
   emailVerifiedAt: Date | null;
   lastSeenAt: Date | null;

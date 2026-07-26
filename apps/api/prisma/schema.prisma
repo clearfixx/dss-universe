@@ -13,6 +13,7 @@ datasource db {
 
 enum UserStatus {
   ACTIVE
+  DEACTIVATED
   BANNED
   DELETED
 }
@@ -101,6 +102,7 @@ model User {
   coverUrl      String?
   coverMediaId  String?    @unique
   status        UserStatus @default(ACTIVE)
+  deactivatedAt DateTime?
 
   media               Media[]              @relation("MediaOwner")
   avatarMedia         Media?               @relation("UserAvatar", fields: [avatarMediaId], references: [id], onDelete: SetNull)

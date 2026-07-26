@@ -34,6 +34,7 @@
  */
 
 import { Inject, Injectable } from '@nestjs/common';
+import { UserStatus } from '@prisma/client';
 
 import { UserMapper } from '../../../users/domain/mappers/user.mapper';
 import {
@@ -79,7 +80,7 @@ export class AuthService {
   async login(dto: LoginDto) {
     const user = await this.usersRepository.findByEmail(dto.email);
 
-    if (!user) {
+    if (!user || user.status !== UserStatus.ACTIVE) {
       throw new InvalidCredentialsException();
     }
 
@@ -103,7 +104,11 @@ export class AuthService {
 
       const user = await this.usersRepository.findById(payload.sub);
 
-      if (!user || !user.refreshTokenHash) {
+      if (
+        !user ||
+        user.status !== UserStatus.ACTIVE ||
+        !user.refreshTokenHash
+      ) {
         throw new InvalidCredentialsException();
       }
 
@@ -128,10 +133,36 @@ export class AuthService {
     return { success: true };
   }
 
+  async deactivateAccount(userId: string, password: string) {
+    const user = await this.usersRepository.findById(userId);
+    if (
+      !user ||
+      user.status !== UserStatus.ACTIVE ||
+      !(await this.passwordHashService.compare(password, user.passwordHash))
+    ) {
+      throw new InvalidCredentialsException();
+    }
+    await this.usersRepository.deactivateAccount(userId);
+    return { success: true };
+  }
+
+  async reactivateAccount(dto: LoginDto) {
+    const user = await this.usersRepository.findByEmail(dto.email);
+    if (
+      !user ||
+      user.status !== UserStatus.DEACTIVATED ||
+      !(await this.passwordHashService.compare(dto.password, user.passwordHash))
+    ) {
+      throw new InvalidCredentialsException();
+    }
+    await this.usersRepository.reactivateAccount(user.id);
+    return this.issueAuthResponse(user.id);
+  }
+
   private async issueAuthResponse(userId: string) {
     const user = await this.usersRepository.findById(userId);
 
-    if (!user) {
+    if (!user || user.status !== UserStatus.ACTIVE) {
       throw new InvalidCredentialsException();
     }
 

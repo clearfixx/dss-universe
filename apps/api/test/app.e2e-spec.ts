@@ -56,6 +56,16 @@ type RegisterErrorResponse = {
   errors?: Array<{ extensions: { code: string } }>;
 };
 
+type ReactivateResponse = {
+  data: {
+    reactivateAccount: {
+      user: { id: string; email: string; username: string };
+      tokens: { accessToken: string };
+    };
+  };
+  errors?: Array<{ extensions: { code: string } }>;
+};
+
 type InitiateMediaUploadResponse = {
   data: {
     initiateMediaUpload: {
@@ -140,6 +150,10 @@ describe('DSS API (e2e)', () => {
 
     expect(schema).toContain('type Viewer');
     expect(schema).toContain('register(input: RegisterInput!)');
+    expect(schema).toContain(
+      'deactivateAccount(input: DeactivateAccountInput!)',
+    );
+    expect(schema).toContain('reactivateAccount(input: LoginInput!)');
     expect(schema).toContain('users(pagination: UsersPageInput)');
     expect(schema).toContain('setViewerAvatar(mediaId: ID!)');
     expect(schema).toContain('removeViewerAvatar: Viewer!');
@@ -1537,6 +1551,105 @@ describe('DSS API (e2e)', () => {
           targetId: media.id,
           action: {
             in: ['media.cleanup.claimed', 'media.cleanup.completed'],
+          },
+        },
+      }),
+    ).resolves.toBe(2);
+  });
+
+  it('deactivates an account immediately and permits credentialed reactivation', async () => {
+    const suffix = `${Date.now()}${Math.random().toString(16).slice(2)}`;
+    const username = `lifecycle-${suffix}`;
+    const email = `${username}@dss.test`;
+    const password = 'dss-lifecycle-password';
+    const registration = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .send({
+        query: `mutation {
+          register(input: {
+            email: "${email}"
+            username: "${username}"
+            displayName: "Lifecycle Astronaut"
+            password: "${password}"
+          }) {
+            user { id email username }
+            tokens { accessToken }
+          }
+        }`,
+      })
+      .expect(200);
+    const registered = registration.body as RegisterResponse;
+    const userId = registered.data.register.user.id;
+    const oldAccessToken = registered.data.register.tokens.accessToken;
+
+    const deactivation = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${oldAccessToken}`)
+      .send({
+        query: `mutation Deactivate($input: DeactivateAccountInput!) {
+          deactivateAccount(input: $input) { success }
+        }`,
+        variables: { input: { password } },
+      })
+      .expect(200);
+    expect(deactivation.body).toEqual({
+      data: { deactivateAccount: { success: true } },
+    });
+
+    const rejectedViewer = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${oldAccessToken}`)
+      .send({ query: '{ viewer { id } }' })
+      .expect(200);
+    expect(
+      (rejectedViewer.body as GraphqlErrorResponse).errors[0]?.extensions.code,
+    ).toBe('UNAUTHENTICATED');
+
+    const rejectedLogin = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .send({
+        query: `mutation Login($input: LoginInput!) {
+          login(input: $input) { tokens { accessToken } }
+        }`,
+        variables: { input: { email, password } },
+      })
+      .expect(200);
+    expect(
+      (rejectedLogin.body as GraphqlErrorResponse).errors[0]?.extensions.code,
+    ).toBe('UNAUTHENTICATED');
+
+    const reactivation = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .send({
+        query: `mutation Reactivate($input: LoginInput!) {
+          reactivateAccount(input: $input) {
+            user { id email username }
+            tokens { accessToken }
+          }
+        }`,
+        variables: { input: { email, password } },
+      })
+      .expect(200);
+    const reactivated = reactivation.body as ReactivateResponse;
+    expect(reactivated.errors).toBeUndefined();
+    expect(reactivated.data.reactivateAccount.user.id).toBe(userId);
+
+    await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set(
+        'Authorization',
+        `Bearer ${reactivated.data.reactivateAccount.tokens.accessToken}`,
+      )
+      .send({ query: '{ viewer { id } }' })
+      .expect(200)
+      .expect({ data: { viewer: { id: userId } } });
+
+    await expect(
+      app.get(PrismaService).auditRecord.count({
+        where: {
+          actorId: userId,
+          action: {
+            in: ['user.account.deactivated', 'user.account.reactivated'],
           },
         },
       }),

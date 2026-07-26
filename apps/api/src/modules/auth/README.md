@@ -69,8 +69,13 @@ registration;
 login;
 token refresh;
 logout;
+credential-confirmed account deactivation and reactivation;
 password hashing;
 JWT token issuing.
+
+Lifecycle changes invalidate authentication immediately: refresh credentials
+are cleared, durable sessions are revoked, and JWT validation requires the
+current account status to remain `ACTIVE`.
 
 Authorization Core owns:
 

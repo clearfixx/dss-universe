@@ -27,6 +27,7 @@ import { RefreshTokenInput } from '../inputs/refresh-token.input';
 import { RegisterInput } from '../inputs/register.input';
 import { AuthPayloadModel } from '../models/auth-payload.model';
 import { LogoutResultModel } from '../models/logout-result.model';
+import { DeactivateAccountInput } from '../inputs/deactivate-account.input';
 
 @Resolver()
 export class AuthResolver {
@@ -70,5 +71,25 @@ export class AuthResolver {
   @UseGuards(JwtAuthGuard)
   logout(@AuthUser() user: AuthenticatedUser): Promise<{ success: boolean }> {
     return this.authService.logout(user.id);
+  }
+
+  @Mutation(() => LogoutResultModel)
+  @UseGuards(JwtAuthGuard)
+  deactivateAccount(
+    @AuthUser() user: AuthenticatedUser,
+    @Args('input') input: DeactivateAccountInput,
+  ): Promise<{ success: boolean }> {
+    return this.authService.deactivateAccount(user.id, input.password);
+  }
+
+  @Mutation(() => AuthPayloadModel)
+  async reactivateAccount(
+    @Args('input') input: LoginInput,
+  ): Promise<AuthPayloadModel> {
+    const result = await this.authService.reactivateAccount(input);
+    return {
+      user: UserGraphqlMapper.viewerFromSafeUser(result.user),
+      tokens: result.tokens,
+    };
   }
 }

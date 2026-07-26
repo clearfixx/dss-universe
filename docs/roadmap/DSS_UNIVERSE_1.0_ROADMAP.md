@@ -593,6 +593,9 @@ Delivered in the Profile Foundation package:
   non-destructive tombstones;
 - comments and reactions intentionally deferred to the shared interaction
   modules rather than duplicated inside Users.
+- credential-confirmed account deactivation and reactivation through GraphQL;
+- immediate access denial for non-active accounts, refresh-token clearing,
+  durable session revocation and immutable lifecycle audit.
 
 ## Profile
 

@@ -116,6 +116,9 @@ Profile Wall owns bounded text/image posts, profile privacy and block
 enforcement, Media references, immutable audit and public tombstones.
 Comments and reactions remain shared platform concerns and are not duplicated
 inside the Users module.
+Account lifecycle supports reversible deactivation with a durable timestamp,
+atomic refresh/session revocation, immutable audit and immediate exclusion from
+public active-user queries.
 
 Notes
 

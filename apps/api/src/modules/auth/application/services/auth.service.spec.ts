@@ -35,6 +35,7 @@ const user: UserRecord = {
   avatarUrl: null,
   coverUrl: null,
   status: UserStatus.ACTIVE,
+  deactivatedAt: null,
   refreshTokenHash: 'refresh-hash',
   emailVerifiedAt: null,
   lastSeenAt: null,
@@ -47,6 +48,8 @@ describe('AuthService', () => {
     findByEmail: jest.fn(),
     findById: jest.fn(),
     updateRefreshTokenHash: jest.fn(),
+    deactivateAccount: jest.fn(),
+    reactivateAccount: jest.fn(),
   } as unknown as jest.Mocked<UsersRepository>;
   const passwordHashService = {
     compare: jest.fn(),
@@ -112,5 +115,62 @@ describe('AuthService', () => {
     await expect(
       service.refresh({ refreshToken: 'expired-refresh-token' }),
     ).rejects.toBeInstanceOf(InvalidCredentialsException);
+  });
+
+  it('deactivates an active account only after password confirmation', async () => {
+    usersRepository.findById.mockResolvedValue(user);
+    passwordHashService.compare.mockResolvedValue(true);
+    usersRepository.deactivateAccount.mockResolvedValue({
+      ...user,
+      status: UserStatus.DEACTIVATED,
+      deactivatedAt: new Date(),
+    });
+
+    await expect(
+      service.deactivateAccount(user.id, 'correct-password'),
+    ).resolves.toEqual({ success: true });
+    expect(usersRepository.deactivateAccount.mock.calls).toContainEqual([
+      user.id,
+    ]);
+  });
+
+  it('reactivates only a deactivated account and rotates its tokens', async () => {
+    const deactivated = {
+      ...user,
+      status: UserStatus.DEACTIVATED,
+      deactivatedAt: new Date(),
+    };
+    usersRepository.findByEmail.mockResolvedValue(deactivated);
+    usersRepository.reactivateAccount.mockResolvedValue(user);
+    usersRepository.findById.mockResolvedValue(user);
+    passwordHashService.compare.mockResolvedValue(true);
+    passwordHashService.hash.mockResolvedValue('rotated-refresh-hash');
+    tokenService.generateTokens.mockResolvedValue({
+      accessToken: 'access-token',
+      refreshToken: 'refresh-token',
+    });
+
+    await expect(
+      service.reactivateAccount({
+        email: user.email,
+        password: 'correct-password',
+      }),
+    ).resolves.toMatchObject({ user: { status: UserStatus.ACTIVE } });
+    expect(usersRepository.reactivateAccount.mock.calls).toContainEqual([
+      user.id,
+    ]);
+  });
+
+  it('rejects normal login for a deactivated account', async () => {
+    usersRepository.findByEmail.mockResolvedValue({
+      ...user,
+      status: UserStatus.DEACTIVATED,
+      deactivatedAt: new Date(),
+    });
+
+    await expect(
+      service.login({ email: user.email, password: 'correct-password' }),
+    ).rejects.toBeInstanceOf(InvalidCredentialsException);
+    expect(passwordHashService.compare.mock.calls).toHaveLength(0);
   });
 });

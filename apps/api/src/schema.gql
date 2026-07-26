@@ -29,6 +29,10 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+input DeactivateAccountInput {
+  password: String!
+}
+
 input InitiateMediaUploadInput {
   checksum: String
   declaredMimeType: String!
@@ -192,10 +196,12 @@ type Mutation {
   abortMediaUpload(id: String!): MediaUploadSession!
   blockUser(userId: ID!): UserBlockResult!
   createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
+  deactivateAccount(input: DeactivateAccountInput!): LogoutResultModel!
   followUser(userId: ID!): UserSocialGraphSummary!
   initiateMediaUpload(input: InitiateMediaUploadInput!): MediaUploadSession!
   login(input: LoginInput!): AuthPayloadModel!
   logout: LogoutResultModel!
+  reactivateAccount(input: LoginInput!): AuthPayloadModel!
   refreshTokens(input: RefreshTokenInput!): AuthPayloadModel!
   register(input: RegisterInput!): AuthPayloadModel!
   rejectQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!

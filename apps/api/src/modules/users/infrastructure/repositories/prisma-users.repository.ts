@@ -34,6 +34,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '@api/core/database';
+import { AuditWriterService } from '@api/core/audit';
 
 import type { CreateUserContract } from '../../domain/contracts/create-user.contract';
 import type { UpdateUserContract } from '../../domain/contracts/update-user.contract';
@@ -46,7 +47,10 @@ import type { Prisma } from '@prisma/client';
 
 @Injectable()
 export class PrismaUsersRepository implements UsersRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly audit: AuditWriterService,
+  ) {}
 
   findById(id: string): Promise<UserRecord | null> {
     return this.prisma.user.findUnique({
@@ -69,6 +73,7 @@ export class PrismaUsersRepository implements UsersRepository {
   async findManyByIds(ids: string[]): Promise<UserRecord[]> {
     return this.prisma.user.findMany({
       where: {
+        status: 'ACTIVE',
         id: {
           in: ids,
         },
@@ -95,9 +100,10 @@ export class PrismaUsersRepository implements UsersRepository {
   }
 
   async findPublicByUsername(username: string): Promise<UserRecord | null> {
-    return this.prisma.user.findUnique({
+    return this.prisma.user.findFirst({
       where: {
         username,
+        status: 'ACTIVE',
       },
     });
   }
@@ -156,6 +162,53 @@ export class PrismaUsersRepository implements UsersRepository {
     return this.prisma.user.update({
       where: { id: userId },
       data: { refreshTokenHash },
+    });
+  }
+
+  async deactivateAccount(userId: string): Promise<UserRecord> {
+    return this.prisma.$transaction(async (transaction) => {
+      const now = new Date();
+      const user = await transaction.user.update({
+        where: { id: userId },
+        data: {
+          status: 'DEACTIVATED',
+          deactivatedAt: now,
+          refreshTokenHash: null,
+        },
+      });
+      await transaction.session.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: now },
+      });
+      await this.audit.append(transaction, {
+        action: 'user.account.deactivated',
+        actorType: 'USER',
+        actorId: userId,
+        targetType: 'User',
+        targetId: userId,
+      });
+      return user;
+    });
+  }
+
+  async reactivateAccount(userId: string): Promise<UserRecord> {
+    return this.prisma.$transaction(async (transaction) => {
+      const user = await transaction.user.update({
+        where: { id: userId, status: 'DEACTIVATED' },
+        data: {
+          status: 'ACTIVE',
+          deactivatedAt: null,
+          refreshTokenHash: null,
+        },
+      });
+      await this.audit.append(transaction, {
+        action: 'user.account.reactivated',
+        actorType: 'USER',
+        actorId: userId,
+        targetType: 'User',
+        targetId: userId,
+      });
+      return user;
     });
   }
 
