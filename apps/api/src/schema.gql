@@ -152,6 +152,7 @@ type MemberDirectoryEntry {
   createdAt: String!
   displayName: String
   id: ID!
+  isOnline: Boolean!
   username: String!
 }
 
@@ -270,6 +271,7 @@ type User {
   followingCount: Int!
   id: ID!
   interests: [String!]!
+  isOnline: Boolean!
   lastSeenAt: String
   location: String
   socialLinks: [UserSocialLink!]!
@@ -334,6 +336,7 @@ type Viewer {
   followingCount: Int!
   id: ID!
   interests: [String!]!
+  isOnline: Boolean!
   lastSeenAt: String
   location: String
   socialLinks: [UserSocialLink!]!

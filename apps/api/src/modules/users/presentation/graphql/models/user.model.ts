@@ -57,6 +57,9 @@ export class UserModel {
   followingCount!: number;
 
   @Field()
+  isOnline!: boolean;
+
+  @Field()
   status!: string;
 
   @Field(() => String, { nullable: true })

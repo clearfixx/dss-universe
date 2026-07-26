@@ -56,6 +56,22 @@ export class UserPrivacyService {
     );
   }
 
+  async getMany(userIds: string[]): Promise<Map<string, UserPrivacySettings>> {
+    const uniqueIds = [...new Set(userIds)];
+    const records = await this.privacy.findManyByUserIds(uniqueIds);
+    const byUserId = new Map(records.map((record) => [record.userId, record]));
+
+    return new Map(
+      uniqueIds.map((userId) => [
+        userId,
+        byUserId.get(userId) ?? {
+          userId,
+          ...DEFAULT_USER_PRIVACY_SETTINGS,
+        },
+      ]),
+    );
+  }
+
   update(
     userId: string,
     settings: UpdateUserPrivacySettings,

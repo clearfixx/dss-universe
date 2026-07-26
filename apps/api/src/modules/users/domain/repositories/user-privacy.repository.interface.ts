@@ -21,6 +21,7 @@ export const USER_PRIVACY_REPOSITORY = Symbol('USER_PRIVACY_REPOSITORY');
 
 export interface UserPrivacyRepository {
   findByUserId(userId: string): Promise<UserPrivacySettings | null>;
+  findManyByUserIds(userIds: string[]): Promise<UserPrivacySettings[]>;
   upsert(
     userId: string,
     settings: UpdateUserPrivacySettings,

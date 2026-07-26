@@ -61,6 +61,7 @@ import {
 } from '../inputs/members-directory.input';
 import { MembersDirectoryPageModel } from '../models/members-directory-page.model';
 import { UserStatus } from '@prisma/client';
+import { UserPresenceService } from '../../../application/services/user-presence.service';
 
 @Resolver(() => UserModel)
 export class UsersResolver {
@@ -73,6 +74,7 @@ export class UsersResolver {
     private readonly graph: UserSocialGraphService,
     private readonly graphLoader: UserSocialGraphLoader,
     private readonly blocks: UserBlockService,
+    private readonly presence: UserPresenceService,
   ) {}
 
   @Query(() => ViewerModel)
@@ -137,6 +139,18 @@ export class UsersResolver {
   @ResolveField('followingCount', () => Int)
   async followingCount(@Parent() user: UserModel): Promise<number> {
     return (await this.graphLoader.load(user.id)).followingCount;
+  }
+
+  @ResolveField('isOnline', () => Boolean)
+  async isOnline(
+    @Parent() user: UserModel,
+    @AuthUser() authenticated: AuthenticatedUser,
+  ): Promise<boolean> {
+    return (
+      (await this.presence.visibleStatuses([user.id], authenticated.id)).get(
+        user.id,
+      ) ?? false
+    );
   }
 
   @Mutation(() => UserSocialGraphModel)
@@ -266,6 +280,7 @@ export class UsersResolver {
   @Query(() => MembersDirectoryPageModel)
   @UseGuards(JwtAuthGuard)
   async members(
+    @AuthUser() authenticated: AuthenticatedUser,
     @Args('input', { nullable: true }) input?: MembersDirectoryInput,
   ): Promise<MembersDirectoryPageModel> {
     const result = await this.usersService.list({
@@ -274,6 +289,10 @@ export class UsersResolver {
       sort: input?.sort ?? MembersDirectorySortInput.NEWEST,
       status: UserStatus.ACTIVE,
     });
+    const presence = await this.presence.visibleStatuses(
+      result.items.map((user) => user.id),
+      authenticated.id,
+    );
 
     return {
       ...result,
@@ -282,6 +301,7 @@ export class UsersResolver {
         username: user.username,
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
+        isOnline: presence.get(user.id) ?? false,
         createdAt: user.createdAt,
       })),
     };

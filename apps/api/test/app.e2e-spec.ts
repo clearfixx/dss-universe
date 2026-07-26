@@ -425,6 +425,7 @@ describe('DSS API (e2e)', () => {
         query: `query UserByUsername($username: String!) {
           userByUsername(username: $username) {
             username bio location website technologies interests lastSeenAt
+            isOnline
             socialLinks { platform url }
           }
         }`,
@@ -441,6 +442,7 @@ describe('DSS API (e2e)', () => {
           technologies: [],
           interests: [],
           lastSeenAt: null,
+          isOnline: false,
           socialLinks: [],
         },
       },
@@ -572,7 +574,7 @@ describe('DSS API (e2e)', () => {
         query: `query Members($input: MembersDirectoryInput) {
           members(input: $input) {
             total page limit totalPages
-            items { id username displayName avatarUrl createdAt }
+            items { id username displayName avatarUrl isOnline createdAt }
           }
         }`,
         variables: {
@@ -598,6 +600,7 @@ describe('DSS API (e2e)', () => {
       expect.objectContaining({
         id: visitor.data.register.user.id,
         username: visitorUsername,
+        isOnline: true,
       }),
     ]);
 

@@ -37,6 +37,12 @@ export class PrismaUserPrivacyRepository implements UserPrivacyRepository {
     return settings;
   }
 
+  findManyByUserIds(userIds: string[]): Promise<UserPrivacySettings[]> {
+    return this.prisma.userPrivacySettings.findMany({
+      where: { userId: { in: userIds } },
+    });
+  }
+
   async upsert(
     userId: string,
     settings: UpdateUserPrivacySettings,

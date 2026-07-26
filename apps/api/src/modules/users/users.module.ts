@@ -27,6 +27,7 @@
  */
 
 import { Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 
 import { PrismaModule } from '@api/core/database';
 
@@ -50,6 +51,8 @@ import { UserSocialGraphLoader } from './presentation/graphql/loaders/user-socia
 import { UserBlockService } from './application/services/user-block.service';
 import { USER_BLOCK_REPOSITORY } from './domain/repositories/user-block.repository.interface';
 import { PrismaUserBlockRepository } from './infrastructure/repositories/prisma-user-block.repository';
+import { UserPresenceService } from './application/services/user-presence.service';
+import { UserPresenceInterceptor } from './presentation/interceptors/user-presence.interceptor';
 
 @Module({
   imports: [PrismaModule],
@@ -64,6 +67,11 @@ import { PrismaUserBlockRepository } from './infrastructure/repositories/prisma-
     UserSocialGraphService,
     UserSocialGraphLoader,
     UserBlockService,
+    UserPresenceService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: UserPresenceInterceptor,
+    },
     {
       provide: USERS_REPOSITORY,
       useClass: PrismaUsersRepository,

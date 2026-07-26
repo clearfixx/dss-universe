@@ -29,5 +29,8 @@ export class MemberDirectoryEntryModel {
   avatarUrl!: string | null;
 
   @Field()
+  isOnline!: boolean;
+
+  @Field()
   createdAt!: string;
 }

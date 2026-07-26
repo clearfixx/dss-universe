@@ -26,6 +26,7 @@ describe('UserPrivacyService', () => {
     jest.fn();
   const repository: jest.Mocked<UserPrivacyRepository> = {
     findByUserId,
+    findManyByUserIds: jest.fn(),
     upsert,
   };
   const service = new UserPrivacyService(repository);
@@ -37,6 +38,20 @@ describe('UserPrivacyService', () => {
 
     await expect(service.get('user-1')).resolves.toEqual({
       userId: 'user-1',
+      ...DEFAULT_USER_PRIVACY_SETTINGS,
+    });
+  });
+
+  it('fills missing records with defaults in batched privacy reads', async () => {
+    repository.findManyByUserIds.mockResolvedValue([]);
+
+    const result = await service.getMany(['user-1', 'user-1', 'user-2']);
+
+    expect(repository.findManyByUserIds.mock.calls).toContainEqual([
+      ['user-1', 'user-2'],
+    ]);
+    expect(result.get('user-2')).toEqual({
+      userId: 'user-2',
       ...DEFAULT_USER_PRIVACY_SETTINGS,
     });
   });
