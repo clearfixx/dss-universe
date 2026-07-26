@@ -93,10 +93,12 @@ model User {
   avatarUrl     String?
   avatarMediaId String?    @unique
   coverUrl      String?
+  coverMediaId  String?    @unique
   status        UserStatus @default(ACTIVE)
 
   media               Media[]              @relation("MediaOwner")
   avatarMedia         Media?               @relation("UserAvatar", fields: [avatarMediaId], references: [id], onDelete: SetNull)
+  coverMedia          Media?               @relation("UserCover", fields: [coverMediaId], references: [id], onDelete: SetNull)
   mediaUploadSessions MediaUploadSession[]
 
   roles             UserRole[]
@@ -159,6 +161,7 @@ model Media {
 
   owner      User?            @relation("MediaOwner", fields: [ownerId], references: [id], onDelete: SetNull)
   avatarFor  User?            @relation("UserAvatar")
+  coverFor   User?            @relation("UserCover")
   variants   MediaVariant[]
   references MediaReference[]
   auditLogs  MediaAuditLog[]

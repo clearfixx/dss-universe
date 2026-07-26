@@ -95,6 +95,7 @@ export class PrismaMediaRepository implements MediaRepository {
         ? {
             references: { none: { removedAt: null } },
             avatarFor: null,
+            coverFor: null,
           }
         : {}),
       ...(query.cursor
@@ -144,6 +145,7 @@ export class PrismaMediaRepository implements MediaRepository {
             status: { not: MediaStatus.DELETED },
             references: { none: { removedAt: null } },
             avatarFor: null,
+            coverFor: null,
           },
         }),
         this.prisma.media.count({ where: { status: MediaStatus.FAILED } }),
@@ -260,6 +262,7 @@ export class PrismaMediaRepository implements MediaRepository {
             ],
             references: { none: { removedAt: null } },
             avatarFor: null,
+            coverFor: null,
           },
           include: {
             variants: { select: { storageKey: true } },
@@ -283,6 +286,7 @@ export class PrismaMediaRepository implements MediaRepository {
               },
               references: { none: { removedAt: null } },
               avatarFor: null,
+              coverFor: null,
             },
             data: { status: MediaStatus.DELETING },
           });

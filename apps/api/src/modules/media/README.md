@@ -142,6 +142,11 @@ GraphQL mutation removeViewerAvatar
 GET /media/public/:mediaId/:variantName
 GET /media/avatars/fallback/:seed.svg
 
+Profile cover API:
+
+GraphQL mutation setViewerCover(mediaId: ID!)
+GraphQL mutation removeViewerCover
+
 Avatar-specific behavior belongs to the user/profile use case layer, but the uploaded file itself belongs to Media.
 
 Current Status
@@ -178,6 +183,8 @@ Implemented:
 - active MediaReference replacement and immutable avatar audit records;
 - cached public WEBP variant delivery without exposing storage paths;
 - deterministic SVG fallback avatars.
+- atomic User-to-Media profile cover assignment through GraphQL;
+- active cover reference replacement, public cover delivery and immutable audit records.
 - visibility-aware signed delivery issued through authenticated GraphQL;
 - five-minute HMAC capabilities without bucket or storage-key disclosure;
 - owner and `media.restricted.read` access enforcement;

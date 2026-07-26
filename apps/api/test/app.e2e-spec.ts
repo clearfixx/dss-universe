@@ -584,6 +584,125 @@ describe('DSS API (e2e)', () => {
       .expect(200)
       .expect('Content-Type', /image\/svg\+xml/);
 
+    const coverSession = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation InitiateMediaUpload($input: InitiateMediaUploadInput!) {
+          initiateMediaUpload(input: $input) { id status }
+        }`,
+        variables: {
+          input: {
+            policyKey: 'cover',
+            originalFilename: 'mission-cover.png',
+            declaredMimeType: 'image/png',
+            declaredSize: PNG_1X1.length,
+          },
+        },
+      })
+      .expect(200);
+    const coverSessionId = (
+      coverSession.body as {
+        data: { initiateMediaUpload: { id: string } };
+      }
+    ).data.initiateMediaUpload.id;
+    await request(app.getHttpServer())
+      .put(`/api/media/uploads/${coverSessionId}/content`)
+      .set('Authorization', 'Bearer ' + accessToken)
+      .attach('file', PNG_1X1, {
+        filename: 'mission-cover.png',
+        contentType: 'image/png',
+      })
+      .expect(200);
+    const coverJob = await app
+      .get(QueueRegistryService)
+      .mediaProcessing.getJob(coverSessionId);
+    expect(coverJob).not.toBeNull();
+    const coverProcessingJob = coverJob as Job<MediaProcessingJob>;
+    expect(coverProcessingJob.data.variants).toEqual([
+      expect.objectContaining({ name: 'cover-640' }),
+      expect.objectContaining({ name: 'cover-1280' }),
+    ]);
+    await expect(processMedia(coverProcessingJob)).resolves.toEqual({
+      mediaId: coverProcessingJob.data.mediaId,
+      duplicate: false,
+      quarantined: false,
+    });
+    const coverMediaId = coverProcessingJob.data.mediaId;
+
+    const setCover = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation SetViewerCover($mediaId: ID!) {
+          setViewerCover(mediaId: $mediaId) { id coverUrl }
+        }`,
+        variables: { mediaId: coverMediaId },
+      })
+      .expect(200);
+    expect(setCover.body).toEqual({
+      data: {
+        setViewerCover: {
+          id: registered.data.register.user.id,
+          coverUrl: `/api/media/public/${coverMediaId}/cover-1280`,
+        },
+      },
+    });
+    await request(app.getHttpServer())
+      .get(`/api/media/public/${coverMediaId}/cover-1280`)
+      .expect(200)
+      .expect('Content-Type', /image\/webp/);
+    const coverState = await app.get(PrismaService).user.findUniqueOrThrow({
+      where: { id: registered.data.register.user.id },
+      include: { coverMedia: true },
+    });
+    expect(coverState.coverMediaId).toBe(coverMediaId);
+    expect(coverState.coverMedia?.id).toBe(coverMediaId);
+    await expect(
+      app.get(PrismaService).mediaReference.count({
+        where: {
+          mediaId: coverMediaId,
+          targetId: coverState.id,
+          purpose: 'cover',
+          removedAt: null,
+        },
+      }),
+    ).resolves.toBe(1);
+
+    const removeCover = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: 'mutation { removeViewerCover { id coverUrl } }',
+      })
+      .expect(200);
+    expect(removeCover.body).toEqual({
+      data: {
+        removeViewerCover: {
+          id: registered.data.register.user.id,
+          coverUrl: null,
+        },
+      },
+    });
+    await expect(
+      app.get(PrismaService).auditRecord.count({
+        where: {
+          actorId: registered.data.register.user.id,
+          action: { in: ['user.cover.assigned', 'user.cover.removed'] },
+        },
+      }),
+    ).resolves.toBe(2);
+    await expect(
+      app.get(PrismaService).mediaReference.count({
+        where: {
+          mediaId: coverMediaId,
+          targetId: registered.data.register.user.id,
+          purpose: 'cover',
+          removedAt: null,
+        },
+      }),
+    ).resolves.toBe(0);
+
     await app.get(PrismaService).media.update({
       where: { id: mediaId },
       data: { visibility: 'PRIVATE' },

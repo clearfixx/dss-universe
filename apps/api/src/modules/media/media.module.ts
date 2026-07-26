@@ -48,11 +48,15 @@ import { MediaRetentionService } from './application/services/media-retention.se
 import { MediaQuarantineService } from './application/services/media-quarantine.service';
 import { MediaLibraryService } from './application/services/media-library.service';
 import { MediaJobService } from './application/services/media-job.service';
+import { CoverService } from './application/services/cover.service';
+import { COVER_REPOSITORY } from './domain/repositories/cover.repository.interface';
+import { PrismaCoverRepository } from './infrastructure/repositories/prisma-cover.repository';
 
 @Module({
   imports: [StorageModule, UsersModule],
   providers: [
     AvatarService,
+    CoverService,
     MediaAccessService,
     MediaDeliveryService,
     MediaUrlSignerService,
@@ -77,10 +81,15 @@ import { MediaJobService } from './application/services/media-job.service';
       provide: AVATAR_REPOSITORY,
       useClass: PrismaAvatarRepository,
     },
+    {
+      provide: COVER_REPOSITORY,
+      useClass: PrismaCoverRepository,
+    },
   ],
   controllers: [MediaUploadController, MediaDeliveryController],
   exports: [
     AvatarService,
+    CoverService,
     MediaUploadPolicyService,
     MediaUploadSessionService,
     MEDIA_REPOSITORY,

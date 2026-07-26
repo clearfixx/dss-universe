@@ -574,6 +574,8 @@ Delivered in the Profile Foundation package:
 - normalized, ordered social-link records with soft-disable semantics;
 - transactional owner mutation, immutable audit entry and batched public
   GraphQL resolution.
+- profile cover assignment and removal through DSS Media Platform;
+- canonical responsive cover variants, active-reference protection and audit.
 
 ## Profile
 
