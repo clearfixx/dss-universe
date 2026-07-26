@@ -13,7 +13,18 @@
  */
 
 import type { PaginationOptions } from '@api/shared';
+import type { UserStatus } from '@prisma/client';
+
+export type ListUsersSort =
+  | 'NEWEST'
+  | 'OLDEST'
+  | 'USERNAME_ASC'
+  | 'USERNAME_DESC'
+  | 'LAST_ACTIVE';
 
 export type ListUsersOptions = {
   pagination?: PaginationOptions;
+  search?: string;
+  status?: UserStatus;
+  sort?: ListUsersSort;
 };

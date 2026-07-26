@@ -55,6 +55,12 @@ import { UserSocialGraphLoader } from '../loaders/user-social-graph.loader';
 import { UserSocialGraphModel } from '../models/user-social-graph.model';
 import { UserBlockService } from '../../../application/services/user-block.service';
 import { UserBlockResultModel } from '../models/user-block-result.model';
+import {
+  MembersDirectoryInput,
+  MembersDirectorySortInput,
+} from '../inputs/members-directory.input';
+import { MembersDirectoryPageModel } from '../models/members-directory-page.model';
+import { UserStatus } from '@prisma/client';
 
 @Resolver(() => UserModel)
 export class UsersResolver {
@@ -254,6 +260,30 @@ export class UsersResolver {
     return {
       ...result,
       items: result.items.map((user) => UserGraphqlMapper.fromResponse(user)),
+    };
+  }
+
+  @Query(() => MembersDirectoryPageModel)
+  @UseGuards(JwtAuthGuard)
+  async members(
+    @Args('input', { nullable: true }) input?: MembersDirectoryInput,
+  ): Promise<MembersDirectoryPageModel> {
+    const result = await this.usersService.list({
+      pagination: input,
+      search: input?.search,
+      sort: input?.sort ?? MembersDirectorySortInput.NEWEST,
+      status: UserStatus.ACTIVE,
+    });
+
+    return {
+      ...result,
+      items: result.items.map((user) => ({
+        id: user.id,
+        username: user.username,
+        displayName: user.displayName,
+        avatarUrl: user.avatarUrl,
+        createdAt: user.createdAt,
+      })),
     };
   }
 

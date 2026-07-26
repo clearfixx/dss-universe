@@ -564,6 +564,43 @@ describe('DSS API (e2e)', () => {
         },
       },
     });
+
+    const membersDirectory = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `query Members($input: MembersDirectoryInput) {
+          members(input: $input) {
+            total page limit totalPages
+            items { id username displayName avatarUrl createdAt }
+          }
+        }`,
+        variables: {
+          input: {
+            page: 1,
+            limit: 10,
+            search: visitorUsername.toUpperCase(),
+            sort: 'USERNAME_ASC',
+          },
+        },
+      })
+      .expect(200);
+    const membersDirectoryBody = membersDirectory.body as {
+      data: {
+        members: {
+          total: number;
+          items: Array<{ id: string; username: string }>;
+        };
+      };
+    };
+    expect(membersDirectoryBody.data.members.total).toBe(1);
+    expect(membersDirectoryBody.data.members.items).toEqual([
+      expect.objectContaining({
+        id: visitor.data.register.user.id,
+        username: visitorUsername,
+      }),
+    ]);
+
     await expect(
       app.get(PrismaService).userFollow.count({
         where: {

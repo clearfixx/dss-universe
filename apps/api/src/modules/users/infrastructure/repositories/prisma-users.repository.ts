@@ -42,6 +42,7 @@ import type { UpdateUserData } from '../../domain/types/update-user-data.type';
 import type { UserRecord } from '../../domain/types/user-record.type';
 import type { ListUsersOptions } from '../../domain/options';
 import type { PaginatedResult } from '@api/shared';
+import type { Prisma } from '@prisma/client';
 
 @Injectable()
 export class PrismaUsersRepository implements UsersRepository {
@@ -135,16 +136,27 @@ export class PrismaUsersRepository implements UsersRepository {
     const page = options.pagination?.page ?? 1;
     const limit = options.pagination?.limit ?? 20;
     const skip = (page - 1) * limit;
+    const search = options.search?.trim();
+    const where: Prisma.UserWhereInput = {
+      status: options.status,
+      ...(search
+        ? {
+            OR: [
+              { username: { contains: search, mode: 'insensitive' } },
+              { displayName: { contains: search, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+    };
 
     const [items, total] = await this.prisma.$transaction([
       this.prisma.user.findMany({
+        where,
         skip,
         take: limit,
-        orderBy: {
-          createdAt: 'desc',
-        },
+        orderBy: this.toOrderBy(options.sort),
       }),
-      this.prisma.user.count(),
+      this.prisma.user.count({ where }),
     ]);
 
     return {
@@ -154,6 +166,24 @@ export class PrismaUsersRepository implements UsersRepository {
       limit,
       totalPages: Math.ceil(total / limit),
     };
+  }
+
+  private toOrderBy(
+    sort: ListUsersOptions['sort'],
+  ): Prisma.UserOrderByWithRelationInput[] {
+    switch (sort) {
+      case 'OLDEST':
+        return [{ createdAt: 'asc' }, { id: 'asc' }];
+      case 'USERNAME_ASC':
+        return [{ username: 'asc' }, { id: 'asc' }];
+      case 'USERNAME_DESC':
+        return [{ username: 'desc' }, { id: 'asc' }];
+      case 'LAST_ACTIVE':
+        return [{ lastSeenAt: { sort: 'desc', nulls: 'last' } }, { id: 'asc' }];
+      case 'NEWEST':
+      default:
+        return [{ createdAt: 'desc' }, { id: 'asc' }];
+    }
   }
 
   async delete(id: string): Promise<void> {

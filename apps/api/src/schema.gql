@@ -147,6 +147,37 @@ enum MediaVisibility {
   RESTRICTED
 }
 
+type MemberDirectoryEntry {
+  avatarUrl: String
+  createdAt: String!
+  displayName: String
+  id: ID!
+  username: String!
+}
+
+input MembersDirectoryInput {
+  limit: Int! = 20
+  page: Int! = 1
+  search: String
+  sort: MembersDirectorySort! = NEWEST
+}
+
+type MembersDirectoryPage {
+  items: [MemberDirectoryEntry!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+enum MembersDirectorySort {
+  LAST_ACTIVE
+  NEWEST
+  OLDEST
+  USERNAME_ASC
+  USERNAME_DESC
+}
+
 type Mutation {
   abortMediaUpload(id: String!): MediaUploadSession!
   blockUser(userId: ID!): UserBlockResult!
@@ -185,6 +216,7 @@ type Query {
   mediaLibrary(input: MediaLibraryInput): MediaLibraryConnection!
   mediaLibraryMetrics: MediaLibraryMetrics!
   mediaUploadSession(id: String!): MediaUploadSession!
+  members(input: MembersDirectoryInput): MembersDirectoryPage!
   quarantinedMedia(limit: Int! = 25): [MediaQuarantineItem!]!
   user(id: ID!): User!
   userByUsername(username: String!): User!

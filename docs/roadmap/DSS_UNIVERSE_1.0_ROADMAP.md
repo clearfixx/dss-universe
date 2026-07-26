@@ -582,6 +582,8 @@ Delivered in the Profile Foundation package:
 - privacy-aware paginated social graph lists, batched GraphQL resolution and audit.
 - reversible user blocks with owner-only lists and immutable audit;
 - atomic bidirectional follow cleanup and centralized follow enforcement.
+- privacy-safe Members Directory foundation with active-member search,
+  deterministic sorting and bounded GraphQL pagination.
 
 ## Profile
 

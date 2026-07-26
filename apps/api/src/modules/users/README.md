@@ -105,6 +105,8 @@ relationship graph.
 User blocks are reversible safety edges. Creating a block atomically disables
 follow edges in both directions, and central enforcement prevents either user
 from recreating the relationship until the blocker removes the block.
+The Members Directory exposes only privacy-safe identity cards and supports
+active-member search, deterministic sorting, and bounded pagination.
 
 Notes
 
