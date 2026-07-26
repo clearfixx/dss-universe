@@ -112,6 +112,8 @@ model User {
   sessions          Session[]
   socialLinks       UserSocialLink[]
   privacySettings   UserPrivacySettings?
+  followers         UserFollow[]         @relation("UserFollowers")
+  following         UserFollow[]         @relation("UserFollowing")
 
   refreshTokenHash String?
   emailVerifiedAt  DateTime?
@@ -131,12 +133,31 @@ model UserPrivacySettings {
   showSocialLinks   Boolean           @default(true)
   showLastSeen      Boolean           @default(false)
   showOnlineStatus  Boolean           @default(true)
+  allowFollowers    Boolean           @default(true)
+  showFollows       Boolean           @default(true)
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_privacy_settings")
+}
+
+model UserFollow {
+  id          String    @id @default(uuid())
+  followerId  String
+  followingId String
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  follower  User @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId, deletedAt, createdAt])
+  @@index([followingId, deletedAt, createdAt])
+  @@map("user_follows")
 }
 
 model UserSocialLink {

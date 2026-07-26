@@ -341,7 +341,7 @@ describe('DSS API (e2e)', () => {
         query: `query {
           viewerPrivacySettings {
             profileVisibility showLocation showWebsite showSocialLinks
-            showLastSeen showOnlineStatus
+            showLastSeen showOnlineStatus allowFollowers showFollows
           }
         }`,
       })
@@ -355,6 +355,8 @@ describe('DSS API (e2e)', () => {
           showSocialLinks: true,
           showLastSeen: false,
           showOnlineStatus: true,
+          allowFollowers: true,
+          showFollows: true,
         },
       },
     });
@@ -368,7 +370,7 @@ describe('DSS API (e2e)', () => {
         ) {
           updateViewerPrivacy(input: $input) {
             profileVisibility showLocation showWebsite showSocialLinks
-            showLastSeen showOnlineStatus
+            showLastSeen showOnlineStatus allowFollowers showFollows
           }
         }`,
         variables: {
@@ -379,6 +381,8 @@ describe('DSS API (e2e)', () => {
             showSocialLinks: true,
             showLastSeen: true,
             showOnlineStatus: true,
+            allowFollowers: true,
+            showFollows: true,
           },
         },
       });
@@ -441,6 +445,109 @@ describe('DSS API (e2e)', () => {
         },
       },
     });
+
+    const followResult = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set(
+        'Authorization',
+        'Bearer ' + visitor.data.register.tokens.accessToken,
+      )
+      .send({
+        query: `mutation FollowUser($userId: ID!) {
+          followUser(userId: $userId) {
+            userId followerCount followingCount
+          }
+        }`,
+        variables: { userId: registered.data.register.user.id },
+      })
+      .expect(200);
+    expect(followResult.body).toEqual({
+      data: {
+        followUser: {
+          userId: registered.data.register.user.id,
+          followerCount: 1,
+          followingCount: 0,
+        },
+      },
+    });
+
+    const ownerFollowers = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `query Followers($userId: ID!) {
+          followers(userId: $userId, pagination: { page: 1, limit: 10 }) {
+            total page limit totalPages
+            items { id username followerCount followingCount }
+          }
+        }`,
+        variables: { userId: registered.data.register.user.id },
+      })
+      .expect(200);
+    expect(ownerFollowers.body).toEqual({
+      data: {
+        followers: {
+          total: 1,
+          page: 1,
+          limit: 10,
+          totalPages: 1,
+          items: [
+            {
+              id: visitor.data.register.user.id,
+              username: visitorUsername,
+              followerCount: 0,
+              followingCount: 1,
+            },
+          ],
+        },
+      },
+    });
+
+    const hiddenFollowers = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set(
+        'Authorization',
+        'Bearer ' + visitor.data.register.tokens.accessToken,
+      )
+      .send({
+        query: `query Followers($userId: ID!) {
+          followers(userId: $userId) { total }
+        }`,
+        variables: { userId: registered.data.register.user.id },
+      })
+      .expect(200);
+    const hiddenFollowersBody = hiddenFollowers.body as {
+      errors?: Array<{ extensions?: { code?: string } }>;
+    };
+    expect(hiddenFollowersBody.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+
+    const unfollowResult = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set(
+        'Authorization',
+        'Bearer ' + visitor.data.register.tokens.accessToken,
+      )
+      .send({
+        query: `mutation UnfollowUser($userId: ID!) {
+          unfollowUser(userId: $userId) { userId followerCount }
+        }`,
+        variables: { userId: registered.data.register.user.id },
+      })
+      .expect(200);
+    const unfollowBody = unfollowResult.body as {
+      data: { unfollowUser: { followerCount: number } };
+    };
+    expect(unfollowBody.data.unfollowUser.followerCount).toBe(0);
+    await expect(
+      app.get(PrismaService).auditRecord.count({
+        where: {
+          actorId: visitor.data.register.user.id,
+          targetId: registered.data.register.user.id,
+          action: { in: ['user.follow.created', 'user.follow.removed'] },
+        },
+      }),
+    ).resolves.toBe(2);
+
     await expect(
       app.get(PrismaService).auditRecord.count({
         where: {

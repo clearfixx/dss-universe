@@ -578,6 +578,8 @@ Delivered in the Profile Foundation package:
 - canonical responsive cover variants, active-reference protection and audit.
 - owner-controlled profile privacy settings with privacy-safe defaults;
 - enforced private-profile redaction for extended fields and social links.
+- reversible follow/unfollow edges with follower and following counters;
+- privacy-aware paginated social graph lists, batched GraphQL resolution and audit.
 
 ## Profile
 

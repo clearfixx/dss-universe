@@ -12,7 +12,7 @@
  * ===============================================================
  */
 
-import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 import { UserSocialLinkModel } from './user-social-link.model';
 
 @ObjectType('User')
@@ -49,6 +49,12 @@ export class UserModel {
 
   @Field(() => String, { nullable: true })
   coverUrl!: string | null;
+
+  @Field(() => Int)
+  followerCount!: number;
+
+  @Field(() => Int)
+  followingCount!: number;
 
   @Field()
   status!: string;

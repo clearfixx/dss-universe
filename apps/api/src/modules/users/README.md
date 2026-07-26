@@ -98,6 +98,11 @@ viewers. Owners always retain access to their own data.
 Social relationships and profile walls are separate Phase 7 packages and must
 not be improvised inside controllers.
 
+The social graph owns reversible follow edges, batched follower/following
+counters, bounded lists, owner policy enforcement, and immutable audit entries.
+Mutual follows may later be projected as friends without creating a second
+relationship graph.
+
 Notes
 
 Users is the airlock between identity data and the rest of DSS Universe.

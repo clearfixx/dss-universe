@@ -149,6 +149,7 @@ enum MediaVisibility {
 
 type Mutation {
   abortMediaUpload(id: String!): MediaUploadSession!
+  followUser(userId: ID!): UserSocialGraphSummary!
   initiateMediaUpload(input: InitiateMediaUploadInput!): MediaUploadSession!
   login(input: LoginInput!): AuthPayloadModel!
   logout: LogoutResultModel!
@@ -161,6 +162,7 @@ type Mutation {
   retryFailedMedia(mediaId: ID!): MediaLibraryItem!
   setViewerAvatar(mediaId: ID!): Viewer!
   setViewerCover(mediaId: ID!): Viewer!
+  unfollowUser(userId: ID!): UserSocialGraphSummary!
   updateViewerPrivacy(input: UpdateUserPrivacyInput!): UserPrivacySettings!
   updateViewerProfile(input: UpdateViewerProfileInput!): Viewer!
   updateViewerSocialLinks(input: UpdateViewerSocialLinksInput!): [UserSocialLink!]!
@@ -174,6 +176,8 @@ enum ProfileVisibility {
 
 type Query {
   apiInfo: ApiInfo!
+  followers(pagination: UsersPageInput, userId: ID!): UsersPageModel!
+  following(pagination: UsersPageInput, userId: ID!): UsersPageModel!
   mediaAccessUrl(mediaId: ID!, variantName: String!): MediaAccess!
   mediaLibrary(input: MediaLibraryInput): MediaLibraryConnection!
   mediaLibraryMetrics: MediaLibraryMetrics!
@@ -198,7 +202,9 @@ input RegisterInput {
 }
 
 input UpdateUserPrivacyInput {
+  allowFollowers: Boolean!
   profileVisibility: ProfileVisibility!
+  showFollows: Boolean!
   showLastSeen: Boolean!
   showLocation: Boolean!
   showOnlineStatus: Boolean!
@@ -225,6 +231,8 @@ type User {
   coverUrl: String
   createdAt: String!
   displayName: String
+  followerCount: Int!
+  followingCount: Int!
   id: ID!
   interests: [String!]!
   lastSeenAt: String
@@ -237,12 +245,20 @@ type User {
 }
 
 type UserPrivacySettings {
+  allowFollowers: Boolean!
   profileVisibility: ProfileVisibility!
+  showFollows: Boolean!
   showLastSeen: Boolean!
   showLocation: Boolean!
   showOnlineStatus: Boolean!
   showSocialLinks: Boolean!
   showWebsite: Boolean!
+}
+
+type UserSocialGraphSummary {
+  followerCount: Int!
+  followingCount: Int!
+  userId: ID!
 }
 
 type UserSocialLink {
@@ -274,6 +290,8 @@ type Viewer {
   displayName: String
   email: String!
   emailVerifiedAt: String
+  followerCount: Int!
+  followingCount: Int!
   id: ID!
   interests: [String!]!
   lastSeenAt: String

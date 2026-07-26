@@ -35,4 +35,10 @@ export class UserPrivacyModel {
 
   @Field()
   showOnlineStatus!: boolean;
+
+  @Field()
+  allowFollowers!: boolean;
+
+  @Field()
+  showFollows!: boolean;
 }

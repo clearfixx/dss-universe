@@ -127,6 +127,8 @@ describe('UsersService', () => {
       showSocialLinks: false,
       showLastSeen: false,
       showOnlineStatus: false,
+      allowFollowers: true,
+      showFollows: true,
     });
 
     const result = await service.getPublicByUsername(user.username, 'viewer-2');

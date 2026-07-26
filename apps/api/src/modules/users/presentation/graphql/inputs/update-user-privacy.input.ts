@@ -53,4 +53,12 @@ export class UpdateUserPrivacyInput {
   @Field()
   @IsBoolean()
   showOnlineStatus!: boolean;
+
+  @Field()
+  @IsBoolean()
+  allowFollowers!: boolean;
+
+  @Field()
+  @IsBoolean()
+  showFollows!: boolean;
 }

@@ -16,6 +16,7 @@ import { NotFoundException, UseGuards } from '@nestjs/common';
 import {
   Args,
   ID,
+  Int,
   Mutation,
   Parent,
   Query,
@@ -49,6 +50,9 @@ import {
 } from '../inputs/update-user-privacy.input';
 import { UserPrivacyModel } from '../models/user-privacy.model';
 import type { UserPrivacySettings } from '../../../domain/types/user-privacy-settings.type';
+import { UserSocialGraphService } from '../../../application/services/user-social-graph.service';
+import { UserSocialGraphLoader } from '../loaders/user-social-graph.loader';
+import { UserSocialGraphModel } from '../models/user-social-graph.model';
 
 @Resolver(() => UserModel)
 export class UsersResolver {
@@ -58,6 +62,8 @@ export class UsersResolver {
     private readonly socialLinksService: UserSocialLinksService,
     private readonly socialLinks: UserSocialLinksLoader,
     private readonly privacy: UserPrivacyService,
+    private readonly graph: UserSocialGraphService,
+    private readonly graphLoader: UserSocialGraphLoader,
   ) {}
 
   @Query(() => ViewerModel)
@@ -114,6 +120,66 @@ export class UsersResolver {
     return this.visibleSocialLinks(user.id, authenticated.id);
   }
 
+  @ResolveField('followerCount', () => Int)
+  async followerCount(@Parent() user: UserModel): Promise<number> {
+    return (await this.graphLoader.load(user.id)).followerCount;
+  }
+
+  @ResolveField('followingCount', () => Int)
+  async followingCount(@Parent() user: UserModel): Promise<number> {
+    return (await this.graphLoader.load(user.id)).followingCount;
+  }
+
+  @Mutation(() => UserSocialGraphModel)
+  @UseGuards(JwtAuthGuard)
+  followUser(
+    @AuthUser() authenticated: AuthenticatedUser,
+    @Args('userId', { type: () => ID }) userId: string,
+  ): Promise<UserSocialGraphModel> {
+    return this.graph.follow(authenticated.id, userId);
+  }
+
+  @Mutation(() => UserSocialGraphModel)
+  @UseGuards(JwtAuthGuard)
+  unfollowUser(
+    @AuthUser() authenticated: AuthenticatedUser,
+    @Args('userId', { type: () => ID }) userId: string,
+  ): Promise<UserSocialGraphModel> {
+    return this.graph.unfollow(authenticated.id, userId);
+  }
+
+  @Query(() => UsersPageModel)
+  @UseGuards(JwtAuthGuard)
+  async followers(
+    @AuthUser() authenticated: AuthenticatedUser,
+    @Args('userId', { type: () => ID }) userId: string,
+    @Args('pagination', { nullable: true }) pagination?: UsersPageInput,
+  ): Promise<UsersPageModel> {
+    const result = await this.graph.followers(
+      userId,
+      authenticated.id,
+      pagination?.page,
+      pagination?.limit,
+    );
+    return this.toUsersPage(result);
+  }
+
+  @Query(() => UsersPageModel)
+  @UseGuards(JwtAuthGuard)
+  async following(
+    @AuthUser() authenticated: AuthenticatedUser,
+    @Args('userId', { type: () => ID }) userId: string,
+    @Args('pagination', { nullable: true }) pagination?: UsersPageInput,
+  ): Promise<UsersPageModel> {
+    const result = await this.graph.following(
+      userId,
+      authenticated.id,
+      pagination?.page,
+      pagination?.limit,
+    );
+    return this.toUsersPage(result);
+  }
+
   @Query(() => UserModel)
   @UseGuards(JwtAuthGuard)
   async user(@Args('id', { type: () => ID }) id: string) {
@@ -166,6 +232,15 @@ export class UsersResolver {
     return {
       ...settings,
       profileVisibility: settings.profileVisibility as ProfileVisibilityInput,
+    };
+  }
+
+  private toUsersPage(
+    result: Awaited<ReturnType<UserSocialGraphService['followers']>>,
+  ): UsersPageModel {
+    return {
+      ...result,
+      items: result.items.map((user) => UserGraphqlMapper.fromResponse(user)),
     };
   }
 }

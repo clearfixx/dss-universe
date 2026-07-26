@@ -43,6 +43,10 @@ import { UserSocialLinksLoader } from './presentation/graphql/loaders/user-socia
 import { UserPrivacyService } from './application/services/user-privacy.service';
 import { USER_PRIVACY_REPOSITORY } from './domain/repositories/user-privacy.repository.interface';
 import { PrismaUserPrivacyRepository } from './infrastructure/repositories/prisma-user-privacy.repository';
+import { UserSocialGraphService } from './application/services/user-social-graph.service';
+import { USER_SOCIAL_GRAPH_REPOSITORY } from './domain/repositories/user-social-graph.repository.interface';
+import { PrismaUserSocialGraphRepository } from './infrastructure/repositories/prisma-user-social-graph.repository';
+import { UserSocialGraphLoader } from './presentation/graphql/loaders/user-social-graph.loader';
 
 @Module({
   imports: [PrismaModule],
@@ -54,6 +58,8 @@ import { PrismaUserPrivacyRepository } from './infrastructure/repositories/prism
     UserSocialLinksService,
     UserSocialLinksLoader,
     UserPrivacyService,
+    UserSocialGraphService,
+    UserSocialGraphLoader,
     {
       provide: USERS_REPOSITORY,
       useClass: PrismaUsersRepository,
@@ -65,6 +71,10 @@ import { PrismaUserPrivacyRepository } from './infrastructure/repositories/prism
     {
       provide: USER_PRIVACY_REPOSITORY,
       useClass: PrismaUserPrivacyRepository,
+    },
+    {
+      provide: USER_SOCIAL_GRAPH_REPOSITORY,
+      useClass: PrismaUserSocialGraphRepository,
     },
   ],
   exports: [UsersService, UserPrivacyService, USERS_REPOSITORY],

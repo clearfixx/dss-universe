@@ -50,6 +50,8 @@ describe('UserPrivacyService', () => {
       showSocialLinks: false,
       showLastSeen: false,
       showOnlineStatus: false,
+      allowFollowers: true,
+      showFollows: false,
     });
 
     await expect(service.visibilityFor('user-1', 'user-1')).resolves.toEqual(
@@ -59,6 +61,8 @@ describe('UserPrivacyService', () => {
         showSocialLinks: true,
         showLastSeen: true,
         showOnlineStatus: true,
+        allowFollowers: true,
+        showFollows: true,
       }),
     );
   });
@@ -72,6 +76,8 @@ describe('UserPrivacyService', () => {
       showSocialLinks: true,
       showLastSeen: true,
       showOnlineStatus: true,
+      allowFollowers: true,
+      showFollows: true,
     });
 
     await expect(service.visibilityFor('user-1', 'user-2')).resolves.toEqual(
@@ -81,6 +87,7 @@ describe('UserPrivacyService', () => {
         showSocialLinks: false,
         showLastSeen: false,
         showOnlineStatus: false,
+        showFollows: false,
       }),
     );
   });
