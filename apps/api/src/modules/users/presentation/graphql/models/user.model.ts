@@ -13,6 +13,7 @@
  */
 
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { UserSocialLinkModel } from './user-social-link.model';
 
 @ObjectType('User')
 export class UserModel {
@@ -39,6 +40,9 @@ export class UserModel {
 
   @Field(() => [String])
   interests!: string[];
+
+  @Field(() => [UserSocialLinkModel])
+  socialLinks!: UserSocialLinkModel[];
 
   @Field(() => String, { nullable: true })
   avatarUrl!: string | null;

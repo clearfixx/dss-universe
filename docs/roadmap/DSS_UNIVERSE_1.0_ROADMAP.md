@@ -571,6 +571,9 @@ Delivered in the Profile Foundation package:
 - owner-authenticated GraphQL profile mutation;
 - public profile projection through the existing Users boundary;
 - clean PostgreSQL migration plus unit and E2E coverage.
+- normalized, ordered social-link records with soft-disable semantics;
+- transactional owner mutation, immutable audit entry and batched public
+  GraphQL resolution.
 
 ## Profile
 

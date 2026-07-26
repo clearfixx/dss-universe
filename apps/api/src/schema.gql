@@ -160,6 +160,7 @@ type Mutation {
   retryFailedMedia(mediaId: ID!): MediaLibraryItem!
   setViewerAvatar(mediaId: ID!): Viewer!
   updateViewerProfile(input: UpdateViewerProfileInput!): Viewer!
+  updateViewerSocialLinks(input: UpdateViewerSocialLinksInput!): [UserSocialLink!]!
 }
 
 type Query {
@@ -195,6 +196,10 @@ input UpdateViewerProfileInput {
   website: String
 }
 
+input UpdateViewerSocialLinksInput {
+  links: [ViewerSocialLinkInput!]!
+}
+
 type User {
   avatarUrl: String
   bio: String
@@ -205,10 +210,19 @@ type User {
   interests: [String!]!
   lastSeenAt: String
   location: String
+  socialLinks: [UserSocialLink!]!
   status: String!
   technologies: [String!]!
   username: String!
   website: String
+}
+
+type UserSocialLink {
+  id: ID!
+  label: String
+  platform: String!
+  position: Int!
+  url: String!
 }
 
 input UsersPageInput {
@@ -236,9 +250,16 @@ type Viewer {
   interests: [String!]!
   lastSeenAt: String
   location: String
+  socialLinks: [UserSocialLink!]!
   status: String!
   technologies: [String!]!
   updatedAt: String!
   username: String!
   website: String
+}
+
+input ViewerSocialLinkInput {
+  label: String
+  platform: String!
+  url: String!
 }

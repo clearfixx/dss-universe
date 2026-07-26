@@ -13,7 +13,15 @@
  */
 
 import { NotFoundException, UseGuards } from '@nestjs/common';
-import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  ID,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 
 import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
 import {
@@ -30,12 +38,18 @@ import { UserModel } from '../models/user.model';
 import { UsersPageModel } from '../models/users-page.model';
 import { ViewerModel } from '../models/viewer.model';
 import { UpdateViewerProfileInput } from '../inputs/update-viewer-profile.input';
+import { UpdateViewerSocialLinksInput } from '../inputs/update-viewer-social-links.input';
+import { UserSocialLinksService } from '../../../application/services/user-social-links.service';
+import { UserSocialLinksLoader } from '../loaders/user-social-links.loader';
+import { UserSocialLinkModel } from '../models/user-social-link.model';
 
 @Resolver(() => UserModel)
 export class UsersResolver {
   constructor(
     private readonly usersService: UsersService,
     private readonly userById: UserByIdLoader,
+    private readonly socialLinksService: UserSocialLinksService,
+    private readonly socialLinks: UserSocialLinksLoader,
   ) {}
 
   @Query(() => ViewerModel)
@@ -54,6 +68,22 @@ export class UsersResolver {
   ): Promise<ViewerModel> {
     const user = await this.usersService.updateProfile(authenticated.id, input);
     return UserGraphqlMapper.viewerFromResponse(user);
+  }
+
+  @Mutation(() => [UserSocialLinkModel])
+  @UseGuards(JwtAuthGuard)
+  updateViewerSocialLinks(
+    @AuthUser() authenticated: AuthenticatedUser,
+    @Args('input') input: UpdateViewerSocialLinksInput,
+  ): Promise<UserSocialLinkModel[]> {
+    return this.socialLinksService.replace(authenticated.id, input.links);
+  }
+
+  @ResolveField('socialLinks', () => [UserSocialLinkModel])
+  socialLinksForUser(
+    @Parent() user: UserModel,
+  ): Promise<UserSocialLinkModel[]> {
+    return this.socialLinks.load(user.id);
   }
 
   @Query(() => UserModel)

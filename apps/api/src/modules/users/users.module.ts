@@ -36,6 +36,10 @@ import { PrismaUsersRepository } from './infrastructure/repositories/prisma-user
 import { UsersController } from './presentation/controllers/users.controller';
 import { UserByIdLoader } from './presentation/graphql/loaders/user-by-id.loader';
 import { UsersResolver } from './presentation/graphql/resolvers/users.resolver';
+import { UserSocialLinksService } from './application/services/user-social-links.service';
+import { USER_SOCIAL_LINKS_REPOSITORY } from './domain/repositories/user-social-links.repository.interface';
+import { PrismaUserSocialLinksRepository } from './infrastructure/repositories/prisma-user-social-links.repository';
+import { UserSocialLinksLoader } from './presentation/graphql/loaders/user-social-links.loader';
 
 @Module({
   imports: [PrismaModule],
@@ -44,9 +48,15 @@ import { UsersResolver } from './presentation/graphql/resolvers/users.resolver';
     UsersService,
     UsersResolver,
     UserByIdLoader,
+    UserSocialLinksService,
+    UserSocialLinksLoader,
     {
       provide: USERS_REPOSITORY,
       useClass: PrismaUsersRepository,
+    },
+    {
+      provide: USER_SOCIAL_LINKS_REPOSITORY,
+      useClass: PrismaUserSocialLinksRepository,
     },
   ],
   exports: [UsersService, USERS_REPOSITORY],

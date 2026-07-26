@@ -102,6 +102,7 @@ model User {
   roles             UserRole[]
   directPermissions UserPermission[]
   sessions          Session[]
+  socialLinks       UserSocialLink[]
 
   refreshTokenHash String?
   emailVerifiedAt  DateTime?
@@ -111,6 +112,24 @@ model User {
   updatedAt DateTime @updatedAt
 
   @@map("users")
+}
+
+model UserSocialLink {
+  id        String    @id @default(uuid())
+  userId    String
+  platform  String
+  label     String?
+  url       String
+  position  Int       @default(0)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform])
+  @@index([userId, deletedAt, position])
+  @@map("user_social_links")
 }
 
 model Media {

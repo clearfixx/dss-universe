@@ -250,6 +250,53 @@ describe('DSS API (e2e)', () => {
       },
     });
 
+    const updatedSocialLinks = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation UpdateViewerSocialLinks(
+          $input: UpdateViewerSocialLinksInput!
+        ) {
+          updateViewerSocialLinks(input: $input) {
+            platform label url position
+          }
+        }`,
+        variables: {
+          input: {
+            links: [
+              {
+                platform: 'GitHub',
+                label: '  Open Source ',
+                url: 'https://github.com/dss-universe',
+              },
+              {
+                platform: 'LinkedIn',
+                url: 'https://linkedin.com/in/dss-universe',
+              },
+            ],
+          },
+        },
+      })
+      .expect(200);
+    expect(updatedSocialLinks.body).toEqual({
+      data: {
+        updateViewerSocialLinks: [
+          {
+            platform: 'github',
+            label: 'Open Source',
+            url: 'https://github.com/dss-universe',
+            position: 0,
+          },
+          {
+            platform: 'linkedin',
+            label: null,
+            url: 'https://linkedin.com/in/dss-universe',
+            position: 1,
+          },
+        ],
+      },
+    });
+
     const userLookup = await request(app.getHttpServer())
       .post('/api/graphql')
       .set('Authorization', 'Bearer ' + accessToken)
@@ -257,7 +304,7 @@ describe('DSS API (e2e)', () => {
       .send(
         JSON.stringify({
           query:
-            'query UserByUsername($username: String!) { userByUsername(username: $username) { id username location technologies } }',
+            'query UserByUsername($username: String!) { userByUsername(username: $username) { id username location technologies socialLinks { platform url position } } }',
           variables: { username },
         }),
       );
@@ -272,9 +319,30 @@ describe('DSS API (e2e)', () => {
           username,
           location: 'Kyiv, Ukraine',
           technologies: ['typescript', 'NestJS'],
+          socialLinks: [
+            {
+              platform: 'github',
+              url: 'https://github.com/dss-universe',
+              position: 0,
+            },
+            {
+              platform: 'linkedin',
+              url: 'https://linkedin.com/in/dss-universe',
+              position: 1,
+            },
+          ],
         },
       },
     });
+    await expect(
+      app.get(PrismaService).auditRecord.count({
+        where: {
+          action: 'user.profile.social_links_updated',
+          actorId: registered.data.register.user.id,
+          targetId: registered.data.register.user.id,
+        },
+      }),
+    ).resolves.toBe(1);
 
     const initiatedUpload = await request(app.getHttpServer())
       .post('/api/graphql')

@@ -82,12 +82,15 @@ The Users module currently owns the user account and profile foundation:
 identity fields;
 profile identity, biography, location and website;
 technology and interest collections;
+ordered, normalized social links with soft-disable history;
 status;
 email verification timestamp;
 last seen timestamp;
 authentication-related internal hashes.
 
 Profile updates are exposed through the authenticated GraphQL viewer boundary.
+Social-link collections are replaced transactionally, audited, and resolved
+through a request-scoped DataLoader for list safety.
 Avatar and cover binaries belong to DSS Media Platform.
 Social relationships, privacy policies and profile walls are separate Phase 7
 packages and must not be improvised inside controllers.
