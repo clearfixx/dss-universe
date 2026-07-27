@@ -29,6 +29,8 @@ For current product and architecture work, use these sources first:
 5. `design/MOCKUP_CATALOG.md` — canonical/supporting/historical mockup classification;
 6. `adr/` — accepted architecture decisions.
 7. `development/QUALITY_GATE.md` — mandatory verification and test strategy.
+8. `architecture/PHASE_7_USER_CONTRACTS.md` — frozen Users/Profile backend
+   ownership, privacy invariants and deferred cross-phase extensions.
 
 Older roadmap and architecture files are historical references when they conflict with these documents.
 

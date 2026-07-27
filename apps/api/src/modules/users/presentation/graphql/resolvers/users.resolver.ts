@@ -12,7 +12,7 @@
  * ===============================================================
  */
 
-import { NotFoundException, UseGuards } from '@nestjs/common';
+import { UseGuards } from '@nestjs/common';
 import {
   Args,
   ID,
@@ -33,7 +33,6 @@ import {
 
 import { UsersService } from '../../../application/services/users.service';
 import { UsersPageInput } from '../inputs/users-page.input';
-import { UserByIdLoader } from '../loaders/user-by-id.loader';
 import { UserGraphqlMapper } from '../mappers/user-graphql.mapper';
 import { UserModel } from '../models/user.model';
 import { UsersPageModel } from '../models/users-page.model';
@@ -77,7 +76,6 @@ import { UserActivityPageModel } from '../models/user-activity.model';
 export class UsersResolver {
   constructor(
     private readonly usersService: UsersService,
-    private readonly userById: UserByIdLoader,
     private readonly socialLinksService: UserSocialLinksService,
     private readonly socialLinks: UserSocialLinksLoader,
     private readonly privacy: UserPrivacyService,
@@ -252,13 +250,11 @@ export class UsersResolver {
 
   @Query(() => UserModel)
   @UseGuards(JwtAuthGuard)
-  async user(@Args('id', { type: () => ID }) id: string) {
-    const result = await this.userById.load(id);
-
-    if (!result) {
-      throw new NotFoundException('User not found.');
-    }
-
+  async user(
+    @Args('id', { type: () => ID }) id: string,
+    @AuthUser() authenticated: AuthenticatedUser,
+  ) {
+    const result = await this.usersService.getPublicById(id, authenticated.id);
     return UserGraphqlMapper.fromResponse(result);
   }
 

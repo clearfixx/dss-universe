@@ -99,6 +99,15 @@ export class PrismaUsersRepository implements UsersRepository {
     return result;
   }
 
+  async findPublicById(id: string): Promise<UserRecord | null> {
+    return this.prisma.user.findFirst({
+      where: {
+        id,
+        status: 'ACTIVE',
+      },
+    });
+  }
+
   async findPublicByUsername(username: string): Promise<UserRecord | null> {
     return this.prisma.user.findFirst({
       where: {

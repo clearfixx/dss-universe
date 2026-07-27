@@ -94,7 +94,8 @@ through a request-scoped DataLoader for list safety.
 Avatar and cover binaries belong to DSS Media Platform.
 Privacy policy is stored behind a dedicated repository, uses privacy-safe
 defaults, and redacts private extended profiles and social links from other
-viewers. Owners always retain access to their own data.
+viewers. Public lookups by both id and username pass through the same privacy
+projection. Owners always retain access to their own data.
 Social relationships and profile walls are separate Phase 7 packages and must
 not be improvised inside controllers.
 

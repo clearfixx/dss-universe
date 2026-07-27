@@ -613,6 +613,10 @@ Delivered in the Profile Foundation package:
   events and an idempotent Worker projector;
 - privacy/block-aware paginated user activity with Profile Wall creation and
   tombstone retraction as the first end-to-end producer.
+- frozen Phase 7 backend ownership and GraphQL contracts with one privacy-safe
+  public profile projection for both id and username lookup;
+- explicit deferral of reputation/groups/titles to Phase 8 and shared
+  interactions/moderation to Phase 9–10, preventing duplicate Users concepts.
 
 ## Profile
 

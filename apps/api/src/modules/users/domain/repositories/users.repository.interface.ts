@@ -49,6 +49,8 @@ export interface UsersRepository {
 
   findRoleNamesByUserIds(userIds: string[]): Promise<Map<string, string[]>>;
 
+  findPublicById(id: string): Promise<UserRecord | null>;
+
   findPublicByUsername(username: string): Promise<UserRecord | null>;
 
   create(data: CreateUserContract): Promise<UserRecord>;

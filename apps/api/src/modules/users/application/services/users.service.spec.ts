@@ -145,4 +145,35 @@ describe('UsersService', () => {
       lastSeenAt: null,
     });
   });
+
+  it('uses the same privacy projection for a public profile lookup by id', async () => {
+    usersRepository.findPublicById = jest.fn().mockResolvedValue({
+      ...user,
+      bio: 'Private biography',
+      location: 'Kyiv',
+      technologies: ['TypeScript'],
+    });
+    privacy.visibilityFor.mockResolvedValue({
+      userId: user.id,
+      profileVisibility: 'PRIVATE',
+      showLocation: false,
+      showWebsite: false,
+      showSocialLinks: false,
+      showLastSeen: false,
+      showOnlineStatus: false,
+      allowFollowers: true,
+      showFollows: true,
+      allowWallPosts: false,
+    });
+
+    const result = await service.getPublicById(user.id, 'viewer-2');
+
+    expect(usersRepository.findPublicById.mock.calls).toContainEqual([user.id]);
+    expect(result).toMatchObject({
+      bio: null,
+      location: null,
+      technologies: [],
+      interests: [],
+    });
+  });
 });

@@ -36,6 +36,7 @@ describe('PrismaUsersRepository', () => {
     );
 
     await repository.findManyByIds(['user-1']);
+    await repository.findPublicById('user-1');
     await repository.findPublicByUsername('astro');
 
     expect(findMany.mock.calls).toContainEqual([
@@ -43,6 +44,14 @@ describe('PrismaUsersRepository', () => {
         where: {
           status: 'ACTIVE',
           id: { in: ['user-1'] },
+        },
+      },
+    ]);
+    expect(findFirst.mock.calls).toContainEqual([
+      {
+        where: {
+          id: 'user-1',
+          status: 'ACTIVE',
         },
       },
     ]);

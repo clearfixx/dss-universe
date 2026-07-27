@@ -534,6 +534,33 @@ describe('DSS API (e2e)', () => {
       },
     });
 
+    const privateProfileById = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set(
+        'Authorization',
+        'Bearer ' + visitor.data.register.tokens.accessToken,
+      )
+      .send({
+        query: `query User($id: ID!) {
+          user(id: $id) {
+            username bio location website technologies interests lastSeenAt
+            isOnline
+            socialLinks { platform url }
+          }
+        }`,
+        variables: { id: registered.data.register.user.id },
+      })
+      .expect(200);
+    const profileByIdBody = privateProfileById.body as {
+      data: { user: Record<string, unknown> };
+    };
+    const profileByUsernameBody = privateProfile.body as {
+      data: { userByUsername: Record<string, unknown> };
+    };
+    expect(profileByIdBody.data.user).toEqual(
+      profileByUsernameBody.data.userByUsername,
+    );
+
     const wallPostResult = await request(app.getHttpServer())
       .post('/api/graphql')
       .set('Authorization', 'Bearer ' + accessToken)
