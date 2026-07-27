@@ -237,9 +237,33 @@ type Mutation {
   setViewerCover(mediaId: ID!): Viewer!
   unblockUser(userId: ID!): UserBlockResult!
   unfollowUser(userId: ID!): UserSocialGraphSummary!
+  updateViewerNotificationPreferences(input: UpdateNotificationPreferencesInput!): NotificationPreferences!
   updateViewerPrivacy(input: UpdateUserPrivacyInput!): UserPrivacySettings!
   updateViewerProfile(input: UpdateViewerProfileInput!): Viewer!
   updateViewerSocialLinks(input: UpdateViewerSocialLinksInput!): [UserSocialLink!]!
+}
+
+enum NotificationCategory {
+  COMMENTS_REPLIES
+  DIRECT_MESSAGES
+  MENTIONS
+  PUBLISHING_REVIEW
+  REPUTATION
+  SUBSCRIPTIONS
+  SUPPORT
+}
+
+enum NotificationDigestFrequency {
+  DAILY
+  OFF
+  WEEKLY
+}
+
+type NotificationPreferences {
+  digestFrequency: NotificationDigestFrequency!
+  emailCategories: [NotificationCategory!]!
+  emailEnabled: Boolean!
+  inAppCategories: [NotificationCategory!]!
 }
 
 enum ProfileVisibility {
@@ -284,6 +308,7 @@ type Query {
   userByUsername(username: String!): User!
   users(pagination: UsersPageInput): UsersPageModel!
   viewer: Viewer!
+  viewerNotificationPreferences: NotificationPreferences!
   viewerPrivacySettings: UserPrivacySettings!
   viewerSessions: [AuthSession!]!
 }
@@ -302,6 +327,13 @@ input RegisterInput {
 type RevokeSessionsResultModel {
   revokedCount: Int!
   success: Boolean!
+}
+
+input UpdateNotificationPreferencesInput {
+  digestFrequency: NotificationDigestFrequency!
+  emailCategories: [NotificationCategory!]!
+  emailEnabled: Boolean!
+  inAppCategories: [NotificationCategory!]!
 }
 
 input UpdateUserPrivacyInput {

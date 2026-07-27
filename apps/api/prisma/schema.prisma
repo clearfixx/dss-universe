@@ -86,6 +86,22 @@ enum AuditResult {
   DENIED
 }
 
+enum NotificationCategory {
+  MENTIONS
+  DIRECT_MESSAGES
+  REPUTATION
+  COMMENTS_REPLIES
+  SUBSCRIPTIONS
+  PUBLISHING_REVIEW
+  SUPPORT
+}
+
+enum NotificationDigestFrequency {
+  OFF
+  DAILY
+  WEEKLY
+}
+
 model User {
   id            String     @id @default(uuid())
   email         String     @unique
@@ -110,17 +126,18 @@ model User {
   coverMedia          Media?               @relation("UserCover", fields: [coverMediaId], references: [id], onDelete: SetNull)
   mediaUploadSessions MediaUploadSession[]
 
-  roles             UserRole[]
-  directPermissions UserPermission[]
-  sessions          Session[]
-  socialLinks       UserSocialLink[]
-  privacySettings   UserPrivacySettings?
-  followers         UserFollow[]         @relation("UserFollowers")
-  following         UserFollow[]         @relation("UserFollowing")
-  blockedUsers      UserBlock[]          @relation("UserBlocker")
-  blockedByUsers    UserBlock[]          @relation("UserBlocked")
-  wallPosts         UserWallPost[]       @relation("ProfileWallOwner")
-  authoredWallPosts UserWallPost[]       @relation("ProfileWallAuthor")
+  roles                   UserRole[]
+  directPermissions       UserPermission[]
+  sessions                Session[]
+  socialLinks             UserSocialLink[]
+  privacySettings         UserPrivacySettings?
+  followers               UserFollow[]                 @relation("UserFollowers")
+  following               UserFollow[]                 @relation("UserFollowing")
+  blockedUsers            UserBlock[]                  @relation("UserBlocker")
+  blockedByUsers          UserBlock[]                  @relation("UserBlocked")
+  wallPosts               UserWallPost[]               @relation("ProfileWallOwner")
+  authoredWallPosts       UserWallPost[]               @relation("ProfileWallAuthor")
+  notificationPreferences UserNotificationPreferences?
 
   refreshTokenHash String?
   emailVerifiedAt  DateTime?
@@ -130,6 +147,20 @@ model User {
   updatedAt DateTime @updatedAt
 
   @@map("users")
+}
+
+model UserNotificationPreferences {
+  userId          String                      @id
+  inAppCategories NotificationCategory[]      @default([MENTIONS, DIRECT_MESSAGES, REPUTATION, COMMENTS_REPLIES, SUBSCRIPTIONS, PUBLISHING_REVIEW, SUPPORT])
+  emailEnabled    Boolean                     @default(true)
+  emailCategories NotificationCategory[]      @default([MENTIONS, DIRECT_MESSAGES, PUBLISHING_REVIEW, SUPPORT])
+  digestFrequency NotificationDigestFrequency @default(OFF)
+  createdAt       DateTime                    @default(now())
+  updatedAt       DateTime                    @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_notification_preferences")
 }
 
 model UserPrivacySettings {

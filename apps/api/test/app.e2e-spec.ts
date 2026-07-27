@@ -171,6 +171,12 @@ describe('DSS API (e2e)', () => {
     expect(schema).toContain('viewerSessions: [AuthSession!]!');
     expect(schema).toContain('revokeViewerSession(sessionId: ID!)');
     expect(schema).toContain('revokeOtherViewerSessions');
+    expect(schema).toContain(
+      'viewerNotificationPreferences: NotificationPreferences!',
+    );
+    expect(schema).toContain(
+      'updateViewerNotificationPreferences(input: UpdateNotificationPreferencesInput!)',
+    );
     expect(schema).toContain('users(pagination: UsersPageInput)');
     expect(schema).toContain('setViewerAvatar(mediaId: ID!)');
     expect(schema).toContain('removeViewerAvatar: Viewer!');
@@ -1920,6 +1926,99 @@ describe('DSS API (e2e)', () => {
     expect(
       (revokedCurrent.body as GraphqlErrorResponse).errors[0]?.extensions.code,
     ).toBe('UNAUTHENTICATED');
+  });
+
+  it('reads defaults and updates owner notification preferences', async () => {
+    const suffix = `${Date.now()}${Math.random().toString(16).slice(2)}`;
+    const username = `notifications-${suffix}`;
+    const registration = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .send({
+        query: `mutation {
+          register(input: {
+            email: "${username}@dss.test"
+            username: "${username}"
+            displayName: "Notification Astronaut"
+            password: "dss-notification-password"
+          }) {
+            user { id email username }
+            tokens { accessToken }
+          }
+        }`,
+      })
+      .expect(200);
+    const registered = registration.body as RegisterResponse;
+    const userId = registered.data.register.user.id;
+    const token = registered.data.register.tokens.accessToken;
+    const select =
+      'inAppCategories emailEnabled emailCategories digestFrequency';
+
+    const defaults = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        query: `{ viewerNotificationPreferences { ${select} } }`,
+      })
+      .expect(200);
+    expect(defaults.body).toEqual({
+      data: {
+        viewerNotificationPreferences: {
+          inAppCategories: [
+            'MENTIONS',
+            'DIRECT_MESSAGES',
+            'REPUTATION',
+            'COMMENTS_REPLIES',
+            'SUBSCRIPTIONS',
+            'PUBLISHING_REVIEW',
+            'SUPPORT',
+          ],
+          emailEnabled: true,
+          emailCategories: [
+            'MENTIONS',
+            'DIRECT_MESSAGES',
+            'PUBLISHING_REVIEW',
+            'SUPPORT',
+          ],
+          digestFrequency: 'OFF',
+        },
+      },
+    });
+
+    const updated = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        query: `mutation Update($input: UpdateNotificationPreferencesInput!) {
+          updateViewerNotificationPreferences(input: $input) { ${select} }
+        }`,
+        variables: {
+          input: {
+            inAppCategories: ['SUPPORT', 'MENTIONS'],
+            emailEnabled: false,
+            emailCategories: ['SUPPORT'],
+            digestFrequency: 'WEEKLY',
+          },
+        },
+      })
+      .expect(200);
+    expect(updated.body).toEqual({
+      data: {
+        updateViewerNotificationPreferences: {
+          inAppCategories: ['MENTIONS', 'SUPPORT'],
+          emailEnabled: false,
+          emailCategories: ['SUPPORT'],
+          digestFrequency: 'WEEKLY',
+        },
+      },
+    });
+    await expect(
+      app.get(PrismaService).auditRecord.count({
+        where: {
+          actorId: userId,
+          action: 'notification.preferences.updated',
+        },
+      }),
+    ).resolves.toBe(1);
   });
 
   afterAll(async () => {

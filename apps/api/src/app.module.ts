@@ -75,6 +75,7 @@ import { AppController } from './app.controller';
 import { AuthModule } from './modules/auth/auth.module';
 import { IamModule } from './modules/iam';
 import { MediaModule } from './modules/media/media.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
@@ -92,6 +93,7 @@ import { UsersModule } from './modules/users/users.module';
     AuthorizationModule,
     IamModule,
     MediaModule,
+    NotificationsModule,
   ],
   providers: [
     {
