@@ -177,6 +177,7 @@ describe('DSS API (e2e)', () => {
     expect(schema).toContain(
       'updateViewerNotificationPreferences(input: UpdateNotificationPreferencesInput!)',
     );
+    expect(schema).toContain('presenceSummary: PresenceSummary!');
     expect(schema).toContain('users(pagination: UsersPageInput)');
     expect(schema).toContain('setViewerAvatar(mediaId: ID!)');
     expect(schema).toContain('removeViewerAvatar: Viewer!');
@@ -2019,6 +2020,66 @@ describe('DSS API (e2e)', () => {
         },
       }),
     ).resolves.toBe(1);
+  });
+
+  it('exposes aggregate member, guest and crawler presence safely', async () => {
+    const suffix = `${Date.now()}${Math.random().toString(16).slice(2)}`;
+    const username = `presence-${suffix}`;
+    const registration = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('User-Agent', 'Mozilla/5.0 DSS Guest')
+      .send({
+        query: `mutation {
+          register(input: {
+            email: "${username}@dss.test"
+            username: "${username}"
+            displayName: "Presence Astronaut"
+            password: "dss-presence-password"
+          }) {
+            user { id email username }
+            tokens { accessToken }
+          }
+        }`,
+      })
+      .expect(200);
+    const registered = registration.body as RegisterResponse;
+    const token = registered.data.register.tokens.accessToken;
+
+    await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('User-Agent', 'Googlebot/2.1')
+      .send({ query: '{ apiInfo { status } }' })
+      .expect(200);
+
+    const summary = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        query: `{
+          presenceSummary {
+            onlineMembers onlineGuests onlineCrawlers totalOnline sampledAt
+          }
+        }`,
+      })
+      .expect(200);
+    const metrics = (
+      summary.body as {
+        data: {
+          presenceSummary: {
+            onlineMembers: number;
+            onlineGuests: number;
+            onlineCrawlers: number;
+            totalOnline: number;
+          };
+        };
+      }
+    ).data.presenceSummary;
+
+    expect(metrics.onlineGuests).toBeGreaterThanOrEqual(1);
+    expect(metrics.onlineCrawlers).toBeGreaterThanOrEqual(1);
+    expect(metrics.totalOnline).toBe(
+      metrics.onlineMembers + metrics.onlineGuests + metrics.onlineCrawlers,
+    );
   });
 
   afterAll(async () => {

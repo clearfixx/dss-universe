@@ -25,6 +25,8 @@ describe('UserPresenceService', () => {
     zremrangebyscore: jest.fn(),
     zmscore: jest.fn(),
     zrangebyscore: jest.fn(),
+    zcard: jest.fn(),
+    zrem: jest.fn(),
   };
   const users = {
     updateById: jest.fn(),
@@ -177,5 +179,82 @@ describe('UserPresenceService', () => {
     await expect(service.visibleOnlineUserIds('viewer')).resolves.toEqual([
       'visible',
     ]);
+  });
+
+  it('tracks guests and crawlers in separate ephemeral aggregates', async () => {
+    await service.touchAnonymous('guest-1', 'Mozilla/5.0 Safari/605.1');
+    await service.touchAnonymous('crawler-1', 'Googlebot/2.1');
+
+    expect(redis.zadd).toHaveBeenNthCalledWith(
+      1,
+      'dss:presence:guests',
+      expect.any(Number),
+      'guest-1',
+    );
+    expect(redis.zadd).toHaveBeenNthCalledWith(
+      2,
+      'dss:presence:crawlers',
+      expect.any(Number),
+      'crawler-1',
+    );
+  });
+
+  it('removes the short-lived guest marker after authentication', async () => {
+    redis.set.mockResolvedValue(null);
+
+    await service.touch('user-1', 'guest-1');
+
+    expect(redis.zrem).toHaveBeenCalledWith('dss:presence:guests', 'guest-1');
+  });
+
+  it('returns a privacy-filtered aggregate presence summary', async () => {
+    redis.zrangebyscore.mockResolvedValue(['visible', 'hidden']);
+    redis.zmscore.mockResolvedValue(['1785073000000', '1785073000000']);
+    redis.zcard.mockResolvedValueOnce(4).mockResolvedValueOnce(2);
+    privacy.getMany.mockResolvedValue(
+      new Map([
+        [
+          'visible',
+          {
+            userId: 'visible',
+            profileVisibility: 'PUBLIC',
+            showLocation: true,
+            showWebsite: true,
+            showSocialLinks: true,
+            showLastSeen: false,
+            showOnlineStatus: true,
+            allowFollowers: true,
+            showFollows: true,
+            allowWallPosts: true,
+          },
+        ],
+        [
+          'hidden',
+          {
+            userId: 'hidden',
+            profileVisibility: 'PUBLIC',
+            showLocation: true,
+            showWebsite: true,
+            showSocialLinks: true,
+            showLastSeen: false,
+            showOnlineStatus: false,
+            allowFollowers: true,
+            showFollows: true,
+            allowWallPosts: true,
+          },
+        ],
+      ]),
+    );
+
+    const summary = await service.summary('viewer');
+
+    expect(summary).toEqual({
+      onlineMembers: 1,
+      onlineGuests: 4,
+      onlineCrawlers: 2,
+      totalOnline: 7,
+      sampledAt: summary.sampledAt,
+    });
+    expect(summary.sampledAt).toBeInstanceOf(Date);
   });
 });

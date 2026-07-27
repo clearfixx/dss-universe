@@ -604,6 +604,9 @@ Delivered in the Profile Foundation package:
 - dedicated Notifications policy boundary with owner-only GraphQL preferences;
 - configurable in-app/email categories and digest cadence with stable defaults,
   deterministic persistence and immutable audit.
+- privacy-safe aggregate member, guest and crawler online metrics;
+- five-minute anonymous presence identifiers with no durable guest
+  fingerprint or raw network metadata persistence.
 
 ## Profile
 

@@ -112,6 +112,10 @@ without inventing future points, reputation, level, group, or title data.
 Presence is ephemeral Redis TTL state refreshed by authenticated activity.
 Durable last-seen writes are throttled, Redis failures are fail-open for
 product requests, and online state is always filtered through profile privacy.
+Guest presence uses a random HttpOnly identifier limited to the five-minute
+online window. Known crawlers use a short-lived one-way request fingerprint.
+Only aggregate member, guest and crawler counts leave the Presence boundary;
+raw guest IP addresses and user agents are never persisted by Presence.
 Profile Wall owns bounded text/image posts, profile privacy and block
 enforcement, Media references, immutable audit and public tombstones.
 Comments and reactions remain shared platform concerns and are not duplicated

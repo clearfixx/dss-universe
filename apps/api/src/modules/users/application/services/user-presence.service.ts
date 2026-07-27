@@ -10,6 +10,7 @@
  *
  * 🧠 Responsibilities:
  * • refreshes Redis TTL presence for authenticated activity;
+ * • maintains short-lived guest and crawler aggregates;
  * • throttles durable last-seen updates;
  * • batches online lookups;
  * • enforces owner-controlled online-status privacy.
@@ -31,10 +32,15 @@ import {
   USERS_REPOSITORY,
   type UsersRepository,
 } from '../../domain/repositories/users.repository.interface';
+import type { PresenceSummary } from '../../domain/types/presence-summary.type';
 import { UserPrivacyService } from './user-privacy.service';
 
 const PRESENCE_TTL_SECONDS = 300;
 const ACTIVE_USERS_KEY = 'dss:presence:users';
+const ACTIVE_GUESTS_KEY = 'dss:presence:guests';
+const ACTIVE_CRAWLERS_KEY = 'dss:presence:crawlers';
+const CRAWLER_PATTERN =
+  /bot|crawler|spider|slurp|bingpreview|facebookexternalhit|google-inspectiontool|lighthouse/i;
 
 @Injectable()
 export class UserPresenceService {
@@ -44,8 +50,11 @@ export class UserPresenceService {
     private readonly privacy: UserPrivacyService,
   ) {}
 
-  async touch(userId: string): Promise<void> {
+  async touch(userId: string, previousGuestId?: string): Promise<void> {
     const now = Date.now();
+    if (previousGuestId) {
+      await this.redis.zrem(ACTIVE_GUESTS_KEY, previousGuestId);
+    }
     await this.redis.zadd(
       ACTIVE_USERS_KEY,
       now + PRESENCE_TTL_SECONDS * 1000,
@@ -62,6 +71,48 @@ export class UserPresenceService {
     if (shouldPersist === 'OK') {
       await this.users.updateById(userId, { lastSeenAt: new Date(now) });
     }
+  }
+
+  async touchAnonymous(visitorId: string, userAgent: string): Promise<void> {
+    const key = this.isCrawler(userAgent)
+      ? ACTIVE_CRAWLERS_KEY
+      : ACTIVE_GUESTS_KEY;
+    await this.redis.zadd(
+      key,
+      Date.now() + PRESENCE_TTL_SECONDS * 1000,
+      visitorId,
+    );
+  }
+
+  async summary(viewerId: string): Promise<PresenceSummary> {
+    const now = Date.now();
+    await Promise.all(
+      [ACTIVE_USERS_KEY, ACTIVE_GUESTS_KEY, ACTIVE_CRAWLERS_KEY].map((key) =>
+        this.redis.zremrangebyscore(key, '-inf', now),
+      ),
+    );
+    const [activeUserIds, onlineGuests, onlineCrawlers] = await Promise.all([
+      this.redis.zrangebyscore(
+        ACTIVE_USERS_KEY,
+        now,
+        '+inf',
+        'LIMIT',
+        0,
+        10000,
+      ),
+      this.redis.zcard(ACTIVE_GUESTS_KEY),
+      this.redis.zcard(ACTIVE_CRAWLERS_KEY),
+    ]);
+    const visibleMembers = await this.visibleStatuses(activeUserIds, viewerId);
+    const onlineMembers = [...visibleMembers.values()].filter(Boolean).length;
+
+    return {
+      onlineMembers,
+      onlineGuests,
+      onlineCrawlers,
+      totalOnline: onlineMembers + onlineGuests + onlineCrawlers,
+      sampledAt: new Date(now),
+    };
   }
 
   async visibleStatuses(
@@ -118,4 +169,13 @@ export class UserPresenceService {
   private lastSeenThrottleKey(userId: string): string {
     return `dss:presence:last-seen:${userId}`;
   }
+
+  private isCrawler(userAgent: string): boolean {
+    return CRAWLER_PATTERN.test(userAgent);
+  }
 }
+
+/**
+ * 🛰️ Presence expires quickly. The Universe remembers contributions, not
+ * every anonymous footstep.
+ */

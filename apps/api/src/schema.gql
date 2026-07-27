@@ -266,6 +266,14 @@ type NotificationPreferences {
   inAppCategories: [NotificationCategory!]!
 }
 
+type PresenceSummary {
+  onlineCrawlers: Int!
+  onlineGuests: Int!
+  onlineMembers: Int!
+  sampledAt: DateTime!
+  totalOnline: Int!
+}
+
 enum ProfileVisibility {
   MEMBERS
   PRIVATE
@@ -302,6 +310,7 @@ type Query {
   mediaLibraryMetrics: MediaLibraryMetrics!
   mediaUploadSession(id: String!): MediaUploadSession!
   members(input: MembersDirectoryInput): MembersDirectoryPage!
+  presenceSummary: PresenceSummary!
   profileWall(pagination: UsersPageInput, profileOwnerId: ID!): ProfileWallPage!
   quarantinedMedia(limit: Int! = 25): [MediaQuarantineItem!]!
   user(id: ID!): User!

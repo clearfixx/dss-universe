@@ -67,6 +67,7 @@ import { CreateWallPostInput } from '../inputs/create-wall-post.input';
 import { UserWallPostModel } from '../models/user-wall-post.model';
 import { UserWallPageModel } from '../models/user-wall-page.model';
 import type { UserWallPost } from '../../../domain/types/user-wall-post.type';
+import { PresenceSummaryModel } from '../models/presence-summary.model';
 
 @Resolver(() => UserModel)
 export class UsersResolver {
@@ -318,6 +319,14 @@ export class UsersResolver {
         createdAt: user.createdAt,
       })),
     };
+  }
+
+  @Query(() => PresenceSummaryModel)
+  @UseGuards(JwtAuthGuard)
+  presenceSummary(
+    @AuthUser() authenticated: AuthenticatedUser,
+  ): Promise<PresenceSummaryModel> {
+    return this.presence.summary(authenticated.id);
   }
 
   @Mutation(() => UserWallPostModel)
