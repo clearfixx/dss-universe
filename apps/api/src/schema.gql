@@ -274,6 +274,26 @@ type PresenceSummary {
   totalOnline: Int!
 }
 
+type ProfileCompletion {
+  completedCount: Int!
+  completedFields: [ProfileCompletionField!]!
+  isComplete: Boolean!
+  missingFields: [ProfileCompletionField!]!
+  percentage: Int!
+  totalCount: Int!
+}
+
+enum ProfileCompletionField {
+  AVATAR
+  BIO
+  COVER
+  INTERESTS
+  LOCATION
+  SOCIAL_LINKS
+  TECHNOLOGIES
+  WEBSITE
+}
+
 enum ProfileVisibility {
   MEMBERS
   PRIVATE
@@ -319,6 +339,7 @@ type Query {
   viewer: Viewer!
   viewerNotificationPreferences: NotificationPreferences!
   viewerPrivacySettings: UserPrivacySettings!
+  viewerProfileCompletion: ProfileCompletion!
   viewerSessions: [AuthSession!]!
 }
 

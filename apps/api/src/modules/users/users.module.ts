@@ -56,6 +56,7 @@ import { UserPresenceInterceptor } from './presentation/interceptors/user-presen
 import { UserWallService } from './application/services/user-wall.service';
 import { USER_WALL_REPOSITORY } from './domain/repositories/user-wall.repository.interface';
 import { PrismaUserWallRepository } from './infrastructure/repositories/prisma-user-wall.repository';
+import { ProfileCompletionService } from './application/services/profile-completion.service';
 
 @Module({
   imports: [PrismaModule],
@@ -72,6 +73,7 @@ import { PrismaUserWallRepository } from './infrastructure/repositories/prisma-u
     UserBlockService,
     UserPresenceService,
     UserWallService,
+    ProfileCompletionService,
     {
       provide: APP_INTERCEPTOR,
       useClass: UserPresenceInterceptor,

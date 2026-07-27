@@ -607,6 +607,8 @@ Delivered in the Profile Foundation package:
 - privacy-safe aggregate member, guest and crawler online metrics;
 - five-minute anonymous presence identifiers with no durable guest
   fingerprint or raw network metadata persistence.
+- owner-only profile completion with a deterministic eight-section checklist,
+  missing-field guidance and no stale derived database state.
 
 ## Profile
 

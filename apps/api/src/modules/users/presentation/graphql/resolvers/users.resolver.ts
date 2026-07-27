@@ -68,6 +68,8 @@ import { UserWallPostModel } from '../models/user-wall-post.model';
 import { UserWallPageModel } from '../models/user-wall-page.model';
 import type { UserWallPost } from '../../../domain/types/user-wall-post.type';
 import { PresenceSummaryModel } from '../models/presence-summary.model';
+import { ProfileCompletionService } from '../../../application/services/profile-completion.service';
+import { ProfileCompletionModel } from '../models/profile-completion.model';
 
 @Resolver(() => UserModel)
 export class UsersResolver {
@@ -82,6 +84,7 @@ export class UsersResolver {
     private readonly blocks: UserBlockService,
     private readonly presence: UserPresenceService,
     private readonly wall: UserWallService,
+    private readonly profileCompletion: ProfileCompletionService,
   ) {}
 
   @Query(() => ViewerModel)
@@ -327,6 +330,14 @@ export class UsersResolver {
     @AuthUser() authenticated: AuthenticatedUser,
   ): Promise<PresenceSummaryModel> {
     return this.presence.summary(authenticated.id);
+  }
+
+  @Query(() => ProfileCompletionModel)
+  @UseGuards(JwtAuthGuard)
+  viewerProfileCompletion(
+    @AuthUser() authenticated: AuthenticatedUser,
+  ): Promise<ProfileCompletionModel> {
+    return this.profileCompletion.getForUser(authenticated.id);
   }
 
   @Mutation(() => UserWallPostModel)

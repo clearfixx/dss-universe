@@ -178,6 +178,7 @@ describe('DSS API (e2e)', () => {
       'updateViewerNotificationPreferences(input: UpdateNotificationPreferencesInput!)',
     );
     expect(schema).toContain('presenceSummary: PresenceSummary!');
+    expect(schema).toContain('viewerProfileCompletion: ProfileCompletion!');
     expect(schema).toContain('users(pagination: UsersPageInput)');
     expect(schema).toContain('setViewerAvatar(mediaId: ID!)');
     expect(schema).toContain('removeViewerAvatar: Viewer!');
@@ -332,6 +333,47 @@ describe('DSS API (e2e)', () => {
             position: 1,
           },
         ],
+      },
+    });
+
+    const deniedProfileCompletion = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .send({ query: '{ viewerProfileCompletion { percentage } }' })
+      .expect(200);
+    expect(
+      (deniedProfileCompletion.body as GraphqlErrorResponse).errors[0]
+        .extensions.code,
+    ).toBe('UNAUTHENTICATED');
+
+    const profileCompletion = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `query {
+          viewerProfileCompletion {
+            percentage completedCount totalCount isComplete
+            completedFields missingFields
+          }
+        }`,
+      })
+      .expect(200);
+    expect(profileCompletion.body).toEqual({
+      data: {
+        viewerProfileCompletion: {
+          percentage: 75,
+          completedCount: 6,
+          totalCount: 8,
+          isComplete: false,
+          completedFields: [
+            'BIO',
+            'LOCATION',
+            'WEBSITE',
+            'TECHNOLOGIES',
+            'INTERESTS',
+            'SOCIAL_LINKS',
+          ],
+          missingFields: ['AVATAR', 'COVER'],
+        },
       },
     });
 

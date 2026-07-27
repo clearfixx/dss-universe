@@ -116,6 +116,9 @@ Guest presence uses a random HttpOnly identifier limited to the five-minute
 online window. Known crawlers use a short-lived one-way request fingerprint.
 Only aggregate member, guest and crawler counts leave the Presence boundary;
 raw guest IP addresses and user agents are never persisted by Presence.
+Profile completion is calculated on demand from eight canonical profile
+sections: avatar, cover, biography, location, website, technologies, interests
+and social links. It is owner-only and stores no derived progress column.
 Profile Wall owns bounded text/image posts, profile privacy and block
 enforcement, Media references, immutable audit and public tombstones.
 Comments and reactions remain shared platform concerns and are not duplicated
