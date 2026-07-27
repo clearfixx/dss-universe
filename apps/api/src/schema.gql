@@ -334,6 +334,7 @@ type Query {
   profileWall(pagination: UsersPageInput, profileOwnerId: ID!): ProfileWallPage!
   quarantinedMedia(limit: Int! = 25): [MediaQuarantineItem!]!
   user(id: ID!): User!
+  userActivity(pagination: UsersPageInput, userId: ID!): UserActivityPage!
   userByUsername(username: String!): User!
   users(pagination: UsersPageInput): UsersPageModel!
   viewer: Viewer!
@@ -409,6 +410,24 @@ type User {
   technologies: [String!]!
   username: String!
   website: String
+}
+
+type UserActivity {
+  action: String!
+  actorId: ID!
+  id: ID!
+  module: String!
+  occurredAt: String!
+  subjectId: ID!
+  subjectType: String!
+}
+
+type UserActivityPage {
+  items: [UserActivity!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
 }
 
 type UserBlockResult {

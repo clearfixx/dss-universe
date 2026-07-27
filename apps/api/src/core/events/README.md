@@ -8,6 +8,10 @@ Core Events defines versioned event envelopes and the durable write boundary use
 
 `OutboxWriterService.append()` requires an existing Prisma `TransactionClient`. A feature must write its primary state and the matching outbox event in the same transaction.
 
+Profile Wall is the first product producer consumed by the shared Activity
+projector. Creation and tombstone events are written in the same transaction as
+their canonical post and audit state; feed rows are built asynchronously.
+
 ```text
 Application use case
   -> Prisma transaction

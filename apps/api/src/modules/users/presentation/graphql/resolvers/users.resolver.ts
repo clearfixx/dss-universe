@@ -70,6 +70,8 @@ import type { UserWallPost } from '../../../domain/types/user-wall-post.type';
 import { PresenceSummaryModel } from '../models/presence-summary.model';
 import { ProfileCompletionService } from '../../../application/services/profile-completion.service';
 import { ProfileCompletionModel } from '../models/profile-completion.model';
+import { UserActivityFeedService } from '../../../application/services/user-activity-feed.service';
+import { UserActivityPageModel } from '../models/user-activity.model';
 
 @Resolver(() => UserModel)
 export class UsersResolver {
@@ -85,6 +87,7 @@ export class UsersResolver {
     private readonly presence: UserPresenceService,
     private readonly wall: UserWallService,
     private readonly profileCompletion: ProfileCompletionService,
+    private readonly activityFeed: UserActivityFeedService,
   ) {}
 
   @Query(() => ViewerModel)
@@ -338,6 +341,33 @@ export class UsersResolver {
     @AuthUser() authenticated: AuthenticatedUser,
   ): Promise<ProfileCompletionModel> {
     return this.profileCompletion.getForUser(authenticated.id);
+  }
+
+  @Query(() => UserActivityPageModel)
+  @UseGuards(JwtAuthGuard)
+  async userActivity(
+    @AuthUser() authenticated: AuthenticatedUser,
+    @Args('userId', { type: () => ID }) userId: string,
+    @Args('pagination', { nullable: true }) pagination?: UsersPageInput,
+  ): Promise<UserActivityPageModel> {
+    const result = await this.activityFeed.list(
+      authenticated.id,
+      userId,
+      pagination?.page,
+      pagination?.limit,
+    );
+    return {
+      ...result,
+      items: result.items.map((entry) => ({
+        id: entry.id,
+        actorId: entry.actorId,
+        module: entry.module,
+        action: entry.action,
+        subjectType: entry.subjectType,
+        subjectId: entry.subjectId,
+        occurredAt: entry.occurredAt.toISOString(),
+      })),
+    };
   }
 
   @Mutation(() => UserWallPostModel)

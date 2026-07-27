@@ -23,6 +23,7 @@ import { MediaKind, MediaStatus } from '@prisma/client';
 
 import { AuditWriterService } from '@api/core/audit';
 import { PrismaService } from '@api/core/database';
+import { createEventEnvelope, OutboxWriterService } from '@api/core/events';
 import type { PaginatedResult } from '@api/shared';
 
 import type { UserWallRepository } from '../../domain/repositories/user-wall.repository.interface';
@@ -33,12 +34,15 @@ import type {
 
 const MEDIA_TARGET_TYPE = 'UserWallPost';
 const MEDIA_PURPOSE = 'wall-image';
+const WALL_POST_CREATED_EVENT = 'users.profile-wall.post-created.v1';
+const WALL_POST_RETRACTED_EVENT = 'users.profile-wall.post-retracted.v1';
 
 @Injectable()
 export class PrismaUserWallRepository implements UserWallRepository {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditWriterService,
+    private readonly outbox: OutboxWriterService,
   ) {}
 
   async create(input: CreateUserWallPost): Promise<UserWallPost> {
@@ -63,6 +67,21 @@ export class PrismaUserWallRepository implements UserWallRepository {
         targetId: post.id,
         metadata: { profileOwnerId: input.profileOwnerId },
       });
+      await this.outbox.append(
+        transaction,
+        createEventEnvelope({
+          name: WALL_POST_CREATED_EVENT,
+          version: 1,
+          category: 'integration',
+          producer: 'dss.api.users',
+          actorId: input.authorId,
+          aggregate: { type: MEDIA_TARGET_TYPE, id: post.id },
+          payload: {
+            profileOwnerId: input.profileOwnerId,
+            hasImage: input.imageMediaId !== null,
+          },
+        }),
+      );
       return this.toDomain(post);
     });
   }
@@ -141,6 +160,18 @@ export class PrismaUserWallRepository implements UserWallRepository {
         reason: reason ?? undefined,
         metadata: { profileOwnerId: post.profileOwnerId },
       });
+      await this.outbox.append(
+        transaction,
+        createEventEnvelope({
+          name: WALL_POST_RETRACTED_EVENT,
+          version: 1,
+          category: 'integration',
+          producer: 'dss.api.users',
+          actorId: deletedById,
+          aggregate: { type: MEDIA_TARGET_TYPE, id: post.id },
+          payload: { profileOwnerId: post.profileOwnerId },
+        }),
+      );
       return this.toDomain(post);
     });
   }

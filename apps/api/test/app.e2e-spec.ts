@@ -21,7 +21,7 @@ import { join } from 'node:path';
 import { Pool } from 'pg';
 import request from 'supertest';
 import type { Job } from 'bullmq';
-import type { MediaProcessingJob } from '@dss/jobs';
+import type { IntegrationEventJob, MediaProcessingJob } from '@dss/jobs';
 import type { App } from 'supertest/types';
 
 import { AppModule } from './../src/app.module';
@@ -32,6 +32,7 @@ import { MediaRetentionService } from './../src/modules/media/application/servic
 import { LocalMediaFileProcessor } from '../../worker/src/local-media-file.processor';
 import { createMediaProcessingProcessor } from '../../worker/src/media-processing.processor';
 import { PostgresMediaProcessingStore } from '../../worker/src/postgres-media-processing.store';
+import { PostgresActivityProjector } from '../../worker/src/postgres-activity.projector';
 
 const E2E_UPLOADS_DIR = `.e2e-uploads-${process.pid}`;
 const PNG_1X1 = Buffer.from(
@@ -179,6 +180,9 @@ describe('DSS API (e2e)', () => {
     );
     expect(schema).toContain('presenceSummary: PresenceSummary!');
     expect(schema).toContain('viewerProfileCompletion: ProfileCompletion!');
+    expect(schema).toContain(
+      'userActivity(pagination: UsersPageInput, userId: ID!): UserActivityPage!',
+    );
     expect(schema).toContain('users(pagination: UsersPageInput)');
     expect(schema).toContain('setViewerAvatar(mediaId: ID!)');
     expect(schema).toContain('removeViewerAvatar: Viewer!');
@@ -563,6 +567,78 @@ describe('DSS API (e2e)', () => {
       isDeleted: false,
     });
 
+    const prisma = app.get(PrismaService);
+    const activityProjector = new PostgresActivityProjector(processingPool);
+    const createdEvent = await prisma.outboxEvent.findFirstOrThrow({
+      where: {
+        eventName: 'users.profile-wall.post-created.v1',
+        aggregateId: wallPostBody.data.createProfileWallPost.id,
+      },
+    });
+    await activityProjector.project({
+      eventId: createdEvent.id,
+      eventName: createdEvent.eventName,
+      eventVersion: createdEvent.eventVersion,
+      category: createdEvent.eventCategory,
+      producer: createdEvent.producer,
+      actorId: createdEvent.actorId ?? undefined,
+      aggregateType: createdEvent.aggregateType ?? undefined,
+      aggregateId: createdEvent.aggregateId ?? undefined,
+      payload: createdEvent.payload,
+      occurredAt: createdEvent.occurredAt.toISOString(),
+    } satisfies IntegrationEventJob);
+
+    const projectedActivity = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `query UserActivity($userId: ID!) {
+          userActivity(userId: $userId, pagination: { page: 1, limit: 10 }) {
+            total page limit totalPages
+            items { actorId module action subjectType subjectId occurredAt }
+          }
+        }`,
+        variables: { userId: registered.data.register.user.id },
+      })
+      .expect(200);
+    expect(projectedActivity.body).toEqual({
+      data: {
+        userActivity: {
+          total: 1,
+          page: 1,
+          limit: 10,
+          totalPages: 1,
+          items: [
+            {
+              actorId: registered.data.register.user.id,
+              module: 'PROFILE',
+              action: 'PROFILE_WALL_POST_CREATED',
+              subjectType: 'UserWallPost',
+              subjectId: wallPostBody.data.createProfileWallPost.id,
+              occurredAt: createdEvent.occurredAt.toISOString(),
+            },
+          ],
+        },
+      },
+    });
+
+    const privateActivity = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set(
+        'Authorization',
+        'Bearer ' + visitor.data.register.tokens.accessToken,
+      )
+      .send({
+        query: `query UserActivity($userId: ID!) {
+          userActivity(userId: $userId) { total }
+        }`,
+        variables: { userId: registered.data.register.user.id },
+      })
+      .expect(200);
+    expect(
+      (privateActivity.body as GraphqlErrorResponse).errors[0].extensions.code,
+    ).toBe('FORBIDDEN');
+
     const removedWallPost = await request(app.getHttpServer())
       .post('/api/graphql')
       .set('Authorization', 'Bearer ' + accessToken)
@@ -597,6 +673,48 @@ describe('DSS API (e2e)', () => {
     expect(
       typeof removedWallPostBody.data.removeProfileWallPost.deletedAt,
     ).toBe('string');
+
+    const retractedEvent = await prisma.outboxEvent.findFirstOrThrow({
+      where: {
+        eventName: 'users.profile-wall.post-retracted.v1',
+        aggregateId: wallPostBody.data.createProfileWallPost.id,
+      },
+    });
+    await activityProjector.project({
+      eventId: retractedEvent.id,
+      eventName: retractedEvent.eventName,
+      eventVersion: retractedEvent.eventVersion,
+      category: retractedEvent.eventCategory,
+      producer: retractedEvent.producer,
+      actorId: retractedEvent.actorId ?? undefined,
+      aggregateType: retractedEvent.aggregateType ?? undefined,
+      aggregateId: retractedEvent.aggregateId ?? undefined,
+      payload: retractedEvent.payload,
+      occurredAt: retractedEvent.occurredAt.toISOString(),
+    } satisfies IntegrationEventJob);
+    const retractedActivity = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `query UserActivity($userId: ID!) {
+          userActivity(userId: $userId) { total items { id } }
+        }`,
+        variables: { userId: registered.data.register.user.id },
+      })
+      .expect(200);
+    expect(retractedActivity.body).toEqual({
+      data: { userActivity: { total: 0, items: [] } },
+    });
+    await prisma.outboxEvent.deleteMany({
+      where: {
+        eventName: {
+          in: [
+            'users.profile-wall.post-created.v1',
+            'users.profile-wall.post-retracted.v1',
+          ],
+        },
+      },
+    });
 
     const wallHistory = await request(app.getHttpServer())
       .post('/api/graphql')

@@ -119,6 +119,9 @@ raw guest IP addresses and user agents are never persisted by Presence.
 Profile completion is calculated on demand from eight canonical profile
 sections: avatar, cover, biography, location, website, technologies, interests
 and social links. It is owner-only and stores no derived progress column.
+User activity reads the shared event-based Activity projection and applies
+profile privacy plus block policy before returning it through GraphQL. Profile
+Wall publishes versioned Outbox events; it does not write feed rows directly.
 Profile Wall owns bounded text/image posts, profile privacy and block
 enforcement, Media references, immutable audit and public tombstones.
 Comments and reactions remain shared platform concerns and are not duplicated

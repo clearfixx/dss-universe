@@ -15,6 +15,7 @@ import { LocalMediaFileProcessor } from "./local-media-file.processor.js";
 import { createMediaProcessingProcessor } from "./media-processing.processor.js";
 import { PostgresMediaProcessingStore } from "./postgres-media-processing.store.js";
 import { ClamAvMediaMalwareScanner } from "./clamav-media-malware.scanner.js";
+import { PostgresActivityProjector } from "./postgres-activity.projector.js";
 
 const connection = new Redis({
   host: process.env.REDIS_HOST ?? "localhost",
@@ -26,15 +27,19 @@ const logger = pino({
   level: process.env.LOG_LEVEL ?? "info",
 });
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const consumerName = "dss.worker.integration-events.v1";
+const consumerName = "dss.worker.integration-events.v2";
 const deadLetterQueue = new Queue<DeadLetterIntegrationEventJob>(
   DSS_QUEUE_NAMES.INTEGRATION_EVENTS_DEAD_LETTER,
   { connection },
 );
 const deadLetters = new DeadLetterService(pool, deadLetterQueue, consumerName);
+const activityProjector = new PostgresActivityProjector(pool);
 const worker = new Worker<IntegrationEventJob>(
   DSS_QUEUE_NAMES.INTEGRATION_EVENTS,
-  createIntegrationEventProcessor(new PostgresProcessedEventStore(pool)),
+  createIntegrationEventProcessor(
+    new PostgresProcessedEventStore(pool),
+    (event) => activityProjector.project(event),
+  ),
   { connection },
 );
 const mediaWorker = new Worker<MediaProcessingJob>(

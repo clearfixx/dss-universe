@@ -609,6 +609,10 @@ Delivered in the Profile Foundation package:
   fingerprint or raw network metadata persistence.
 - owner-only profile completion with a deterministic eight-section checklist,
   missing-field guidance and no stale derived database state.
+- shared Activity projection foundation fed by versioned transactional Outbox
+  events and an idempotent Worker projector;
+- privacy/block-aware paginated user activity with Profile Wall creation and
+  tombstone retraction as the first end-to-end producer.
 
 ## Profile
 
@@ -814,6 +818,13 @@ All points use a reversible ledger. Deleted/moderated/unpublished content may re
 - subscriptions, interests, mentions and own activity;
 - deterministic recommendations before AI augmentation;
 - unread markers and module filters.
+
+Foundation delivered early in Phase 7:
+
+- independent Activity read model rather than public reuse of Audit records;
+- allow-listed event projection with no content bodies or request metadata;
+- idempotent Profile Wall creation and tombstone retraction handling;
+- user activity GraphQL boundary with profile privacy and block enforcement.
 
 ## Definition of Done
 

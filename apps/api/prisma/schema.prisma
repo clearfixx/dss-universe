@@ -102,6 +102,12 @@ enum NotificationDigestFrequency {
   WEEKLY
 }
 
+enum ActivityVisibility {
+  PUBLIC
+  MEMBERS
+  PRIVATE
+}
+
 model User {
   id            String     @id @default(uuid())
   email         String     @unique
@@ -557,4 +563,25 @@ model AuditRecord {
   @@index([targetType, targetId, occurredAt])
   @@index([correlationId])
   @@map("audit_records")
+}
+
+model ActivityEntry {
+  id            String             @id @default(uuid())
+  sourceEventId String             @unique
+  actorId       String
+  module        String
+  action        String
+  subjectType   String
+  subjectId     String
+  visibility    ActivityVisibility @default(MEMBERS)
+  metadata      Json?
+  occurredAt    DateTime
+  retractedAt   DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@index([actorId, retractedAt, occurredAt, id])
+  @@index([module, retractedAt, occurredAt])
+  @@index([subjectType, subjectId])
+  @@map("activity_entries")
 }

@@ -57,9 +57,11 @@ import { UserWallService } from './application/services/user-wall.service';
 import { USER_WALL_REPOSITORY } from './domain/repositories/user-wall.repository.interface';
 import { PrismaUserWallRepository } from './infrastructure/repositories/prisma-user-wall.repository';
 import { ProfileCompletionService } from './application/services/profile-completion.service';
+import { ActivityModule } from '../activity';
+import { UserActivityFeedService } from './application/services/user-activity-feed.service';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, ActivityModule],
   controllers: [UsersController],
   providers: [
     UsersService,
@@ -74,6 +76,7 @@ import { ProfileCompletionService } from './application/services/profile-complet
     UserPresenceService,
     UserWallService,
     ProfileCompletionService,
+    UserActivityFeedService,
     {
       provide: APP_INTERCEPTOR,
       useClass: UserPresenceInterceptor,

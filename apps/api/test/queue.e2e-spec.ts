@@ -51,15 +51,21 @@ describe('Outbox queue delivery (e2e)', () => {
         processed += 1;
         return Promise.resolve(processIntegrationEvent(job.data));
       },
-      { connection: { host: '127.0.0.1', port: 6380 } },
+      {
+        connection: { host: '127.0.0.1', port: 6380 },
+        autorun: false,
+      },
     );
-    const completed = new Promise<void>((resolve, reject) => {
-      worker.once('completed', () => resolve());
-      worker.once('failed', (_job, error) => reject(error));
-    });
-
+    void worker.run();
+    await worker.waitUntilReady();
     await expect(dispatcher.dispatchPending()).resolves.toBe(1);
-    await completed;
+    const job = await queues.integrationEvents.getJob(event.id);
+    expect(job).toBeDefined();
+    for (let attempt = 0; attempt < 100; attempt += 1) {
+      if ((await job?.getState()) === 'completed') break;
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+    await expect(job?.getState()).resolves.toBe('completed');
     await expect(
       prisma.outboxEvent.findUnique({ where: { id: event.id } }),
     ).resolves.toMatchObject({ status: 'PUBLISHED' });
@@ -71,8 +77,7 @@ describe('Outbox queue delivery (e2e)', () => {
     await new Promise((resolve) => setTimeout(resolve, 100));
     expect(processed).toBe(1);
 
-    await worker.close();
-    const job = await queues.integrationEvents.getJob(event.id);
+    await worker.close(true);
     await job?.remove();
     await prisma.outboxEvent.delete({ where: { id: event.id } });
   });
