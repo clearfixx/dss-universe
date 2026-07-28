@@ -144,6 +144,8 @@ model User {
   wallPosts               UserWallPost[]               @relation("ProfileWallOwner")
   authoredWallPosts       UserWallPost[]               @relation("ProfileWallAuthor")
   notificationPreferences UserNotificationPreferences?
+  reputationGiven         ReputationEntry[]            @relation("ReputationActor")
+  reputationReceived      ReputationEntry[]            @relation("ReputationRecipient")
 
   refreshTokenHash String?
   emailVerifiedAt  DateTime?
@@ -584,4 +586,35 @@ model ActivityEntry {
   @@index([module, retractedAt, occurredAt])
   @@index([subjectType, subjectId])
   @@map("activity_entries")
+}
+
+model ReputationEntry {
+  id              String   @id @default(uuid())
+  actorId         String
+  recipientId     String
+  value           Int
+  reason          String
+  reversesEntryId String?  @unique
+  createdAt       DateTime @default(now())
+
+  actor     User @relation("ReputationActor", fields: [actorId], references: [id], onDelete: Restrict)
+  recipient User @relation("ReputationRecipient", fields: [recipientId], references: [id], onDelete: Restrict)
+
+  reverses ReputationEntry? @relation("ReputationReversal", fields: [reversesEntryId], references: [id], onDelete: Restrict)
+  reversal ReputationEntry? @relation("ReputationReversal")
+
+  @@index([recipientId, createdAt, id])
+  @@index([actorId, recipientId, createdAt])
+  @@index([reversesEntryId])
+  @@map("reputation_entries")
+}
+
+model ReputationPolicy {
+  id                    String   @id @default("default")
+  minimumAccountAgeDays Int      @default(7)
+  updatedById           String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("reputation_policy")
 }

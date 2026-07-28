@@ -52,6 +52,7 @@ const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     Permission.RolesRead,
 
     Permission.PermissionsRead,
+    Permission.ReputationReverse,
   ],
 
   admin: [
@@ -74,6 +75,8 @@ const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     Permission.MediaQuarantineManage,
     Permission.MediaLibraryRead,
     Permission.MediaJobsManage,
+    Permission.ReputationReverse,
+    Permission.ReputationSettingsManage,
   ],
 
   owner: PERMISSION_LIST.map((permission) => permission.key),

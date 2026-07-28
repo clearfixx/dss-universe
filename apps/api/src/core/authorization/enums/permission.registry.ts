@@ -87,6 +87,17 @@ export const PERMISSIONS = {
     description: 'Allows retrying failed Media processing jobs.',
   },
 
+  ReputationReverse: {
+    key: 'reputation.reverse',
+    label: 'Reverse reputation',
+    description: 'Allows reversing direct reputation entries.',
+  },
+  ReputationSettingsManage: {
+    key: 'reputation.settings.manage',
+    label: 'Manage reputation settings',
+    description: 'Allows updating Reputation policy settings.',
+  },
+
   RolesRead: {
     key: 'roles.read',
     label: 'Read roles',

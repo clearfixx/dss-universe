@@ -28,6 +28,7 @@
 
 export { UsersModule } from './users.module';
 export { UsersService } from './application/services/users.service';
+export { UserBlockService } from './application/services/user-block.service';
 
 export {
   USERS_REPOSITORY,

@@ -697,6 +697,31 @@ Delivered in the Profile Foundation package:
 
 # Phase 8 — Gamification, Reputation, Points, Levels and Titles
 
+## Status
+
+```text
+IN PROGRESS
+```
+
+Delivered in the Reputation Ledger foundation package:
+
+- separate Reputation bounded context, independent from Users, reactions and
+  Community Points;
+- immutable PostgreSQL ledger for public `+1` and `-1` decisions with actor,
+  recipient, mandatory reason and timestamp;
+- append-only compensating reversal with moderator identity and reason;
+- database triggers that reject ledger updates and deletes;
+- rebuildable score derived from original and reversal values;
+- configurable minimum account age with a seven-day default;
+- one actor-to-recipient decision per rolling 24 hours, serialized with a
+  PostgreSQL advisory transaction lock;
+- inactive-user, self-rating and block enforcement;
+- permission-backed reversal and policy management without role checks;
+- transactional Audit and Outbox evidence;
+- authenticated GraphQL history, policy, give, reverse and policy-update
+  contracts;
+- unit, concurrency and PostgreSQL E2E coverage.
+
 ## Direct reputation
 
 - visible author and mandatory reason;

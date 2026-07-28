@@ -52,6 +52,12 @@ input DeactivateAccountInput {
   password: String!
 }
 
+input GiveReputationInput {
+  reason: String!
+  recipientId: ID!
+  value: Int!
+}
+
 input InitiateMediaUploadInput {
   checksum: String
   declaredMimeType: String!
@@ -219,6 +225,7 @@ type Mutation {
   createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
   deactivateAccount(input: DeactivateAccountInput!): LogoutResultModel!
   followUser(userId: ID!): UserSocialGraphSummary!
+  giveReputation(input: GiveReputationInput!): ReputationEntry!
   initiateMediaUpload(input: InitiateMediaUploadInput!): MediaUploadSession!
   login(input: LoginInput!): AuthPayloadModel!
   logout: LogoutResultModel!
@@ -231,12 +238,14 @@ type Mutation {
   removeViewerCover: Viewer!
   rescanQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
   retryFailedMedia(mediaId: ID!): MediaLibraryItem!
+  reverseReputation(input: ReverseReputationInput!): ReputationEntry!
   revokeOtherViewerSessions: RevokeSessionsResultModel!
   revokeViewerSession(sessionId: ID!): LogoutResultModel!
   setViewerAvatar(mediaId: ID!): Viewer!
   setViewerCover(mediaId: ID!): Viewer!
   unblockUser(userId: ID!): UserBlockResult!
   unfollowUser(userId: ID!): UserSocialGraphSummary!
+  updateReputationPolicy(input: UpdateReputationPolicyInput!): ReputationPolicy!
   updateViewerNotificationPreferences(input: UpdateNotificationPreferencesInput!): NotificationPreferences!
   updateViewerPrivacy(input: UpdateUserPrivacyInput!): UserPrivacySettings!
   updateViewerProfile(input: UpdateViewerProfileInput!): Viewer!
@@ -333,6 +342,8 @@ type Query {
   presenceSummary: PresenceSummary!
   profileWall(pagination: UsersPageInput, profileOwnerId: ID!): ProfileWallPage!
   quarantinedMedia(limit: Int! = 25): [MediaQuarantineItem!]!
+  reputationHistory(pagination: ReputationPageInput, userId: ID!): ReputationHistory!
+  reputationPolicy: ReputationPolicy!
   user(id: ID!): User!
   userActivity(pagination: UsersPageInput, userId: ID!): UserActivityPage!
   userByUsername(username: String!): User!
@@ -355,6 +366,55 @@ input RegisterInput {
   username: String!
 }
 
+type ReputationActor {
+  avatarUrl: String
+  displayName: String
+  id: ID!
+  username: String!
+}
+
+type ReputationEntry {
+  actor: ReputationActor!
+  createdAt: DateTime!
+  id: ID!
+  reason: String!
+  recipientId: ID!
+  reversal: ReputationReversal
+  value: Int!
+}
+
+type ReputationHistory {
+  items: [ReputationEntry!]!
+  limit: Int!
+  page: Int!
+  score: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+input ReputationPageInput {
+  limit: Int! = 20
+  page: Int! = 1
+}
+
+type ReputationPolicy {
+  minimumAccountAgeDays: Int!
+  updatedAt: DateTime!
+  updatedById: ID
+}
+
+type ReputationReversal {
+  actor: ReputationActor!
+  createdAt: DateTime!
+  id: ID!
+  reason: String!
+}
+
+input ReverseReputationInput {
+  entryId: ID!
+  reason: String!
+}
+
 type RevokeSessionsResultModel {
   revokedCount: Int!
   success: Boolean!
@@ -365,6 +425,10 @@ input UpdateNotificationPreferencesInput {
   emailCategories: [NotificationCategory!]!
   emailEnabled: Boolean!
   inAppCategories: [NotificationCategory!]!
+}
+
+input UpdateReputationPolicyInput {
+  minimumAccountAgeDays: Int!
 }
 
 input UpdateUserPrivacyInput {

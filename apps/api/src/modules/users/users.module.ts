@@ -104,7 +104,12 @@ import { UserActivityFeedService } from './application/services/user-activity-fe
       useClass: PrismaUserWallRepository,
     },
   ],
-  exports: [UsersService, UserPrivacyService, USERS_REPOSITORY],
+  exports: [
+    UsersService,
+    UserPrivacyService,
+    UserBlockService,
+    USERS_REPOSITORY,
+  ],
 })
 export class UsersModule {}
 

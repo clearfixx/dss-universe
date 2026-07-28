@@ -31,6 +31,8 @@ For current product and architecture work, use these sources first:
 7. `development/QUALITY_GATE.md` — mandatory verification and test strategy.
 8. `architecture/PHASE_7_USER_CONTRACTS.md` — frozen Users/Profile backend
    ownership, privacy invariants and deferred cross-phase extensions.
+9. `architecture/PHASE_8_REPUTATION_LEDGER.md` — immutable direct reputation,
+   reversal, cooldown and policy contracts.
 
 Older roadmap and architecture files are historical references when they conflict with these documents.
 
