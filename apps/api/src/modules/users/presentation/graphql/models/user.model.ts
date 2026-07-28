@@ -57,6 +57,9 @@ export class UserModel {
   followingCount!: number;
 
   @Field()
+  isFollowedByViewer!: boolean;
+
+  @Field()
   isOnline!: boolean;
 
   @Field()

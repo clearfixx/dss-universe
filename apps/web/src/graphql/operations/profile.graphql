@@ -1,0 +1,285 @@
+query PublicProfile($username: String!) {
+  viewer {
+    id
+  }
+  userByUsername(username: $username) {
+    id
+    username
+    displayName
+    bio
+    location
+    website
+    technologies
+    interests
+    avatarUrl
+    coverUrl
+    followerCount
+    followingCount
+    isFollowedByViewer
+    isOnline
+    lastSeenAt
+    createdAt
+    socialLinks {
+      id
+      platform
+      label
+      url
+      position
+    }
+  }
+}
+
+query ProfileWall($profileOwnerId: ID!, $pagination: UsersPageInput) {
+  profileWall(profileOwnerId: $profileOwnerId, pagination: $pagination) {
+    items {
+      id
+      profileOwnerId
+      authorId
+      body
+      imageMediaId
+      isDeleted
+      deletedAt
+      createdAt
+      updatedAt
+    }
+    total
+    page
+    limit
+    totalPages
+  }
+}
+
+query UserActivity($userId: ID!, $pagination: UsersPageInput) {
+  userActivity(userId: $userId, pagination: $pagination) {
+    items {
+      id
+      actorId
+      module
+      action
+      subjectType
+      subjectId
+      occurredAt
+    }
+    total
+    page
+    limit
+    totalPages
+  }
+}
+
+query MembersDirectory($input: MembersDirectoryInput) {
+  members(input: $input) {
+    items {
+      id
+      username
+      displayName
+      avatarUrl
+      isOnline
+      roles
+      createdAt
+    }
+    total
+    page
+    limit
+    totalPages
+  }
+  presenceSummary {
+    onlineMembers
+    onlineGuests
+    onlineCrawlers
+    totalOnline
+    sampledAt
+  }
+}
+
+query ProfileSettings {
+  viewer {
+    id
+    username
+    displayName
+    email
+    bio
+    location
+    website
+    technologies
+    interests
+    avatarUrl
+    coverUrl
+    createdAt
+    socialLinks {
+      id
+      platform
+      label
+      url
+      position
+    }
+  }
+  viewerPrivacySettings {
+    profileVisibility
+    showLocation
+    showWebsite
+    showSocialLinks
+    showLastSeen
+    showOnlineStatus
+    allowFollowers
+    showFollows
+    allowWallPosts
+  }
+  viewerProfileCompletion {
+    percentage
+    completedCount
+    totalCount
+    isComplete
+    completedFields
+    missingFields
+  }
+  viewerSessions {
+    id
+    current
+    userAgent
+    ipAddress
+    createdAt
+    expiresAt
+  }
+  viewerNotificationPreferences {
+    inAppCategories
+    emailEnabled
+    emailCategories
+    digestFrequency
+  }
+}
+
+mutation FollowProfile($userId: ID!) {
+  followUser(userId: $userId) {
+    userId
+    followerCount
+    followingCount
+  }
+}
+
+mutation UnfollowProfile($userId: ID!) {
+  unfollowUser(userId: $userId) {
+    userId
+    followerCount
+    followingCount
+  }
+}
+
+mutation CreateProfileWallPost($input: CreateWallPostInput!) {
+  createProfileWallPost(input: $input) {
+    id
+    profileOwnerId
+    authorId
+    body
+    imageMediaId
+    isDeleted
+    createdAt
+    updatedAt
+  }
+}
+
+mutation RemoveProfileWallPost($postId: ID!, $reason: String) {
+  removeProfileWallPost(postId: $postId, reason: $reason) {
+    id
+    isDeleted
+    deletedAt
+  }
+}
+
+mutation UpdateViewerProfileSettings($input: UpdateViewerProfileInput!) {
+  updateViewerProfile(input: $input) {
+    id
+    username
+    displayName
+    bio
+    location
+    website
+    technologies
+    interests
+    updatedAt
+  }
+}
+
+mutation UpdateViewerPrivacySettings($input: UpdateUserPrivacyInput!) {
+  updateViewerPrivacy(input: $input) {
+    profileVisibility
+    showLocation
+    showWebsite
+    showSocialLinks
+    showLastSeen
+    showOnlineStatus
+    allowFollowers
+    showFollows
+    allowWallPosts
+  }
+}
+
+mutation UpdateViewerNotificationSettings(
+  $input: UpdateNotificationPreferencesInput!
+) {
+  updateViewerNotificationPreferences(input: $input) {
+    inAppCategories
+    emailEnabled
+    emailCategories
+    digestFrequency
+  }
+}
+
+mutation RevokeViewerDeviceSession($sessionId: ID!) {
+  revokeViewerSession(sessionId: $sessionId) {
+    success
+  }
+}
+
+mutation RevokeOtherViewerDeviceSessions {
+  revokeOtherViewerSessions {
+    success
+    revokedCount
+  }
+}
+
+mutation ChangeViewerEmail($input: ChangeEmailInput!) {
+  changeViewerEmail(input: $input) {
+    success
+  }
+}
+
+mutation ChangeViewerPassword($input: ChangePasswordInput!) {
+  changeViewerPassword(input: $input) {
+    success
+  }
+}
+
+mutation DeactivateViewerAccount($input: DeactivateAccountInput!) {
+  deactivateAccount(input: $input) {
+    success
+  }
+}
+
+mutation SetViewerAvatar($mediaId: ID!) {
+  setViewerAvatar(mediaId: $mediaId) {
+    id
+    avatarUrl
+  }
+}
+
+mutation RemoveViewerAvatar {
+  removeViewerAvatar {
+    id
+    avatarUrl
+  }
+}
+
+mutation SetViewerCover($mediaId: ID!) {
+  setViewerCover(mediaId: $mediaId) {
+    id
+    coverUrl
+  }
+}
+
+mutation RemoveViewerCover {
+  removeViewerCover {
+    id
+    coverUrl
+  }
+}

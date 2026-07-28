@@ -86,6 +86,18 @@ export class PrismaUserSocialGraphRepository implements UserSocialGraphRepositor
     });
   }
 
+  async isFollowing(actorId: string, targetId: string): Promise<boolean> {
+    const edge = await this.prisma.userFollow.findFirst({
+      where: {
+        followerId: actorId,
+        followingId: targetId,
+        deletedAt: null,
+      },
+      select: { followerId: true },
+    });
+    return Boolean(edge);
+  }
+
   async summaries(
     userIds: string[],
   ): Promise<Map<string, UserSocialGraphSummary>> {

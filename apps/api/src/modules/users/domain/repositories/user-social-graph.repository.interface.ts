@@ -24,6 +24,7 @@ export const USER_SOCIAL_GRAPH_REPOSITORY = Symbol(
 export interface UserSocialGraphRepository {
   follow(actorId: string, targetId: string): Promise<void>;
   unfollow(actorId: string, targetId: string): Promise<void>;
+  isFollowing(actorId: string, targetId: string): Promise<boolean>;
   summaries(userIds: string[]): Promise<Map<string, UserSocialGraphSummary>>;
   followers(
     userId: string,

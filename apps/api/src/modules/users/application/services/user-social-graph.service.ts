@@ -94,6 +94,11 @@ export class UserSocialGraphService {
     return this.graph.summaries(userIds);
   }
 
+  isFollowing(actorId: string, targetId: string): Promise<boolean> {
+    if (actorId === targetId) return Promise.resolve(false);
+    return this.graph.isFollowing(actorId, targetId);
+  }
+
   followers(
     userId: string,
     viewerId: string,

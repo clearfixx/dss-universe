@@ -152,6 +152,14 @@ export class UsersResolver {
     return (await this.graphLoader.load(user.id)).followingCount;
   }
 
+  @ResolveField('isFollowedByViewer', () => Boolean)
+  isFollowedByViewer(
+    @Parent() user: UserModel,
+    @AuthUser() authenticated: AuthenticatedUser,
+  ): Promise<boolean> {
+    return this.graph.isFollowing(authenticated.id, user.id);
+  }
+
   @ResolveField('isOnline', () => Boolean)
   async isOnline(
     @Parent() user: UserModel,

@@ -402,6 +402,7 @@ type User {
   followingCount: Int!
   id: ID!
   interests: [String!]!
+  isFollowedByViewer: Boolean!
   isOnline: Boolean!
   lastSeenAt: String
   location: String
@@ -486,6 +487,7 @@ type Viewer {
   followingCount: Int!
   id: ID!
   interests: [String!]!
+  isFollowedByViewer: Boolean!
   isOnline: Boolean!
   lastSeenAt: String
   location: String

@@ -21,8 +21,20 @@ to the API. UI visibility is never the only permission boundary.
 
 - `/` — guest landing or authenticated Command Deck;
 - `/command-deck` — personal DSS overview;
+- `/profile/[username]` — privacy-aware social profile, Profile Wall and
+  activity projection;
+- `/settings/profile` — owner profile, privacy, notification, media, security
+  and session settings;
+- `/members` — searchable, filterable member directory with privacy-safe
+  presence and TanStack Table;
 - `/media` — Mission Control Media Library with storage metrics, catalog
   filters, cursor navigation, failure visibility, and processing retry.
+
+The profile frontend uses React Server Components for GraphQL reads, Server
+Actions for authenticated mutations, Zustand for transient profile-tab state,
+and TanStack Table for the Members Directory. Reputation, points, levels,
+titles and ranking remain owned by Phase 8; shared wall comments, reactions and
+reports remain owned by Phase 9–10.
 
 ## GraphQL workflow
 

@@ -25,9 +25,13 @@ describe('UserSocialGraphService', () => {
     jest.fn();
   const summaries: jest.MockedFunction<UserSocialGraphRepository['summaries']> =
     jest.fn();
+  const isFollowing: jest.MockedFunction<
+    UserSocialGraphRepository['isFollowing']
+  > = jest.fn();
   const graph = {
     follow,
     unfollow,
+    isFollowing,
     summaries,
   } as unknown as jest.Mocked<UserSocialGraphRepository>;
   const users = {
@@ -100,5 +104,13 @@ describe('UserSocialGraphService', () => {
       followingCount: 0,
     });
     expect(follow).toHaveBeenCalledWith('user-1', 'user-2');
+  });
+
+  it('exposes the viewer follow state without querying self edges', async () => {
+    isFollowing.mockResolvedValue(true);
+
+    await expect(service.isFollowing('user-1', 'user-2')).resolves.toBe(true);
+    await expect(service.isFollowing('user-1', 'user-1')).resolves.toBe(false);
+    expect(isFollowing.mock.calls).toEqual([['user-1', 'user-2']]);
   });
 });

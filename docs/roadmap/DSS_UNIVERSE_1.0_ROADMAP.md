@@ -560,7 +560,7 @@ Delivered in the Media v1 foundation package:
 ## Status
 
 ```text
-IN PROGRESS
+COMPLETE
 ```
 
 Delivered in the Profile Foundation package:
@@ -617,6 +617,15 @@ Delivered in the Profile Foundation package:
   public profile projection for both id and username lookup;
 - explicit deferral of reputation/groups/titles to Phase 8 and shared
   interactions/moderation to Phase 9–10, preventing duplicate Users concepts.
+- responsive `/profile/[username]` owner/visitor frontend with cover, avatar,
+  privacy-aware details, social links, follow state, Profile Wall and Activity;
+- owner-only `/settings/profile` frontend for identity, privacy, notifications,
+  sessions, credentials, lifecycle and Media-backed avatar/cover references;
+- `/members` frontend with URL-backed discovery, presence metrics, GraphQL,
+  TanStack Table and extension points for Phase 8 ranking;
+- Zustand-backed transient profile navigation and Server Action GraphQL
+  mutations with no client-side permission assumptions;
+- approved Profile frontend concept mockup and regression tests.
 
 ## Profile
 
@@ -625,7 +634,8 @@ Delivered in the Profile Foundation package:
 - technologies/skills and interests;
 - registration/activity/last-seen information;
 - privacy settings;
-- badges, selected title, level, points and reputation;
+- extension points for badges, selected title, level, points and reputation
+  delivered by Phase 8;
 - social-network-style profile layout;
 - profile completion.
 
@@ -643,8 +653,8 @@ Delivered in the Profile Foundation package:
 
 - registered users may post text, image or text+image;
 - privacy controls;
-- comments/reactions where approved;
-- moderation, tombstones and reports.
+- tombstones in Phase 7;
+- shared comments/reactions/reports and moderation in Phase 9–10.
 
 ## Followers and friends
 
@@ -659,11 +669,11 @@ Delivered in the Profile Foundation package:
 
 - all users;
 - search, filters and sorting;
-- role/group/title filters;
+- role filtering in Phase 7; group/title filters in Phase 8;
 - online status;
-- top month/year/all time;
-- top-5 cards;
-- activity, reputation and contribution columns;
+- top month/year/all time and true top-5 ranking in Phase 8;
+- identity/activity columns in Phase 7; reputation and contribution ranking
+  columns in Phase 8;
 - pagination;
 - GraphQL projections and TanStack Table.
 
@@ -677,8 +687,10 @@ Delivered in the Profile Foundation package:
 ## Definition of Done
 
 - public profile and settings are complete;
-- follow and wall flows are moderated and tested;
-- Members Directory matches the approved mockup behavior;
+- follow and wall ownership/privacy flows are tested;
+- shared interaction moderation is connected in Phase 9–10;
+- Members Directory matches the approved Phase 7 behavior and exposes Phase 8
+  ranking extension points;
 - privacy is enforced on the API.
 
 ---

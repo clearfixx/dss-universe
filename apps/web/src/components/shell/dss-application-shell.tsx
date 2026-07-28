@@ -122,8 +122,10 @@ export function DssApplicationShell({ children }: PropsWithChildren) {
             <Button variant="ghost" size="icon" aria-label="Notifications">
               <Bell />
             </Button>
-            <Button variant="ghost" size="icon" aria-label="Settings">
-              <Settings />
+            <Button asChild variant="ghost" size="icon" aria-label="Settings">
+              <Link href="/settings/profile">
+                <Settings />
+              </Link>
             </Button>
             <div className="ml-2 flex items-center gap-3 border-l border-white/10 pl-4">
               <Avatar>

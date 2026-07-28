@@ -3,7 +3,7 @@
 ## Status
 
 ```text
-BACKEND FOUNDATION FROZEN
+PHASE 7 CONTRACTS AND FRONTEND DELIVERED
 ```
 
 This document freezes the backend ownership and public API boundaries delivered
@@ -53,6 +53,10 @@ Public authenticated contracts:
 - `userActivity(userId, pagination)`;
 - `presenceSummary`.
 
+The public profile projection also exposes viewer-relative follow state through
+`isFollowedByViewer`. The field is resolved through the social graph boundary
+and never inferred on the client.
+
 Both public profile lookup paths must use the same privacy projection. No
 resolver or loader may expose a raw `UserRecord` or bypass profile visibility.
 
@@ -88,8 +92,21 @@ The following are deliberately not implemented inside Users:
 - shared comments, reactions and reports — Phase 9;
 - Profile Wall interaction moderation — shared Phase 9/10 infrastructure;
 - cross-module home feed aggregation — Phase 9 Activity Feed;
-- frontend profile, settings, wall and directory screens — frontend delivery
-  after the backend contracts are stable.
+- reputation-backed directory ranking and top periods — Phase 8;
+- cross-module comments, reactions, reports and wall moderation — Phase 9–10.
+
+## Delivered frontend surfaces
+
+- `/profile/[username]` — responsive public/owner profile, social links,
+  follow action, Profile Wall and privacy-safe activity;
+- `/settings/profile` — profile, privacy, notification, media, credential,
+  account lifecycle and session controls;
+- `/members` — URL-backed search, role/online filters, deterministic sorting,
+  pagination, privacy-safe presence metrics and TanStack Table.
+
+Reads use GraphQL from React Server Components. Authenticated writes use Server
+Actions that forward the HttpOnly credential to GraphQL. Zustand owns only the
+transient profile tab, while filters remain shareable URL state.
 
 ## Change policy
 
