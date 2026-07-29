@@ -22,8 +22,10 @@
 
 import {
   Activity,
+  Award,
   CalendarDays,
   Code2,
+  Crown,
   ExternalLink,
   FileImage,
   Globe2,
@@ -34,10 +36,11 @@ import {
   Orbit,
   Pencil,
   Radio,
-  Rocket,
   Send,
   ShieldCheck,
   Sparkles,
+  Star,
+  Trophy,
   UserCheck,
   UserPlus,
   Users,
@@ -57,23 +60,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import type {
   ProfileWallQuery,
+  ProfileGamificationQuery,
   PublicProfileQuery,
   UserActivityQuery,
 } from "@/gql/graphql";
 import { cn } from "@/lib/utils";
 import { useProfileUiStore, type ProfileTab } from "@/stores/profile-ui.store";
 
-import { createWallPost, setProfileFollowState } from "./profile-actions";
+import {
+  createWallPost,
+  giveProfileReputation,
+  selectViewerCustomTitle,
+  setProfileFollowState,
+} from "./profile-actions";
 
 type Profile = PublicProfileQuery["userByUsername"];
 type Wall = ProfileWallQuery["profileWall"] | undefined;
 type ActivityPage = UserActivityQuery["userActivity"] | undefined;
+type Gamification = ProfileGamificationQuery | undefined;
 
 type ProfileViewProps = {
   viewerId: string;
   profile: Profile;
   wall: Wall;
   activity: ActivityPage;
+  gamification: Gamification;
 };
 
 const tabs: Array<{ id: ProfileTab; label: string; icon: typeof Orbit }> = [
@@ -113,11 +124,15 @@ export function ProfileView({
   profile,
   wall,
   activity,
+  gamification,
 }: ProfileViewProps) {
   const activeTab = useProfileUiStore((state) => state.activeTab);
   const setActiveTab = useProfileUiStore((state) => state.setActiveTab);
   const [pending, startTransition] = useTransition();
   const isOwner = viewerId === profile.id;
+  const selectedTitle = gamification?.userCustomTitles.find(
+    (grant) => grant.selected && grant.title.isActive,
+  )?.title;
 
   function toggleFollow() {
     startTransition(async () => {
@@ -168,6 +183,17 @@ export function ProfileView({
                   {profile.displayName || profile.username}
                 </h1>
                 <ShieldCheck className="size-5 text-violet-400" />
+                {selectedTitle ? (
+                  <Badge
+                    style={{
+                      borderColor: `${selectedTitle.color}66`,
+                      color: selectedTitle.color,
+                      backgroundColor: `${selectedTitle.color}14`,
+                    }}
+                  >
+                    <Crown /> {selectedTitle.badge} {selectedTitle.name}
+                  </Badge>
+                ) : null}
                 {profile.isOnline ? (
                   <Badge className="border-emerald-400/20 bg-emerald-400/10 text-emerald-300">
                     Online
@@ -233,9 +259,8 @@ export function ProfileView({
             />
             <ProfileMetric
               label="Гейміфікація"
-              value="Відкриється у Phase 8"
-              icon={Rocket}
-              muted
+              value={`Рівень ${gamification?.levelProgress.currentLevel ?? 0} · ${(gamification?.levelProgress.balance ?? 0).toLocaleString("uk-UA")} очок`}
+              icon={Trophy}
             />
           </div>
         </div>
@@ -277,6 +302,14 @@ export function ProfileView({
         </div>
 
         <div className="space-y-5">
+          <GamificationCard
+            gamification={gamification}
+            isOwner={isOwner}
+            username={profile.username}
+          />
+          <AchievementsCard gamification={gamification} />
+          <ProgressHistoryCard gamification={gamification} />
+          {!isOwner ? <ReputationCard profile={profile} /> : null}
           <ContributionCard profile={profile} wall={wall} activity={activity} />
           {showActivity ? <ActivityFeed activity={activity} compact /> : null}
         </div>
@@ -585,16 +618,272 @@ function ContributionCard({
           value={(activity?.total ?? 0).toLocaleString("uk-UA")}
           icon={Activity}
         />
-        <div className="col-span-2 rounded-xl border border-amber-400/15 bg-amber-400/5 p-4">
-          <p className="text-xs uppercase tracking-wide text-amber-300">
-            Phase 8 ready
-          </p>
-          <p className="mt-1 text-sm text-slate-400">
-            Рівні, очки, репутація та звання підключаться до цього профілю без
-            зміни його базової структури.
-          </p>
-        </div>
         <p className="col-span-2 text-xs text-slate-600">ID: {profile.id}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function GamificationCard({
+  gamification,
+  isOwner,
+  username,
+}: {
+  gamification: Gamification;
+  isOwner: boolean;
+  username: string;
+}) {
+  const level = gamification?.levelProgress;
+  const titles =
+    gamification?.userCustomTitles.filter(
+      (grant) => !grant.revokedAt && grant.title.isActive,
+    ) ?? [];
+  const progress = Math.min(100, Math.max(0, level?.progressPercent ?? 0));
+
+  return (
+    <Card className="overflow-hidden border-violet-400/15 bg-gradient-to-br from-violet-950/35 to-blue-950/20">
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <Trophy className="size-5 text-amber-300" /> Прогрес
+          </span>
+          <Badge className="bg-violet-500/15 text-violet-200">
+            Рівень {level?.currentLevel ?? 0}
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <div>
+          <div className="mb-2 flex items-end justify-between">
+            <div>
+              <p className="text-2xl font-bold">
+                {(level?.balance ?? 0).toLocaleString("uk-UA")}
+              </p>
+              <p className="text-xs text-slate-500">Community Points</p>
+            </div>
+            <p className="text-sm font-medium text-emerald-300">
+              {gamification?.reputationHistory.score ?? 0} репутації
+            </p>
+          </div>
+          <div
+            className="h-2 overflow-hidden rounded-full bg-white/5"
+            role="progressbar"
+            aria-label="Прогрес поточного рівня"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(progress)}
+          >
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-400"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <div className="mt-2 flex justify-between text-xs text-slate-500">
+            <span>{Math.round(progress)}%</span>
+            <span>
+              {level?.nextLevel
+                ? `${level.pointsNeeded.toLocaleString("uk-UA")} до рівня ${level.nextLevel}`
+                : "Максимальний рівень"}
+            </span>
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-2 flex items-center gap-2 text-xs uppercase tracking-wider text-slate-500">
+            <Crown className="size-3.5" /> Звання
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {titles.length ? (
+              titles.map((grant) => (
+                <Badge
+                  key={grant.id}
+                  variant="outline"
+                  style={{
+                    borderColor: `${grant.title.color}66`,
+                    color: grant.title.color,
+                  }}
+                >
+                  {grant.title.badge} {grant.title.name}
+                </Badge>
+              ))
+            ) : (
+              <span className="text-sm text-slate-500">
+                Звання ще не отримані.
+              </span>
+            )}
+          </div>
+          {isOwner && titles.length > 1 ? (
+            <form
+              action={selectViewerCustomTitle.bind(null, username)}
+              className="mt-3 flex gap-2"
+            >
+              <select
+                name="grantId"
+                defaultValue={
+                  titles.find((grant) => grant.selected)?.id ?? titles[0]?.id
+                }
+                aria-label="Звання для відображення"
+                className="h-9 min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-950 px-3 text-sm"
+              >
+                {titles.map((grant) => (
+                  <option key={grant.id} value={grant.id}>
+                    {grant.title.badge} {grant.title.name}
+                  </option>
+                ))}
+              </select>
+              <Button type="submit" size="sm" variant="outline">
+                Обрати
+              </Button>
+            </form>
+          ) : null}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ReputationCard({ profile }: { profile: Profile }) {
+  const action = giveProfileReputation.bind(null, profile.id, profile.username);
+  return (
+    <Card className="border-emerald-400/10 bg-white/[0.03]">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Star className="size-5 text-emerald-300" /> Змінити репутацію
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form action={action} className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-sm text-emerald-300 has-checked:ring-1 has-checked:ring-emerald-400">
+              <input type="radio" name="value" value="1" required /> +1
+            </label>
+            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-rose-400/20 bg-rose-400/5 px-3 py-2 text-sm text-rose-300 has-checked:ring-1 has-checked:ring-rose-400">
+              <input type="radio" name="value" value="-1" required /> −1
+            </label>
+          </div>
+          <Textarea
+            name="reason"
+            minLength={3}
+            maxLength={500}
+            required
+            placeholder="Опишіть причину оцінки…"
+            className="min-h-20 bg-black/20"
+          />
+          <Button type="submit" className="w-full">
+            Надіслати оцінку
+          </Button>
+          <p className="text-xs leading-5 text-slate-500">
+            Одну оцінку конкретному користувачу можна залишити раз на 24 години.
+            Автор і причина будуть видимі отримувачу.
+          </p>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+function AchievementsCard({ gamification }: { gamification: Gamification }) {
+  const awards = gamification?.userAchievements ?? [];
+  return (
+    <Card className="bg-white/[0.03]">
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <Award className="size-5 text-cyan-300" /> Досягнення
+          </span>
+          <span className="text-sm font-normal text-slate-500">
+            {awards.length}
+          </span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {awards.length ? (
+          <div className="grid grid-cols-3 gap-2">
+            {awards.slice(0, 6).map((award) => (
+              <div
+                key={award.id}
+                title={`${award.achievement.name}: ${award.reason}`}
+                className="group grid min-h-20 place-items-center rounded-xl border bg-black/15 p-2 text-center"
+                style={{
+                  borderColor: `${award.achievement.color}4D`,
+                  backgroundColor: `${award.achievement.color}0D`,
+                }}
+              >
+                <span className="text-xl">{award.achievement.badge}</span>
+                <span className="line-clamp-2 text-[11px] text-slate-300">
+                  {award.achievement.name}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-white/10 p-6 text-center">
+            <Star className="mx-auto size-6 text-slate-600" />
+            <p className="mt-2 text-sm text-slate-500">
+              Перші досягнення ще попереду.
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ProgressHistoryCard({ gamification }: { gamification: Gamification }) {
+  const points = gamification?.communityPointsHistory.items ?? [];
+  const reputation = gamification?.reputationHistory.items ?? [];
+  if (!points.length && !reputation.length) return null;
+
+  return (
+    <Card className="bg-white/[0.03]">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Activity className="size-5 text-violet-300" /> Історія прогресу
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {points.slice(0, 3).map((entry) => (
+          <div key={entry.id} className="flex items-start gap-3">
+            <span
+              className={cn(
+                "grid min-w-10 place-items-center rounded-lg px-2 py-1 text-xs font-bold",
+                entry.points >= 0
+                  ? "bg-cyan-400/10 text-cyan-300"
+                  : "bg-rose-400/10 text-rose-300",
+              )}
+            >
+              {entry.points > 0 ? "+" : ""}
+              {entry.points}
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm text-slate-300">{entry.reason}</p>
+              <p className="mt-1 text-xs text-slate-600">{entry.ruleKey}</p>
+            </div>
+          </div>
+        ))}
+        {reputation.slice(0, 3).map((entry) => (
+          <div
+            key={entry.id}
+            className="border-t border-white/[0.06] pt-3 text-sm"
+          >
+            <p className="text-slate-300">
+              <span
+                className={
+                  entry.value > 0 ? "text-emerald-300" : "text-rose-300"
+                }
+              >
+                {entry.value > 0 ? "+1" : "−1"}
+              </span>{" "}
+              від{" "}
+              <strong>
+                {entry.actor.displayName || `@${entry.actor.username}`}
+              </strong>
+            </p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">
+              {entry.reason}
+            </p>
+          </div>
+        ))}
       </CardContent>
     </Card>
   );

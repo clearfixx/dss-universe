@@ -20,8 +20,12 @@ import {
   Bot,
   ChevronLeft,
   ChevronRight,
+  Crown,
+  Medal,
   Search,
   Sparkles,
+  Trophy,
+  TrendingUp,
   UserRound,
   Users,
 } from "lucide-react";
@@ -44,7 +48,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import type { MembersDirectoryQuery } from "@/gql/graphql";
+import type { LeaderboardPeriod, MembersDirectoryQuery } from "@/gql/graphql";
 
 type Member = MembersDirectoryQuery["members"]["items"][number];
 
@@ -55,12 +59,16 @@ type MembersDirectoryProps = {
     role?: string;
     sort?: string;
     onlineOnly?: boolean;
+    ranking?: LeaderboardPeriod;
   };
 };
 
 const column = createColumnHelper<Member>();
 
-function initials(member: Member): string {
+function initials(member: {
+  displayName: string | null;
+  username: string;
+}): string {
   return (member.displayName || member.username)
     .split(/\s+/)
     .slice(0, 2)
@@ -78,9 +86,29 @@ function pageHref(
   if (filters.role) search.set("role", filters.role);
   if (filters.sort) search.set("sort", filters.sort);
   if (filters.onlineOnly) search.set("onlineOnly", "true");
+  if (filters.ranking) search.set("ranking", filters.ranking);
   search.set("page", String(page));
   return `/members?${search.toString()}`;
 }
+
+function rankingHref(
+  filters: MembersDirectoryProps["filters"],
+  ranking: LeaderboardPeriod,
+): string {
+  const search = new URLSearchParams();
+  if (filters.search) search.set("search", filters.search);
+  if (filters.role) search.set("role", filters.role);
+  if (filters.sort) search.set("sort", filters.sort);
+  if (filters.onlineOnly) search.set("onlineOnly", "true");
+  search.set("ranking", ranking);
+  return `/members?${search.toString()}`;
+}
+
+const rankingLabels: Record<LeaderboardPeriod, string> = {
+  MONTH: "За місяць",
+  YEAR: "За рік",
+  ALL_TIME: "За весь час",
+};
 
 export function MembersDirectory({ data, filters }: MembersDirectoryProps) {
   const columns = useMemo(
@@ -227,18 +255,46 @@ export function MembersDirectory({ data, filters }: MembersDirectoryProps) {
       </Card>
 
       <section>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-semibold">Представники спільноти</h2>
-          <Badge variant="outline">
-            <Sparkles /> Рейтинговий топ — Phase 8
-          </Badge>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="flex items-center gap-2 font-semibold">
+              <Trophy className="size-5 text-amber-300" />
+              Лідери спільноти
+            </h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Рейтинг формується лише з Community Points.
+            </p>
+          </div>
+          <div className="flex rounded-lg border border-white/10 bg-black/20 p-1">
+            {(["MONTH", "YEAR", "ALL_TIME"] as const).map((period) => (
+              <Button
+                key={period}
+                asChild
+                size="sm"
+                variant={
+                  data.leaderboard.period === period ? "secondary" : "ghost"
+                }
+              >
+                <Link href={rankingHref(filters, period)}>
+                  {rankingLabels[period]}
+                </Link>
+              </Button>
+            ))}
+          </div>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
-          {data.members.items.slice(0, 3).map((member) => (
-            <Link key={member.id} href={`/profile/${member.username}`}>
-              <Card className="h-full bg-gradient-to-br from-white/[0.055] to-violet-950/20 transition hover:border-violet-400/30">
-                <CardContent className="flex items-center gap-4 py-3">
-                  <Avatar className="size-14">
+          {data.leaderboard.items.map((member) => (
+            <Link key={member.userId} href={`/profile/${member.username}`}>
+              <Card className="relative h-full overflow-hidden bg-gradient-to-br from-white/[0.055] to-violet-950/20 transition hover:-translate-y-0.5 hover:border-violet-400/30">
+                <span className="absolute right-3 top-3 grid size-8 place-items-center rounded-lg bg-amber-400/10 font-bold text-amber-300">
+                  {member.rank === 1 ? (
+                    <Crown className="size-4" />
+                  ) : (
+                    member.rank
+                  )}
+                </span>
+                <CardContent className="flex items-center gap-4 py-4">
+                  <Avatar className="size-16 ring-2 ring-violet-400/20">
                     {member.avatarUrl ? (
                       <AvatarImage
                         src={member.avatarUrl}
@@ -251,17 +307,45 @@ export function MembersDirectory({ data, filters }: MembersDirectoryProps) {
                     <p className="truncate font-semibold">
                       {member.displayName || member.username}
                     </p>
-                    <p className="text-sm text-violet-300">
-                      {member.roles[0] || "Учасник"}
+                    <p
+                      className="truncate text-sm text-violet-300"
+                      style={
+                        member.selectedTitle
+                          ? { color: member.selectedTitle.color }
+                          : undefined
+                      }
+                    >
+                      {member.selectedTitle
+                        ? `${member.selectedTitle.badge} ${member.selectedTitle.name}`
+                        : `Рівень ${member.currentLevel}`}
                     </p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      {member.isOnline ? "● Онлайн" : `@${member.username}`}
+                    <p className="mt-1 flex items-center gap-1 text-sm font-semibold text-amber-200">
+                      <Sparkles className="size-3.5" />
+                      {member.communityPoints.toLocaleString("uk-UA")} очок
                     </p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
           ))}
+        </div>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.025] px-4 py-3 text-sm">
+          <span className="flex items-center gap-2 text-slate-400">
+            <TrendingUp className="size-4 text-emerald-300" />
+            Ваша позиція:{" "}
+            <strong className="text-white">
+              {data.leaderboard.viewerRank
+                ? `#${data.leaderboard.viewerRank}`
+                : "—"}
+            </strong>
+          </span>
+          <span className="flex items-center gap-2 text-slate-400">
+            <Medal className="size-4 text-violet-300" />
+            {(data.leaderboard.viewerCommunityPoints ?? 0).toLocaleString(
+              "uk-UA",
+            )}{" "}
+            Community Points
+          </span>
         </div>
       </section>
 

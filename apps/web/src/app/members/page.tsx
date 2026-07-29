@@ -16,7 +16,7 @@ import { DssApplicationShell } from "@/components/shell/dss-application-shell";
 import { ErrorState } from "@/components/states/async-states";
 import { MembersDirectory } from "@/features/members/members-directory";
 import { loadMembersDirectory } from "@/features/profile/profile-data";
-import type { MembersDirectorySort } from "@/gql/graphql";
+import type { LeaderboardPeriod, MembersDirectorySort } from "@/gql/graphql";
 
 type MembersPageProps = {
   searchParams: Promise<{
@@ -25,6 +25,7 @@ type MembersPageProps = {
     role?: string;
     search?: string;
     sort?: string;
+    ranking?: string;
   }>;
 };
 
@@ -35,6 +36,7 @@ const sorts: MembersDirectorySort[] = [
   "USERNAME_ASC",
   "USERNAME_DESC",
 ];
+const rankingPeriods: LeaderboardPeriod[] = ["MONTH", "YEAR", "ALL_TIME"];
 
 export default async function MembersPage({ searchParams }: MembersPageProps) {
   const params = await searchParams;
@@ -47,12 +49,18 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
     role: params.role?.trim() || undefined,
     sort,
     onlineOnly: params.onlineOnly === "true",
+    ranking: rankingPeriods.includes(params.ranking as LeaderboardPeriod)
+      ? (params.ranking as LeaderboardPeriod)
+      : "ALL_TIME",
   };
-  const data = await loadMembersDirectory({
-    ...filters,
-    page,
-    limit: 20,
-  }).catch(() => null);
+  const data = await loadMembersDirectory(
+    {
+      ...filters,
+      page,
+      limit: 20,
+    },
+    filters.ranking,
+  ).catch(() => null);
 
   if (!data) {
     return (

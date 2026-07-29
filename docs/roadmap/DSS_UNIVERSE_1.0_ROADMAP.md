@@ -804,6 +804,20 @@ Delivered in the Leaderboards foundation package:
 - authenticated GraphQL discovery;
 - unit and PostgreSQL E2E coverage.
 
+Delivered in the Gamification Frontend package:
+
+- profile level, Community Points, and next-threshold progress;
+- recent explainable points and reputation history;
+- visible reputation and mandatory-reason `+1` / `-1` visitor form;
+- selected-title identity accent and owner title selection;
+- earned achievement badge gallery;
+- top-three Members Directory leaderboard cards;
+- URL-backed month, year, and all-time ranking controls;
+- viewer position and period-points context;
+- parallel Server Component GraphQL loading;
+- server-only authenticated reputation and title mutations;
+- generated GraphQL types, React tests, and production build coverage.
+
 ## Direct reputation
 
 - visible author and mandatory reason;

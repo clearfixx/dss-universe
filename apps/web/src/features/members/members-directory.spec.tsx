@@ -44,6 +44,32 @@ const data: MembersDirectoryQuery = {
       },
     ],
   },
+  leaderboard: {
+    period: "ALL_TIME",
+    startsAt: null,
+    endsAt: "2026-07-29T12:00:00.000Z",
+    generatedAt: "2026-07-29T12:00:00.000Z",
+    total: 1,
+    viewerRank: 1,
+    viewerCommunityPoints: 1250,
+    items: [
+      {
+        rank: 1,
+        userId: "user-1",
+        username: "astro",
+        displayName: "Astro DSS",
+        avatarUrl: null,
+        communityPoints: 1250,
+        currentLevel: 8,
+        reputation: 42,
+        selectedTitle: {
+          name: "Архітектор знань",
+          color: "#22D3EE",
+          badge: "✦",
+        },
+      },
+    ],
+  },
 };
 
 describe("MembersDirectory", () => {
@@ -57,7 +83,9 @@ describe("MembersDirectory", () => {
     expect(
       screen.getAllByRole("link", { name: /Astro DSS/ })[0],
     ).toHaveAttribute("href", "/profile/astro");
-    expect(screen.getByText("Рейтинговий топ — Phase 8")).toBeInTheDocument();
+    expect(screen.getByText("Лідери спільноти")).toBeInTheDocument();
+    expect(screen.getByText("1 250 очок")).toBeInTheDocument();
+    expect(screen.getByText("Ваша позиція:")).toBeInTheDocument();
   });
 });
 

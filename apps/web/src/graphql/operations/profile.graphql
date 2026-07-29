@@ -67,7 +67,78 @@ query UserActivity($userId: ID!, $pagination: UsersPageInput) {
   }
 }
 
-query MembersDirectory($input: MembersDirectoryInput) {
+query ProfileGamification($userId: ID!) {
+  levelProgress(userId: $userId) {
+    balance
+    currentLevel
+    currentThreshold
+    nextLevel
+    nextThreshold
+    pointsIntoLevel
+    pointsNeeded
+    progressPercent
+  }
+  communityPointsHistory(userId: $userId, pagination: { page: 1, limit: 5 }) {
+    total
+    balance
+    items {
+      id
+      points
+      reason
+      ruleKey
+      occurredAt
+    }
+  }
+  reputationHistory(userId: $userId, pagination: { page: 1, limit: 5 }) {
+    score
+    total
+    items {
+      id
+      value
+      reason
+      createdAt
+      actor {
+        id
+        username
+        displayName
+        avatarUrl
+      }
+    }
+  }
+  userAchievements(userId: $userId) {
+    id
+    awardedAt
+    reason
+    achievement {
+      id
+      key
+      name
+      description
+      color
+      badge
+    }
+  }
+  userCustomTitles(userId: $userId) {
+    id
+    selected
+    grantedAt
+    grantReason
+    revokedAt
+    title {
+      id
+      name
+      description
+      color
+      badge
+      isActive
+    }
+  }
+}
+
+query MembersDirectory(
+  $input: MembersDirectoryInput
+  $leaderboardInput: LeaderboardInput
+) {
   members(input: $input) {
     items {
       id
@@ -89,6 +160,30 @@ query MembersDirectory($input: MembersDirectoryInput) {
     onlineCrawlers
     totalOnline
     sampledAt
+  }
+  leaderboard(input: $leaderboardInput) {
+    period
+    startsAt
+    endsAt
+    generatedAt
+    total
+    viewerRank
+    viewerCommunityPoints
+    items {
+      rank
+      userId
+      username
+      displayName
+      avatarUrl
+      communityPoints
+      currentLevel
+      reputation
+      selectedTitle {
+        name
+        color
+        badge
+      }
+    }
   }
 }
 
@@ -162,6 +257,29 @@ mutation UnfollowProfile($userId: ID!) {
     userId
     followerCount
     followingCount
+  }
+}
+
+mutation GiveProfileReputation($input: GiveReputationInput!) {
+  giveReputation(input: $input) {
+    id
+    recipientId
+    value
+    reason
+    createdAt
+  }
+}
+
+mutation SelectViewerCustomTitle($grantId: ID!) {
+  selectCustomTitle(grantId: $grantId) {
+    id
+    selected
+    title {
+      id
+      name
+      color
+      badge
+    }
   }
 }
 

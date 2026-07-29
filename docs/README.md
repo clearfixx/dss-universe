@@ -43,6 +43,9 @@ For current product and architecture work, use these sources first:
     idempotent awards, cooldowns, caps and moderation-aware rollback.
 14. `architecture/PHASE_8_LEADERBOARDS_FOUNDATION.md` — Community
     Points-derived month, year and all-time rankings with deterministic ties.
+15. `architecture/PHASE_8_GAMIFICATION_FRONTEND.md` — typed profile and Members
+    Directory composition for points, levels, reputation, titles, achievements
+    and leaderboards.
 
 Older roadmap and architecture files are historical references when they conflict with these documents.
 

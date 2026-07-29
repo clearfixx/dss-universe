@@ -24,12 +24,14 @@ import {
   CreateProfileWallPostDocument,
   DeactivateViewerAccountDocument,
   FollowProfileDocument,
+  GiveProfileReputationDocument,
   RemoveViewerAvatarDocument,
   RemoveViewerCoverDocument,
   RevokeOtherViewerDeviceSessionsDocument,
   RevokeViewerDeviceSessionDocument,
   SetViewerAvatarDocument,
   SetViewerCoverDocument,
+  SelectViewerCustomTitleDocument,
   UnfollowProfileDocument,
   UpdateViewerNotificationSettingsDocument,
   UpdateViewerPrivacySettingsDocument,
@@ -85,6 +87,38 @@ export async function createWallPost(
         imageMediaId: imageMediaId || null,
       },
     },
+    context: await context(),
+  });
+  revalidatePath(`/profile/${username}`);
+}
+
+export async function giveProfileReputation(
+  recipientId: string,
+  username: string,
+  formData: FormData,
+): Promise<void> {
+  const reason = String(formData.get("reason") ?? "").trim();
+  const value = Number.parseInt(String(formData.get("value") ?? ""), 10);
+  if ((value !== 1 && value !== -1) || reason.length < 3) {
+    throw new Error("Оберіть оцінку та поясніть її причину.");
+  }
+  await getClient().mutate({
+    mutation: GiveProfileReputationDocument,
+    variables: { input: { recipientId, value, reason } },
+    context: await context(),
+  });
+  revalidatePath(`/profile/${username}`);
+}
+
+export async function selectViewerCustomTitle(
+  username: string,
+  formData: FormData,
+): Promise<void> {
+  const grantId = String(formData.get("grantId") ?? "").trim();
+  if (!grantId) throw new Error("Оберіть звання.");
+  await getClient().mutate({
+    mutation: SelectViewerCustomTitleDocument,
+    variables: { grantId },
     context: await context(),
   });
   revalidatePath(`/profile/${username}`);

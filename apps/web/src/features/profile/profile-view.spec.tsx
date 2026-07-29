@@ -17,6 +17,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type {
   ProfileWallQuery,
+  ProfileGamificationQuery,
   PublicProfileQuery,
   UserActivityQuery,
 } from "@/gql/graphql";
@@ -24,6 +25,8 @@ import { useProfileUiStore } from "@/stores/profile-ui.store";
 
 vi.mock("./profile-actions", () => ({
   createWallPost: vi.fn(),
+  giveProfileReputation: vi.fn(),
+  selectViewerCustomTitle: vi.fn(),
   setProfileFollowState: vi.fn(),
 }));
 
@@ -87,6 +90,97 @@ const activity: UserActivityQuery["userActivity"] = {
   ],
 };
 
+const gamification: ProfileGamificationQuery = {
+  levelProgress: {
+    balance: 1250,
+    currentLevel: 8,
+    currentThreshold: 1000,
+    nextLevel: 9,
+    nextThreshold: 1500,
+    pointsIntoLevel: 250,
+    pointsNeeded: 250,
+    progressPercent: 50,
+  },
+  communityPointsHistory: {
+    balance: 1250,
+    total: 1,
+    items: [
+      {
+        id: "points-1",
+        points: 50,
+        reason: "Опубліковано статтю.",
+        ruleKey: "knowledge.article.published",
+        occurredAt: "2026-07-28T12:00:00.000Z",
+      },
+    ],
+  },
+  reputationHistory: {
+    score: 42,
+    total: 1,
+    items: [
+      {
+        id: "reputation-1",
+        value: 1,
+        reason: "Корисна відповідь.",
+        createdAt: "2026-07-28T12:00:00.000Z",
+        actor: {
+          id: "actor-1",
+          username: "mission-control",
+          displayName: "Mission Control",
+          avatarUrl: null,
+        },
+      },
+    ],
+  },
+  userAchievements: [
+    {
+      id: "award-1",
+      awardedAt: "2026-07-28T12:00:00.000Z",
+      reason: "Завершив першу місію.",
+      achievement: {
+        id: "achievement-1",
+        key: "first.mission",
+        name: "Перша місія",
+        description: "Перший крок у DSS.",
+        color: "#22D3EE",
+        badge: "🚀",
+      },
+    },
+  ],
+  userCustomTitles: [
+    {
+      id: "grant-1",
+      selected: true,
+      grantedAt: "2026-07-28T12:00:00.000Z",
+      grantReason: "За розвиток платформи.",
+      revokedAt: null,
+      title: {
+        id: "title-1",
+        name: "Архітектор знань",
+        description: "Будує фундамент DSS.",
+        color: "#A78BFA",
+        badge: "✦",
+        isActive: true,
+      },
+    },
+    {
+      id: "grant-2",
+      selected: false,
+      grantedAt: "2026-07-27T12:00:00.000Z",
+      grantReason: "За першу завершену місію.",
+      revokedAt: null,
+      title: {
+        id: "title-2",
+        name: "Першопроходець",
+        description: "Досліджує нові модулі.",
+        color: "#22D3EE",
+        badge: "🚀",
+        isActive: true,
+      },
+    },
+  ],
+};
+
 describe("ProfileView", () => {
   beforeEach(() => {
     useProfileUiStore.setState({ activeTab: "overview" });
@@ -99,6 +193,7 @@ describe("ProfileView", () => {
         profile={profile}
         wall={wall}
         activity={activity}
+        gamification={gamification}
       />,
     );
 
@@ -107,10 +202,37 @@ describe("ProfileView", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Будую DSS Universe.")).toBeInTheDocument();
     expect(screen.getByText("Перший запис у профілі.")).toBeInTheDocument();
-    expect(screen.getByText("Відкриється у Phase 8")).toBeInTheDocument();
+    expect(screen.getByText("Рівень 8 · 1 250 очок")).toBeInTheDocument();
+    expect(screen.getAllByText(/Архітектор знань/)).not.toHaveLength(0);
+    expect(screen.getByText("Перша місія")).toBeInTheDocument();
+    expect(screen.getByText("Опубліковано статтю.")).toBeInTheDocument();
+    expect(screen.getByText("Корисна відповідь.")).toBeInTheDocument();
+    expect(
+      screen.getByRole("combobox", { name: "Звання для відображення" }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Редагувати профіль/ }),
     ).toHaveAttribute("href", "/settings/profile");
+  });
+
+  it("shows the explained reputation form only to a profile visitor", () => {
+    render(
+      <ProfileView
+        viewerId="visitor-1"
+        profile={profile}
+        wall={wall}
+        activity={activity}
+        gamification={gamification}
+      />,
+    );
+
+    expect(screen.getByText("Змінити репутацію")).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText("Опишіть причину оцінки…"),
+    ).toBeRequired();
+    expect(
+      screen.getByRole("button", { name: "Надіслати оцінку" }),
+    ).toBeInTheDocument();
   });
 });
 
