@@ -790,6 +790,20 @@ Delivered in the Achievements foundation package:
 - authenticated GraphQL discovery, profile badges, policy, and history;
 - unit, concurrency, cap, rollback, and PostgreSQL E2E coverage.
 
+Delivered in the Leaderboards foundation package:
+
+- read-only rankings derived exclusively from Community Points;
+- current UTC month, current UTC year, and all-time periods;
+- active-member participation including zero-point accounts;
+- deterministic points/account-age/user-id ordering;
+- explicit snapshot boundaries and generation timestamp;
+- paginated cards plus viewer rank outside the requested page;
+- current all-time level, reputation, and selected-title card enrichment;
+- deactivated-account exclusion;
+- range-first ledger indexes without a second authoritative balance;
+- authenticated GraphQL discovery;
+- unit and PostgreSQL E2E coverage.
+
 ## Direct reputation
 
 - visible author and mandatory reason;

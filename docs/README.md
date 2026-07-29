@@ -41,6 +41,8 @@ For current product and architecture work, use these sources first:
     title definitions, historical grants and cooldown-protected selection.
 13. `architecture/PHASE_8_ACHIEVEMENTS_FOUNDATION.md` — semantic event rules,
     idempotent awards, cooldowns, caps and moderation-aware rollback.
+14. `architecture/PHASE_8_LEADERBOARDS_FOUNDATION.md` — Community
+    Points-derived month, year and all-time rankings with deterministic ties.
 
 Older roadmap and architecture files are historical references when they conflict with these documents.
 

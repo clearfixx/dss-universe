@@ -620,6 +620,7 @@ model ReputationEntry {
 
   @@index([recipientId, createdAt, id])
   @@index([actorId, recipientId, createdAt])
+  @@index([createdAt, recipientId])
   @@index([reversesEntryId])
   @@map("reputation_entries")
 }
@@ -656,6 +657,7 @@ model CommunityPointEntry {
 
   @@index([userId, occurredAt, id])
   @@index([userId, ruleKey, occurredAt])
+  @@index([occurredAt, userId])
   @@index([sourceType, sourceId])
   @@index([reversesEntryId])
   @@map("community_point_entries")

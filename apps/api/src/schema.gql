@@ -197,6 +197,50 @@ input InitiateMediaUploadInput {
   policyKey: String!
 }
 
+type LeaderboardEntry {
+  avatarUrl: String
+  communityPoints: Int!
+  currentLevel: Int!
+  displayName: String
+  rank: Int!
+  reputation: Int!
+  selectedTitle: LeaderboardSelectedTitle
+  userId: ID!
+  username: String!
+}
+
+input LeaderboardInput {
+  limit: Int! = 20
+  page: Int! = 1
+  period: LeaderboardPeriod! = ALL_TIME
+}
+
+type LeaderboardPage {
+  endsAt: String!
+  generatedAt: String!
+  items: [LeaderboardEntry!]!
+  limit: Int!
+  page: Int!
+  period: LeaderboardPeriod!
+  startsAt: String
+  total: Int!
+  totalPages: Int!
+  viewerCommunityPoints: Int
+  viewerRank: Int
+}
+
+enum LeaderboardPeriod {
+  ALL_TIME
+  MONTH
+  YEAR
+}
+
+type LeaderboardSelectedTitle {
+  badge: String!
+  color: String!
+  name: String!
+}
+
 type LevelDefinition {
   level: Int!
   threshold: Int!
@@ -541,6 +585,7 @@ type Query {
   customTitlesAdmin: [CustomTitle!]!
   followers(pagination: UsersPageInput, userId: ID!): UsersPageModel!
   following(pagination: UsersPageInput, userId: ID!): UsersPageModel!
+  leaderboard(input: LeaderboardInput): LeaderboardPage!
   levelDefinitions: [LevelDefinition!]!
   levelHistory(pagination: LevelHistoryPageInput, userId: ID!): LevelTransitionHistory!
   levelProgress(userId: ID!): LevelProgress!

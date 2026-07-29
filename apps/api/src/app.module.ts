@@ -78,6 +78,7 @@ import { CommunityPointsModule } from './modules/community-points';
 import { CustomTitlesModule } from './modules/custom-titles';
 import { IamModule } from './modules/iam';
 import { LevelsModule } from './modules/levels';
+import { LeaderboardsModule } from './modules/leaderboards';
 import { MediaModule } from './modules/media/media.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ReputationModule } from './modules/reputation';
@@ -104,6 +105,7 @@ import { UsersModule } from './modules/users/users.module';
     LevelsModule,
     CustomTitlesModule,
     AchievementsModule,
+    LeaderboardsModule,
   ],
   providers: [
     {
