@@ -39,6 +39,8 @@ For current product and architecture work, use these sources first:
     progress, configurable thresholds and immutable transitions.
 12. `architecture/PHASE_8_CUSTOM_TITLES_FOUNDATION.md` — permission-neutral
     title definitions, historical grants and cooldown-protected selection.
+13. `architecture/PHASE_8_ACHIEVEMENTS_FOUNDATION.md` — semantic event rules,
+    idempotent awards, cooldowns, caps and moderation-aware rollback.
 
 Older roadmap and architecture files are historical references when they conflict with these documents.
 

@@ -2,6 +2,60 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type Achievement {
+  badge: String!
+  color: String!
+  createdAt: DateTime!
+  description: String
+  id: ID!
+  isActive: Boolean!
+  key: String!
+  name: String!
+  slug: String!
+  updatedAt: DateTime!
+}
+
+type AchievementAward {
+  achievement: Achievement!
+  achievementId: ID!
+  awardedAt: DateTime!
+  awardedById: ID
+  id: ID!
+  kind: AchievementAwardKind!
+  reason: String!
+  revocation: AchievementAwardRevocation
+  ruleId: ID
+  sourceEventName: String
+  sourceId: String
+  sourceType: String
+  userId: ID!
+}
+
+enum AchievementAwardKind {
+  MANUAL
+  RULE
+}
+
+type AchievementAwardRevocation {
+  awardId: ID!
+  id: ID!
+  occurredAt: DateTime!
+  reason: String!
+  revokedById: ID
+}
+
+type AchievementRule {
+  achievement: Achievement!
+  achievementId: ID!
+  cooldownHours: Int!
+  dailyCap: Int
+  enabled: Boolean!
+  eventName: String!
+  id: ID!
+  recipientPayloadKey: String!
+  repeatable: Boolean!
+}
+
 type ApiInfo {
   name: String!
   status: String!
@@ -200,6 +254,12 @@ type LogoutResultModel {
   success: Boolean!
 }
 
+input ManualAchievementAwardInput {
+  achievementId: ID!
+  reason: String!
+  userId: ID!
+}
+
 type MediaAccess {
   expiresAt: DateTime!
   url: String!
@@ -344,6 +404,7 @@ enum MembersDirectorySort {
 
 type Mutation {
   abortMediaUpload(id: String!): MediaUploadSession!
+  awardAchievement(input: ManualAchievementAwardInput!): AchievementAward!
   blockUser(userId: ID!): UserBlockResult!
   changeViewerEmail(input: ChangeEmailInput!): LogoutResultModel!
   changeViewerPassword(input: ChangePasswordInput!): LogoutResultModel!
@@ -367,9 +428,13 @@ type Mutation {
   retryFailedMedia(mediaId: ID!): MediaLibraryItem!
   reverseCommunityPoints(input: ReverseCommunityPointsInput!): CommunityPointEntry!
   reverseReputation(input: ReverseReputationInput!): ReputationEntry!
+  revokeAchievementAward(input: RevokeAchievementAwardInput!): AchievementAward!
   revokeCustomTitle(input: RevokeCustomTitleInput!): UserTitleGrant!
   revokeOtherViewerSessions: RevokeSessionsResultModel!
   revokeViewerSession(sessionId: ID!): LogoutResultModel!
+  rollbackAchievementSource(input: RollbackAchievementSourceInput!): [AchievementAward!]!
+  saveAchievement(input: SaveAchievementInput!): Achievement!
+  saveAchievementRule(input: SaveAchievementRuleInput!): AchievementRule!
   selectCustomTitle(grantId: ID!): UserTitleGrant!
   setViewerAvatar(mediaId: ID!): Viewer!
   setViewerCover(mediaId: ID!): Viewer!
@@ -464,6 +529,9 @@ type ProfileWallPost {
 }
 
 type Query {
+  achievementRules: [AchievementRule!]!
+  achievements: [Achievement!]!
+  achievementsAdmin: [Achievement!]!
   apiInfo: ApiInfo!
   blockedUsers(pagination: UsersPageInput): UsersPageModel!
   communityPointRules: [CommunityPointRule!]!
@@ -487,6 +555,8 @@ type Query {
   reputationHistory(pagination: ReputationPageInput, userId: ID!): ReputationHistory!
   reputationPolicy: ReputationPolicy!
   user(id: ID!): User!
+  userAchievementHistory(userId: ID!): [AchievementAward!]!
+  userAchievements(userId: ID!): [AchievementAward!]!
   userActivity(pagination: UsersPageInput, userId: ID!): UserActivityPage!
   userByUsername(username: String!): User!
   userCustomTitles(userId: ID!): [UserTitleGrant!]!
@@ -563,6 +633,11 @@ input ReverseReputationInput {
   reason: String!
 }
 
+input RevokeAchievementAwardInput {
+  awardId: ID!
+  reason: String!
+}
+
 input RevokeCustomTitleInput {
   grantId: ID!
   reason: String!
@@ -571,6 +646,33 @@ input RevokeCustomTitleInput {
 type RevokeSessionsResultModel {
   revokedCount: Int!
   success: Boolean!
+}
+
+input RollbackAchievementSourceInput {
+  reason: String!
+  sourceId: String!
+  sourceType: String!
+}
+
+input SaveAchievementInput {
+  badge: String!
+  color: String!
+  description: String
+  id: ID
+  isActive: Boolean! = true
+  key: String!
+  name: String!
+}
+
+input SaveAchievementRuleInput {
+  achievementId: ID!
+  cooldownHours: Int! = 0
+  dailyCap: Int
+  enabled: Boolean! = true
+  eventName: String!
+  id: ID
+  recipientPayloadKey: String! = "userId"
+  repeatable: Boolean! = false
 }
 
 input UpdateCommunityPointRuleInput {

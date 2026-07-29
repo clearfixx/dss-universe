@@ -83,6 +83,7 @@ const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     Permission.LevelsSettingsManage,
     Permission.CustomTitlesManage,
     Permission.CustomTitlesSettingsManage,
+    Permission.AchievementsManage,
   ],
 
   owner: PERMISSION_LIST.map((permission) => permission.key),

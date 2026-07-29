@@ -72,6 +72,7 @@ import { ObservabilityModule } from '@api/core/observability';
 import { HealthModule } from '@api/health';
 
 import { AppController } from './app.controller';
+import { AchievementsModule } from './modules/achievements';
 import { AuthModule } from './modules/auth/auth.module';
 import { CommunityPointsModule } from './modules/community-points';
 import { CustomTitlesModule } from './modules/custom-titles';
@@ -102,6 +103,7 @@ import { UsersModule } from './modules/users/users.module';
     CommunityPointsModule,
     LevelsModule,
     CustomTitlesModule,
+    AchievementsModule,
   ],
   providers: [
     {

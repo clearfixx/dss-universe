@@ -125,6 +125,12 @@ export const PERMISSIONS = {
     label: 'Manage custom title settings',
     description: 'Allows updating custom title selection policy.',
   },
+  AchievementsManage: {
+    key: 'achievements.manage',
+    label: 'Manage achievements',
+    description:
+      'Allows managing achievement definitions, rules, awards, and rollbacks.',
+  },
 
   RolesRead: {
     key: 'roles.read',

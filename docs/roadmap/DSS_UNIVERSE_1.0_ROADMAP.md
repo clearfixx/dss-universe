@@ -771,6 +771,25 @@ Delivered in the Custom Titles foundation package:
 - authenticated GraphQL discovery, administration and self-selection;
 - unit and PostgreSQL E2E coverage.
 
+Delivered in the Achievements foundation package:
+
+- separate Achievements bounded context for profile recognition;
+- semantic event rules without querying foreign domain tables;
+- manual and event-driven awards with mandatory explanations;
+- active/archive definitions with Unicode names and stable machine keys;
+- configurable recipient payload key per versioned event;
+- repeatable and non-repeatable award policy;
+- configurable cooldown hours and optional UTC daily caps;
+- per-rule processed-event markers and advisory-lock serialization;
+- capped and ignored events remain idempotently processed;
+- explicit, source-based, and event-driven moderation rollback;
+- immutable award and revocation history protected by PostgreSQL triggers;
+- revoked awards no longer consume active daily caps;
+- permission-backed administration without achievement-derived access;
+- transactional Audit and `achievements.*.v1` Outbox evidence;
+- authenticated GraphQL discovery, profile badges, policy, and history;
+- unit, concurrency, cap, rollback, and PostgreSQL E2E coverage.
+
 ## Direct reputation
 
 - visible author and mandatory reason;

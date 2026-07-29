@@ -91,6 +91,11 @@ enum LevelTransitionDirection {
   DOWN
 }
 
+enum AchievementAwardKind {
+  RULE
+  MANUAL
+}
+
 enum NotificationCategory {
   MENTIONS
   DIRECT_MESSAGES
@@ -155,6 +160,7 @@ model User {
   levelTransitions        LevelTransition[]
   titleGrants             UserTitleGrant[]
   selectedTitle           UserTitleSelection?
+  achievementAwards       AchievementAward[]
 
   refreshTokenHash String?
   emailVerifiedAt  DateTime?
@@ -774,4 +780,86 @@ model CustomTitleSettings {
   updatedAt             DateTime @updatedAt
 
   @@map("custom_title_settings")
+}
+
+model AchievementDefinition {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  name        String
+  slug        String   @unique
+  description String?
+  color       String
+  badge       String
+  isActive    Boolean  @default(true)
+  createdById String
+  updatedById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rules  AchievementRule[]
+  awards AchievementAward[]
+
+  @@index([isActive, name])
+  @@map("achievement_definitions")
+}
+
+model AchievementRule {
+  id                  String   @id @default(uuid())
+  achievementId       String
+  eventName           String
+  recipientPayloadKey String   @default("userId")
+  repeatable          Boolean  @default(false)
+  cooldownHours       Int      @default(0)
+  dailyCap            Int?
+  enabled             Boolean  @default(true)
+  createdById         String
+  updatedById         String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  achievement AchievementDefinition @relation(fields: [achievementId], references: [id], onDelete: Restrict)
+  awards      AchievementAward[]
+
+  @@unique([achievementId, eventName])
+  @@index([eventName, enabled])
+  @@map("achievement_rules")
+}
+
+model AchievementAward {
+  id              String               @id @default(uuid())
+  userId          String
+  achievementId   String
+  ruleId          String?
+  kind            AchievementAwardKind
+  reason          String
+  awardedById     String?
+  sourceEventId   String?
+  sourceEventName String?
+  sourceType      String?
+  sourceId        String?
+  awardedAt       DateTime             @default(now())
+
+  user        User                        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  achievement AchievementDefinition       @relation(fields: [achievementId], references: [id], onDelete: Restrict)
+  rule        AchievementRule?            @relation(fields: [ruleId], references: [id], onDelete: Restrict)
+  revocation  AchievementAwardRevocation?
+
+  @@unique([achievementId, sourceEventId])
+  @@index([userId, awardedAt, id])
+  @@index([sourceType, sourceId])
+  @@index([ruleId, userId, awardedAt])
+  @@map("achievement_awards")
+}
+
+model AchievementAwardRevocation {
+  id          String   @id @default(uuid())
+  awardId     String   @unique
+  revokedById String?
+  reason      String
+  occurredAt  DateTime @default(now())
+
+  award AchievementAward @relation(fields: [awardId], references: [id], onDelete: Restrict)
+
+  @@index([occurredAt])
+  @@map("achievement_award_revocations")
 }
