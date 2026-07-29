@@ -112,6 +112,54 @@ input InitiateMediaUploadInput {
   policyKey: String!
 }
 
+type LevelDefinition {
+  level: Int!
+  threshold: Int!
+  updatedAt: DateTime!
+  updatedById: ID
+}
+
+input LevelHistoryPageInput {
+  limit: Int! = 20
+  page: Int! = 1
+}
+
+type LevelProgress {
+  balance: Int!
+  currentLevel: Int!
+  currentThreshold: Int!
+  nextLevel: Int
+  nextThreshold: Int
+  pointsIntoLevel: Int!
+  pointsNeeded: Int!
+  progressPercent: Float!
+  userId: ID!
+}
+
+type LevelTransition {
+  balance: Int!
+  direction: LevelTransitionDirection!
+  fromLevel: Int!
+  id: ID!
+  occurredAt: DateTime!
+  sourceEventName: String!
+  toLevel: Int!
+  userId: ID!
+}
+
+enum LevelTransitionDirection {
+  DOWN
+  UP
+}
+
+type LevelTransitionHistory {
+  items: [LevelTransition!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
+}
+
 input LoginInput {
   email: String!
   password: String!
@@ -293,6 +341,7 @@ type Mutation {
   unblockUser(userId: ID!): UserBlockResult!
   unfollowUser(userId: ID!): UserSocialGraphSummary!
   updateCommunityPointRule(input: UpdateCommunityPointRuleInput!): CommunityPointRule!
+  updateLevelDefinition(input: UpdateLevelDefinitionInput!): LevelDefinition!
   updateReputationPolicy(input: UpdateReputationPolicyInput!): ReputationPolicy!
   updateViewerNotificationPreferences(input: UpdateNotificationPreferencesInput!): NotificationPreferences!
   updateViewerPrivacy(input: UpdateUserPrivacyInput!): UserPrivacySettings!
@@ -384,6 +433,9 @@ type Query {
   communityPointsHistory(pagination: CommunityPointsPageInput, userId: ID!): CommunityPointHistory!
   followers(pagination: UsersPageInput, userId: ID!): UsersPageModel!
   following(pagination: UsersPageInput, userId: ID!): UsersPageModel!
+  levelDefinitions: [LevelDefinition!]!
+  levelHistory(pagination: LevelHistoryPageInput, userId: ID!): LevelTransitionHistory!
+  levelProgress(userId: ID!): LevelProgress!
   mediaAccessUrl(mediaId: ID!, variantName: String!): MediaAccess!
   mediaLibrary(input: MediaLibraryInput): MediaLibraryConnection!
   mediaLibraryMetrics: MediaLibraryMetrics!
@@ -480,6 +532,11 @@ input UpdateCommunityPointRuleInput {
   enabled: Boolean!
   key: String!
   points: Int!
+}
+
+input UpdateLevelDefinitionInput {
+  level: Int!
+  threshold: Int!
 }
 
 input UpdateNotificationPreferencesInput {

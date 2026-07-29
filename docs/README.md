@@ -35,6 +35,8 @@ For current product and architecture work, use these sources first:
    reversal, cooldown and policy contracts.
 10. `architecture/PHASE_8_COMMUNITY_POINTS_LEDGER.md` — event-derived
     participation ledger, configurable weights, caps and reversals.
+11. `architecture/PHASE_8_LEVELS_FOUNDATION.md` — Community Points-derived
+    progress, configurable thresholds and immutable transitions.
 
 Older roadmap and architecture files are historical references when they conflict with these documents.
 

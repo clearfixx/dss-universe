@@ -739,6 +739,21 @@ Delivered in the Community Points Ledger foundation package:
 - authenticated GraphQL history, rules, reversal and rule-update contracts;
 - unit, concurrency, cap and PostgreSQL E2E coverage.
 
+Delivered in the Levels foundation package:
+
+- separate Levels bounded context derived exclusively from Community Points;
+- no duplicated XP, points balance or level field on User;
+- configurable, contiguous and strictly increasing thresholds;
+- initial Level 1 = 10, Level 2 = 50 and Level 15 = 5000 curve;
+- implicit Level 0 below the first threshold;
+- current level, next level, interval progress and points-needed projection;
+- append-only UP and DOWN transition history for every crossed threshold;
+- advisory-lock serialization and transactional processed-event markers;
+- immutable PostgreSQL transition history with Audit and Outbox evidence;
+- permission-backed threshold management without role checks;
+- authenticated GraphQL progress, definitions, history and settings contracts;
+- unit, concurrency and PostgreSQL E2E coverage.
+
 ## Direct reputation
 
 - visible author and mandatory reason;

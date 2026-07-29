@@ -52,6 +52,10 @@ export class CommunityPointsService {
     private readonly users: UsersService,
   ) {}
 
+  balance(userId: string): Promise<number> {
+    return this.points.balance(userId);
+  }
+
   rules(): Promise<CommunityPointRule[]> {
     return this.points.rules();
   }

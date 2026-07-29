@@ -75,6 +75,7 @@ import { AppController } from './app.controller';
 import { AuthModule } from './modules/auth/auth.module';
 import { CommunityPointsModule } from './modules/community-points';
 import { IamModule } from './modules/iam';
+import { LevelsModule } from './modules/levels';
 import { MediaModule } from './modules/media/media.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ReputationModule } from './modules/reputation';
@@ -98,6 +99,7 @@ import { UsersModule } from './modules/users/users.module';
     NotificationsModule,
     ReputationModule,
     CommunityPointsModule,
+    LevelsModule,
   ],
   providers: [
     {

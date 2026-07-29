@@ -69,6 +69,7 @@ function event(
 
 describe('CommunityPointsService', () => {
   const repository = {
+    balance: jest.fn(),
     rules: jest.fn(),
     matchingRules: jest.fn(),
     updateRule: jest.fn(),

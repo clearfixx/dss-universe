@@ -108,6 +108,12 @@ export const PERMISSIONS = {
     description:
       'Allows updating Community Points rules and anti-abuse limits.',
   },
+  LevelsSettingsManage: {
+    key: 'levels.settings.manage',
+    label: 'Manage level settings',
+    description:
+      'Allows creating and updating Community Points level thresholds.',
+  },
 
   RolesRead: {
     key: 'roles.read',

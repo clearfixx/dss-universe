@@ -26,6 +26,7 @@ export const COMMUNITY_POINTS_REPOSITORY = Symbol(
 );
 
 export interface CommunityPointsRepository {
+  balance(userId: string): Promise<number>;
   rules(): Promise<CommunityPointRule[]>;
   matchingRules(
     eventName: string,

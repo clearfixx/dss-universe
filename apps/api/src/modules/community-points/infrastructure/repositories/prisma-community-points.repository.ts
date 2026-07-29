@@ -78,6 +78,14 @@ export class PrismaCommunityPointsRepository implements CommunityPointsRepositor
     private readonly outbox: OutboxWriterService,
   ) {}
 
+  async balance(userId: string): Promise<number> {
+    const balance = await this.prisma.communityPointEntry.aggregate({
+      where: { userId },
+      _sum: { points: true },
+    });
+    return balance._sum.points ?? 0;
+  }
+
   async rules(): Promise<CommunityPointRule[]> {
     return this.prisma.communityPointRule.findMany({
       orderBy: { key: 'asc' },

@@ -86,6 +86,11 @@ enum AuditResult {
   DENIED
 }
 
+enum LevelTransitionDirection {
+  UP
+  DOWN
+}
+
 enum NotificationCategory {
   MENTIONS
   DIRECT_MESSAGES
@@ -147,6 +152,7 @@ model User {
   reputationGiven         ReputationEntry[]            @relation("ReputationActor")
   reputationReceived      ReputationEntry[]            @relation("ReputationRecipient")
   communityPointEntries   CommunityPointEntry[]        @relation("CommunityPointRecipient")
+  levelTransitions        LevelTransition[]
 
   refreshTokenHash String?
   emailVerifiedAt  DateTime?
@@ -675,4 +681,34 @@ model CommunityPointRevokedSource {
   @@unique([sourceType, sourceId])
   @@index([occurredAt])
   @@map("community_point_revoked_sources")
+}
+
+model LevelDefinition {
+  level       Int      @id
+  threshold   Int      @unique
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("level_definitions")
+}
+
+model LevelTransition {
+  id              String                   @id @default(uuid())
+  userId          String
+  fromLevel       Int
+  toLevel         Int
+  direction       LevelTransitionDirection
+  balance         Int
+  sourceEventId   String
+  sourceEventName String
+  occurredAt      DateTime
+  createdAt       DateTime                 @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([sourceEventId, toLevel])
+  @@index([userId, occurredAt, id])
+  @@index([userId, createdAt])
+  @@map("level_transitions")
 }
