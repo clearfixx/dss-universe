@@ -37,6 +37,52 @@ input ChangePasswordInput {
   newPassword: String!
 }
 
+type CommunityPointEntry {
+  actorId: ID
+  id: ID!
+  occurredAt: DateTime!
+  points: Int!
+  reason: String!
+  reversal: CommunityPointReversal
+  ruleKey: String!
+  sourceEventName: String
+  sourceId: ID
+  sourceType: String
+  userId: ID!
+}
+
+type CommunityPointHistory {
+  balance: Int!
+  items: [CommunityPointEntry!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+type CommunityPointReversal {
+  actorId: ID
+  id: ID!
+  occurredAt: DateTime!
+  reason: String!
+}
+
+type CommunityPointRule {
+  dailyLimit: Int
+  enabled: Boolean!
+  eventName: String!
+  key: String!
+  payloadValue: Int
+  points: Int!
+  updatedAt: DateTime!
+  updatedById: ID
+}
+
+input CommunityPointsPageInput {
+  limit: Int! = 20
+  page: Int! = 1
+}
+
 input CreateWallPostInput {
   body: String
   imageMediaId: ID
@@ -238,6 +284,7 @@ type Mutation {
   removeViewerCover: Viewer!
   rescanQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
   retryFailedMedia(mediaId: ID!): MediaLibraryItem!
+  reverseCommunityPoints(input: ReverseCommunityPointsInput!): CommunityPointEntry!
   reverseReputation(input: ReverseReputationInput!): ReputationEntry!
   revokeOtherViewerSessions: RevokeSessionsResultModel!
   revokeViewerSession(sessionId: ID!): LogoutResultModel!
@@ -245,6 +292,7 @@ type Mutation {
   setViewerCover(mediaId: ID!): Viewer!
   unblockUser(userId: ID!): UserBlockResult!
   unfollowUser(userId: ID!): UserSocialGraphSummary!
+  updateCommunityPointRule(input: UpdateCommunityPointRuleInput!): CommunityPointRule!
   updateReputationPolicy(input: UpdateReputationPolicyInput!): ReputationPolicy!
   updateViewerNotificationPreferences(input: UpdateNotificationPreferencesInput!): NotificationPreferences!
   updateViewerPrivacy(input: UpdateUserPrivacyInput!): UserPrivacySettings!
@@ -332,6 +380,8 @@ type ProfileWallPost {
 type Query {
   apiInfo: ApiInfo!
   blockedUsers(pagination: UsersPageInput): UsersPageModel!
+  communityPointRules: [CommunityPointRule!]!
+  communityPointsHistory(pagination: CommunityPointsPageInput, userId: ID!): CommunityPointHistory!
   followers(pagination: UsersPageInput, userId: ID!): UsersPageModel!
   following(pagination: UsersPageInput, userId: ID!): UsersPageModel!
   mediaAccessUrl(mediaId: ID!, variantName: String!): MediaAccess!
@@ -410,6 +460,11 @@ type ReputationReversal {
   reason: String!
 }
 
+input ReverseCommunityPointsInput {
+  entryId: ID!
+  reason: String!
+}
+
 input ReverseReputationInput {
   entryId: ID!
   reason: String!
@@ -418,6 +473,13 @@ input ReverseReputationInput {
 type RevokeSessionsResultModel {
   revokedCount: Int!
   success: Boolean!
+}
+
+input UpdateCommunityPointRuleInput {
+  dailyLimit: Int
+  enabled: Boolean!
+  key: String!
+  points: Int!
 }
 
 input UpdateNotificationPreferencesInput {

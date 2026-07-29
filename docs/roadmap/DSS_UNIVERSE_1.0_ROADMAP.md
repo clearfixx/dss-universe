@@ -722,6 +722,23 @@ Delivered in the Reputation Ledger foundation package:
   contracts;
 - unit, concurrency and PostgreSQL E2E coverage.
 
+Delivered in the Community Points Ledger foundation package:
+
+- separate Community Points bounded context, independent from direct
+  Reputation, reactions and Users;
+- event-derived, immutable PostgreSQL ledger with rebuildable balances;
+- configurable activity weights, enabled flags and UTC-day anti-abuse limits;
+- initial rules for comments, Community Hub topics, News, Knowledge Forge and
+  positive/negative direct reputation;
+- advisory-lock serialization and transactional processed-event markers;
+- duplicate deliveries and capped events remain idempotent;
+- append-only manual and source-driven compensating reversals;
+- database triggers that reject ledger updates and deletes;
+- permission-backed rule management and moderator correction;
+- transactional Audit and Outbox evidence;
+- authenticated GraphQL history, rules, reversal and rule-update contracts;
+- unit, concurrency, cap and PostgreSQL E2E coverage.
+
 ## Direct reputation
 
 - visible author and mandatory reason;

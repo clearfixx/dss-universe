@@ -146,6 +146,7 @@ model User {
   notificationPreferences UserNotificationPreferences?
   reputationGiven         ReputationEntry[]            @relation("ReputationActor")
   reputationReceived      ReputationEntry[]            @relation("ReputationRecipient")
+  communityPointEntries   CommunityPointEntry[]        @relation("CommunityPointRecipient")
 
   refreshTokenHash String?
   emailVerifiedAt  DateTime?
@@ -617,4 +618,61 @@ model ReputationPolicy {
   updatedAt             DateTime @updatedAt
 
   @@map("reputation_policy")
+}
+
+model CommunityPointEntry {
+  id              String   @id @default(uuid())
+  userId          String
+  ruleKey         String
+  points          Int
+  reason          String
+  sourceEventId   String?  @unique
+  sourceEventName String?
+  sourceType      String?
+  sourceId        String?
+  actorId         String?
+  reversesEntryId String?  @unique
+  occurredAt      DateTime
+  createdAt       DateTime @default(now())
+
+  user User @relation("CommunityPointRecipient", fields: [userId], references: [id], onDelete: Restrict)
+
+  reverses CommunityPointEntry? @relation("CommunityPointReversal", fields: [reversesEntryId], references: [id], onDelete: Restrict)
+  reversal CommunityPointEntry? @relation("CommunityPointReversal")
+
+  @@index([userId, occurredAt, id])
+  @@index([userId, ruleKey, occurredAt])
+  @@index([sourceType, sourceId])
+  @@index([reversesEntryId])
+  @@map("community_point_entries")
+}
+
+model CommunityPointRule {
+  key          String   @id
+  eventName    String
+  payloadValue Int?
+  points       Int
+  dailyLimit   Int?
+  enabled      Boolean  @default(true)
+  updatedById  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([eventName, enabled])
+  @@map("community_point_rules")
+}
+
+model CommunityPointRevokedSource {
+  id            String   @id @default(uuid())
+  sourceType    String
+  sourceId      String
+  sourceEventId String   @unique
+  actorId       String?
+  reason        String
+  occurredAt    DateTime
+  createdAt     DateTime @default(now())
+
+  @@unique([sourceType, sourceId])
+  @@index([occurredAt])
+  @@map("community_point_revoked_sources")
 }

@@ -97,6 +97,17 @@ export const PERMISSIONS = {
     label: 'Manage reputation settings',
     description: 'Allows updating Reputation policy settings.',
   },
+  CommunityPointsReverse: {
+    key: 'community-points.reverse',
+    label: 'Reverse Community Points',
+    description: 'Allows appending compensating Community Points reversals.',
+  },
+  CommunityPointsSettingsManage: {
+    key: 'community-points.settings.manage',
+    label: 'Manage Community Points settings',
+    description:
+      'Allows updating Community Points rules and anti-abuse limits.',
+  },
 
   RolesRead: {
     key: 'roles.read',

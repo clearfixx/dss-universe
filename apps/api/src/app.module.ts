@@ -73,6 +73,7 @@ import { HealthModule } from '@api/health';
 
 import { AppController } from './app.controller';
 import { AuthModule } from './modules/auth/auth.module';
+import { CommunityPointsModule } from './modules/community-points';
 import { IamModule } from './modules/iam';
 import { MediaModule } from './modules/media/media.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
@@ -96,6 +97,7 @@ import { UsersModule } from './modules/users/users.module';
     MediaModule,
     NotificationsModule,
     ReputationModule,
+    CommunityPointsModule,
   ],
   providers: [
     {

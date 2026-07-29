@@ -33,6 +33,8 @@ For current product and architecture work, use these sources first:
    ownership, privacy invariants and deferred cross-phase extensions.
 9. `architecture/PHASE_8_REPUTATION_LEDGER.md` — immutable direct reputation,
    reversal, cooldown and policy contracts.
+10. `architecture/PHASE_8_COMMUNITY_POINTS_LEDGER.md` — event-derived
+    participation ledger, configurable weights, caps and reversals.
 
 Older roadmap and architecture files are historical references when they conflict with these documents.
 
