@@ -754,6 +754,23 @@ Delivered in the Levels foundation package:
 - authenticated GraphQL progress, definitions, history and settings contracts;
 - unit, concurrency and PostgreSQL E2E coverage.
 
+Delivered in the Custom Titles foundation package:
+
+- separate, permission-neutral Custom Titles bounded context;
+- administrator-created name, Unicode slug, color, badge and description;
+- active/archive lifecycle without deleting historical awards;
+- multiple active titles per user and one selected display title;
+- mandatory grant and revocation reasons with retained history;
+- partial database uniqueness for active user/title grants;
+- configurable global display-change cooldown, including explicit zero days;
+- idempotent current-title selection and atomic cooldown enforcement;
+- automatic selection clearing when a grant is revoked or title archived;
+- PostgreSQL protection against physical grant deletion;
+- permission-backed administration without title-derived authorization;
+- transactional Audit and `custom-titles.*.v1` Outbox evidence;
+- authenticated GraphQL discovery, administration and self-selection;
+- unit and PostgreSQL E2E coverage.
+
 ## Direct reputation
 
 - visible author and mandatory reason;

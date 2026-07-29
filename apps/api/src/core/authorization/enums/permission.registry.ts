@@ -114,6 +114,17 @@ export const PERMISSIONS = {
     description:
       'Allows creating and updating Community Points level thresholds.',
   },
+  CustomTitlesManage: {
+    key: 'custom-titles.manage',
+    label: 'Manage custom titles',
+    description:
+      'Allows creating, updating, granting, and revoking custom titles.',
+  },
+  CustomTitlesSettingsManage: {
+    key: 'custom-titles.settings.manage',
+    label: 'Manage custom title settings',
+    description: 'Allows updating custom title selection policy.',
+  },
 
   RolesRead: {
     key: 'roles.read',

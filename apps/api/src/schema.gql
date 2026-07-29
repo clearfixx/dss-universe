@@ -83,10 +83,35 @@ input CommunityPointsPageInput {
   page: Int! = 1
 }
 
+input CreateCustomTitleInput {
+  badge: String!
+  color: String!
+  description: String
+  name: String!
+}
+
 input CreateWallPostInput {
   body: String
   imageMediaId: ID
   profileOwnerId: ID!
+}
+
+type CustomTitle {
+  badge: String!
+  color: String!
+  createdAt: DateTime!
+  description: String
+  id: ID!
+  isActive: Boolean!
+  name: String!
+  slug: String!
+  updatedAt: DateTime!
+}
+
+type CustomTitleSettings {
+  selectionCooldownDays: Int!
+  updatedAt: DateTime!
+  updatedById: ID
 }
 
 """
@@ -102,6 +127,12 @@ input GiveReputationInput {
   reason: String!
   recipientId: ID!
   value: Int!
+}
+
+input GrantCustomTitleInput {
+  reason: String!
+  titleId: ID!
+  userId: ID!
 }
 
 input InitiateMediaUploadInput {
@@ -316,10 +347,12 @@ type Mutation {
   blockUser(userId: ID!): UserBlockResult!
   changeViewerEmail(input: ChangeEmailInput!): LogoutResultModel!
   changeViewerPassword(input: ChangePasswordInput!): LogoutResultModel!
+  createCustomTitle(input: CreateCustomTitleInput!): CustomTitle!
   createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
   deactivateAccount(input: DeactivateAccountInput!): LogoutResultModel!
   followUser(userId: ID!): UserSocialGraphSummary!
   giveReputation(input: GiveReputationInput!): ReputationEntry!
+  grantCustomTitle(input: GrantCustomTitleInput!): UserTitleGrant!
   initiateMediaUpload(input: InitiateMediaUploadInput!): MediaUploadSession!
   login(input: LoginInput!): AuthPayloadModel!
   logout: LogoutResultModel!
@@ -334,13 +367,17 @@ type Mutation {
   retryFailedMedia(mediaId: ID!): MediaLibraryItem!
   reverseCommunityPoints(input: ReverseCommunityPointsInput!): CommunityPointEntry!
   reverseReputation(input: ReverseReputationInput!): ReputationEntry!
+  revokeCustomTitle(input: RevokeCustomTitleInput!): UserTitleGrant!
   revokeOtherViewerSessions: RevokeSessionsResultModel!
   revokeViewerSession(sessionId: ID!): LogoutResultModel!
+  selectCustomTitle(grantId: ID!): UserTitleGrant!
   setViewerAvatar(mediaId: ID!): Viewer!
   setViewerCover(mediaId: ID!): Viewer!
   unblockUser(userId: ID!): UserBlockResult!
   unfollowUser(userId: ID!): UserSocialGraphSummary!
   updateCommunityPointRule(input: UpdateCommunityPointRuleInput!): CommunityPointRule!
+  updateCustomTitle(input: UpdateCustomTitleInput!): CustomTitle!
+  updateCustomTitleSettings(input: UpdateCustomTitleSettingsInput!): CustomTitleSettings!
   updateLevelDefinition(input: UpdateLevelDefinitionInput!): LevelDefinition!
   updateReputationPolicy(input: UpdateReputationPolicyInput!): ReputationPolicy!
   updateViewerNotificationPreferences(input: UpdateNotificationPreferencesInput!): NotificationPreferences!
@@ -431,6 +468,9 @@ type Query {
   blockedUsers(pagination: UsersPageInput): UsersPageModel!
   communityPointRules: [CommunityPointRule!]!
   communityPointsHistory(pagination: CommunityPointsPageInput, userId: ID!): CommunityPointHistory!
+  customTitleSettings: CustomTitleSettings!
+  customTitles: [CustomTitle!]!
+  customTitlesAdmin: [CustomTitle!]!
   followers(pagination: UsersPageInput, userId: ID!): UsersPageModel!
   following(pagination: UsersPageInput, userId: ID!): UsersPageModel!
   levelDefinitions: [LevelDefinition!]!
@@ -449,6 +489,7 @@ type Query {
   user(id: ID!): User!
   userActivity(pagination: UsersPageInput, userId: ID!): UserActivityPage!
   userByUsername(username: String!): User!
+  userCustomTitles(userId: ID!): [UserTitleGrant!]!
   users(pagination: UsersPageInput): UsersPageModel!
   viewer: Viewer!
   viewerNotificationPreferences: NotificationPreferences!
@@ -522,6 +563,11 @@ input ReverseReputationInput {
   reason: String!
 }
 
+input RevokeCustomTitleInput {
+  grantId: ID!
+  reason: String!
+}
+
 type RevokeSessionsResultModel {
   revokedCount: Int!
   success: Boolean!
@@ -532,6 +578,19 @@ input UpdateCommunityPointRuleInput {
   enabled: Boolean!
   key: String!
   points: Int!
+}
+
+input UpdateCustomTitleInput {
+  badge: String!
+  color: String!
+  description: String
+  id: ID!
+  isActive: Boolean!
+  name: String!
+}
+
+input UpdateCustomTitleSettingsInput {
+  selectionCooldownDays: Int!
 }
 
 input UpdateLevelDefinitionInput {
@@ -643,6 +702,20 @@ type UserSocialLink {
   platform: String!
   position: Int!
   url: String!
+}
+
+type UserTitleGrant {
+  grantReason: String!
+  grantedAt: DateTime!
+  grantedById: ID!
+  id: ID!
+  revokeReason: String
+  revokedAt: DateTime
+  revokedById: ID
+  selected: Boolean!
+  title: CustomTitle!
+  titleId: ID!
+  userId: ID!
 }
 
 input UsersPageInput {

@@ -37,6 +37,8 @@ For current product and architecture work, use these sources first:
     participation ledger, configurable weights, caps and reversals.
 11. `architecture/PHASE_8_LEVELS_FOUNDATION.md` — Community Points-derived
     progress, configurable thresholds and immutable transitions.
+12. `architecture/PHASE_8_CUSTOM_TITLES_FOUNDATION.md` — permission-neutral
+    title definitions, historical grants and cooldown-protected selection.
 
 Older roadmap and architecture files are historical references when they conflict with these documents.
 
