@@ -952,6 +952,15 @@ Delivered Comments foundation:
 - owner-policy authorization for reads and writes;
 - authenticated GraphQL pilot plus transactional Audit and Outbox evidence.
 
+Delivered Reactions foundation:
+
+- one FK-backed reaction per actor and canonical Interaction Target;
+- idempotent set, atomic kind switching and idempotent clear;
+- `LIKE`, `UPVOTE` and `DOWNVOTE` with rebuildable counts and score;
+- owner-policy authorization plus target lifecycle enforcement;
+- authenticated GraphQL API and transactional Audit/Outbox evidence;
+- no implicit coupling to Reputation or Community Points.
+
 ## Content Gates
 
 - hide text, image, code or file blocks;

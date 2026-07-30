@@ -633,6 +633,181 @@ describe('DSS API (e2e)', () => {
       },
     });
 
+    const targetId =
+      wallPostBody.data.createProfileWallPost.interactionTargetId;
+    const setUpvote = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation SetReaction($input: SetReactionInput!) {
+          setReaction(input: $input) {
+            changed
+            reaction { interactionTargetId actorId kind }
+            summary {
+              likes upvotes downvotes score total viewerReaction
+            }
+          }
+        }`,
+        variables: {
+          input: { interactionTargetId: targetId, kind: 'UPVOTE' },
+        },
+      })
+      .expect(200);
+    expect(setUpvote.body).toMatchObject({
+      data: {
+        setReaction: {
+          changed: true,
+          reaction: {
+            interactionTargetId: targetId,
+            actorId: registered.data.register.user.id,
+            kind: 'UPVOTE',
+          },
+          summary: {
+            likes: 0,
+            upvotes: 1,
+            downvotes: 0,
+            score: 1,
+            total: 1,
+            viewerReaction: 'UPVOTE',
+          },
+        },
+      },
+    });
+
+    const repeatedUpvote = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation SetReaction($input: SetReactionInput!) {
+          setReaction(input: $input) { changed summary { total score } }
+        }`,
+        variables: {
+          input: { interactionTargetId: targetId, kind: 'UPVOTE' },
+        },
+      })
+      .expect(200);
+    expect(repeatedUpvote.body).toEqual({
+      data: {
+        setReaction: {
+          changed: false,
+          summary: { total: 1, score: 1 },
+        },
+      },
+    });
+
+    const switchedReaction = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation SetReaction($input: SetReactionInput!) {
+          setReaction(input: $input) {
+            changed
+            summary {
+              likes upvotes downvotes score total viewerReaction
+            }
+          }
+        }`,
+        variables: {
+          input: { interactionTargetId: targetId, kind: 'LIKE' },
+        },
+      })
+      .expect(200);
+    expect(switchedReaction.body).toEqual({
+      data: {
+        setReaction: {
+          changed: true,
+          summary: {
+            likes: 1,
+            upvotes: 0,
+            downvotes: 0,
+            score: 0,
+            total: 1,
+            viewerReaction: 'LIKE',
+          },
+        },
+      },
+    });
+
+    const clearedReaction = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation ClearReaction($targetId: ID!) {
+          clearReaction(interactionTargetId: $targetId) {
+            likes upvotes downvotes score total viewerReaction
+          }
+        }`,
+        variables: { targetId },
+      })
+      .expect(200);
+    expect(clearedReaction.body).toEqual({
+      data: {
+        clearReaction: {
+          likes: 0,
+          upvotes: 0,
+          downvotes: 0,
+          score: 0,
+          total: 0,
+          viewerReaction: null,
+        },
+      },
+    });
+
+    const reactionSummary = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `query ReactionSummary($targetId: ID!) {
+          reactionSummary(interactionTargetId: $targetId) {
+            likes upvotes downvotes score total viewerReaction
+          }
+        }`,
+        variables: { targetId },
+      })
+      .expect(200);
+    expect(reactionSummary.body).toEqual({
+      data: {
+        reactionSummary: {
+          likes: 0,
+          upvotes: 0,
+          downvotes: 0,
+          score: 0,
+          total: 0,
+          viewerReaction: null,
+        },
+      },
+    });
+    await expect(
+      app.get(PrismaService).auditRecord.count({
+        where: {
+          actorId: registered.data.register.user.id,
+          targetId,
+          action: {
+            in: [
+              'reactions.reaction.set',
+              'reactions.reaction.changed',
+              'reactions.reaction.cleared',
+            ],
+          },
+        },
+      }),
+    ).resolves.toBe(3);
+    await expect(
+      app.get(PrismaService).outboxEvent.count({
+        where: {
+          actorId: registered.data.register.user.id,
+          aggregateId: targetId,
+          eventName: {
+            in: [
+              'reactions.reaction.set.v1',
+              'reactions.reaction.changed.v1',
+              'reactions.reaction.cleared.v1',
+            ],
+          },
+        },
+      }),
+    ).resolves.toBe(3);
+
     const createdComment = await request(app.getHttpServer())
       .post('/api/graphql')
       .set('Authorization', 'Bearer ' + accessToken)
@@ -928,6 +1103,10 @@ describe('DSS API (e2e)', () => {
             targetId: $targetId
             capability: COMMENT
           ) { allowed reason }
+          react: interactionTargetAccess(
+            targetId: $targetId
+            capability: REACT
+          ) { allowed reason }
         }`,
         variables: {
           targetId: wallPostBody.data.createProfileWallPost.interactionTargetId,
@@ -939,6 +1118,7 @@ describe('DSS API (e2e)', () => {
         interactionTarget: { status: 'LOCKED' },
         read: { allowed: true, reason: null },
         comment: { allowed: false, reason: 'TARGET_LOCKED' },
+        react: { allowed: false, reason: 'TARGET_LOCKED' },
       },
     });
 
@@ -960,6 +1140,23 @@ describe('DSS API (e2e)', () => {
       .expect(200);
     expect(
       (commentOnLockedTarget.body as GraphqlErrorResponse).errors[0].extensions
+        .code,
+    ).toBe('FORBIDDEN');
+
+    const reactionOnLockedTarget = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation SetReaction($input: SetReactionInput!) {
+          setReaction(input: $input) { changed }
+        }`,
+        variables: {
+          input: { interactionTargetId: targetId, kind: 'UPVOTE' },
+        },
+      })
+      .expect(200);
+    expect(
+      (reactionOnLockedTarget.body as GraphqlErrorResponse).errors[0].extensions
         .code,
     ).toBe('FORBIDDEN');
 

@@ -124,6 +124,12 @@ enum InteractionTargetStatus {
   RETIRED
 }
 
+enum ReactionKind {
+  LIKE
+  UPVOTE
+  DOWNVOTE
+}
+
 model User {
   id            String     @id @default(uuid())
   email         String     @unique
@@ -167,6 +173,7 @@ model User {
   commentsAuthored        Comment[]                    @relation("CommentAuthor")
   commentRevisions        CommentRevision[]            @relation("CommentRevisionEditor")
   commentsDeleted         Comment[]                    @relation("CommentDeletedBy")
+  reactions               Reaction[]
   titleGrants             UserTitleGrant[]
   selectedTitle           UserTitleSelection?
   achievementAwards       AchievementAward[]
@@ -247,13 +254,46 @@ model InteractionTarget {
   createdAt   DateTime                @default(now())
   updatedAt   DateTime                @updatedAt
 
-  userWallPost UserWallPost?
-  comments     Comment[]
+  userWallPost      UserWallPost?
+  comments          Comment[]
+  reactions         Reaction[]
+  reactionAggregate ReactionAggregate?
 
   @@unique([ownerType, ownerId])
   @@index([kind, status])
   @@index([ownerModule, status])
   @@map("interaction_targets")
+}
+
+model Reaction {
+  id                  String       @id @default(uuid())
+  interactionTargetId String
+  actorId             String
+  kind                ReactionKind
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  interactionTarget InteractionTarget @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
+  actor             User              @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@unique([interactionTargetId, actorId])
+  @@index([interactionTargetId, kind])
+  @@index([actorId, createdAt])
+  @@map("reactions")
+}
+
+model ReactionAggregate {
+  interactionTargetId String   @id
+  likes               Int      @default(0)
+  upvotes             Int      @default(0)
+  downvotes           Int      @default(0)
+  score               Int      @default(0)
+  total               Int      @default(0)
+  updatedAt           DateTime @updatedAt
+
+  interactionTarget InteractionTarget @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
+
+  @@map("reaction_aggregates")
 }
 
 model Comment {

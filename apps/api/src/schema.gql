@@ -523,6 +523,7 @@ type Mutation {
   blockUser(userId: ID!): UserBlockResult!
   changeViewerEmail(input: ChangeEmailInput!): LogoutResultModel!
   changeViewerPassword(input: ChangePasswordInput!): LogoutResultModel!
+  clearReaction(interactionTargetId: ID!): ReactionSummary!
   createComment(input: CreateCommentInput!): Comment!
   createCustomTitle(input: CreateCustomTitleInput!): CustomTitle!
   createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
@@ -554,6 +555,7 @@ type Mutation {
   saveAchievement(input: SaveAchievementInput!): Achievement!
   saveAchievementRule(input: SaveAchievementRuleInput!): AchievementRule!
   selectCustomTitle(grantId: ID!): UserTitleGrant!
+  setReaction(input: SetReactionInput!): SetReactionPayload!
   setViewerAvatar(mediaId: ID!): Viewer!
   setViewerCover(mediaId: ID!): Viewer!
   unblockUser(userId: ID!): UserBlockResult!
@@ -676,6 +678,7 @@ type Query {
   presenceSummary: PresenceSummary!
   profileWall(pagination: UsersPageInput, profileOwnerId: ID!): ProfileWallPage!
   quarantinedMedia(limit: Int! = 25): [MediaQuarantineItem!]!
+  reactionSummary(interactionTargetId: ID!): ReactionSummary!
   reputationHistory(pagination: ReputationPageInput, userId: ID!): ReputationHistory!
   reputationPolicy: ReputationPolicy!
   user(id: ID!): User!
@@ -690,6 +693,33 @@ type Query {
   viewerPrivacySettings: UserPrivacySettings!
   viewerProfileCompletion: ProfileCompletion!
   viewerSessions: [AuthSession!]!
+}
+
+type Reaction {
+  actorId: ID!
+  createdAt: String!
+  id: ID!
+  interactionTargetId: ID!
+  kind: ReactionKind!
+  updatedAt: String!
+}
+
+"""A content signal that remains separate from user reputation changes."""
+enum ReactionKind {
+  DOWNVOTE
+  LIKE
+  UPVOTE
+}
+
+type ReactionSummary {
+  downvotes: Int!
+  interactionTargetId: ID!
+  likes: Int!
+  score: Int!
+  total: Int!
+  updatedAt: String
+  upvotes: Int!
+  viewerReaction: ReactionKind
 }
 
 input RefreshTokenInput {
@@ -797,6 +827,17 @@ input SaveAchievementRuleInput {
   id: ID
   recipientPayloadKey: String! = "userId"
   repeatable: Boolean! = false
+}
+
+input SetReactionInput {
+  interactionTargetId: ID!
+  kind: ReactionKind!
+}
+
+type SetReactionPayload {
+  changed: Boolean!
+  reaction: Reaction!
+  summary: ReactionSummary!
 }
 
 input UpdateCommunityPointRuleInput {

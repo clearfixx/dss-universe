@@ -18,16 +18,20 @@ import { AuditModule } from '@api/core/audit';
 import { PrismaModule } from '@api/core/database';
 import { EventsModule } from '@api/core/events';
 
+import { CommentsService } from './application/services/comments.service';
 import { InteractionPolicyRegistryService } from './application/services/interaction-policy-registry.service';
 import { InteractionTargetWriterService } from './application/services/interaction-target-writer.service';
 import { InteractionTargetsService } from './application/services/interaction-targets.service';
-import { INTERACTION_TARGETS_REPOSITORY } from './domain/repositories/interaction-targets.repository.interface';
-import { PrismaInteractionTargetsRepository } from './infrastructure/repositories/prisma-interaction-targets.repository';
-import { InteractionTargetsResolver } from './presentation/graphql/resolvers/interaction-targets.resolver';
-import { CommentsService } from './application/services/comments.service';
+import { ReactionsService } from './application/services/reactions.service';
 import { COMMENTS_REPOSITORY } from './domain/repositories/comments.repository.interface';
+import { INTERACTION_TARGETS_REPOSITORY } from './domain/repositories/interaction-targets.repository.interface';
+import { REACTIONS_REPOSITORY } from './domain/repositories/reactions.repository.interface';
 import { PrismaCommentsRepository } from './infrastructure/repositories/prisma-comments.repository';
+import { PrismaInteractionTargetsRepository } from './infrastructure/repositories/prisma-interaction-targets.repository';
+import { PrismaReactionsRepository } from './infrastructure/repositories/prisma-reactions.repository';
 import { CommentsResolver } from './presentation/graphql/resolvers/comments.resolver';
+import { InteractionTargetsResolver } from './presentation/graphql/resolvers/interaction-targets.resolver';
+import { ReactionsResolver } from './presentation/graphql/resolvers/reactions.resolver';
 
 @Module({
   imports: [PrismaModule, AuditModule, EventsModule],
@@ -38,6 +42,8 @@ import { CommentsResolver } from './presentation/graphql/resolvers/comments.reso
     InteractionTargetsResolver,
     CommentsService,
     CommentsResolver,
+    ReactionsService,
+    ReactionsResolver,
     {
       provide: INTERACTION_TARGETS_REPOSITORY,
       useClass: PrismaInteractionTargetsRepository,
@@ -46,12 +52,17 @@ import { CommentsResolver } from './presentation/graphql/resolvers/comments.reso
       provide: COMMENTS_REPOSITORY,
       useClass: PrismaCommentsRepository,
     },
+    {
+      provide: REACTIONS_REPOSITORY,
+      useClass: PrismaReactionsRepository,
+    },
   ],
   exports: [
     InteractionPolicyRegistryService,
     InteractionTargetWriterService,
     InteractionTargetsService,
     CommentsService,
+    ReactionsService,
   ],
 })
 export class InteractionsModule {}

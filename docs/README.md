@@ -50,6 +50,8 @@ For current product and architecture work, use these sources first:
     cross-module target identity, lifecycle and owner-policy authorization.
 17. `architecture/PHASE_9_SHARED_COMMENTS_FOUNDATION.md` — shared comment
     bodies, bounded replies, immutable revisions and public tombstones.
+18. `architecture/PHASE_9_SHARED_REACTIONS_FOUNDATION.md` — idempotent content
+    reactions, rebuildable vote aggregates and strict Reputation separation.
 
 Older roadmap and architecture files are historical references when they conflict with these documents.
 
