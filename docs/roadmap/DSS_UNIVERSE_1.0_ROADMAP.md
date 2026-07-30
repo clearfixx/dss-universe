@@ -944,6 +944,14 @@ Delivered foundation:
 - reactions/votes with idempotent records;
 - bookmarks/saved items with private ownership.
 
+Delivered Comments foundation:
+
+- one FK-backed Comments context using canonical Interaction Targets;
+- top-level comments and independently paginated one-level replies;
+- immutable revision history and body-free public tombstones;
+- owner-policy authorization for reads and writes;
+- authenticated GraphQL pilot plus transactional Audit and Outbox evidence.
+
 ## Content Gates
 
 - hide text, image, code or file blocks;

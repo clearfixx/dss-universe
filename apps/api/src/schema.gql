@@ -91,6 +91,41 @@ input ChangePasswordInput {
   newPassword: String!
 }
 
+type Comment {
+  authorId: ID!
+  body: String
+  createdAt: String!
+  deletedAt: String
+  editedAt: String
+  id: ID!
+  interactionTargetId: ID!
+  isDeleted: Boolean!
+  parentId: ID
+  updatedAt: String!
+}
+
+type CommentPage {
+  items: [Comment!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+type CommentRevision {
+  body: String!
+  commentId: ID!
+  createdAt: String!
+  editorId: ID!
+  id: ID!
+  version: Int!
+}
+
+input CommentsPageInput {
+  limit: Int! = 20
+  page: Int! = 1
+}
+
 type CommunityPointEntry {
   actorId: ID
   id: ID!
@@ -137,6 +172,12 @@ input CommunityPointsPageInput {
   page: Int! = 1
 }
 
+input CreateCommentInput {
+  body: String!
+  interactionTargetId: ID!
+  parentId: ID
+}
+
 input CreateCustomTitleInput {
   badge: String!
   color: String!
@@ -175,6 +216,11 @@ scalar DateTime
 
 input DeactivateAccountInput {
   password: String!
+}
+
+input EditCommentInput {
+  body: String!
+  commentId: ID!
 }
 
 input GiveReputationInput {
@@ -477,9 +523,11 @@ type Mutation {
   blockUser(userId: ID!): UserBlockResult!
   changeViewerEmail(input: ChangeEmailInput!): LogoutResultModel!
   changeViewerPassword(input: ChangePasswordInput!): LogoutResultModel!
+  createComment(input: CreateCommentInput!): Comment!
   createCustomTitle(input: CreateCustomTitleInput!): CustomTitle!
   createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
   deactivateAccount(input: DeactivateAccountInput!): LogoutResultModel!
+  editComment(input: EditCommentInput!): Comment!
   followUser(userId: ID!): UserSocialGraphSummary!
   giveReputation(input: GiveReputationInput!): ReputationEntry!
   grantCustomTitle(input: GrantCustomTitleInput!): UserTitleGrant!
@@ -490,6 +538,7 @@ type Mutation {
   refreshTokens(input: RefreshTokenInput!): AuthPayloadModel!
   register(input: RegisterInput!): AuthPayloadModel!
   rejectQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
+  removeComment(commentId: ID!, reason: String): Comment!
   removeProfileWallPost(postId: ID!, reason: String): ProfileWallPost!
   removeViewerAvatar: Viewer!
   removeViewerCover: Viewer!
@@ -604,6 +653,8 @@ type Query {
   achievementsAdmin: [Achievement!]!
   apiInfo: ApiInfo!
   blockedUsers(pagination: UsersPageInput): UsersPageModel!
+  commentRevisions(commentId: ID!): [CommentRevision!]!
+  commentsForTarget(interactionTargetId: ID!, pagination: CommentsPageInput, parentId: ID): CommentPage!
   communityPointRules: [CommunityPointRule!]!
   communityPointsHistory(pagination: CommunityPointsPageInput, userId: ID!): CommunityPointHistory!
   customTitleSettings: CustomTitleSettings!

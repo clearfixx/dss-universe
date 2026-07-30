@@ -16,6 +16,9 @@ Knowledge Forge, Academy, Profile Wall, or future modules.
 - Lifecycle restrictions run before owner authorization.
 - Registration and status changes produce Audit and Outbox evidence.
 - Profile Wall is the first integrated target owner.
+- Comments owns FK-backed top-level comments and one-level replies.
+- Every comment version is retained in immutable revision history.
+- Deleted comments become body-free tombstones.
 
 ## Boundary
 
@@ -23,6 +26,10 @@ Owning modules decide whether a user may read, comment, react, or bookmark.
 Future Comments, Reactions, and Bookmarks modules store only the canonical
 `interactionTargetId`; they must not recreate unconstrained
 `targetType + targetId` relationships.
+
+Comments already follows this contract. Its first API uses bounded plain text;
+structured DSS Editor documents, mentions, reports, and staff moderation
+annotations arrive in their dedicated packages.
 
 Interaction counters are projections and may be rebuilt. They are never the
 sole source of truth.

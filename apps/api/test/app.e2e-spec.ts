@@ -633,6 +633,180 @@ describe('DSS API (e2e)', () => {
       },
     });
 
+    const createdComment = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation CreateComment($input: CreateCommentInput!) {
+          createComment(input: $input) {
+            id interactionTargetId authorId parentId body isDeleted editedAt
+          }
+        }`,
+        variables: {
+          input: {
+            interactionTargetId:
+              wallPostBody.data.createProfileWallPost.interactionTargetId,
+            body: '  First shared comment.  ',
+          },
+        },
+      })
+      .expect(200);
+    const createdCommentBody = createdComment.body as {
+      data: {
+        createComment: {
+          id: string;
+          interactionTargetId: string;
+          parentId: string | null;
+          body: string;
+          isDeleted: boolean;
+        };
+      };
+    };
+    expect(createdCommentBody.data.createComment).toMatchObject({
+      interactionTargetId:
+        wallPostBody.data.createProfileWallPost.interactionTargetId,
+      parentId: null,
+      body: 'First shared comment.',
+      isDeleted: false,
+    });
+
+    const editedComment = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation EditComment($input: EditCommentInput!) {
+          editComment(input: $input) { id body editedAt }
+        }`,
+        variables: {
+          input: {
+            commentId: createdCommentBody.data.createComment.id,
+            body: 'Edited shared comment.',
+          },
+        },
+      })
+      .expect(200);
+    expect(editedComment.body).toMatchObject({
+      data: {
+        editComment: {
+          id: createdCommentBody.data.createComment.id,
+          body: 'Edited shared comment.',
+        },
+      },
+    });
+    expect(
+      typeof (
+        editedComment.body as { data: { editComment: { editedAt: unknown } } }
+      ).data.editComment.editedAt,
+    ).toBe('string');
+
+    const commentRevisionHistory = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `query CommentRevisions($commentId: ID!) {
+          commentRevisions(commentId: $commentId) {
+            commentId version body editorId createdAt
+          }
+        }`,
+        variables: { commentId: createdCommentBody.data.createComment.id },
+      })
+      .expect(200);
+    expect(commentRevisionHistory.body).toMatchObject({
+      data: {
+        commentRevisions: [
+          { version: 1, body: 'First shared comment.' },
+          { version: 2, body: 'Edited shared comment.' },
+        ],
+      },
+    });
+
+    const replyComment = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation Reply($input: CreateCommentInput!) {
+          createComment(input: $input) { id parentId body }
+        }`,
+        variables: {
+          input: {
+            interactionTargetId:
+              wallPostBody.data.createProfileWallPost.interactionTargetId,
+            parentId: createdCommentBody.data.createComment.id,
+            body: 'A bounded reply.',
+          },
+        },
+      })
+      .expect(200);
+    expect(replyComment.body).toMatchObject({
+      data: {
+        createComment: {
+          parentId: createdCommentBody.data.createComment.id,
+          body: 'A bounded reply.',
+        },
+      },
+    });
+
+    const topLevelComments = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `query Comments($targetId: ID!) {
+          commentsForTarget(
+            interactionTargetId: $targetId
+            pagination: { page: 1, limit: 10 }
+          ) {
+            total items { id parentId body }
+          }
+        }`,
+        variables: {
+          targetId: wallPostBody.data.createProfileWallPost.interactionTargetId,
+        },
+      })
+      .expect(200);
+    expect(topLevelComments.body).toMatchObject({
+      data: {
+        commentsForTarget: {
+          total: 1,
+          items: [
+            {
+              id: createdCommentBody.data.createComment.id,
+              parentId: null,
+              body: 'Edited shared comment.',
+            },
+          ],
+        },
+      },
+    });
+
+    const removedComment = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation RemoveComment($commentId: ID!) {
+          removeComment(commentId: $commentId, reason: "Author cleanup") {
+            id body isDeleted deletedAt
+          }
+        }`,
+        variables: { commentId: createdCommentBody.data.createComment.id },
+      })
+      .expect(200);
+    expect(removedComment.body).toMatchObject({
+      data: {
+        removeComment: {
+          id: createdCommentBody.data.createComment.id,
+          body: null,
+          isDeleted: true,
+        },
+      },
+    });
+    expect(
+      typeof (
+        removedComment.body as {
+          data: { removeComment: { deletedAt: unknown } };
+        }
+      ).data.removeComment.deletedAt,
+    ).toBe('string');
+
     const prisma = app.get(PrismaService);
     const activityProjector = new PostgresActivityProjector(processingPool);
     const createdEvent = await prisma.outboxEvent.findFirstOrThrow({
@@ -767,6 +941,27 @@ describe('DSS API (e2e)', () => {
         comment: { allowed: false, reason: 'TARGET_LOCKED' },
       },
     });
+
+    const commentOnLockedTarget = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation CreateComment($input: CreateCommentInput!) {
+          createComment(input: $input) { id }
+        }`,
+        variables: {
+          input: {
+            interactionTargetId:
+              wallPostBody.data.createProfileWallPost.interactionTargetId,
+            body: 'Too late.',
+          },
+        },
+      })
+      .expect(200);
+    expect(
+      (commentOnLockedTarget.body as GraphqlErrorResponse).errors[0].extensions
+        .code,
+    ).toBe('FORBIDDEN');
 
     const retractedEvent = await prisma.outboxEvent.findFirstOrThrow({
       where: {

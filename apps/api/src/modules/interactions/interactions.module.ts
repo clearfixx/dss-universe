@@ -24,6 +24,10 @@ import { InteractionTargetsService } from './application/services/interaction-ta
 import { INTERACTION_TARGETS_REPOSITORY } from './domain/repositories/interaction-targets.repository.interface';
 import { PrismaInteractionTargetsRepository } from './infrastructure/repositories/prisma-interaction-targets.repository';
 import { InteractionTargetsResolver } from './presentation/graphql/resolvers/interaction-targets.resolver';
+import { CommentsService } from './application/services/comments.service';
+import { COMMENTS_REPOSITORY } from './domain/repositories/comments.repository.interface';
+import { PrismaCommentsRepository } from './infrastructure/repositories/prisma-comments.repository';
+import { CommentsResolver } from './presentation/graphql/resolvers/comments.resolver';
 
 @Module({
   imports: [PrismaModule, AuditModule, EventsModule],
@@ -32,15 +36,22 @@ import { InteractionTargetsResolver } from './presentation/graphql/resolvers/int
     InteractionTargetWriterService,
     InteractionTargetsService,
     InteractionTargetsResolver,
+    CommentsService,
+    CommentsResolver,
     {
       provide: INTERACTION_TARGETS_REPOSITORY,
       useClass: PrismaInteractionTargetsRepository,
+    },
+    {
+      provide: COMMENTS_REPOSITORY,
+      useClass: PrismaCommentsRepository,
     },
   ],
   exports: [
     InteractionPolicyRegistryService,
     InteractionTargetWriterService,
     InteractionTargetsService,
+    CommentsService,
   ],
 })
 export class InteractionsModule {}
