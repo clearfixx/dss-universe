@@ -14,6 +14,7 @@
 
 export type UserWallPost = {
   id: string;
+  interactionTargetId: string;
   profileOwnerId: string;
   authorId: string;
   body: string | null;

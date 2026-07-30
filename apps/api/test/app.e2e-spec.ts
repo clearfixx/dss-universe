@@ -567,7 +567,7 @@ describe('DSS API (e2e)', () => {
       .send({
         query: `mutation CreateWallPost($input: CreateWallPostInput!) {
           createProfileWallPost(input: $input) {
-            id profileOwnerId authorId body imageMediaId isDeleted
+            id interactionTargetId profileOwnerId authorId body imageMediaId isDeleted
           }
         }`,
         variables: {
@@ -582,6 +582,7 @@ describe('DSS API (e2e)', () => {
       data: {
         createProfileWallPost: {
           id: string;
+          interactionTargetId: string;
           profileOwnerId: string;
           body: string;
           isDeleted: boolean;
@@ -592,6 +593,44 @@ describe('DSS API (e2e)', () => {
       profileOwnerId: registered.data.register.user.id,
       body: 'First transmission from the Profile Wall.',
       isDeleted: false,
+    });
+
+    const targetAccess = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `query TargetAccess($targetId: ID!) {
+          interactionTarget(id: $targetId) {
+            id kind ownerModule ownerType ownerId status
+          }
+          interactionTargetAccess(
+            targetId: $targetId
+            capability: COMMENT
+          ) {
+            allowed reason capability
+          }
+        }`,
+        variables: {
+          targetId: wallPostBody.data.createProfileWallPost.interactionTargetId,
+        },
+      })
+      .expect(200);
+    expect(targetAccess.body).toMatchObject({
+      data: {
+        interactionTarget: {
+          id: wallPostBody.data.createProfileWallPost.interactionTargetId,
+          kind: 'users.profile-wall-post',
+          ownerModule: 'users',
+          ownerType: 'UserWallPost',
+          ownerId: wallPostBody.data.createProfileWallPost.id,
+          status: 'ACTIVE',
+        },
+        interactionTargetAccess: {
+          allowed: true,
+          reason: null,
+          capability: 'COMMENT',
+        },
+      },
     });
 
     const prisma = app.get(PrismaService);
@@ -700,6 +739,34 @@ describe('DSS API (e2e)', () => {
     expect(
       typeof removedWallPostBody.data.removeProfileWallPost.deletedAt,
     ).toBe('string');
+
+    const lockedTarget = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `query LockedTarget($targetId: ID!) {
+          interactionTarget(id: $targetId) { status }
+          read: interactionTargetAccess(
+            targetId: $targetId
+            capability: READ
+          ) { allowed reason }
+          comment: interactionTargetAccess(
+            targetId: $targetId
+            capability: COMMENT
+          ) { allowed reason }
+        }`,
+        variables: {
+          targetId: wallPostBody.data.createProfileWallPost.interactionTargetId,
+        },
+      })
+      .expect(200);
+    expect(lockedTarget.body).toEqual({
+      data: {
+        interactionTarget: { status: 'LOCKED' },
+        read: { allowed: true, reason: null },
+        comment: { allowed: false, reason: 'TARGET_LOCKED' },
+      },
+    });
 
     const retractedEvent = await prisma.outboxEvent.findFirstOrThrow({
       where: {

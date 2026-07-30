@@ -889,6 +889,15 @@ All points use a reversible ledger. Deleted/moderated/unpublished content may re
   requested action;
 - counters are rebuildable projections, never the sole source of truth.
 
+Delivered foundation:
+
+- canonical `InteractionTarget` schema, migration and immutable ownership;
+- `ACTIVE`, `LOCKED` and `RETIRED` lifecycle;
+- fail-closed owner policy registry and authenticated GraphQL access pilot;
+- transactional Audit and Outbox evidence;
+- Profile Wall as the first real FK-backed owner, including privacy/block
+  authorization and tombstone-to-lock lifecycle.
+
 ## Interaction bounded contexts
 
 - Comments owns comment bodies, reply trees, edit history, mentions,

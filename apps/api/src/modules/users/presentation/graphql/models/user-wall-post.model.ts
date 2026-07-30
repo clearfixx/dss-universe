@@ -20,6 +20,9 @@ export class UserWallPostModel {
   id!: string;
 
   @Field(() => ID)
+  interactionTargetId!: string;
+
+  @Field(() => ID)
   profileOwnerId!: string;
 
   @Field(() => ID)

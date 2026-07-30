@@ -20,11 +20,14 @@
 
 import { Injectable } from '@nestjs/common';
 import { MediaKind, MediaStatus } from '@prisma/client';
+import { randomUUID } from 'node:crypto';
 
 import { AuditWriterService } from '@api/core/audit';
 import { PrismaService } from '@api/core/database';
 import { createEventEnvelope, OutboxWriterService } from '@api/core/events';
 import type { PaginatedResult } from '@api/shared';
+import { InteractionTargetWriterService } from '../../../interactions';
+import { PROFILE_WALL_INTERACTION_KIND } from '../../application/services/profile-wall-interaction.policy';
 
 import type { UserWallRepository } from '../../domain/repositories/user-wall.repository.interface';
 import type {
@@ -43,11 +46,24 @@ export class PrismaUserWallRepository implements UserWallRepository {
     private readonly prisma: PrismaService,
     private readonly audit: AuditWriterService,
     private readonly outbox: OutboxWriterService,
+    private readonly interactionTargets: InteractionTargetWriterService,
   ) {}
 
   async create(input: CreateUserWallPost): Promise<UserWallPost> {
     return this.prisma.$transaction(async (transaction) => {
-      const post = await transaction.userWallPost.create({ data: input });
+      const postId = randomUUID();
+      const interactionTargetId = randomUUID();
+      await this.interactionTargets.register(transaction, {
+        id: interactionTargetId,
+        kind: PROFILE_WALL_INTERACTION_KIND,
+        ownerModule: 'users',
+        ownerType: MEDIA_TARGET_TYPE,
+        ownerId: postId,
+        actorId: input.authorId,
+      });
+      const post = await transaction.userWallPost.create({
+        data: { ...input, id: postId, interactionTargetId },
+      });
       if (input.imageMediaId) {
         await transaction.mediaReference.create({
           data: {
@@ -142,6 +158,13 @@ export class PrismaUserWallRepository implements UserWallRepository {
           deleteReason: reason,
         },
       });
+      await this.interactionTargets.setStatus(
+        transaction,
+        post.interactionTargetId,
+        'LOCKED',
+        deletedById,
+        reason ?? 'Profile Wall post tombstoned.',
+      );
       await transaction.mediaReference.updateMany({
         where: {
           targetType: MEDIA_TARGET_TYPE,
@@ -178,6 +201,7 @@ export class PrismaUserWallRepository implements UserWallRepository {
 
   private toDomain(post: {
     id: string;
+    interactionTargetId: string;
     profileOwnerId: string;
     authorId: string;
     body: string | null;
@@ -189,6 +213,7 @@ export class PrismaUserWallRepository implements UserWallRepository {
     const isDeleted = post.deletedAt !== null;
     return {
       id: post.id,
+      interactionTargetId: post.interactionTargetId,
       profileOwnerId: post.profileOwnerId,
       authorId: post.authorId,
       body: isDeleted ? null : post.body,

@@ -294,6 +294,7 @@ export type ProfileWallQuery = {
     totalPages: number;
     items: Array<{
       id: string;
+      interactionTargetId: string;
       profileOwnerId: string;
       authorId: string;
       body: string | null;
@@ -563,6 +564,7 @@ export type CreateProfileWallPostMutationVariables = Exact<{
 export type CreateProfileWallPostMutation = {
   createProfileWallPost: {
     id: string;
+    interactionTargetId: string;
     profileOwnerId: string;
     authorId: string;
     body: string | null;
@@ -1292,6 +1294,10 @@ export const ProfileWallDocument = {
                     kind: "SelectionSet",
                     selections: [
                       { kind: "Field", name: { kind: "Name", value: "id" } },
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "interactionTargetId" },
+                      },
                       {
                         kind: "Field",
                         name: { kind: "Name", value: "profileOwnerId" },
@@ -2407,6 +2413,10 @@ export const CreateProfileWallPostDocument = {
               kind: "SelectionSet",
               selections: [
                 { kind: "Field", name: { kind: "Name", value: "id" } },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "interactionTargetId" },
+                },
                 {
                   kind: "Field",
                   name: { kind: "Name", value: "profileOwnerId" },

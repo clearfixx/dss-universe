@@ -60,6 +60,7 @@ const wall: ProfileWallQuery["profileWall"] = {
   items: [
     {
       id: "post-1",
+      interactionTargetId: "target-post-1",
       profileOwnerId: "user-1",
       authorId: "user-1",
       body: "Перший запис у профілі.",

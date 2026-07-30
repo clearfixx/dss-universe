@@ -197,6 +197,31 @@ input InitiateMediaUploadInput {
   policyKey: String!
 }
 
+type InteractionAccessDecision {
+  allowed: Boolean!
+  capability: InteractionCapability!
+  reason: String
+  target: InteractionTarget!
+}
+
+enum InteractionCapability {
+  BOOKMARK
+  COMMENT
+  REACT
+  READ
+}
+
+type InteractionTarget {
+  createdAt: String!
+  id: ID!
+  kind: String!
+  ownerId: ID!
+  ownerModule: String!
+  ownerType: String!
+  status: String!
+  updatedAt: String!
+}
+
 type LeaderboardEntry {
   avatarUrl: String
   communityPoints: Int!
@@ -567,6 +592,7 @@ type ProfileWallPost {
   deletedAt: String
   id: ID!
   imageMediaId: ID
+  interactionTargetId: ID!
   isDeleted: Boolean!
   profileOwnerId: ID!
   updatedAt: String!
@@ -585,6 +611,8 @@ type Query {
   customTitlesAdmin: [CustomTitle!]!
   followers(pagination: UsersPageInput, userId: ID!): UsersPageModel!
   following(pagination: UsersPageInput, userId: ID!): UsersPageModel!
+  interactionTarget(id: ID!): InteractionTarget!
+  interactionTargetAccess(capability: InteractionCapability!, targetId: ID!): InteractionAccessDecision!
   leaderboard(input: LeaderboardInput): LeaderboardPage!
   levelDefinitions: [LevelDefinition!]!
   levelHistory(pagination: LevelHistoryPageInput, userId: ID!): LevelTransitionHistory!

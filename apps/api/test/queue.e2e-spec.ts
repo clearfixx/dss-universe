@@ -34,6 +34,9 @@ describe('Outbox queue delivery (e2e)', () => {
   });
 
   it('delivers an event once with a deterministic job identity', async () => {
+    await queues.integrationEvents.obliterate({ force: true });
+    await prisma.outboxEvent.deleteMany({ where: { status: 'PENDING' } });
+
     const event = createEventEnvelope({
       name: 'platform.queue.verified',
       version: 1,

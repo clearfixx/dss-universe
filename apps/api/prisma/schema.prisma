@@ -118,6 +118,12 @@ enum ActivityVisibility {
   PRIVATE
 }
 
+enum InteractionTargetStatus {
+  ACTIVE
+  LOCKED
+  RETIRED
+}
+
 model User {
   id            String     @id @default(uuid())
   email         String     @unique
@@ -206,24 +212,44 @@ model UserPrivacySettings {
 }
 
 model UserWallPost {
-  id             String    @id @default(uuid())
-  profileOwnerId String
-  authorId       String
-  body           String?
-  imageMediaId   String?
-  deletedAt      DateTime?
-  deletedById    String?
-  deleteReason   String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id                  String    @id @default(uuid())
+  profileOwnerId      String
+  authorId            String
+  body                String?
+  imageMediaId        String?
+  deletedAt           DateTime?
+  deletedById         String?
+  deleteReason        String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  interactionTargetId String    @unique
 
-  profileOwner User @relation("ProfileWallOwner", fields: [profileOwnerId], references: [id], onDelete: Cascade)
-  author       User @relation("ProfileWallAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  profileOwner      User              @relation("ProfileWallOwner", fields: [profileOwnerId], references: [id], onDelete: Cascade)
+  author            User              @relation("ProfileWallAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  interactionTarget InteractionTarget @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
 
   @@index([profileOwnerId, createdAt, id])
   @@index([authorId, createdAt])
   @@index([deletedAt])
   @@map("user_wall_posts")
+}
+
+model InteractionTarget {
+  id          String                  @id @default(uuid())
+  kind        String
+  ownerModule String
+  ownerType   String
+  ownerId     String
+  status      InteractionTargetStatus @default(ACTIVE)
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+
+  userWallPost UserWallPost?
+
+  @@unique([ownerType, ownerId])
+  @@index([kind, status])
+  @@index([ownerModule, status])
+  @@map("interaction_targets")
 }
 
 model UserFollow {

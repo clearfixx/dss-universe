@@ -88,6 +88,7 @@ describe('UserWallService', () => {
     wall.isAttachableImage.mockResolvedValue(true);
     wall.create.mockResolvedValue({
       id: 'post-image',
+      interactionTargetId: 'target-image',
       profileOwnerId: 'owner',
       authorId: 'author',
       body: null,
@@ -113,6 +114,7 @@ describe('UserWallService', () => {
   it('allows the profile owner to tombstone a visitor post', async () => {
     wall.findById.mockResolvedValue({
       id: 'post-1',
+      interactionTargetId: 'target-1',
       profileOwnerId: 'owner',
       authorId: 'author',
       body: 'Hello',
@@ -124,6 +126,7 @@ describe('UserWallService', () => {
     });
     wall.tombstone.mockResolvedValue({
       id: 'post-1',
+      interactionTargetId: 'target-1',
       profileOwnerId: 'owner',
       authorId: 'author',
       body: null,

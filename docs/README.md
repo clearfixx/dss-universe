@@ -46,6 +46,8 @@ For current product and architecture work, use these sources first:
 15. `architecture/PHASE_8_GAMIFICATION_FRONTEND.md` — typed profile and Members
     Directory composition for points, levels, reputation, titles, achievements
     and leaderboards.
+16. `architecture/PHASE_9_INTERACTION_TARGET_REGISTRY.md` — canonical
+    cross-module target identity, lifecycle and owner-policy authorization.
 
 Older roadmap and architecture files are historical references when they conflict with these documents.
 
