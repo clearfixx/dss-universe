@@ -808,6 +808,151 @@ describe('DSS API (e2e)', () => {
       }),
     ).resolves.toBe(3);
 
+    const savedBookmark = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation SaveBookmark($targetId: ID!) {
+          saveBookmark(interactionTargetId: $targetId) {
+            saved changed
+            bookmark { id interactionTargetId createdAt }
+          }
+        }`,
+        variables: { targetId },
+      })
+      .expect(200);
+    const savedBookmarkBody = savedBookmark.body as {
+      data: {
+        saveBookmark: {
+          saved: boolean;
+          changed: boolean;
+          bookmark: {
+            id: string;
+            interactionTargetId: string;
+            createdAt: string;
+          };
+        };
+      };
+    };
+    expect(savedBookmarkBody.data.saveBookmark).toMatchObject({
+      saved: true,
+      changed: true,
+      bookmark: { interactionTargetId: targetId },
+    });
+    expect(typeof savedBookmarkBody.data.saveBookmark.bookmark.createdAt).toBe(
+      'string',
+    );
+
+    const repeatedBookmark = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation SaveBookmark($targetId: ID!) {
+          saveBookmark(interactionTargetId: $targetId) {
+            saved changed bookmark { id }
+          }
+        }`,
+        variables: { targetId },
+      })
+      .expect(200);
+    expect(repeatedBookmark.body).toEqual({
+      data: {
+        saveBookmark: {
+          saved: true,
+          changed: false,
+          bookmark: { id: savedBookmarkBody.data.saveBookmark.bookmark.id },
+        },
+      },
+    });
+
+    const viewerBookmarks = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `query ViewerBookmarks {
+          viewerBookmarks(pagination: { page: 1, limit: 10 }) {
+            total page limit totalPages
+            items { id interactionTargetId }
+          }
+        }`,
+      })
+      .expect(200);
+    expect(viewerBookmarks.body).toEqual({
+      data: {
+        viewerBookmarks: {
+          total: 1,
+          page: 1,
+          limit: 10,
+          totalPages: 1,
+          items: [
+            {
+              id: savedBookmarkBody.data.saveBookmark.bookmark.id,
+              interactionTargetId: targetId,
+            },
+          ],
+        },
+      },
+    });
+
+    const removedBookmark = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation RemoveBookmark($targetId: ID!) {
+          removeBookmark(interactionTargetId: $targetId) {
+            saved changed bookmark { id }
+          }
+        }`,
+        variables: { targetId },
+      })
+      .expect(200);
+    expect(removedBookmark.body).toEqual({
+      data: {
+        removeBookmark: { saved: false, changed: true, bookmark: null },
+      },
+    });
+
+    const repeatedRemoval = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation RemoveBookmark($targetId: ID!) {
+          removeBookmark(interactionTargetId: $targetId) {
+            saved changed
+          }
+        }`,
+        variables: { targetId },
+      })
+      .expect(200);
+    expect(repeatedRemoval.body).toEqual({
+      data: { removeBookmark: { saved: false, changed: false } },
+    });
+    await expect(
+      app.get(PrismaService).auditRecord.count({
+        where: {
+          actorId: registered.data.register.user.id,
+          targetId,
+          action: {
+            in: ['bookmarks.bookmark.saved', 'bookmarks.bookmark.removed'],
+          },
+        },
+      }),
+    ).resolves.toBe(2);
+    await expect(
+      app.get(PrismaService).outboxEvent.count({
+        where: {
+          actorId: registered.data.register.user.id,
+          aggregateId: savedBookmarkBody.data.saveBookmark.bookmark.id,
+          eventName: {
+            in: [
+              'bookmarks.bookmark.saved.v1',
+              'bookmarks.bookmark.removed.v1',
+            ],
+          },
+        },
+      }),
+    ).resolves.toBe(2);
+
     const createdComment = await request(app.getHttpServer())
       .post('/api/graphql')
       .set('Authorization', 'Bearer ' + accessToken)
@@ -1107,6 +1252,10 @@ describe('DSS API (e2e)', () => {
             targetId: $targetId
             capability: REACT
           ) { allowed reason }
+          bookmark: interactionTargetAccess(
+            targetId: $targetId
+            capability: BOOKMARK
+          ) { allowed reason }
         }`,
         variables: {
           targetId: wallPostBody.data.createProfileWallPost.interactionTargetId,
@@ -1119,6 +1268,7 @@ describe('DSS API (e2e)', () => {
         read: { allowed: true, reason: null },
         comment: { allowed: false, reason: 'TARGET_LOCKED' },
         react: { allowed: false, reason: 'TARGET_LOCKED' },
+        bookmark: { allowed: false, reason: 'TARGET_LOCKED' },
       },
     });
 
@@ -1157,6 +1307,21 @@ describe('DSS API (e2e)', () => {
       .expect(200);
     expect(
       (reactionOnLockedTarget.body as GraphqlErrorResponse).errors[0].extensions
+        .code,
+    ).toBe('FORBIDDEN');
+
+    const bookmarkOnLockedTarget = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation SaveBookmark($targetId: ID!) {
+          saveBookmark(interactionTargetId: $targetId) { changed }
+        }`,
+        variables: { targetId },
+      })
+      .expect(200);
+    expect(
+      (bookmarkOnLockedTarget.body as GraphqlErrorResponse).errors[0].extensions
         .code,
     ).toBe('FORBIDDEN');
 

@@ -961,6 +961,16 @@ Delivered Reactions foundation:
 - authenticated GraphQL API and transactional Audit/Outbox evidence;
 - no implicit coupling to Reputation or Community Points.
 
+Delivered Bookmarks foundation:
+
+- one private FK-backed saved-item relationship per owner and Interaction
+  Target;
+- idempotent save and remove with owner-scoped pagination;
+- target-owner authorization for save and lifecycle enforcement;
+- removal remains available after target access or lifecycle changes;
+- GraphQL returns target coordinates without copying protected owner content;
+- transactional Audit and Outbox evidence for real transitions only.
+
 ## Content Gates
 
 - hide text, image, code or file blocks;

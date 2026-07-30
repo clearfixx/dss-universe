@@ -22,6 +22,8 @@ Knowledge Forge, Academy, Profile Wall, or future modules.
 - Reactions owns one idempotent `LIKE`, `UPVOTE`, or `DOWNVOTE` per actor and
   target.
 - Reaction aggregates and vote score are rebuildable projections.
+- Bookmarks owns private, idempotent saved-item relationships.
+- Bookmark lists expose only the authenticated owner's target coordinates.
 
 ## Boundary
 
@@ -30,13 +32,14 @@ Future Comments, Reactions, and Bookmarks modules store only the canonical
 `interactionTargetId`; they must not recreate unconstrained
 `targetType + targetId` relationships.
 
-Comments and Reactions already follow this contract. The first Comments API
-uses bounded plain text;
+Comments, Reactions, and Bookmarks already follow this contract. The first
+Comments API uses bounded plain text;
 structured DSS Editor documents, mentions, reports, and staff moderation
 annotations arrive in their dedicated packages.
 
 Interaction counters are projections and may be rebuilt. They are never the
 sole source of truth. Reaction records never mutate Reputation implicitly.
+Bookmark lists never hydrate owner-domain content or bypass its `READ` policy.
 
 ## Lifecycle
 

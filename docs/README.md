@@ -52,6 +52,8 @@ For current product and architecture work, use these sources first:
     bodies, bounded replies, immutable revisions and public tombstones.
 18. `architecture/PHASE_9_SHARED_REACTIONS_FOUNDATION.md` — idempotent content
     reactions, rebuildable vote aggregates and strict Reputation separation.
+19. `architecture/PHASE_9_SHARED_BOOKMARKS_FOUNDATION.md` — private saved-item
+    ownership, retry-safe mutations and owner-domain access boundaries.
 
 Older roadmap and architecture files are historical references when they conflict with these documents.
 

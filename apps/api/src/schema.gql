@@ -81,6 +81,31 @@ type AuthTokensModel {
   refreshToken: String!
 }
 
+type Bookmark {
+  createdAt: String!
+  id: ID!
+  interactionTargetId: ID!
+}
+
+type BookmarkMutationPayload {
+  bookmark: Bookmark
+  changed: Boolean!
+  saved: Boolean!
+}
+
+type BookmarkPage {
+  items: [Bookmark!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+input BookmarksPageInput {
+  limit: Int! = 20
+  page: Int! = 1
+}
+
 input ChangeEmailInput {
   currentPassword: String!
   email: String!
@@ -539,6 +564,7 @@ type Mutation {
   refreshTokens(input: RefreshTokenInput!): AuthPayloadModel!
   register(input: RegisterInput!): AuthPayloadModel!
   rejectQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
+  removeBookmark(interactionTargetId: ID!): BookmarkMutationPayload!
   removeComment(commentId: ID!, reason: String): Comment!
   removeProfileWallPost(postId: ID!, reason: String): ProfileWallPost!
   removeViewerAvatar: Viewer!
@@ -554,6 +580,7 @@ type Mutation {
   rollbackAchievementSource(input: RollbackAchievementSourceInput!): [AchievementAward!]!
   saveAchievement(input: SaveAchievementInput!): Achievement!
   saveAchievementRule(input: SaveAchievementRuleInput!): AchievementRule!
+  saveBookmark(interactionTargetId: ID!): BookmarkMutationPayload!
   selectCustomTitle(grantId: ID!): UserTitleGrant!
   setReaction(input: SetReactionInput!): SetReactionPayload!
   setViewerAvatar(mediaId: ID!): Viewer!
@@ -689,6 +716,7 @@ type Query {
   userCustomTitles(userId: ID!): [UserTitleGrant!]!
   users(pagination: UsersPageInput): UsersPageModel!
   viewer: Viewer!
+  viewerBookmarks(pagination: BookmarksPageInput): BookmarkPage!
   viewerNotificationPreferences: NotificationPreferences!
   viewerPrivacySettings: UserPrivacySettings!
   viewerProfileCompletion: ProfileCompletion!
