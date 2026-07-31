@@ -125,6 +125,7 @@ type Comment {
   id: ID!
   interactionTargetId: ID!
   isDeleted: Boolean!
+  mentionedUserIds: [ID!]!
   parentId: ID
   updatedAt: String!
 }

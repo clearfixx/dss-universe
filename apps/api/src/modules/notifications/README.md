@@ -9,6 +9,11 @@ Phase 7 establishes the owner-controlled preferences boundary without
 prematurely implementing notification inboxes, email transport or realtime
 delivery.
 
+Phase 9 adds the first producer integration: Comments emits durable
+`notifications.mention.created.v1` and `notifications.mention.retracted.v1`
+signals. Delivery remains deferred to a Notifications consumer so user
+preferences, grouping and retry policy stay centralized.
+
 ## Current responsibility
 
 - stable preferences before the first persisted update;

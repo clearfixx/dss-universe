@@ -31,7 +31,12 @@ export interface CommentsRepository {
     page: number,
     limit: number,
   ): Promise<PaginatedResult<Comment>>;
-  edit(commentId: string, editorId: string, body: string): Promise<Comment>;
+  edit(
+    commentId: string,
+    editorId: string,
+    body: string,
+    mentionedUsernames: string[],
+  ): Promise<Comment>;
   tombstone(
     commentId: string,
     actorId: string,

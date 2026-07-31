@@ -953,20 +953,28 @@ describe('DSS API (e2e)', () => {
       }),
     ).resolves.toBe(2);
 
+    const mentionRecipient = await app.get(PrismaService).user.create({
+      data: {
+        email: `mentioned-${suffix}@dss.test`,
+        username: `m${suffix.slice(-20)}`,
+        displayName: 'Mentioned Astronaut',
+        passwordHash: 'not-used-by-this-e2e-scenario',
+      },
+    });
     const createdComment = await request(app.getHttpServer())
       .post('/api/graphql')
       .set('Authorization', 'Bearer ' + accessToken)
       .send({
         query: `mutation CreateComment($input: CreateCommentInput!) {
           createComment(input: $input) {
-            id interactionTargetId authorId parentId body isDeleted editedAt
+            id interactionTargetId authorId parentId mentionedUserIds body isDeleted editedAt
           }
         }`,
         variables: {
           input: {
             interactionTargetId:
               wallPostBody.data.createProfileWallPost.interactionTargetId,
-            body: '  First shared comment.  ',
+            body: `  First shared comment for @${mentionRecipient.username}.  `,
           },
         },
       })
@@ -977,6 +985,7 @@ describe('DSS API (e2e)', () => {
           id: string;
           interactionTargetId: string;
           parentId: string | null;
+          mentionedUserIds: string[];
           body: string;
           isDeleted: boolean;
         };
@@ -986,16 +995,26 @@ describe('DSS API (e2e)', () => {
       interactionTargetId:
         wallPostBody.data.createProfileWallPost.interactionTargetId,
       parentId: null,
-      body: 'First shared comment.',
+      mentionedUserIds: [mentionRecipient.id],
+      body: `First shared comment for @${mentionRecipient.username}.`,
       isDeleted: false,
     });
+    await expect(
+      app.get(PrismaService).outboxEvent.count({
+        where: {
+          eventName: 'notifications.mention.created.v1',
+          actorId: registered.data.register.user.id,
+          payload: { path: ['recipientId'], equals: mentionRecipient.id },
+        },
+      }),
+    ).resolves.toBe(1);
 
     const editedComment = await request(app.getHttpServer())
       .post('/api/graphql')
       .set('Authorization', 'Bearer ' + accessToken)
       .send({
         query: `mutation EditComment($input: EditCommentInput!) {
-          editComment(input: $input) { id body editedAt }
+          editComment(input: $input) { id mentionedUserIds body editedAt }
         }`,
         variables: {
           input: {
@@ -1009,6 +1028,7 @@ describe('DSS API (e2e)', () => {
       data: {
         editComment: {
           id: createdCommentBody.data.createComment.id,
+          mentionedUserIds: [],
           body: 'Edited shared comment.',
         },
       },
@@ -1034,11 +1054,28 @@ describe('DSS API (e2e)', () => {
     expect(commentRevisionHistory.body).toMatchObject({
       data: {
         commentRevisions: [
-          { version: 1, body: 'First shared comment.' },
+          {
+            version: 1,
+            body: `First shared comment for @${mentionRecipient.username}.`,
+          },
           { version: 2, body: 'Edited shared comment.' },
         ],
       },
     });
+    await expect(
+      app.get(PrismaService).outboxEvent.count({
+        where: {
+          aggregateType: 'Mention',
+          eventName: {
+            in: [
+              'notifications.mention.created.v1',
+              'notifications.mention.retracted.v1',
+            ],
+          },
+          payload: { path: ['recipientId'], equals: mentionRecipient.id },
+        },
+      }),
+    ).resolves.toBe(2);
 
     const replyComment = await request(app.getHttpServer())
       .post('/api/graphql')

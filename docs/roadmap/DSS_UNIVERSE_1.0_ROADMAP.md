@@ -971,6 +971,20 @@ Delivered Bookmarks foundation:
 - GraphQL returns target coordinates without copying protected owner content;
 - transactional Audit and Outbox evidence for real transitions only.
 
+Delivered Comment Mentions and Notification Integration foundation:
+
+- bounded, Unicode-aware `@username` extraction with deduplication and a
+  per-comment limit;
+- FK-backed active-user resolution without copying usernames into mention
+  history;
+- self-mentions and unknown users produce no notification signal;
+- create, edit and tombstone synchronize active mentions atomically with
+  comment state;
+- GraphQL exposes privacy-safe recipient identities with visible comments;
+- versioned notification Outbox events and Audit evidence are emitted only for
+  real mention activation or retraction;
+- inbox, unread, email and realtime delivery remain owned by Phase 15.
+
 ## Content Gates
 
 - hide text, image, code or file blocks;

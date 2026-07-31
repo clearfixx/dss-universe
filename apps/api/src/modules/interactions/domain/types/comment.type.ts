@@ -17,6 +17,7 @@ export type Comment = {
   interactionTargetId: string;
   authorId: string;
   parentId: string | null;
+  mentionedUserIds: string[];
   body: string | null;
   isDeleted: boolean;
   editedAt: Date | null;
@@ -39,6 +40,7 @@ export type CreateComment = {
   authorId: string;
   parentId: string | null;
   body: string;
+  mentionedUsernames: string[];
 };
 
 /**

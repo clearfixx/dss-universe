@@ -34,6 +34,9 @@ import type { Comment, CommentRevision } from '../../domain/types/comment.type';
 import { InteractionTargetsService } from './interaction-targets.service';
 
 const MAX_COMMENT_LENGTH = 5000;
+const MAX_MENTIONS = 20;
+const MENTION_PATTERN =
+  /(^|[^\p{L}\p{N}_])@([\p{L}\p{N}_](?:[\p{L}\p{N}_.-]{0,30}[\p{L}\p{N}_])?)/gu;
 
 @Injectable()
 export class CommentsService {
@@ -72,6 +75,7 @@ export class CommentsService {
       authorId: actorId,
       parentId: parent?.id ?? null,
       body: cleanBody,
+      mentionedUsernames: this.extractMentionedUsernames(cleanBody),
     });
   }
 
@@ -107,7 +111,13 @@ export class CommentsService {
     if (comment.isDeleted) {
       throw new BadRequestException('A deleted comment cannot be edited.');
     }
-    return this.comments.edit(comment.id, actorId, this.cleanBody(body));
+    const cleanBody = this.cleanBody(body);
+    return this.comments.edit(
+      comment.id,
+      actorId,
+      cleanBody,
+      this.extractMentionedUsernames(cleanBody),
+    );
   }
 
   async remove(
@@ -169,6 +179,22 @@ export class CommentsService {
       );
     }
     return clean;
+  }
+
+  private extractMentionedUsernames(body: string): string[] {
+    const usernames = new Map<string, string>();
+    for (const match of body.matchAll(MENTION_PATTERN)) {
+      const username = match[2];
+      if (!username) continue;
+      const key = username.toLocaleLowerCase('en-US');
+      if (!usernames.has(key)) usernames.set(key, username);
+      if (usernames.size > MAX_MENTIONS) {
+        throw new BadRequestException(
+          `A comment may mention at most ${MAX_MENTIONS} users.`,
+        );
+      }
+    }
+    return [...usernames.values()];
   }
 }
 

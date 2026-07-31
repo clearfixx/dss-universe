@@ -54,6 +54,8 @@ For current product and architecture work, use these sources first:
     reactions, rebuildable vote aggregates and strict Reputation separation.
 19. `architecture/PHASE_9_SHARED_BOOKMARKS_FOUNDATION.md` — private saved-item
     ownership, retry-safe mutations and owner-domain access boundaries.
+20. `architecture/PHASE_9_COMMENT_MENTIONS_FOUNDATION.md` — relational comment
+    mentions and delivery-neutral Notifications integration events.
 
 Older roadmap and architecture files are historical references when they conflict with these documents.
 

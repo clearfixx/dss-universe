@@ -24,6 +24,10 @@ Knowledge Forge, Academy, Profile Wall, or future modules.
 - Reaction aggregates and vote score are rebuildable projections.
 - Bookmarks owns private, idempotent saved-item relationships.
 - Bookmark lists expose only the authenticated owner's target coordinates.
+- Comments resolves bounded `@username` mentions to active user relations.
+- Mention state follows comment edits and tombstones without deleting history.
+- Mention transitions emit notification integration events; Comments never
+  writes notification inbox rows or sends delivery directly.
 
 ## Boundary
 
@@ -33,9 +37,9 @@ Future Comments, Reactions, and Bookmarks modules store only the canonical
 `targetType + targetId` relationships.
 
 Comments, Reactions, and Bookmarks already follow this contract. The first
-Comments API uses bounded plain text;
-structured DSS Editor documents, mentions, reports, and staff moderation
-annotations arrive in their dedicated packages.
+Comments API uses bounded plain text with relational mentions; structured DSS
+Editor documents, reports, and staff moderation annotations arrive in their
+dedicated packages.
 
 Interaction counters are projections and may be rebuilt. They are never the
 sole source of truth. Reaction records never mutate Reputation implicitly.

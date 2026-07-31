@@ -28,6 +28,9 @@ export class CommentModel {
   @Field(() => ID, { nullable: true })
   parentId!: string | null;
 
+  @Field(() => [ID])
+  mentionedUserIds!: string[];
+
   @Field(() => String, { nullable: true })
   body!: string | null;
 

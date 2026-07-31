@@ -25,6 +25,7 @@ describe('CommentsService', () => {
     interactionTargetId: 'target-1',
     authorId: 'author-1',
     parentId: null,
+    mentionedUserIds: [],
     body: 'Hello',
     isDeleted: false,
     editedAt: null,
@@ -72,7 +73,20 @@ describe('CommentsService', () => {
       authorId: 'author-1',
       parentId: null,
       body: 'Hello',
+      mentionedUsernames: [],
     });
+  });
+
+  it('extracts unique mentions without treating email addresses as mentions', async () => {
+    await service.create(
+      'author-1',
+      'target-1',
+      'Hello @Astro and @astro; mail astronaut@example.com',
+    );
+
+    expect(repository.create.mock.calls[0]?.[0].mentionedUsernames).toEqual([
+      'Astro',
+    ]);
   });
 
   it('fails closed when the target owner denies comments', async () => {

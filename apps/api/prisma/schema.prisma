@@ -173,6 +173,8 @@ model User {
   commentsAuthored        Comment[]                    @relation("CommentAuthor")
   commentRevisions        CommentRevision[]            @relation("CommentRevisionEditor")
   commentsDeleted         Comment[]                    @relation("CommentDeletedBy")
+  mentionsAuthored        Mention[]                    @relation("MentionActor")
+  mentionsReceived        Mention[]                    @relation("MentionRecipient")
   reactions               Reaction[]
   bookmarks               Bookmark[]
   titleGrants             UserTitleGrant[]
@@ -260,6 +262,7 @@ model InteractionTarget {
   reactions         Reaction[]
   reactionAggregate ReactionAggregate?
   bookmarks         Bookmark[]
+  mentions          Mention[]
 
   @@unique([ownerType, ownerId])
   @@index([kind, status])
@@ -331,12 +334,35 @@ model Comment {
   replies           Comment[]         @relation("CommentReplies")
   deletedBy         User?             @relation("CommentDeletedBy", fields: [deletedById], references: [id], onDelete: Restrict)
   revisions         CommentRevision[]
+  mentions          Mention[]
 
   @@index([interactionTargetId, parentId, createdAt, id])
   @@index([authorId, createdAt])
   @@index([parentId, createdAt, id])
   @@index([deletedAt])
   @@map("comments")
+}
+
+model Mention {
+  id                  String    @id @default(uuid())
+  interactionTargetId String
+  commentId           String
+  actorId             String
+  recipientId         String
+  createdAt           DateTime  @default(now())
+  activatedAt         DateTime  @default(now())
+  retractedAt         DateTime?
+
+  interactionTarget InteractionTarget @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
+  comment           Comment           @relation(fields: [commentId], references: [id], onDelete: Restrict)
+  actor             User              @relation("MentionActor", fields: [actorId], references: [id], onDelete: Restrict)
+  recipient         User              @relation("MentionRecipient", fields: [recipientId], references: [id], onDelete: Restrict)
+
+  @@unique([commentId, recipientId])
+  @@index([recipientId, retractedAt, activatedAt, id])
+  @@index([commentId, retractedAt])
+  @@index([interactionTargetId, createdAt])
+  @@map("mentions")
 }
 
 model CommentRevision {

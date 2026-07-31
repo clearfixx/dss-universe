@@ -24,6 +24,7 @@ import { AuditWriterService } from '@api/core/audit';
 import { PrismaService } from '@api/core/database';
 import { createEventEnvelope, OutboxWriterService } from '@api/core/events';
 import type { PaginatedResult } from '@api/shared';
+import type { Prisma } from '@prisma/client';
 
 import type { CommentsRepository } from '../../domain/repositories/comments.repository.interface';
 import type {
@@ -44,7 +45,8 @@ export class PrismaCommentsRepository implements CommentsRepository {
 
   async create(input: CreateComment): Promise<Comment> {
     return this.prisma.$transaction(async (transaction) => {
-      const comment = await transaction.comment.create({ data: input });
+      const { mentionedUsernames, ...commentData } = input;
+      const comment = await transaction.comment.create({ data: commentData });
       await transaction.commentRevision.create({
         data: {
           commentId: comment.id,
@@ -53,14 +55,33 @@ export class PrismaCommentsRepository implements CommentsRepository {
           editorId: input.authorId,
         },
       });
+      const mentionedUserIds = await this.syncMentions(
+        transaction,
+        comment,
+        input.authorId,
+        mentionedUsernames,
+      );
       await this.record(transaction, comment, input.authorId, 'created', null);
-      return this.toDomain(comment);
+      return this.toDomain(comment, mentionedUserIds);
     });
   }
 
   async findById(id: string): Promise<Comment | null> {
-    const comment = await this.prisma.comment.findUnique({ where: { id } });
-    return comment ? this.toDomain(comment) : null;
+    const comment = await this.prisma.comment.findUnique({
+      where: { id },
+      include: {
+        mentions: {
+          where: { retractedAt: null },
+          select: { recipientId: true },
+        },
+      },
+    });
+    return comment
+      ? this.toDomain(
+          comment,
+          comment.mentions.map((mention) => mention.recipientId),
+        )
+      : null;
   }
 
   async list(
@@ -76,11 +97,22 @@ export class PrismaCommentsRepository implements CommentsRepository {
         orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
         skip: (page - 1) * limit,
         take: limit,
+        include: {
+          mentions: {
+            where: { retractedAt: null },
+            select: { recipientId: true },
+          },
+        },
       }),
       this.prisma.comment.count({ where }),
     ]);
     return {
-      items: records.map((comment) => this.toDomain(comment)),
+      items: records.map((comment) =>
+        this.toDomain(
+          comment,
+          comment.mentions.map((mention) => mention.recipientId),
+        ),
+      ),
       total,
       page,
       limit,
@@ -92,6 +124,7 @@ export class PrismaCommentsRepository implements CommentsRepository {
     commentId: string,
     editorId: string,
     body: string,
+    mentionedUsernames: string[],
   ): Promise<Comment> {
     return this.prisma.$transaction(async (transaction) => {
       await transaction.$executeRaw`
@@ -116,6 +149,12 @@ export class PrismaCommentsRepository implements CommentsRepository {
           editorId,
         },
       });
+      const mentionedUserIds = await this.syncMentions(
+        transaction,
+        comment,
+        editorId,
+        mentionedUsernames,
+      );
       await this.record(
         transaction,
         comment,
@@ -125,7 +164,7 @@ export class PrismaCommentsRepository implements CommentsRepository {
           ? 'Body normalized without semantic change.'
           : null,
       );
-      return this.toDomain(comment);
+      return this.toDomain(comment, mentionedUserIds);
     });
   }
 
@@ -144,6 +183,7 @@ export class PrismaCommentsRepository implements CommentsRepository {
           deleteReason: reason,
         },
       });
+      await this.syncMentions(transaction, comment, actorId, []);
       await this.record(transaction, comment, actorId, 'tombstoned', reason);
       return this.toDomain(comment);
     });
@@ -200,20 +240,168 @@ export class PrismaCommentsRepository implements CommentsRepository {
     );
   }
 
-  private toDomain(comment: {
-    id: string;
-    interactionTargetId: string;
-    authorId: string;
-    parentId: string | null;
-    body: string | null;
-    editedAt: Date | null;
-    deletedAt: Date | null;
-    createdAt: Date;
-    updatedAt: Date;
-  }): Comment {
+  private async syncMentions(
+    transaction: Prisma.TransactionClient,
+    comment: {
+      id: string;
+      interactionTargetId: string;
+      authorId: string;
+    },
+    actorId: string,
+    usernames: string[],
+  ): Promise<string[]> {
+    const candidates =
+      usernames.length === 0
+        ? []
+        : await transaction.user.findMany({
+            where: {
+              status: 'ACTIVE',
+              id: { not: comment.authorId },
+              OR: usernames.map((username) => ({
+                username: { equals: username, mode: 'insensitive' as const },
+              })),
+            },
+            select: { id: true, username: true },
+            orderBy: { id: 'asc' },
+          });
+    const desiredIds = this.resolveRecipientIds(
+      usernames,
+      candidates,
+      comment.authorId,
+    );
+    const existing = await transaction.mention.findMany({
+      where: { commentId: comment.id },
+      orderBy: { id: 'asc' },
+    });
+
+    for (const mention of existing) {
+      if (
+        mention.retractedAt === null &&
+        !desiredIds.has(mention.recipientId)
+      ) {
+        const retracted = await transaction.mention.update({
+          where: { id: mention.id },
+          data: { retractedAt: new Date() },
+        });
+        await this.recordMention(transaction, retracted, actorId, 'retracted');
+      }
+    }
+
+    const existingByRecipient = new Map(
+      existing.map((mention) => [mention.recipientId, mention]),
+    );
+    for (const recipientId of desiredIds) {
+      const current = existingByRecipient.get(recipientId);
+      if (current?.retractedAt === null) continue;
+      const activatedAt = new Date();
+      const mention = current
+        ? await transaction.mention.update({
+            where: { id: current.id },
+            data: { activatedAt, retractedAt: null },
+          })
+        : await transaction.mention.create({
+            data: {
+              interactionTargetId: comment.interactionTargetId,
+              commentId: comment.id,
+              actorId: comment.authorId,
+              recipientId,
+              activatedAt,
+            },
+          });
+      await this.recordMention(transaction, mention, actorId, 'created');
+    }
+
+    return [...desiredIds];
+  }
+
+  private resolveRecipientIds(
+    usernames: string[],
+    candidates: { id: string; username: string }[],
+    authorId: string,
+  ): Set<string> {
+    const recipientIds = new Set<string>();
+    for (const username of usernames) {
+      const matches = candidates.filter(
+        (candidate) =>
+          candidate.id !== authorId &&
+          candidate.username.localeCompare(username, 'en-US', {
+            sensitivity: 'accent',
+          }) === 0,
+      );
+      const exact = matches.find(
+        (candidate) => candidate.username === username,
+      );
+      if (exact) {
+        recipientIds.add(exact.id);
+      } else if (matches.length === 1 && matches[0]) {
+        recipientIds.add(matches[0].id);
+      }
+    }
+    return recipientIds;
+  }
+
+  private async recordMention(
+    transaction: Prisma.TransactionClient,
+    mention: {
+      id: string;
+      interactionTargetId: string;
+      commentId: string;
+      actorId: string;
+      recipientId: string;
+    },
+    transitionActorId: string,
+    action: 'created' | 'retracted',
+  ): Promise<void> {
+    await this.audit.append(transaction, {
+      action: `comments.mention.${action}`,
+      actorType: 'USER',
+      actorId: transitionActorId,
+      targetType: 'Mention',
+      targetId: mention.id,
+      metadata: {
+        commentId: mention.commentId,
+        interactionTargetId: mention.interactionTargetId,
+        recipientId: mention.recipientId,
+      },
+    });
+    await this.outbox.append(
+      transaction,
+      createEventEnvelope({
+        name: `notifications.mention.${action}.v1`,
+        version: 1,
+        category: 'integration',
+        producer: PRODUCER,
+        actorId: mention.actorId,
+        aggregate: { type: 'Mention', id: mention.id },
+        payload: {
+          mentionId: mention.id,
+          commentId: mention.commentId,
+          interactionTargetId: mention.interactionTargetId,
+          actorId: mention.actorId,
+          recipientId: mention.recipientId,
+        },
+      }),
+    );
+  }
+
+  private toDomain(
+    comment: {
+      id: string;
+      interactionTargetId: string;
+      authorId: string;
+      parentId: string | null;
+      body: string | null;
+      editedAt: Date | null;
+      deletedAt: Date | null;
+      createdAt: Date;
+      updatedAt: Date;
+    },
+    mentionedUserIds: string[] = [],
+  ): Comment {
     const isDeleted = comment.deletedAt !== null;
     return {
       ...comment,
+      mentionedUserIds,
       body: isDeleted ? null : comment.body,
       isDeleted,
     };
