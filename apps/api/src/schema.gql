@@ -198,6 +198,43 @@ input CommunityPointsPageInput {
   page: Int! = 1
 }
 
+type ContentReport {
+  category: ContentReportCategory!
+  commentId: ID
+  createdAt: String!
+  id: ID!
+  interactionTargetId: ID!
+  reason: String!
+  reporterId: ID!
+  reviewNote: String
+  reviewedAt: String
+  reviewedById: ID
+  status: ContentReportStatus!
+  updatedAt: String!
+}
+
+enum ContentReportCategory {
+  HARASSMENT
+  ILLEGAL
+  MISINFORMATION
+  OTHER
+  SPAM
+}
+
+type ContentReportPage {
+  items: [ContentReport!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+enum ContentReportStatus {
+  DISMISSED
+  OPEN
+  RESOLVED
+}
+
 input CreateCommentInput {
   body: String!
   interactionTargetId: ID!
@@ -209,6 +246,14 @@ input CreateCustomTitleInput {
   color: String!
   description: String
   name: String!
+}
+
+input CreateModerationAnnotationInput {
+  commentId: ID
+  expiresAt: String
+  interactionTargetId: ID!
+  kind: ModerationAnnotationKind!
+  reason: String!
 }
 
 input CreateWallPostInput {
@@ -543,6 +588,32 @@ enum MembersDirectorySort {
   USERNAME_DESC
 }
 
+type ModerationAnnotation {
+  actorId: ID!
+  commentId: ID
+  createdAt: String!
+  expiresAt: String
+  id: ID!
+  interactionTargetId: ID!
+  kind: ModerationAnnotationKind!
+  reason: String!
+  revokeReason: String
+  revokedAt: String
+  revokedById: ID
+}
+
+enum ModerationAnnotationKind {
+  BAN
+  READ_ONLY
+  REMOVAL
+  WARNING
+}
+
+input ModerationPageInput {
+  limit: Int! = 20
+  page: Int! = 1
+}
+
 type Mutation {
   abortMediaUpload(id: String!): MediaUploadSession!
   awardAchievement(input: ManualAchievementAwardInput!): AchievementAward!
@@ -552,6 +623,7 @@ type Mutation {
   clearReaction(interactionTargetId: ID!): ReactionSummary!
   createComment(input: CreateCommentInput!): Comment!
   createCustomTitle(input: CreateCustomTitleInput!): CustomTitle!
+  createModerationAnnotation(input: CreateModerationAnnotationInput!): ModerationAnnotation!
   createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
   deactivateAccount(input: DeactivateAccountInput!): LogoutResultModel!
   editComment(input: EditCommentInput!): Comment!
@@ -570,12 +642,15 @@ type Mutation {
   removeProfileWallPost(postId: ID!, reason: String): ProfileWallPost!
   removeViewerAvatar: Viewer!
   removeViewerCover: Viewer!
+  reportContent(input: ReportContentInput!): ContentReport!
   rescanQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
   retryFailedMedia(mediaId: ID!): MediaLibraryItem!
   reverseCommunityPoints(input: ReverseCommunityPointsInput!): CommunityPointEntry!
   reverseReputation(input: ReverseReputationInput!): ReputationEntry!
+  reviewContentReport(input: ReviewContentReportInput!): ContentReport!
   revokeAchievementAward(input: RevokeAchievementAwardInput!): AchievementAward!
   revokeCustomTitle(input: RevokeCustomTitleInput!): UserTitleGrant!
+  revokeModerationAnnotation(annotationId: ID!, reason: String!): ModerationAnnotation!
   revokeOtherViewerSessions: RevokeSessionsResultModel!
   revokeViewerSession(sessionId: ID!): LogoutResultModel!
   rollbackAchievementSource(input: RollbackAchievementSourceInput!): [AchievementAward!]!
@@ -687,6 +762,7 @@ type Query {
   commentsForTarget(interactionTargetId: ID!, pagination: CommentsPageInput, parentId: ID): CommentPage!
   communityPointRules: [CommunityPointRule!]!
   communityPointsHistory(pagination: CommunityPointsPageInput, userId: ID!): CommunityPointHistory!
+  contentReports(pagination: ModerationPageInput, status: ContentReportStatus): ContentReportPage!
   customTitleSettings: CustomTitleSettings!
   customTitles: [CustomTitle!]!
   customTitlesAdmin: [CustomTitle!]!
@@ -703,6 +779,7 @@ type Query {
   mediaLibraryMetrics: MediaLibraryMetrics!
   mediaUploadSession(id: String!): MediaUploadSession!
   members(input: MembersDirectoryInput): MembersDirectoryPage!
+  moderationAnnotations(commentId: ID, interactionTargetId: ID!): [ModerationAnnotation!]!
   presenceSummary: PresenceSummary!
   profileWall(pagination: UsersPageInput, profileOwnerId: ID!): ProfileWallPage!
   quarantinedMedia(limit: Int! = 25): [MediaQuarantineItem!]!
@@ -762,6 +839,18 @@ input RegisterInput {
   username: String!
 }
 
+input ReportContentInput {
+  category: ContentReportCategory!
+  commentId: ID
+  interactionTargetId: ID!
+  reason: String!
+}
+
+enum ReportReviewDecision {
+  DISMISSED
+  RESOLVED
+}
+
 type ReputationActor {
   avatarUrl: String
   displayName: String
@@ -814,6 +903,12 @@ input ReverseCommunityPointsInput {
 input ReverseReputationInput {
   entryId: ID!
   reason: String!
+}
+
+input ReviewContentReportInput {
+  decision: ReportReviewDecision!
+  note: String!
+  reportId: ID!
 }
 
 input RevokeAchievementAwardInput {

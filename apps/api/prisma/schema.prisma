@@ -130,6 +130,27 @@ enum ReactionKind {
   DOWNVOTE
 }
 
+enum ContentReportCategory {
+  SPAM
+  HARASSMENT
+  MISINFORMATION
+  ILLEGAL
+  OTHER
+}
+
+enum ContentReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+enum ModerationAnnotationKind {
+  WARNING
+  READ_ONLY
+  BAN
+  REMOVAL
+}
+
 model User {
   id            String     @id @default(uuid())
   email         String     @unique
@@ -180,6 +201,10 @@ model User {
   titleGrants             UserTitleGrant[]
   selectedTitle           UserTitleSelection?
   achievementAwards       AchievementAward[]
+  contentReports          ContentReport[]              @relation("ContentReportReporter")
+  contentReportsReviewed  ContentReport[]              @relation("ContentReportReviewer")
+  moderationAnnotations   ModerationAnnotation[]       @relation("ModerationAnnotationActor")
+  annotationsRevoked      ModerationAnnotation[]       @relation("ModerationAnnotationRevoker")
 
   refreshTokenHash String?
   emailVerifiedAt  DateTime?
@@ -257,12 +282,14 @@ model InteractionTarget {
   createdAt   DateTime                @default(now())
   updatedAt   DateTime                @updatedAt
 
-  userWallPost      UserWallPost?
-  comments          Comment[]
-  reactions         Reaction[]
-  reactionAggregate ReactionAggregate?
-  bookmarks         Bookmark[]
-  mentions          Mention[]
+  userWallPost          UserWallPost?
+  comments              Comment[]
+  reactions             Reaction[]
+  reactionAggregate     ReactionAggregate?
+  bookmarks             Bookmark[]
+  mentions              Mention[]
+  reports               ContentReport[]
+  moderationAnnotations ModerationAnnotation[]
 
   @@unique([ownerType, ownerId])
   @@index([kind, status])
@@ -328,13 +355,15 @@ model Comment {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  interactionTarget InteractionTarget @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
-  author            User              @relation("CommentAuthor", fields: [authorId], references: [id], onDelete: Restrict)
-  parent            Comment?          @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Restrict)
-  replies           Comment[]         @relation("CommentReplies")
-  deletedBy         User?             @relation("CommentDeletedBy", fields: [deletedById], references: [id], onDelete: Restrict)
-  revisions         CommentRevision[]
-  mentions          Mention[]
+  interactionTarget     InteractionTarget      @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
+  author                User                   @relation("CommentAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  parent                Comment?               @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Restrict)
+  replies               Comment[]              @relation("CommentReplies")
+  deletedBy             User?                  @relation("CommentDeletedBy", fields: [deletedById], references: [id], onDelete: Restrict)
+  revisions             CommentRevision[]
+  mentions              Mention[]
+  reports               ContentReport[]
+  moderationAnnotations ModerationAnnotation[]
 
   @@index([interactionTargetId, parentId, createdAt, id])
   @@index([authorId, createdAt])
@@ -380,6 +409,56 @@ model CommentRevision {
   @@index([commentId, createdAt])
   @@index([editorId, createdAt])
   @@map("comment_revisions")
+}
+
+model ContentReport {
+  id                  String                @id @default(uuid())
+  interactionTargetId String
+  commentId           String?
+  reporterId          String
+  category            ContentReportCategory
+  reason              String
+  status              ContentReportStatus   @default(OPEN)
+  reviewedById        String?
+  reviewNote          String?
+  reviewedAt          DateTime?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  interactionTarget InteractionTarget @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
+  comment           Comment?          @relation(fields: [commentId], references: [id], onDelete: Restrict)
+  reporter          User              @relation("ContentReportReporter", fields: [reporterId], references: [id], onDelete: Restrict)
+  reviewedBy        User?             @relation("ContentReportReviewer", fields: [reviewedById], references: [id], onDelete: Restrict)
+
+  @@index([status, createdAt, id])
+  @@index([interactionTargetId, createdAt])
+  @@index([commentId, createdAt])
+  @@index([reporterId, createdAt])
+  @@map("content_reports")
+}
+
+model ModerationAnnotation {
+  id                  String                   @id @default(uuid())
+  interactionTargetId String
+  commentId           String?
+  kind                ModerationAnnotationKind
+  actorId             String
+  reason              String
+  expiresAt           DateTime?
+  revokedAt           DateTime?
+  revokedById         String?
+  revokeReason        String?
+  createdAt           DateTime                 @default(now())
+
+  interactionTarget InteractionTarget @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
+  comment           Comment?          @relation(fields: [commentId], references: [id], onDelete: Restrict)
+  actor             User              @relation("ModerationAnnotationActor", fields: [actorId], references: [id], onDelete: Restrict)
+  revokedBy         User?             @relation("ModerationAnnotationRevoker", fields: [revokedById], references: [id], onDelete: Restrict)
+
+  @@index([interactionTargetId, createdAt, id])
+  @@index([commentId, createdAt, id])
+  @@index([revokedAt, expiresAt])
+  @@map("moderation_annotations")
 }
 
 model UserFollow {

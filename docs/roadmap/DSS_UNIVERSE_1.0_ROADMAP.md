@@ -985,6 +985,16 @@ Delivered Comment Mentions and Notification Integration foundation:
   real mention activation or retraction;
 - inbox, unread, email and realtime delivery remain owned by Phase 15.
 
+Delivered Reports and Moderation Annotations foundation:
+
+- one open user report per canonical target or comment subject;
+- target-owner read authorization and strict comment-to-target validation;
+- permission-protected staff queue, resolution and dismissal workflow;
+- public warning, read-only, ban and removal annotation history;
+- annotation expiry and explicit revocation without destructive deletion;
+- transactional Audit and versioned Outbox evidence for every transition;
+- sanctions, authority hierarchy and appeals remain owned by Phase 14.
+
 ## Content Gates
 
 - hide text, image, code or file blocks;

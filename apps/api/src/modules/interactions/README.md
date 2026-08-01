@@ -28,6 +28,9 @@ Knowledge Forge, Academy, Profile Wall, or future modules.
 - Mention state follows comment edits and tombstones without deleting history.
 - Mention transitions emit notification integration events; Comments never
   writes notification inbox rows or sends delivery directly.
+- Reports provides one open user report per target or comment subject.
+- Moderation annotations preserve public warning/removal history, including
+  expiry and revocation transitions.
 
 ## Boundary
 
@@ -37,9 +40,9 @@ Future Comments, Reactions, and Bookmarks modules store only the canonical
 `targetType + targetId` relationships.
 
 Comments, Reactions, and Bookmarks already follow this contract. The first
-Comments API uses bounded plain text with relational mentions; structured DSS
-Editor documents, reports, and staff moderation annotations arrive in their
-dedicated packages.
+Comments API uses bounded plain text with relational mentions. Reports and
+staff moderation annotations now share the same canonical target boundary;
+structured DSS Editor documents arrive in their dedicated package.
 
 Interaction counters are projections and may be rebuilt. They are never the
 sole source of truth. Reaction records never mutate Reputation implicitly.

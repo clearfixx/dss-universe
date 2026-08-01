@@ -19,6 +19,7 @@ export { InteractionTargetWriterService } from './application/services/interacti
 export { InteractionTargetsService } from './application/services/interaction-targets.service';
 export { CommentsService } from './application/services/comments.service';
 export { ReactionsService } from './application/services/reactions.service';
+export { ModerationService } from './application/services/moderation.service';
 export type {
   InteractionCapability,
   InteractionTarget,

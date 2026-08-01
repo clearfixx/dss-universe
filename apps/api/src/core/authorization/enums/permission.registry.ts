@@ -132,6 +132,17 @@ export const PERMISSIONS = {
       'Allows managing achievement definitions, rules, awards, and rollbacks.',
   },
 
+  ContentReportsReview: {
+    key: 'content-reports.review',
+    label: 'Review content reports',
+    description: 'Allows reviewing and resolving reports about public content.',
+  },
+  ModerationAnnotationsManage: {
+    key: 'moderation-annotations.manage',
+    label: 'Manage moderation annotations',
+    description: 'Allows publishing and revoking moderation annotations.',
+  },
+
   RolesRead: {
     key: 'roles.read',
     label: 'Read roles',

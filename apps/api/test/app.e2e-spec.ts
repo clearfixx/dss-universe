@@ -1009,6 +1009,187 @@ describe('DSS API (e2e)', () => {
       }),
     ).resolves.toBe(1);
 
+    const reportedComment = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation ReportContent($input: ReportContentInput!) {
+          reportContent(input: $input) {
+            id interactionTargetId commentId reporterId category reason status
+          }
+        }`,
+        variables: {
+          input: {
+            interactionTargetId: targetId,
+            commentId: createdCommentBody.data.createComment.id,
+            category: 'OTHER',
+            reason: 'E2E moderation review request.',
+          },
+        },
+      })
+      .expect(200);
+    const reportedCommentBody = reportedComment.body as {
+      data: { reportContent: { id: string } };
+    };
+    expect(reportedComment.body).toMatchObject({
+      data: {
+        reportContent: {
+          interactionTargetId: targetId,
+          commentId: createdCommentBody.data.createComment.id,
+          reporterId: registered.data.register.user.id,
+          category: 'OTHER',
+          reason: 'E2E moderation review request.',
+          status: 'OPEN',
+        },
+      },
+    });
+    await expect(
+      app.get(PrismaService).outboxEvent.count({
+        where: {
+          aggregateId: reportedCommentBody.data.reportContent.id,
+          eventName: 'content-reports.report.created.v1',
+        },
+      }),
+    ).resolves.toBe(1);
+
+    const duplicateReport = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation ReportContent($input: ReportContentInput!) {
+          reportContent(input: $input) { id }
+        }`,
+        variables: {
+          input: {
+            interactionTargetId: targetId,
+            commentId: createdCommentBody.data.createComment.id,
+            category: 'SPAM',
+            reason: 'A duplicate open report.',
+          },
+        },
+      })
+      .expect(200);
+    expect(
+      (duplicateReport.body as GraphqlErrorResponse).errors[0].extensions.code,
+    ).toBe('CONFLICT');
+
+    const moderationPrisma = app.get(PrismaService);
+    for (const key of [
+      'content-reports.review',
+      'moderation-annotations.manage',
+    ]) {
+      const permission = await moderationPrisma.permission.upsert({
+        where: { key },
+        update: {},
+        create: { key, label: key, description: 'E2E permission' },
+      });
+      await moderationPrisma.userPermission.create({
+        data: {
+          userId: registered.data.register.user.id,
+          permissionId: permission.id,
+        },
+      });
+    }
+    const staffLogin = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .send({
+        query: `mutation Login($input: LoginInput!) {
+          login(input: $input) { tokens { accessToken } user { id email username } }
+        }`,
+        variables: { input: { email, password: 'dss-test-password' } },
+      })
+      .expect(200);
+    const staffAccessToken = (staffLogin.body as LoginResponse).data.login
+      .tokens.accessToken;
+
+    const reviewedReport = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + staffAccessToken)
+      .send({
+        query: `mutation Review($input: ReviewContentReportInput!) {
+          reviewContentReport(input: $input) { id status reviewedById reviewNote }
+        }`,
+        variables: {
+          input: {
+            reportId: reportedCommentBody.data.reportContent.id,
+            decision: 'RESOLVED',
+            note: 'Reviewed by the E2E moderator.',
+          },
+        },
+      })
+      .expect(200);
+    expect(reviewedReport.body).toMatchObject({
+      data: {
+        reviewContentReport: {
+          id: reportedCommentBody.data.reportContent.id,
+          status: 'RESOLVED',
+          reviewedById: registered.data.register.user.id,
+          reviewNote: 'Reviewed by the E2E moderator.',
+        },
+      },
+    });
+
+    const createdAnnotation = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + staffAccessToken)
+      .send({
+        query: `mutation Annotate($input: CreateModerationAnnotationInput!) {
+          createModerationAnnotation(input: $input) { id kind reason revokedAt }
+        }`,
+        variables: {
+          input: {
+            interactionTargetId: targetId,
+            commentId: createdCommentBody.data.createComment.id,
+            kind: 'WARNING',
+            reason: 'Visible E2E moderation warning.',
+          },
+        },
+      })
+      .expect(200);
+    const createdAnnotationBody = createdAnnotation.body as {
+      data: { createModerationAnnotation: { id: string } };
+    };
+    expect(createdAnnotation.body).toMatchObject({
+      data: {
+        createModerationAnnotation: {
+          kind: 'WARNING',
+          reason: 'Visible E2E moderation warning.',
+          revokedAt: null,
+        },
+      },
+    });
+
+    const revokedAnnotation = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + staffAccessToken)
+      .send({
+        query: `mutation Revoke($id: ID!) {
+          revokeModerationAnnotation(annotationId: $id, reason: "Corrected after review.") {
+            id revokedAt revokedById revokeReason
+          }
+        }`,
+        variables: {
+          id: createdAnnotationBody.data.createModerationAnnotation.id,
+        },
+      })
+      .expect(200);
+    expect(revokedAnnotation.body).toMatchObject({
+      data: {
+        revokeModerationAnnotation: {
+          id: createdAnnotationBody.data.createModerationAnnotation.id,
+          revokedById: registered.data.register.user.id,
+          revokeReason: 'Corrected after review.',
+        },
+      },
+    });
+    expect(
+      typeof (
+        revokedAnnotation.body as {
+          data: { revokeModerationAnnotation: { revokedAt: unknown } };
+        }
+      ).data.revokeModerationAnnotation.revokedAt,
+    ).toBe('string');
+
     const editedComment = await request(app.getHttpServer())
       .post('/api/graphql')
       .set('Authorization', 'Bearer ' + accessToken)

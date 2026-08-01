@@ -54,6 +54,8 @@ const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     Permission.PermissionsRead,
     Permission.ReputationReverse,
     Permission.CommunityPointsReverse,
+    Permission.ContentReportsReview,
+    Permission.ModerationAnnotationsManage,
   ],
 
   admin: [
@@ -84,6 +86,8 @@ const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     Permission.CustomTitlesManage,
     Permission.CustomTitlesSettingsManage,
     Permission.AchievementsManage,
+    Permission.ContentReportsReview,
+    Permission.ModerationAnnotationsManage,
   ],
 
   owner: PERMISSION_LIST.map((permission) => permission.key),
