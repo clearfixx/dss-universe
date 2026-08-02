@@ -1,0 +1,26 @@
+{
+  "name": "@dss/editor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --max-warnings=0",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@dss/eslint-config": "workspace:*",
+    "@dss/tsconfig": "workspace:*",
+    "eslint": "^9.18.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.62.0",
+    "vitest": "^4.0.18"
+  }
+}

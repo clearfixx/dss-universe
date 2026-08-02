@@ -28,6 +28,7 @@ import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/core/database';
 import { QueueRegistryService } from './../src/core/queue';
 import { StorageService } from './../src/core/storage';
+import { EDITOR_CODE_HIGHLIGHTER } from './../src/modules/editor/application/contracts/editor-code-highlighter.interface';
 import { MediaRetentionService } from './../src/modules/media/application/services/media-retention.service';
 import { LocalMediaFileProcessor } from '../../worker/src/local-media-file.processor';
 import { createMediaProcessingProcessor } from '../../worker/src/media-processing.processor';
@@ -98,7 +99,15 @@ describe('DSS API (e2e)', () => {
     process.env.DSS_UPLOADS_DIR = E2E_UPLOADS_DIR;
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(EDITOR_CODE_HIGHLIGHTER)
+      .useValue({
+        highlight: (code: string, language: string) =>
+          Promise.resolve(
+            `<pre class="shiki" data-language="${language}"><code>${code}</code></pre>`,
+          ),
+      })
+      .compile();
 
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('api');
@@ -185,6 +194,9 @@ describe('DSS API (e2e)', () => {
     );
     expect(schema).toContain('users(pagination: UsersPageInput)');
     expect(schema).toContain('setViewerAvatar(mediaId: ID!)');
+    expect(schema).toContain(
+      'previewEditorDocument(input: PreviewEditorDocumentInput!): EditorDocumentPreview!',
+    );
     expect(schema).toContain('removeViewerAvatar: Viewer!');
     expect(schema).toContain(
       'mediaAccessUrl(mediaId: ID!, variantName: String!): MediaAccess!',
@@ -257,6 +269,62 @@ describe('DSS API (e2e)', () => {
         viewer: registered.data.register.user,
       },
     });
+
+    const editorDocument = {
+      schemaVersion: 1,
+      profile: 'FULL',
+      content: {
+        type: 'doc',
+        content: [
+          {
+            type: 'heading',
+            attrs: { level: 2 },
+            content: [{ type: 'text', text: 'DSS Editor' }],
+          },
+          {
+            type: 'codeBlock',
+            attrs: { language: 'typescript' },
+            content: [{ type: 'text', text: 'const ready = true;' }],
+          },
+        ],
+      },
+    };
+    const editorPreview = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `query PreviewEditor($input: PreviewEditorDocumentInput!) {
+          previewEditorDocument(input: $input) {
+            canonicalJson html plainText searchText
+          }
+        }`,
+        variables: {
+          input: { documentJson: JSON.stringify(editorDocument) },
+        },
+      })
+      .expect(200);
+    const editorPreviewBody = editorPreview.body as {
+      data: {
+        previewEditorDocument: {
+          canonicalJson: string;
+          plainText: string;
+          searchText: string;
+          html: string;
+        };
+      };
+    };
+    expect(editorPreviewBody.data.previewEditorDocument.canonicalJson).toBe(
+      JSON.stringify(editorDocument),
+    );
+    expect(editorPreviewBody.data.previewEditorDocument.plainText).toContain(
+      'DSS Editor',
+    );
+    expect(editorPreviewBody.data.previewEditorDocument.searchText).toContain(
+      'dss editor',
+    );
+    expect(editorPreviewBody.data.previewEditorDocument.html).toContain(
+      'shiki',
+    );
 
     const updatedProfile = await request(app.getHttpServer())
       .post('/api/graphql')

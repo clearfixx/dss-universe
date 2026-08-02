@@ -294,6 +294,13 @@ input EditCommentInput {
   commentId: ID!
 }
 
+type EditorDocumentPreview {
+  canonicalJson: String!
+  html: String!
+  plainText: String!
+  searchText: String!
+}
+
 input GiveReputationInput {
   reason: String!
   recipientId: ID!
@@ -705,6 +712,10 @@ type PresenceSummary {
   totalOnline: Int!
 }
 
+input PreviewEditorDocumentInput {
+  documentJson: String!
+}
+
 type ProfileCompletion {
   completedCount: Int!
   completedFields: [ProfileCompletionField!]!
@@ -781,6 +792,7 @@ type Query {
   members(input: MembersDirectoryInput): MembersDirectoryPage!
   moderationAnnotations(commentId: ID, interactionTargetId: ID!): [ModerationAnnotation!]!
   presenceSummary: PresenceSummary!
+  previewEditorDocument(input: PreviewEditorDocumentInput!): EditorDocumentPreview!
   profileWall(pagination: UsersPageInput, profileOwnerId: ID!): ProfileWallPage!
   quarantinedMedia(limit: Int! = 25): [MediaQuarantineItem!]!
   reactionSummary(interactionTargetId: ID!): ReactionSummary!

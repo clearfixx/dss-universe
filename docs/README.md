@@ -58,6 +58,8 @@ For current product and architecture work, use these sources first:
     mentions and delivery-neutral Notifications integration events.
 21. `architecture/PHASE_9_REPORTS_MODERATION_ANNOTATIONS.md` — shared abuse
     reports, permission-protected review and public moderation history.
+22. `architecture/PHASE_9_DSS_EDITOR_FOUNDATION.md` — versioned canonical
+    Tiptap JSON, profile allowlists and safe server projections.
 
 Older roadmap and architecture files are historical references when they conflict with these documents.
 

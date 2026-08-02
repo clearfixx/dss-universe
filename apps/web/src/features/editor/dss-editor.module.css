@@ -1,0 +1,121 @@
+.shell {
+  overflow: hidden;
+  border: 1px solid rgba(139, 92, 246, 0.32);
+  border-radius: 16px;
+  background: rgba(7, 11, 26, 0.92);
+  box-shadow: 0 24px 80px rgba(3, 7, 18, 0.36);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  background: rgba(15, 23, 42, 0.82);
+}
+
+.toolbar button {
+  display: inline-flex;
+  min-width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: 150ms ease;
+}
+
+.toolbar button:hover,
+.toolbar button[data-active="true"] {
+  border-color: rgba(139, 92, 246, 0.48);
+  background: rgba(124, 58, 237, 0.2);
+  color: #ede9fe;
+}
+
+.toolbar button:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+
+.divider {
+  width: 1px;
+  height: 24px;
+  margin: 0 3px;
+  background: rgba(148, 163, 184, 0.18);
+}
+
+.surface {
+  min-height: 180px;
+  padding: 18px 20px;
+  color: #e2e8f0;
+}
+
+.surface :global(.tiptap) {
+  min-height: 144px;
+  outline: none;
+  line-height: 1.7;
+}
+
+.surface :global(.tiptap p) {
+  margin: 0.65rem 0;
+}
+
+.surface :global(.tiptap h1),
+.surface :global(.tiptap h2),
+.surface :global(.tiptap h3),
+.surface :global(.tiptap h4) {
+  margin: 1.25rem 0 0.55rem;
+  color: #f8fafc;
+  font-weight: 650;
+}
+
+.surface :global(.tiptap ul),
+.surface :global(.tiptap ol) {
+  margin: 0.75rem 0;
+  padding-left: 1.5rem;
+}
+
+.surface :global(.tiptap blockquote) {
+  margin: 1rem 0;
+  border-left: 3px solid #8b5cf6;
+  padding-left: 1rem;
+  color: #cbd5e1;
+}
+
+.surface :global(.tiptap code) {
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  border-radius: 5px;
+  background: rgba(2, 6, 23, 0.9);
+  padding: 0.1rem 0.32rem;
+  color: #7dd3fc;
+  font-family: var(--font-mono);
+}
+
+.surface :global(.tiptap pre) {
+  overflow-x: auto;
+  margin: 1rem 0;
+  border: 1px solid rgba(56, 189, 248, 0.18);
+  border-radius: 12px;
+  background: #090c14;
+  padding: 1rem;
+}
+
+.surface :global(.tiptap pre code) {
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  padding: 8px 14px;
+  color: #64748b;
+  font-size: 12px;
+}

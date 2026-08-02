@@ -36,6 +36,7 @@
   "dependencies": {
     "@apollo/server": "^5.5.1",
     "@as-integrations/express5": "^1.1.2",
+    "@dss/editor": "workspace:*",
     "@dss/jobs": "workspace:*",
     "@nestjs/apollo": "^13.4.2",
     "@nestjs/common": "^11.0.1",
@@ -73,6 +74,7 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "sharp": "^0.35.3",
+    "shiki": "^4.4.1",
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {

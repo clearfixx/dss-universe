@@ -76,6 +76,7 @@ import { AchievementsModule } from './modules/achievements';
 import { AuthModule } from './modules/auth/auth.module';
 import { CommunityPointsModule } from './modules/community-points';
 import { CustomTitlesModule } from './modules/custom-titles';
+import { EditorModule } from './modules/editor';
 import { IamModule } from './modules/iam';
 import { InteractionsModule } from './modules/interactions';
 import { LevelsModule } from './modules/levels';
@@ -106,6 +107,7 @@ import { UsersModule } from './modules/users/users.module';
     CommunityPointsModule,
     LevelsModule,
     CustomTitlesModule,
+    EditorModule,
     AchievementsModule,
     LeaderboardsModule,
   ],

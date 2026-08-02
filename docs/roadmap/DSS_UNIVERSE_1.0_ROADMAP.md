@@ -935,6 +935,19 @@ Delivered foundation:
 - server-side schema validation;
 - no arbitrary user HTML.
 
+Delivered DSS Editor foundation:
+
+- one framework-neutral `@dss/editor` canonical document contract;
+- versioned JSON with `FULL`, `FORUM`, and `COMPACT` profile allowlists;
+- structured mention, Media Reference, attachment, code, and Content Gate
+  nodes;
+- bounded recursive server validation with no arbitrary HTML;
+- derived HTML, plain-text, and normalized search projections;
+- Shiki `dark-plus` code rendering and authenticated GraphQL preview;
+- SSR-safe Tiptap frontend shell with profile-specific controls;
+- drafts, autosave, persistence migrations, Media picker, mention autocomplete,
+  and Content Gate evaluation remain follow-up packages.
+
 ## Comments, reactions and bookmarks
 
 - reusable Comment, Reaction and Bookmark modules backed by Interaction
