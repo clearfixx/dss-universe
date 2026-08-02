@@ -20,6 +20,9 @@ versioned Tiptap JSON document contract for every DSS content module.
 - SSR-safe Tiptap frontend shell.
 - custom permission-aware DSS toolbar with no Tiptap UI dependency;
 - engineering guard against Tiptap Pro and Cloud packages.
+- framework-neutral debounced autosave coordination with monotonic versions,
+  retryable failures and explicit conflict state;
+- frontend document-change contract for host-owned draft commands.
 
 ## Boundary
 
@@ -33,8 +36,7 @@ Gate Platform.
 
 ## Deferred integrations
 
-- draft persistence and autosave;
-- comment JSON migration;
+- owning-module draft persistence commands and restoration screens;
 - Media picker and mention autocomplete;
 - Content Gate policy builder and viewer evaluation;
 - owning-module publication workflows;

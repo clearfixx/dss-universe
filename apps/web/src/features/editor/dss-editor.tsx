@@ -85,6 +85,7 @@ type DssEditorProps = {
   name?: string;
   editable?: boolean;
   ariaLabel?: string;
+  onDocumentChange?: (document: EditorDocument) => void;
   onRequestAction?: (request: DssEditorActionRequest) => void;
 };
 
@@ -123,6 +124,7 @@ export function DssEditor({
   name = "documentJson",
   editable = true,
   ariaLabel = "DSS Editor",
+  onDocumentChange,
   onRequestAction,
 }: DssEditorProps) {
   const definition = getEditorProfileDefinition(profile);
@@ -137,6 +139,13 @@ export function DssEditor({
     content: document.content,
     editable,
     immediatelyRender: false,
+    onUpdate: ({ editor: current }) => {
+      onDocumentChange?.({
+        schemaVersion: DSS_EDITOR_SCHEMA_VERSION,
+        profile,
+        content: current.getJSON() as EditorDocument["content"],
+      });
+    },
   });
   const selectedState = useEditorState({
     editor,

@@ -13,6 +13,7 @@
  */
 
 export * from "./capabilities";
+export * from "./autosave";
 export * from "./document";
 export * from "./profiles";
 export * from "./projections";

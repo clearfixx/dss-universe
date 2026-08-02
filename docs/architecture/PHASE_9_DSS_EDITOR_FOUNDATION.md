@@ -76,10 +76,21 @@ DSS product profile + actor permissions
   → safe HTML / plain / search projections
 ```
 
+## Draft and autosave boundary
+
+`@dss/editor` provides a storage-neutral autosave coordinator. It debounces
+canonical documents, permits only one in-flight save, advances monotonic host
+versions and exposes `DIRTY`, `SAVING`, `SAVED`, `CONFLICT`, and `ERROR`
+states. Failed content remains available for an explicit retry.
+
+The host module owns draft identity, authorization, persistence and conflict
+resolution. This keeps News drafts in News, Knowledge Forge drafts in
+Knowledge Forge, and prevents the editor framework from becoming a generic
+content database.
+
 ## Deferred work
 
-- comment canonical-document migration;
-- drafts, autosave and conflict/version workflow;
+- owning-module draft persistence commands and restoration screens;
 - Media Library picker and upload dialogs;
 - mention suggestions;
 - Content Gate rules and API redaction;

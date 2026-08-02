@@ -951,8 +951,11 @@ Delivered DSS Editor foundation:
 - SSR-safe Tiptap frontend shell and custom declarative DSS toolbar;
 - permission-aware Media, AI and Content Gate controls with server-side
   authorization explicitly retained as the trust boundary;
-- drafts, autosave, persistence migrations, Media picker, mention autocomplete,
-  and Content Gate evaluation remain follow-up packages.
+- storage-neutral, debounced autosave coordination with serialized writes,
+  monotonic host versions, retryable failures and explicit conflict state;
+- frontend document-change contract for host-owned draft commands;
+- owning-module draft persistence, Media picker, mention autocomplete, and
+  Content Gate evaluation remain follow-up packages.
 
 ## Comments, reactions and bookmarks
 
