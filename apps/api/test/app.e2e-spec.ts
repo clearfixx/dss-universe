@@ -272,7 +272,7 @@ describe('DSS API (e2e)', () => {
 
     const editorDocument = {
       schemaVersion: 1,
-      profile: 'FULL',
+      profile: 'WIKI',
       content: {
         type: 'doc',
         content: [

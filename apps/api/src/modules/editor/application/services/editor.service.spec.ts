@@ -27,7 +27,7 @@ describe('EditorService', () => {
   beforeEach(() => jest.clearAllMocks());
 
   it('returns canonical and searchable projections for a valid document', async () => {
-    const document = createEmptyEditorDocument('COMPACT');
+    const document = createEmptyEditorDocument('COMMENT');
     document.content.content = [
       { type: 'paragraph', content: [{ type: 'text', text: 'Привіт DSS' }] },
     ];
@@ -48,7 +48,7 @@ describe('EditorService', () => {
       service.preview(
         JSON.stringify({
           schemaVersion: 1,
-          profile: 'COMPACT',
+          profile: 'COMMENT',
           content: { type: 'doc', content: [{ type: 'html' }] },
         }),
       ),

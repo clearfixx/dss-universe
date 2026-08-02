@@ -8,7 +8,9 @@ versioned Tiptap JSON document contract for every DSS content module.
 ## Current foundation
 
 - shared `@dss/editor` framework-neutral contract;
-- `FULL`, `FORUM`, and `COMPACT` profile allowlists;
+- product profiles for comments, forum content, news, Research Lab, Wiki,
+  messages and administration;
+- framework-neutral capability, toolbar and editor-permission registry;
 - structured mention, Media Reference, attachment, code, and Content Gate
   nodes;
 - bounded recursive server validation;
@@ -16,6 +18,8 @@ versioned Tiptap JSON document contract for every DSS content module.
 - escaped HTML projection with Shiki `dark-plus` code highlighting;
 - authenticated GraphQL preview endpoint;
 - SSR-safe Tiptap frontend shell.
+- custom permission-aware DSS toolbar with no Tiptap UI dependency;
+- engineering guard against Tiptap Pro and Cloud packages.
 
 ## Boundary
 

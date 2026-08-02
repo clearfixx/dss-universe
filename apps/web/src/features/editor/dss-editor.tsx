@@ -6,13 +6,13 @@
  * 📄 File: apps/web/src/features/editor/dss-editor.tsx
  *
  * 🎯 Purpose:
- * Provides the reusable SSR-safe Tiptap editing surface for DSS profiles.
+ * Provides the reusable SSR-safe Tiptap surface and custom DSS toolbar.
  *
  * 🧠 Responsibilities:
- * • initializes Tiptap only inside a narrow Client Component boundary;
- * • exposes profile-specific controls and nodes;
- * • serializes versioned canonical JSON for forms and GraphQL workflows;
- * • never accepts arbitrary HTML as canonical input.
+ * • resolves product profiles into permission-aware toolbar groups;
+ * • executes local formatting commands through the headless editor engine;
+ * • delegates DSS dialogs such as Media, AI and Content Gate to host modules;
+ * • serializes versioned canonical JSON for forms and GraphQL workflows.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -22,45 +22,114 @@
 
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import {
+  AlignCenter,
+  AlignLeft,
+  AtSign,
   Bold,
   Braces,
   Code,
+  FileImage,
   Heading2,
   Italic,
+  Link2,
   List,
   ListOrdered,
+  LockKeyhole,
+  Paperclip,
   Quote,
   Redo2,
+  Sparkles,
   Strikethrough,
   Undo2,
+  Video,
+  type LucideIcon,
 } from "lucide-react";
-import type { EditorDocument, EditorProfile } from "@dss/editor";
+import type {
+  EditorDocument,
+  EditorPermission,
+  EditorProfile,
+  EditorToolId,
+} from "@dss/editor";
 import {
   createEmptyEditorDocument,
   DSS_EDITOR_SCHEMA_VERSION,
+  EDITOR_TOOL_DEFINITIONS,
   getEditorProfileDefinition,
+  resolveEditorProfile,
 } from "@dss/editor";
-import { useMemo } from "react";
+import { Fragment, useMemo } from "react";
 
 import { createEditorExtensions } from "./editor-extensions";
 import styles from "./dss-editor.module.css";
 
+type DialogToolId = Extract<
+  EditorToolId,
+  | "link"
+  | "mention"
+  | "image"
+  | "video"
+  | "attachment"
+  | "contentGate"
+  | "aiAssist"
+>;
+
+export type DssEditorActionRequest = {
+  profile: EditorProfile;
+  toolId: DialogToolId;
+};
+
 type DssEditorProps = {
   profile: EditorProfile;
+  permissions?: readonly EditorPermission[];
   initialDocument?: EditorDocument;
   name?: string;
   editable?: boolean;
   ariaLabel?: string;
+  onRequestAction?: (request: DssEditorActionRequest) => void;
+};
+
+const NO_EDITOR_PERMISSIONS: readonly EditorPermission[] = [];
+
+const TOOL_PRESENTATION: Record<
+  EditorToolId,
+  { label: string; icon: LucideIcon }
+> = {
+  bold: { label: "Bold", icon: Bold },
+  italic: { label: "Italic", icon: Italic },
+  strike: { label: "Strike", icon: Strikethrough },
+  inlineCode: { label: "Inline code", icon: Code },
+  alignLeft: { label: "Align left", icon: AlignLeft },
+  alignCenter: { label: "Align center", icon: AlignCenter },
+  link: { label: "Insert link", icon: Link2 },
+  heading: { label: "Heading", icon: Heading2 },
+  bulletList: { label: "Bullet list", icon: List },
+  orderedList: { label: "Ordered list", icon: ListOrdered },
+  blockquote: { label: "Quote", icon: Quote },
+  codeBlock: { label: "Code block", icon: Braces },
+  mention: { label: "Mention user", icon: AtSign },
+  image: { label: "Insert image", icon: FileImage },
+  video: { label: "Insert video", icon: Video },
+  attachment: { label: "Attach file", icon: Paperclip },
+  contentGate: { label: "Hidden content", icon: LockKeyhole },
+  aiAssist: { label: "DSS AI Core", icon: Sparkles },
+  undo: { label: "Undo", icon: Undo2 },
+  redo: { label: "Redo", icon: Redo2 },
 };
 
 export function DssEditor({
   profile,
+  permissions = NO_EDITOR_PERMISSIONS,
   initialDocument,
   name = "documentJson",
   editable = true,
   ariaLabel = "DSS Editor",
+  onRequestAction,
 }: DssEditorProps) {
   const definition = getEditorProfileDefinition(profile);
+  const resolved = useMemo(
+    () => resolveEditorProfile(profile, permissions),
+    [permissions, profile],
+  );
   const document = initialDocument ?? createEmptyEditorDocument(profile);
   const extensions = useMemo(() => createEditorExtensions(profile), [profile]);
   const editor = useEditor({
@@ -77,7 +146,8 @@ export function DssEditor({
       bold: current?.isActive("bold") ?? false,
       italic: current?.isActive("italic") ?? false,
       strike: current?.isActive("strike") ?? false,
-      code: current?.isActive("code") ?? false,
+      inlineCode: current?.isActive("code") ?? false,
+      alignCenter: current?.isActive({ textAlign: "center" }) ?? false,
       heading: current?.isActive("heading", { level: 2 }) ?? false,
       bulletList: current?.isActive("bulletList") ?? false,
       orderedList: current?.isActive("orderedList") ?? false,
@@ -93,7 +163,8 @@ export function DssEditor({
     bold: false,
     italic: false,
     strike: false,
-    code: false,
+    inlineCode: false,
+    alignCenter: false,
     heading: false,
     bulletList: false,
     orderedList: false,
@@ -102,11 +173,81 @@ export function DssEditor({
     canUndo: false,
     canRedo: false,
   };
-
   const canonical: EditorDocument = {
     schemaVersion: DSS_EDITOR_SCHEMA_VERSION,
     profile,
     content: state.json as EditorDocument["content"],
+  };
+
+  const isActive = (toolId: EditorToolId): boolean => {
+    if (toolId === "alignLeft") return !state.alignCenter;
+    if (toolId === "alignCenter") return state.alignCenter;
+    if (
+      toolId in state &&
+      typeof state[toolId as keyof typeof state] === "boolean"
+    ) {
+      return state[toolId as keyof typeof state] as boolean;
+    }
+    return false;
+  };
+  const isDisabled = (toolId: EditorToolId): boolean => {
+    if (!editor) return true;
+    if (toolId === "undo") return !state.canUndo;
+    if (toolId === "redo") return !state.canRedo;
+    return (
+      EDITOR_TOOL_DEFINITIONS[toolId].action === "DIALOG" && !onRequestAction
+    );
+  };
+  const requestDialog = (toolId: EditorToolId): void => {
+    if (EDITOR_TOOL_DEFINITIONS[toolId].action !== "DIALOG") return;
+    onRequestAction?.({ profile, toolId: toolId as DialogToolId });
+  };
+  const runTool = (toolId: EditorToolId): void => {
+    if (!editor) return;
+    const chain = editor.chain().focus();
+    switch (toolId) {
+      case "bold":
+        chain.toggleBold().run();
+        break;
+      case "italic":
+        chain.toggleItalic().run();
+        break;
+      case "strike":
+        chain.toggleStrike().run();
+        break;
+      case "inlineCode":
+        chain.toggleCode().run();
+        break;
+      case "alignLeft":
+        chain.setTextAlign("left").run();
+        break;
+      case "alignCenter":
+        chain.setTextAlign("center").run();
+        break;
+      case "heading":
+        chain.toggleHeading({ level: 2 }).run();
+        break;
+      case "bulletList":
+        chain.toggleBulletList().run();
+        break;
+      case "orderedList":
+        chain.toggleOrderedList().run();
+        break;
+      case "blockquote":
+        chain.toggleBlockquote().run();
+        break;
+      case "codeBlock":
+        chain.toggleCodeBlock().run();
+        break;
+      case "undo":
+        chain.undo().run();
+        break;
+      case "redo":
+        chain.redo().run();
+        break;
+      default:
+        requestDialog(toolId);
+    }
   };
 
   return (
@@ -117,89 +258,26 @@ export function DssEditor({
           role="toolbar"
           aria-label="Editor tools"
         >
-          <Tool
-            label="Bold"
-            active={state.bold}
-            onClick={() => editor?.chain().focus().toggleBold().run()}
-          >
-            <Bold size={16} />
-          </Tool>
-          <Tool
-            label="Italic"
-            active={state.italic}
-            onClick={() => editor?.chain().focus().toggleItalic().run()}
-          >
-            <Italic size={16} />
-          </Tool>
-          <Tool
-            label="Strike"
-            active={state.strike}
-            onClick={() => editor?.chain().focus().toggleStrike().run()}
-          >
-            <Strikethrough size={16} />
-          </Tool>
-          <Tool
-            label="Inline code"
-            active={state.code}
-            onClick={() => editor?.chain().focus().toggleCode().run()}
-          >
-            <Code size={16} />
-          </Tool>
-          <span className={styles.divider} />
-          {profile !== "COMPACT" ? (
-            <Tool
-              label="Heading"
-              active={state.heading}
-              onClick={() =>
-                editor?.chain().focus().toggleHeading({ level: 2 }).run()
-              }
-            >
-              <Heading2 size={16} />
-            </Tool>
-          ) : null}
-          <Tool
-            label="Bullet list"
-            active={state.bulletList}
-            onClick={() => editor?.chain().focus().toggleBulletList().run()}
-          >
-            <List size={16} />
-          </Tool>
-          <Tool
-            label="Ordered list"
-            active={state.orderedList}
-            onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-          >
-            <ListOrdered size={16} />
-          </Tool>
-          <Tool
-            label="Quote"
-            active={state.blockquote}
-            onClick={() => editor?.chain().focus().toggleBlockquote().run()}
-          >
-            <Quote size={16} />
-          </Tool>
-          <Tool
-            label="Code block"
-            active={state.codeBlock}
-            onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
-          >
-            <Braces size={16} />
-          </Tool>
-          <span className={styles.divider} />
-          <Tool
-            label="Undo"
-            disabled={!state.canUndo}
-            onClick={() => editor?.chain().focus().undo().run()}
-          >
-            <Undo2 size={16} />
-          </Tool>
-          <Tool
-            label="Redo"
-            disabled={!state.canRedo}
-            onClick={() => editor?.chain().focus().redo().run()}
-          >
-            <Redo2 size={16} />
-          </Tool>
+          {resolved.toolbar.map((group, groupIndex) => (
+            <Fragment key={group.id}>
+              {groupIndex > 0 ? <span className={styles.divider} /> : null}
+              {group.tools.map((toolId) => {
+                const presentation = TOOL_PRESENTATION[toolId];
+                const Icon = presentation.icon;
+                return (
+                  <Tool
+                    key={toolId}
+                    label={presentation.label}
+                    active={isActive(toolId)}
+                    disabled={isDisabled(toolId)}
+                    onClick={() => runTool(toolId)}
+                  >
+                    <Icon size={16} />
+                  </Tool>
+                );
+              })}
+            </Fragment>
+          ))}
         </div>
       ) : null}
       <EditorContent className={styles.surface} editor={editor} />
@@ -249,4 +327,4 @@ function Tool({
   );
 }
 
-/** The toolbar may sparkle; canonical JSON still wears the flight suit. */
+/** Tiptap flies the engine; every visible switch still belongs to DSS. */

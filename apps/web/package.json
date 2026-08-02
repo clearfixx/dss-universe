@@ -25,6 +25,7 @@
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.14.6",
     "@tiptap/core": "^3.29.2",
+    "@tiptap/extension-text-align": "^3.29.2",
     "@tiptap/pm": "^3.29.2",
     "@tiptap/react": "^3.29.2",
     "@tiptap/starter-kit": "^3.29.2",

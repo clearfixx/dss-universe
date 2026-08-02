@@ -14,7 +14,16 @@
 
 export const DSS_EDITOR_SCHEMA_VERSION = 1 as const;
 
-export const EDITOR_PROFILES = ["FULL", "FORUM", "COMPACT"] as const;
+export const EDITOR_PROFILES = [
+  "COMMENT",
+  "FORUM_REPLY",
+  "FORUM_TOPIC",
+  "NEWS",
+  "RESEARCH_ARTICLE",
+  "WIKI",
+  "MESSAGE",
+  "ADMIN",
+] as const;
 export type EditorProfile = (typeof EDITOR_PROFILES)[number];
 
 export const EDITOR_CODE_LANGUAGES = [

@@ -17,12 +17,13 @@ import { describe, expect, it } from "vitest";
 import { createEditorExtensions } from "./editor-extensions";
 
 describe("DSS Editor extensions", () => {
-  it("adds structured platform nodes to publication and forum profiles", () => {
-    const names = createEditorExtensions("FULL").map(({ name }) => name);
+  it("adds structured platform nodes to publication profiles", () => {
+    const names = createEditorExtensions("WIKI").map(({ name }) => name);
 
     expect(names).toEqual(
       expect.arrayContaining([
         "starterKit",
+        "textAlign",
         "codeBlock",
         "mention",
         "mediaReference",
@@ -32,8 +33,8 @@ describe("DSS Editor extensions", () => {
     );
   });
 
-  it("keeps Content Gates outside the compact comment profile", () => {
-    const names = createEditorExtensions("COMPACT").map(({ name }) => name);
+  it("keeps Content Gates outside the comment profile", () => {
+    const names = createEditorExtensions("COMMENT").map(({ name }) => name);
 
     expect(names).not.toContain("contentGate");
     expect(names).toContain("codeBlock");

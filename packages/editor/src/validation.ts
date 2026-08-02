@@ -178,6 +178,22 @@ function validateNodeAttributes(
   headingLevels: readonly number[],
   errors: EditorValidationError[],
 ): void {
+  if (node.type === "paragraph" || node.type === "heading") {
+    const textAlign = node.attrs?.textAlign;
+    if (
+      textAlign !== undefined &&
+      textAlign !== "left" &&
+      textAlign !== "center"
+    ) {
+      errors.push(
+        error(
+          `${path}.attrs.textAlign`,
+          "TEXT_ALIGNMENT",
+          "Text alignment must be left or center.",
+        ),
+      );
+    }
+  }
   if (
     node.type === "heading" &&
     !headingLevels.includes(numberAttr(node, "level"))

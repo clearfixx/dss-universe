@@ -22,7 +22,7 @@
     "test:cov": "turbo test:cov",
     "db:validate": "pnpm --filter @dss/api db:validate",
     "db:generate": "pnpm --filter @dss/api db:generate",
-    "architecture:check": "node scripts/check-architecture.mjs",
+    "architecture:check": "node scripts/check-architecture.mjs && node scripts/check-editor-licenses.mjs",
     "graphql:codegen": "pnpm --filter @dss/web graphql:codegen",
     "graphql:check": "pnpm --filter @dss/web graphql:check && git diff --exit-code -- apps/api/src/schema.gql apps/web/src/gql",
     "quality": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm db:validate && pnpm test && pnpm build && pnpm architecture:check",

@@ -18,6 +18,7 @@ import {
   createEmptyEditorDocument,
   projectEditorPlainText,
   projectEditorSearchText,
+  resolveEditorProfile,
   validateEditorDocument,
 } from "./index";
 
@@ -25,7 +26,7 @@ describe("DSS Editor document contract", () => {
   it("accepts a versioned full document and derives stable projections", () => {
     const document = {
       schemaVersion: 1,
-      profile: "FULL",
+      profile: "WIKI",
       content: {
         type: "doc",
         content: [
@@ -63,10 +64,10 @@ describe("DSS Editor document contract", () => {
     expect(projectEditorSearchText(result.document)).toContain("dss editor");
   });
 
-  it("rejects arbitrary nodes, unsafe links and compact headings", () => {
+  it("rejects arbitrary nodes, unsafe links and comment headings", () => {
     const result = validateEditorDocument({
       schemaVersion: 1,
-      profile: "COMPACT",
+      profile: "COMMENT",
       content: {
         type: "doc",
         content: [
@@ -100,11 +101,38 @@ describe("DSS Editor document contract", () => {
   });
 
   it("creates valid empty documents for every profile", () => {
-    for (const profile of ["FULL", "FORUM", "COMPACT"] as const) {
+    for (const profile of [
+      "COMMENT",
+      "FORUM_REPLY",
+      "FORUM_TOPIC",
+      "NEWS",
+      "RESEARCH_ARTICLE",
+      "WIKI",
+      "MESSAGE",
+      "ADMIN",
+    ] as const) {
       expect(
         validateEditorDocument(createEmptyEditorDocument(profile)).valid,
       ).toBe(true);
     }
+  });
+
+  it("resolves module toolbars through explicit privileged permissions", () => {
+    const publicComment = resolveEditorProfile("COMMENT");
+    const commentTools = publicComment.toolbar.flatMap(({ tools }) => tools);
+    expect(commentTools).toContain("bold");
+    expect(commentTools).not.toContain("image");
+    expect(commentTools).not.toContain("contentGate");
+
+    const wiki = resolveEditorProfile("WIKI", [
+      "MEDIA_UPLOAD",
+      "CONTENT_GATE_CONFIGURE",
+      "AI_ASSIST",
+    ]);
+    const wikiTools = wiki.toolbar.flatMap(({ tools }) => tools);
+    expect(wikiTools).toEqual(
+      expect.arrayContaining(["heading", "image", "contentGate", "aiAssist"]),
+    );
   });
 });
 

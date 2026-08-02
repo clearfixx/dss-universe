@@ -387,7 +387,7 @@ Command Deck must not be used as the name of the admin platform.
 - Tiptap JSON is the canonical document format;
 - HTML and plain text are derived projections;
 - documents carry a schema version;
-- full, forum and compact editor presets are separate;
+- product-specific editor profiles share one capability-driven engine;
 - custom nodes include Media Reference, Content Gate, code, mentions and attachments;
 - arbitrary user HTML is not trusted.
 

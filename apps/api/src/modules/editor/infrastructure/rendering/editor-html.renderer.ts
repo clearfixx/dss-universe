@@ -61,9 +61,9 @@ export class EditorHtmlRenderer {
       case 'doc':
         return children;
       case 'paragraph':
-        return `<p>${children}</p>`;
+        return `<p${this.textAlignAttribute(node)}>${children}</p>`;
       case 'heading':
-        return `<h${this.numberAttr(node, 'level')}>${children}</h${this.numberAttr(node, 'level')}>`;
+        return `<h${this.numberAttr(node, 'level')}${this.textAlignAttribute(node)}>${children}</h${this.numberAttr(node, 'level')}>`;
       case 'bulletList':
         return `<ul>${children}</ul>`;
       case 'orderedList':
@@ -121,6 +121,11 @@ export class EditorHtmlRenderer {
   private numberAttr(node: EditorNode, key: string): number {
     const value = node.attrs?.[key];
     return typeof value === 'number' ? value : 2;
+  }
+
+  private textAlignAttribute(node: EditorNode): string {
+    const value = node.attrs?.textAlign;
+    return value === 'center' ? ' style="text-align: center"' : '';
   }
 
   private escape(value: string): string {

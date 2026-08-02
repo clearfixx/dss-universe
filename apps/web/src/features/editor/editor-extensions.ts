@@ -13,6 +13,7 @@
  */
 
 import { Node, mergeAttributes, type Extensions } from "@tiptap/core";
+import TextAlign from "@tiptap/extension-text-align";
 import StarterKit from "@tiptap/starter-kit";
 import type { EditorProfile } from "@dss/editor";
 import { getEditorProfileDefinition } from "@dss/editor";
@@ -115,13 +116,23 @@ export function createEditorExtensions(profile: EditorProfile): Extensions {
         HTMLAttributes: { rel: "nofollow ugc noopener noreferrer" },
       },
     }),
+    TextAlign.configure({
+      types:
+        definition.headingLevels.length > 0
+          ? ["heading", "paragraph"]
+          : ["paragraph"],
+      alignments: ["left", "center"],
+      defaultAlignment: "left",
+    }),
     CodeBlockNode,
     MentionNode,
     MediaReferenceNode,
     AttachmentNode,
   ];
 
-  if (profile !== "COMPACT") extensions.push(ContentGateNode);
+  if (definition.allowedNodes.includes("contentGate")) {
+    extensions.push(ContentGateNode);
+  }
   return extensions;
 }
 

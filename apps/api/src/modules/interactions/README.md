@@ -43,7 +43,7 @@ Comments, Reactions, and Bookmarks already follow this contract. The first
 Comments API still uses bounded plain text with relational mentions. Reports
 and staff moderation annotations share the same canonical target boundary.
 The DSS Editor schema foundation now exists; migrating comment persistence to
-the `COMPACT` document profile remains an explicit follow-up package.
+the `COMMENT` document profile remains an explicit follow-up package.
 
 Interaction counters are projections and may be rebuilt. They are never the
 sole source of truth. Reaction records never mutate Reputation implicitly.

@@ -2,65 +2,87 @@
 
 ## Outcome
 
-DSS Universe now has one shared structured-document contract instead of future
-News, Research Lab, Knowledge Forge, Community Hub, and Comments modules
-inventing incompatible rich-text formats.
+DSS Universe has one shared editor framework instead of separate rich-text
+implementations for Community Hub, News, Research Lab, Knowledge Forge,
+Comments, Messages and administrative content.
+
+Tiptap/ProseMirror is the headless editing engine. DSS owns the canonical
+contract, product profiles, toolbar, design, permissions, dialogs, persistence
+and platform integrations.
 
 ## Canonical document
 
 ```text
 EditorDocument
   schemaVersion
-  profile: FULL | FORUM | COMPACT
+  profile
   content: Tiptap / ProseMirror JSON doc
 ```
 
-Only validated JSON is canonical. HTML, plain text, and normalized search text
+Only validated JSON is canonical. HTML, plain text and normalized search text
 are rebuildable projections. Raw user HTML is neither accepted nor persisted.
 
-## Profile boundary
+## Product profiles
 
-- `FULL` supports publication headings, structured media, attachments, code,
-  mentions, and Content Gates;
-- `FORUM` supports the topic authoring surface with reduced heading depth;
-- `COMPACT` supports comments and messages without headings or Content Gates.
+- `COMMENT` — compact comments with formatting, alignment, links and media;
+- `FORUM_REPLY` — richer replies with lists, quotes and code;
+- `FORUM_TOPIC` — structured topics with headings and Content Gates;
+- `NEWS` — newsroom publications;
+- `RESEARCH_ARTICLE` — long-form Research Lab documents;
+- `WIKI` — Knowledge Forge articles and future document-grade extensions;
+- `MESSAGE` — private text, code and files;
+- `ADMIN` — trusted system-authored content.
 
-All profiles have explicit character, node, mark, and node allowlists. The
-server validates independently from the Tiptap client.
+Every profile declares character/node limits, allowed nodes and marks,
+capabilities, toolbar groups and heading levels. The same engine composes a
+different surface for every module.
 
-## Structured platform nodes
+## Capability and permission boundary
 
-- Mention stores `userId` and display username attributes;
-- Media Reference and Attachment store DSS Media Platform IDs, never raw
-  storage locations;
-- Code Block stores an allowlisted language and is rendered with Shiki's
-  VS Code `dark-plus` theme;
-- Content Gate stores the ID of a policy owned by the future Content Gate
-  Platform.
+Toolbar tools map to framework-neutral capabilities. Privileged controls are
+resolved only when the host grants the corresponding editor permission:
+
+- `MEDIA_UPLOAD` enables image, video and attachment dialogs;
+- `CONTENT_GATE_CONFIGURE` enables hidden-content configuration;
+- `AI_ASSIST` enables DSS AI Core commands.
+
+This filtering is user experience, not authorization. Owning GraphQL commands
+must recheck permissions before accepting media, policies or AI actions.
+
+## Custom DSS interface
+
+The toolbar, responsive behavior, icons, dialogs and styling are DSS-owned
+React components. Dialog tools emit typed requests to the host module so Media
+Platform, AI Core, Mention search and Content Gate builders can be embedded
+without coupling the canonical package to React or Tiptap.
+
+## Dependency policy
+
+Only MIT-compatible Tiptap open-source packages may be used. Tiptap Pro, Cloud,
+managed AI, comments, documents and collaboration are not platform
+dependencies. The root architecture check rejects `@tiptap-pro/*` and
+`@tiptap-cloud/*` packages.
 
 ## Runtime flow
 
 ```text
-Tiptap Client
+DSS product profile + actor permissions
+  → Capability Registry
+  → custom DSS toolbar + Tiptap engine
   → versioned canonical JSON
-  → GraphQL owning-module command
-  → @dss/editor validation
+  → owning-module GraphQL command
+  → server validation and authorization
   → owning-module persistence
   → safe HTML / plain / search projections
 ```
 
-The preview query proves the validation and projection boundary but does not
-store drafts or grant publication authority.
-
 ## Deferred work
 
-- drafts, autosave, conflict/version workflow;
-- comments migration from bounded text to `COMPACT` documents;
-- Media Library picker, upload, and reference hydration;
+- comment canonical-document migration;
+- drafts, autosave and conflict/version workflow;
+- Media Library picker and upload dialogs;
 - mention suggestions;
 - Content Gate rules and API redaction;
-- module-specific forms and permissions;
-- AI Core editing commands.
-
-These remain separate packages so the schema foundation does not accidentally
-become a generic content ownership module.
+- module-specific publication forms;
+- AI Core editing commands;
+- Wiki tables, tasks, footnotes, TOC and revision tools.

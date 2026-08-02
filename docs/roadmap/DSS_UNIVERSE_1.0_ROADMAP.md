@@ -927,7 +927,11 @@ Delivered foundation:
 
 - Tiptap/ProseMirror core;
 - versioned JSON document schema;
-- full, forum and compact presets;
+- one engine with product profiles for comments, forum topics/replies, news,
+  Research Lab, Wiki, messages and administration;
+- declarative capability and toolbar registry with permission-aware tools;
+- fully custom DSS UI with host-owned Media, AI and Content Gate dialogs;
+- MIT-only Tiptap dependency policy enforced by architecture checks;
 - Media Reference, Content Gate, code, mention and attachment nodes;
 - Shiki VS Code-style highlighting;
 - preview, drafts and autosave;
@@ -938,13 +942,15 @@ Delivered foundation:
 Delivered DSS Editor foundation:
 
 - one framework-neutral `@dss/editor` canonical document contract;
-- versioned JSON with `FULL`, `FORUM`, and `COMPACT` profile allowlists;
+- versioned JSON with product-specific profile allowlists;
 - structured mention, Media Reference, attachment, code, and Content Gate
   nodes;
 - bounded recursive server validation with no arbitrary HTML;
 - derived HTML, plain-text, and normalized search projections;
 - Shiki `dark-plus` code rendering and authenticated GraphQL preview;
-- SSR-safe Tiptap frontend shell with profile-specific controls;
+- SSR-safe Tiptap frontend shell and custom declarative DSS toolbar;
+- permission-aware Media, AI and Content Gate controls with server-side
+  authorization explicitly retained as the trust boundary;
 - drafts, autosave, persistence migrations, Media picker, mention autocomplete,
   and Content Gate evaluation remain follow-up packages.
 

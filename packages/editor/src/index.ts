@@ -12,6 +12,7 @@
  * ===============================================================
  */
 
+export * from "./capabilities";
 export * from "./document";
 export * from "./profiles";
 export * from "./projections";
