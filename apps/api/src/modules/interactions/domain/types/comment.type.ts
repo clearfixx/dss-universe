@@ -19,6 +19,8 @@ export type Comment = {
   parentId: string | null;
   mentionedUserIds: string[];
   body: string | null;
+  documentJson: string | null;
+  searchText: string | null;
   isDeleted: boolean;
   editedAt: Date | null;
   deletedAt: Date | null;
@@ -31,6 +33,8 @@ export type CommentRevision = {
   commentId: string;
   version: number;
   body: string;
+  documentJson: string;
+  searchText: string;
   editorId: string;
   createdAt: Date;
 };
@@ -40,6 +44,15 @@ export type CreateComment = {
   authorId: string;
   parentId: string | null;
   body: string;
+  documentJson: string;
+  searchText: string;
+  mentionedUsernames: string[];
+};
+
+export type EditCommentContent = {
+  body: string;
+  documentJson: string;
+  searchText: string;
   mentionedUsernames: string[];
 };
 

@@ -35,11 +35,19 @@ export class CreateCommentInput {
   @IsUUID()
   parentId?: string;
 
-  @Field()
+  @Field({ nullable: true })
+  @IsOptional()
   @IsString()
   @MinLength(1)
   @MaxLength(5000)
-  body!: string;
+  body?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(1_000_000)
+  documentJson?: string;
 }
 
 @InputType()
@@ -48,11 +56,19 @@ export class EditCommentInput {
   @IsUUID()
   commentId!: string;
 
-  @Field()
+  @Field({ nullable: true })
+  @IsOptional()
   @IsString()
   @MinLength(1)
   @MaxLength(5000)
-  body!: string;
+  body?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(1_000_000)
+  documentJson?: string;
 }
 
 @InputType()

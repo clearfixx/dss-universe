@@ -10,7 +10,8 @@
  *
  * 🧠 Responsibilities:
  * • authorizes reads and writes through the target owner;
- * • validates bounded plain-text content until DSS Editor lands;
+ * • validates canonical COMMENT documents through DSS Editor;
+ * • preserves bounded plain-text input as a compatibility adapter;
  * • enforces one reply level and same-target parentage;
  * • limits editing, tombstoning and revision access to the author.
  *
@@ -25,6 +26,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import {
+  createEmptyEditorDocument,
+  type EditorDocument,
+  type EditorNode,
+} from '@dss/editor';
+
+import { EditorService } from '../../../editor/application/services/editor.service';
 
 import {
   COMMENTS_REPOSITORY,
@@ -44,16 +52,17 @@ export class CommentsService {
     @Inject(COMMENTS_REPOSITORY)
     private readonly comments: CommentsRepository,
     private readonly targets: InteractionTargetsService,
+    private readonly editor: EditorService,
   ) {}
 
   async create(
     actorId: string,
     targetId: string,
-    body: string,
+    content: { body?: string; documentJson?: string },
     parentId?: string | null,
   ): Promise<Comment> {
     await this.assertTargetAccess(targetId, actorId, 'COMMENT');
-    const cleanBody = this.cleanBody(body);
+    const normalized = this.normalizeContent(content);
     const parent = parentId ? await this.requireComment(parentId) : null;
     if (parent) {
       if (parent.interactionTargetId !== targetId) {
@@ -74,8 +83,13 @@ export class CommentsService {
       interactionTargetId: targetId,
       authorId: actorId,
       parentId: parent?.id ?? null,
-      body: cleanBody,
-      mentionedUsernames: this.extractMentionedUsernames(cleanBody),
+      body: normalized.plainText,
+      documentJson: normalized.canonicalJson,
+      searchText: normalized.searchText,
+      mentionedUsernames: this.extractMentionedUsernames(
+        normalized.document,
+        normalized.plainText,
+      ),
     });
   }
 
@@ -99,7 +113,7 @@ export class CommentsService {
   async edit(
     actorId: string,
     commentId: string,
-    body: string,
+    content: { body?: string; documentJson?: string },
   ): Promise<Comment> {
     const comment = await this.requireComment(commentId);
     await this.assertTargetAccess(
@@ -111,13 +125,16 @@ export class CommentsService {
     if (comment.isDeleted) {
       throw new BadRequestException('A deleted comment cannot be edited.');
     }
-    const cleanBody = this.cleanBody(body);
-    return this.comments.edit(
-      comment.id,
-      actorId,
-      cleanBody,
-      this.extractMentionedUsernames(cleanBody),
-    );
+    const normalized = this.normalizeContent(content);
+    return this.comments.edit(comment.id, actorId, {
+      body: normalized.plainText,
+      documentJson: normalized.canonicalJson,
+      searchText: normalized.searchText,
+      mentionedUsernames: this.extractMentionedUsernames(
+        normalized.document,
+        normalized.plainText,
+      ),
+    });
   }
 
   async remove(
@@ -171,18 +188,61 @@ export class CommentsService {
     }
   }
 
-  private cleanBody(body: string): string {
-    const clean = body.trim();
-    if (!clean || clean.length > MAX_COMMENT_LENGTH) {
+  private normalizeContent(content: {
+    body?: string;
+    documentJson?: string;
+  }): ReturnType<EditorService['normalize']> {
+    if (Boolean(content.body) === Boolean(content.documentJson)) {
       throw new BadRequestException(
-        `Comment body must contain 1 to ${MAX_COMMENT_LENGTH} characters.`,
+        'Provide exactly one of body or documentJson.',
       );
     }
-    return clean;
+    const documentJson = content.documentJson
+      ? content.documentJson
+      : JSON.stringify(this.legacyDocument(content.body ?? ''));
+    const projection = this.editor.normalize(documentJson, 'COMMENT');
+    if (
+      !this.hasMeaningfulContent(projection.document.content) ||
+      projection.plainText.length > MAX_COMMENT_LENGTH
+    ) {
+      throw new BadRequestException(
+        `Comment content must be meaningful and project to at most ${MAX_COMMENT_LENGTH} characters.`,
+      );
+    }
+    return projection;
   }
 
-  private extractMentionedUsernames(body: string): string[] {
+  private legacyDocument(body: string): EditorDocument {
+    const clean = body.trim();
+    if (!clean) {
+      throw new BadRequestException('Comment body cannot be empty.');
+    }
+    const document = createEmptyEditorDocument('COMMENT');
+    document.content.content = [
+      {
+        type: 'paragraph',
+        content: [{ type: 'text', text: clean }],
+      },
+    ];
+    return document;
+  }
+
+  private hasMeaningfulContent(node: EditorNode): boolean {
+    if (node.type === 'text') return Boolean(node.text?.trim());
+    if (['mention', 'mediaReference', 'attachment'].includes(node.type)) {
+      return true;
+    }
+    return (node.content ?? []).some((child) =>
+      this.hasMeaningfulContent(child),
+    );
+  }
+
+  private extractMentionedUsernames(
+    document: EditorDocument,
+    body: string,
+  ): string[] {
     const usernames = new Map<string, string>();
+    this.collectStructuredMentions(document.content, usernames);
     for (const match of body.matchAll(MENTION_PATTERN)) {
       const username = match[2];
       if (!username) continue;
@@ -196,8 +256,21 @@ export class CommentsService {
     }
     return [...usernames.values()];
   }
+
+  private collectStructuredMentions(
+    node: EditorNode,
+    usernames: Map<string, string>,
+  ): void {
+    const username = node.type === 'mention' ? node.attrs?.username : null;
+    if (typeof username === 'string') {
+      usernames.set(username.toLocaleLowerCase('en-US'), username);
+    }
+    for (const child of node.content ?? []) {
+      this.collectStructuredMentions(child, usernames);
+    }
+  }
 }
 
 /**
- * Today: bounded text. Tomorrow: DSS Editor. Never: arbitrary HTML from orbit.
+ * Canonical JSON has landed. Arbitrary HTML is still denied docking clearance.
  */

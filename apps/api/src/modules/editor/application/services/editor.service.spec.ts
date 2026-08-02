@@ -54,6 +54,14 @@ describe('EditorService', () => {
       ),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
+
+  it('enforces an owning module profile during normalization', () => {
+    const wiki = createEmptyEditorDocument('WIKI');
+
+    expect(() => service.normalize(JSON.stringify(wiki), 'COMMENT')).toThrow(
+      BadRequestException,
+    );
+  });
 });
 
 /** A green preview test means validation and rendering share the same flight plan. */

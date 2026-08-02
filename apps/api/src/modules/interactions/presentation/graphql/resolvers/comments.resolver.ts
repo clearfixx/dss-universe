@@ -47,7 +47,7 @@ export class CommentsResolver {
       await this.comments.create(
         actor.id,
         input.interactionTargetId,
-        input.body,
+        { body: input.body, documentJson: input.documentJson },
         input.parentId,
       ),
     );
@@ -82,7 +82,10 @@ export class CommentsResolver {
     @Args('input') input: EditCommentInput,
   ): Promise<CommentModel> {
     return this.toModel(
-      await this.comments.edit(actor.id, input.commentId, input.body),
+      await this.comments.edit(actor.id, input.commentId, {
+        body: input.body,
+        documentJson: input.documentJson,
+      }),
     );
   }
 

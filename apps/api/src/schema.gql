@@ -121,6 +121,7 @@ type Comment {
   body: String
   createdAt: String!
   deletedAt: String
+  documentJson: String
   editedAt: String
   id: ID!
   interactionTargetId: ID!
@@ -142,6 +143,7 @@ type CommentRevision {
   body: String!
   commentId: ID!
   createdAt: String!
+  documentJson: String!
   editorId: ID!
   id: ID!
   version: Int!
@@ -236,7 +238,8 @@ enum ContentReportStatus {
 }
 
 input CreateCommentInput {
-  body: String!
+  body: String
+  documentJson: String
   interactionTargetId: ID!
   parentId: ID
 }
@@ -290,8 +293,9 @@ input DeactivateAccountInput {
 }
 
 input EditCommentInput {
-  body: String!
+  body: String
   commentId: ID!
+  documentJson: String
 }
 
 type EditorDocumentPreview {

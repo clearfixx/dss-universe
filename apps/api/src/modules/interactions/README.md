@@ -17,8 +17,11 @@ Knowledge Forge, Academy, Profile Wall, or future modules.
 - Registration and status changes produce Audit and Outbox evidence.
 - Profile Wall is the first integrated target owner.
 - Comments owns FK-backed top-level comments and one-level replies.
-- Every comment version is retained in immutable revision history.
-- Deleted comments become body-free tombstones.
+- Every comment version retains canonical `COMMENT` JSON and immutable text
+  projections.
+- Legacy `body` input remains as a compatibility adapter; new clients submit
+  `documentJson`.
+- Deleted comments clear canonical JSON and projections into public tombstones.
 - Reactions owns one idempotent `LIKE`, `UPVOTE`, or `DOWNVOTE` per actor and
   target.
 - Reaction aggregates and vote score are rebuildable projections.
@@ -39,11 +42,10 @@ Future Comments, Reactions, and Bookmarks modules store only the canonical
 `interactionTargetId`; they must not recreate unconstrained
 `targetType + targetId` relationships.
 
-Comments, Reactions, and Bookmarks already follow this contract. The first
-Comments API still uses bounded plain text with relational mentions. Reports
-and staff moderation annotations share the same canonical target boundary.
-The DSS Editor schema foundation now exists; migrating comment persistence to
-the `COMMENT` document profile remains an explicit follow-up package.
+Comments, Reactions, and Bookmarks already follow this contract. Comments now
+persists validated `COMMENT` editor documents with relational mentions and
+backward-compatible plain-text projections. Reports and staff moderation
+annotations share the same canonical target boundary.
 
 Interaction counters are projections and may be rebuilt. They are never the
 sole source of truth. Reaction records never mutate Reputation implicitly.

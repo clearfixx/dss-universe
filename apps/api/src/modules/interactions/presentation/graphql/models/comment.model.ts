@@ -34,6 +34,9 @@ export class CommentModel {
   @Field(() => String, { nullable: true })
   body!: string | null;
 
+  @Field(() => String, { nullable: true })
+  documentJson!: string | null;
+
   @Field()
   isDeleted!: boolean;
 
@@ -81,6 +84,9 @@ export class CommentRevisionModel {
 
   @Field()
   body!: string;
+
+  @Field()
+  documentJson!: string;
 
   @Field(() => ID)
   editorId!: string;

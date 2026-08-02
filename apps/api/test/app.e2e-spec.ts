@@ -1029,20 +1029,44 @@ describe('DSS API (e2e)', () => {
         passwordHash: 'not-used-by-this-e2e-scenario',
       },
     });
+    const commentDocument = {
+      schemaVersion: 1,
+      profile: 'COMMENT',
+      content: {
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            content: [
+              { type: 'text', text: 'First shared comment for ' },
+              {
+                type: 'mention',
+                attrs: {
+                  userId: mentionRecipient.id,
+                  username: mentionRecipient.username,
+                },
+              },
+              { type: 'text', text: '.' },
+            ],
+          },
+        ],
+      },
+    };
+    const commentDocumentJson = JSON.stringify(commentDocument);
     const createdComment = await request(app.getHttpServer())
       .post('/api/graphql')
       .set('Authorization', 'Bearer ' + accessToken)
       .send({
         query: `mutation CreateComment($input: CreateCommentInput!) {
           createComment(input: $input) {
-            id interactionTargetId authorId parentId mentionedUserIds body isDeleted editedAt
+            id interactionTargetId authorId parentId mentionedUserIds body documentJson isDeleted editedAt
           }
         }`,
         variables: {
           input: {
             interactionTargetId:
               wallPostBody.data.createProfileWallPost.interactionTargetId,
-            body: `  First shared comment for @${mentionRecipient.username}.  `,
+            documentJson: commentDocumentJson,
           },
         },
       })
@@ -1055,6 +1079,7 @@ describe('DSS API (e2e)', () => {
           parentId: string | null;
           mentionedUserIds: string[];
           body: string;
+          documentJson: string;
           isDeleted: boolean;
         };
       };
@@ -1067,6 +1092,9 @@ describe('DSS API (e2e)', () => {
       body: `First shared comment for @${mentionRecipient.username}.`,
       isDeleted: false,
     });
+    expect(
+      JSON.parse(createdCommentBody.data.createComment.documentJson),
+    ).toEqual(commentDocument);
     await expect(
       app.get(PrismaService).outboxEvent.count({
         where: {
@@ -1258,22 +1286,44 @@ describe('DSS API (e2e)', () => {
       ).data.revokeModerationAnnotation.revokedAt,
     ).toBe('string');
 
+    const editedCommentDocumentJson = JSON.stringify({
+      schemaVersion: 1,
+      profile: 'COMMENT',
+      content: {
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            attrs: { textAlign: 'center' },
+            content: [{ type: 'text', text: 'Edited shared comment.' }],
+          },
+        ],
+      },
+    });
     const editedComment = await request(app.getHttpServer())
       .post('/api/graphql')
       .set('Authorization', 'Bearer ' + accessToken)
       .send({
         query: `mutation EditComment($input: EditCommentInput!) {
-          editComment(input: $input) { id mentionedUserIds body editedAt }
+          editComment(input: $input) { id mentionedUserIds body documentJson editedAt }
         }`,
         variables: {
           input: {
             commentId: createdCommentBody.data.createComment.id,
-            body: 'Edited shared comment.',
+            documentJson: editedCommentDocumentJson,
           },
         },
       })
       .expect(200);
-    expect(editedComment.body).toMatchObject({
+    const editedCommentBody = editedComment.body as {
+      data: {
+        editComment: {
+          documentJson: string;
+          editedAt: unknown;
+        };
+      };
+    };
+    expect(editedCommentBody).toMatchObject({
       data: {
         editComment: {
           id: createdCommentBody.data.createComment.id,
@@ -1282,11 +1332,10 @@ describe('DSS API (e2e)', () => {
         },
       },
     });
-    expect(
-      typeof (
-        editedComment.body as { data: { editComment: { editedAt: unknown } } }
-      ).data.editComment.editedAt,
-    ).toBe('string');
+    expect(JSON.parse(editedCommentBody.data.editComment.documentJson)).toEqual(
+      JSON.parse(editedCommentDocumentJson),
+    );
+    expect(typeof editedCommentBody.data.editComment.editedAt).toBe('string');
 
     const commentRevisionHistory = await request(app.getHttpServer())
       .post('/api/graphql')
@@ -1294,23 +1343,43 @@ describe('DSS API (e2e)', () => {
       .send({
         query: `query CommentRevisions($commentId: ID!) {
           commentRevisions(commentId: $commentId) {
-            commentId version body editorId createdAt
+            commentId version body documentJson editorId createdAt
           }
         }`,
         variables: { commentId: createdCommentBody.data.createComment.id },
       })
       .expect(200);
-    expect(commentRevisionHistory.body).toMatchObject({
+    const commentRevisionHistoryBody = commentRevisionHistory.body as {
+      data: {
+        commentRevisions: Array<{
+          version: number;
+          body: string;
+          documentJson: string;
+        }>;
+      };
+    };
+    expect(commentRevisionHistoryBody).toMatchObject({
       data: {
         commentRevisions: [
           {
             version: 1,
             body: `First shared comment for @${mentionRecipient.username}.`,
           },
-          { version: 2, body: 'Edited shared comment.' },
+          {
+            version: 2,
+            body: 'Edited shared comment.',
+          },
         ],
       },
     });
+    expect(
+      commentRevisionHistoryBody.data.commentRevisions.map(
+        ({ documentJson }): unknown => JSON.parse(documentJson) as unknown,
+      ),
+    ).toEqual([
+      commentDocument,
+      JSON.parse(editedCommentDocumentJson) as unknown,
+    ]);
     await expect(
       app.get(PrismaService).outboxEvent.count({
         where: {
@@ -1390,7 +1459,7 @@ describe('DSS API (e2e)', () => {
       .send({
         query: `mutation RemoveComment($commentId: ID!) {
           removeComment(commentId: $commentId, reason: "Author cleanup") {
-            id body isDeleted deletedAt
+            id body documentJson isDeleted deletedAt
           }
         }`,
         variables: { commentId: createdCommentBody.data.createComment.id },
@@ -1401,6 +1470,7 @@ describe('DSS API (e2e)', () => {
         removeComment: {
           id: createdCommentBody.data.createComment.id,
           body: null,
+          documentJson: null,
           isDeleted: true,
         },
       },

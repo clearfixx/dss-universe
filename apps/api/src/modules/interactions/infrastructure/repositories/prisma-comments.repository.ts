@@ -24,13 +24,14 @@ import { AuditWriterService } from '@api/core/audit';
 import { PrismaService } from '@api/core/database';
 import { createEventEnvelope, OutboxWriterService } from '@api/core/events';
 import type { PaginatedResult } from '@api/shared';
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 import type { CommentsRepository } from '../../domain/repositories/comments.repository.interface';
 import type {
   Comment,
   CommentRevision,
   CreateComment,
+  EditCommentContent,
 } from '../../domain/types/comment.type';
 
 const PRODUCER = 'dss.api.comments';
@@ -45,13 +46,20 @@ export class PrismaCommentsRepository implements CommentsRepository {
 
   async create(input: CreateComment): Promise<Comment> {
     return this.prisma.$transaction(async (transaction) => {
-      const { mentionedUsernames, ...commentData } = input;
-      const comment = await transaction.comment.create({ data: commentData });
+      const { mentionedUsernames, documentJson, ...commentData } = input;
+      const comment = await transaction.comment.create({
+        data: {
+          ...commentData,
+          document: this.parseDocument(documentJson),
+        },
+      });
       await transaction.commentRevision.create({
         data: {
           commentId: comment.id,
           version: 1,
           body: input.body,
+          document: this.parseDocument(input.documentJson),
+          searchText: input.searchText,
           editorId: input.authorId,
         },
       });
@@ -123,14 +131,13 @@ export class PrismaCommentsRepository implements CommentsRepository {
   async edit(
     commentId: string,
     editorId: string,
-    body: string,
-    mentionedUsernames: string[],
+    content: EditCommentContent,
   ): Promise<Comment> {
     return this.prisma.$transaction(async (transaction) => {
       await transaction.$executeRaw`
         SELECT pg_advisory_xact_lock(hashtext(${commentId}))
       `;
-      const current = await transaction.comment.findUniqueOrThrow({
+      await transaction.comment.findUniqueOrThrow({
         where: { id: commentId },
       });
       const latest = await transaction.commentRevision.aggregate({
@@ -139,13 +146,20 @@ export class PrismaCommentsRepository implements CommentsRepository {
       });
       const comment = await transaction.comment.update({
         where: { id: commentId },
-        data: { body, editedAt: new Date() },
+        data: {
+          body: content.body,
+          document: this.parseDocument(content.documentJson),
+          searchText: content.searchText,
+          editedAt: new Date(),
+        },
       });
       await transaction.commentRevision.create({
         data: {
           commentId,
           version: (latest._max.version ?? 0) + 1,
-          body,
+          body: content.body,
+          document: this.parseDocument(content.documentJson),
+          searchText: content.searchText,
           editorId,
         },
       });
@@ -153,17 +167,9 @@ export class PrismaCommentsRepository implements CommentsRepository {
         transaction,
         comment,
         editorId,
-        mentionedUsernames,
+        content.mentionedUsernames,
       );
-      await this.record(
-        transaction,
-        comment,
-        editorId,
-        'edited',
-        current.body === body
-          ? 'Body normalized without semantic change.'
-          : null,
-      );
+      await this.record(transaction, comment, editorId, 'edited', null);
       return this.toDomain(comment, mentionedUserIds);
     });
   }
@@ -178,6 +184,8 @@ export class PrismaCommentsRepository implements CommentsRepository {
         where: { id: commentId },
         data: {
           body: null,
+          document: Prisma.DbNull,
+          searchText: null,
           deletedAt: new Date(),
           deletedById: actorId,
           deleteReason: reason,
@@ -190,10 +198,14 @@ export class PrismaCommentsRepository implements CommentsRepository {
   }
 
   async revisions(commentId: string): Promise<CommentRevision[]> {
-    return this.prisma.commentRevision.findMany({
+    const revisions = await this.prisma.commentRevision.findMany({
       where: { commentId },
       orderBy: [{ version: 'asc' }, { id: 'asc' }],
     });
+    return revisions.map((revision) => ({
+      ...revision,
+      documentJson: JSON.stringify(revision.document),
+    }));
   }
 
   private async record(
@@ -391,6 +403,8 @@ export class PrismaCommentsRepository implements CommentsRepository {
       authorId: string;
       parentId: string | null;
       body: string | null;
+      document: Prisma.JsonValue | null;
+      searchText: string | null;
       editedAt: Date | null;
       deletedAt: Date | null;
       createdAt: Date;
@@ -403,8 +417,17 @@ export class PrismaCommentsRepository implements CommentsRepository {
       ...comment,
       mentionedUserIds,
       body: isDeleted ? null : comment.body,
+      documentJson:
+        isDeleted || comment.document === null
+          ? null
+          : JSON.stringify(comment.document),
+      searchText: isDeleted ? null : comment.searchText,
       isDeleted,
     };
+  }
+
+  private parseDocument(documentJson: string): Prisma.InputJsonValue {
+    return JSON.parse(documentJson) as Prisma.InputJsonValue;
   }
 }
 

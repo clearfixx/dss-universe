@@ -348,6 +348,8 @@ model Comment {
   authorId            String
   parentId            String?
   body                String?
+  document            Json?     @db.JsonB
+  searchText          String?
   editedAt            DateTime?
   deletedAt           DateTime?
   deletedById         String?
@@ -399,6 +401,8 @@ model CommentRevision {
   commentId String
   version   Int
   body      String
+  document  Json     @db.JsonB
+  searchText String
   editorId  String
   createdAt DateTime @default(now())
 

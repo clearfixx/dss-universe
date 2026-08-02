@@ -18,6 +18,8 @@ import { AuditModule } from '@api/core/audit';
 import { PrismaModule } from '@api/core/database';
 import { EventsModule } from '@api/core/events';
 
+import { EditorModule } from '../editor';
+
 import { BookmarksService } from './application/services/bookmarks.service';
 import { CommentsService } from './application/services/comments.service';
 import { InteractionPolicyRegistryService } from './application/services/interaction-policy-registry.service';
@@ -42,7 +44,7 @@ import { ModerationResolver } from './presentation/graphql/resolvers/moderation.
 import { ReactionsResolver } from './presentation/graphql/resolvers/reactions.resolver';
 
 @Module({
-  imports: [PrismaModule, AuditModule, EventsModule],
+  imports: [PrismaModule, AuditModule, EventsModule, EditorModule],
   providers: [
     InteractionPolicyRegistryService,
     InteractionTargetWriterService,

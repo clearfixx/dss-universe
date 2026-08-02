@@ -14,6 +14,9 @@
 
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 
+import { EditorService } from '../../../editor/application/services/editor.service';
+import type { EditorHtmlRenderer } from '../../../editor/infrastructure/rendering/editor-html.renderer';
+
 import type { CommentsRepository } from '../../domain/repositories/comments.repository.interface';
 import type { Comment } from '../../domain/types/comment.type';
 import type { InteractionTargetsService } from './interaction-targets.service';
@@ -27,6 +30,9 @@ describe('CommentsService', () => {
     parentId: null,
     mentionedUserIds: [],
     body: 'Hello',
+    documentJson:
+      '{"schemaVersion":1,"profile":"COMMENT","content":{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Hello"}]}]}}',
+    searchText: 'hello',
     isDeleted: false,
     editedAt: null,
     deletedAt: null,
@@ -62,31 +68,88 @@ describe('CommentsService', () => {
         reason: null,
       }),
     } as unknown as jest.Mocked<InteractionTargetsService>;
-    service = new CommentsService(repository, targets);
+    service = new CommentsService(
+      repository,
+      targets,
+      new EditorService({} as EditorHtmlRenderer),
+    );
   });
 
   it('creates normalized top-level comments after owner authorization', async () => {
-    await service.create('author-1', 'target-1', '  Hello  ');
+    await service.create('author-1', 'target-1', { body: '  Hello  ' });
 
     expect(repository.create.mock.calls[0]?.[0]).toEqual({
       interactionTargetId: 'target-1',
       authorId: 'author-1',
       parentId: null,
       body: 'Hello',
+      documentJson: comment.documentJson,
+      searchText: 'hello',
       mentionedUsernames: [],
     });
   });
 
   it('extracts unique mentions without treating email addresses as mentions', async () => {
-    await service.create(
-      'author-1',
-      'target-1',
-      'Hello @Astro and @astro; mail astronaut@example.com',
-    );
+    await service.create('author-1', 'target-1', {
+      body: 'Hello @Astro and @astro; mail astronaut@example.com',
+    });
 
     expect(repository.create.mock.calls[0]?.[0].mentionedUsernames).toEqual([
       'Astro',
     ]);
+  });
+
+  it('accepts canonical COMMENT JSON and extracts structured mentions', async () => {
+    const documentJson = JSON.stringify({
+      schemaVersion: 1,
+      profile: 'COMMENT',
+      content: {
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            attrs: { textAlign: 'center' },
+            content: [
+              { type: 'text', text: 'Hello ' },
+              {
+                type: 'mention',
+                attrs: {
+                  userId: '123e4567-e89b-42d3-a456-426614174000',
+                  username: 'Commander',
+                },
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    await service.create('author-1', 'target-1', { documentJson });
+
+    expect(repository.create.mock.calls[0]?.[0]).toMatchObject({
+      body: 'Hello @Commander',
+      searchText: 'hello @commander',
+      mentionedUsernames: ['Commander'],
+      documentJson,
+    });
+  });
+
+  it('rejects ambiguous input and the wrong editor profile', async () => {
+    await expect(
+      service.create('author-1', 'target-1', {
+        body: 'Hello',
+        documentJson: comment.documentJson ?? undefined,
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    await expect(
+      service.create('author-1', 'target-1', {
+        documentJson: JSON.stringify({
+          schemaVersion: 1,
+          profile: 'WIKI',
+          content: { type: 'doc', content: [{ type: 'paragraph' }] },
+        }),
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('fails closed when the target owner denies comments', async () => {
@@ -98,12 +161,12 @@ describe('CommentsService', () => {
     });
 
     await expect(
-      service.create('author-1', 'target-1', 'Hello'),
+      service.create('author-1', 'target-1', { body: 'Hello' }),
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
   it('accepts one reply level on the same target', async () => {
-    await service.create('author-2', 'target-1', 'Reply', comment.id);
+    await service.create('author-2', 'target-1', { body: 'Reply' }, comment.id);
 
     expect(repository.create.mock.calls[0]?.[0]).toEqual(
       expect.objectContaining({ parentId: comment.id }),
@@ -116,7 +179,7 @@ describe('CommentsService', () => {
       interactionTargetId: 'target-2',
     });
     await expect(
-      service.create('author-2', 'target-1', 'Reply', comment.id),
+      service.create('author-2', 'target-1', { body: 'Reply' }, comment.id),
     ).rejects.toBeInstanceOf(BadRequestException);
 
     repository.findById.mockResolvedValue({
@@ -124,13 +187,13 @@ describe('CommentsService', () => {
       parentId: 'root-comment',
     });
     await expect(
-      service.create('author-2', 'target-1', 'Reply', comment.id),
+      service.create('author-2', 'target-1', { body: 'Reply' }, comment.id),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('limits edits, tombstones and revision history to the author', async () => {
     await expect(
-      service.edit('another-user', comment.id, 'Updated'),
+      service.edit('another-user', comment.id, { body: 'Updated' }),
     ).rejects.toBeInstanceOf(ForbiddenException);
     await expect(
       service.remove('another-user', comment.id),

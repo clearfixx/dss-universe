@@ -18,6 +18,7 @@ import type {
   Comment,
   CommentRevision,
   CreateComment,
+  EditCommentContent,
 } from '../types/comment.type';
 
 export const COMMENTS_REPOSITORY = Symbol('COMMENTS_REPOSITORY');
@@ -34,8 +35,7 @@ export interface CommentsRepository {
   edit(
     commentId: string,
     editorId: string,
-    body: string,
-    mentionedUsernames: string[],
+    content: EditCommentContent,
   ): Promise<Comment>;
   tombstone(
     commentId: string,

@@ -969,7 +969,10 @@ Delivered Comments foundation:
 - top-level comments and independently paginated one-level replies;
 - immutable revision history and body-free public tombstones;
 - owner-policy authorization for reads and writes;
-- authenticated GraphQL pilot plus transactional Audit and Outbox evidence.
+- authenticated GraphQL pilot plus transactional Audit and Outbox evidence;
+- canonical `COMMENT` editor JSON on current state and immutable revisions;
+- backward-compatible body input/projection plus normalized search text;
+- safe legacy-row migration and tombstone clearing of all public projections.
 
 Delivered Reactions foundation:
 

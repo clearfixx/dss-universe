@@ -15,9 +15,12 @@
 import type { EditorDocument } from '@dss/editor';
 
 export type EditorPreview = {
+  html: string;
+} & EditorProjection;
+
+export type EditorProjection = {
   document: EditorDocument;
   canonicalJson: string;
-  html: string;
   plainText: string;
   searchText: string;
 };
