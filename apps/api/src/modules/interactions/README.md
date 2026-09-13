@@ -17,6 +17,8 @@ Knowledge Forge, Academy, Profile Wall, or future modules.
 - Registration and status changes produce Audit and Outbox evidence.
 - Profile Wall is the first integrated target owner.
 - Comments owns FK-backed top-level comments and one-level replies.
+- Comments owns private, optimistic-versioned drafts with restoration and
+  explicit discard.
 - Every comment version retains canonical `COMMENT` JSON and immutable text
   projections.
 - Legacy `body` input remains as a compatibility adapter; new clients submit
@@ -44,7 +46,8 @@ Future Comments, Reactions, and Bookmarks modules store only the canonical
 
 Comments, Reactions, and Bookmarks already follow this contract. Comments now
 persists validated `COMMENT` editor documents with relational mentions and
-backward-compatible plain-text projections. Reports and staff moderation
+backward-compatible plain-text projections. Draft persistence remains private
+to its author and never becomes a generic Editor-owned content store. Reports and staff moderation
 annotations share the same canonical target boundary.
 
 Interaction counters are projections and may be rebuilt. They are never the

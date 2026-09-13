@@ -14,6 +14,7 @@
 
 export { InteractionsModule } from './interactions.module';
 export { BookmarksService } from './application/services/bookmarks.service';
+export { CommentDraftsService } from './application/services/comment-drafts.service';
 export { InteractionPolicyRegistryService } from './application/services/interaction-policy-registry.service';
 export { InteractionTargetWriterService } from './application/services/interaction-target-writer.service';
 export { InteractionTargetsService } from './application/services/interaction-targets.service';

@@ -131,6 +131,17 @@ type Comment {
   updatedAt: String!
 }
 
+type CommentDraft {
+  createdAt: String!
+  documentJson: String!
+  id: ID!
+  interactionTargetId: ID!
+  parentId: ID
+  plainText: String!
+  updatedAt: String!
+  version: Int!
+}
+
 type CommentPage {
   items: [Comment!]!
   limit: Int!
@@ -722,6 +733,7 @@ type Mutation {
   createModerationAnnotation(input: CreateModerationAnnotationInput!): ModerationAnnotation!
   createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
   deactivateAccount(input: DeactivateAccountInput!): LogoutResultModel!
+  discardCommentDraft(draftId: ID!): Boolean!
   editComment(input: EditCommentInput!): Comment!
   followUser(userId: ID!): UserSocialGraphSummary!
   giveReputation(input: GiveReputationInput!): ReputationEntry!
@@ -754,6 +766,7 @@ type Mutation {
   saveAchievement(input: SaveAchievementInput!): Achievement!
   saveAchievementRule(input: SaveAchievementRuleInput!): AchievementRule!
   saveBookmark(interactionTargetId: ID!): BookmarkMutationPayload!
+  saveCommentDraft(input: SaveCommentDraftInput!): CommentDraft!
   selectCustomTitle(grantId: ID!): UserTitleGrant!
   setReaction(input: SetReactionInput!): SetReactionPayload!
   setViewerAvatar(mediaId: ID!): Viewer!
@@ -859,6 +872,7 @@ type Query {
   achievementsAdmin: [Achievement!]!
   apiInfo: ApiInfo!
   blockedUsers(pagination: UsersPageInput): UsersPageModel!
+  commentDraft(interactionTargetId: ID!, parentId: ID): CommentDraft
   commentRevisions(commentId: ID!): [CommentRevision!]!
   commentsForTarget(interactionTargetId: ID!, pagination: CommentsPageInput, parentId: ID): CommentPage!
   communityPointRules: [CommunityPointRule!]!
@@ -900,6 +914,7 @@ type Query {
   users(pagination: UsersPageInput): UsersPageModel!
   viewer: Viewer!
   viewerBookmarks(pagination: BookmarksPageInput): BookmarkPage!
+  viewerCommentDrafts(limit: Int! = 20): [CommentDraft!]!
   viewerNotificationPreferences: NotificationPreferences!
   viewerPrivacySettings: UserPrivacySettings!
   viewerProfileCompletion: ProfileCompletion!
@@ -1065,6 +1080,13 @@ input SaveAchievementRuleInput {
   id: ID
   recipientPayloadKey: String! = "userId"
   repeatable: Boolean! = false
+}
+
+input SaveCommentDraftInput {
+  baseVersion: Int!
+  documentJson: String!
+  interactionTargetId: ID!
+  parentId: ID
 }
 
 input SetReactionInput {

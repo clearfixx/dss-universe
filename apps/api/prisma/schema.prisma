@@ -206,6 +206,7 @@ model User {
   communityPointEntries   CommunityPointEntry[]        @relation("CommunityPointRecipient")
   levelTransitions        LevelTransition[]
   commentsAuthored        Comment[]                    @relation("CommentAuthor")
+  commentDrafts           CommentDraft[]
   commentRevisions        CommentRevision[]            @relation("CommentRevisionEditor")
   commentsDeleted         Comment[]                    @relation("CommentDeletedBy")
   mentionsAuthored        Mention[]                    @relation("MentionActor")
@@ -232,11 +233,11 @@ model User {
 }
 
 model ContentGate {
-  id           String              @id @default(uuid())
-  ownerId      String
-  operator     ContentGateOperator
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
+  id        String              @id @default(uuid())
+  ownerId   String
+  operator  ContentGateOperator
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
 
   owner        User                     @relation(fields: [ownerId], references: [id], onDelete: Restrict)
   requirements ContentGateRequirement[]
@@ -327,6 +328,7 @@ model InteractionTarget {
 
   userWallPost          UserWallPost?
   comments              Comment[]
+  commentDrafts         CommentDraft[]
   reactions             Reaction[]
   reactionAggregate     ReactionAggregate?
   bookmarks             Bookmark[]
@@ -406,6 +408,7 @@ model Comment {
   replies               Comment[]              @relation("CommentReplies")
   deletedBy             User?                  @relation("CommentDeletedBy", fields: [deletedById], references: [id], onDelete: Restrict)
   revisions             CommentRevision[]
+  childDrafts           CommentDraft[]
   mentions              Mention[]
   reports               ContentReport[]
   moderationAnnotations ModerationAnnotation[]
@@ -415,6 +418,29 @@ model Comment {
   @@index([parentId, createdAt, id])
   @@index([deletedAt])
   @@map("comments")
+}
+
+model CommentDraft {
+  id                  String   @id @default(uuid())
+  authorId            String
+  interactionTargetId String
+  parentId            String?
+  scopeKey            String
+  document            Json     @db.JsonB
+  plainText           String
+  version             Int      @default(1)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  author            User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  interactionTarget InteractionTarget @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
+  parent            Comment?          @relation(fields: [parentId], references: [id], onDelete: Restrict)
+
+  @@unique([authorId, scopeKey])
+  @@index([authorId, updatedAt, id])
+  @@index([interactionTargetId, updatedAt])
+  @@index([parentId])
+  @@map("comment_drafts")
 }
 
 model Mention {
@@ -440,14 +466,14 @@ model Mention {
 }
 
 model CommentRevision {
-  id        String   @id @default(uuid())
-  commentId String
-  version   Int
-  body      String
-  document  Json     @db.JsonB
+  id         String   @id @default(uuid())
+  commentId  String
+  version    Int
+  body       String
+  document   Json     @db.JsonB
   searchText String
-  editorId  String
-  createdAt DateTime @default(now())
+  editorId   String
+  createdAt  DateTime @default(now())
 
   comment Comment @relation(fields: [commentId], references: [id], onDelete: Restrict)
   editor  User    @relation("CommentRevisionEditor", fields: [editorId], references: [id], onDelete: Restrict)

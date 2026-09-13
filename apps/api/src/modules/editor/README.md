@@ -25,6 +25,8 @@ versioned Tiptap JSON document contract for every DSS content module.
 - framework-neutral debounced autosave coordination with monotonic versions,
   retryable failures and explicit conflict state;
 - frontend document-change contract for host-owned draft commands.
+- reusable React autosave adapter and explicit draft recovery prompt;
+- Comments-owned persistence as the first real host-module integration;
 - DSS-owned Media Library picker limited to the actor's READY resources;
 - privacy-aware member suggestions and structured mention insertion.
 - provider-neutral AI Core commands with permission enforcement, explicit
@@ -42,7 +44,6 @@ Gate Platform.
 
 ## Deferred integrations
 
-- owning-module draft persistence commands and restoration screens;
 - owning-module publication workflows;
 
 🚀 Build. Share. Grow.

@@ -1059,6 +1059,110 @@ describe('DSS API (e2e)', () => {
       },
     };
     const commentDocumentJson = JSON.stringify(commentDocument);
+    const firstDraftSave = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation SaveCommentDraft($input: SaveCommentDraftInput!) {
+          saveCommentDraft(input: $input) {
+            id interactionTargetId parentId documentJson plainText version updatedAt
+          }
+        }`,
+        variables: {
+          input: {
+            interactionTargetId: targetId,
+            documentJson: commentDocumentJson,
+            baseVersion: 0,
+          },
+        },
+      })
+      .expect(200);
+    const firstDraftBody = firstDraftSave.body as {
+      data: {
+        saveCommentDraft: {
+          id: string;
+          interactionTargetId: string;
+          version: number;
+        };
+      };
+    };
+    expect(firstDraftBody.data.saveCommentDraft).toMatchObject({
+      interactionTargetId: targetId,
+      version: 1,
+    });
+
+    const secondDraftSave = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation SaveCommentDraft($input: SaveCommentDraftInput!) {
+          saveCommentDraft(input: $input) { id version plainText updatedAt }
+        }`,
+        variables: {
+          input: {
+            interactionTargetId: targetId,
+            documentJson: commentDocumentJson,
+            baseVersion: 1,
+          },
+        },
+      })
+      .expect(200);
+    expect(secondDraftSave.body).toMatchObject({
+      data: { saveCommentDraft: { version: 2 } },
+    });
+
+    const staleDraftSave = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation SaveCommentDraft($input: SaveCommentDraftInput!) {
+          saveCommentDraft(input: $input) { id version }
+        }`,
+        variables: {
+          input: {
+            interactionTargetId: targetId,
+            documentJson: commentDocumentJson,
+            baseVersion: 1,
+          },
+        },
+      })
+      .expect(200);
+    expect(staleDraftSave.body).toMatchObject({
+      errors: [{ extensions: { code: 'CONFLICT' } }],
+    });
+
+    const restoredDraft = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `query CommentDraft($targetId: ID!) {
+          commentDraft(interactionTargetId: $targetId) { id version documentJson }
+        }`,
+        variables: { targetId },
+      })
+      .expect(200);
+    const restoredDraftBody = restoredDraft.body as {
+      data: { commentDraft: { version: number; documentJson: string } };
+    };
+    expect(restoredDraftBody.data.commentDraft.version).toBe(2);
+    expect(
+      JSON.parse(restoredDraftBody.data.commentDraft.documentJson),
+    ).toEqual(commentDocument);
+
+    const discardedDraft = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `mutation DiscardCommentDraft($draftId: ID!) {
+          discardCommentDraft(draftId: $draftId)
+        }`,
+        variables: { draftId: firstDraftBody.data.saveCommentDraft.id },
+      })
+      .expect(200);
+    expect(discardedDraft.body).toEqual({
+      data: { discardCommentDraft: true },
+    });
+
     const createdComment = await request(app.getHttpServer())
       .post('/api/graphql')
       .set('Authorization', 'Bearer ' + accessToken)

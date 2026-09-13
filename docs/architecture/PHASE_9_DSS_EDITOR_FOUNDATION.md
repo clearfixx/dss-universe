@@ -88,6 +88,20 @@ resolution. This keeps News drafts in News, Knowledge Forge drafts in
 Knowledge Forge, and prevents the editor framework from becoming a generic
 content database.
 
+Comments is the first real owning-module implementation. `CommentDraft` is a
+private Interaction Platform record scoped to one author, target and optional
+reply parent. Every save revalidates canonical `COMMENT` JSON and target-owner
+policy, then advances an optimistic version. A stale browser tab receives an
+explicit conflict instead of silently overwriting newer work. Authors can
+restore or hard-delete these private working records; public-content tombstone
+rules do not apply to unpublished drafts.
+
+The frontend supplies a reusable React adapter for the storage-neutral
+coordinator and a DSS-owned recovery prompt. The Comments composer binds those
+pieces to Comments GraphQL commands. Future News, Community Hub, Research Lab
+and Knowledge Forge modules must add their own draft tables and commands while
+reusing the same coordinator and recovery interface.
+
 ## Media and mention integrations
 
 The custom DSS toolbar opens DSS-owned dialogs rather than third-party editor
@@ -144,6 +158,6 @@ Phase 21.
 
 ## Deferred work
 
-- owning-module draft persistence commands and restoration screens;
+- News, Community Hub, Research Lab and Knowledge Forge draft persistence;
 - module-specific publication forms;
 - Wiki tables, tasks, footnotes, TOC and revision tools.

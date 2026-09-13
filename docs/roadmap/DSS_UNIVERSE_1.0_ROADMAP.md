@@ -966,7 +966,11 @@ Delivered DSS Editor foundation:
 - provider-neutral AI Core editor commands with versioned prompts, structured
   OpenAI Responses output, explicit external-processing consent, permission
   checks, labeled suggestions and a separate human Apply action;
-- owning-module draft persistence remains a follow-up package.
+- Comments-owned private draft persistence with canonical validation,
+  optimistic versions, conflict protection, restoration and explicit discard;
+- reusable React autosave and recovery surfaces for future owning modules;
+- News, Community Hub, Research Lab and Knowledge Forge add their own draft
+  stores when their canonical domain models arrive.
 
 ## Comments, reactions and bookmarks
 
