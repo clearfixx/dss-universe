@@ -37,6 +37,11 @@ It is responsible for:
 - relation between media and feature modules;
 - future media lifecycle policies.
 
+The `editorMedia` GraphQL boundary is intentionally narrower than Mission
+Control's Media Library: any authenticated member may browse only their own
+`READY` resources for insertion into DSS Editor. Storage keys and provider
+details never cross that boundary.
+
 ---
 
 ## Storage Boundary

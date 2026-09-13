@@ -183,6 +183,29 @@ export class MediaResolver {
     };
   }
 
+  @Query(() => MediaLibraryConnectionModel)
+  async editorMedia(
+    @AuthUser() user: AuthenticatedUser,
+    @Args('input', { nullable: true }) input?: MediaLibraryInput,
+  ): Promise<MediaLibraryConnectionModel> {
+    const result = await this.library.browseOwnReady(user, {
+      first: input?.first,
+      after: input?.after,
+      search: input?.search,
+      kind: input?.kind,
+      visibility: input?.visibility,
+    });
+    return {
+      items: result.items.map((media) =>
+        MediaLibraryGraphqlMapper.toItem(media),
+      ),
+      pageInfo: {
+        hasNextPage: result.hasNextPage,
+        endCursor: result.endCursor,
+      },
+    };
+  }
+
   @Query(() => MediaLibraryMetricsModel)
   mediaLibraryMetrics(
     @AuthUser() user: AuthenticatedUser,

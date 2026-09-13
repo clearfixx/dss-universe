@@ -71,6 +71,11 @@ describe('MediaLibraryService', () => {
     roles: [],
     permissions: [Permission.MediaLibraryRead],
   };
+  const member: AuthenticatedUser = {
+    ...manager,
+    id: 'member-1',
+    permissions: [],
+  };
   const first = media('media-2', new Date('2026-07-25T12:00:00.000Z'));
   const second = media('media-1', new Date('2026-07-25T11:00:00.000Z'));
 
@@ -107,6 +112,22 @@ describe('MediaLibraryService', () => {
       hasNextPage: true,
     });
     expect(result.endCursor).toEqual(expect.any(String));
+  });
+
+  it('scopes editor media to the actor and READY resources without staff permission', async () => {
+    await service.browseOwnReady(member, {
+      first: 12,
+      search: '  mission  ',
+      kind: MediaKind.IMAGE,
+    });
+
+    expect(repository.browseLibrary).toHaveBeenCalledWith({
+      first: 12,
+      ownerId: member.id,
+      status: MediaStatus.READY,
+      search: 'mission',
+      kind: MediaKind.IMAGE,
+    });
   });
 
   it('decodes a previously issued cursor into repository-neutral state', async () => {

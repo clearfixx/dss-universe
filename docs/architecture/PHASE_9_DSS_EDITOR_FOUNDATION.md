@@ -88,11 +88,23 @@ resolution. This keeps News drafts in News, Knowledge Forge drafts in
 Knowledge Forge, and prevents the editor framework from becoming a generic
 content database.
 
+## Media and mention integrations
+
+The custom DSS toolbar opens DSS-owned dialogs rather than third-party editor
+UI. `editorMedia` returns only the authenticated actor's `READY` Media Platform
+records and never exposes storage coordinates. Selection inserts a canonical
+`mediaReference` or `attachment` node containing the immutable Media ID.
+
+Mention autocomplete reuses the privacy-aware Members Directory search. It is
+debounced and bounded, starts after two characters, and inserts both the stable
+user ID and current username into a structured `mention` node. Comment
+persistence still resolves the username server-side and owns notification
+effects.
+
 ## Deferred work
 
 - owning-module draft persistence commands and restoration screens;
-- Media Library picker and upload dialogs;
-- mention suggestions;
+- direct upload from the Media picker;
 - Content Gate rules and API redaction;
 - module-specific publication forms;
 - AI Core editing commands;

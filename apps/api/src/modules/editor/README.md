@@ -23,6 +23,8 @@ versioned Tiptap JSON document contract for every DSS content module.
 - framework-neutral debounced autosave coordination with monotonic versions,
   retryable failures and explicit conflict state;
 - frontend document-change contract for host-owned draft commands.
+- DSS-owned Media Library picker limited to the actor's READY resources;
+- privacy-aware member suggestions and structured mention insertion.
 
 ## Boundary
 
@@ -37,7 +39,7 @@ Gate Platform.
 ## Deferred integrations
 
 - owning-module draft persistence commands and restoration screens;
-- Media picker and mention autocomplete;
+- direct upload from the Media picker;
 - Content Gate policy builder and viewer evaluation;
 - owning-module publication workflows;
 - AI-assisted document commands.

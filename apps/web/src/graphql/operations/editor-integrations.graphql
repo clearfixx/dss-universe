@@ -1,0 +1,29 @@
+query EditorMedia($input: MediaLibraryInput) {
+  editorMedia(input: $input) {
+    items {
+      id
+      kind
+      originalFilename
+      mimeType
+      width
+      height
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+query EditorMentionSuggestions($input: MembersDirectoryInput) {
+  members(input: $input) {
+    items {
+      id
+      username
+      displayName
+      avatarUrl
+      isOnline
+    }
+    total
+  }
+}

@@ -1,0 +1,147 @@
+.backdrop {
+  position: fixed;
+  z-index: 80;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(2, 6, 23, 0.78);
+  backdrop-filter: blur(8px);
+}
+
+.dialog {
+  width: min(680px, 100%);
+  max-height: min(720px, 88vh);
+  overflow: auto;
+  border: 1px solid rgba(139, 92, 246, 0.42);
+  border-radius: 18px;
+  background: #090e1d;
+  padding: 18px;
+  color: #e2e8f0;
+  box-shadow: 0 32px 120px rgba(0, 0, 0, 0.55);
+}
+
+.dialog header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.dialog h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.dialog header button {
+  border-radius: 8px;
+  padding: 3px 10px;
+  color: #94a3b8;
+  font-size: 24px;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 11px;
+  padding: 10px 12px;
+  background: rgba(15, 23, 42, 0.75);
+}
+
+.search input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #f8fafc;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.resource,
+.member {
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.62);
+  color: #cbd5e1;
+  text-align: left;
+}
+
+.resource {
+  display: grid;
+  gap: 7px;
+  min-height: 112px;
+  padding: 13px;
+}
+
+.resource:hover,
+.member:hover {
+  border-color: #8b5cf6;
+  background: rgba(124, 58, 237, 0.16);
+}
+
+.resource span,
+.member strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resource small,
+.member small {
+  color: #64748b;
+}
+
+.list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.member {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 13px;
+}
+
+.member span {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+}
+
+.member i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 10px #34d399;
+}
+
+.empty,
+.error {
+  margin: 18px 0 4px;
+  color: #94a3b8;
+  text-align: center;
+}
+
+.error {
+  color: #fca5a5;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}

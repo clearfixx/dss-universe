@@ -781,6 +781,7 @@ type Query {
   customTitleSettings: CustomTitleSettings!
   customTitles: [CustomTitle!]!
   customTitlesAdmin: [CustomTitle!]!
+  editorMedia(input: MediaLibraryInput): MediaLibraryConnection!
   followers(pagination: UsersPageInput, userId: ID!): UsersPageModel!
   following(pagination: UsersPageInput, userId: ID!): UsersPageModel!
   interactionTarget(id: ID!): InteractionTarget!

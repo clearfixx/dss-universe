@@ -2446,6 +2446,38 @@ describe('DSS API (e2e)', () => {
       .get(`${accessBody.data.mediaAccessUrl.url}x`)
       .expect(401);
 
+    const editorMedia = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({
+        query: `query EditorMedia($input: MediaLibraryInput) {
+          editorMedia(input: $input) {
+            items { id ownerId kind status originalFilename }
+            pageInfo { hasNextPage endCursor }
+          }
+        }`,
+        variables: {
+          input: { first: 10, kind: 'IMAGE', search: 'commander.png' },
+        },
+      })
+      .expect(200);
+    expect(editorMedia.body).toMatchObject({
+      data: {
+        editorMedia: {
+          items: [
+            {
+              id: mediaId,
+              ownerId: registered.data.register.user.id,
+              kind: 'IMAGE',
+              status: 'READY',
+              originalFilename: 'commander.png',
+            },
+          ],
+          pageInfo: { hasNextPage: false },
+        },
+      },
+    });
+
     await app.get(PrismaService).media.update({
       where: { id: mediaId },
       data: {

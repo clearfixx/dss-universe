@@ -57,9 +57,15 @@ import {
   getEditorProfileDefinition,
   resolveEditorProfile,
 } from "@dss/editor";
-import { Fragment, useMemo } from "react";
+import { Fragment, useMemo, useState } from "react";
 
 import { createEditorExtensions } from "./editor-extensions";
+import {
+  EditorMediaDialog,
+  EditorMentionDialog,
+  type EditorMediaSelection,
+  type EditorMentionSelection,
+} from "./editor-resource-dialog";
 import styles from "./dss-editor.module.css";
 
 type DialogToolId = Extract<
@@ -90,6 +96,12 @@ type DssEditorProps = {
 };
 
 const NO_EDITOR_PERMISSIONS: readonly EditorPermission[] = [];
+const INTERNAL_DIALOG_TOOLS = new Set<DialogToolId>([
+  "mention",
+  "image",
+  "video",
+  "attachment",
+]);
 
 const TOOL_PRESENTATION: Record<
   EditorToolId,
@@ -127,6 +139,7 @@ export function DssEditor({
   onDocumentChange,
   onRequestAction,
 }: DssEditorProps) {
+  const [activeDialog, setActiveDialog] = useState<DialogToolId | null>(null);
   const definition = getEditorProfileDefinition(profile);
   const resolved = useMemo(
     () => resolveEditorProfile(profile, permissions),
@@ -204,12 +217,53 @@ export function DssEditor({
     if (toolId === "undo") return !state.canUndo;
     if (toolId === "redo") return !state.canRedo;
     return (
-      EDITOR_TOOL_DEFINITIONS[toolId].action === "DIALOG" && !onRequestAction
+      EDITOR_TOOL_DEFINITIONS[toolId].action === "DIALOG" &&
+      !onRequestAction &&
+      !INTERNAL_DIALOG_TOOLS.has(toolId as DialogToolId)
     );
   };
   const requestDialog = (toolId: EditorToolId): void => {
     if (EDITOR_TOOL_DEFINITIONS[toolId].action !== "DIALOG") return;
-    onRequestAction?.({ profile, toolId: toolId as DialogToolId });
+    const dialogTool = toolId as DialogToolId;
+    if (onRequestAction) {
+      onRequestAction({ profile, toolId: dialogTool });
+      return;
+    }
+    if (INTERNAL_DIALOG_TOOLS.has(dialogTool)) setActiveDialog(dialogTool);
+  };
+  const insertMedia = (selection: EditorMediaSelection): void => {
+    if (!editor || !activeDialog) return;
+    const content =
+      activeDialog === "attachment"
+        ? {
+            type: "attachment",
+            attrs: { mediaId: selection.id, label: selection.label },
+          }
+        : {
+            type: "mediaReference",
+            attrs: {
+              mediaId: selection.id,
+              alt: selection.label,
+              caption: "",
+            },
+          };
+    editor.chain().focus().insertContent(content).run();
+    setActiveDialog(null);
+  };
+  const insertMention = (selection: EditorMentionSelection): void => {
+    if (!editor) return;
+    editor
+      .chain()
+      .focus()
+      .insertContent([
+        {
+          type: "mention",
+          attrs: { userId: selection.id, username: selection.username },
+        },
+        { type: "text", text: " " },
+      ])
+      .run();
+    setActiveDialog(null);
   };
   const runTool = (toolId: EditorToolId): void => {
     if (!editor) return;
@@ -305,6 +359,21 @@ export function DssEditor({
           {definition.maxCharacters.toLocaleString()}
         </span>
       </div>
+      {activeDialog === "mention" ? (
+        <EditorMentionDialog
+          onClose={() => setActiveDialog(null)}
+          onSelect={insertMention}
+        />
+      ) : null}
+      {activeDialog === "image" ||
+      activeDialog === "video" ||
+      activeDialog === "attachment" ? (
+        <EditorMediaDialog
+          mode={activeDialog}
+          onClose={() => setActiveDialog(null)}
+          onSelect={insertMedia}
+        />
+      ) : null}
     </section>
   );
 }

@@ -954,8 +954,11 @@ Delivered DSS Editor foundation:
 - storage-neutral, debounced autosave coordination with serialized writes,
   monotonic host versions, retryable failures and explicit conflict state;
 - frontend document-change contract for host-owned draft commands;
-- owning-module draft persistence, Media picker, mention autocomplete, and
-  Content Gate evaluation remain follow-up packages.
+- DSS-owned Media Library picker backed by an actor-scoped `READY` media query
+  and canonical Media Reference/attachment insertion;
+- debounced, privacy-aware member suggestions and structured mention insertion;
+- owning-module draft persistence, direct picker uploads, and Content Gate
+  evaluation remain follow-up packages.
 
 ## Comments, reactions and bookmarks
 

@@ -32,6 +32,7 @@ import {
   MEDIA_REPOSITORY,
   type MediaRepository,
 } from '../../domain/repositories/media.repository.interface';
+import { MediaStatus } from '../../domain/enums/media-status.enum';
 import type { MediaLibraryQuery } from '../../domain/types/media-library-query.type';
 import type { MediaEntity } from '../../domain/entities/media.entity';
 
@@ -64,6 +65,34 @@ export class MediaLibraryService {
     input: BrowseMediaLibraryInput = {},
   ): Promise<MediaLibraryConnection> {
     this.assertCanRead(actor);
+    return this.browseAuthorized(input);
+  }
+
+  async browseOwnReady(
+    actor: AuthenticatedUser,
+    input: Omit<BrowseMediaLibraryInput, 'ownerId' | 'status'> = {},
+  ): Promise<MediaLibraryConnection> {
+    return this.browseAuthorized({
+      ...input,
+      ownerId: actor.id,
+      status: MediaStatus.READY,
+    });
+  }
+
+  metrics(actor: AuthenticatedUser) {
+    this.assertCanRead(actor);
+    return this.media.getLibraryMetrics();
+  }
+
+  private assertCanRead(actor: AuthenticatedUser): void {
+    if (!actor.permissions.includes(Permission.MediaLibraryRead)) {
+      throw new ForbiddenException('Media Library permission is required.');
+    }
+  }
+
+  private async browseAuthorized(
+    input: BrowseMediaLibraryInput,
+  ): Promise<MediaLibraryConnection> {
     const first = Math.min(
       Math.max(Math.trunc(input.first ?? DEFAULT_PAGE_SIZE), 1),
       MAX_PAGE_SIZE,
@@ -80,17 +109,6 @@ export class MediaLibraryService {
       ...page,
       endCursor: last ? this.encodeCursor(last) : null,
     };
-  }
-
-  metrics(actor: AuthenticatedUser) {
-    this.assertCanRead(actor);
-    return this.media.getLibraryMetrics();
-  }
-
-  private assertCanRead(actor: AuthenticatedUser): void {
-    if (!actor.permissions.includes(Permission.MediaLibraryRead)) {
-      throw new ForbiddenException('Media Library permission is required.');
-    }
   }
 
   private encodeCursor(media: MediaEntity): string {
