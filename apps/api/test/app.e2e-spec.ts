@@ -197,6 +197,12 @@ describe('DSS API (e2e)', () => {
     expect(schema).toContain(
       'previewEditorDocument(input: PreviewEditorDocumentInput!): EditorDocumentPreview!',
     );
+    expect(schema).toContain(
+      'createContentGate(input: CreateContentGateInput!): ContentGateModel!',
+    );
+    expect(schema).toContain(
+      'evaluateContentGate(id: ID!): ContentGateEvaluationModel!',
+    );
     expect(schema).toContain('removeViewerAvatar: Viewer!');
     expect(schema).toContain(
       'mediaAccessUrl(mediaId: ID!, variantName: String!): MediaAccess!',

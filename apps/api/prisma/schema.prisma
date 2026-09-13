@@ -151,6 +151,20 @@ enum ModerationAnnotationKind {
   REMOVAL
 }
 
+enum ContentGateOperator {
+  ALL
+  ANY
+}
+
+enum ContentGateRequirementKind {
+  ACCOUNT_AGE_DAYS
+  COMMENTS
+  FORUM_POSTS
+  PUBLICATIONS
+  REPUTATION
+  GROUP
+}
+
 model User {
   id            String     @id @default(uuid())
   email         String     @unique
@@ -205,6 +219,7 @@ model User {
   contentReportsReviewed  ContentReport[]              @relation("ContentReportReviewer")
   moderationAnnotations   ModerationAnnotation[]       @relation("ModerationAnnotationActor")
   annotationsRevoked      ModerationAnnotation[]       @relation("ModerationAnnotationRevoker")
+  contentGates            ContentGate[]
 
   refreshTokenHash String?
   emailVerifiedAt  DateTime?
@@ -214,6 +229,34 @@ model User {
   updatedAt DateTime @updatedAt
 
   @@map("users")
+}
+
+model ContentGate {
+  id           String              @id @default(uuid())
+  ownerId      String
+  operator     ContentGateOperator
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  owner        User                     @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  requirements ContentGateRequirement[]
+
+  @@index([ownerId, createdAt])
+  @@map("content_gates")
+}
+
+model ContentGateRequirement {
+  id        String                     @id @default(uuid())
+  gateId    String
+  kind      ContentGateRequirementKind
+  threshold Int?
+  groupKey  String?
+
+  gate ContentGate @relation(fields: [gateId], references: [id], onDelete: Cascade)
+
+  @@unique([gateId, kind])
+  @@index([gateId])
+  @@map("content_gate_requirements")
 }
 
 model UserNotificationPreferences {

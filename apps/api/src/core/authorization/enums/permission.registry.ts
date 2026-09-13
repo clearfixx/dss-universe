@@ -142,6 +142,11 @@ export const PERMISSIONS = {
     label: 'Manage moderation annotations',
     description: 'Allows publishing and revoking moderation annotations.',
   },
+  ContentGatesConfigure: {
+    key: 'content-gates.configure',
+    label: 'Configure Content Gates',
+    description: 'Allows creating reusable hidden-content access policies.',
+  },
 
   RolesRead: {
     key: 'roles.read',

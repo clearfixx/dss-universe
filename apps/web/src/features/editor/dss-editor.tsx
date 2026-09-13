@@ -60,6 +60,7 @@ import {
 import { Fragment, useMemo, useState } from "react";
 
 import { createEditorExtensions } from "./editor-extensions";
+import { EditorContentGateDialog } from "./editor-content-gate-dialog";
 import {
   EditorMediaDialog,
   EditorMentionDialog,
@@ -101,6 +102,7 @@ const INTERNAL_DIALOG_TOOLS = new Set<DialogToolId>([
   "image",
   "video",
   "attachment",
+  "contentGate",
 ]);
 
 const TOOL_PRESENTATION: Record<
@@ -265,6 +267,19 @@ export function DssEditor({
       .run();
     setActiveDialog(null);
   };
+  const insertContentGate = (gateId: string): void => {
+    if (!editor) return;
+    editor
+      .chain()
+      .focus()
+      .insertContent({
+        type: "contentGate",
+        attrs: { gateId },
+        content: [{ type: "paragraph", content: [] }],
+      })
+      .run();
+    setActiveDialog(null);
+  };
   const runTool = (toolId: EditorToolId): void => {
     if (!editor) return;
     const chain = editor.chain().focus();
@@ -363,6 +378,12 @@ export function DssEditor({
         <EditorMentionDialog
           onClose={() => setActiveDialog(null)}
           onSelect={insertMention}
+        />
+      ) : null}
+      {activeDialog === "contentGate" ? (
+        <EditorContentGateDialog
+          onClose={() => setActiveDialog(null)}
+          onSelect={insertContentGate}
         />
       ) : null}
       {activeDialog === "image" ||

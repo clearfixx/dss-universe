@@ -22,7 +22,15 @@
 "use client";
 
 import { useLazyQuery } from "@apollo/client/react";
-import { FileText, ImageIcon, Search, UserRound, Video } from "lucide-react";
+import {
+  FileText,
+  ImageIcon,
+  RefreshCw,
+  Search,
+  Upload,
+  UserRound,
+  Video,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 import {
@@ -32,6 +40,7 @@ import {
 } from "@/gql/graphql";
 
 import styles from "./editor-resource-dialog.module.css";
+import { uploadEditorMedia } from "./editor-actions";
 
 export type EditorMediaSelection = {
   id: string;
@@ -57,11 +66,48 @@ export function EditorMediaDialog({
   onSelect,
 }: MediaDialogProps) {
   const [search, setSearch] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [uploadNotice, setUploadNotice] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [load, { data, loading, error }] = useLazyQuery(EditorMediaDocument, {
     fetchPolicy: "network-only",
   });
   const kind =
     mode === "image" ? "IMAGE" : mode === "video" ? "VIDEO" : undefined;
+
+  const refresh = (): void => {
+    void load({
+      variables: {
+        input: {
+          first: 24,
+          ...(kind ? { kind } : {}),
+          ...(search.trim() ? { search: search.trim() } : {}),
+        },
+      },
+    });
+  };
+
+  const upload = async (file: File): Promise<void> => {
+    if (mode === "video") return;
+    setUploading(true);
+    setUploadError(null);
+    setUploadNotice(null);
+    try {
+      const formData = new FormData();
+      formData.set("file", file);
+      const result = await uploadEditorMedia(mode, formData);
+      setSearch(result.filename);
+      setUploadNotice(
+        `${result.filename} entered Media processing. Refresh when it is READY.`,
+      );
+    } catch (reason) {
+      setUploadError(
+        reason instanceof Error ? reason.message : "Media upload failed.",
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
 
   useEffect(() => {
     const timer = window.setTimeout(
@@ -87,6 +133,37 @@ export function EditorMediaDialog({
       onClose={onClose}
     >
       <SearchField value={search} onChange={setSearch} label="Search media" />
+      <div className={styles.actions}>
+        {mode !== "video" ? (
+          <label className={styles.upload}>
+            <Upload aria-hidden="true" size={16} />
+            <span>{uploading ? "Uploading…" : "Upload new"}</span>
+            <input
+              type="file"
+              disabled={uploading}
+              accept={
+                mode === "image"
+                  ? "image/jpeg,image/png,image/webp"
+                  : ".pdf,.zip,.txt,.md"
+              }
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) void upload(file);
+                event.target.value = "";
+              }}
+            />
+          </label>
+        ) : (
+          <span className={styles.hint}>
+            Video upload policy is not enabled yet.
+          </span>
+        )}
+        <button type="button" className={styles.refresh} onClick={refresh}>
+          <RefreshCw aria-hidden="true" size={15} /> Refresh
+        </button>
+      </div>
+      {uploadNotice ? <p className={styles.notice}>{uploadNotice}</p> : null}
+      {uploadError ? <p className={styles.error}>{uploadError}</p> : null}
       <ResourceState loading={loading} error={error?.message} />
       {!loading && !error && data?.editorMedia.items.length === 0 ? (
         <p className={styles.empty}>No READY media matches this search.</p>

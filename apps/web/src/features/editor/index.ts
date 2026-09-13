@@ -14,6 +14,7 @@
 
 export * from "./dss-editor";
 export * from "./editor-extensions";
+export * from "./editor-content-gate-dialog";
 export * from "./editor-resource-dialog";
 
 /** One export hatch, three profiles, zero arbitrary HTML payloads. */

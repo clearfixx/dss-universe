@@ -58,6 +58,52 @@
   color: #f8fafc;
 }
 
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.upload,
+.refresh {
+  display: inline-flex;
+  cursor: pointer;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(139, 92, 246, 0.42);
+  border-radius: 9px;
+  padding: 8px 11px;
+  background: rgba(124, 58, 237, 0.15);
+  color: #ddd6fe;
+  font-size: 13px;
+}
+
+.upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.refresh {
+  background: transparent;
+  color: #94a3b8;
+}
+
+.hint,
+.notice {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.notice {
+  margin: 10px 0 0;
+  color: #67e8f9;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));

@@ -957,8 +957,12 @@ Delivered DSS Editor foundation:
 - DSS-owned Media Library picker backed by an actor-scoped `READY` media query
   and canonical Media Reference/attachment insertion;
 - debounced, privacy-aware member suggestions and structured mention insertion;
-- owning-module draft persistence, direct picker uploads, and Content Gate
-  evaluation remain follow-up packages.
+- direct picker uploads through the existing GraphQL + multipart Media
+  handshake, with server-only access-token handling;
+- reusable Content Access policies with `ALL`/`ANY`, global requirement facts,
+  author/Premium bypass verdicts and a custom DSS Editor policy builder;
+- owning-module draft persistence and publication-boundary Content Gate
+  redaction remain follow-up packages.
 
 ## Comments, reactions and bookmarks
 

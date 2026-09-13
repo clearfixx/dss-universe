@@ -39,8 +39,7 @@ Gate Platform.
 ## Deferred integrations
 
 - owning-module draft persistence commands and restoration screens;
-- direct upload from the Media picker;
-- Content Gate policy builder and viewer evaluation;
+- owning-module Content Gate redaction at publication response boundaries;
 - owning-module publication workflows;
 - AI-assisted document commands.
 

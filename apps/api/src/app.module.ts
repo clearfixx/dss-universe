@@ -75,6 +75,7 @@ import { AppController } from './app.controller';
 import { AchievementsModule } from './modules/achievements';
 import { AuthModule } from './modules/auth/auth.module';
 import { CommunityPointsModule } from './modules/community-points';
+import { ContentAccessModule } from './modules/content-access';
 import { CustomTitlesModule } from './modules/custom-titles';
 import { EditorModule } from './modules/editor';
 import { IamModule } from './modules/iam';
@@ -105,6 +106,7 @@ import { UsersModule } from './modules/users/users.module';
     NotificationsModule,
     ReputationModule,
     CommunityPointsModule,
+    ContentAccessModule,
     LevelsModule,
     CustomTitlesModule,
     EditorModule,

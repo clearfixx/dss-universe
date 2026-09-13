@@ -101,11 +101,27 @@ user ID and current username into a structured `mention` node. Comment
 persistence still resolves the username server-side and owns notification
 effects.
 
+Direct picker upload uses the existing Media handshake: an authenticated server
+action creates a policy-bound session through GraphQL and streams multipart
+bytes to the Media intake endpoint without exposing the access token. New files
+remain unavailable for insertion until asynchronous quarantine and processing
+promote them to `READY`.
+
+## Content Gate integration
+
+The Content Access bounded context persists reusable `ALL`/`ANY` policies and
+evaluates global account-age, comment, forum, publication, reputation and group
+requirements. Gate authors and Premium receive explicit bypass verdicts. The
+editor builder stores only the resulting gate ID in canonical JSON; protected
+payloads remain owned by their publication module.
+
+Forum/publication counters are deliberately zero until those canonical modules
+provide their ledgers. Moderation read-only/ban overrides connect in Phase 14.
+
 ## Deferred work
 
 - owning-module draft persistence commands and restoration screens;
-- direct upload from the Media picker;
-- Content Gate rules and API redaction;
+- owning-module Content Gate redaction at publication response boundaries;
 - module-specific publication forms;
 - AI Core editing commands;
 - Wiki tables, tasks, footnotes, TOC and revision tools.

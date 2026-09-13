@@ -27,3 +27,24 @@ query EditorMentionSuggestions($input: MembersDirectoryInput) {
     total
   }
 }
+
+mutation InitiateEditorMediaUpload($input: InitiateMediaUploadInput!) {
+  initiateMediaUpload(input: $input) {
+    id
+    status
+    originalFilename
+  }
+}
+
+mutation CreateEditorContentGate($input: CreateContentGateInput!) {
+  createContentGate(input: $input) {
+    id
+    operator
+    requirements {
+      id
+      kind
+      threshold
+      groupKey
+    }
+  }
+}

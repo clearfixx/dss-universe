@@ -200,6 +200,50 @@ input CommunityPointsPageInput {
   page: Int! = 1
 }
 
+type ContentGateEvaluationModel {
+  allowed: Boolean!
+  bypassed: Boolean!
+  gate: ContentGateModel!
+  notice: String!
+  unmet: [ContentGateRequirementKind!]!
+}
+
+type ContentGateModel {
+  createdAt: DateTime!
+  id: ID!
+  operator: ContentGateOperator!
+  ownerId: ID!
+  requirements: [ContentGateRequirementModel!]!
+  updatedAt: DateTime!
+}
+
+enum ContentGateOperator {
+  ALL
+  ANY
+}
+
+input ContentGateRequirementInput {
+  groupKey: String
+  kind: ContentGateRequirementKind!
+  threshold: Int
+}
+
+enum ContentGateRequirementKind {
+  ACCOUNT_AGE_DAYS
+  COMMENTS
+  FORUM_POSTS
+  GROUP
+  PUBLICATIONS
+  REPUTATION
+}
+
+type ContentGateRequirementModel {
+  groupKey: String
+  id: ID!
+  kind: ContentGateRequirementKind!
+  threshold: Int
+}
+
 type ContentReport {
   category: ContentReportCategory!
   commentId: ID
@@ -242,6 +286,11 @@ input CreateCommentInput {
   documentJson: String
   interactionTargetId: ID!
   parentId: ID
+}
+
+input CreateContentGateInput {
+  operator: ContentGateOperator!
+  requirements: [ContentGateRequirementInput!]!
 }
 
 input CreateCustomTitleInput {
@@ -633,6 +682,7 @@ type Mutation {
   changeViewerPassword(input: ChangePasswordInput!): LogoutResultModel!
   clearReaction(interactionTargetId: ID!): ReactionSummary!
   createComment(input: CreateCommentInput!): Comment!
+  createContentGate(input: CreateContentGateInput!): ContentGateModel!
   createCustomTitle(input: CreateCustomTitleInput!): CustomTitle!
   createModerationAnnotation(input: CreateModerationAnnotationInput!): ModerationAnnotation!
   createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
@@ -782,6 +832,7 @@ type Query {
   customTitles: [CustomTitle!]!
   customTitlesAdmin: [CustomTitle!]!
   editorMedia(input: MediaLibraryInput): MediaLibraryConnection!
+  evaluateContentGate(id: ID!): ContentGateEvaluationModel!
   followers(pagination: UsersPageInput, userId: ID!): UsersPageModel!
   following(pagination: UsersPageInput, userId: ID!): UsersPageModel!
   interactionTarget(id: ID!): InteractionTarget!
