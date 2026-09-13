@@ -961,8 +961,9 @@ Delivered DSS Editor foundation:
   handshake, with server-only access-token handling;
 - reusable Content Access policies with `ALL`/`ANY`, global requirement facts,
   author/Premium bypass verdicts and a custom DSS Editor policy builder;
-- owning-module draft persistence and publication-boundary Content Gate
-  redaction remain follow-up packages.
+- viewer-safe GraphQL delivery projection with recursive publication-boundary
+  Content Gate redaction and no denied payload delivery;
+- owning-module draft persistence remains a follow-up package.
 
 ## Comments, reactions and bookmarks
 

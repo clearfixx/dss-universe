@@ -17,6 +17,8 @@ versioned Tiptap JSON document contract for every DSS content module.
 - canonical JSON plus derived plain-text and search projections;
 - escaped HTML projection with Shiki `dark-plus` code highlighting;
 - authenticated GraphQL preview endpoint;
+- authenticated viewer-safe delivery projection with recursive server-side
+  Content Gate redaction;
 - SSR-safe Tiptap frontend shell.
 - custom permission-aware DSS toolbar with no Tiptap UI dependency;
 - engineering guard against Tiptap Pro and Cloud packages.
@@ -39,7 +41,6 @@ Gate Platform.
 ## Deferred integrations
 
 - owning-module draft persistence commands and restoration screens;
-- owning-module Content Gate redaction at publication response boundaries;
 - owning-module publication workflows;
 - AI-assisted document commands.
 

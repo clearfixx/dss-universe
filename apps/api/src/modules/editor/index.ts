@@ -12,7 +12,9 @@
  * ===============================================================
  */
 
+export * from './application/services/editor-content-delivery.service';
 export * from './application/services/editor.service';
+export * from './application/types/editor-delivery.type';
 export * from './editor.module';
 
 /** Consumers request projections; they do not invent document schemas. */

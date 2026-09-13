@@ -75,6 +75,18 @@ describe('ContentGatesService', () => {
     expect(result.notice).toContain('Premium');
   });
 
+  it('fails closed for guests without querying user facts', async () => {
+    repository.findById.mockResolvedValue(gate);
+
+    await expect(service.evaluate(gate.id, null)).resolves.toMatchObject({
+      allowed: false,
+      bypassed: false,
+      unmet: ['ACCOUNT_AGE_DAYS', 'REPUTATION'],
+      notice: 'Sign in to check hidden content requirements.',
+    });
+    expect(repository.viewerFacts.mock.calls).toHaveLength(0);
+  });
+
   it('rejects malformed group requirements', () => {
     expect(() =>
       service.create({

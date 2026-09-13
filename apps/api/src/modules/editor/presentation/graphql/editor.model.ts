@@ -12,7 +12,8 @@
  * ===============================================================
  */
 
-import { Field, ObjectType } from '@nestjs/graphql';
+import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { ContentGateRequirementKind } from '@prisma/client';
 
 @ObjectType('EditorDocumentPreview')
 export class EditorDocumentPreviewModel {
@@ -27,6 +28,33 @@ export class EditorDocumentPreviewModel {
 
   @Field()
   searchText!: string;
+}
+
+@ObjectType('EditorContentGateDecision')
+export class EditorContentGateDecisionModel {
+  @Field(() => ID)
+  gateId!: string;
+
+  @Field()
+  allowed!: boolean;
+
+  @Field()
+  bypassed!: boolean;
+
+  @Field(() => [ContentGateRequirementKind])
+  unmet!: ContentGateRequirementKind[];
+
+  @Field()
+  notice!: string;
+}
+
+@ObjectType('EditorDocumentDelivery')
+export class EditorDocumentDeliveryModel {
+  @Field()
+  documentJson!: string;
+
+  @Field(() => [EditorContentGateDecisionModel])
+  gates!: EditorContentGateDecisionModel[];
 }
 
 /** The preview is disposable; the canonical JSON is the source of truth. */

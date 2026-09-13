@@ -53,11 +53,20 @@ export class ContentGatesService {
 
   async evaluate(
     gateId: string,
-    viewerId: string,
+    viewerId: string | null,
     now = new Date(),
   ): Promise<ContentGateEvaluation> {
     const gate = await this.gates.findById(gateId);
     if (!gate) throw new NotFoundException('Content Gate was not found.');
+    if (!viewerId) {
+      return {
+        gate,
+        allowed: false,
+        bypassed: false,
+        unmet: gate.requirements.map(({ kind }) => kind),
+        notice: 'Sign in to check hidden content requirements.',
+      };
+    }
     const facts = await this.gates.viewerFacts(viewerId, now);
     if (!facts)
       throw new NotFoundException('Content Gate viewer was not found.');

@@ -15,16 +15,23 @@
 import { UseGuards } from '@nestjs/common';
 import { Args, Query, Resolver } from '@nestjs/graphql';
 
-import { JwtAuthGuard } from '@api/core/auth';
+import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
 
+import { EditorContentDeliveryService } from '../../application/services/editor-content-delivery.service';
 import { EditorService } from '../../application/services/editor.service';
 import { PreviewEditorDocumentInput } from './editor.input';
-import { EditorDocumentPreviewModel } from './editor.model';
+import {
+  EditorDocumentDeliveryModel,
+  EditorDocumentPreviewModel,
+} from './editor.model';
 
 @Resolver()
 @UseGuards(JwtAuthGuard)
 export class EditorResolver {
-  constructor(private readonly editor: EditorService) {}
+  constructor(
+    private readonly editor: EditorService,
+    private readonly delivery: EditorContentDeliveryService,
+  ) {}
 
   @Query(() => EditorDocumentPreviewModel)
   async previewEditorDocument(
@@ -38,6 +45,21 @@ export class EditorResolver {
       searchText: preview.searchText,
     };
   }
+
+  @Query(() => EditorDocumentDeliveryModel)
+  async deliverEditorDocument(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('input') input: PreviewEditorDocumentInput,
+  ): Promise<EditorDocumentDeliveryModel> {
+    const projection = await this.delivery.project(
+      input.documentJson,
+      actor.id,
+    );
+    return {
+      documentJson: projection.documentJson,
+      gates: projection.gates,
+    };
+  }
 }
 
-/** GraphQL asks for a preview; it never grants storage authority. */
+/** GraphQL previews drafts and delivers only viewer-safe projections. */

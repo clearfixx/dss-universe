@@ -347,6 +347,19 @@ input EditCommentInput {
   documentJson: String
 }
 
+type EditorContentGateDecision {
+  allowed: Boolean!
+  bypassed: Boolean!
+  gateId: ID!
+  notice: String!
+  unmet: [ContentGateRequirementKind!]!
+}
+
+type EditorDocumentDelivery {
+  documentJson: String!
+  gates: [EditorContentGateDecision!]!
+}
+
 type EditorDocumentPreview {
   canonicalJson: String!
   html: String!
@@ -831,6 +844,7 @@ type Query {
   customTitleSettings: CustomTitleSettings!
   customTitles: [CustomTitle!]!
   customTitlesAdmin: [CustomTitle!]!
+  deliverEditorDocument(input: PreviewEditorDocumentInput!): EditorDocumentDelivery!
   editorMedia(input: MediaLibraryInput): MediaLibraryConnection!
   evaluateContentGate(id: ID!): ContentGateEvaluationModel!
   followers(pagination: UsersPageInput, userId: ID!): UsersPageModel!

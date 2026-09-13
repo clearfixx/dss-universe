@@ -115,13 +115,20 @@ requirements. Gate authors and Premium receive explicit bypass verdicts. The
 editor builder stores only the resulting gate ID in canonical JSON; protected
 payloads remain owned by their publication module.
 
+`EditorContentDeliveryService` is the reusable publication response boundary.
+It validates canonical JSON, evaluates every distinct gate for the viewer and
+recursively strips denied child payloads before serialization. Its GraphQL
+projection returns only the redacted document plus explicit lock or bypass
+decisions, so clients can render honest placeholders without receiving the
+secret content. Guest delivery fails closed and returns a sign-in notice; it
+does not attempt to manufacture user facts.
+
 Forum/publication counters are deliberately zero until those canonical modules
 provide their ledgers. Moderation read-only/ban overrides connect in Phase 14.
 
 ## Deferred work
 
 - owning-module draft persistence commands and restoration screens;
-- owning-module Content Gate redaction at publication response boundaries;
 - module-specific publication forms;
 - AI Core editing commands;
 - Wiki tables, tasks, footnotes, TOC and revision tools.
