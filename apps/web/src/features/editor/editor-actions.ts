@@ -24,9 +24,11 @@ import { cookies } from "next/headers";
 
 import {
   CreateEditorContentGateDocument,
+  RunEditorAiCommandDocument,
   InitiateEditorMediaUploadDocument,
   type ContentGateOperator,
   type ContentGateRequirementKind,
+  type EditorAiCommand,
 } from "@/gql/graphql";
 import { getClient } from "@/lib/apollo/rsc-client";
 import { siteConfig } from "@/config/site.config";
@@ -45,6 +47,46 @@ export type EditorContentGateInput = {
     groupKey?: string;
   }>;
 };
+
+export type EditorAiCommandInput = {
+  command: EditorAiCommand;
+  profile: string;
+  sourceText?: string;
+  instruction?: string;
+  language?: string;
+  externalProcessingConfirmed: true;
+};
+
+export type EditorAiCommandSuggestion = {
+  generationId: string;
+  command: EditorAiCommand;
+  generatedText: string;
+  generatedContentLabel: string;
+  model: string;
+  requiresConfirmation: boolean;
+};
+
+export async function runEditorAiCommand(
+  input: EditorAiCommandInput,
+): Promise<EditorAiCommandSuggestion> {
+  const token = (await cookies()).get("dss_access_token")?.value;
+  if (!token) throw new Error("Authentication is required.");
+  const result = await getClient().mutate({
+    mutation: RunEditorAiCommandDocument,
+    variables: { input },
+    context: { headers: { authorization: `Bearer ${token}` } },
+  });
+  const suggestion = result.data?.runEditorAiCommand;
+  if (!suggestion) throw new Error("DSS AI Core did not return a suggestion.");
+  return {
+    generationId: suggestion.generationId,
+    command: suggestion.command,
+    generatedText: suggestion.generatedText,
+    generatedContentLabel: suggestion.generatedContentLabel,
+    model: suggestion.model,
+    requiresConfirmation: suggestion.requiresConfirmation,
+  };
+}
 
 export async function createEditorContentGate(
   input: EditorContentGateInput,

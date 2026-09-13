@@ -27,6 +27,8 @@ versioned Tiptap JSON document contract for every DSS content module.
 - frontend document-change contract for host-owned draft commands.
 - DSS-owned Media Library picker limited to the actor's READY resources;
 - privacy-aware member suggestions and structured mention insertion.
+- provider-neutral AI Core commands with permission enforcement, explicit
+  external-processing consent, labeled suggestions and human-controlled Apply.
 
 ## Boundary
 
@@ -42,6 +44,5 @@ Gate Platform.
 
 - owning-module draft persistence commands and restoration screens;
 - owning-module publication workflows;
-- AI-assisted document commands.
 
 🚀 Build. Share. Grow.

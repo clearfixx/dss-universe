@@ -36,6 +36,13 @@ export const validationSchema = Joi.object({
     .default('info'),
 
   OPENAI_API_KEY: Joi.string().allow('').optional(),
+  OPENAI_MODEL: Joi.string().allow('').optional(),
+  OPENAI_BASE_URL: Joi.string().uri().default('https://api.openai.com/v1'),
+  OPENAI_TIMEOUT_MS: Joi.number()
+    .integer()
+    .min(1_000)
+    .max(120_000)
+    .default(30_000),
 
   MAIL_HOST: Joi.string().allow('').optional(),
   MAIL_PORT: Joi.number().optional(),

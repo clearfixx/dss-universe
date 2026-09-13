@@ -126,9 +126,24 @@ does not attempt to manufacture user facts.
 Forum/publication counters are deliberately zero until those canonical modules
 provide their ledgers. Moderation read-only/ban overrides connect in Phase 14.
 
+## AI Core integration
+
+The editor exposes provider-neutral AI commands for generating, rewriting,
+expanding, shortening, explaining and generating code. The UI sends a request
+only after the actor explicitly confirms external processing, presents the
+result as an AI-generated suggestion and requires a separate Apply action.
+AI output is never published automatically.
+
+`EditorAiService` owns validation, prompt-version selection and bounded output.
+`AiTextProvider` keeps the application independent of a specific vendor, while
+the first infrastructure adapter uses the OpenAI Responses API with structured
+JSON output, request timeouts and disabled provider-side storage. Access is
+protected by `ai.editor.use`; the permission is intentionally not assigned to
+ordinary seeded roles until the persistent quota and cost ledger arrives in
+Phase 21.
+
 ## Deferred work
 
 - owning-module draft persistence commands and restoration screens;
 - module-specific publication forms;
-- AI Core editing commands;
 - Wiki tables, tasks, footnotes, TOC and revision tools.

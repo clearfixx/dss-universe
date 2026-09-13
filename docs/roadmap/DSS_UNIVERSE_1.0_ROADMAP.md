@@ -963,6 +963,9 @@ Delivered DSS Editor foundation:
   author/Premium bypass verdicts and a custom DSS Editor policy builder;
 - viewer-safe GraphQL delivery projection with recursive publication-boundary
   Content Gate redaction and no denied payload delivery;
+- provider-neutral AI Core editor commands with versioned prompts, structured
+  OpenAI Responses output, explicit external-processing consent, permission
+  checks, labeled suggestions and a separate human Apply action;
 - owning-module draft persistence remains a follow-up package.
 
 ## Comments, reactions and bookmarks
@@ -1621,6 +1624,13 @@ AI Core is a cross-cutting optional capability, not a required dependency of nor
 - generated-content labeling;
 - human confirmation before publication;
 - audit.
+
+Phase 9 already delivers the reusable editor-command foundation: a
+provider-neutral text-generation contract, versioned structured prompts, the
+initial OpenAI Responses adapter, permission enforcement, explicit external
+processing consent, generated-suggestion labeling and human-controlled Apply.
+Phase 21 still owns persistent quotas, usage/cost ledgers, provider routing,
+cross-feature audit, redaction policy and the remaining product integrations.
 
 ## Out of scope
 

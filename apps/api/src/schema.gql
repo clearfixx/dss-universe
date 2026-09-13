@@ -347,6 +347,28 @@ input EditCommentInput {
   documentJson: String
 }
 
+enum EditorAiCommand {
+  Expand
+  Explain
+  Generate
+  GenerateCode
+  Rewrite
+  Shorten
+}
+
+type EditorAiCommandResult {
+  command: EditorAiCommand!
+  generatedContentLabel: String!
+  generatedText: String!
+  generationId: ID!
+  inputTokens: Int
+  model: String!
+  outputTokens: Int
+  promptVersion: String!
+  provider: String!
+  requiresConfirmation: Boolean!
+}
+
 type EditorContentGateDecision {
   allowed: Boolean!
   bypassed: Boolean!
@@ -728,6 +750,7 @@ type Mutation {
   revokeOtherViewerSessions: RevokeSessionsResultModel!
   revokeViewerSession(sessionId: ID!): LogoutResultModel!
   rollbackAchievementSource(input: RollbackAchievementSourceInput!): [AchievementAward!]!
+  runEditorAiCommand(input: RunEditorAiCommandInput!): EditorAiCommandResult!
   saveAchievement(input: SaveAchievementInput!): Achievement!
   saveAchievementRule(input: SaveAchievementRuleInput!): AchievementRule!
   saveBookmark(interactionTargetId: ID!): BookmarkMutationPayload!
@@ -1012,6 +1035,15 @@ input RollbackAchievementSourceInput {
   reason: String!
   sourceId: String!
   sourceType: String!
+}
+
+input RunEditorAiCommandInput {
+  command: EditorAiCommand!
+  externalProcessingConfirmed: Boolean!
+  instruction: String
+  language: String
+  profile: String!
+  sourceText: String
 }
 
 input SaveAchievementInput {

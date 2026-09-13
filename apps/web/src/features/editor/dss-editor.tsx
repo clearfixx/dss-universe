@@ -53,6 +53,7 @@ import type {
 import {
   createEmptyEditorDocument,
   DSS_EDITOR_SCHEMA_VERSION,
+  EDITOR_CODE_LANGUAGES,
   EDITOR_TOOL_DEFINITIONS,
   getEditorProfileDefinition,
   resolveEditorProfile,
@@ -60,6 +61,7 @@ import {
 import { Fragment, useMemo, useState } from "react";
 
 import { createEditorExtensions } from "./editor-extensions";
+import { EditorAiDialog, type EditorAiSelection } from "./editor-ai-dialog";
 import { EditorContentGateDialog } from "./editor-content-gate-dialog";
 import {
   EditorMediaDialog,
@@ -103,6 +105,7 @@ const INTERNAL_DIALOG_TOOLS = new Set<DialogToolId>([
   "video",
   "attachment",
   "contentGate",
+  "aiAssist",
 ]);
 
 const TOOL_PRESENTATION: Record<
@@ -142,6 +145,7 @@ export function DssEditor({
   onRequestAction,
 }: DssEditorProps) {
   const [activeDialog, setActiveDialog] = useState<DialogToolId | null>(null);
+  const [activeAiSource, setActiveAiSource] = useState("");
   const definition = getEditorProfileDefinition(profile);
   const resolved = useMemo(
     () => resolveEditorProfile(profile, permissions),
@@ -231,7 +235,13 @@ export function DssEditor({
       onRequestAction({ profile, toolId: dialogTool });
       return;
     }
-    if (INTERNAL_DIALOG_TOOLS.has(dialogTool)) setActiveDialog(dialogTool);
+    if (INTERNAL_DIALOG_TOOLS.has(dialogTool)) {
+      if (dialogTool === "aiAssist" && editor) {
+        const { from, to } = editor.state.selection;
+        setActiveAiSource(editor.state.doc.textBetween(from, to, "\n"));
+      }
+      setActiveDialog(dialogTool);
+    }
   };
   const insertMedia = (selection: EditorMediaSelection): void => {
     if (!editor || !activeDialog) return;
@@ -278,6 +288,33 @@ export function DssEditor({
         content: [{ type: "paragraph", content: [] }],
       })
       .run();
+    setActiveDialog(null);
+  };
+  const applyAiSuggestion = (selection: EditorAiSelection): void => {
+    if (!editor) return;
+    if (selection.command === "GenerateCode") {
+      const language = EDITOR_CODE_LANGUAGES.includes(
+        selection.language as (typeof EDITOR_CODE_LANGUAGES)[number],
+      )
+        ? selection.language
+        : "plaintext";
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: "codeBlock",
+          attrs: { language },
+          content: [{ type: "text", text: selection.generatedText }],
+        })
+        .run();
+    } else {
+      editor
+        .chain()
+        .focus()
+        .insertContent({ type: "text", text: selection.generatedText })
+        .run();
+    }
+    setActiveAiSource("");
     setActiveDialog(null);
   };
   const runTool = (toolId: EditorToolId): void => {
@@ -384,6 +421,17 @@ export function DssEditor({
         <EditorContentGateDialog
           onClose={() => setActiveDialog(null)}
           onSelect={insertContentGate}
+        />
+      ) : null}
+      {activeDialog === "aiAssist" ? (
+        <EditorAiDialog
+          profile={profile}
+          sourceText={activeAiSource}
+          onClose={() => {
+            setActiveAiSource("");
+            setActiveDialog(null);
+          }}
+          onApply={applyAiSuggestion}
         />
       ) : null}
       {activeDialog === "image" ||

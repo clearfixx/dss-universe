@@ -48,3 +48,18 @@ mutation CreateEditorContentGate($input: CreateContentGateInput!) {
     }
   }
 }
+
+mutation RunEditorAiCommand($input: RunEditorAiCommandInput!) {
+  runEditorAiCommand(input: $input) {
+    generationId
+    provider
+    model
+    promptVersion
+    command
+    generatedText
+    inputTokens
+    outputTokens
+    generatedContentLabel
+    requiresConfirmation
+  }
+}

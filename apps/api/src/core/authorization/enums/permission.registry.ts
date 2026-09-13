@@ -147,6 +147,11 @@ export const PERMISSIONS = {
     label: 'Configure Content Gates',
     description: 'Allows creating reusable hidden-content access policies.',
   },
+  AiEditorUse: {
+    key: 'ai.editor.use',
+    label: 'Use AI Editor assistance',
+    description: 'Allows requesting human-confirmed AI Editor suggestions.',
+  },
 
   RolesRead: {
     key: 'roles.read',

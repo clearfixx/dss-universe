@@ -73,6 +73,7 @@ import { HealthModule } from '@api/health';
 
 import { AppController } from './app.controller';
 import { AchievementsModule } from './modules/achievements';
+import { AiCoreModule } from './modules/ai-core';
 import { AuthModule } from './modules/auth/auth.module';
 import { CommunityPointsModule } from './modules/community-points';
 import { ContentAccessModule } from './modules/content-access';
@@ -110,6 +111,7 @@ import { UsersModule } from './modules/users/users.module';
     LevelsModule,
     CustomTitlesModule,
     EditorModule,
+    AiCoreModule,
     AchievementsModule,
     LeaderboardsModule,
   ],

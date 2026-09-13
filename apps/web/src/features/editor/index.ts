@@ -13,6 +13,7 @@
  */
 
 export * from "./dss-editor";
+export * from "./editor-ai-dialog";
 export * from "./editor-extensions";
 export * from "./editor-content-gate-dialog";
 export * from "./editor-resource-dialog";
