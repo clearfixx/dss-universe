@@ -1,0 +1,573 @@
+.universe {
+  position: relative;
+  isolation: isolate;
+  color: #ecf3ff;
+  background: radial-gradient(ellipse at 60% 35%, #06132b 0, #02050d 57%);
+  font-family: inherit;
+}
+.navbar {
+  max-width: 1440px;
+  margin: auto;
+  height: 86px;
+  padding: 0 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #83b6ff13;
+}
+.brand {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+}
+.brand svg {
+  color: #83b3ff;
+}
+.brand small {
+  display: block;
+  color: #76869f;
+  font-size: 8px;
+  letter-spacing: 0.19em;
+  margin-top: 3px;
+}
+.navbar nav {
+  display: flex;
+  gap: 32px;
+  font-size: 12px;
+  color: #a7b5cb;
+}
+.navbar nav a {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.preview {
+  color: #8b9ab3;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  border: 1px solid #7c9ec12b;
+  border-radius: 5px;
+  padding: 8px 10px;
+}
+.hero {
+  position: relative;
+  max-width: 1440px;
+  margin: auto;
+  min-height: 770px;
+  padding: 100px 44px 38px;
+}
+.sphere {
+  position: absolute;
+  width: min(55vw, 740px);
+  top: -22px;
+  left: 33%;
+  pointer-events: auto;
+}
+.copy {
+  position: relative;
+  width: 42%;
+  padding-top: 30px;
+}
+.eyebrow {
+  color: #8ea4c4;
+  font-size: 9px;
+  letter-spacing: 0.23em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.eyebrow span,
+.coreLabel > span:first-child,
+.bottomBar i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #4be6b5;
+  box-shadow: 0 0 12px #3cdfab;
+  display: inline-block;
+}
+.copy h1 {
+  margin: 23px 0;
+  font-size: clamp(36px, 3.8vw, 56px);
+  letter-spacing: -0.055em;
+  line-height: 1.14;
+  font-weight: 600;
+}
+.copy h1 > span {
+  display: block;
+  margin-top: 14px;
+  font-size: 0.64em;
+  letter-spacing: -0.025em;
+  line-height: 1.3;
+  background: linear-gradient(105deg, #9c70ff, #66a8ff 46%, #49e4d6);
+  background-clip: text;
+  color: transparent;
+}
+.description {
+  color: #97a6bd;
+  line-height: 1.9;
+  font-size: 14px;
+}
+.actions {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+  margin-top: 30px;
+  font-size: 12px;
+}
+.actions a {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.primary {
+  padding: 13px 18px;
+  background: linear-gradient(110deg, #494aea, #3539b9);
+  border: 1px solid #8286ff66;
+  border-radius: 6px;
+  box-shadow: 0 5px 30px #373ed128;
+}
+.activity {
+  display: flex;
+  gap: 12px;
+  border-top: 1px solid #8aa4d323;
+  margin-top: 42px;
+  padding-top: 20px;
+  max-width: 340px;
+}
+.activityIcon {
+  color: #a28aff;
+  font-size: 22px;
+}
+.activity small {
+  font-size: 8px;
+  color: #70819b;
+  letter-spacing: 0.09em;
+}
+.activity p {
+  font-size: 11px;
+  margin-top: 6px;
+}
+.activity div > span {
+  font-size: 10px;
+  color: #6d95c1;
+}
+.activity b {
+  padding: 0 6px;
+  color: #53627a;
+}
+.telemetry {
+  position: absolute;
+  right: 35px;
+  top: 110px;
+  width: 150px;
+  display: grid;
+  gap: 13px;
+}
+.telemetry > div {
+  padding: 16px;
+  border: 1px solid #5081b339;
+  border-radius: 8px;
+  background: linear-gradient(130deg, #0a172bba, #060b16b3);
+  backdrop-filter: blur(10px);
+}
+.telemetry small {
+  display: block;
+  font-size: 10px;
+  color: #a1b2ca;
+}
+.telemetry strong {
+  display: block;
+  font-size: 25px;
+  font-weight: 400;
+  margin: 8px 0 4px;
+  letter-spacing: 0.01em;
+}
+.telemetry span {
+  font-size: 8px;
+  color: #55cbb2;
+}
+.coreLabel {
+  position: relative;
+  margin: 26px 0 20px 47%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: #b8c9df;
+}
+.coreLabel b {
+  color: #41516c;
+}
+.readyLabel {
+  color: #648ba5;
+  font-size: 8px;
+}
+.console {
+  position: relative;
+  margin: 0 auto;
+  max-width: 740px;
+  padding: 19px 20px 13px;
+  border: 1px solid #637fcb80;
+  border-radius: 12px;
+  background: linear-gradient(120deg, #16102bba, #081426e8 65%);
+  box-shadow:
+    -4px 0 25px #734cee18,
+    4px 0 25px #267cff18,
+    inset 0 1px #aec4ff0d;
+  backdrop-filter: blur(16px);
+}
+.consoleHeading {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  color: #b4c0d5;
+  font-size: 14px;
+}
+.consoleHeading svg {
+  color: #a58af7;
+}
+.consoleHeading small {
+  margin-left: auto;
+  font-size: 8px;
+  color: #7a8fae;
+  letter-spacing: 0.12em;
+}
+.console form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 9px;
+}
+.console form > span {
+  font-size: 23px;
+  color: #9b86e4;
+}
+.console input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  padding: 8px 0;
+  color: #e5eaff;
+  font-size: 13px;
+  outline: none;
+}
+.console input::placeholder {
+  color: #64748f;
+}
+.console form button {
+  background: #7893bc12;
+  padding: 7px;
+  border-radius: 5px;
+}
+.console button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.inputLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.suggestions,
+.sourceChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
+}
+.suggestions button,
+.sourceChips span {
+  padding: 6px 10px;
+  border: 1px solid #729ac027;
+  border-radius: 5px;
+  font-size: 9px;
+  color: #91a7c4;
+  background: #030b163b;
+}
+.suggestions button span {
+  margin-left: 8px;
+  color: #62799d;
+}
+.searching {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 15px 0;
+  color: #a6b4d1;
+  font-size: 12px;
+}
+.searching svg {
+  animation: breathe 1s ease-in-out infinite alternate;
+}
+.searching .sourceChips {
+  width: 100%;
+}
+.answer {
+  margin-top: 12px;
+  border-top: 1px solid #7a9bc32b;
+  padding-top: 15px;
+}
+.answer > small {
+  font-size: 9px;
+  color: #a995e9;
+}
+.answer p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: #bac8dc;
+  margin: 9px 0;
+}
+.answer > button {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 15px;
+  font-size: 11px;
+  color: #8ebaff;
+}
+.bottomBar {
+  max-width: 1352px;
+  margin: auto;
+  padding: 18px 0;
+  border-top: 1px solid #80a4d623;
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: #81a197;
+}
+.bottomBar > span,
+.bottomBar button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.bottomBar small {
+  margin-left: 10px;
+  color: #56647b;
+  font-size: 9px;
+  letter-spacing: 0;
+}
+.bottomBar button {
+  color: #8293ae;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+.universe a:hover,
+.universe button:hover {
+  color: #fff;
+}
+.universe :is(a, button, input):focus-visible {
+  outline: 2px solid #8ab9ff;
+  outline-offset: 5px;
+}
+.beams {
+  position: absolute;
+  top: 32%;
+  left: 60%;
+  pointer-events: none;
+}
+.beams i {
+  position: absolute;
+  height: 1px;
+  width: 420px;
+  transform-origin: left;
+  background: linear-gradient(90deg, #90c8ff, transparent);
+  opacity: 0;
+}
+.beams i:nth-child(1) {
+  transform: rotate(-145deg);
+}
+.beams i:nth-child(2) {
+  transform: rotate(15deg);
+  width: 320px;
+}
+.beams i:nth-child(3) {
+  transform: rotate(105deg);
+  width: 290px;
+}
+.universe[data-arrival="playing"] .sphere {
+  animation: arrive 3s cubic-bezier(0.22, 0.68, 0.25, 1) both;
+}
+.universe[data-arrival="playing"] .navbar {
+  animation: assemble 700ms 1100ms both;
+}
+.universe[data-arrival="playing"] .copy {
+  animation: assemble 800ms 1500ms both;
+}
+.universe[data-arrival="playing"] .telemetry {
+  animation: assemble 700ms 1800ms both;
+}
+.universe[data-arrival="playing"] .console {
+  animation: assemble 700ms 2200ms both;
+}
+.universe[data-arrival="playing"] .bottomBar,
+.universe[data-arrival="playing"] .coreLabel {
+  animation: assemble 600ms 2400ms both;
+}
+.universe[data-arrival="playing"] .beams i {
+  animation: beam 1100ms 1000ms both;
+}
+.universe[data-arrival="playing"] .beams i:nth-child(2) {
+  animation-delay: 1500ms;
+}
+.universe[data-arrival="playing"] .beams i:nth-child(3) {
+  animation-delay: 1900ms;
+}
+@keyframes arrive {
+  0% {
+    transform: translateX(-22%) scale(0.025);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  35% {
+    transform: translateX(-22%) scale(0.8);
+  }
+  65%,
+  100% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+@keyframes assemble {
+  from {
+    opacity: 0;
+    clip-path: inset(0 50% 0 50%);
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0);
+    transform: translateY(0);
+  }
+}
+@keyframes beam {
+  0%,
+  100% {
+    opacity: 0;
+    scale: 0 1;
+  }
+  45% {
+    opacity: 0.65;
+    scale: 1 1;
+  }
+}
+@keyframes breathe {
+  to {
+    opacity: 0.3;
+  }
+}
+@media (min-width: 1600px) {
+  .hero {
+    min-height: 830px;
+  }
+  .coreLabel {
+    margin-top: 70px;
+  }
+}
+@media (max-width: 1100px) {
+  .telemetry {
+    display: none;
+  }
+  .sphere {
+    left: 38%;
+    width: 61vw;
+    top: 10px;
+  }
+  .copy {
+    width: 49%;
+  }
+  .bottomBar {
+    margin: 0 30px;
+  }
+  .hero {
+    min-height: 750px;
+  }
+  .navbar nav {
+    gap: 16px;
+  }
+  .preview {
+    display: none;
+  }
+}
+@media (max-width: 700px) {
+  .navbar {
+    height: 72px;
+    padding: 0 20px;
+  }
+  .navbar nav a:not(:last-child) {
+    display: none;
+  }
+  .navbar nav {
+    font-size: 10px;
+  }
+  .brand {
+    font-size: 11px;
+  }
+  .brand small {
+    font-size: 6px;
+  }
+  .hero {
+    padding: 300px 22px 28px;
+    min-height: auto;
+  }
+  .sphere {
+    width: 360px;
+    max-width: 100%;
+    left: 50%;
+    top: -25px;
+    margin-left: -180px;
+  }
+  .copy {
+    width: 100%;
+    padding: 0;
+  }
+  .copy h1 {
+    font-size: 42px;
+  }
+  .copy h1 > span br {
+    display: none;
+  }
+  .activity {
+    display: none;
+  }
+  .coreLabel {
+    margin: 32px 0 18px;
+  }
+  .console {
+    padding: 15px;
+  }
+  .consoleHeading {
+    font-size: 12px;
+  }
+  .suggestions button {
+    font-size: 8px;
+  }
+  .bottomBar {
+    margin: 0 22px;
+    font-size: 8px;
+  }
+  .bottomBar small {
+    display: none;
+  }
+  .beams {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .universe *,
+  .universe[data-arrival="playing"] * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -5,7 +5,7 @@ test("guest foundation page renders", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: /Explore/ })).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Enter Station" }),
+    page.getByRole("link", { name: "Enter Station" }).first(),
   ).toBeVisible();
 });
 
