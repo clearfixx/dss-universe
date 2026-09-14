@@ -20,17 +20,57 @@ export function CoreSphere({ active }: { active: boolean }) {
     let size = 600;
     let rotation = 0;
     let previous = 0;
+    let elapsed = 0;
+    let energy = 0;
     const pointer = { x: 0, y: 0 };
-    const points = Array.from({ length: 180 }, (_, i) => {
-      const y = 1 - (i / 179) * 2;
+    const view = { x: 0, y: 0 };
+    const light = document.createElement("canvas");
+    light.width = 64;
+    light.height = 64;
+    const lightContext = light.getContext("2d");
+    if (lightContext) {
+      const halo = lightContext.createRadialGradient(32, 32, 0, 32, 32, 32);
+      halo.addColorStop(0, "#e6faff");
+      halo.addColorStop(0.07, "#a0e2ff");
+      halo.addColorStop(0.2, "#398effa0");
+      halo.addColorStop(0.5, "#466aff30");
+      halo.addColorStop(1, "#456aff00");
+      lightContext.fillStyle = halo;
+      lightContext.fillRect(0, 0, 64, 64);
+    }
+    const points = Array.from({ length: 240 }, (_, i) => {
+      const y = 1 - (i / 239) * 2;
       const radius = Math.sqrt(1 - y * y);
       const angle = i * Math.PI * (3 - Math.sqrt(5));
-      return { x: Math.cos(angle) * radius, y, z: Math.sin(angle) * radius };
+      return {
+        x: Math.cos(angle) * radius,
+        y,
+        z: Math.sin(angle) * radius,
+        id: i,
+      };
     });
+    const orbitPoint = (orbit: number, t: number) => {
+      const tilt = orbit * 0.47;
+      const yaw = orbit * 1.618;
+      const distance = 0.78 + (orbit % 7) * 0.06;
+      const x = Math.cos(t) * distance;
+      const y = Math.sin(t) * Math.cos(tilt) * distance;
+      const z = Math.sin(t) * Math.sin(tilt) * distance;
+      return {
+        x: x * Math.cos(yaw) - y * Math.sin(yaw),
+        y: x * Math.sin(yaw) + y * Math.cos(yaw),
+        z,
+      };
+    };
+    const orbits = Array.from({ length: 22 }, (_, orbit) =>
+      Array.from({ length: 129 }, (_, step) =>
+        orbitPoint(orbit, (step / 128) * Math.PI * 2),
+      ),
+    );
     const edges: [number, number][] = [];
     points.forEach((a, i) =>
       points.slice(i + 1).forEach((b, offset) => {
-        if (Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z) < 0.36)
+        if (Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z) < 0.3)
           edges.push([i, i + offset + 1]);
       }),
     );
@@ -38,16 +78,22 @@ export function CoreSphere({ active }: { active: boolean }) {
       if (!ctx || !canvas) return;
       const delta = previous ? Math.min(now - previous, 50) : 0;
       previous = now;
-      if (!motion.matches)
-        rotation += delta * (activeRef.current ? 0.00022 : 0.000055);
+      const easing = 1 - Math.exp(-delta / 450);
+      energy += ((activeRef.current ? 1 : 0) - energy) * easing;
+      if (!motion.matches) {
+        elapsed += delta;
+        rotation += delta * (0.000035 + energy * 0.00009);
+        view.x += (pointer.x - view.x) * easing;
+        view.y += (pointer.y - view.y) * easing;
+      }
       ctx.clearRect(0, 0, size, size);
       const center = size / 2;
       const radius = size * 0.34;
-      const angle = rotation + pointer.x * 0.12;
+      const angle = rotation + view.x * 0.28;
       const project = (x: number, y: number, z: number) => {
         const rx = x * Math.cos(angle) + z * Math.sin(angle);
         const rz = z * Math.cos(angle) - x * Math.sin(angle);
-        const tilt = 0.22 + pointer.y * 0.1;
+        const tilt = 0.22 + view.y * 0.2;
         const ry = y * Math.cos(tilt) - rz * Math.sin(tilt);
         const depth = y * Math.sin(tilt) + rz * Math.cos(tilt);
         const perspective = 3.8 / (3.8 - depth);
@@ -76,7 +122,10 @@ export function CoreSphere({ active }: { active: boolean }) {
         ctx.fillStyle = `rgba(103,163,255,${0.15 + (i % 5) * 0.1})`;
         ctx.fillRect(x, y, i % 7 === 0 ? 1.6 : 0.8, 0.8);
       }
-      const projected = points.map((p) => project(p.x, p.y, p.z));
+      const projected = points.map((p) => ({
+        ...project(p.x, p.y, p.z),
+        id: p.id,
+      }));
       ctx.lineWidth = 0.6;
       edges.forEach(([a, b]) => {
         const p = projected[a]!;
@@ -87,28 +136,50 @@ export function CoreSphere({ active }: { active: boolean }) {
         ctx.lineTo(q.x, q.y);
         ctx.stroke();
       });
-      for (let orbit = 0; orbit < 9; orbit++) {
+      ctx.globalCompositeOperation = "lighter";
+      orbits.forEach((path, orbit) => {
         ctx.beginPath();
-        for (let step = 0; step <= 160; step++) {
-          const t = (step / 160) * Math.PI * 2;
-          const tilt = orbit * 0.43;
-          const p = project(
-            Math.cos(t) * 1.08,
-            Math.sin(t) * Math.cos(tilt) * 1.08,
-            Math.sin(t) * Math.sin(tilt) * 1.08,
-          );
+        path.forEach((point, step) => {
+          const p = project(point.x, point.y, point.z);
           if (step === 0) ctx.moveTo(p.x, p.y);
           else ctx.lineTo(p.x, p.y);
-        }
-        ctx.strokeStyle = orbit % 2 ? "#8957ff3b" : "#248fff40";
+        });
+        ctx.lineWidth = orbit % 3 === 0 ? 0.9 : 0.5;
+        ctx.strokeStyle = orbit % 3 === 0 ? "#8663ff55" : "#248fff44";
         ctx.stroke();
-      }
+        // Luminous packets follow the actual orbit geometry, with fading tails.
+        const head = elapsed * (0.00018 + (orbit % 4) * 0.00004) + orbit * 2.4;
+        for (let segment = 0; segment < 20; segment++) {
+          const a = orbitPoint(orbit, head - segment * 0.017);
+          const b = orbitPoint(orbit, head - (segment + 1) * 0.017);
+          const p = project(a.x, a.y, a.z);
+          const q = project(b.x, b.y, b.z);
+          const opacity = (1 - segment / 20) * (0.3 + (p.z + 1.2) * 0.2);
+          ctx.strokeStyle =
+            orbit % 3 === 0
+              ? `rgba(168,107,255,${opacity})`
+              : `rgba(66,171,255,${opacity})`;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(q.x, q.y);
+          ctx.stroke();
+          if (segment === 0) {
+            ctx.drawImage(light, p.x - 12, p.y - 12, 24, 24);
+            ctx.fillStyle = "#b8eaff";
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 1.6, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      });
       projected
         .sort((a, b) => a.z - b.z)
-        .forEach((p, i) => {
+        .forEach((p) => {
+          const i = p.id;
           const bright = (p.z + 1) / 2;
-          ctx.shadowBlur = bright > 0.6 ? 12 : 0;
-          ctx.shadowColor = i % 4 === 0 ? "#a570ff" : "#278cff";
+          if (bright > 0.6 && i % 3 === 0)
+            ctx.drawImage(light, p.x - 10, p.y - 10, 20, 20);
           ctx.fillStyle =
             i % 4 === 0
               ? `rgba(181,141,255,${0.3 + bright * 0.7})`
@@ -117,18 +188,11 @@ export function CoreSphere({ active }: { active: boolean }) {
           ctx.arc(p.x, p.y, 0.7 + bright * 1.8, 0, Math.PI * 2);
           ctx.fill();
         });
-      ctx.shadowBlur = 0;
       // Small lens flares retain crisp luminous centers at every display scale.
       projected
-        .filter((p, i) => p.z > 0.3 && i % 9 === 0)
+        .filter((p) => p.z > 0.3 && p.id % 13 === 0)
         .forEach((p) => {
-          const flare = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 17);
-          flare.addColorStop(0, "#e1faffee");
-          flare.addColorStop(0.12, "#65bbffcc");
-          flare.addColorStop(0.4, "#446aff55");
-          flare.addColorStop(1, "#456aff00");
-          ctx.fillStyle = flare;
-          ctx.fillRect(p.x - 17, p.y - 17, 34, 34);
+          ctx.drawImage(light, p.x - 20, p.y - 20, 40, 40);
           ctx.strokeStyle = "#a6d8ff66";
           ctx.lineWidth = 0.5;
           ctx.beginPath();
@@ -138,7 +202,9 @@ export function CoreSphere({ active }: { active: boolean }) {
           ctx.lineTo(p.x, p.y + 9);
           ctx.stroke();
         });
-      const pulse = motion.matches ? 1 : 1 + Math.sin(now * 0.0018) * 0.09;
+      const pulse = motion.matches
+        ? 1
+        : 1 + Math.sin(elapsed * 0.0018) * 0.09 + energy * 0.16;
       const core = ctx.createRadialGradient(
         center,
         center,
@@ -154,20 +220,33 @@ export function CoreSphere({ active }: { active: boolean }) {
       core.addColorStop(1, "#604aff00");
       ctx.fillStyle = core;
       ctx.fillRect(0, 0, size, size);
-      for (let i = 1; i < 5; i++) {
-        ctx.strokeStyle = `rgba(121,187,255,${0.6 - i * 0.1})`;
+      for (let i = 1; i < 8; i++) {
+        ctx.strokeStyle = `rgba(121,187,255,${0.65 - i * 0.065})`;
         ctx.beginPath();
         ctx.ellipse(
           center,
           center,
-          radius * i * 0.065 * pulse,
-          radius * i * 0.09 * pulse,
+          radius * i * 0.024 * pulse,
+          radius * i * 0.033 * pulse,
           rotation + i,
           0,
           Math.PI * 2,
         );
         ctx.stroke();
       }
+      // A fine equatorial flare gives the nucleus a bright, structured center.
+      const flare = ctx.createLinearGradient(
+        center - radius * 0.55,
+        center,
+        center + radius * 0.55,
+        center,
+      );
+      flare.addColorStop(0, "#479aff00");
+      flare.addColorStop(0.5, "#aeefffcc");
+      flare.addColorStop(1, "#479aff00");
+      ctx.fillStyle = flare;
+      ctx.fillRect(center - radius * 0.55, center - 0.5, radius * 1.1, 1);
+      ctx.globalCompositeOperation = "source-over";
       if (visible && !document.hidden && !motion.matches)
         frame = requestAnimationFrame(draw);
     }
@@ -194,9 +273,14 @@ export function CoreSphere({ active }: { active: boolean }) {
       pointer.x = (event.clientX - rect.left) / rect.width - 0.5;
       pointer.y = (event.clientY - rect.top) / rect.height - 0.5;
     };
+    const leave = () => {
+      pointer.x = 0;
+      pointer.y = 0;
+    };
     resize.observe(canvas);
     intersection.observe(canvas);
     canvas.addEventListener("pointermove", move);
+    canvas.addEventListener("pointerleave", leave);
     document.addEventListener("visibilitychange", restart);
     motion.addEventListener("change", restart);
     return () => {
@@ -204,6 +288,7 @@ export function CoreSphere({ active }: { active: boolean }) {
       resize.disconnect();
       intersection.disconnect();
       canvas.removeEventListener("pointermove", move);
+      canvas.removeEventListener("pointerleave", leave);
       document.removeEventListener("visibilitychange", restart);
       motion.removeEventListener("change", restart);
     };

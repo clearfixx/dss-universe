@@ -71,13 +71,19 @@ export function UniverseArrival() {
         finish();
       }
     };
+    const skipArrival = () => {
+      clearTimeout(timer);
+      finish();
+    };
     element.addEventListener("replay-arrival", replay);
+    element.addEventListener("skip-arrival", skipArrival);
     window.addEventListener("keydown", skip);
     motion.addEventListener("change", reduced);
     return () => {
       clearTimeout(timer);
       if (searchTimer.current) clearTimeout(searchTimer.current);
       element.removeEventListener("replay-arrival", replay);
+      element.removeEventListener("skip-arrival", skipArrival);
       window.removeEventListener("keydown", skip);
       motion.removeEventListener("change", reduced);
     };
@@ -94,6 +100,12 @@ export function UniverseArrival() {
 
   return (
     <div ref={root} className={styles.universe} data-arrival="ready">
+      <button
+        className={styles.skip}
+        onClick={() => root.current?.dispatchEvent(new Event("skip-arrival"))}
+      >
+        Skip arrival <span>ESC</span>
+      </button>
       <header className={styles.navbar}>
         <Link href="/" className={styles.brand}>
           <Orbit size={25} />
@@ -119,6 +131,7 @@ export function UniverseArrival() {
           <i />
           <i />
         </div>
+        <div className={styles.wave} aria-hidden="true" />
         <div className={styles.copy}>
           <p className={styles.eyebrow}>
             <span /> A UNIVERSE BUILT BY YOU

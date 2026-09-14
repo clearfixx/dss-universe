@@ -11,9 +11,17 @@ test("first arrival finishes, replay can be skipped, returning visits stay ready
   await expect
     .poll(() => page.evaluate(() => localStorage.getItem("dss:arrival:v1")))
     .toBe("seen");
+  const copy = page
+    .getByRole("heading", { name: /DSS Universe/ })
+    .locator("..");
+  await expect(copy).toHaveCSS("opacity", "1");
+  await expect(copy).toHaveCSS("clip-path", "none");
   await page.getByRole("button", { name: "Replay arrival" }).click();
   await expect(scene).toHaveAttribute("data-arrival", "playing");
   await page.keyboard.press("Escape");
+  await expect(scene).toHaveAttribute("data-arrival", "ready");
+  await page.getByRole("button", { name: "Replay arrival" }).click();
+  await page.getByRole("button", { name: "Skip arrival" }).click();
   await expect(scene).toHaveAttribute("data-arrival", "ready");
   await page.reload();
   await expect(

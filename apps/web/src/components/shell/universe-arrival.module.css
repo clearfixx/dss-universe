@@ -371,8 +371,8 @@
 }
 .beams {
   position: absolute;
-  top: 32%;
-  left: 60%;
+  top: calc(min(27.5vw, 370px) - 22px);
+  left: calc(33% + min(27.5vw, 370px));
   pointer-events: none;
 }
 .beams i {
@@ -384,7 +384,8 @@
   opacity: 0;
 }
 .beams i:nth-child(1) {
-  transform: rotate(-145deg);
+  transform: rotate(-135deg);
+  width: 560px;
 }
 .beams i:nth-child(2) {
   transform: rotate(15deg);
@@ -392,7 +393,45 @@
 }
 .beams i:nth-child(3) {
   transform: rotate(105deg);
-  width: 290px;
+  width: 400px;
+}
+.wave {
+  position: absolute;
+  pointer-events: none;
+  width: 90px;
+  height: 90px;
+  border: 1px solid #72bfff;
+  border-radius: 50%;
+  top: calc(min(27.5vw, 370px) - 67px);
+  left: calc(33% + min(27.5vw, 370px) - 45px);
+  opacity: 0;
+  box-shadow:
+    0 0 25px #348aff33,
+    inset 0 0 20px #348aff22;
+}
+.skip {
+  display: none;
+  position: absolute;
+  z-index: 5;
+  right: 30px;
+  top: 24px;
+  padding: 8px 12px;
+  border: 1px solid #7194c344;
+  border-radius: 6px;
+  background: #050b18;
+  color: #a9b9d1;
+  font-size: 11px;
+}
+.skip span {
+  margin-left: 10px;
+  font-size: 9px;
+  color: #62728f;
+}
+.universe[data-arrival="playing"] .skip {
+  display: block;
+}
+.universe[data-arrival="playing"] .wave {
+  animation: awaken 1100ms 1700ms both;
 }
 .universe[data-arrival="playing"] .sphere {
   animation: arrive 3s cubic-bezier(0.22, 0.68, 0.25, 1) both;
@@ -424,19 +463,35 @@
 }
 @keyframes arrive {
   0% {
-    transform: translateX(-22%) scale(0.025);
+    left: calc(50% - min(27.5vw, 370px));
+    transform: scale(0.025);
     opacity: 0;
   }
   12% {
     opacity: 1;
   }
-  35% {
-    transform: translateX(-22%) scale(0.8);
+  28% {
+    left: calc(50% - min(27.5vw, 370px));
+    transform: scale(0.8);
   }
-  65%,
+  44%,
   100% {
-    transform: translateX(0) scale(1);
+    left: 33%;
+    transform: scale(1);
     opacity: 1;
+  }
+}
+@keyframes awaken {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  20% {
+    opacity: 0.35;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(8);
   }
 }
 @keyframes assemble {
@@ -476,6 +531,13 @@
   }
 }
 @media (max-width: 1100px) {
+  .beams,
+  .wave {
+    display: none;
+  }
+  .universe[data-arrival="playing"] .sphere {
+    animation-name: arriveCompact;
+  }
   .telemetry {
     display: none;
   }
@@ -498,6 +560,17 @@
   }
   .preview {
     display: none;
+  }
+}
+@keyframes arriveCompact {
+  0% {
+    opacity: 0;
+    transform: scale(0.025);
+  }
+  44%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 @media (max-width: 700px) {
@@ -565,6 +638,9 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .universe[data-arrival="playing"] .skip {
+    display: none;
+  }
   .universe *,
   .universe[data-arrival="playing"] * {
     animation: none !important;
