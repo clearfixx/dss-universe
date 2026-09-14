@@ -31,6 +31,8 @@ versioned Tiptap JSON document contract for every DSS content module.
 - privacy-aware member suggestions and structured mention insertion.
 - provider-neutral AI Core commands with permission enforcement, explicit
   external-processing consent, labeled suggestions and human-controlled Apply.
+- Knowledge Forge-grade tables, task lists, paired footnotes and one
+  heading-derived table of contents for `WIKI` and trusted `ADMIN` documents.
 
 ## Boundary
 

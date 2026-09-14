@@ -34,18 +34,23 @@ import {
   Link2,
   List,
   ListOrdered,
+  ListTree,
+  ListTodo,
   LockKeyhole,
+  NotebookText,
   Paperclip,
   Quote,
   Redo2,
   Sparkles,
   Strikethrough,
+  Table2,
   Undo2,
   Video,
   type LucideIcon,
 } from "lucide-react";
 import type {
   EditorDocument,
+  EditorNode,
   EditorPermission,
   EditorProfile,
   EditorToolId,
@@ -130,6 +135,10 @@ const TOOL_PRESENTATION: Record<
   attachment: { label: "Attach file", icon: Paperclip },
   contentGate: { label: "Hidden content", icon: LockKeyhole },
   aiAssist: { label: "DSS AI Core", icon: Sparkles },
+  table: { label: "Insert table", icon: Table2 },
+  taskList: { label: "Insert task list", icon: ListTodo },
+  footnote: { label: "Insert footnote", icon: NotebookText },
+  tableOfContents: { label: "Insert table of contents", icon: ListTree },
   undo: { label: "Undo", icon: Undo2 },
   redo: { label: "Redo", icon: Redo2 },
 };
@@ -181,6 +190,10 @@ export function DssEditor({
       orderedList: current?.isActive("orderedList") ?? false,
       blockquote: current?.isActive("blockquote") ?? false,
       codeBlock: current?.isActive("codeBlock") ?? false,
+      table: current?.isActive("table") ?? false,
+      taskList: current?.isActive("taskList") ?? false,
+      footnote: current?.isActive("footnoteReference") ?? false,
+      tableOfContents: current?.isActive("tableOfContents") ?? false,
       canUndo: current?.can().undo() ?? false,
       canRedo: current?.can().redo() ?? false,
     }),
@@ -198,6 +211,10 @@ export function DssEditor({
     orderedList: false,
     blockquote: false,
     codeBlock: false,
+    table: false,
+    taskList: false,
+    footnote: false,
+    tableOfContents: false,
     canUndo: false,
     canRedo: false,
   };
@@ -354,6 +371,60 @@ export function DssEditor({
       case "codeBlock":
         chain.toggleCodeBlock().run();
         break;
+      case "table":
+        chain
+          .insertContent({
+            type: "table",
+            content: [
+              {
+                type: "tableRow",
+                content: [
+                  tableCell("tableHeader", "Heading"),
+                  tableCell("tableHeader", "Heading"),
+                ],
+              },
+              {
+                type: "tableRow",
+                content: [
+                  tableCell("tableCell", "Cell"),
+                  tableCell("tableCell", "Cell"),
+                ],
+              },
+            ],
+          })
+          .run();
+        break;
+      case "taskList":
+        chain
+          .insertContent({
+            type: "taskList",
+            content: [
+              {
+                type: "taskItem",
+                attrs: { checked: false },
+                content: [{ type: "paragraph", content: [] }],
+              },
+            ],
+          })
+          .run();
+        break;
+      case "footnote": {
+        const noteId = nextFootnoteId(state.json as EditorDocument["content"]);
+        chain
+          .insertContent([
+            { type: "footnoteReference", attrs: { noteId } },
+            {
+              type: "footnoteDefinition",
+              attrs: { noteId },
+              content: [{ type: "paragraph", content: [] }],
+            },
+          ])
+          .run();
+        break;
+      }
+      case "tableOfContents":
+        chain.insertContent({ type: "tableOfContents" }).run();
+        break;
       case "undo":
         chain.undo().run();
         break;
@@ -445,6 +516,30 @@ export function DssEditor({
       ) : null}
     </section>
   );
+}
+
+function tableCell(type: "tableHeader" | "tableCell", text: string) {
+  return {
+    type,
+    content: [
+      {
+        type: "paragraph",
+        content: [{ type: "text", text }],
+      },
+    ],
+  };
+}
+
+function nextFootnoteId(content: EditorNode): string {
+  let count = 0;
+  const visit = (node: EditorNode): void => {
+    if (node.type === "footnoteDefinition") count += 1;
+    for (const child of node.content ?? []) {
+      visit(child);
+    }
+  };
+  visit(content);
+  return `note-${count + 1}`;
 }
 
 function Tool({

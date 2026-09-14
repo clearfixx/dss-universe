@@ -29,8 +29,26 @@ describe("DSS Editor extensions", () => {
         "mediaReference",
         "attachment",
         "contentGate",
+        "table",
+        "tableRow",
+        "tableHeader",
+        "tableCell",
+        "taskList",
+        "taskItem",
+        "footnoteReference",
+        "footnoteDefinition",
+        "tableOfContents",
       ]),
     );
+  });
+
+  it("keeps document-grade extensions outside ordinary publications", () => {
+    const names = createEditorExtensions("NEWS").map(({ name }) => name);
+
+    expect(names).not.toContain("table");
+    expect(names).not.toContain("taskList");
+    expect(names).not.toContain("footnoteReference");
+    expect(names).not.toContain("tableOfContents");
   });
 
   it("keeps Content Gates outside the comment profile", () => {

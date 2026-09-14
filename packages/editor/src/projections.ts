@@ -23,6 +23,11 @@ const BLOCK_NODES = new Set([
   "mediaReference",
   "attachment",
   "contentGate",
+  "tableCell",
+  "tableHeader",
+  "tableRow",
+  "taskItem",
+  "footnoteDefinition",
 ]);
 
 export function projectEditorPlainText(document: EditorDocument): string {
@@ -48,6 +53,10 @@ function projectNode(node: EditorNode): string {
     return stringAttr(node, "caption") || stringAttr(node, "alt");
   }
   if (node.type === "attachment") return stringAttr(node, "label");
+  if (node.type === "footnoteReference") {
+    return `[${stringAttr(node, "noteId")}]`;
+  }
+  if (node.type === "tableOfContents") return "";
 
   const content = (node.content ?? []).map(projectNode).join("");
   return BLOCK_NODES.has(node.type) ? `${content}\n` : content;

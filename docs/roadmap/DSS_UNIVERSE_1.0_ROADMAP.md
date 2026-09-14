@@ -969,6 +969,9 @@ Delivered DSS Editor foundation:
 - Comments-owned private draft persistence with canonical validation,
   optimistic versions, conflict protection, restoration and explicit discard;
 - reusable React autosave and recovery surfaces for future owning modules;
+- document-grade `WIKI`/`ADMIN` extensions for structured tables, task lists,
+  paired footnotes and one heading-derived table of contents, with strict
+  profile boundaries and safe server rendering;
 - News, Community Hub, Research Lab and Knowledge Forge add their own draft
   stores when their canonical domain models arrive.
 

@@ -71,6 +71,62 @@ describe('EditorHtmlRenderer', () => {
     await expect(renderer.render(document)).resolves.toContain('shiki');
     expect(highlight).toHaveBeenCalledWith('const dss = true;', 'typescript');
   });
+
+  it('renders document-grade structures and a heading-derived TOC', async () => {
+    const document: EditorDocument = {
+      schemaVersion: 1,
+      profile: 'WIKI',
+      content: {
+        type: 'doc',
+        content: [
+          { type: 'tableOfContents' },
+          {
+            type: 'heading',
+            attrs: { level: 2 },
+            content: [{ type: 'text', text: 'DSS Architecture' }],
+          },
+          {
+            type: 'taskList',
+            content: [
+              {
+                type: 'taskItem',
+                attrs: { checked: true },
+                content: [
+                  {
+                    type: 'paragraph',
+                    content: [{ type: 'text', text: 'Ship it' }],
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            type: 'paragraph',
+            content: [
+              { type: 'text', text: 'Verified' },
+              { type: 'footnoteReference', attrs: { noteId: 'note-1' } },
+            ],
+          },
+          {
+            type: 'footnoteDefinition',
+            attrs: { noteId: 'note-1' },
+            content: [
+              {
+                type: 'paragraph',
+                content: [{ type: 'text', text: 'Source' }],
+              },
+            ],
+          },
+        ],
+      },
+    };
+
+    const html = await renderer.render(document);
+    expect(html).toContain('href="#dss-architecture"');
+    expect(html).toContain('<h2 id="dss-architecture">');
+    expect(html).toContain('data-checked="true"');
+    expect(html).toContain('id="footnote-note-1"');
+  });
 });
 
 /** Safe projections let rich documents shine without inviting scripts aboard. */

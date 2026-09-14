@@ -71,6 +71,13 @@ const PUBLICATION_CAPABILITIES = [
   "CONTENT_GATE",
   "AI_ASSIST",
 ] as const satisfies readonly EditorCapability[];
+const DOCUMENT_CAPABILITIES = [
+  ...PUBLICATION_CAPABILITIES,
+  "TABLE",
+  "TASK_LIST",
+  "FOOTNOTE",
+  "TABLE_OF_CONTENTS",
+] as const satisfies readonly EditorCapability[];
 
 const COMPACT_TOOLBAR = [
   { id: "format", tools: ["bold", "italic", "inlineCode", "link"] },
@@ -104,6 +111,14 @@ const PUBLICATION_TOOLBAR = [
   },
   { id: "intelligence", tools: ["aiAssist"] },
   { id: "history", tools: ["undo", "redo"] },
+] as const satisfies readonly EditorToolbarGroup[];
+const DOCUMENT_TOOLBAR = [
+  ...PUBLICATION_TOOLBAR.slice(0, 3),
+  {
+    id: "document",
+    tools: ["table", "taskList", "footnote", "tableOfContents"],
+  },
+  ...PUBLICATION_TOOLBAR.slice(3),
 ] as const satisfies readonly EditorToolbarGroup[];
 
 function compact(
@@ -162,6 +177,36 @@ function publication(
   };
 }
 
+function documentProfile(
+  profile: "WIKI" | "ADMIN",
+  maxCharacters: number,
+  maxNodes: number,
+): EditorProfileDefinition {
+  const definition = publication(
+    profile,
+    maxCharacters,
+    maxNodes,
+    [1, 2, 3, 4],
+  );
+  return {
+    ...definition,
+    allowedNodes: [
+      ...definition.allowedNodes,
+      "table",
+      "tableRow",
+      "tableHeader",
+      "tableCell",
+      "taskList",
+      "taskItem",
+      "footnoteReference",
+      "footnoteDefinition",
+      "tableOfContents",
+    ],
+    capabilities: DOCUMENT_CAPABILITIES,
+    toolbar: DOCUMENT_TOOLBAR,
+  };
+}
+
 export const EDITOR_PROFILE_DEFINITIONS: Record<
   EditorProfile,
   EditorProfileDefinition
@@ -177,8 +222,8 @@ export const EDITOR_PROFILE_DEFINITIONS: Record<
     12_000,
     [1, 2, 3, 4],
   ),
-  WIKI: publication("WIKI", 300_000, 15_000, [1, 2, 3, 4]),
-  ADMIN: publication("ADMIN", 300_000, 15_000, [1, 2, 3, 4]),
+  WIKI: documentProfile("WIKI", 300_000, 15_000),
+  ADMIN: documentProfile("ADMIN", 300_000, 15_000),
 };
 
 export function getEditorProfileDefinition(

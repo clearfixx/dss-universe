@@ -160,4 +160,13 @@ Phase 21.
 
 - News, Community Hub, Research Lab and Knowledge Forge draft persistence;
 - module-specific publication forms;
-- Wiki tables, tasks, footnotes, TOC and revision tools.
+- Knowledge Forge revision ownership and review tools remain in Phase 11.
+
+## Document-grade extensions
+
+Phase 9 delivers the reusable Knowledge Forge-grade document contract without
+creating the future Knowledge Forge domain early. `WIKI` and `ADMIN` profiles
+support structured tables, task lists, paired footnote references/definitions
+and one heading-derived table of contents. The server validates placement and
+pairing, derives searchable meaning, and renders stable escaped HTML anchors.
+News, forum and compact profiles cannot persist these nodes.

@@ -99,6 +99,159 @@ const CodeBlockNode = Node.create({
   ],
 });
 
+const TableNode = Node.create({
+  name: "table",
+  group: "block",
+  content: "tableRow+",
+  isolating: true,
+  parseHTML: () => [{ tag: "table[data-dss-table]" }],
+  renderHTML: ({ HTMLAttributes }) => [
+    "table",
+    mergeAttributes(HTMLAttributes, { "data-dss-table": "" }),
+    ["tbody", 0],
+  ],
+});
+
+const TableRowNode = Node.create({
+  name: "tableRow",
+  content: "(tableHeader|tableCell)+",
+  parseHTML: () => [{ tag: "tr" }],
+  renderHTML: ({ HTMLAttributes }) => ["tr", HTMLAttributes, 0],
+});
+
+const TableHeaderNode = Node.create({
+  name: "tableHeader",
+  content: "block+",
+  isolating: true,
+  parseHTML: () => [{ tag: "th" }],
+  renderHTML: ({ HTMLAttributes }) => ["th", HTMLAttributes, 0],
+});
+
+const TableCellNode = Node.create({
+  name: "tableCell",
+  content: "block+",
+  isolating: true,
+  parseHTML: () => [{ tag: "td" }],
+  renderHTML: ({ HTMLAttributes }) => ["td", HTMLAttributes, 0],
+});
+
+const TaskListNode = Node.create({
+  name: "taskList",
+  group: "block",
+  content: "taskItem+",
+  parseHTML: () => [{ tag: 'ul[data-type="taskList"]' }],
+  renderHTML: ({ HTMLAttributes }) => [
+    "ul",
+    mergeAttributes(HTMLAttributes, { "data-type": "taskList" }),
+    0,
+  ],
+});
+
+const TaskItemNode = Node.create({
+  name: "taskItem",
+  content: "paragraph block*",
+  defining: true,
+  addAttributes: () => ({ checked: { default: false } }),
+  addNodeView:
+    () =>
+    ({ editor, getPos, node }) => {
+      const dom = document.createElement("li");
+      const checkbox = document.createElement("input");
+      const contentDOM = document.createElement("div");
+      dom.dataset.type = "taskItem";
+      checkbox.type = "checkbox";
+      checkbox.checked = node.attrs.checked === true;
+      checkbox.setAttribute("aria-label", "Toggle task");
+      checkbox.contentEditable = "false";
+      const updateChecked = (): void => {
+        if (typeof getPos !== "function") return;
+        const position = getPos();
+        if (position === undefined) return;
+        editor.view.dispatch(
+          editor.state.tr.setNodeMarkup(position, undefined, {
+            ...node.attrs,
+            checked: checkbox.checked,
+          }),
+        );
+      };
+      checkbox.addEventListener("change", updateChecked);
+      dom.append(checkbox, contentDOM);
+      return {
+        dom,
+        contentDOM,
+        update: (updatedNode) => {
+          if (updatedNode.type.name !== "taskItem") return false;
+          node = updatedNode;
+          checkbox.checked = updatedNode.attrs.checked === true;
+          return true;
+        },
+        destroy: () => checkbox.removeEventListener("change", updateChecked),
+      };
+    },
+  parseHTML: () => [{ tag: 'li[data-type="taskItem"]' }],
+  renderHTML: ({ HTMLAttributes }) => [
+    "li",
+    mergeAttributes(HTMLAttributes, { "data-type": "taskItem" }),
+    [
+      "input",
+      {
+        type: "checkbox",
+        disabled: "",
+        ...(HTMLAttributes.checked ? { checked: "" } : {}),
+      },
+    ],
+    ["div", 0],
+  ],
+});
+
+const FootnoteReferenceNode = Node.create({
+  name: "footnoteReference",
+  group: "inline",
+  inline: true,
+  atom: true,
+  addAttributes: () => ({ noteId: { default: null } }),
+  parseHTML: () => [{ tag: "sup[data-dss-footnote-reference]" }],
+  renderHTML: ({ HTMLAttributes }) => [
+    "sup",
+    mergeAttributes(HTMLAttributes, { "data-dss-footnote-reference": "" }),
+    `[${String(HTMLAttributes.noteId ?? "")}]`,
+  ],
+});
+
+const FootnoteDefinitionNode = Node.create({
+  name: "footnoteDefinition",
+  group: "block",
+  content: "block+",
+  defining: true,
+  addAttributes: () => ({ noteId: { default: null } }),
+  parseHTML: () => [{ tag: "aside[data-dss-footnote-definition]" }],
+  renderHTML: ({ HTMLAttributes }) => [
+    "aside",
+    mergeAttributes(HTMLAttributes, { "data-dss-footnote-definition": "" }),
+    [
+      "span",
+      { "aria-hidden": "true" },
+      `[${String(HTMLAttributes.noteId ?? "")}]`,
+    ],
+    ["div", 0],
+  ],
+});
+
+const TableOfContentsNode = Node.create({
+  name: "tableOfContents",
+  group: "block",
+  atom: true,
+  parseHTML: () => [{ tag: "nav[data-dss-table-of-contents]" }],
+  renderHTML: ({ HTMLAttributes }) => [
+    "nav",
+    mergeAttributes(HTMLAttributes, {
+      "aria-label": "Table of contents",
+      "data-dss-table-of-contents": "",
+    }),
+    "Table of contents",
+  ],
+});
+
 export function createEditorExtensions(profile: EditorProfile): Extensions {
   const definition = getEditorProfileDefinition(profile);
   const extensions: Extensions = [
@@ -132,6 +285,19 @@ export function createEditorExtensions(profile: EditorProfile): Extensions {
 
   if (definition.allowedNodes.includes("contentGate")) {
     extensions.push(ContentGateNode);
+  }
+  if (definition.allowedNodes.includes("table")) {
+    extensions.push(
+      TableNode,
+      TableRowNode,
+      TableHeaderNode,
+      TableCellNode,
+      TaskListNode,
+      TaskItemNode,
+      FootnoteReferenceNode,
+      FootnoteDefinitionNode,
+      TableOfContentsNode,
+    );
   }
   return extensions;
 }

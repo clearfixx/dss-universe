@@ -36,6 +36,7 @@ export type EditorValidationResult =
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SAFE_LINK_PROTOCOLS = new Set(["https:", "http:", "mailto:"]);
+const FOOTNOTE_ID_PATTERN = /^[a-z0-9](?:[a-z0-9_-]{0,63})$/i;
 
 export function validateEditorDocument(value: unknown): EditorValidationResult {
   const errors: EditorValidationError[] = [];
@@ -67,7 +68,9 @@ export function validateEditorDocument(value: unknown): EditorValidationResult {
     definition,
     counters,
     errors,
+    null,
   );
+  validateDocumentGradeInvariants(value.content as EditorNode, errors);
   if (counters.characters > definition.maxCharacters) {
     errors.push(
       error(
@@ -108,6 +111,7 @@ function validateNode(
   definition: ReturnType<typeof getEditorProfileDefinition>,
   counters: { characters: number; nodes: number },
   errors: EditorValidationError[],
+  parentType: string | null,
 ): void {
   counters.nodes += 1;
   if (!isRecord(node) || typeof node.type !== "string") {
@@ -143,6 +147,7 @@ function validateNode(
   }
 
   validateNodeAttributes(node, path, definition.headingLevels, errors);
+  validateNodePlacement(node, path, parentType, errors);
   for (const [index, mark] of (node.marks ?? []).entries()) {
     validateMark(
       mark,
@@ -168,8 +173,106 @@ function validateNode(
       definition,
       counters,
       errors,
+      node.type,
     );
   }
+}
+
+const DOCUMENT_GRADE_PARENTS: Record<string, readonly string[]> = {
+  table: ["doc", "contentGate", "listItem", "taskItem", "footnoteDefinition"],
+  tableRow: ["table"],
+  tableHeader: ["tableRow"],
+  tableCell: ["tableRow"],
+  taskList: [
+    "doc",
+    "contentGate",
+    "listItem",
+    "taskItem",
+    "footnoteDefinition",
+  ],
+  taskItem: ["taskList"],
+  footnoteReference: ["paragraph", "heading"],
+  footnoteDefinition: ["doc", "contentGate"],
+  tableOfContents: ["doc", "contentGate"],
+};
+
+function validateNodePlacement(
+  node: EditorNode,
+  path: string,
+  parentType: string | null,
+  errors: EditorValidationError[],
+): void {
+  const allowedParents = DOCUMENT_GRADE_PARENTS[node.type];
+  if (allowedParents && (!parentType || !allowedParents.includes(parentType))) {
+    errors.push(
+      error(
+        path,
+        "NODE_PLACEMENT",
+        `${node.type} is not allowed inside ${parentType ?? "the document root"}.`,
+      ),
+    );
+  }
+  if (
+    [
+      "table",
+      "tableRow",
+      "tableHeader",
+      "tableCell",
+      "taskList",
+      "taskItem",
+      "footnoteDefinition",
+    ].includes(node.type) &&
+    (!node.content || node.content.length === 0)
+  ) {
+    errors.push(
+      error(path, "NODE_CONTENT", `${node.type} requires structured content.`),
+    );
+  }
+}
+
+function validateDocumentGradeInvariants(
+  root: EditorNode,
+  errors: EditorValidationError[],
+): void {
+  const references = new Map<string, number>();
+  const definitions = new Map<string, number>();
+  let tableOfContentsCount = 0;
+  const visit = (node: EditorNode): void => {
+    if (node.type === "footnoteReference") {
+      increment(references, stringAttr(node, "noteId"));
+    }
+    if (node.type === "footnoteDefinition") {
+      increment(definitions, stringAttr(node, "noteId"));
+    }
+    if (node.type === "tableOfContents") tableOfContentsCount += 1;
+    for (const child of node.content ?? []) visit(child);
+  };
+  visit(root);
+
+  for (const noteId of new Set([...references.keys(), ...definitions.keys()])) {
+    if (references.get(noteId) !== 1 || definitions.get(noteId) !== 1) {
+      errors.push(
+        error(
+          "content",
+          "FOOTNOTE_PAIR",
+          `Footnote ${noteId} requires exactly one reference and one definition.`,
+        ),
+      );
+    }
+  }
+  if (tableOfContentsCount > 1) {
+    errors.push(
+      error(
+        "content",
+        "TABLE_OF_CONTENTS_LIMIT",
+        "A document may contain only one table of contents.",
+      ),
+    );
+  }
+}
+
+function increment(values: Map<string, number>, key: string): void {
+  values.set(key, (values.get(key) ?? 0) + 1);
 }
 
 function validateNodeAttributes(
@@ -235,6 +338,30 @@ function validateNodeAttributes(
   }
   if (node.type === "contentGate") {
     requireUuidAttr(node, path, "gateId", errors);
+  }
+  if (node.type === "taskItem") {
+    const checked = node.attrs?.checked;
+    if (typeof checked !== "boolean") {
+      errors.push(
+        error(
+          `${path}.attrs.checked`,
+          "TASK_CHECKED",
+          "Task checked state must be a boolean.",
+        ),
+      );
+    }
+  }
+  if (node.type === "footnoteReference" || node.type === "footnoteDefinition") {
+    const noteId = stringAttr(node, "noteId");
+    if (!FOOTNOTE_ID_PATTERN.test(noteId)) {
+      errors.push(
+        error(
+          `${path}.attrs.noteId`,
+          "FOOTNOTE_ID",
+          "Footnote ID must contain 1 to 64 safe characters.",
+        ),
+      );
+    }
   }
 }
 

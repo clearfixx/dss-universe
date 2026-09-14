@@ -35,6 +35,10 @@ export const EDITOR_CAPABILITIES = [
   "ATTACHMENT",
   "CONTENT_GATE",
   "AI_ASSIST",
+  "TABLE",
+  "TASK_LIST",
+  "FOOTNOTE",
+  "TABLE_OF_CONTENTS",
   "HISTORY",
 ] as const;
 export type EditorCapability = (typeof EDITOR_CAPABILITIES)[number];
@@ -65,6 +69,10 @@ export const EDITOR_TOOL_IDS = [
   "attachment",
   "contentGate",
   "aiAssist",
+  "table",
+  "taskList",
+  "footnote",
+  "tableOfContents",
   "undo",
   "redo",
 ] as const;
@@ -77,6 +85,7 @@ export type EditorToolbarGroup = {
     | "structure"
     | "insert"
     | "intelligence"
+    | "document"
     | "history";
   tools: readonly EditorToolId[];
 };
@@ -162,6 +171,14 @@ export const EDITOR_TOOL_DEFINITIONS: Record<
     capability: "AI_ASSIST",
     requiredPermission: "AI_ASSIST",
     action: "DIALOG",
+  },
+  table: { id: "table", capability: "TABLE", action: "COMMAND" },
+  taskList: { id: "taskList", capability: "TASK_LIST", action: "COMMAND" },
+  footnote: { id: "footnote", capability: "FOOTNOTE", action: "COMMAND" },
+  tableOfContents: {
+    id: "tableOfContents",
+    capability: "TABLE_OF_CONTENTS",
+    action: "COMMAND",
   },
   undo: { id: "undo", capability: "HISTORY", action: "COMMAND" },
   redo: { id: "redo", capability: "HISTORY", action: "COMMAND" },
