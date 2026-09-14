@@ -820,3 +820,97 @@
     transition: none !important;
   }
 }
+
+/* Keep the question composer in the first screen on everyday laptop displays. */
+@media (min-width: 1101px) and (max-height: 900px) {
+  .navbar {
+    height: 72px;
+    padding-inline: 36px;
+  }
+  .hero {
+    min-height: 590px;
+    padding: 30px 36px 24px;
+  }
+  .copy {
+    padding-top: 18px;
+    width: 40%;
+  }
+  .copy h1 {
+    font-size: 42px;
+    margin: 18px 0;
+  }
+  .copy h1 > span {
+    margin-top: 10px;
+  }
+  .description {
+    font-size: 13px;
+    line-height: 1.75;
+  }
+  .actions {
+    margin-top: 22px;
+    gap: 18px;
+  }
+  .activity {
+    margin-top: 24px;
+    padding-top: 14px;
+  }
+  .sphere {
+    width: min(45vw, 570px);
+    top: -20px;
+    left: 36%;
+  }
+  .telemetry {
+    top: 64px;
+    right: 28px;
+    width: 138px;
+    gap: 10px;
+  }
+  .telemetry > div {
+    padding: 13px;
+  }
+  .telemetry strong {
+    font-size: 23px;
+  }
+  .coreLabel {
+    margin: 32px 0 14px 48%;
+  }
+  .console {
+    max-width: 700px;
+    padding: 15px 18px 12px;
+  }
+  .bottomBar {
+    margin-inline: 36px;
+    padding-block: 14px;
+  }
+  .beams {
+    top: calc(min(22.5vw, 285px) - 20px);
+    left: calc(36% + min(22.5vw, 285px));
+  }
+  .wave {
+    top: calc(min(22.5vw, 285px) - 65px);
+    left: calc(36% + min(22.5vw, 285px) - 45px);
+  }
+  .universe[data-arrival="playing"] .sphere {
+    animation-name: arriveLaptop;
+  }
+}
+@keyframes arriveLaptop {
+  0% {
+    left: calc(50% - min(22.5vw, 285px));
+    transform: scale(0.025);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  28% {
+    left: calc(50% - min(22.5vw, 285px));
+    transform: scale(0.8);
+  }
+  44%,
+  100% {
+    left: 36%;
+    transform: scale(1);
+    opacity: 1;
+  }
+}
