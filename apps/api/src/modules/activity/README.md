@@ -30,10 +30,19 @@ events without importing Activity or Users.
 - `sourceEventId` makes projection retries idempotent.
 - Activity records are projections and may be rebuilt from canonical events.
 
-## Current boundary
+## Phase 9 feed boundary
 
-This Phase 7 foundation exposes paginated user activity with profile privacy
-and block enforcement. Guest feeds, following/interests ranking, unread
-markers, module filters and cross-module aggregation remain in Phase 9.
+- `publicActivityFeed` exposes only `PUBLIC` projections to guests.
+- `viewerActivityFeed` exposes `PUBLIC` and `MEMBERS` projections, excludes
+  blocked relationships, and ranks mentions, followed actors, interests, own
+  activity and recency with stable deterministic weights.
+- module filters are normalized and bounded at the application boundary;
+- a dedicated per-user cursor supplies “since last visit” and unread markers;
+- `markActivityFeedVisited` advances that cursor with a server timestamp;
+- recommendation mode is explicit and deterministic. Optional AI summaries
+  can be added later without becoming a feed dependency or failure mode.
+
+Activity metadata remains an internal allow-listed projection. GraphQL never
+returns copied content bodies, request metadata or arbitrary JSON.
 
 🚀 Build. Share. Grow.

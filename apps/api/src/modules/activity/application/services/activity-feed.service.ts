@@ -20,7 +20,10 @@ import {
   ACTIVITY_REPOSITORY,
   type ActivityRepository,
 } from '../../domain/repositories/activity.repository.interface';
-import type { ActivityEntry } from '../../domain/types/activity-entry.type';
+import type {
+  ActivityEntry,
+  ActivityFeedPage,
+} from '../../domain/types/activity-entry.type';
 
 @Injectable()
 export class ActivityFeedService {
@@ -39,6 +42,45 @@ export class ActivityFeedService {
       Math.max(1, page),
       Math.min(50, Math.max(1, limit)),
     );
+  }
+
+  publicFeed(
+    modules?: string[],
+    page = 1,
+    limit = 20,
+  ): Promise<ActivityFeedPage> {
+    return this.activity.findFeed({
+      modules: this.modules(modules),
+      page: Math.max(1, page),
+      limit: Math.min(50, Math.max(1, limit)),
+    });
+  }
+
+  personalizedFeed(
+    viewerId: string,
+    modules?: string[],
+    page = 1,
+    limit = 20,
+  ): Promise<ActivityFeedPage> {
+    return this.activity.findFeed({
+      viewerId,
+      modules: this.modules(modules),
+      page: Math.max(1, page),
+      limit: Math.min(50, Math.max(1, limit)),
+    });
+  }
+
+  markVisited(viewerId: string): Promise<Date> {
+    return this.activity.markVisited(viewerId, new Date());
+  }
+
+  private modules(modules?: string[]): string[] | undefined {
+    const normalized = [
+      ...new Set(
+        modules?.map((item) => item.trim().toUpperCase()).filter(Boolean),
+      ),
+    ];
+    return normalized.length ? normalized.slice(0, 12) : undefined;
   }
 }
 

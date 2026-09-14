@@ -1066,6 +1066,17 @@ Foundation delivered early in Phase 7:
 - idempotent Profile Wall creation and tombstone retraction handling;
 - user activity GraphQL boundary with profile privacy and block enforcement.
 
+Delivered Activity Feed completion:
+
+- guest-safe public and authenticated member feed contracts;
+- deterministic ranking across mentions, followed actors, interests, own
+  activity and recency, without an AI runtime dependency;
+- bilateral block filtering and retracted-event exclusion;
+- normalized, bounded module filters;
+- explicit per-user “since last visit” cursor and unread markers;
+- Command Deck integration with a failure-safe deterministic briefing;
+- dedicated integration coverage for visibility, ranking and visit state.
+
 ## Definition of Done
 
 - one canonical document can render safely across modules;

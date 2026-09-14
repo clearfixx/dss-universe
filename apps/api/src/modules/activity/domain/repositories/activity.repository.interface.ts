@@ -14,7 +14,11 @@
 
 import type { PaginatedResult } from '@api/shared';
 
-import type { ActivityEntry } from '../types/activity-entry.type';
+import type {
+  ActivityEntry,
+  ActivityFeedPage,
+  ActivityFeedQuery,
+} from '../types/activity-entry.type';
 
 export const ACTIVITY_REPOSITORY = Symbol('ACTIVITY_REPOSITORY');
 
@@ -24,6 +28,8 @@ export interface ActivityRepository {
     page: number,
     limit: number,
   ): Promise<PaginatedResult<ActivityEntry>>;
+  findFeed(query: ActivityFeedQuery): Promise<ActivityFeedPage>;
+  markVisited(viewerId: string, visitedAt: Date): Promise<Date>;
 }
 
 /**

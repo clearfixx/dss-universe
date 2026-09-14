@@ -56,6 +56,49 @@ type AchievementRule {
   repeatable: Boolean!
 }
 
+input ActivityFeedInput {
+  limit: Int! = 20
+  modules: [String!]
+  page: Int! = 1
+}
+
+type ActivityFeedItem {
+  action: String!
+  actorId: ID!
+  id: ID!
+  isUnread: Boolean!
+  module: String!
+  occurredAt: String!
+  reason: ActivityFeedReason!
+  score: Float!
+  subjectId: ID!
+  subjectType: String!
+}
+
+type ActivityFeedPage {
+  generatedAt: String!
+  items: [ActivityFeedItem!]!
+  lastVisitedAt: String
+  limit: Int!
+  page: Int!
+  recommendationMode: String!
+  total: Int!
+  totalPages: Int!
+  unreadCount: Int!
+}
+
+enum ActivityFeedReason {
+  FOLLOWING
+  INTEREST
+  MENTION
+  OWN_ACTIVITY
+  RECENT
+}
+
+type ActivityFeedVisit {
+  visitedAt: String!
+}
+
 type ApiInfo {
   name: String!
   status: String!
@@ -741,6 +784,7 @@ type Mutation {
   initiateMediaUpload(input: InitiateMediaUploadInput!): MediaUploadSession!
   login(input: LoginInput!): AuthPayloadModel!
   logout: LogoutResultModel!
+  markActivityFeedVisited: ActivityFeedVisit!
   reactivateAccount(input: LoginInput!): AuthPayloadModel!
   refreshTokens(input: RefreshTokenInput!): AuthPayloadModel!
   register(input: RegisterInput!): AuthPayloadModel!
@@ -901,6 +945,7 @@ type Query {
   presenceSummary: PresenceSummary!
   previewEditorDocument(input: PreviewEditorDocumentInput!): EditorDocumentPreview!
   profileWall(pagination: UsersPageInput, profileOwnerId: ID!): ProfileWallPage!
+  publicActivityFeed(input: ActivityFeedInput): ActivityFeedPage!
   quarantinedMedia(limit: Int! = 25): [MediaQuarantineItem!]!
   reactionSummary(interactionTargetId: ID!): ReactionSummary!
   reputationHistory(pagination: ReputationPageInput, userId: ID!): ReputationHistory!
@@ -913,6 +958,7 @@ type Query {
   userCustomTitles(userId: ID!): [UserTitleGrant!]!
   users(pagination: UsersPageInput): UsersPageModel!
   viewer: Viewer!
+  viewerActivityFeed(input: ActivityFeedInput): ActivityFeedPage!
   viewerBookmarks(pagination: BookmarksPageInput): BookmarkPage!
   viewerCommentDrafts(limit: Int! = 20): [CommentDraft!]!
   viewerNotificationPreferences: NotificationPreferences!

@@ -1,0 +1,26 @@
+query ViewerActivityFeed($input: ActivityFeedInput) {
+  viewerActivityFeed(input: $input) {
+    items {
+      id
+      actorId
+      module
+      action
+      subjectType
+      subjectId
+      occurredAt
+      isUnread
+      reason
+    }
+    total
+    unreadCount
+    lastVisitedAt
+    generatedAt
+    recommendationMode
+  }
+}
+
+mutation MarkActivityFeedVisited {
+  markActivityFeedVisited {
+    visitedAt
+  }
+}

@@ -26,6 +26,38 @@ export interface ActivityEntry {
   occurredAt: Date;
 }
 
+export type ActivityFeedReason =
+  | 'OWN_ACTIVITY'
+  | 'MENTION'
+  | 'FOLLOWING'
+  | 'INTEREST'
+  | 'RECENT';
+
+export interface ActivityFeedItem extends ActivityEntry {
+  isUnread: boolean;
+  reason: ActivityFeedReason;
+  score: number;
+}
+
+export interface ActivityFeedQuery {
+  viewerId?: string;
+  modules?: string[];
+  page: number;
+  limit: number;
+}
+
+export interface ActivityFeedPage {
+  items: ActivityFeedItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  unreadCount: number;
+  lastVisitedAt: Date | null;
+  generatedAt: Date;
+  recommendationMode: 'DETERMINISTIC';
+}
+
 /**
  * Feed entries describe what happened; domain entities retain the real content.
  */

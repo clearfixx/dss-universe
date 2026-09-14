@@ -19,11 +19,13 @@ import { PrismaModule } from '@api/core/database';
 import { ActivityFeedService } from './application/services/activity-feed.service';
 import { ACTIVITY_REPOSITORY } from './domain/repositories/activity.repository.interface';
 import { PrismaActivityRepository } from './infrastructure/repositories/prisma-activity.repository';
+import { ActivityFeedResolver } from './presentation/graphql/resolvers/activity-feed.resolver';
 
 @Module({
   imports: [PrismaModule],
   providers: [
     ActivityFeedService,
+    ActivityFeedResolver,
     {
       provide: ACTIVITY_REPOSITORY,
       useClass: PrismaActivityRepository,
