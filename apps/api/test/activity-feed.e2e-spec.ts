@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto';
 
 import { Test, type TestingModule } from '@nestjs/testing';
 import { ActivityVisibility } from '@prisma/client';
+import type { INestApplication } from '@nestjs/common';
+import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/core/database';
@@ -9,6 +11,7 @@ import { ActivityFeedService } from '../src/modules/activity';
 
 describe('Activity Feed (e2e)', () => {
   let module: TestingModule;
+  let app: INestApplication;
   let prisma: PrismaService;
   let feed: ActivityFeedService;
   const suffix = randomUUID().slice(0, 8);
@@ -20,9 +23,10 @@ describe('Activity Feed (e2e)', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    await module.init();
-    prisma = module.get(PrismaService);
-    feed = module.get(ActivityFeedService);
+    app = module.createNestApplication();
+    await app.init();
+    prisma = app.get(PrismaService);
+    feed = app.get(ActivityFeedService);
     await prisma.user.createMany({
       data: [
         {
@@ -98,7 +102,7 @@ describe('Activity Feed (e2e)', () => {
       where: { sourceEventId: { endsWith: suffix } },
     });
     await prisma.user.deleteMany({ where: { id: { in: Object.values(ids) } } });
-    await module.close();
+    await app.close();
   });
 
   it('keeps guests public and personalizes members without blocked actors', async () => {
@@ -120,6 +124,42 @@ describe('Activity Feed (e2e)', () => {
       'INTEREST',
     );
     expect(member.unreadCount).toBeGreaterThanOrEqual(2);
+  });
+
+  it('exposes the public projection without authentication or metadata', async () => {
+    const response = await request(
+      app.getHttpServer() as Parameters<typeof request>[0],
+    )
+      .post('/api/graphql')
+      .send({
+        query: `query { publicActivityFeed(input: { modules: ["WIKI"] }) {
+          items { id module actorId isUnread reason }
+          recommendationMode unreadCount
+        } }`,
+      })
+      .expect(200);
+    const body = response.body as {
+      errors?: unknown;
+      data: {
+        publicActivityFeed: {
+          recommendationMode: string;
+          unreadCount: number;
+          items: Array<{ actorId: string }>;
+        };
+      };
+    };
+
+    expect(body.errors).toBeUndefined();
+    expect(body.data.publicActivityFeed).toMatchObject({
+      recommendationMode: 'DETERMINISTIC',
+      unreadCount: 0,
+    });
+    expect(
+      body.data.publicActivityFeed.items.some(
+        (item) => item.actorId === ids.blocked,
+      ),
+    ).toBe(true);
+    expect(JSON.stringify(body)).not.toContain('metadata');
   });
 
   it('advances the visit cursor independently from reads', async () => {

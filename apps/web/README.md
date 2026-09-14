@@ -33,8 +33,9 @@ to the API. UI visibility is never the only permission boundary.
 The profile frontend uses React Server Components for GraphQL reads, Server
 Actions for authenticated mutations, Zustand for transient profile-tab state,
 and TanStack Table for the Members Directory. Reputation, points, levels,
-titles and ranking remain owned by Phase 8; shared wall comments, reactions and
-reports remain owned by Phase 9–10.
+titles and ranking remain owned by Phase 8. Phase 9 now supplies the shared
+editor, interactions, Content Gates and deterministic Activity Feed surfaces;
+module-specific publishing and moderation continue in their scheduled phases.
 
 ## GraphQL workflow
 

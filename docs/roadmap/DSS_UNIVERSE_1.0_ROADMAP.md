@@ -877,6 +877,10 @@ All points use a reversible ledger. Deleted/moderated/unpublished content may re
 
 # Phase 9 — Interaction Platform, Shared Content, Editor, Content Gates and Activity Feed
 
+**Status: complete.** The reusable platform foundations and Phase 9 acceptance
+criteria are implemented. Product-owned News, Forum, Knowledge Forge, Academy
+and Moderation integrations remain in their scheduled phases.
+
 ## Interaction Target Registry
 
 - one canonical target identity for News, Community Hub, Research Lab,
@@ -1049,6 +1053,17 @@ Delivered Reports and Moderation Annotations foundation:
 - read-only/ban overrides Premium;
 - API never returns unauthorized hidden content;
 - visually explicit locked/unlocked states.
+
+Delivered Content Gates foundation:
+
+- persisted reusable `ALL`/`ANY` policies with bounded unique requirements;
+- account-age, comments, reputation and group facts, with explicit zero-value
+  adapters for domain ledgers that arrive in later phases;
+- author and Premium bypass with visible notices;
+- server-side recursive redaction that never serializes denied payloads;
+- custom DSS Editor policy builder and viewer-safe delivery decisions;
+- fail-closed guest, missing-viewer and unavailable-policy behavior;
+- Moderation sanction overrides remain owned by Phase 14 as scheduled.
 
 ## Activity Feed
 
