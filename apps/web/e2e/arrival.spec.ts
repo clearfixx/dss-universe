@@ -1,5 +1,56 @@
 import { expect, test } from "@playwright/test";
 
+test("demo activity can be paused and resumed", async ({ page }) => {
+  await page.clock.install();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  const pause = page.getByRole("button", { name: "Pause ambient activity" });
+  await expect(pause).toBeVisible();
+  await expect(
+    page.getByText("A new idea becomes shared knowledge."),
+  ).toBeVisible();
+  await page.clock.fastForward(7000);
+  await expect(
+    page.getByText("Alex shared a guide to React architecture."),
+  ).toBeVisible();
+  await pause.click();
+  await page.clock.fastForward(20000);
+  await expect(
+    page.getByText("Alex shared a guide to React architecture."),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Resume ambient activity" }).click();
+  // Let the browser deliver the new IntersectionObserver subscription before advancing time.
+  await page.waitForTimeout(100);
+  await page.clock.fastForward(7000);
+  await expect(
+    page.getByText("Maria helped a developer find their next step."),
+  ).toBeVisible();
+});
+
+test("unsupported requests do not fabricate answers and cancelled searches stay cancelled", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await page.getByLabel("Explore a demo question").fill("What is the weather?");
+  await page.getByRole("button", { name: "Search demo" }).click();
+  await expect(
+    page.getByText(/This preview has three prepared examples/),
+  ).toBeVisible();
+  await expect(
+    page.getByText(/Start with short-lived access tokens/),
+  ).not.toBeVisible();
+  await page.getByRole("button", { name: /React architecture/ }).click();
+  await page.getByRole("button", { name: "Cancel search" }).click();
+  await page.waitForTimeout(2400);
+  await expect(
+    page.getByText(/Organize the application by product feature/),
+  ).not.toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /React architecture/ }),
+  ).toBeVisible();
+});
+
 test("first arrival finishes, replay can be skipped, returning visits stay ready", async ({
   page,
 }) => {

@@ -6,6 +6,7 @@ import { ArrowRight, Orbit, RotateCcw, Search, Sparkles } from "lucide-react";
 
 import { CoreSphere } from "./core-sphere";
 import styles from "./universe-arrival.module.css";
+import { useStationDemo } from "./use-station-demo";
 
 const visitKey = "dss:arrival:v1";
 const sources = ["Knowledge Forge", "Research Lab", "Community Hub", "Academy"];
@@ -22,9 +23,12 @@ const answers = [
 
 export function UniverseArrival() {
   const root = useRef<HTMLDivElement>(null);
+  const { tick, paused, setPaused, event } = useStationDemo(root);
   const [stage, setStage] = useState<"idle" | "searching" | "answer">("idle");
   const [query, setQuery] = useState("");
   const [answer, setAnswer] = useState(0);
+  const [searchStep, setSearchStep] = useState(0);
+  const [unsupported, setUnsupported] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -93,9 +97,32 @@ export function UniverseArrival() {
     if (!value.trim()) return;
     if (searchTimer.current) clearTimeout(searchTimer.current);
     setQuery(value);
-    setAnswer(/react/i.test(value) ? 1 : /typescript/i.test(value) ? 2 : 0);
+    const match = /react/i.test(value)
+      ? 1
+      : /typescript/i.test(value)
+        ? 2
+        : /jwt|auth/i.test(value)
+          ? 0
+          : -1;
+    setUnsupported(match < 0);
+    if (match < 0) {
+      setStage("idle");
+      return;
+    }
+    setAnswer(match);
+    setSearchStep(0);
     setStage("searching");
-    searchTimer.current = setTimeout(() => setStage("answer"), 2200);
+    let step = 0;
+    const advance = () => {
+      step += 1;
+      setSearchStep(step);
+      if (step === 4) {
+        setStage("answer");
+        return;
+      }
+      searchTimer.current = setTimeout(advance, 550);
+    };
+    searchTimer.current = setTimeout(advance, 550);
   }
 
   return (
@@ -124,7 +151,11 @@ export function UniverseArrival() {
       </header>
       <section className={styles.hero} aria-label="Welcome to DSS Universe">
         <div className={styles.sphere}>
-          <CoreSphere active={stage === "searching"} />
+          <CoreSphere
+            active={stage === "searching"}
+            signal={`${tick}:${stage}`}
+            paused={paused}
+          />
         </div>
         <div className={styles.beams} aria-hidden="true">
           <i />
@@ -158,11 +189,11 @@ export function UniverseArrival() {
           </div>
           <div className={styles.activity}>
             <span className={styles.activityIcon}>✧</span>
-            <div>
+            <div key={tick} className={styles.activityEvent}>
               <small>FROM AROUND THE UNIVERSE · DEMO</small>
-              <p>A new idea becomes shared knowledge.</p>
+              <p>{event.text}</p>
               <span>
-                Knowledge Forge <b>·</b> just now
+                {event.module} <b>·</b> simulated event
               </span>
             </div>
           </div>
@@ -173,23 +204,31 @@ export function UniverseArrival() {
         >
           <div>
             <small>◉ &nbsp; Explorers online</small>
-            <strong>584</strong>
-            <span>+8 joined the station</span>
+            <strong>{event.online}</strong>
+            <span>Exploring together · demo</span>
           </div>
           <div>
             <small>✧ &nbsp; AI conversations</small>
-            <strong>41</strong>
+            <strong>{event.conversations}</strong>
             <span>Ideas in motion</span>
           </div>
           <div>
             <small>☆ &nbsp; Community points</small>
-            <strong>123,587</strong>
+            <strong>{event.points.toLocaleString("en-US")}</strong>
             <span>Knowledge creates value</span>
           </div>
         </aside>
         <div className={styles.coreLabel}>
           <span /> CORE <b>/</b>{" "}
-          <span className={styles.readyLabel}>STATION OPERATIONAL</span>
+          <span className={styles.readyLabel}>
+            {paused
+              ? "AMBIENT ACTIVITY PAUSED"
+              : stage === "searching"
+                ? "EXPLORING CONNECTIONS"
+                : stage === "answer"
+                  ? "RESPONSE READY"
+                  : "STATION OPERATIONAL"}
+          </span>
         </div>
         <div className={styles.console}>
           <div className={styles.consoleHeading}>
@@ -213,6 +252,7 @@ export function UniverseArrival() {
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Ask a question. Find your next idea."
               maxLength={500}
+              readOnly={stage === "searching"}
             />
             <button
               aria-label="Search demo"
@@ -221,6 +261,12 @@ export function UniverseArrival() {
               <ArrowRight size={20} />
             </button>
           </form>
+          {unsupported && (
+            <p role="status" className={styles.demoNotice}>
+              This preview has three prepared examples. Choose one below to
+              explore the experience.
+            </p>
+          )}
           {stage === "idle" && (
             <div className={styles.suggestions}>
               {examples.map((text, index) => (
@@ -243,10 +289,27 @@ export function UniverseArrival() {
                 <Search size={15} />
                 <span>Exploring the Universe…</span>
                 <div className={styles.sourceChips}>
-                  {sources.map((source) => (
-                    <span key={source}>{source}</span>
+                  {sources.map((source, index) => (
+                    <span key={source} data-complete={index < searchStep}>
+                      {index < searchStep ? "✓ " : "◌ "}
+                      {source}
+                    </span>
                   ))}
                 </div>
+                <p className={styles.searchStatus}>
+                  {searchStep === 0
+                    ? "Opening module connections…"
+                    : `${searchStep} of 4 demo modules explored`}
+                </p>
+                <button
+                  className={styles.cancelSearch}
+                  onClick={() => {
+                    if (searchTimer.current) clearTimeout(searchTimer.current);
+                    setStage("idle");
+                  }}
+                >
+                  Cancel search
+                </button>
               </div>
             )}
             {stage === "answer" && (
@@ -275,13 +338,21 @@ export function UniverseArrival() {
         <span>
           <i /> ALL SYSTEMS CONNECTED <small>Simulated activity</small>
         </span>
-        <button
-          onClick={() =>
-            root.current?.dispatchEvent(new Event("replay-arrival"))
-          }
-        >
-          <RotateCcw size={13} /> Replay arrival
-        </button>
+        <div className={styles.playbackControls}>
+          <button
+            aria-pressed={paused}
+            onClick={() => setPaused((value) => !value)}
+          >
+            {paused ? "Resume ambient activity" : "Pause ambient activity"}
+          </button>
+          <button
+            onClick={() =>
+              root.current?.dispatchEvent(new Event("replay-arrival"))
+            }
+          >
+            <RotateCcw size={13} /> Replay arrival
+          </button>
+        </div>
       </div>
     </div>
   );

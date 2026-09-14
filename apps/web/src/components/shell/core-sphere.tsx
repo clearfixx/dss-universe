@@ -3,12 +3,29 @@
 import { useEffect, useRef } from "react";
 
 /** Procedural depth-projected geometry; no textures, network or per-frame React updates. */
-export function CoreSphere({ active }: { active: boolean }) {
+export function CoreSphere({
+  active,
+  signal = "",
+  paused = false,
+}: {
+  active: boolean;
+  signal?: string;
+  paused?: boolean;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const activeRef = useRef(active);
+  const signalRef = useRef(signal);
+  const pausedRef = useRef(paused);
   useEffect(() => {
     activeRef.current = active;
   }, [active]);
+  useEffect(() => {
+    signalRef.current = signal;
+  }, [signal]);
+  useEffect(() => {
+    pausedRef.current = paused;
+    canvasRef.current?.dispatchEvent(new Event("core-playback"));
+  }, [paused]);
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -22,6 +39,8 @@ export function CoreSphere({ active }: { active: boolean }) {
     let previous = 0;
     let elapsed = 0;
     let energy = 0;
+    let lastSignal = signalRef.current;
+    let signalAge = 2000;
     const pointer = { x: 0, y: 0 };
     const view = { x: 0, y: 0 };
     const light = document.createElement("canvas");
@@ -78,9 +97,14 @@ export function CoreSphere({ active }: { active: boolean }) {
       if (!ctx || !canvas) return;
       const delta = previous ? Math.min(now - previous, 50) : 0;
       previous = now;
+      if (lastSignal !== signalRef.current) {
+        lastSignal = signalRef.current;
+        signalAge = 0;
+      }
+      if (!pausedRef.current) signalAge += delta;
       const easing = 1 - Math.exp(-delta / 450);
       energy += ((activeRef.current ? 1 : 0) - energy) * easing;
-      if (!motion.matches) {
+      if (!motion.matches && !pausedRef.current) {
         elapsed += delta;
         rotation += delta * (0.000035 + energy * 0.00009);
         view.x += (pointer.x - view.x) * easing;
@@ -246,8 +270,22 @@ export function CoreSphere({ active }: { active: boolean }) {
       flare.addColorStop(1, "#479aff00");
       ctx.fillStyle = flare;
       ctx.fillRect(center - radius * 0.55, center - 0.5, radius * 1.1, 1);
+      if (!motion.matches && signalAge < 1700) {
+        const progress = signalAge / 1700;
+        ctx.strokeStyle = `rgba(107,187,255,${Math.sin(progress * Math.PI) * 0.5})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(
+          center,
+          center,
+          radius * (0.12 + progress * 0.96),
+          0,
+          Math.PI * 2,
+        );
+        ctx.stroke();
+      }
       ctx.globalCompositeOperation = "source-over";
-      if (visible && !document.hidden && !motion.matches)
+      if (visible && !document.hidden && !motion.matches && !pausedRef.current)
         frame = requestAnimationFrame(draw);
     }
     const restart = () => {
@@ -280,6 +318,7 @@ export function CoreSphere({ active }: { active: boolean }) {
     resize.observe(canvas);
     intersection.observe(canvas);
     canvas.addEventListener("pointermove", move);
+    canvas.addEventListener("core-playback", restart);
     canvas.addEventListener("pointerleave", leave);
     document.addEventListener("visibilitychange", restart);
     motion.addEventListener("change", restart);
@@ -288,6 +327,7 @@ export function CoreSphere({ active }: { active: boolean }) {
       resize.disconnect();
       intersection.disconnect();
       canvas.removeEventListener("pointermove", move);
+      canvas.removeEventListener("core-playback", restart);
       canvas.removeEventListener("pointerleave", leave);
       document.removeEventListener("visibilitychange", restart);
       motion.removeEventListener("change", restart);

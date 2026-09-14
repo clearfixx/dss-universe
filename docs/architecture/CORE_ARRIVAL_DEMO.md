@@ -28,6 +28,14 @@ with three prewritten examples; it makes no AI or search API requests. Source ch
 name illustrative modules and are not actual citations. There are no profile settings
 or live integrations in this package.
 
+The ambient storyboard advances every 6.5 seconds while visible and outside the
+arrival sequence. Each event updates the activity card, bounded telemetry and Core
+signal together. The sequence loops after five events; it is not cumulative real
+community activity. Hidden tabs and offscreen scenes suspend the timer. A pause
+control freezes ambient events and Core rendering; explicit search remains usable.
+Search marks four modules in sequence, supports cancellation and offers prepared
+examples for unsupported input instead of fabricating a matching response.
+
 This renderer is a dependency-free Canvas 2D projection of 3D geometry, not a WebGL
 scene. It establishes the working composition and lifecycle. Further art direction,
 potential WebGL bloom remain subject to visual review;
