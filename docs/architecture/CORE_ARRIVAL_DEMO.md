@@ -22,6 +22,10 @@ finishes the sequence, as does the visible Skip arrival button. Light beams orig
 at the settled nucleus; an expanding ring accompanies the interface assembly.
 The page remains usable without waiting for the animation.
 Server-rendered content stays visible if JavaScript fails.
+Keyboard focus on interface controls completes the arrival, so hidden animated
+controls never trap a keyboard user. Cancelling or resetting search returns focus
+to its input. With JavaScript disabled, the page supplies a static SVG Core and
+hides controls requiring hydration while retaining ordinary navigation.
 
 All telemetry is illustrative. Search is a local, explicitly labelled simulation
 with three prewritten examples; it makes no AI or search API requests. Source chips

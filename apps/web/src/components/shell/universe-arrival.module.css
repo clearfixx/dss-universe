@@ -5,6 +5,13 @@
   background: radial-gradient(ellipse at 60% 35%, #06132b 0, #02050d 57%);
   font-family: inherit;
 }
+.noScriptNotice {
+  padding: 12px 24px;
+  color: #a4bad7;
+  font-size: 12px;
+  text-align: center;
+  border-bottom: 1px solid #6f99d32b;
+}
 .navbar {
   max-width: 1440px;
   margin: auto;

@@ -32,6 +32,7 @@ export function UniverseArrival() {
   const [unsupported, setUnsupported] = useState(false);
   const [selectedSource, setSelectedSource] = useState<number | null>(null);
   const consoleRef = useRef<HTMLDivElement>(null);
+  const queryRef = useRef<HTMLInputElement>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -82,8 +83,13 @@ export function UniverseArrival() {
       clearTimeout(timer);
       finish();
     };
+    const revealFocusedControl = () => {
+      if (document.activeElement?.classList.contains(styles.skip)) return;
+      if (element.dataset.arrival === "playing") skipArrival();
+    };
     element.addEventListener("replay-arrival", replay);
     element.addEventListener("skip-arrival", skipArrival);
+    element.addEventListener("focusin", revealFocusedControl);
     window.addEventListener("keydown", skip);
     motion.addEventListener("change", reduced);
     return () => {
@@ -91,6 +97,7 @@ export function UniverseArrival() {
       if (searchTimer.current) clearTimeout(searchTimer.current);
       element.removeEventListener("replay-arrival", replay);
       element.removeEventListener("skip-arrival", skipArrival);
+      element.removeEventListener("focusin", revealFocusedControl);
       window.removeEventListener("keydown", skip);
       motion.removeEventListener("change", reduced);
     };
@@ -131,6 +138,13 @@ export function UniverseArrival() {
 
   return (
     <div ref={root} className={styles.universe} data-arrival="ready">
+      <noscript>
+        <style>{"[data-demo-interactive] { display: none !important; }"}</style>
+        <p className={styles.noScriptNotice}>
+          The station is ready to explore. Enable JavaScript for the animated
+          Core and interactive demo.
+        </p>
+      </noscript>
       <button
         className={styles.skip}
         onClick={() => root.current?.dispatchEvent(new Event("skip-arrival"))}
@@ -162,6 +176,7 @@ export function UniverseArrival() {
           />
           <div
             className={styles.satellites}
+            data-demo-interactive
             aria-label="Explore connected demo modules"
           >
             <svg viewBox="0 0 600 600" aria-hidden="true">
@@ -270,7 +285,7 @@ export function UniverseArrival() {
                   : "STATION OPERATIONAL"}
           </span>
         </div>
-        <div ref={consoleRef} className={styles.console}>
+        <div ref={consoleRef} className={styles.console} data-demo-interactive>
           <div className={styles.consoleHeading}>
             <Sparkles size={16} />
             <span>What would you like to build today?</span>
@@ -287,6 +302,7 @@ export function UniverseArrival() {
             </label>
             <span aria-hidden="true">›</span>
             <input
+              ref={queryRef}
               id="universe-query"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
@@ -346,6 +362,7 @@ export function UniverseArrival() {
                   onClick={() => {
                     if (searchTimer.current) clearTimeout(searchTimer.current);
                     setStage("idle");
+                    queryRef.current?.focus();
                   }}
                 >
                   Cancel search
@@ -390,6 +407,7 @@ export function UniverseArrival() {
                   onClick={() => {
                     setStage("idle");
                     setQuery("");
+                    queryRef.current?.focus();
                   }}
                 >
                   Explore another question <ArrowRight size={14} />
@@ -403,7 +421,7 @@ export function UniverseArrival() {
         <span>
           <i /> ALL SYSTEMS CONNECTED <small>Simulated activity</small>
         </span>
-        <div className={styles.playbackControls}>
+        <div className={styles.playbackControls} data-demo-interactive>
           <button
             aria-pressed={paused}
             onClick={() => setPaused((value) => !value)}

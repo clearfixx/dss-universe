@@ -334,10 +334,57 @@ export function CoreSphere({
     };
   }, []);
   return (
-    <canvas
-      ref={canvasRef}
-      aria-hidden="true"
-      style={{ width: "100%", aspectRatio: "1" }}
-    />
+    <>
+      <noscript>
+        <svg
+          viewBox="0 0 600 600"
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+          }}
+        >
+          <defs>
+            <radialGradient id="core-static-glow">
+              <stop stopColor="#8ce7ff" />
+              <stop offset=".14" stopColor="#367bff" stopOpacity=".7" />
+              <stop offset="1" stopColor="#1d3eaa" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <circle cx="300" cy="300" r="220" fill="url(#core-static-glow)" />
+          {Array.from({ length: 9 }, (_, i) => (
+            <ellipse
+              key={i}
+              cx="300"
+              cy="300"
+              rx="218"
+              ry={50 + i * 18}
+              transform={`rotate(${i * 23} 300 300)`}
+              fill="none"
+              stroke={i % 2 ? "#8273ff" : "#439fff"}
+              strokeOpacity=".4"
+              strokeWidth=".8"
+            />
+          ))}
+          {Array.from({ length: 36 }, (_, i) => (
+            <circle
+              key={i}
+              cx={300 + Math.cos(i * 2.4) * (100 + (i % 6) * 22)}
+              cy={300 + Math.sin(i * 2.4) * (100 + (i % 6) * 22)}
+              r="2"
+              fill="#9edbff"
+            />
+          ))}
+          <circle cx="300" cy="300" r="5" fill="#dcfaff" />
+        </svg>
+      </noscript>
+      <canvas
+        ref={canvasRef}
+        aria-hidden="true"
+        style={{ width: "100%", aspectRatio: "1" }}
+      />
+    </>
   );
 }

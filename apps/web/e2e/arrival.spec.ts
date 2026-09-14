@@ -1,5 +1,43 @@
 import { expect, test } from "@playwright/test";
 
+test("keyboard interaction reveals the interface and search returns focus", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: /DSS UNIVERSE/ }).focus();
+  await expect(page.locator("[data-arrival]")).toHaveAttribute(
+    "data-arrival",
+    "ready",
+  );
+  await page.getByRole("button", { name: /React architecture/ }).click();
+  await page.getByRole("button", { name: "Cancel search" }).click();
+  await expect(page.getByLabel("Explore a demo question")).toBeFocused();
+  await page.getByRole("button", { name: /React architecture/ }).click();
+  await page.getByRole("button", { name: "Explore another question" }).click();
+  await expect(page.getByLabel("Explore a demo question")).toBeFocused();
+});
+
+test("the guest page remains usable without JavaScript", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto("http://127.0.0.1:3100/");
+  await expect(
+    page.getByRole("heading", { name: /DSS Universe/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(/Enable JavaScript for the animated Core/),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Search demo" }),
+  ).not.toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Enter Station" }).first(),
+  ).toBeVisible();
+  await context.close();
+});
+
 test("Core module opens a demo and source previews remain topic-specific", async ({
   page,
 }) => {
@@ -38,14 +76,14 @@ test("Core module controls stay within a narrow viewport", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  for (const module of [
+  for (const moduleName of [
     "Knowledge Forge",
     "Research Lab",
     "Community Hub",
     "Academy",
   ]) {
     const box = await page
-      .getByRole("button", { name: `Explore ${module} demo` })
+      .getByRole("button", { name: `Explore ${moduleName} demo` })
       .boundingBox();
     expect(box).not.toBeNull();
     expect(box!.x).toBeGreaterThanOrEqual(0);
