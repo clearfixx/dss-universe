@@ -25,7 +25,11 @@ Server-rendered content stays visible if JavaScript fails.
 
 All telemetry is illustrative. Search is a local, explicitly labelled simulation
 with three prewritten examples; it makes no AI or search API requests. Source chips
-name illustrative modules and are not actual citations. There are no profile settings
+open topic-specific illustrative excerpts and are not actual citations. Four
+interactive module markers around Core launch prepared searches, highlight the
+currently explored module and connect visually to the nucleus. Source previews
+support keyboard activation and explicitly identify unpublished demo content.
+There are no profile settings
 or live integrations in this package.
 
 The ambient storyboard advances every 6.5 seconds while visible and outside the

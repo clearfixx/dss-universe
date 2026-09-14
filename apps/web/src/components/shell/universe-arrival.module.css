@@ -65,6 +65,118 @@
   left: 33%;
   pointer-events: auto;
 }
+.satellites {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.satellites svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: #5b9dff33;
+  stroke-width: 0.7;
+  stroke-dasharray: 2 6;
+}
+.satellites button {
+  position: absolute;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transform: translate(-50%, -50%);
+  padding: 9px 10px;
+  border: 1px solid #436a9a66;
+  border-radius: 6px;
+  background: #07101fee;
+  color: #aabdd5;
+  font-size: 9px;
+  white-space: nowrap;
+  transition:
+    border-color 350ms,
+    box-shadow 350ms;
+}
+.satellites button:nth-of-type(1) {
+  left: 18%;
+  top: 23%;
+}
+.satellites button:nth-of-type(2) {
+  left: 81%;
+  top: 29%;
+}
+.satellites button:nth-of-type(3) {
+  left: 18%;
+  top: 69%;
+}
+.satellites button:nth-of-type(4) {
+  left: 80%;
+  top: 74%;
+}
+.satellites button > span {
+  color: #9e8cff;
+  font-size: 13px;
+}
+.satellites button i {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #36536d;
+}
+.satellites button[data-active="true"] {
+  border-color: #759fffa6;
+  box-shadow: 0 0 18px #446aff2b;
+}
+.satellites button[data-active="true"] i {
+  background: #77edd1;
+  box-shadow: 0 0 7px #66e9ce;
+}
+.satellites button:disabled {
+  cursor: wait;
+}
+.sourceChips button {
+  padding: 7px 10px;
+  border: 1px solid #729ac040;
+  border-radius: 5px;
+  font-size: 10px;
+  color: #9ebbdc;
+  background: #030b164d;
+}
+.sourceChips button[aria-expanded="true"] {
+  border-color: #8c7fe9;
+  color: #d6d0ff;
+}
+.sourceChips button > span {
+  padding: 0 0 0 6px;
+  border: 0;
+  background: transparent;
+}
+.sourcePreview {
+  margin-top: 15px;
+  padding: 16px;
+  border-left: 2px solid #8b79d8;
+  border-radius: 0 6px 6px 0;
+  background: #889dcb0a;
+}
+.sourcePreview > small {
+  color: #9b8ece;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+}
+.sourcePreview h2 {
+  margin-top: 9px;
+  color: #d3def0;
+  font-size: 14px;
+  font-weight: 500;
+}
+.sourcePreview > span {
+  color: #697f9e;
+  font-size: 9px;
+}
+.universe[data-arrival="playing"] .satellites {
+  animation: assemble 700ms 1750ms both;
+}
 .copy {
   position: relative;
   width: 42%;
@@ -642,9 +754,10 @@
   .sphere {
     width: 360px;
     max-width: 100%;
-    left: 50%;
+    left: 0;
+    right: 0;
     top: -25px;
-    margin-left: -180px;
+    margin: 0 auto;
   }
   .copy {
     width: 100%;
@@ -653,8 +766,16 @@
   .copy h1 {
     font-size: 42px;
   }
-  .copy h1 > span br {
-    display: none;
+  .satellites button {
+    min-height: 44px;
+  }
+  .satellites button:nth-of-type(1),
+  .satellites button:nth-of-type(3) {
+    left: 22%;
+  }
+  .satellites button:nth-of-type(2),
+  .satellites button:nth-of-type(4) {
+    left: 78%;
   }
   .activity {
     display: none;

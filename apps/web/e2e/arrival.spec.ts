@@ -1,5 +1,58 @@
 import { expect, test } from "@playwright/test";
 
+test("Core module opens a demo and source previews remain topic-specific", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Explore Academy demo" }).click();
+  await expect(page.getByText(/Begin with inference/)).toBeVisible();
+  const source = page.getByRole("button", { name: "Academy", exact: true });
+  await source.click();
+  await expect(source).toHaveAttribute("aria-expanded", "true");
+  await expect(
+    page.getByRole("heading", { name: "Your first strict TypeScript project" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Demo content — not a published resource."),
+  ).toBeVisible();
+  await source.press("Enter");
+  await expect(source).toHaveAttribute("aria-expanded", "false");
+  await page.getByRole("button", { name: "Explore another question" }).click();
+  await page.getByRole("button", { name: /React architecture/ }).click();
+  await expect(
+    page.getByText(/Organize the application by product feature/),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Your first strict TypeScript project" }),
+  ).not.toBeVisible();
+  await page
+    .getByRole("button", { name: "Knowledge Forge", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "A feature-first React project" }),
+  ).toBeVisible();
+});
+
+test("Core module controls stay within a narrow viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  for (const module of [
+    "Knowledge Forge",
+    "Research Lab",
+    "Community Hub",
+    "Academy",
+  ]) {
+    const box = await page
+      .getByRole("button", { name: `Explore ${module} demo` })
+      .boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.x).toBeGreaterThanOrEqual(0);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(320);
+  }
+});
+
 test("demo activity can be paused and resumed", async ({ page }) => {
   await page.clock.install();
   await page.emulateMedia({ reducedMotion: "reduce" });

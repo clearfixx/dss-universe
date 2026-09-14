@@ -7,6 +7,7 @@ import { ArrowRight, Orbit, RotateCcw, Search, Sparkles } from "lucide-react";
 import { CoreSphere } from "./core-sphere";
 import styles from "./universe-arrival.module.css";
 import { useStationDemo } from "./use-station-demo";
+import { demoSources } from "./demo-sources";
 
 const visitKey = "dss:arrival:v1";
 const sources = ["Knowledge Forge", "Research Lab", "Community Hub", "Academy"];
@@ -29,6 +30,8 @@ export function UniverseArrival() {
   const [answer, setAnswer] = useState(0);
   const [searchStep, setSearchStep] = useState(0);
   const [unsupported, setUnsupported] = useState(false);
+  const [selectedSource, setSelectedSource] = useState<number | null>(null);
+  const consoleRef = useRef<HTMLDivElement>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -97,6 +100,7 @@ export function UniverseArrival() {
     if (!value.trim()) return;
     if (searchTimer.current) clearTimeout(searchTimer.current);
     setQuery(value);
+    setSelectedSource(null);
     const match = /react/i.test(value)
       ? 1
       : /typescript/i.test(value)
@@ -153,9 +157,45 @@ export function UniverseArrival() {
         <div className={styles.sphere}>
           <CoreSphere
             active={stage === "searching"}
-            signal={`${tick}:${stage}`}
+            signal={`${tick}:${stage}:${selectedSource}`}
             paused={paused}
           />
+          <div
+            className={styles.satellites}
+            aria-label="Explore connected demo modules"
+          >
+            <svg viewBox="0 0 600 600" aria-hidden="true">
+              <path d="M300 300 L108 138 M300 300 L486 174 M300 300 L108 414 M300 300 L480 444" />
+            </svg>
+            {sources.map((source, index) => (
+              <button
+                key={source}
+                disabled={stage === "searching"}
+                data-active={
+                  stage === "searching"
+                    ? searchStep === index
+                    : selectedSource === index ||
+                      (selectedSource === null && event.module === source)
+                }
+                aria-label={`Explore ${source} demo`}
+                onClick={() => {
+                  search(examples[index === 3 ? 2 : index === 1 ? 1 : 0]!);
+                  consoleRef.current?.scrollIntoView({
+                    block: "nearest",
+                    behavior: window.matchMedia(
+                      "(prefers-reduced-motion: reduce)",
+                    ).matches
+                      ? "instant"
+                      : "smooth",
+                  });
+                }}
+              >
+                <span aria-hidden="true">{["◇", "✧", "◈", "⌁"][index]}</span>
+                {source}
+                <i />
+              </button>
+            ))}
+          </div>
         </div>
         <div className={styles.beams} aria-hidden="true">
           <i />
@@ -230,7 +270,7 @@ export function UniverseArrival() {
                   : "STATION OPERATIONAL"}
           </span>
         </div>
-        <div className={styles.console}>
+        <div ref={consoleRef} className={styles.console}>
           <div className={styles.consoleHeading}>
             <Sparkles size={16} />
             <span>What would you like to build today?</span>
@@ -317,10 +357,35 @@ export function UniverseArrival() {
                 <small>PREWRITTEN DEMO · {examples[answer]}</small>
                 <p>{answers[answer]}</p>
                 <div className={styles.sourceChips}>
-                  {sources.map((source) => (
-                    <span key={source}>{source}</span>
+                  {sources.map((source, index) => (
+                    <button
+                      key={source}
+                      aria-expanded={selectedSource === index}
+                      aria-controls="demo-source-preview"
+                      onClick={() =>
+                        setSelectedSource((current) =>
+                          current === index ? null : index,
+                        )
+                      }
+                    >
+                      {source} <span aria-hidden="true">↗</span>
+                    </button>
                   ))}
                 </div>
+                {selectedSource !== null && (
+                  <section
+                    id="demo-source-preview"
+                    className={styles.sourcePreview}
+                    aria-label={`${sources[selectedSource]} demo source`}
+                  >
+                    <small>
+                      ILLUSTRATIVE SOURCE · {sources[selectedSource]}
+                    </small>
+                    <h2>{demoSources[answer]?.[selectedSource]?.title}</h2>
+                    <p>{demoSources[answer]?.[selectedSource]?.excerpt}</p>
+                    <span>Demo content — not a published resource.</span>
+                  </section>
+                )}
                 <button
                   onClick={() => {
                     setStage("idle");
