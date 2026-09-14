@@ -11,6 +11,8 @@ verified inside the first screen at 1280×720, 1366×768 and 1440×1050.
 The renderer uses 240 depth-projected spherical nodes, 22 precomputed orbit paths,
 moving light packets with fading tails, additive glow and a breathing nucleus.
 Glow sprites are painted once and reused, avoiding per-node canvas shadow blur.
+A counter-rotating inner lattice surrounds the nucleus; a low-opacity atmospheric
+rim separates the outer shell from the background without per-frame blur filters.
 Node identities remain stable during depth sorting so colors and flares do not
 flicker. Pointer movement eases the viewing angle back to neutral on pointer leave;
 demo search smoothly increases rotation speed and nucleus energy.

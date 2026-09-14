@@ -140,6 +140,20 @@ export function CoreSphere({
       glow.addColorStop(1, "#02040b00");
       ctx.fillStyle = glow;
       ctx.fillRect(0, 0, size, size);
+      const atmosphere = ctx.createRadialGradient(
+        center,
+        center,
+        radius * 0.6,
+        center,
+        center,
+        radius * 1.15,
+      );
+      atmosphere.addColorStop(0, "#194fff00");
+      atmosphere.addColorStop(0.65, "#245cfa08");
+      atmosphere.addColorStop(0.82, "#387bff17");
+      atmosphere.addColorStop(1, "#427aff00");
+      ctx.fillStyle = atmosphere;
+      ctx.fillRect(0, 0, size, size);
       for (let i = 0; i < 95; i++) {
         const x = (((i * 137.508) % 100) / 100) * size;
         const y = (((i * 73.791) % 100) / 100) * size;
@@ -161,6 +175,36 @@ export function CoreSphere({
         ctx.stroke();
       });
       ctx.globalCompositeOperation = "lighter";
+      // A counter-rotating inner lattice makes the nucleus a small world of its own.
+      const innerAngle = -rotation * 2.2;
+      const innerScale = 0.32 + energy * 0.025;
+      const inner = points.map((point) =>
+        project(
+          (point.x * Math.cos(innerAngle) + point.z * Math.sin(innerAngle)) *
+            innerScale,
+          point.y * innerScale,
+          (point.z * Math.cos(innerAngle) - point.x * Math.sin(innerAngle)) *
+            innerScale,
+        ),
+      );
+      ctx.beginPath();
+      edges.forEach(([a, b], index) => {
+        if (index % 2) return;
+        ctx.moveTo(inner[a]!.x, inner[a]!.y);
+        ctx.lineTo(inner[b]!.x, inner[b]!.y);
+      });
+      ctx.strokeStyle = "#589fff66";
+      ctx.lineWidth = 0.55;
+      ctx.stroke();
+      inner.forEach((point, index) => {
+        if (index % 4) return;
+        ctx.fillStyle = index % 12 ? "#b4e9ff" : "#c6a4ff";
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 0.8, 0, Math.PI * 2);
+        ctx.fill();
+        if (index % 12 === 0)
+          ctx.drawImage(light, point.x - 8, point.y - 8, 16, 16);
+      });
       orbits.forEach((path, orbit) => {
         ctx.beginPath();
         path.forEach((point, step) => {
