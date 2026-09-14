@@ -19,8 +19,10 @@ at 2×, and animation stops when hidden or outside the viewport. Reduced-motion
 visitors get a still sphere and an immediate interface. All observers, listeners
 and animation/timer handles are cleaned up on unmount.
 
-First-visit playback uses the versioned `dss:arrival:v1` localStorage key. Storage
-failure does not block the page. Replay is available for reviewing the demo; Escape
+First-visit playback uses the versioned `dss:arrival:v1` localStorage key. The timer
+and CSS playback pause together while the document is hidden: only visible arrival
+time counts toward completion. Returning to the tab resumes the remaining time.
+Storage failure does not block the page. Replay is available for reviewing the demo; Escape
 finishes the sequence, as does the visible Skip arrival button. Light beams originate
 at the settled nucleus; an expanding ring accompanies the interface assembly.
 The page remains usable without waiting for the animation.

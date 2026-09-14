@@ -1,5 +1,38 @@
 import { expect, test } from "@playwright/test";
 
+test("arrival only consumes visible time before marking the first visit seen", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await page.goto("/");
+  const scene = page.locator("[data-arrival]");
+  await expect(scene).toHaveAttribute("data-arrival", "playing");
+  await page.evaluate(() => {
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      value: true,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await page.clock.fastForward(10000);
+  await expect(scene).toHaveAttribute("data-arrival-paused", "true");
+  expect(
+    await page.evaluate(() => localStorage.getItem("dss:arrival:v1")),
+  ).toBeNull();
+  await page.evaluate(() => {
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      value: false,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await page.clock.fastForward(3100);
+  await expect(scene).toHaveAttribute("data-arrival", "ready");
+  expect(
+    await page.evaluate(() => localStorage.getItem("dss:arrival:v1")),
+  ).toBe("seen");
+});
+
 test("keyboard interaction reveals the interface and search returns focus", async ({
   page,
 }) => {

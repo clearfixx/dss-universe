@@ -40,12 +40,34 @@ export function UniverseArrival() {
     if (!element) return;
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let timer: ReturnType<typeof setTimeout>;
+    let remaining = 3000;
+    let startedAt: number | null = null;
     const finish = () => {
+      clearTimeout(timer);
+      startedAt = null;
       element.dataset.arrival = "ready";
+      delete element.dataset.arrivalPaused;
       try {
         localStorage.setItem(visitKey, "seen");
       } catch {
         /* Storage is optional. */
+      }
+    };
+    const syncVisibility = () => {
+      if (element.dataset.arrival !== "playing") return;
+      if (document.hidden) {
+        if (startedAt !== null)
+          remaining = Math.max(0, remaining - (performance.now() - startedAt));
+        clearTimeout(timer);
+        startedAt = null;
+        element.dataset.arrivalPaused = "true";
+      } else if (startedAt === null) {
+        delete element.dataset.arrivalPaused;
+        startedAt = performance.now();
+        timer = setTimeout(() => {
+          if (document.hidden) syncVisibility();
+          else finish();
+        }, remaining);
       }
     };
     let seen = false;
@@ -56,16 +78,18 @@ export function UniverseArrival() {
     }
     if (!seen && !motion.matches) {
       element.dataset.arrival = "playing";
-      timer = setTimeout(finish, 3000);
+      syncVisibility();
     }
     const replay = () => {
       clearTimeout(timer);
+      startedAt = null;
+      remaining = 3000;
       if (motion.matches) return;
       element.dataset.arrival = "ready";
       // Restart the same mounted scene; Core never swaps to another illustration.
       void element.offsetWidth;
       element.dataset.arrival = "playing";
-      timer = setTimeout(finish, 3000);
+      syncVisibility();
     };
     const skip = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -92,6 +116,7 @@ export function UniverseArrival() {
     element.addEventListener("focusin", revealFocusedControl);
     window.addEventListener("keydown", skip);
     motion.addEventListener("change", reduced);
+    document.addEventListener("visibilitychange", syncVisibility);
     return () => {
       clearTimeout(timer);
       if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -100,6 +125,7 @@ export function UniverseArrival() {
       element.removeEventListener("focusin", revealFocusedControl);
       window.removeEventListener("keydown", skip);
       motion.removeEventListener("change", reduced);
+      document.removeEventListener("visibilitychange", syncVisibility);
     };
   }, []);
 
