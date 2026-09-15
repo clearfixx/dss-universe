@@ -612,32 +612,6 @@
   outline: 2px solid #8ab9ff;
   outline-offset: 5px;
 }
-.beams {
-  position: absolute;
-  top: calc(min(27.5vw, 370px) - 22px);
-  left: calc(33% + min(27.5vw, 370px));
-  pointer-events: none;
-}
-.beams i {
-  position: absolute;
-  height: 1px;
-  width: 420px;
-  transform-origin: left;
-  background: linear-gradient(90deg, #90c8ff, transparent);
-  opacity: 0;
-}
-.beams i:nth-child(1) {
-  transform: rotate(-135deg);
-  width: 560px;
-}
-.beams i:nth-child(2) {
-  transform: rotate(15deg);
-  width: 320px;
-}
-.beams i:nth-child(3) {
-  transform: rotate(105deg);
-  width: 400px;
-}
 .wave {
   position: absolute;
   pointer-events: none;
@@ -705,15 +679,6 @@
 .universe[data-arrival="playing"] .coreLabel {
   animation: assemble 600ms 2400ms both;
 }
-.universe[data-arrival="playing"] .beams i {
-  animation: beam 1100ms 1000ms both;
-}
-.universe[data-arrival="playing"] .beams i:nth-child(2) {
-  animation-delay: 1500ms;
-}
-.universe[data-arrival="playing"] .beams i:nth-child(3) {
-  animation-delay: 1900ms;
-}
 @keyframes arrive {
   0% {
     left: calc(50% - min(27.5vw, 370px));
@@ -759,17 +724,6 @@
     transform: translateY(0);
   }
 }
-@keyframes beam {
-  0%,
-  100% {
-    opacity: 0;
-    scale: 0 1;
-  }
-  45% {
-    opacity: 0.65;
-    scale: 1 1;
-  }
-}
 @keyframes breathe {
   to {
     opacity: 0.3;
@@ -787,7 +741,6 @@
   .construction {
     display: none;
   }
-  .beams,
   .wave {
     display: none;
   }
@@ -906,9 +859,6 @@
   .bottomBar small {
     display: none;
   }
-  .beams {
-    display: none;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   .construction {
@@ -984,10 +934,6 @@
   .bottomBar {
     margin-inline: 36px;
     padding-block: 14px;
-  }
-  .beams {
-    top: calc(min(22.5vw, 285px) - 20px);
-    left: calc(36% + min(22.5vw, 285px));
   }
   .wave {
     top: calc(min(22.5vw, 285px) - 65px);

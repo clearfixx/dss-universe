@@ -1,5 +1,34 @@
 # Core and Arrival Sequence — demo foundation
 
+## Review checkpoint — 2026-09-15
+
+Status: functional demo ready for visual review. This is not approval of final
+art direction, production readiness, or completion of the full Universe Landing.
+
+Verified at this checkpoint:
+
+- Formatting and web lint passed; production build and TypeScript passed.
+- Web unit checks: 13 files, 22 tests passed.
+- Chromium E2E: 13 scenarios passed, including replay, visibility pause, keyboard,
+  no-script fallback, source selection, cancellation and narrow-screen controls.
+- All three prepared topics were exercised with source previews in a separate
+  browser run: no runtime errors or POST requests were observed.
+- Obsolete fixed-angle beam styles were removed after the measured construction
+  paths replaced them.
+
+Still open for product/design review:
+
+- How closely the Canvas sphere matches the reference energy, density and glow.
+- Whether the three-second construction sequence conveys the desired arrival.
+- Final wording, language, module naming and the long-term Core identity.
+
+Deliberate demo boundaries: guest homepage only; authenticated visitors keep their
+existing Command Deck. Data and sources are fixtures. Real AI, live events, profile
+preferences and full landing-page modules are not implemented here. Frame timings
+reported during development are local Chromium samples, not a cross-device SLA.
+
+## Implementation
+
 The guest homepage now owns the living Core. A single mounted procedural canvas
 grows from a point, shifts right and stays in the Hero. The three-second sequence
 reveals navigation, copy, telemetry and search with light beams and clipped reveals.
