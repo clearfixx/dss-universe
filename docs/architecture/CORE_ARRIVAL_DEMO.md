@@ -4,6 +4,12 @@ The guest homepage now owns the living Core. A single mounted procedural canvas
 grows from a point, shifts right and stays in the Hero. The three-second sequence
 reveals navigation, copy, telemetry and search with light beams and clipped reveals.
 The left copy column has a stable final position.
+Desktop construction now measures the actual Core and interface bounds before each
+playback. Four light paths travel to the navbar, copy, telemetry and composer,
+trace their outlines and precede content reveals within the three-second scene.
+The copy reveals vertically to preserve whole letter shapes. A resize during
+playback completes the scene; replay measures the new layout. Compact screens
+retain simpler reveals, and reduced-motion visitors skip construction effects.
 Laptop viewports at least 1101px wide and no more than 900px tall use a compact
 composition with matching arrival-beam coordinates. The initial composer was
 verified inside the first screen at 1280×720, 1366×768 and 1440×1050.

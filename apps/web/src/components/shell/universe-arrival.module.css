@@ -12,6 +12,89 @@
   text-align: center;
   border-bottom: 1px solid #6f99d32b;
 }
+.construction {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+}
+.construction path {
+  fill: none;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.construction [data-delivery] {
+  stroke: #8ccbff;
+  stroke-width: 1.3;
+}
+.construction [data-outline] {
+  stroke: #879cff;
+  stroke-width: 1;
+}
+.construction g {
+  --launch: 1050ms;
+  --draw: 1320ms;
+}
+.construction g:nth-child(2) {
+  --launch: 1250ms;
+  --draw: 1520ms;
+}
+.construction g:nth-child(3) {
+  --launch: 1550ms;
+  --draw: 1820ms;
+}
+.construction g:nth-child(4) {
+  --launch: 1850ms;
+  --draw: 2170ms;
+}
+.universe[data-arrival="playing"] .construction {
+  opacity: 1;
+}
+.universe[data-arrival="playing"] .construction [data-delivery] {
+  animation: deliver 650ms var(--launch) both;
+}
+.universe[data-arrival="playing"] .construction [data-outline] {
+  animation: outline 700ms var(--draw) both;
+}
+@keyframes deliver {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.85;
+  }
+  55% {
+    stroke-dashoffset: 0;
+    opacity: 0.85;
+  }
+  100% {
+    stroke-dashoffset: -1;
+    opacity: 0;
+  }
+}
+@keyframes outline {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.7;
+  }
+  65% {
+    stroke-dashoffset: 0;
+    opacity: 0.5;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
 .universe[data-arrival="playing"][data-arrival-paused="true"] * {
   animation-play-state: paused !important;
 }
@@ -596,16 +679,26 @@
   animation: arrive 3s cubic-bezier(0.22, 0.68, 0.25, 1) both;
 }
 .universe[data-arrival="playing"] .navbar {
-  animation: assemble 700ms 1100ms both;
+  animation: assemble 550ms 1450ms both;
 }
 .universe[data-arrival="playing"] .copy {
-  animation: assemble 800ms 1500ms both;
+  animation: materialize 550ms 1650ms both;
+}
+@keyframes materialize {
+  from {
+    opacity: 0.2;
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0);
+  }
 }
 .universe[data-arrival="playing"] .telemetry {
-  animation: assemble 700ms 1800ms both;
+  animation: assemble 550ms 1950ms both;
 }
 .universe[data-arrival="playing"] .console {
-  animation: assemble 700ms 2200ms both;
+  animation: assemble 600ms 2350ms both;
 }
 .universe[data-arrival="playing"] .bottomBar,
 .universe[data-arrival="playing"] .coreLabel {
@@ -633,7 +726,7 @@
     left: calc(50% - min(27.5vw, 370px));
     transform: scale(0.8);
   }
-  44%,
+  35%,
   100% {
     left: 33%;
     transform: scale(1);
@@ -690,6 +783,9 @@
   }
 }
 @media (max-width: 1100px) {
+  .construction {
+    display: none;
+  }
   .beams,
   .wave {
     display: none;
@@ -814,6 +910,9 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .construction {
+    display: none;
+  }
   .universe[data-arrival="playing"] .skip {
     display: none;
   }
@@ -910,7 +1009,7 @@
     left: calc(50% - min(22.5vw, 285px));
     transform: scale(0.8);
   }
-  44%,
+  35%,
   100% {
     left: 36%;
     transform: scale(1);

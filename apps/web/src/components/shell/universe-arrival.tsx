@@ -33,6 +33,7 @@ export function UniverseArrival() {
   const [selectedSource, setSelectedSource] = useState<number | null>(null);
   const consoleRef = useRef<HTMLDivElement>(null);
   const queryRef = useRef<HTMLInputElement>(null);
+  const constructionRef = useRef<SVGSVGElement>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -42,6 +43,36 @@ export function UniverseArrival() {
     let timer: ReturnType<typeof setTimeout>;
     let remaining = 3000;
     let startedAt: number | null = null;
+    const measureConstruction = () => {
+      const svg = constructionRef.current;
+      const anchor = element.querySelector("[data-core-anchor]");
+      if (!svg || !anchor) return;
+      const bounds = element.getBoundingClientRect();
+      const core = anchor.getBoundingClientRect();
+      const x = core.left + core.width / 2 - bounds.left;
+      const y = core.top + core.height / 2 - bounds.top;
+      svg.setAttribute("viewBox", `0 0 ${bounds.width} ${bounds.height}`);
+      for (const name of ["navbar", "copy", "telemetry", "console"]) {
+        const target = element.querySelector(`[data-arrival-target="${name}"]`);
+        if (!target) continue;
+        const rect = target.getBoundingClientRect();
+        const left = rect.left - bounds.left;
+        const top = rect.top - bounds.top;
+        const tx = left + rect.width / 2;
+        const ty = top;
+        const group = svg.querySelector(`[data-build="${name}"]`);
+        group?.setAttribute("visibility", rect.width ? "visible" : "hidden");
+        group
+          ?.querySelector("[data-delivery]")
+          ?.setAttribute("d", `M ${x} ${y} Q ${tx} ${y} ${tx} ${ty}`);
+        group
+          ?.querySelector("[data-outline]")
+          ?.setAttribute(
+            "d",
+            `M ${tx} ${top} H ${left + rect.width} V ${top + rect.height} H ${left} V ${top} Z`,
+          );
+      }
+    };
     const finish = () => {
       clearTimeout(timer);
       startedAt = null;
@@ -77,6 +108,7 @@ export function UniverseArrival() {
       /* Play once per mount when storage is unavailable. */
     }
     if (!seen && !motion.matches) {
+      measureConstruction();
       element.dataset.arrival = "playing";
       syncVisibility();
     }
@@ -88,6 +120,7 @@ export function UniverseArrival() {
       element.dataset.arrival = "ready";
       // Restart the same mounted scene; Core never swaps to another illustration.
       void element.offsetWidth;
+      measureConstruction();
       element.dataset.arrival = "playing";
       syncVisibility();
     };
@@ -117,6 +150,11 @@ export function UniverseArrival() {
     window.addEventListener("keydown", skip);
     motion.addEventListener("change", reduced);
     document.addEventListener("visibilitychange", syncVisibility);
+    // Resizing changes target geometry; complete the current scene without jumping paths.
+    const resized = () => {
+      if (element.dataset.arrival === "playing") finish();
+    };
+    window.addEventListener("resize", resized);
     return () => {
       clearTimeout(timer);
       if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -126,6 +164,7 @@ export function UniverseArrival() {
       window.removeEventListener("keydown", skip);
       motion.removeEventListener("change", reduced);
       document.removeEventListener("visibilitychange", syncVisibility);
+      window.removeEventListener("resize", resized);
     };
   }, []);
 
@@ -164,6 +203,19 @@ export function UniverseArrival() {
 
   return (
     <div ref={root} className={styles.universe} data-arrival="ready">
+      <svg
+        ref={constructionRef}
+        className={styles.construction}
+        aria-hidden="true"
+        preserveAspectRatio="none"
+      >
+        {["navbar", "copy", "telemetry", "console"].map((name) => (
+          <g key={name} data-build={name}>
+            <path data-delivery pathLength="1" />
+            <path data-outline pathLength="1" />
+          </g>
+        ))}
+      </svg>
       <noscript>
         <style>{"[data-demo-interactive] { display: none !important; }"}</style>
         <p className={styles.noScriptNotice}>
@@ -177,7 +229,7 @@ export function UniverseArrival() {
       >
         Skip arrival <span>ESC</span>
       </button>
-      <header className={styles.navbar}>
+      <header className={styles.navbar} data-arrival-target="navbar">
         <Link href="/" className={styles.brand}>
           <Orbit size={25} />
           <span>
@@ -194,7 +246,7 @@ export function UniverseArrival() {
         <span className={styles.preview}>EXPERIENCE PREVIEW</span>
       </header>
       <section className={styles.hero} aria-label="Welcome to DSS Universe">
-        <div className={styles.sphere}>
+        <div className={styles.sphere} data-core-anchor>
           <CoreSphere
             active={stage === "searching"}
             signal={`${tick}:${stage}:${selectedSource}`}
@@ -238,13 +290,8 @@ export function UniverseArrival() {
             ))}
           </div>
         </div>
-        <div className={styles.beams} aria-hidden="true">
-          <i />
-          <i />
-          <i />
-        </div>
         <div className={styles.wave} aria-hidden="true" />
-        <div className={styles.copy}>
+        <div className={styles.copy} data-arrival-target="copy">
           <p className={styles.eyebrow}>
             <span /> A UNIVERSE BUILT BY YOU
           </p>
@@ -281,6 +328,7 @@ export function UniverseArrival() {
         </div>
         <aside
           className={styles.telemetry}
+          data-arrival-target="telemetry"
           aria-label="Demonstration station activity"
         >
           <div>
@@ -311,7 +359,12 @@ export function UniverseArrival() {
                   : "STATION OPERATIONAL"}
           </span>
         </div>
-        <div ref={consoleRef} className={styles.console} data-demo-interactive>
+        <div
+          ref={consoleRef}
+          className={styles.console}
+          data-demo-interactive
+          data-arrival-target="console"
+        >
           <div className={styles.consoleHeading}>
             <Sparkles size={16} />
             <span>What would you like to build today?</span>

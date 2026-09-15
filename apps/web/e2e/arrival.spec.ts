@@ -1,5 +1,31 @@
 import { expect, test } from "@playwright/test";
 
+test("resizing during construction completes the scene without hiding controls", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1050 });
+  await page.goto("/");
+  await expect(page.locator("[data-arrival]")).toHaveAttribute(
+    "data-arrival",
+    "playing",
+  );
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await expect(page.locator("[data-arrival]")).toHaveAttribute(
+    "data-arrival",
+    "ready",
+  );
+  await expect(page.getByLabel("Explore a demo question")).toBeVisible();
+  await page.getByRole("button", { name: "Replay arrival" }).click();
+  await expect(page.locator("[data-arrival]")).toHaveAttribute(
+    "data-arrival",
+    "playing",
+  );
+  await page.keyboard.press("Escape");
+  await expect(
+    page.getByRole("link", { name: "Enter Station" }).first(),
+  ).toBeVisible();
+});
+
 test("arrival only consumes visible time before marking the first visit seen", async ({
   page,
 }) => {
