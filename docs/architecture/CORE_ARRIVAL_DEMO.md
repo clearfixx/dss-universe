@@ -7,6 +7,9 @@ The left copy column has a stable final position.
 Desktop construction now measures the actual Core and interface bounds before each
 playback. Four light paths travel to the navbar, copy, telemetry and composer,
 trace their outlines and precede content reveals within the three-second scene.
+Telemetry counts up during its reveal using the same visible-time clock; skipping
+restores exact values immediately. Screen readers receive stable final numbers,
+while the decorative animated values are hidden from accessibility announcements.
 The copy reveals vertically to preserve whole letter shapes. A resize during
 playback completes the scene; replay measures the new layout. Compact screens
 retain simpler reveals, and reduced-motion visitors skip construction effects.

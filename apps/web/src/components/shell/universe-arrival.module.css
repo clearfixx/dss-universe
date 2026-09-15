@@ -421,6 +421,7 @@
   color: #a1b2ca;
 }
 .telemetry strong {
+  font-variant-numeric: tabular-nums;
   display: block;
   font-size: 25px;
   font-weight: 400;

@@ -159,6 +159,8 @@ test("demo activity can be paused and resumed", async ({ page }) => {
   await expect(
     page.getByText("A new idea becomes shared knowledge."),
   ).toBeVisible();
+  // Allow the initial visibility observer to start the ambient timer.
+  await page.waitForTimeout(100);
   await page.clock.fastForward(7000);
   await expect(
     page.getByText("Alex shared a guide to React architecture."),

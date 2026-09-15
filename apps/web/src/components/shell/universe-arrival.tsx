@@ -43,6 +43,26 @@ export function UniverseArrival() {
     let timer: ReturnType<typeof setTimeout>;
     let remaining = 3000;
     let startedAt: number | null = null;
+    let counterFrame = 0;
+    const numberFormat = new Intl.NumberFormat("en-US");
+    const paintCounters = (progress: number) => {
+      element
+        .querySelectorAll<HTMLElement>("[data-arrival-count]")
+        .forEach((node) => {
+          const value = Number(node.dataset.arrivalCount);
+          node.textContent = numberFormat.format(Math.round(value * progress));
+        });
+    };
+    const animateCounters = () => {
+      if (element.dataset.arrival !== "playing" || document.hidden) return;
+      const elapsed =
+        3000 -
+        remaining +
+        (startedAt === null ? 0 : performance.now() - startedAt);
+      const progress = Math.max(0, Math.min(1, (elapsed - 1950) / 750));
+      paintCounters(1 - Math.pow(1 - progress, 3));
+      if (progress < 1) counterFrame = requestAnimationFrame(animateCounters);
+    };
     const measureConstruction = () => {
       const svg = constructionRef.current;
       const anchor = element.querySelector("[data-core-anchor]");
@@ -75,6 +95,8 @@ export function UniverseArrival() {
     };
     const finish = () => {
       clearTimeout(timer);
+      cancelAnimationFrame(counterFrame);
+      paintCounters(1);
       startedAt = null;
       element.dataset.arrival = "ready";
       delete element.dataset.arrivalPaused;
@@ -87,6 +109,7 @@ export function UniverseArrival() {
     const syncVisibility = () => {
       if (element.dataset.arrival !== "playing") return;
       if (document.hidden) {
+        cancelAnimationFrame(counterFrame);
         if (startedAt !== null)
           remaining = Math.max(0, remaining - (performance.now() - startedAt));
         clearTimeout(timer);
@@ -95,6 +118,7 @@ export function UniverseArrival() {
       } else if (startedAt === null) {
         delete element.dataset.arrivalPaused;
         startedAt = performance.now();
+        counterFrame = requestAnimationFrame(animateCounters);
         timer = setTimeout(() => {
           if (document.hidden) syncVisibility();
           else finish();
@@ -114,6 +138,7 @@ export function UniverseArrival() {
     }
     const replay = () => {
       clearTimeout(timer);
+      cancelAnimationFrame(counterFrame);
       startedAt = null;
       remaining = 3000;
       if (motion.matches) return;
@@ -157,6 +182,7 @@ export function UniverseArrival() {
     window.addEventListener("resize", resized);
     return () => {
       clearTimeout(timer);
+      cancelAnimationFrame(counterFrame);
       if (searchTimer.current) clearTimeout(searchTimer.current);
       element.removeEventListener("replay-arrival", replay);
       element.removeEventListener("skip-arrival", skipArrival);
@@ -333,17 +359,34 @@ export function UniverseArrival() {
         >
           <div>
             <small>◉ &nbsp; Explorers online</small>
-            <strong>{event.online}</strong>
+            <strong>
+              <span className={styles.inputLabel}>{event.online}</span>
+              <span aria-hidden="true" data-arrival-count={event.online}>
+                {event.online}
+              </span>
+            </strong>
             <span>Exploring together · demo</span>
           </div>
           <div>
             <small>✧ &nbsp; AI conversations</small>
-            <strong>{event.conversations}</strong>
+            <strong>
+              <span className={styles.inputLabel}>{event.conversations}</span>
+              <span aria-hidden="true" data-arrival-count={event.conversations}>
+                {event.conversations}
+              </span>
+            </strong>
             <span>Ideas in motion</span>
           </div>
           <div>
             <small>☆ &nbsp; Community points</small>
-            <strong>{event.points.toLocaleString("en-US")}</strong>
+            <strong>
+              <span className={styles.inputLabel}>
+                {event.points.toLocaleString("en-US")}
+              </span>
+              <span aria-hidden="true" data-arrival-count={event.points}>
+                {event.points.toLocaleString("en-US")}
+              </span>
+            </strong>
             <span>Knowledge creates value</span>
           </div>
         </aside>
