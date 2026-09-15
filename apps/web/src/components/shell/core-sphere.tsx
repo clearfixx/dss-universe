@@ -6,15 +6,18 @@ import { useEffect, useRef } from "react";
 export function CoreSphere({
   active,
   signal = "",
+  phase = "idle",
   paused = false,
 }: {
   active: boolean;
   signal?: string;
+  phase?: "idle" | "searching" | "answer";
   paused?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const activeRef = useRef(active);
   const signalRef = useRef(signal);
+  const phaseRef = useRef(phase);
   const pausedRef = useRef(paused);
   useEffect(() => {
     activeRef.current = active;
@@ -22,6 +25,9 @@ export function CoreSphere({
   useEffect(() => {
     signalRef.current = signal;
   }, [signal]);
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
   useEffect(() => {
     pausedRef.current = paused;
     canvasRef.current?.dispatchEvent(new Event("core-playback"));
@@ -41,6 +47,8 @@ export function CoreSphere({
     let energy = 0;
     let lastSignal = signalRef.current;
     let signalAge = 2000;
+    let lastPhase = phaseRef.current;
+    let reaction: "activity" | "search" | "answer" | "none" = "none";
     const pointer = { x: 0, y: 0 };
     const view = { x: 0, y: 0 };
     const light = document.createElement("canvas");
@@ -56,6 +64,18 @@ export function CoreSphere({
       halo.addColorStop(1, "#456aff00");
       lightContext.fillStyle = halo;
       lightContext.fillRect(0, 0, 64, 64);
+    }
+    const distantLight = document.createElement("canvas");
+    distantLight.width = 32;
+    distantLight.height = 32;
+    const distantContext = distantLight.getContext("2d");
+    if (distantContext) {
+      const blur = distantContext.createRadialGradient(16, 16, 0, 16, 16, 16);
+      blur.addColorStop(0, "#7babff70");
+      blur.addColorStop(0.3, "#677fff42");
+      blur.addColorStop(1, "#657aff00");
+      distantContext.fillStyle = blur;
+      distantContext.fillRect(0, 0, 32, 32);
     }
     // Paint the soft light volume once: blur is never applied to text or the whole scene.
     const volume = document.createElement("canvas");
@@ -150,6 +170,15 @@ export function CoreSphere({
       if (lastSignal !== signalRef.current) {
         lastSignal = signalRef.current;
         signalAge = 0;
+        reaction =
+          phaseRef.current === "searching"
+            ? "search"
+            : lastPhase === "searching" && phaseRef.current === "answer"
+              ? "answer"
+              : lastPhase === "searching"
+                ? "none"
+                : "activity";
+        lastPhase = phaseRef.current;
       }
       if (!pausedRef.current) signalAge += delta;
       const easing = 1 - Math.exp(-delta / 450);
@@ -233,7 +262,8 @@ export function CoreSphere({
       edges.forEach(([a, b]) => {
         const p = projected[a]!;
         const q = projected[b]!;
-        ctx.strokeStyle = `rgba(63,116,255,${0.07 + ((p.z + q.z + 2) / 4) * 0.34})`;
+        const depth = (p.z + q.z + 2) / 4;
+        ctx.strokeStyle = `rgba(63,116,255,${0.025 + depth * depth * 0.38})`;
         ctx.beginPath();
         ctx.moveTo(p.x, p.y);
         ctx.lineTo(q.x, q.y);
@@ -311,6 +341,22 @@ export function CoreSphere({
         .forEach((p) => {
           const i = p.id;
           const bright = (p.z + 1) / 2;
+          // Defocus only the back hemisphere; cached soft sprites avoid frame-time blur.
+          const focus = Math.max(0, Math.min(1, (p.z + 0.35) / 0.55));
+          if (focus < 1) {
+            ctx.globalAlpha = 1 - focus;
+            const diameter = 5 + -p.z * 5;
+            ctx.drawImage(
+              distantLight,
+              p.x - diameter / 2,
+              p.y - diameter / 2,
+              diameter,
+              diameter,
+            );
+            ctx.globalAlpha = 1;
+          }
+          if (focus === 0) return;
+          ctx.globalAlpha = focus;
           if (bright > 0.6 && i % 3 === 0)
             ctx.drawImage(light, p.x - 10, p.y - 10, 20, 20);
           ctx.fillStyle =
@@ -320,6 +366,7 @@ export function CoreSphere({
           ctx.beginPath();
           ctx.arc(p.x, p.y, 0.7 + bright * 1.8, 0, Math.PI * 2);
           ctx.fill();
+          ctx.globalAlpha = 1;
         });
       // Small lens flares retain crisp luminous centers at every display scale.
       projected
@@ -379,15 +426,38 @@ export function CoreSphere({
       flare.addColorStop(1, "#479aff00");
       ctx.fillStyle = flare;
       ctx.fillRect(center - radius * 0.55, center - 0.5, radius * 1.1, 1);
-      if (!motion.matches && signalAge < 1700) {
-        const progress = signalAge / 1700;
-        ctx.strokeStyle = `rgba(107,187,255,${Math.sin(progress * Math.PI) * 0.5})`;
+      if (!motion.matches && activeRef.current) {
+        // Search pulls three staggered packets toward the nucleus.
+        for (let ring = 0; ring < 3; ring++) {
+          const progress = (elapsed / 1450 + ring / 3) % 1;
+          ctx.strokeStyle = `rgba(156,132,255,${Math.sin(progress * Math.PI) * 0.24 * energy})`;
+          ctx.lineWidth = 0.8;
+          ctx.beginPath();
+          ctx.arc(
+            center,
+            center,
+            radius * (1 - progress * 0.9),
+            0,
+            Math.PI * 2,
+          );
+          ctx.stroke();
+        }
+      }
+      const reactionDuration = reaction === "answer" ? 2100 : 1050;
+      if (
+        !motion.matches &&
+        (reaction === "activity" || reaction === "answer") &&
+        signalAge < reactionDuration
+      ) {
+        const progress = signalAge / reactionDuration;
+        const strength = reaction === "answer" ? 0.48 : 0.25;
+        ctx.strokeStyle = `rgba(${reaction === "answer" ? "116,228,235" : "107,187,255"},${Math.sin(progress * Math.PI) * strength})`;
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.arc(
           center,
           center,
-          radius * (0.12 + progress * 0.96),
+          radius * (0.12 + (1 - Math.pow(1 - progress, 2)) * 0.96),
           0,
           Math.PI * 2,
         );

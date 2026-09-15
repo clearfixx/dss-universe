@@ -275,6 +275,7 @@ export function UniverseArrival() {
         <div className={styles.sphere} data-core-anchor>
           <CoreSphere
             active={stage === "searching"}
+            phase={stage}
             signal={`${tick}:${stage}:${selectedSource}`}
             paused={paused}
           />

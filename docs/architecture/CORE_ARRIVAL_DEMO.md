@@ -56,6 +56,10 @@ is painted once to an offscreen canvas; the sharp geometry and interface are not
 blurred. The volume slowly turns and breathes with the existing Core clock.
 Node identities remain stable during depth sorting so colors and flares do not
 flicker. Pointer movement eases the viewing angle back to neutral on pointer leave;
+Rear nodes crossfade into cached soft sprites, with dimmer rear connections, while
+front nodes remain sharp. Search sends staggered rings inward; a completed response
+releases a slower cyan wave, and ambient events produce a shorter blue pulse.
+Cancelling a search does not emit the completed-response effect.
 demo search smoothly increases rotation speed and nucleus energy.
 Geometry is initialized once, canvas resolution is capped
 at 2×, and animation stops when hidden or outside the viewport. Reduced-motion
