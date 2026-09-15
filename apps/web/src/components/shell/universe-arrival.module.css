@@ -428,7 +428,7 @@
   margin: 8px 0 4px;
   letter-spacing: 0.01em;
 }
-.telemetry span {
+.telemetry > div > span {
   font-size: 8px;
   color: #55cbb2;
 }

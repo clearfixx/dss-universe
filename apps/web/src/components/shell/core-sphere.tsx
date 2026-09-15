@@ -57,6 +57,56 @@ export function CoreSphere({
       lightContext.fillStyle = halo;
       lightContext.fillRect(0, 0, 64, 64);
     }
+    // Paint the soft light volume once: blur is never applied to text or the whole scene.
+    const volume = document.createElement("canvas");
+    volume.width = 256;
+    volume.height = 256;
+    const volumeContext = volume.getContext("2d");
+    if (volumeContext) {
+      volumeContext.globalCompositeOperation = "lighter";
+      const clouds = [
+        { x: 128, y: 128, r: 119, color: "35,75,255", strength: 0.38 },
+        { x: 124, y: 127, r: 76, color: "43,177,255", strength: 0.48 },
+        { x: 103, y: 100, r: 65, color: "134,58,255", strength: 0.36 },
+        { x: 158, y: 149, r: 69, color: "76,69,255", strength: 0.3 },
+        { x: 150, y: 92, r: 44, color: "30,137,255", strength: 0.22 },
+      ];
+      for (const cloud of clouds) {
+        const mist = volumeContext.createRadialGradient(
+          cloud.x,
+          cloud.y,
+          0,
+          cloud.x,
+          cloud.y,
+          cloud.r,
+        );
+        mist.addColorStop(0, `rgba(${cloud.color},${cloud.strength})`);
+        mist.addColorStop(
+          0.35,
+          `rgba(${cloud.color},${cloud.strength * 0.55})`,
+        );
+        mist.addColorStop(1, `rgba(${cloud.color},0)`);
+        volumeContext.fillStyle = mist;
+        volumeContext.fillRect(0, 0, 256, 256);
+      }
+      volumeContext.filter = "blur(9px)";
+      volumeContext.strokeStyle = "#7973ff70";
+      volumeContext.lineWidth = 7;
+      for (let i = 0; i < 3; i++) {
+        volumeContext.beginPath();
+        volumeContext.ellipse(
+          128,
+          128,
+          45 + i * 12,
+          24 + i * 7,
+          i * 1.1,
+          0.3,
+          Math.PI * 1.6,
+        );
+        volumeContext.stroke();
+      }
+      volumeContext.filter = "none";
+    }
     const points = Array.from({ length: 240 }, (_, i) => {
       const y = 1 - (i / 239) * 2;
       const radius = Math.sqrt(1 - y * y);
@@ -140,6 +190,21 @@ export function CoreSphere({
       glow.addColorStop(1, "#02040b00");
       ctx.fillStyle = glow;
       ctx.fillRect(0, 0, size, size);
+      ctx.save();
+      ctx.translate(center, center);
+      ctx.rotate(-rotation * 0.4);
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha =
+        0.88 + Math.sin(elapsed * 0.0009) * 0.07 + energy * 0.12;
+      const volumeSize = radius * 2.45;
+      ctx.drawImage(
+        volume,
+        -volumeSize / 2,
+        -volumeSize / 2,
+        volumeSize,
+        volumeSize,
+      );
+      ctx.restore();
       const atmosphere = ctx.createRadialGradient(
         center,
         center,

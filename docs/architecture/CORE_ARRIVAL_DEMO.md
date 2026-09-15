@@ -51,6 +51,9 @@ moving light packets with fading tails, additive glow and a breathing nucleus.
 Glow sprites are painted once and reused, avoiding per-node canvas shadow blur.
 A counter-rotating inner lattice surrounds the nucleus; a low-opacity atmospheric
 rim separates the outer shell from the background without per-frame blur filters.
+A cached blue-violet light volume adds interior bloom and blurred wisps. Its blur
+is painted once to an offscreen canvas; the sharp geometry and interface are not
+blurred. The volume slowly turns and breathes with the existing Core clock.
 Node identities remain stable during depth sorting so colors and flares do not
 flicker. Pointer movement eases the viewing angle back to neutral on pointer leave;
 demo search smoothly increases rotation speed and nucleus energy.
