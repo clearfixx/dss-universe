@@ -54,6 +54,10 @@ rim separates the outer shell from the background without per-frame blur filters
 A cached blue-violet light volume adds interior bloom and blurred wisps. Its blur
 is painted once to an offscreen canvas; the sharp geometry and interface are not
 blurred. The volume slowly turns and breathes with the existing Core clock.
+Two slow frequencies vary the breathing without randomness or abrupt changes;
+orbital tails have mixed lengths with a few longer accents. Activity and search
+panels briefly catch the Core's light on their edges. These accents respect pause
+and reduced-motion preferences and do not increase the permanent glow.
 Node identities remain stable during depth sorting so colors and flares do not
 flicker. Pointer movement eases the viewing angle back to neutral on pointer leave;
 Rear nodes crossfade into cached soft sprites, with dimmer rear connections, while

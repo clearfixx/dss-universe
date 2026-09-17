@@ -224,8 +224,11 @@ export function CoreSphere({
       ctx.rotate(-rotation * 0.4);
       ctx.globalCompositeOperation = "lighter";
       ctx.globalAlpha =
-        0.88 + Math.sin(elapsed * 0.0009) * 0.07 + energy * 0.12;
-      const volumeSize = radius * 2.45;
+        0.83 +
+        Math.sin(elapsed * 0.00071) * 0.045 +
+        Math.sin(elapsed * 0.00113 + 1.2) * 0.025 +
+        energy * 0.08;
+      const volumeSize = radius * (2.45 + Math.sin(elapsed * 0.00047) * 0.045);
       ctx.drawImage(
         volume,
         -volumeSize / 2,
@@ -312,12 +315,14 @@ export function CoreSphere({
         ctx.stroke();
         // Luminous packets follow the actual orbit geometry, with fading tails.
         const head = elapsed * (0.00018 + (orbit % 4) * 0.00004) + orbit * 2.4;
-        for (let segment = 0; segment < 20; segment++) {
+        const tailLength = orbit % 7 === 0 ? 32 : 10 + (orbit % 4) * 3;
+        for (let segment = 0; segment < tailLength; segment++) {
           const a = orbitPoint(orbit, head - segment * 0.017);
           const b = orbitPoint(orbit, head - (segment + 1) * 0.017);
           const p = project(a.x, a.y, a.z);
           const q = project(b.x, b.y, b.z);
-          const opacity = (1 - segment / 20) * (0.3 + (p.z + 1.2) * 0.2);
+          const opacity =
+            Math.pow(1 - segment / tailLength, 1.4) * (0.3 + (p.z + 1.2) * 0.2);
           ctx.strokeStyle =
             orbit % 3 === 0
               ? `rgba(168,107,255,${opacity})`
@@ -384,7 +389,10 @@ export function CoreSphere({
         });
       const pulse = motion.matches
         ? 1
-        : 1 + Math.sin(elapsed * 0.0018) * 0.09 + energy * 0.16;
+        : 1 +
+          Math.sin(elapsed * 0.0015) * 0.055 +
+          Math.sin(elapsed * 0.0023 + 0.8) * 0.025 +
+          energy * 0.16;
       const core = ctx.createRadialGradient(
         center,
         center,

@@ -343,6 +343,13 @@ export function UniverseArrival() {
             </a>
           </div>
           <div className={styles.activity}>
+            {tick > 0 && !paused && (
+              <span
+                key={tick}
+                className={styles.activityGlint}
+                aria-hidden="true"
+              />
+            )}
             <span className={styles.activityIcon}>✧</span>
             <div key={tick} className={styles.activityEvent}>
               <small>FROM AROUND THE UNIVERSE · DEMO</small>
@@ -409,6 +416,14 @@ export function UniverseArrival() {
           data-demo-interactive
           data-arrival-target="console"
         >
+          {stage !== "idle" && !paused && (
+            <span
+              key={stage}
+              className={styles.consoleGlint}
+              data-response={stage === "answer"}
+              aria-hidden="true"
+            />
+          )}
           <div className={styles.consoleHeading}>
             <Sparkles size={16} />
             <span>What would you like to build today?</span>

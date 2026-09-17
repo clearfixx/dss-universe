@@ -335,12 +335,48 @@
   box-shadow: 0 5px 30px #373ed128;
 }
 .activity {
+  position: relative;
   display: flex;
   gap: 12px;
   border-top: 1px solid #8aa4d323;
   margin-top: 42px;
   padding-top: 20px;
   max-width: 340px;
+}
+.activityGlint {
+  position: absolute;
+  top: -1px;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #a4beff);
+  pointer-events: none;
+  animation: edgeLight 1100ms ease-out both;
+}
+.consoleGlint {
+  position: absolute;
+  inset: -1px;
+  border: 1px solid #a18cf0;
+  border-radius: inherit;
+  box-shadow: 0 -5px 22px #7b58ed24;
+  pointer-events: none;
+  animation: edgeLight 1400ms ease-out both;
+}
+.consoleGlint[data-response="true"] {
+  border-color: #7fe8e5;
+  box-shadow: 0 -5px 22px #5fcaca24;
+  animation-duration: 1900ms;
+}
+@keyframes edgeLight {
+  0% {
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.65;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 .activityIcon {
   color: #a28aff;
@@ -861,6 +897,10 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .activityGlint,
+  .consoleGlint {
+    display: none;
+  }
   .construction {
     display: none;
   }
