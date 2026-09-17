@@ -345,13 +345,13 @@ export function UniverseArrival() {
           <div className={styles.activity}>
             {tick > 0 && !paused && (
               <span
-                key={tick}
+                key={`glint-${tick}`}
                 className={styles.activityGlint}
                 aria-hidden="true"
               />
             )}
             <span className={styles.activityIcon}>✧</span>
-            <div key={tick} className={styles.activityEvent}>
+            <div key={`event-${tick}`} className={styles.activityEvent}>
               <small>FROM AROUND THE UNIVERSE · DEMO</small>
               <p>{event.text}</p>
               <span>

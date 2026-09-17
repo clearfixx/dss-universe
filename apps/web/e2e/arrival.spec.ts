@@ -151,6 +151,10 @@ test("Core module controls stay within a narrow viewport", async ({ page }) => {
 });
 
 test("demo activity can be paused and resumed", async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") consoleErrors.push(message.text());
+  });
   await page.clock.install();
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
@@ -177,6 +181,7 @@ test("demo activity can be paused and resumed", async ({ page }) => {
   await expect(
     page.getByText("Maria helped a developer find their next step."),
   ).toBeVisible();
+  expect(consoleErrors).toEqual([]);
 });
 
 test("unsupported requests do not fabricate answers and cancelled searches stay cancelled", async ({
