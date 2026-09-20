@@ -165,6 +165,29 @@ enum ContentGateRequirementKind {
   GROUP
 }
 
+enum NewsArticleStatus {
+  DRAFT
+  IN_REVIEW
+  CHANGES_REQUESTED
+  APPROVED
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum NewsPostType {
+  STANDARD
+  TEXT
+  GALLERY
+  VIDEO
+  AUDIO
+}
+
+enum NewsVisibility {
+  PUBLIC
+  MEMBERS
+}
+
 model User {
   id            String     @id @default(uuid())
   email         String     @unique
@@ -222,6 +245,8 @@ model User {
   moderationAnnotations   ModerationAnnotation[]       @relation("ModerationAnnotationActor")
   annotationsRevoked      ModerationAnnotation[]       @relation("ModerationAnnotationRevoker")
   contentGates            ContentGate[]
+  newsArticles            NewsArticle[]                @relation("NewsAuthor")
+  newsRevisions           NewsRevision[]               @relation("NewsRevisionEditor")
 
   refreshTokenHash String?
   emailVerifiedAt  DateTime?
@@ -336,11 +361,78 @@ model InteractionTarget {
   mentions              Mention[]
   reports               ContentReport[]
   moderationAnnotations ModerationAnnotation[]
+  newsArticle           NewsArticle?
 
   @@unique([ownerType, ownerId])
   @@index([kind, status])
   @@index([ownerModule, status])
   @@map("interaction_targets")
+}
+
+model NewsArticle {
+  id                  String            @id @default(uuid())
+  interactionTargetId String            @unique
+  authorId            String
+  postType            NewsPostType      @default(STANDARD)
+  status              NewsArticleStatus @default(DRAFT)
+  visibility          NewsVisibility    @default(PUBLIC)
+  language            String            @default("uk")
+  slug                String
+  title               String
+  shortText           String
+  document            Json              @db.JsonB
+  plainText           String
+  searchText          String
+  coverMediaId        String?
+  currentVersion      Int               @default(1)
+  allowComments       Boolean           @default(true)
+  allowRating         Boolean           @default(true)
+  allowSharing        Boolean           @default(true)
+  allowIndexing       Boolean           @default(true)
+  showOnHomepage      Boolean           @default(true)
+  featured            Boolean           @default(false)
+  submittedAt         DateTime?
+  approvedAt          DateTime?
+  publishedAt         DateTime?
+  displayPublishedAt  DateTime?
+  archivedAt          DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  interactionTarget InteractionTarget @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
+  author            User              @relation("NewsAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  revisions         NewsRevision[]
+
+  @@unique([language, slug])
+  @@index([status, publishedAt, id])
+  @@index([authorId, status, updatedAt])
+  @@index([postType, status, publishedAt])
+  @@map("news_articles")
+}
+
+model NewsRevision {
+  id            String       @id @default(uuid())
+  articleId     String
+  version       Int
+  editorId      String
+  postType      NewsPostType
+  language      String
+  slug          String
+  title         String
+  shortText     String
+  document      Json         @db.JsonB
+  plainText     String
+  searchText    String
+  coverMediaId  String?
+  changeSummary String?
+  createdAt     DateTime     @default(now())
+
+  article NewsArticle @relation(fields: [articleId], references: [id], onDelete: Restrict)
+  editor  User        @relation("NewsRevisionEditor", fields: [editorId], references: [id], onDelete: Restrict)
+
+  @@unique([articleId, version])
+  @@index([editorId, createdAt])
+  @@map("news_revisions")
 }
 
 model Reaction {

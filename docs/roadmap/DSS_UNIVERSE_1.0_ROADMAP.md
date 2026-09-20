@@ -1103,6 +1103,10 @@ Delivered Activity Feed completion:
 
 # Phase 10 — News Platform
 
+**Status: active.** Packages 10.0–10.1 establish the frozen product contracts
+and canonical News draft aggregate with immutable initial revisions,
+Interaction Target ownership and transactional Audit/Outbox evidence.
+
 ## Scope
 
 News is a separate moderated news module, not a personal-blog system.

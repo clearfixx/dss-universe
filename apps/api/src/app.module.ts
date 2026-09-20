@@ -85,6 +85,7 @@ import { InteractionsModule } from './modules/interactions';
 import { LevelsModule } from './modules/levels';
 import { LeaderboardsModule } from './modules/leaderboards';
 import { MediaModule } from './modules/media/media.module';
+import { NewsModule } from './modules/news';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ReputationModule } from './modules/reputation';
 import { UsersModule } from './modules/users/users.module';
@@ -106,6 +107,7 @@ import { UsersModule } from './modules/users/users.module';
     IamModule,
     InteractionsModule,
     MediaModule,
+    NewsModule,
     NotificationsModule,
     ReputationModule,
     CommunityPointsModule,
