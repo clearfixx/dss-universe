@@ -1,6 +1,6 @@
 # Phase 10 — News Platform Architecture
 
-> Status: Packages 10.0–10.9 implemented
+> Status: Packages 10.0–10.10 implemented
 
 ## Product boundary
 
@@ -78,7 +78,7 @@ identities and routing metadata, never the article body.
 
 ## Deferred packages
 
-- comments, files, views and sharing — 10.10–10.12;
+- files, views and sharing — 10.11–10.12;
 - permission-guarded editorial/GraphQL surfaces and platform integrations —
   10.13–10.16.
 
@@ -174,3 +174,17 @@ ownership in Phase 13.
   timestamp, while aggregate score remains `upvotes - downvotes`;
 - optional authentication enriches public delivery with only the current
   viewer's reaction and bookmark state.
+
+## Package 10.10 delivery
+
+- comments use the shared canonical Comment aggregate and may form arbitrarily
+  deep reply trees on one article target;
+- every comment owns a separate immutable Interaction Target for canonical
+  upvote/downvote state and a rebuildable score;
+- public News comment delivery paginates root discussions while keeping each
+  branch together and follows the audited admin threshold, page size and mode;
+- the Full News UI supports comments, replies, rating, numbered pages,
+  load-more and combined active-page state;
+- branches show three direct replies initially, and comments scoring `-5` or
+  lower are hidden behind an explicit disclosure;
+- deleted comments remain tombstones so reply structure is preserved.

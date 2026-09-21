@@ -16,6 +16,7 @@ import type {
   ShortNewsNumberedPage,
 } from '../../domain/types/short-news.type';
 import type { NewsChronologicalNavigation } from '../../domain/types/news-links.type';
+import type { NewsCommentsPage } from '../../domain/types/news-comment.type';
 
 export type BrowseShortNewsInput = {
   first?: number;
@@ -137,6 +138,28 @@ export class NewsDeliveryService {
       );
     }
     return this.delivery.ratingVotes(articleId, page, pageSize);
+  }
+
+  comments(
+    articleId: string,
+    page = 1,
+    pageSize = 20,
+    viewerId?: string,
+  ): Promise<NewsCommentsPage> {
+    if (!articleId.trim()) {
+      throw new BadRequestException('News article is required.');
+    }
+    if (!Number.isInteger(page) || page < 1) {
+      throw new BadRequestException(
+        'Comments page must be a positive integer.',
+      );
+    }
+    if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > 100) {
+      throw new BadRequestException(
+        'Comments page size must be between 1 and 100.',
+      );
+    }
+    return this.delivery.comments(articleId, page, pageSize, viewerId);
   }
 
   private slug(value: string | undefined, label: string): string | undefined {

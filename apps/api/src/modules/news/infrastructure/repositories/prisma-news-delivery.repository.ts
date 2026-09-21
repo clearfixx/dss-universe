@@ -8,6 +8,10 @@ import type {
   NewsChronologicalNeighbor,
 } from '../../domain/types/news-links.type';
 import type {
+  NewsCommentItem,
+  NewsCommentsPage,
+} from '../../domain/types/news-comment.type';
+import type {
   FullNewsItem,
   NewsRatingVote,
   ShortNewsItem,
@@ -217,6 +221,116 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
     ]);
     return {
       items: rows as NewsRatingVote[],
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+    };
+  }
+
+  async comments(
+    articleId: string,
+    page: number,
+    pageSize: number,
+    viewerId?: string,
+  ): Promise<NewsCommentsPage> {
+    const article = await this.prisma.newsArticle.findFirst({
+      where: { id: articleId, status: 'PUBLISHED', allowComments: true },
+      select: { interactionTargetId: true },
+    });
+    if (!article) return { items: [], total: 0, page, pageSize, totalPages: 0 };
+
+    const commentWhere = { interactionTargetId: article.interactionTargetId };
+    const [roots, total, rows] = await this.prisma.$transaction([
+      this.prisma.comment.findMany({
+        where: { ...commentWhere, parentId: null },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        select: { id: true },
+      }),
+      this.prisma.comment.count({
+        where: { ...commentWhere, parentId: null },
+      }),
+      this.prisma.comment.findMany({
+        where: commentWhere,
+        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+        select: {
+          id: true,
+          reactionTargetId: true,
+          parentId: true,
+          body: true,
+          document: true,
+          deletedAt: true,
+          editedAt: true,
+          createdAt: true,
+          author: {
+            select: {
+              id: true,
+              username: true,
+              displayName: true,
+              avatarUrl: true,
+            },
+          },
+          reactionTarget: {
+            select: {
+              reactionAggregate: {
+                select: { upvotes: true, downvotes: true, score: true },
+              },
+              reactions: viewerId
+                ? {
+                    where: {
+                      actorId: viewerId,
+                      kind: {
+                        in: [ReactionKind.UPVOTE, ReactionKind.DOWNVOTE],
+                      },
+                    },
+                    select: { kind: true },
+                    take: 1,
+                  }
+                : false,
+            },
+          },
+        },
+      }),
+    ]);
+
+    const nodes = new Map<string, NewsCommentItem>();
+    for (const row of rows) {
+      const aggregate = row.reactionTarget.reactionAggregate;
+      const viewerReaction = row.reactionTarget.reactions?.at(0)?.kind;
+      nodes.set(row.id, {
+        id: row.id,
+        reactionTargetId: row.reactionTargetId,
+        parentId: row.parentId,
+        body: row.body,
+        documentJson: JSON.stringify(row.document),
+        isDeleted: Boolean(row.deletedAt),
+        editedAt: row.editedAt,
+        createdAt: row.createdAt,
+        author: row.author,
+        engagement: {
+          upvotes: aggregate?.upvotes ?? 0,
+          downvotes: aggregate?.downvotes ?? 0,
+          score: aggregate?.score ?? 0,
+          viewerReaction:
+            viewerReaction === ReactionKind.UPVOTE
+              ? 'UPVOTE'
+              : viewerReaction === ReactionKind.DOWNVOTE
+                ? 'DOWNVOTE'
+                : null,
+        },
+        children: [],
+      });
+    }
+    for (const node of nodes.values()) {
+      if (node.parentId) nodes.get(node.parentId)?.children.push(node);
+    }
+    return {
+      items: roots.flatMap(({ id }) => {
+        const root = nodes.get(id);
+        return root ? [root] : [];
+      }),
       total,
       page,
       pageSize,

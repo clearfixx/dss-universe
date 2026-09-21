@@ -22,6 +22,7 @@ import { EditorModule } from '../editor';
 
 import { BookmarksService } from './application/services/bookmarks.service';
 import { CommentDraftsService } from './application/services/comment-drafts.service';
+import { CommentInteractionPolicy } from './application/services/comment-interaction.policy';
 import { CommentsService } from './application/services/comments.service';
 import { InteractionPolicyRegistryService } from './application/services/interaction-policy-registry.service';
 import { InteractionTargetWriterService } from './application/services/interaction-target-writer.service';
@@ -57,6 +58,7 @@ import { ReactionsResolver } from './presentation/graphql/resolvers/reactions.re
     BookmarksService,
     BookmarksResolver,
     CommentDraftsService,
+    CommentInteractionPolicy,
     CommentDraftsResolver,
     CommentsService,
     CommentsResolver,

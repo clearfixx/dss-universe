@@ -171,6 +171,7 @@ type Comment {
   isDeleted: Boolean!
   mentionedUserIds: [ID!]!
   parentId: ID
+  reactionTargetId: ID!
   updatedAt: String!
 }
 
@@ -881,6 +882,35 @@ type NewsCategorySummary {
   slug: String!
 }
 
+type NewsComment {
+  author: NewsAuthor!
+  body: String!
+  children: [NewsComment!]!
+  createdAt: DateTime!
+  documentJson: String!
+  editedAt: DateTime
+  engagement: NewsCommentEngagement!
+  id: ID!
+  isDeleted: Boolean!
+  parentId: ID
+  reactionTargetId: ID!
+}
+
+type NewsCommentEngagement {
+  downvotes: Int!
+  score: Int!
+  upvotes: Int!
+  viewerReaction: NewsVoteKind
+}
+
+type NewsCommentsPage {
+  items: [NewsComment!]!
+  page: Int!
+  pageSize: Int!
+  total: Int!
+  totalPages: Int!
+}
+
 type NewsEngagement {
   bookmarkedByViewer: Boolean!
   commentCount: Int!
@@ -1097,6 +1127,7 @@ type Query {
   members(input: MembersDirectoryInput): MembersDirectoryPage!
   moderationAnnotations(commentId: ID, interactionTargetId: ID!): [ModerationAnnotation!]!
   news(input: NewsBrowseInput): NumberedNewsPage!
+  newsComments(articleId: ID!, page: Int! = 1, pageSize: Int): NewsCommentsPage!
   newsNavigation(articleId: ID!): NewsNavigation!
   newsRatingVotes(articleId: ID!, page: Int! = 1, pageSize: Int! = 20): NewsRatingVotePage!
   newsSettings: NewsSettings!

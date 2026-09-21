@@ -6,6 +6,7 @@ import {
 import { Test, type TestingModule } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import { createEmptyEditorDocument } from '@dss/editor';
+import { randomUUID } from 'node:crypto';
 import type { App } from 'supertest/types';
 
 import { AppModule } from './../src/app.module';
@@ -34,6 +35,7 @@ describe('News domain foundation (e2e)', () => {
   const userIds: string[] = [];
   const taxonomyIds: string[] = [];
   const linkIds: string[] = [];
+  const commentTargetIds: string[] = [];
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -62,6 +64,15 @@ describe('News domain foundation (e2e)', () => {
       );
       await prisma.comment.deleteMany({
         where: { interactionTargetId: { in: targetIds } },
+      });
+      await prisma.reactionAggregate.deleteMany({
+        where: { interactionTargetId: { in: commentTargetIds } },
+      });
+      await prisma.reaction.deleteMany({
+        where: { interactionTargetId: { in: commentTargetIds } },
+      });
+      await prisma.interactionTarget.deleteMany({
+        where: { id: { in: commentTargetIds } },
       });
       await prisma.bookmark.deleteMany({
         where: { interactionTargetId: { in: targetIds } },
@@ -402,9 +413,23 @@ describe('News domain foundation (e2e)', () => {
       workflow.publishDue(new Date(scheduledFor.getTime() + 1)),
     ).resolves.toHaveLength(1);
 
+    const commentId = randomUUID();
+    const commentTargetId = randomUUID();
+    commentTargetIds.push(commentTargetId);
+    await prisma.interactionTarget.create({
+      data: {
+        id: commentTargetId,
+        kind: 'comment',
+        ownerModule: 'interactions',
+        ownerType: 'Comment',
+        ownerId: commentId,
+      },
+    });
     await prisma.comment.create({
       data: {
+        id: commentId,
         interactionTargetId: article.interactionTargetId,
+        reactionTargetId: commentTargetId,
         authorId: reviewer.id,
         body: 'A useful operational update.',
         document: createEmptyEditorDocument(

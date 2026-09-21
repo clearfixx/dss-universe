@@ -25,6 +25,7 @@ import { PrismaService } from '@api/core/database';
 import { createEventEnvelope, OutboxWriterService } from '@api/core/events';
 import type { PaginatedResult } from '@api/shared';
 import { Prisma } from '@prisma/client';
+import { randomUUID } from 'node:crypto';
 
 import type { CommentsRepository } from '../../domain/repositories/comments.repository.interface';
 import type {
@@ -33,6 +34,7 @@ import type {
   CreateComment,
   EditCommentContent,
 } from '../../domain/types/comment.type';
+import { InteractionTargetWriterService } from '../../application/services/interaction-target-writer.service';
 
 const PRODUCER = 'dss.api.comments';
 
@@ -42,13 +44,26 @@ export class PrismaCommentsRepository implements CommentsRepository {
     private readonly prisma: PrismaService,
     private readonly audit: AuditWriterService,
     private readonly outbox: OutboxWriterService,
+    private readonly targets: InteractionTargetWriterService,
   ) {}
 
   async create(input: CreateComment): Promise<Comment> {
     return this.prisma.$transaction(async (transaction) => {
       const { mentionedUsernames, documentJson, ...commentData } = input;
+      const commentId = randomUUID();
+      const reactionTargetId = randomUUID();
+      await this.targets.register(transaction, {
+        id: reactionTargetId,
+        kind: 'comment',
+        ownerModule: 'interactions',
+        ownerType: 'Comment',
+        ownerId: commentId,
+        actorId: input.authorId,
+      });
       const comment = await transaction.comment.create({
         data: {
+          id: commentId,
+          reactionTargetId,
           ...commentData,
           document: this.parseDocument(documentJson),
         },
@@ -213,6 +228,7 @@ export class PrismaCommentsRepository implements CommentsRepository {
     comment: {
       id: string;
       interactionTargetId: string;
+      reactionTargetId: string;
       authorId: string;
       parentId: string | null;
     },
@@ -257,6 +273,7 @@ export class PrismaCommentsRepository implements CommentsRepository {
     comment: {
       id: string;
       interactionTargetId: string;
+      reactionTargetId: string;
       authorId: string;
     },
     actorId: string,
@@ -400,6 +417,7 @@ export class PrismaCommentsRepository implements CommentsRepository {
     comment: {
       id: string;
       interactionTargetId: string;
+      reactionTargetId: string;
       authorId: string;
       parentId: string | null;
       body: string | null;

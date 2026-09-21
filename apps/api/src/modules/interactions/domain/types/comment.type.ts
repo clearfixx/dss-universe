@@ -15,6 +15,7 @@
 export type Comment = {
   id: string;
   interactionTargetId: string;
+  reactionTargetId: string;
   authorId: string;
   parentId: string | null;
   mentionedUserIds: string[];

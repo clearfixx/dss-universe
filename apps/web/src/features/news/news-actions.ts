@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 
 import {
   ClearNewsVoteDocument,
+  CreateNewsCommentDocument,
   RemoveNewsBookmarkDocument,
   SaveNewsBookmarkDocument,
   SetNewsVoteDocument,
@@ -13,7 +14,11 @@ import {
 } from "@/gql/graphql";
 import { getClient } from "@/lib/apollo/rsc-client";
 
-import { loadNewsCatalog, loadRatingVotes } from "./news-data";
+import {
+  loadNewsCatalog,
+  loadNewsComments,
+  loadRatingVotes,
+} from "./news-data";
 
 async function context() {
   const token = (await cookies()).get("dss_access_token")?.value;
@@ -79,4 +84,30 @@ export async function setNewsBookmark(
       ).data?.saveBookmark.saved;
   revalidatePath(articlePath);
   return nextSaved;
+}
+
+export async function createNewsComment(
+  interactionTargetId: string,
+  body: string,
+  articlePath: string,
+  parentId?: string,
+) {
+  const normalized = body.trim();
+  if (!normalized) throw new Error("Коментар не може бути порожнім.");
+  await getClient().mutate({
+    mutation: CreateNewsCommentDocument,
+    variables: {
+      input: { interactionTargetId, body: normalized, parentId },
+    },
+    context: await context(),
+  });
+  revalidatePath(articlePath);
+}
+
+export async function loadMoreNewsComments(
+  articleId: string,
+  page: number,
+  pageSize: number,
+) {
+  return (await loadNewsComments(articleId, page, pageSize)).newsComments;
 }

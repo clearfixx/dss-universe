@@ -7,6 +7,7 @@ import {
   FullNewsPageDocument,
   NewsCatalogDocument,
   NewsNavigationDocument,
+  NewsCommentsDocument,
   NewsRatingVotesDocument,
   type NewsBrowseInput,
 } from "@/gql/graphql";
@@ -59,4 +60,19 @@ export async function loadRatingVotes(
   });
   if (!result.data) throw new Error("NEWS_RATING_UNAVAILABLE");
   return result.data.newsRatingVotes;
+}
+
+export async function loadNewsComments(
+  articleId: string,
+  page = 1,
+  pageSize?: number,
+) {
+  const result = await getClient().query({
+    query: NewsCommentsDocument,
+    variables: { articleId, page, pageSize },
+    context: await authContext(),
+    fetchPolicy: "no-cache",
+  });
+  if (!result.data) throw new Error("NEWS_COMMENTS_UNAVAILABLE");
+  return result.data;
 }

@@ -5,7 +5,12 @@ import { notFound } from "next/navigation";
 
 import { DssApplicationShell } from "@/components/shell/dss-application-shell";
 import { Badge } from "@/components/ui/badge";
-import { loadFullNews, loadNewsNavigation } from "@/features/news/news-data";
+import {
+  loadFullNews,
+  loadNewsComments,
+  loadNewsNavigation,
+} from "@/features/news/news-data";
+import { NewsComments } from "@/features/news/news-comments";
 import { NewsDocument } from "@/features/news/news-document";
 import { NewsEngagement } from "@/features/news/news-engagement";
 
@@ -32,6 +37,9 @@ export default async function FullNewsRoute({ params }: Props) {
   const article = await loadFullNews(language, slug);
   if (!article) notFound();
   const navigation = await loadNewsNavigation(article.id);
+  const comments = article.allowComments
+    ? await loadNewsComments(article.id, 1)
+    : null;
   const articlePath = `/news/${article.language}/${article.slug}`;
 
   return (
@@ -126,6 +134,16 @@ export default async function FullNewsRoute({ params }: Props) {
             ) : null}
           </aside>
         </div>
+        {comments ? (
+          <NewsComments
+            articleId={article.id}
+            interactionTargetId={article.interactionTargetId}
+            articlePath={articlePath}
+            initial={comments.newsComments}
+            mode={comments.newsSettings.commentsPaginationMode}
+            threshold={comments.newsSettings.commentsPaginationThreshold}
+          />
+        ) : null}
         <nav
           aria-label="Сусідні новини"
           className="grid gap-4 border-t border-white/10 pt-8 md:grid-cols-2"

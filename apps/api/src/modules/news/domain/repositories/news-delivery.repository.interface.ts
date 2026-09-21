@@ -1,4 +1,5 @@
 import type { NewsChronologicalNavigation } from '../types/news-links.type';
+import type { NewsCommentsPage } from '../types/news-comment.type';
 import type {
   FullNewsItem,
   NewsRatingVote,
@@ -34,4 +35,10 @@ export interface NewsDeliveryRepository {
     pageSize: number;
     totalPages: number;
   }>;
+  comments(
+    articleId: string,
+    page: number,
+    pageSize: number,
+    viewerId?: string,
+  ): Promise<NewsCommentsPage>;
 }

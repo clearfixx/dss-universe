@@ -70,9 +70,6 @@ export class CommentsService {
           'A reply must use the same interaction target as its parent.',
         );
       }
-      if (parent.parentId) {
-        throw new BadRequestException('Replies cannot be nested more deeply.');
-      }
       if (parent.isDeleted) {
         throw new BadRequestException(
           'A deleted comment cannot receive replies.',

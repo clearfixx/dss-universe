@@ -394,7 +394,8 @@ model InteractionTarget {
   updatedAt   DateTime                @updatedAt
 
   userWallPost          UserWallPost?
-  comments              Comment[]
+  comments              Comment[]              @relation("CommentParentTarget")
+  commentReaction       Comment?               @relation("CommentReactionTarget")
   commentDrafts         CommentDraft[]
   reactions             Reaction[]
   reactionAggregate     ReactionAggregate?
@@ -692,6 +693,7 @@ model Bookmark {
 model Comment {
   id                  String    @id @default(uuid())
   interactionTargetId String
+  reactionTargetId    String    @unique
   authorId            String
   parentId            String?
   body                String?
@@ -704,7 +706,8 @@ model Comment {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  interactionTarget     InteractionTarget      @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
+  interactionTarget     InteractionTarget      @relation("CommentParentTarget", fields: [interactionTargetId], references: [id], onDelete: Restrict)
+  reactionTarget        InteractionTarget      @relation("CommentReactionTarget", fields: [reactionTargetId], references: [id], onDelete: Restrict)
   author                User                   @relation("CommentAuthor", fields: [authorId], references: [id], onDelete: Restrict)
   parent                Comment?               @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Restrict)
   replies               Comment[]              @relation("CommentReplies")

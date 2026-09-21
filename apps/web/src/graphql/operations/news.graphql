@@ -183,3 +183,62 @@ mutation RemoveNewsBookmark($interactionTargetId: ID!) {
     changed
   }
 }
+
+fragment NewsCommentFields on NewsComment {
+  id
+  reactionTargetId
+  parentId
+  body
+  documentJson
+  isDeleted
+  editedAt
+  createdAt
+  author {
+    id
+    username
+    displayName
+    avatarUrl
+  }
+  engagement {
+    upvotes
+    downvotes
+    score
+    viewerReaction
+  }
+}
+
+query NewsComments($articleId: ID!, $page: Int!, $pageSize: Int) {
+  newsComments(articleId: $articleId, page: $page, pageSize: $pageSize) {
+    total
+    page
+    pageSize
+    totalPages
+    items {
+      ...NewsCommentFields
+      children {
+        ...NewsCommentFields
+        children {
+          ...NewsCommentFields
+          children {
+            ...NewsCommentFields
+            children {
+              ...NewsCommentFields
+            }
+          }
+        }
+      }
+    }
+  }
+  newsSettings {
+    commentsPaginationMode
+    commentsPaginationThreshold
+    commentsPageSize
+  }
+}
+
+mutation CreateNewsComment($input: CreateCommentInput!) {
+  createComment(input: $input) {
+    id
+    reactionTargetId
+  }
+}

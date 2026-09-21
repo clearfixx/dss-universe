@@ -10,6 +10,7 @@ describe('NewsDeliveryService', () => {
   let browseShortNumbered: jest.Mock;
   let findFullBySlug: jest.Mock;
   let ratingVotes: jest.Mock;
+  let comments: jest.Mock;
   let service: NewsDeliveryService;
   const item = {
     id: 'article-1',
@@ -36,12 +37,20 @@ describe('NewsDeliveryService', () => {
       pageSize: 20,
       totalPages: 0,
     });
+    comments = jest.fn().mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      pageSize: 20,
+      totalPages: 0,
+    });
     repository = {
       browseShort,
       browseShortNumbered,
       chronologicalNavigation: jest.fn(),
       findFullBySlug,
       ratingVotes,
+      comments,
     };
     service = new NewsDeliveryService(repository);
   });
@@ -107,6 +116,17 @@ describe('NewsDeliveryService', () => {
       BadRequestException,
     );
     expect(() => service.ratingVotes('article-1', 1, 101)).toThrow(
+      BadRequestException,
+    );
+  });
+
+  it('bounds comment pages and preserves viewer context', async () => {
+    await service.comments('article-1', 2, 25, 'viewer-1');
+    expect(comments).toHaveBeenCalledWith('article-1', 2, 25, 'viewer-1');
+    expect(() => service.comments('article-1', 0, 25)).toThrow(
+      BadRequestException,
+    );
+    expect(() => service.comments('article-1', 1, 101)).toThrow(
       BadRequestException,
     );
   });

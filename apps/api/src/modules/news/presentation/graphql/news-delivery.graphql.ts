@@ -189,6 +189,40 @@ class NewsRatingVotePageModel {
   @Field(() => Int) totalPages!: number;
 }
 
+@ObjectType('NewsCommentEngagement')
+class NewsCommentEngagementModel {
+  @Field(() => Int) upvotes!: number;
+  @Field(() => Int) downvotes!: number;
+  @Field(() => Int) score!: number;
+  @Field(() => NewsVoteKindModel, { nullable: true })
+  viewerReaction!: NewsVoteKindModel | null;
+}
+
+@ObjectType('NewsComment')
+class NewsCommentModel {
+  @Field(() => ID) id!: string;
+  @Field(() => ID) reactionTargetId!: string;
+  @Field(() => ID, { nullable: true }) parentId!: string | null;
+  @Field() body!: string;
+  @Field() documentJson!: string;
+  @Field() isDeleted!: boolean;
+  @Field(() => GraphQLISODateTime, { nullable: true }) editedAt!: Date | null;
+  @Field(() => GraphQLISODateTime) createdAt!: Date;
+  @Field(() => NewsAuthorModel) author!: NewsAuthorModel;
+  @Field(() => NewsCommentEngagementModel)
+  engagement!: NewsCommentEngagementModel;
+  @Field(() => [NewsCommentModel]) children!: NewsCommentModel[];
+}
+
+@ObjectType('NewsCommentsPage')
+class NewsCommentsPageModel {
+  @Field(() => [NewsCommentModel]) items!: NewsCommentModel[];
+  @Field(() => Int) total!: number;
+  @Field(() => Int) page!: number;
+  @Field(() => Int) pageSize!: number;
+  @Field(() => Int) totalPages!: number;
+}
+
 @InputType()
 class NewsBrowseInput {
   @Field(() => Int, { nullable: true })
@@ -279,5 +313,21 @@ export class NewsDeliveryResolver {
     @Args('pageSize', { type: () => Int, defaultValue: 20 }) pageSize: number,
   ): ReturnType<NewsDeliveryService['ratingVotes']> {
     return this.delivery.ratingVotes(articleId, page, pageSize);
+  }
+
+  @Query(() => NewsCommentsPageModel)
+  async newsComments(
+    @Context() context: { req: { user?: AuthenticatedUser } },
+    @Args('articleId', { type: () => ID }) articleId: string,
+    @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
+    @Args('pageSize', { type: () => Int, nullable: true }) pageSize?: number,
+  ) {
+    const settings = await this.settings.settings();
+    return this.delivery.comments(
+      articleId,
+      page,
+      pageSize ?? settings.commentsPageSize,
+      context.req.user?.id,
+    );
   }
 }

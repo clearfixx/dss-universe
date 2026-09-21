@@ -23,6 +23,9 @@ export class CommentModel {
   interactionTargetId!: string;
 
   @Field(() => ID)
+  reactionTargetId!: string;
+
+  @Field(() => ID)
   authorId!: string;
 
   @Field(() => ID, { nullable: true })

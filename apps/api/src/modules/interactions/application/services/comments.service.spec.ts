@@ -26,6 +26,7 @@ describe('CommentsService', () => {
   const comment: Comment = {
     id: 'comment-1',
     interactionTargetId: 'target-1',
+    reactionTargetId: 'reaction-target-1',
     authorId: 'author-1',
     parentId: null,
     mentionedUserIds: [],
@@ -165,7 +166,7 @@ describe('CommentsService', () => {
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
-  it('accepts one reply level on the same target', async () => {
+  it('accepts replies on the same target', async () => {
     await service.create('author-2', 'target-1', { body: 'Reply' }, comment.id);
 
     expect(repository.create.mock.calls[0]?.[0]).toEqual(
@@ -173,7 +174,7 @@ describe('CommentsService', () => {
     );
   });
 
-  it('rejects cross-target and nested replies', async () => {
+  it('rejects cross-target replies and accepts nested replies', async () => {
     repository.findById.mockResolvedValue({
       ...comment,
       interactionTargetId: 'target-2',
@@ -188,7 +189,10 @@ describe('CommentsService', () => {
     });
     await expect(
       service.create('author-2', 'target-1', { body: 'Reply' }, comment.id),
-    ).rejects.toBeInstanceOf(BadRequestException);
+    ).resolves.toEqual(comment);
+    expect(repository.create.mock.calls.at(-1)?.[0]).toEqual(
+      expect.objectContaining({ parentId: comment.id }),
+    );
   });
 
   it('limits edits, tombstones and revision history to the author', async () => {
