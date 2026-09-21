@@ -18,5 +18,10 @@ projection. Scheduled material stays private until server activation; public
 queries use stable cursors and compose engagement from Interaction Platform.
 Full News delivery and UI remain in their scheduled Phase 10 packages.
 
+The pagination correction adds an audited policy for News and News comments,
+parallel cursor and numbered delivery, chronological neighbors, and explicit
+SEO links between published articles. Forum discussion links remain deferred
+until Phase 13 owns a canonical Forum Topic identity.
+
 Shared services retain their ownership: Editor validates documents, Media owns
 files, and Interactions owns comments, reactions and bookmarks.

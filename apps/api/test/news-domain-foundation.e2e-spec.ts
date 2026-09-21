@@ -13,7 +13,9 @@ import { PrismaService } from './../src/core/database';
 import { InteractionTargetsService } from './../src/modules/interactions';
 import {
   NewsDeliveryService,
+  NewsLinksService,
   NewsService,
+  NewsSettingsService,
   NewsTaxonomyService,
   NewsWorkflowService,
 } from './../src/modules/news';
@@ -26,9 +28,12 @@ describe('News domain foundation (e2e)', () => {
   let taxonomy: NewsTaxonomyService;
   let workflow: NewsWorkflowService;
   let delivery: NewsDeliveryService;
+  let links: NewsLinksService;
+  let settings: NewsSettingsService;
   const articleIds: string[] = [];
   const userIds: string[] = [];
   const taxonomyIds: string[] = [];
+  const linkIds: string[] = [];
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -42,6 +47,8 @@ describe('News domain foundation (e2e)', () => {
     taxonomy = app.get(NewsTaxonomyService);
     workflow = app.get(NewsWorkflowService);
     delivery = app.get(NewsDeliveryService);
+    links = app.get(NewsLinksService);
+    settings = app.get(NewsSettingsService);
   });
 
   afterAll(async () => {
@@ -68,6 +75,9 @@ describe('News domain foundation (e2e)', () => {
       await prisma.newsEditorialDecision.deleteMany({
         where: { articleId: { in: articleIds } },
       });
+      await prisma.newsInternalLink.deleteMany({
+        where: { id: { in: linkIds } },
+      });
       await prisma.newsArticle.deleteMany({
         where: { id: { in: articleIds } },
       });
@@ -92,6 +102,35 @@ describe('News domain foundation (e2e)', () => {
               aggregateId: { in: targetIds },
             },
           ],
+        },
+      });
+      await prisma.auditRecord.deleteMany({
+        where: {
+          OR: [
+            { targetType: 'NewsInternalLink', targetId: { in: linkIds } },
+            { targetType: 'NewsSettings', targetId: 'default' },
+          ],
+        },
+      });
+      await prisma.outboxEvent.deleteMany({
+        where: {
+          producer: 'dss.api.news',
+          OR: [
+            { aggregateType: 'NewsInternalLink', aggregateId: { in: linkIds } },
+            { aggregateType: 'NewsSettings', aggregateId: 'default' },
+          ],
+        },
+      });
+      await prisma.newsSettings.update({
+        where: { id: 'default' },
+        data: {
+          newsPaginationMode: 'BOTH',
+          newsPaginationThreshold: 12,
+          newsPageSize: 12,
+          commentsPaginationMode: 'BOTH',
+          commentsPaginationThreshold: 20,
+          commentsPageSize: 20,
+          updatedById: null,
         },
       });
       await prisma.newsFieldDefinition.deleteMany({
@@ -281,10 +320,22 @@ describe('News domain foundation (e2e)', () => {
       create: { key: 'news.publish', label: 'Publish News' },
       update: {},
     });
+    const settingsPermission = await prisma.permission.upsert({
+      where: { key: 'news.settings.manage' },
+      create: { key: 'news.settings.manage', label: 'Manage News settings' },
+      update: {},
+    });
+    const linksPermission = await prisma.permission.upsert({
+      where: { key: 'news.links.manage' },
+      create: { key: 'news.links.manage', label: 'Manage News links' },
+      update: {},
+    });
     await prisma.userPermission.createMany({
       data: [
         { userId: reviewer.id, permissionId: reviewPermission.id },
         { userId: publisher.id, permissionId: publishPermission.id },
+        { userId: publisher.id, permissionId: settingsPermission.id },
+        { userId: reviewer.id, permissionId: linksPermission.id },
       ],
     });
 
@@ -400,6 +451,67 @@ describe('News domain foundation (e2e)', () => {
       ],
     });
     expect(shortNews.endCursor).toEqual(expect.any(String));
+
+    await expect(
+      settings.update(publisher.id, {
+        newsPaginationMode: 'BOTH',
+        newsPaginationThreshold: 1,
+        newsPageSize: 1,
+        commentsPaginationMode: 'BOTH',
+        commentsPaginationThreshold: 3,
+        commentsPageSize: 3,
+      }),
+    ).resolves.toMatchObject({
+      newsPaginationMode: 'BOTH',
+      commentsPaginationMode: 'BOTH',
+      commentsPaginationThreshold: 3,
+    });
+
+    const second = await news.createDraft({
+      authorId: author.id,
+      postType: 'STANDARD',
+      visibility: 'PUBLIC',
+      language: 'uk',
+      slug: `station-follow-up-${suffix}`,
+      title: 'Station follow-up',
+      shortText: 'A second operational update for every developer.',
+      documentJson: JSON.stringify(document),
+      coverMediaId: `cover-second-${suffix}`,
+      templateData: {},
+    });
+    articleIds.push(second.id);
+    await workflow.submit(author.id, second.id);
+    await workflow.approve(reviewer.id, second.id);
+    await workflow.publish(publisher.id, second.id);
+
+    await expect(
+      delivery.browseNumbered({ page: 1, pageSize: 1, language: 'uk' }),
+    ).resolves.toMatchObject({
+      total: 2,
+      page: 1,
+      pageSize: 1,
+      totalPages: 2,
+      items: [{ id: second.id }],
+    });
+    await expect(delivery.navigation(article.id)).resolves.toMatchObject({
+      previous: null,
+      next: { id: second.id },
+    });
+    const link = await links.create(reviewer.id, {
+      sourceArticleId: article.id,
+      targetArticleId: second.id,
+      type: 'RELATED',
+      anchorText: 'Read the station follow-up',
+      position: 1,
+    });
+    linkIds.push(link.id);
+    await expect(links.list(article.id)).resolves.toMatchObject([
+      {
+        id: link.id,
+        targetArticleId: second.id,
+        target: { slug: second.slug, title: second.title },
+      },
+    ]);
     await expect(
       prisma.newsEditorialDecision.findMany({
         where: { articleId: article.id },

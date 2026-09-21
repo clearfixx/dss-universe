@@ -57,6 +57,22 @@ export type ShortNewsPage = {
   hasNextPage: boolean;
 };
 
+export type ShortNewsNumberedQuery = Omit<
+  ShortNewsQuery,
+  'first' | 'cursor'
+> & {
+  page: number;
+  pageSize: number;
+};
+
+export type ShortNewsNumberedPage = {
+  items: ShortNewsItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
+
 export type ShortNewsConnection = ShortNewsPage & {
   endCursor: string | null;
 };

@@ -1136,6 +1136,22 @@ News is a separate moderated news module, not a personal-blog system.
 - reactions, comments and bookmarks;
 - unique views and aggregate counters.
 
+## Pagination and navigation
+
+- independent admin policy for News and News-comment pagination;
+- modes: disabled, numbered pages, dynamic load-more, or both;
+- configurable activation threshold and page size;
+- combined mode keeps every dynamically loaded page highlighted while the
+  latest page remains current;
+- numbered pagination includes previous/next, direct page links, a dropdown
+  selector and bounded manual page input;
+- every published article has previous/next News navigation when neighbors
+  exist in the same language;
+- ordered manual SEO interlinks support related, contextual and series links.
+
+News-to-Forum discussion linking is owned by Phase 13, after canonical Forum
+Topic identity exists. Phase 10 must not persist unverified Forum identifiers.
+
 ## Publication workflow
 
 ```text
@@ -1161,6 +1177,8 @@ DRAFT → IN_REVIEW → SCHEDULED/PUBLISHED → ARCHIVED
 - comments, votes, bookmarks and views work;
 - editor supports code, Media and Content Gates;
 - pinned and scheduled content behave correctly;
+- News and News-comment pagination follows the audited admin policy;
+- previous/next navigation and internal SEO links resolve only published News;
 - News contributes to Feed, Search, SEO, Notifications and Gamification.
 
 ---
@@ -1242,6 +1260,18 @@ Combine the structured organization of IPB/XenForo/vBulletin with selected Reddi
 - mentions and notifications;
 - hot/new/top sorting;
 - view/reply/activity counters.
+
+## News discussion integration
+
+- moderators and users with an explicit Forum-link permission may associate a
+  canonical Forum Topic with a published News article;
+- an unlinked News article opens the topic composer with a prefilled title
+  `[обговорення] {newsTitle}`;
+- after topic creation, the author may notify moderators with canonical News
+  and Forum links through Notifications;
+- the News page renders the discussion topic link only after the Forum module
+  verifies and persists the association;
+- unlink/relink actions are audited and never infer authority from role names.
 
 ## Posts
 

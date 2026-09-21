@@ -11,7 +11,9 @@ import {
 import type {
   ShortNewsConnection,
   ShortNewsItem,
+  ShortNewsNumberedPage,
 } from '../../domain/types/short-news.type';
+import type { NewsChronologicalNavigation } from '../../domain/types/news-links.type';
 
 export type BrowseShortNewsInput = {
   first?: number;
@@ -23,6 +25,14 @@ export type BrowseShortNewsInput = {
   search?: string;
   featured?: boolean;
   homepage?: boolean;
+};
+
+export type BrowseNumberedNewsInput = Omit<
+  BrowseShortNewsInput,
+  'first' | 'after'
+> & {
+  page?: number;
+  pageSize?: number;
 };
 
 const DEFAULT_PAGE_SIZE = 20;
@@ -45,6 +55,56 @@ export class NewsDeliveryService {
       Math.max(Math.trunc(input.first ?? DEFAULT_PAGE_SIZE), 1),
       MAX_PAGE_SIZE,
     );
+    const filters = this.filters(input);
+    const page = await this.delivery.browseShort({
+      ...filters,
+      first,
+      ...(input.after ? { cursor: this.decodeCursor(input.after) } : {}),
+      ...(viewerId ? { viewerId } : {}),
+    });
+    const last = page.items.at(-1);
+    return {
+      ...page,
+      endCursor: last ? this.encodeCursor(last) : null,
+    };
+  }
+
+  async browseNumbered(
+    input: BrowseNumberedNewsInput = {},
+    viewerId?: string,
+  ): Promise<ShortNewsNumberedPage> {
+    const page = input.page ?? 1;
+    const pageSize = input.pageSize ?? DEFAULT_PAGE_SIZE;
+    if (!Number.isInteger(page) || page < 1) {
+      throw new BadRequestException('News page must be a positive integer.');
+    }
+    if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > 100) {
+      throw new BadRequestException(
+        'News page size must be an integer between 1 and 100.',
+      );
+    }
+    return this.delivery.browseShortNumbered({
+      ...this.filters(input),
+      page,
+      pageSize,
+      ...(viewerId ? { viewerId } : {}),
+    });
+  }
+
+  navigation(articleId: string): Promise<NewsChronologicalNavigation> {
+    return this.delivery.chronologicalNavigation(articleId);
+  }
+
+  private slug(value: string | undefined, label: string): string | undefined {
+    if (!value) return undefined;
+    const slug = value.trim().toLowerCase();
+    if (!SLUG_PATTERN.test(slug)) {
+      throw new BadRequestException(`News ${label} slug is invalid.`);
+    }
+    return slug;
+  }
+
+  private filters(input: BrowseNumberedNewsInput) {
     const language = input.language?.trim();
     if (language && !LANGUAGE_PATTERN.test(language)) {
       throw new BadRequestException('News language has an invalid format.');
@@ -60,10 +120,7 @@ export class NewsDeliveryService {
         'News search is limited to 100 characters.',
       );
     }
-    const page = await this.delivery.browseShort({
-      first,
-      ...(input.after ? { cursor: this.decodeCursor(input.after) } : {}),
-      ...(viewerId ? { viewerId } : {}),
+    return {
       ...(language ? { language } : {}),
       ...(input.postType ? { postType: input.postType } : {}),
       ...(categorySlug ? { categorySlug } : {}),
@@ -71,21 +128,7 @@ export class NewsDeliveryService {
       ...(search ? { search } : {}),
       ...(input.featured === undefined ? {} : { featured: input.featured }),
       ...(input.homepage === undefined ? {} : { homepage: input.homepage }),
-    });
-    const last = page.items.at(-1);
-    return {
-      ...page,
-      endCursor: last ? this.encodeCursor(last) : null,
     };
-  }
-
-  private slug(value: string | undefined, label: string): string | undefined {
-    if (!value) return undefined;
-    const slug = value.trim().toLowerCase();
-    if (!SLUG_PATTERN.test(slug)) {
-      throw new BadRequestException(`News ${label} slug is invalid.`);
-    }
-    return slug;
   }
 
   private encodeCursor(item: ShortNewsItem): string {

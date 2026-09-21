@@ -212,6 +212,19 @@ enum NewsEditorialAction {
   PUBLISHED
 }
 
+enum NewsPaginationMode {
+  DISABLED
+  PAGES
+  LOAD_MORE
+  BOTH
+}
+
+enum NewsInternalLinkType {
+  RELATED
+  CONTEXTUAL
+  SERIES
+}
+
 model User {
   id            String     @id @default(uuid())
   email         String     @unique
@@ -273,6 +286,8 @@ model User {
   newsRevisions           NewsRevision[]               @relation("NewsRevisionEditor")
   newsEditorialDecisions  NewsEditorialDecision[]
   newsScheduled           NewsArticle[]                @relation("NewsScheduler")
+  newsSettingsUpdated     NewsSettings[]               @relation("NewsSettingsUpdater")
+  newsLinksCreated        NewsInternalLink[]           @relation("NewsLinkCreator")
 
   refreshTokenHash String?
   emailVerifiedAt  DateTime?
@@ -437,6 +452,8 @@ model NewsArticle {
   tags              NewsArticleTag[]
   fieldValues       NewsFieldValue[]
   editorialHistory  NewsEditorialDecision[]
+  outgoingLinks     NewsInternalLink[]      @relation("NewsOutgoingLinks")
+  incomingLinks     NewsInternalLink[]      @relation("NewsIncomingLinks")
 
   @@unique([language, slug])
   @@index([status, publishedAt, id])
@@ -444,6 +461,43 @@ model NewsArticle {
   @@index([authorId, status, updatedAt])
   @@index([postType, status, publishedAt])
   @@map("news_articles")
+}
+
+model NewsSettings {
+  id                          String             @id
+  newsPaginationMode          NewsPaginationMode @default(BOTH)
+  newsPaginationThreshold     Int                @default(12)
+  newsPageSize                Int                @default(12)
+  commentsPaginationMode      NewsPaginationMode @default(BOTH)
+  commentsPaginationThreshold Int                @default(20)
+  commentsPageSize            Int                @default(20)
+  updatedById                 String?
+  createdAt                   DateTime           @default(now())
+  updatedAt                   DateTime           @updatedAt
+
+  updatedBy User? @relation("NewsSettingsUpdater", fields: [updatedById], references: [id], onDelete: Restrict)
+
+  @@map("news_settings")
+}
+
+model NewsInternalLink {
+  id              String               @id @default(uuid())
+  sourceArticleId String
+  targetArticleId String
+  type            NewsInternalLinkType @default(RELATED)
+  anchorText      String
+  position        Int                  @default(0)
+  createdById     String
+  createdAt       DateTime             @default(now())
+
+  sourceArticle NewsArticle @relation("NewsOutgoingLinks", fields: [sourceArticleId], references: [id], onDelete: Cascade)
+  targetArticle NewsArticle @relation("NewsIncomingLinks", fields: [targetArticleId], references: [id], onDelete: Cascade)
+  createdBy     User        @relation("NewsLinkCreator", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@unique([sourceArticleId, targetArticleId, type])
+  @@index([sourceArticleId, position, id])
+  @@index([targetArticleId, type])
+  @@map("news_internal_links")
 }
 
 model NewsCategory {

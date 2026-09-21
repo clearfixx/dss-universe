@@ -137,3 +137,25 @@ identities and routing metadata, never the article body.
   rating aggregate and viewer bookmark state without duplicating ownership;
 - `viewCount` is explicitly nullable until the unique-view projection package,
   rather than returning a fabricated zero.
+
+## Pagination, navigation and SEO correction
+
+- News and News-comment presentation use one audited singleton policy with
+  independent mode (`DISABLED`, `PAGES`, `LOAD_MORE`, `BOTH`), activation
+  threshold and page size;
+- numbered News delivery returns `total`, `totalPages` and the exact page,
+  while cursor delivery remains the stable load-more contract;
+- when both controls are enabled, the client retains every appended page as
+  active while the latest appended page owns previous/next navigation;
+- the shared News pagination control includes numbered links, previous/next,
+  a complete page selector and bounded manual page input;
+- published News exposes chronological previous/next neighbors in the same
+  language;
+- explicit `RELATED`, `CONTEXTUAL` and `SERIES` links provide audited,
+  ordered SEO interlinking between published articles;
+- pagination settings require `news.settings.manage`; SEO-link mutations
+  require `news.links.manage`.
+
+Forum discussion links are intentionally not represented by an opaque or
+unverified identifier. The integration is delivered with canonical Forum Topic
+ownership in Phase 13.

@@ -7,6 +7,7 @@ import { NewsDeliveryService } from './news-delivery.service';
 describe('NewsDeliveryService', () => {
   let repository: jest.Mocked<NewsDeliveryRepository>;
   let browseShort: jest.Mock;
+  let browseShortNumbered: jest.Mock;
   let service: NewsDeliveryService;
   const item = {
     id: 'article-1',
@@ -18,8 +19,26 @@ describe('NewsDeliveryService', () => {
       items: [item],
       hasNextPage: false,
     });
-    repository = { browseShort };
+    browseShortNumbered = jest.fn().mockResolvedValue({
+      items: [item],
+      total: 1,
+      page: 1,
+      pageSize: 20,
+      totalPages: 1,
+    });
+    repository = {
+      browseShort,
+      browseShortNumbered,
+      chronologicalNavigation: jest.fn(),
+    };
     service = new NewsDeliveryService(repository);
+  });
+
+  it('supports numbered pages for page selectors and manual input', async () => {
+    await service.browseNumbered({ page: 3, pageSize: 15, language: 'uk' });
+    expect(browseShortNumbered).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 3, pageSize: 15, language: 'uk' }),
+    );
   });
 
   it('bounds filters and returns an opaque stable cursor', async () => {

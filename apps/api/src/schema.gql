@@ -821,11 +821,29 @@ type Mutation {
   updateCustomTitle(input: UpdateCustomTitleInput!): CustomTitle!
   updateCustomTitleSettings(input: UpdateCustomTitleSettingsInput!): CustomTitleSettings!
   updateLevelDefinition(input: UpdateLevelDefinitionInput!): LevelDefinition!
+  updateNewsSettings(input: UpdateNewsSettingsInput!): NewsSettings!
   updateReputationPolicy(input: UpdateReputationPolicyInput!): ReputationPolicy!
   updateViewerNotificationPreferences(input: UpdateNotificationPreferencesInput!): NotificationPreferences!
   updateViewerPrivacy(input: UpdateUserPrivacyInput!): UserPrivacySettings!
   updateViewerProfile(input: UpdateViewerProfileInput!): Viewer!
   updateViewerSocialLinks(input: UpdateViewerSocialLinksInput!): [UserSocialLink!]!
+}
+
+enum NewsPaginationMode {
+  BOTH
+  DISABLED
+  LOAD_MORE
+  PAGES
+}
+
+type NewsSettings {
+  commentsPageSize: Int!
+  commentsPaginationMode: NewsPaginationMode!
+  commentsPaginationThreshold: Int!
+  newsPageSize: Int!
+  newsPaginationMode: NewsPaginationMode!
+  newsPaginationThreshold: Int!
+  updatedAt: DateTime!
 }
 
 enum NotificationCategory {
@@ -942,6 +960,7 @@ type Query {
   mediaUploadSession(id: String!): MediaUploadSession!
   members(input: MembersDirectoryInput): MembersDirectoryPage!
   moderationAnnotations(commentId: ID, interactionTargetId: ID!): [ModerationAnnotation!]!
+  newsSettings: NewsSettings!
   presenceSummary: PresenceSummary!
   previewEditorDocument(input: PreviewEditorDocumentInput!): EditorDocumentPreview!
   profileWall(pagination: UsersPageInput, profileOwnerId: ID!): ProfileWallPage!
@@ -1169,6 +1188,15 @@ input UpdateCustomTitleSettingsInput {
 input UpdateLevelDefinitionInput {
   level: Int!
   threshold: Int!
+}
+
+input UpdateNewsSettingsInput {
+  commentsPageSize: Int!
+  commentsPaginationMode: NewsPaginationMode!
+  commentsPaginationThreshold: Int!
+  newsPageSize: Int!
+  newsPaginationMode: NewsPaginationMode!
+  newsPaginationThreshold: Int!
 }
 
 input UpdateNotificationPreferencesInput {

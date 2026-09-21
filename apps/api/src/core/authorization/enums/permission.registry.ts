@@ -167,6 +167,16 @@ export const PERMISSIONS = {
     label: 'Manage News taxonomy',
     description: 'Allows managing News categories, tags, and typed fields.',
   },
+  NewsSettingsManage: {
+    key: 'news.settings.manage',
+    label: 'Manage News settings',
+    description: 'Allows changing News and News-comment presentation policy.',
+  },
+  NewsLinksManage: {
+    key: 'news.links.manage',
+    label: 'Manage News links',
+    description: 'Allows managing explicit SEO links between News articles.',
+  },
 
   RolesRead: {
     key: 'roles.read',
