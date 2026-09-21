@@ -34,6 +34,7 @@ export type NewsArticle = {
   title: string;
   shortText: string;
   document: EditorDocument;
+  templateData: unknown;
   plainText: string;
   searchText: string;
   coverMediaId: string | null;
@@ -46,6 +47,7 @@ export type NewsArticle = {
   featured: boolean;
   submittedAt: Date | null;
   approvedAt: Date | null;
+  approvedVersion: number | null;
   publishedAt: Date | null;
   displayPublishedAt: Date | null;
   archivedAt: Date | null;
@@ -62,6 +64,7 @@ export type CreateNewsDraft = {
   title: string;
   shortText: string;
   document: EditorDocument;
+  templateData: unknown;
   plainText: string;
   searchText: string;
   coverMediaId: string | null;
@@ -69,8 +72,8 @@ export type CreateNewsDraft = {
 
 export type CreateNewsDraftRequest = Omit<
   CreateNewsDraft,
-  'document' | 'plainText' | 'searchText'
-> & { documentJson: string };
+  'document' | 'plainText' | 'searchText' | 'templateData'
+> & { documentJson: string; templateData?: unknown };
 
 export type SaveNewsDraft = CreateNewsDraft & {
   articleId: string;
@@ -80,5 +83,5 @@ export type SaveNewsDraft = CreateNewsDraft & {
 
 export type SaveNewsDraftRequest = Omit<
   SaveNewsDraft,
-  'document' | 'plainText' | 'searchText' | 'authorId'
-> & { documentJson: string };
+  'document' | 'plainText' | 'searchText' | 'authorId' | 'templateData'
+> & { documentJson: string; templateData?: unknown };

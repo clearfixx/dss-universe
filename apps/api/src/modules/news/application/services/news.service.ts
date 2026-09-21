@@ -17,6 +17,7 @@ import type {
   NewsArticle,
   SaveNewsDraftRequest,
 } from '../../domain/types/news-article.type';
+import { NewsPostTemplateService } from './news-post-template.service';
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const LANGUAGE_PATTERN = /^[a-z]{2}(?:-[A-Z]{2})?$/;
@@ -26,6 +27,7 @@ export class NewsService {
   constructor(
     @Inject(NEWS_REPOSITORY) private readonly news: NewsRepository,
     private readonly editor: EditorService,
+    private readonly templates: NewsPostTemplateService,
   ) {}
 
   async createDraft(input: CreateNewsDraftRequest): Promise<NewsArticle> {
@@ -56,6 +58,10 @@ export class NewsService {
     }
 
     const projection = this.editor.normalize(input.documentJson, 'NEWS');
+    const templateData = this.templates.normalize(
+      input.postType,
+      input.templateData,
+    );
     return this.news.createDraft({
       authorId: input.authorId,
       postType: input.postType,
@@ -65,6 +71,7 @@ export class NewsService {
       title,
       shortText,
       document: projection.document,
+      templateData,
       plainText: projection.plainText,
       searchText: projection.searchText,
       coverMediaId,
@@ -106,6 +113,10 @@ export class NewsService {
       );
     }
     const projection = this.editor.normalize(input.documentJson, 'NEWS');
+    const templateData = this.templates.normalize(
+      input.postType,
+      input.templateData,
+    );
     const saved = await this.news.saveDraft({
       articleId: input.articleId,
       authorId: actorId,
@@ -118,6 +129,7 @@ export class NewsService {
       title,
       shortText,
       document: projection.document,
+      templateData,
       plainText: projection.plainText,
       searchText: projection.searchText,
       coverMediaId,

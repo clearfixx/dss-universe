@@ -152,6 +152,21 @@ export const PERMISSIONS = {
     label: 'Use AI Editor assistance',
     description: 'Allows requesting human-confirmed AI Editor suggestions.',
   },
+  NewsReview: {
+    key: 'news.review',
+    label: 'Review News',
+    description: 'Allows requesting changes and approving News submissions.',
+  },
+  NewsPublish: {
+    key: 'news.publish',
+    label: 'Publish News',
+    description: 'Allows publishing an approved News revision.',
+  },
+  NewsTaxonomyManage: {
+    key: 'news.taxonomy.manage',
+    label: 'Manage News taxonomy',
+    description: 'Allows managing News categories, tags, and typed fields.',
+  },
 
   RolesRead: {
     key: 'roles.read',

@@ -203,6 +203,13 @@ enum NewsFieldType {
   MEMBER
 }
 
+enum NewsEditorialAction {
+  SUBMITTED
+  CHANGES_REQUESTED
+  APPROVED
+  PUBLISHED
+}
+
 model User {
   id            String     @id @default(uuid())
   email         String     @unique
@@ -262,6 +269,7 @@ model User {
   contentGates            ContentGate[]
   newsArticles            NewsArticle[]                @relation("NewsAuthor")
   newsRevisions           NewsRevision[]               @relation("NewsRevisionEditor")
+  newsEditorialDecisions  NewsEditorialDecision[]
 
   refreshTokenHash String?
   emailVerifiedAt  DateTime?
@@ -396,6 +404,7 @@ model NewsArticle {
   title               String
   shortText           String
   document            Json              @db.JsonB
+  templateData        Json              @default("{}") @db.JsonB
   plainText           String
   searchText          String
   coverMediaId        String?
@@ -408,18 +417,20 @@ model NewsArticle {
   featured            Boolean           @default(false)
   submittedAt         DateTime?
   approvedAt          DateTime?
+  approvedVersion     Int?
   publishedAt         DateTime?
   displayPublishedAt  DateTime?
   archivedAt          DateTime?
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
 
-  interactionTarget InteractionTarget     @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
-  author            User                  @relation("NewsAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  interactionTarget InteractionTarget       @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
+  author            User                    @relation("NewsAuthor", fields: [authorId], references: [id], onDelete: Restrict)
   revisions         NewsRevision[]
   categories        NewsArticleCategory[]
   tags              NewsArticleTag[]
   fieldValues       NewsFieldValue[]
+  editorialHistory  NewsEditorialDecision[]
 
   @@unique([language, slug])
   @@index([status, publishedAt, id])
@@ -540,6 +551,7 @@ model NewsRevision {
   title         String
   shortText     String
   document      Json         @db.JsonB
+  templateData  Json         @default("{}") @db.JsonB
   plainText     String
   searchText    String
   coverMediaId  String?
@@ -552,6 +564,23 @@ model NewsRevision {
   @@unique([articleId, version])
   @@index([editorId, createdAt])
   @@map("news_revisions")
+}
+
+model NewsEditorialDecision {
+  id              String              @id @default(uuid())
+  articleId       String
+  revisionVersion Int
+  actorId         String
+  action          NewsEditorialAction
+  reason          String?
+  createdAt       DateTime            @default(now())
+
+  article NewsArticle @relation(fields: [articleId], references: [id], onDelete: Restrict)
+  actor   User        @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([articleId, createdAt, id])
+  @@index([actorId, action, createdAt])
+  @@map("news_editorial_decisions")
 }
 
 model Reaction {

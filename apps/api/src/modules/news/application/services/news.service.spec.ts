@@ -4,6 +4,7 @@ import { createEmptyEditorDocument } from '@dss/editor';
 import type { EditorService } from '../../../editor';
 import type { NewsRepository } from '../../domain/repositories/news.repository.interface';
 import type { NewsArticle } from '../../domain/types/news-article.type';
+import { NewsPostTemplateService } from './news-post-template.service';
 import { NewsService } from './news.service';
 
 describe('NewsService', () => {
@@ -33,7 +34,11 @@ describe('NewsService', () => {
     editor = {
       normalize,
     };
-    service = new NewsService(repository, editor as EditorService);
+    service = new NewsService(
+      repository,
+      editor as EditorService,
+      new NewsPostTemplateService(),
+    );
   });
 
   it('normalizes a NEWS document and creates the canonical draft', async () => {
@@ -61,6 +66,7 @@ describe('NewsService', () => {
         shortText: 'A concise station update.',
         document,
         plainText: 'Full news text',
+        templateData: {},
       }),
     );
   });
@@ -134,6 +140,7 @@ describe('NewsService', () => {
         authorId: 'author-1',
         baseVersion: 1,
         document,
+        templateData: {},
       }),
     );
   });

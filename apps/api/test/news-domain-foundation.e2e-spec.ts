@@ -1,4 +1,8 @@
-import { ConflictException, type INestApplication } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  type INestApplication,
+} from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { createEmptyEditorDocument } from '@dss/editor';
 import type { App } from 'supertest/types';
@@ -6,7 +10,11 @@ import type { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/core/database';
 import { InteractionTargetsService } from './../src/modules/interactions';
-import { NewsService, NewsTaxonomyService } from './../src/modules/news';
+import {
+  NewsService,
+  NewsTaxonomyService,
+  NewsWorkflowService,
+} from './../src/modules/news';
 
 describe('News domain foundation (e2e)', () => {
   let app: INestApplication<App>;
@@ -14,6 +22,7 @@ describe('News domain foundation (e2e)', () => {
   let news: NewsService;
   let targets: InteractionTargetsService;
   let taxonomy: NewsTaxonomyService;
+  let workflow: NewsWorkflowService;
   const articleIds: string[] = [];
   const userIds: string[] = [];
   const taxonomyIds: string[] = [];
@@ -28,6 +37,7 @@ describe('News domain foundation (e2e)', () => {
     news = app.get(NewsService);
     targets = app.get(InteractionTargetsService);
     taxonomy = app.get(NewsTaxonomyService);
+    workflow = app.get(NewsWorkflowService);
   });
 
   afterAll(async () => {
@@ -40,6 +50,9 @@ describe('News domain foundation (e2e)', () => {
         ({ interactionTargetId }) => interactionTargetId,
       );
       await prisma.newsRevision.deleteMany({
+        where: { articleId: { in: articleIds } },
+      });
+      await prisma.newsEditorialDecision.deleteMany({
         where: { articleId: { in: articleIds } },
       });
       await prisma.newsArticle.deleteMany({
@@ -149,7 +162,8 @@ describe('News domain foundation (e2e)', () => {
       title: 'Station online',
       shortText: 'The station has successfully returned online.',
       documentJson: JSON.stringify(document),
-      coverMediaId: null,
+      coverMediaId: `cover-${suffix}`,
+      templateData: {},
     });
     articleIds.push(article.id);
 
@@ -202,7 +216,8 @@ describe('News domain foundation (e2e)', () => {
       title: 'Station fully online',
       shortText: 'The station is fully operational for every developer.',
       documentJson: JSON.stringify(document),
-      coverMediaId: null,
+      coverMediaId: `cover-${suffix}`,
+      templateData: {},
     });
     expect(saved).toMatchObject({
       currentVersion: 2,
@@ -223,8 +238,98 @@ describe('News domain foundation (e2e)', () => {
         title: 'Stale title',
         shortText: 'This stale tab must not overwrite the current draft.',
         documentJson: JSON.stringify(document),
-        coverMediaId: null,
+        coverMediaId: `cover-${suffix}`,
+        templateData: {},
       }),
     ).rejects.toBeInstanceOf(ConflictException);
+
+    const reviewer = await prisma.user.create({
+      data: {
+        email: `reviewer-${suffix}@example.com`,
+        username: `reviewer-${suffix}`,
+        passwordHash: 'not-used-by-this-test',
+      },
+    });
+    const publisher = await prisma.user.create({
+      data: {
+        email: `publisher-${suffix}@example.com`,
+        username: `publisher-${suffix}`,
+        passwordHash: 'not-used-by-this-test',
+      },
+    });
+    userIds.push(reviewer.id, publisher.id);
+    const reviewPermission = await prisma.permission.upsert({
+      where: { key: 'news.review' },
+      create: { key: 'news.review', label: 'Review News' },
+      update: {},
+    });
+    const publishPermission = await prisma.permission.upsert({
+      where: { key: 'news.publish' },
+      create: { key: 'news.publish', label: 'Publish News' },
+      update: {},
+    });
+    await prisma.userPermission.createMany({
+      data: [
+        { userId: reviewer.id, permissionId: reviewPermission.id },
+        { userId: publisher.id, permissionId: publishPermission.id },
+      ],
+    });
+
+    await expect(workflow.submit(author.id, article.id)).resolves.toMatchObject(
+      { article: { status: 'IN_REVIEW', currentVersion: 2 } },
+    );
+    await expect(
+      workflow.approve(author.id, article.id),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(
+      workflow.requestChanges(
+        reviewer.id,
+        article.id,
+        'Please add one operational detail.',
+      ),
+    ).resolves.toMatchObject({ article: { status: 'CHANGES_REQUESTED' } });
+
+    const revised = await news.saveDraft(author.id, {
+      articleId: article.id,
+      baseVersion: 2,
+      changeSummary: 'Addressed editorial feedback',
+      postType: 'STANDARD',
+      visibility: 'PUBLIC',
+      language: 'uk',
+      slug: article.slug,
+      title: 'Station fully online',
+      shortText: 'The station is fully operational for every developer.',
+      documentJson: JSON.stringify(document),
+      coverMediaId: `cover-${suffix}`,
+      templateData: {},
+    });
+    expect(revised.currentVersion).toBe(3);
+    await workflow.submit(author.id, article.id);
+    await expect(
+      workflow.approve(reviewer.id, article.id, 'Ready for publication.'),
+    ).resolves.toMatchObject({
+      article: { status: 'APPROVED', approvedVersion: 3 },
+    });
+    await expect(
+      workflow.publish(publisher.id, article.id),
+    ).resolves.toMatchObject({
+      article: { status: 'PUBLISHED', approvedVersion: 3 },
+    });
+    await expect(
+      prisma.newsEditorialDecision.findMany({
+        where: { articleId: article.id },
+        orderBy: { createdAt: 'asc' },
+        select: { action: true, revisionVersion: true },
+      }),
+    ).resolves.toEqual([
+      { action: 'SUBMITTED', revisionVersion: 2 },
+      { action: 'CHANGES_REQUESTED', revisionVersion: 2 },
+      { action: 'SUBMITTED', revisionVersion: 3 },
+      { action: 'APPROVED', revisionVersion: 3 },
+      { action: 'PUBLISHED', revisionVersion: 3 },
+    ]);
+    await expect(
+      targets.authorize(article.interactionTargetId, author.id, 'COMMENT'),
+    ).resolves.toMatchObject({ allowed: true });
   });
 });

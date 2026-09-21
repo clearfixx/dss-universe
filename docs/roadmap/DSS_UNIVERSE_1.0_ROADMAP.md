@@ -1103,9 +1103,10 @@ Delivered Activity Feed completion:
 
 # Phase 10 — News Platform
 
-**Status: active.** Packages 10.0–10.3 establish the frozen product contracts,
-canonical News draft aggregate, hierarchical taxonomy, typed field definitions
-and optimistic News-owned revision saves. Interaction Target ownership and
+**Status: active.** Packages 10.0–10.5 establish the frozen product contracts,
+canonical News draft aggregate, hierarchical taxonomy, typed field definitions,
+optimistic News-owned revision saves, validated post templates and the audited
+author-to-review-to-publication workflow. Interaction Target ownership and
 transactional Audit/Outbox evidence remain mandatory at every accepted write.
 
 ## Scope
