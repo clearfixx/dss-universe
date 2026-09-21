@@ -63,6 +63,8 @@ export class PrismaNewsWorkflowRepository implements NewsWorkflowRepository {
         revisionVersion: input.expectedVersion,
         decisionId: decision.id,
         reason: input.reason,
+        scheduledFor: input.scheduledFor?.toISOString() ?? null,
+        displayPublishedAt: input.displayPublishedAt?.toISOString() ?? null,
       };
       await this.audit.append(transaction, {
         action: `news.article.${eventStem}`,
@@ -89,6 +91,43 @@ export class PrismaNewsWorkflowRepository implements NewsWorkflowRepository {
     });
   }
 
+  async publishDue(
+    now: Date,
+    limit: number,
+  ): Promise<NewsEditorialTransitionResult[]> {
+    const candidates = await this.prisma.newsArticle.findMany({
+      where: {
+        status: 'SCHEDULED',
+        scheduledFor: { lte: now },
+        scheduledById: { not: null },
+      },
+      orderBy: [{ scheduledFor: 'asc' }, { id: 'asc' }],
+      take: limit,
+      select: {
+        id: true,
+        currentVersion: true,
+        scheduledById: true,
+        displayPublishedAt: true,
+      },
+    });
+    const published: NewsEditorialTransitionResult[] = [];
+    for (const candidate of candidates) {
+      if (!candidate.scheduledById) continue;
+      const result = await this.transition({
+        articleId: candidate.id,
+        actorId: candidate.scheduledById,
+        expectedStatus: 'SCHEDULED',
+        expectedVersion: candidate.currentVersion,
+        nextStatus: 'PUBLISHED',
+        action: 'PUBLISHED',
+        reason: 'Scheduled publication became due.',
+        displayPublishedAt: candidate.displayPublishedAt,
+      });
+      if (result) published.push(result);
+    }
+    return published;
+  }
+
   private timestamps(input: NewsEditorialTransition, now: Date) {
     switch (input.action) {
       case 'SUBMITTED':
@@ -97,8 +136,27 @@ export class PrismaNewsWorkflowRepository implements NewsWorkflowRepository {
         return { approvedAt: null, approvedVersion: null };
       case 'APPROVED':
         return { approvedAt: now, approvedVersion: input.expectedVersion };
+      case 'SCHEDULED':
+        return {
+          scheduledFor: input.scheduledFor,
+          scheduledById: input.actorId,
+          displayPublishedAt: input.displayPublishedAt,
+        };
+      case 'SCHEDULE_CANCELLED':
+        return {
+          scheduledFor: null,
+          scheduledById: null,
+          displayPublishedAt: null,
+        };
       case 'PUBLISHED':
-        return { publishedAt: now, displayPublishedAt: now };
+        return {
+          publishedAt: now,
+          displayPublishedAt:
+            input.displayPublishedAt ??
+            (input.expectedStatus === 'SCHEDULED' ? undefined : now),
+          scheduledFor: null,
+          scheduledById: null,
+        };
     }
   }
 

@@ -48,6 +48,8 @@ export type NewsArticle = {
   submittedAt: Date | null;
   approvedAt: Date | null;
   approvedVersion: number | null;
+  scheduledFor: Date | null;
+  scheduledById: string | null;
   publishedAt: Date | null;
   displayPublishedAt: Date | null;
   archivedAt: Date | null;

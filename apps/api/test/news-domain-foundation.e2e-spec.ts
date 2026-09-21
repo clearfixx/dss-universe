@@ -4,6 +4,7 @@ import {
   type INestApplication,
 } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
+import { Prisma } from '@prisma/client';
 import { createEmptyEditorDocument } from '@dss/editor';
 import type { App } from 'supertest/types';
 
@@ -11,6 +12,7 @@ import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/core/database';
 import { InteractionTargetsService } from './../src/modules/interactions';
 import {
+  NewsDeliveryService,
   NewsService,
   NewsTaxonomyService,
   NewsWorkflowService,
@@ -23,6 +25,7 @@ describe('News domain foundation (e2e)', () => {
   let targets: InteractionTargetsService;
   let taxonomy: NewsTaxonomyService;
   let workflow: NewsWorkflowService;
+  let delivery: NewsDeliveryService;
   const articleIds: string[] = [];
   const userIds: string[] = [];
   const taxonomyIds: string[] = [];
@@ -38,6 +41,7 @@ describe('News domain foundation (e2e)', () => {
     targets = app.get(InteractionTargetsService);
     taxonomy = app.get(NewsTaxonomyService);
     workflow = app.get(NewsWorkflowService);
+    delivery = app.get(NewsDeliveryService);
   });
 
   afterAll(async () => {
@@ -49,6 +53,15 @@ describe('News domain foundation (e2e)', () => {
       const targetIds = articles.map(
         ({ interactionTargetId }) => interactionTargetId,
       );
+      await prisma.comment.deleteMany({
+        where: { interactionTargetId: { in: targetIds } },
+      });
+      await prisma.bookmark.deleteMany({
+        where: { interactionTargetId: { in: targetIds } },
+      });
+      await prisma.reactionAggregate.deleteMany({
+        where: { interactionTargetId: { in: targetIds } },
+      });
       await prisma.newsRevision.deleteMany({
         where: { articleId: { in: articleIds } },
       });
@@ -310,11 +323,83 @@ describe('News domain foundation (e2e)', () => {
     ).resolves.toMatchObject({
       article: { status: 'APPROVED', approvedVersion: 3 },
     });
+    const scheduledFor = new Date(Date.now() + 60 * 60 * 1000);
+    const displayPublishedAt = new Date(Date.now() - 24 * 60 * 60 * 1000);
     await expect(
-      workflow.publish(publisher.id, article.id),
+      workflow.schedule(
+        publisher.id,
+        article.id,
+        scheduledFor,
+        displayPublishedAt,
+      ),
     ).resolves.toMatchObject({
-      article: { status: 'PUBLISHED', approvedVersion: 3 },
+      article: {
+        status: 'SCHEDULED',
+        approvedVersion: 3,
+        scheduledById: publisher.id,
+        scheduledFor,
+        displayPublishedAt,
+      },
     });
+    await expect(
+      delivery.browseShort({ search: `station-online-${suffix}` }),
+    ).resolves.toMatchObject({ items: [] });
+    await expect(
+      workflow.publishDue(new Date(scheduledFor.getTime() + 1)),
+    ).resolves.toHaveLength(1);
+
+    await prisma.comment.create({
+      data: {
+        interactionTargetId: article.interactionTargetId,
+        authorId: reviewer.id,
+        body: 'A useful operational update.',
+        document: createEmptyEditorDocument(
+          'COMMENT',
+        ) as unknown as Prisma.InputJsonValue,
+        searchText: 'a useful operational update.',
+      },
+    });
+    await prisma.reactionAggregate.create({
+      data: {
+        interactionTargetId: article.interactionTargetId,
+        upvotes: 12,
+        downvotes: 2,
+        score: 10,
+        total: 14,
+      },
+    });
+    await prisma.bookmark.create({
+      data: {
+        interactionTargetId: article.interactionTargetId,
+        ownerId: author.id,
+      },
+    });
+    const shortNews = await delivery.browseShort(
+      {
+        language: 'uk',
+        search: 'fully operational',
+        first: 1,
+      },
+      author.id,
+    );
+    expect(shortNews).toMatchObject({
+      hasNextPage: false,
+      items: [
+        {
+          id: article.id,
+          displayPublishedAt,
+          engagement: {
+            viewCount: null,
+            commentCount: 1,
+            upvotes: 12,
+            downvotes: 2,
+            score: 10,
+            bookmarkedByViewer: true,
+          },
+        },
+      ],
+    });
+    expect(shortNews.endCursor).toEqual(expect.any(String));
     await expect(
       prisma.newsEditorialDecision.findMany({
         where: { articleId: article.id },
@@ -326,6 +411,7 @@ describe('News domain foundation (e2e)', () => {
       { action: 'CHANGES_REQUESTED', revisionVersion: 2 },
       { action: 'SUBMITTED', revisionVersion: 3 },
       { action: 'APPROVED', revisionVersion: 3 },
+      { action: 'SCHEDULED', revisionVersion: 3 },
       { action: 'PUBLISHED', revisionVersion: 3 },
     ]);
     await expect(

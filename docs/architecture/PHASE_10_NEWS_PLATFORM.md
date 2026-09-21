@@ -1,6 +1,6 @@
 # Phase 10 — News Platform Architecture
 
-> Status: Packages 10.0–10.5 implemented
+> Status: Packages 10.0–10.7 implemented
 
 ## Product boundary
 
@@ -78,8 +78,7 @@ identities and routing metadata, never the article body.
 
 ## Deferred packages
 
-- scheduled publication and privileged display dates — 10.6;
-- Short/Full delivery and UI — 10.7–10.8;
+- Full News delivery and initial UI — 10.8;
 - ratings, comments, files, views and sharing — 10.9–10.12;
 - permission-guarded editorial/GraphQL surfaces and platform integrations —
   10.13–10.16.
@@ -120,3 +119,21 @@ identities and routing metadata, never the article body.
   Outbox event atomically;
 - publication activates the existing Interaction Target owner policy without
   minting a second interaction identity.
+
+## Packages 10.6–10.7 delivery
+
+- permission-owned scheduling from an approved immutable revision;
+- audited schedule cancellation back to `APPROVED` without losing approval;
+- server-owned activation time and a separately audited privileged display
+  date, bounded to prevent future-dated or unreasonable values;
+- an idempotent, bounded scheduler that atomically publishes due articles and
+  can be enabled with `NEWS_SCHEDULER_INTERVAL_MS`;
+- scheduled articles remain unavailable to public delivery and interactions;
+- one canonical Short News projection with opaque cursor pagination and
+  language, type, category, tag, search, featured and homepage filters;
+- anonymous delivery is `PUBLIC` only, while an authenticated viewer may also
+  receive `MEMBERS` articles;
+- Short News composes author, primary category, tags, live comment count,
+  rating aggregate and viewer bookmark state without duplicating ownership;
+- `viewCount` is explicitly nullable until the unique-view projection package,
+  rather than returning a fabricated zero.

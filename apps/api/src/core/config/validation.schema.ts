@@ -27,6 +27,7 @@ export const validationSchema = Joi.object({
   REDIS_PORT: Joi.number().default(6379),
   OUTBOX_DISPATCH_INTERVAL_MS: Joi.number().integer().min(0).default(1000),
   MEDIA_RETENTION_DAYS: Joi.number().integer().min(1).default(30),
+  NEWS_SCHEDULER_INTERVAL_MS: Joi.number().integer().min(0).default(0),
   MEDIA_CLEANUP_INTERVAL_MS: Joi.number()
     .integer()
     .min(0)

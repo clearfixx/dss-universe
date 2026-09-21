@@ -1,4 +1,8 @@
-import { ConflictException, ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+} from '@nestjs/common';
 
 import type { PermissionsService } from '@api/core/authorization';
 import type { NewsRepository } from '../../domain/repositories/news.repository.interface';
@@ -50,7 +54,7 @@ describe('NewsWorkflowService', () => {
           },
         }),
       );
-    workflow = { transition };
+    workflow = { transition, publishDue: jest.fn().mockResolvedValue([]) };
     access = jest.fn().mockResolvedValue({ roles: [], permissions: [] });
     permissions = { getAccessProfileByUserId: access };
     service = new NewsWorkflowService(
@@ -101,5 +105,42 @@ describe('NewsWorkflowService', () => {
     await expect(
       service.publish('publisher-1', draft.id),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('schedules an approved revision with a privileged display date', async () => {
+    access.mockResolvedValue({ roles: [], permissions: ['news.publish'] });
+    news.findById.mockResolvedValue({
+      ...draft,
+      status: 'APPROVED',
+      approvedVersion: 2,
+    });
+    const scheduledFor = new Date(Date.now() + 60 * 60 * 1000);
+    const displayPublishedAt = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    await service.schedule(
+      'publisher-1',
+      draft.id,
+      scheduledFor,
+      displayPublishedAt,
+    );
+    expect(transition).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'SCHEDULED',
+        nextStatus: 'SCHEDULED',
+        scheduledFor,
+        displayPublishedAt,
+      }),
+    );
+  });
+
+  it('rejects schedules that are not safely in the future', async () => {
+    access.mockResolvedValue({ roles: [], permissions: ['news.publish'] });
+    news.findById.mockResolvedValue({
+      ...draft,
+      status: 'APPROVED',
+      approvedVersion: 2,
+    });
+    await expect(
+      service.schedule('publisher-1', draft.id, new Date()),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 });

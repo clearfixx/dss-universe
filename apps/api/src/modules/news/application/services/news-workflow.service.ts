@@ -97,6 +97,7 @@ export class NewsWorkflowService {
   async publish(
     actorId: string,
     articleId: string,
+    displayPublishedAt?: Date,
   ): Promise<NewsEditorialTransitionResult> {
     await this.requirePermission(actorId, Permission.NewsPublish);
     const article = await this.article(articleId);
@@ -109,7 +110,70 @@ export class NewsWorkflowService {
       );
     }
     this.templates.assertReady(article);
-    return this.transition(article, actorId, 'PUBLISHED', 'PUBLISHED', null);
+    const displayDate = displayPublishedAt
+      ? this.assertDisplayDate(displayPublishedAt, new Date())
+      : undefined;
+    return this.transition(article, actorId, 'PUBLISHED', 'PUBLISHED', null, {
+      displayPublishedAt: displayDate,
+    });
+  }
+
+  async schedule(
+    actorId: string,
+    articleId: string,
+    scheduledFor: Date,
+    displayPublishedAt?: Date,
+  ): Promise<NewsEditorialTransitionResult> {
+    await this.requirePermission(actorId, Permission.NewsPublish);
+    const article = await this.article(articleId);
+    if (article.status !== 'APPROVED') {
+      throw new ConflictException('Only approved News may be scheduled.');
+    }
+    if (article.approvedVersion !== article.currentVersion) {
+      throw new ConflictException(
+        'The approved revision is no longer the current revision.',
+      );
+    }
+    this.templates.assertReady(article);
+    const now = new Date();
+    const publicationDate = this.assertScheduleDate(scheduledFor, now);
+    const displayDate = displayPublishedAt
+      ? this.assertDisplayDate(displayPublishedAt, publicationDate)
+      : publicationDate;
+    return this.transition(article, actorId, 'SCHEDULED', 'SCHEDULED', null, {
+      scheduledFor: publicationDate,
+      displayPublishedAt: displayDate,
+    });
+  }
+
+  async cancelSchedule(
+    actorId: string,
+    articleId: string,
+    reason: string,
+  ): Promise<NewsEditorialTransitionResult> {
+    await this.requirePermission(actorId, Permission.NewsPublish);
+    const normalizedReason = reason.trim();
+    if (normalizedReason.length < 5 || normalizedReason.length > 1000) {
+      throw new BadRequestException(
+        'A schedule cancellation reason must be 5–1000 characters.',
+      );
+    }
+    const article = await this.article(articleId);
+    if (article.status !== 'SCHEDULED') {
+      throw new ConflictException('Only scheduled News may be unscheduled.');
+    }
+    return this.transition(
+      article,
+      actorId,
+      'APPROVED',
+      'SCHEDULE_CANCELLED',
+      normalizedReason,
+    );
+  }
+
+  publishDue(now = new Date(), limit = 50) {
+    const boundedLimit = Math.min(Math.max(Math.trunc(limit), 1), 100);
+    return this.workflow.publishDue(now, boundedLimit);
   }
 
   private async article(articleId: string): Promise<NewsArticle> {
@@ -134,6 +198,10 @@ export class NewsWorkflowService {
     nextStatus: NewsArticle['status'],
     action: Parameters<NewsWorkflowRepository['transition']>[0]['action'],
     reason: string | null,
+    dates: Pick<
+      Parameters<NewsWorkflowRepository['transition']>[0],
+      'scheduledFor' | 'displayPublishedAt'
+    > = {},
   ): Promise<NewsEditorialTransitionResult> {
     const result = await this.workflow.transition({
       articleId: article.id,
@@ -143,6 +211,7 @@ export class NewsWorkflowService {
       nextStatus,
       action,
       reason,
+      ...dates,
     });
     if (!result) {
       throw new ConflictException(
@@ -150,5 +219,36 @@ export class NewsWorkflowService {
       );
     }
     return result;
+  }
+
+  private assertScheduleDate(value: Date, now: Date): Date {
+    const date = new Date(value);
+    const minimum = now.getTime() + 60_000;
+    const maximum = now.getTime() + 366 * 24 * 60 * 60 * 1000;
+    if (
+      Number.isNaN(date.getTime()) ||
+      date.getTime() < minimum ||
+      date.getTime() > maximum
+    ) {
+      throw new BadRequestException(
+        'Scheduled publication must be 1 minute to 366 days in the future.',
+      );
+    }
+    return date;
+  }
+
+  private assertDisplayDate(value: Date, activationDate: Date): Date {
+    const date = new Date(value);
+    const oldest = activationDate.getTime() - 20 * 366 * 24 * 60 * 60 * 1000;
+    if (
+      Number.isNaN(date.getTime()) ||
+      date.getTime() > activationDate.getTime() ||
+      date.getTime() < oldest
+    ) {
+      throw new BadRequestException(
+        'Display publication date must not be future-dated or over 20 years old.',
+      );
+    }
+    return date;
   }
 }

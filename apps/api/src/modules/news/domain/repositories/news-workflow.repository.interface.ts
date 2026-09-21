@@ -9,4 +9,8 @@ export interface NewsWorkflowRepository {
   transition(
     input: NewsEditorialTransition,
   ): Promise<NewsEditorialTransitionResult | null>;
+  publishDue(
+    now: Date,
+    limit: number,
+  ): Promise<NewsEditorialTransitionResult[]>;
 }

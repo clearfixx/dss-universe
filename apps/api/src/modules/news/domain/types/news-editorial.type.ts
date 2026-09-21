@@ -4,6 +4,8 @@ export type NewsEditorialAction =
   | 'SUBMITTED'
   | 'CHANGES_REQUESTED'
   | 'APPROVED'
+  | 'SCHEDULED'
+  | 'SCHEDULE_CANCELLED'
   | 'PUBLISHED';
 
 export type NewsEditorialDecision = {
@@ -24,6 +26,8 @@ export type NewsEditorialTransition = {
   nextStatus: NewsArticleStatus;
   action: NewsEditorialAction;
   reason: string | null;
+  scheduledFor?: Date | null;
+  displayPublishedAt?: Date | null;
 };
 
 export type NewsEditorialTransitionResult = {

@@ -207,6 +207,8 @@ enum NewsEditorialAction {
   SUBMITTED
   CHANGES_REQUESTED
   APPROVED
+  SCHEDULED
+  SCHEDULE_CANCELLED
   PUBLISHED
 }
 
@@ -270,6 +272,7 @@ model User {
   newsArticles            NewsArticle[]                @relation("NewsAuthor")
   newsRevisions           NewsRevision[]               @relation("NewsRevisionEditor")
   newsEditorialDecisions  NewsEditorialDecision[]
+  newsScheduled           NewsArticle[]                @relation("NewsScheduler")
 
   refreshTokenHash String?
   emailVerifiedAt  DateTime?
@@ -418,6 +421,8 @@ model NewsArticle {
   submittedAt         DateTime?
   approvedAt          DateTime?
   approvedVersion     Int?
+  scheduledFor        DateTime?
+  scheduledById       String?
   publishedAt         DateTime?
   displayPublishedAt  DateTime?
   archivedAt          DateTime?
@@ -426,6 +431,7 @@ model NewsArticle {
 
   interactionTarget InteractionTarget       @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
   author            User                    @relation("NewsAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  scheduledBy       User?                   @relation("NewsScheduler", fields: [scheduledById], references: [id], onDelete: Restrict)
   revisions         NewsRevision[]
   categories        NewsArticleCategory[]
   tags              NewsArticleTag[]
@@ -434,6 +440,7 @@ model NewsArticle {
 
   @@unique([language, slug])
   @@index([status, publishedAt, id])
+  @@index([status, scheduledFor, id])
   @@index([authorId, status, updatedAt])
   @@index([postType, status, publishedAt])
   @@map("news_articles")
