@@ -19,8 +19,10 @@ queries use stable cursors and compose engagement from Interaction Platform.
 Packages 10.8–10.9 add public Full News delivery, catalog/UI contracts,
 viewer-aware votes and bookmarks, and bounded voter statistics. Package 10.10
 adds paginated Reddit-like comment trees, replies, per-comment rating,
-low-score disclosure and tombstone-safe branch delivery. Files, unique views
-and sharing remain in their scheduled Phase 10 packages.
+low-score disclosure and tombstone-safe branch delivery. Package 10.11 binds
+News attachments to DSS Media references and exposes safe file metadata,
+SHA-256/SHA-1/MD5 digests and public original downloads. Unique views and
+sharing remain in their scheduled Phase 10 package.
 
 The pagination correction adds an audited policy for News and News comments,
 parallel cursor and numbered delivery, chronological neighbors, and explicit

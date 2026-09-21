@@ -28,4 +28,5 @@ export type MediaVariant = {
   height: number | null;
   metadata: Record<string, unknown> | null;
   createdAt: Date;
+  originalFilename?: string;
 };

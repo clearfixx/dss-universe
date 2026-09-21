@@ -105,6 +105,20 @@ query FullNewsPage($language: String!, $slug: String!) {
       coverMediaId
       displayPublishedAt
     }
+    attachments {
+      id
+      mediaId
+      label
+      filename
+      mimeType
+      extension
+      size
+      kind
+      checksumSha256
+      checksumSha1
+      checksumMd5
+      downloadUrl
+    }
   }
 }
 

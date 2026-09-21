@@ -905,6 +905,8 @@ model Media {
   extension        String
   size             Int
   checksum         String
+  checksumSha1     String?
+  checksumMd5      String?
   width            Int?
   height           Int?
   durationMs       Int?

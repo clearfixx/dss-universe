@@ -9,6 +9,8 @@ import type { NewsRepository } from '../../domain/repositories/news.repository.i
 import type { NewsWorkflowRepository } from '../../domain/repositories/news-workflow.repository.interface';
 import type { NewsEditorialTransition } from '../../domain/types/news-editorial.type';
 import type { NewsArticle } from '../../domain/types/news-article.type';
+import type { MediaRepository } from '../../../media/domain/repositories/media.repository.interface';
+import { createEmptyEditorDocument } from '@dss/editor';
 import { NewsPostTemplateService } from './news-post-template.service';
 import { NewsWorkflowService } from './news-workflow.service';
 
@@ -18,6 +20,7 @@ describe('NewsWorkflowService', () => {
   let permissions: Pick<PermissionsService, 'getAccessProfileByUserId'>;
   let access: jest.Mock;
   let transition: jest.Mock;
+  let findMediaById: jest.Mock;
   let service: NewsWorkflowService;
   const draft = {
     id: 'article-1',
@@ -29,6 +32,7 @@ describe('NewsWorkflowService', () => {
     templateData: {},
     coverMediaId: 'cover-1',
     plainText: 'Complete article text.',
+    document: createEmptyEditorDocument('NEWS'),
   } as NewsArticle;
 
   beforeEach(() => {
@@ -56,12 +60,14 @@ describe('NewsWorkflowService', () => {
       );
     workflow = { transition, publishDue: jest.fn().mockResolvedValue([]) };
     access = jest.fn().mockResolvedValue({ roles: [], permissions: [] });
+    findMediaById = jest.fn();
     permissions = { getAccessProfileByUserId: access };
     service = new NewsWorkflowService(
       news,
       workflow,
       new NewsPostTemplateService(),
       permissions as PermissionsService,
+      { findById: findMediaById } as unknown as MediaRepository,
     );
   });
 
@@ -76,6 +82,36 @@ describe('NewsWorkflowService', () => {
         action: 'SUBMITTED',
       }),
     );
+  });
+
+  it('blocks review while an attachment is private or still processing', async () => {
+    const attachmentId = '123e4567-e89b-42d3-a456-426614174000';
+    news.findById.mockResolvedValue({
+      ...draft,
+      document: {
+        ...draft.document,
+        content: {
+          ...draft.document.content,
+          content: [
+            { type: 'paragraph' },
+            {
+              type: 'attachment',
+              attrs: { mediaId: attachmentId, label: 'Release archive' },
+            },
+          ],
+        },
+      },
+    });
+    findMediaById.mockResolvedValue({
+      status: 'PROCESSING',
+      visibility: 'PRIVATE',
+    });
+
+    await expect(service.submit('author-1', draft.id)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+    expect(findMediaById).toHaveBeenCalledWith(attachmentId);
+    expect(transition).not.toHaveBeenCalled();
   });
 
   it('denies review decisions without the narrow permission', async () => {

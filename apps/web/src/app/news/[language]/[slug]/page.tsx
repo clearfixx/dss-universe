@@ -13,6 +13,7 @@ import {
 import { NewsComments } from "@/features/news/news-comments";
 import { NewsDocument } from "@/features/news/news-document";
 import { NewsEngagement } from "@/features/news/news-engagement";
+import { NewsAttachments } from "@/features/news/news-attachments";
 
 type Props = { params: Promise<{ language: string; slug: string }> };
 
@@ -134,6 +135,7 @@ export default async function FullNewsRoute({ params }: Props) {
             ) : null}
           </aside>
         </div>
+        <NewsAttachments items={article.attachments} />
         {comments ? (
           <NewsComments
             articleId={article.id}

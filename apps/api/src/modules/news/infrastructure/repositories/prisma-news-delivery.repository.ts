@@ -146,6 +146,27 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
       },
     });
     if (!article) return null;
+    const attachmentLabels = this.attachmentLabels(article.document);
+    const attachmentReferences = attachmentLabels.size
+      ? await this.prisma.mediaReference.findMany({
+          where: {
+            targetType: 'NewsArticle',
+            targetId: short.id,
+            purpose: 'news.attachment',
+            removedAt: null,
+            mediaId: { in: [...attachmentLabels.keys()] },
+            media: {
+              status: 'READY',
+              visibility: 'PUBLIC',
+              deletedAt: null,
+            },
+          },
+          include: { media: true },
+        })
+      : [];
+    const referencesByMediaId = new Map(
+      attachmentReferences.map((reference) => [reference.mediaId, reference]),
+    );
     return {
       ...short,
       documentJson: JSON.stringify(article.document),
@@ -154,6 +175,27 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
       allowRating: article.allowRating,
       allowSharing: article.allowSharing,
       allowIndexing: article.allowIndexing,
+      attachments: [...attachmentLabels].flatMap(([mediaId, label]) => {
+        const reference = referencesByMediaId.get(mediaId);
+        if (!reference) return [];
+        const media = reference.media;
+        return [
+          {
+            id: reference.id,
+            mediaId,
+            label,
+            filename: media.originalFilename,
+            mimeType: media.mimeType,
+            extension: media.extension,
+            size: media.size,
+            kind: this.fileKind(media.mimeType, media.extension),
+            checksumSha256: media.checksum,
+            checksumSha1: media.checksumSha1,
+            checksumMd5: media.checksumMd5,
+            downloadUrl: `/api/media/public/${mediaId}/original`,
+          },
+        ];
+      }),
       related: article.outgoingLinks.flatMap((link) => {
         const date =
           link.targetArticle.displayPublishedAt ??
@@ -403,6 +445,45 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
           : []),
       ],
     };
+  }
+
+  private attachmentLabels(document: Prisma.JsonValue): Map<string, string> {
+    const attachments = new Map<string, string>();
+    const visit = (value: Prisma.JsonValue): void => {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) {
+        if (Array.isArray(value)) value.forEach(visit);
+        return;
+      }
+      if (value.type === 'contentGate') return;
+      if (value.type === 'attachment' && value.attrs) {
+        const attrs = value.attrs;
+        if (
+          typeof attrs === 'object' &&
+          !Array.isArray(attrs) &&
+          typeof attrs.mediaId === 'string' &&
+          typeof attrs.label === 'string'
+        ) {
+          attachments.set(attrs.mediaId, attrs.label);
+        }
+      }
+      if (Array.isArray(value.content)) value.content.forEach(visit);
+    };
+    visit(document);
+    return attachments;
+  }
+
+  private fileKind(mimeType: string, extension: string): string {
+    if (mimeType === 'application/pdf') return 'PDF document';
+    if (mimeType.startsWith('image/'))
+      return `${extension.toUpperCase()} image`;
+    if (mimeType.startsWith('audio/'))
+      return `${extension.toUpperCase()} audio`;
+    if (mimeType.startsWith('video/'))
+      return `${extension.toUpperCase()} video`;
+    if (['zip', 'rar', '7z', 'tar', 'gz'].includes(extension.toLowerCase())) {
+      return `${extension.toUpperCase()} archive`;
+    }
+    return `${extension.toUpperCase()} file`;
   }
 
   private rows(

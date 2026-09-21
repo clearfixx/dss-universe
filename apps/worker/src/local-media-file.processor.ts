@@ -134,6 +134,8 @@ export class LocalMediaFileProcessor implements MediaFileProcessor {
       extension: extname(storageKey).slice(1).toLowerCase(),
       size: details.size,
       checksum: createHash("sha256").update(contents).digest("hex"),
+      checksumSha1: createHash("sha1").update(contents).digest("hex"),
+      checksumMd5: createHash("md5").update(contents).digest("hex"),
       width: null,
       height: null,
     };

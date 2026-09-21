@@ -134,6 +134,22 @@ class NewsRelatedItemModel {
   @Field(() => GraphQLISODateTime) displayPublishedAt!: Date;
 }
 
+@ObjectType('NewsAttachment')
+class NewsAttachmentModel {
+  @Field(() => ID) id!: string;
+  @Field(() => ID) mediaId!: string;
+  @Field() label!: string;
+  @Field() filename!: string;
+  @Field() mimeType!: string;
+  @Field() extension!: string;
+  @Field(() => Int) size!: number;
+  @Field() kind!: string;
+  @Field() checksumSha256!: string;
+  @Field(() => String, { nullable: true }) checksumSha1!: string | null;
+  @Field(() => String, { nullable: true }) checksumMd5!: string | null;
+  @Field() downloadUrl!: string;
+}
+
 @ObjectType('FullNews')
 class FullNewsModel extends ShortNewsModel {
   @Field() documentJson!: string;
@@ -143,6 +159,7 @@ class FullNewsModel extends ShortNewsModel {
   @Field() allowSharing!: boolean;
   @Field() allowIndexing!: boolean;
   @Field(() => [NewsRelatedItemModel]) related!: NewsRelatedItemModel[];
+  @Field(() => [NewsAttachmentModel]) attachments!: NewsAttachmentModel[];
 }
 
 @ObjectType('NumberedNewsPage')

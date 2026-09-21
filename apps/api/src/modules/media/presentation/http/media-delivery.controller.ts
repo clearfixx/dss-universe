@@ -41,6 +41,12 @@ export class MediaDeliveryController {
     response.type(media.mimeType);
     response.setHeader('ETag', `"${media.checksum}"`);
     response.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    if (media.originalFilename) {
+      response.setHeader(
+        'Content-Disposition',
+        `attachment; filename*=UTF-8''${encodeURIComponent(media.originalFilename)}`,
+      );
+    }
     return new StreamableFile(media.content);
   }
 

@@ -17,6 +17,7 @@ import type {
 
 const PRODUCER = 'dss.api.news';
 const OWNER_TYPE = 'NewsArticle';
+const ATTACHMENT_PURPOSE = 'news.attachment';
 
 @Injectable()
 export class PrismaNewsRepository implements NewsRepository {
@@ -58,6 +59,12 @@ export class PrismaNewsRepository implements NewsRepository {
             coverMediaId: input.coverMediaId,
           },
         });
+        await this.syncAttachments(
+          transaction,
+          articleId,
+          input.authorId,
+          input.attachmentMediaIds,
+        );
         const revision = await transaction.newsRevision.create({
           data: {
             articleId,
@@ -163,6 +170,12 @@ export class PrismaNewsRepository implements NewsRepository {
           },
         });
         if (changed.count !== 1) return null;
+        await this.syncAttachments(
+          transaction,
+          input.articleId,
+          input.authorId,
+          input.attachmentMediaIds,
+        );
         const revision = await transaction.newsRevision.create({
           data: {
             articleId: input.articleId,
@@ -232,5 +245,52 @@ export class PrismaNewsRepository implements NewsRepository {
       ...article,
       document: article.document as unknown as EditorDocument,
     };
+  }
+
+  private async syncAttachments(
+    transaction: Prisma.TransactionClient,
+    articleId: string,
+    actorId: string,
+    mediaIds: string[],
+  ): Promise<void> {
+    await transaction.mediaReference.updateMany({
+      where: {
+        targetType: OWNER_TYPE,
+        targetId: articleId,
+        purpose: ATTACHMENT_PURPOSE,
+        removedAt: null,
+        ...(mediaIds.length ? { mediaId: { notIn: mediaIds } } : {}),
+      },
+      data: { removedAt: new Date() },
+    });
+    for (const mediaId of mediaIds) {
+      const existing = await transaction.mediaReference.findFirst({
+        where: {
+          mediaId,
+          targetType: OWNER_TYPE,
+          targetId: articleId,
+          purpose: ATTACHMENT_PURPOSE,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+      if (existing) {
+        if (existing.removedAt) {
+          await transaction.mediaReference.update({
+            where: { id: existing.id },
+            data: { removedAt: null, createdBy: actorId },
+          });
+        }
+      } else {
+        await transaction.mediaReference.create({
+          data: {
+            mediaId,
+            targetType: OWNER_TYPE,
+            targetId: articleId,
+            purpose: ATTACHMENT_PURPOSE,
+            createdBy: actorId,
+          },
+        });
+      }
+    }
   }
 }

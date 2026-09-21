@@ -92,6 +92,8 @@ export class MediaBinaryUploadService {
     }
 
     const checksum = createHash('sha256').update(file.buffer).digest('hex');
+    const checksumSha1 = createHash('sha1').update(file.buffer).digest('hex');
+    const checksumMd5 = createHash('md5').update(file.buffer).digest('hex');
     if (session.checksum && session.checksum.toLowerCase() !== checksum) {
       throw new BadRequestException('Uploaded file checksum does not match.');
     }
@@ -152,6 +154,8 @@ export class MediaBinaryUploadService {
         extension,
         size: file.size,
         checksum,
+        checksumSha1,
+        checksumMd5,
         metadata: {
           uploadSessionId: session.id,
           temporaryKey: session.temporaryKey,

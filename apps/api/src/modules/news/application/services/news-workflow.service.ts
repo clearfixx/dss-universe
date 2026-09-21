@@ -22,6 +22,13 @@ import {
 } from '../../domain/repositories/news-workflow.repository.interface';
 import type { NewsEditorialTransitionResult } from '../../domain/types/news-editorial.type';
 import type { NewsArticle } from '../../domain/types/news-article.type';
+import {
+  MEDIA_REPOSITORY,
+  type MediaRepository,
+} from '../../../media/domain/repositories/media.repository.interface';
+import { MediaStatus } from '../../../media/domain/enums/media-status.enum';
+import { MediaVisibility } from '../../../media/domain/enums/media-visibility.enum';
+import type { EditorNode } from '@dss/editor';
 import { NewsPostTemplateService } from './news-post-template.service';
 
 @Injectable()
@@ -32,6 +39,7 @@ export class NewsWorkflowService {
     private readonly workflow: NewsWorkflowRepository,
     private readonly templates: NewsPostTemplateService,
     private readonly permissions: PermissionsService,
+    @Inject(MEDIA_REPOSITORY) private readonly media: MediaRepository,
   ) {}
 
   async submit(
@@ -45,7 +53,7 @@ export class NewsWorkflowService {
     if (article.status !== 'DRAFT' && article.status !== 'CHANGES_REQUESTED') {
       throw new ConflictException('This News article cannot be submitted.');
     }
-    this.templates.assertReady(article);
+    await this.assertReady(article);
     return this.transition(article, actorId, 'IN_REVIEW', 'SUBMITTED', null);
   }
 
@@ -84,7 +92,7 @@ export class NewsWorkflowService {
     if (article.status !== 'IN_REVIEW') {
       throw new ConflictException('Only News in review may be approved.');
     }
-    this.templates.assertReady(article);
+    await this.assertReady(article);
     return this.transition(
       article,
       actorId,
@@ -109,7 +117,7 @@ export class NewsWorkflowService {
         'The approved revision is no longer the current revision.',
       );
     }
-    this.templates.assertReady(article);
+    await this.assertReady(article);
     const displayDate = displayPublishedAt
       ? this.assertDisplayDate(displayPublishedAt, new Date())
       : undefined;
@@ -134,7 +142,7 @@ export class NewsWorkflowService {
         'The approved revision is no longer the current revision.',
       );
     }
-    this.templates.assertReady(article);
+    await this.assertReady(article);
     const now = new Date();
     const publicationDate = this.assertScheduleDate(scheduledFor, now);
     const displayDate = displayPublishedAt
@@ -219,6 +227,32 @@ export class NewsWorkflowService {
       );
     }
     return result;
+  }
+
+  private async assertReady(article: NewsArticle): Promise<void> {
+    this.templates.assertReady(article);
+    const ids = new Set<string>();
+    const visit = (node: EditorNode): void => {
+      if (
+        node.type === 'attachment' &&
+        typeof node.attrs?.mediaId === 'string'
+      ) {
+        ids.add(node.attrs.mediaId);
+      }
+      node.content?.forEach(visit);
+    };
+    visit(article.document.content);
+    await Promise.all(
+      [...ids].map(async (id) => {
+        const media = await this.media.findById(id);
+        const visible = media?.visibility === MediaVisibility.PUBLIC;
+        if (!media || media.status !== MediaStatus.READY || !visible) {
+          throw new BadRequestException(
+            'Every News attachment must be ready and match article visibility before review or publication.',
+          );
+        }
+      }),
+    );
   }
 
   private assertScheduleDate(value: Date, now: Date): Date {

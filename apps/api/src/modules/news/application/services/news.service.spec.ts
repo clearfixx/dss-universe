@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException } from '@nestjs/common';
 import { createEmptyEditorDocument } from '@dss/editor';
 
 import type { EditorService } from '../../../editor';
+import type { MediaRepository } from '../../../media/domain/repositories/media.repository.interface';
 import type { NewsRepository } from '../../domain/repositories/news.repository.interface';
 import type { NewsArticle } from '../../domain/types/news-article.type';
 import { NewsPostTemplateService } from './news-post-template.service';
@@ -15,6 +16,7 @@ describe('NewsService', () => {
   let createDraft: jest.Mock;
   let saveDraft: jest.Mock;
   let normalize: jest.Mock;
+  let findMediaById: jest.Mock;
 
   beforeEach(() => {
     createDraft = jest.fn();
@@ -25,6 +27,7 @@ describe('NewsService', () => {
       plainText: 'Full news text',
       searchText: 'full news text',
     });
+    findMediaById = jest.fn();
     repository = {
       createDraft,
       findById: jest.fn(),
@@ -38,9 +41,9 @@ describe('NewsService', () => {
       repository,
       editor as EditorService,
       new NewsPostTemplateService(),
+      { findById: findMediaById } as unknown as MediaRepository,
     );
   });
-
   it('normalizes a NEWS document and creates the canonical draft', async () => {
     const created = { id: 'article-1' } as NewsArticle;
     repository.createDraft.mockResolvedValue(created);
@@ -86,6 +89,46 @@ describe('NewsService', () => {
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(createDraft).not.toHaveBeenCalled();
+  });
+
+  it('extracts unique owned attachment identities from the canonical document', async () => {
+    const attachmentId = '123e4567-e89b-42d3-a456-426614174000';
+    const documentWithAttachment = {
+      ...document,
+      content: {
+        ...document.content,
+        content: [
+          ...(document.content.content ?? []),
+          {
+            type: 'attachment' as const,
+            attrs: { mediaId: attachmentId, label: 'Guide' },
+          },
+        ],
+      },
+    };
+    normalize.mockReturnValueOnce({
+      document: documentWithAttachment,
+      plainText: 'Full news text',
+      searchText: 'full news text',
+    });
+    findMediaById.mockResolvedValue({ ownerId: 'author-1', isPublic: false });
+    createDraft.mockResolvedValue({ id: 'article-1' });
+
+    await service.createDraft({
+      authorId: 'author-1',
+      postType: 'STANDARD',
+      visibility: 'PUBLIC',
+      language: 'uk',
+      slug: 'attachment-guide',
+      title: 'Attachment guide',
+      shortText: 'A concise attachment guide.',
+      documentJson: JSON.stringify(documentWithAttachment),
+      coverMediaId: null,
+    });
+
+    expect(createDraft).toHaveBeenCalledWith(
+      expect.objectContaining({ attachmentMediaIds: [attachmentId] }),
+    );
   });
 
   it('rejects a slug already owned in the same language', async () => {

@@ -449,6 +449,7 @@ type FullNews {
   allowIndexing: Boolean!
   allowRating: Boolean!
   allowSharing: Boolean!
+  attachments: [NewsAttachment!]!
   author: NewsAuthor!
   coverMediaId: ID
   displayPublishedAt: DateTime!
@@ -854,6 +855,21 @@ type Mutation {
   updateViewerPrivacy(input: UpdateUserPrivacyInput!): UserPrivacySettings!
   updateViewerProfile(input: UpdateViewerProfileInput!): Viewer!
   updateViewerSocialLinks(input: UpdateViewerSocialLinksInput!): [UserSocialLink!]!
+}
+
+type NewsAttachment {
+  checksumMd5: String
+  checksumSha1: String
+  checksumSha256: String!
+  downloadUrl: String!
+  extension: String!
+  filename: String!
+  id: ID!
+  kind: String!
+  label: String!
+  mediaId: ID!
+  mimeType: String!
+  size: Int!
 }
 
 type NewsAuthor {

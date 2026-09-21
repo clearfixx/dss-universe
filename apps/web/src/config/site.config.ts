@@ -4,7 +4,7 @@ export const siteConfig = {
   description:
     "A space-themed developer platform for learning, building, sharing, and growing.",
   url: "http://localhost:3000",
-  apiUrl: "http://localhost:4000/api",
+  apiUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api",
   graphqlUrl:
     process.env.NEXT_PUBLIC_GRAPHQL_URL ?? "http://localhost:4000/api/graphql",
 } as const;

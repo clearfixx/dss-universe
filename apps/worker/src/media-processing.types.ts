@@ -13,6 +13,8 @@ export type ProcessedMediaFile = {
   extension: string;
   size: number;
   checksum: string;
+  checksumSha1: string;
+  checksumMd5: string;
   width: number | null;
   height: number | null;
 };

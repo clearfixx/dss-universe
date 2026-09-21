@@ -1,6 +1,6 @@
 # Phase 10 — News Platform Architecture
 
-> Status: Packages 10.0–10.10 implemented
+> Status: Packages 10.0–10.11 implemented
 
 ## Product boundary
 
@@ -78,7 +78,7 @@ identities and routing metadata, never the article body.
 
 ## Deferred packages
 
-- files, views and sharing — 10.11–10.12;
+- views and sharing — 10.12;
 - permission-guarded editorial/GraphQL surfaces and platform integrations —
   10.13–10.16.
 
@@ -188,3 +188,20 @@ ownership in Phase 13.
 - branches show three direct replies initially, and comments scoring `-5` or
   lower are hidden behind an explicit disclosure;
 - deleted comments remain tombstones so reply structure is preserved.
+
+## Package 10.11 delivery
+
+- News attachment nodes are synchronized to active DSS Media references on
+  every accepted draft version instead of duplicating file ownership;
+- review, approval, scheduling and publication are blocked until every
+  attachment is processed and publicly deliverable;
+- public Full News exposes ordered, `READY` and `PUBLIC` attachment metadata
+  only, with label, filename, explicit file kind, MIME type and byte size;
+- Media records persist SHA-256, SHA-1 and MD5 digests for newly processed
+  originals, while legacy records safely expose only their available digest;
+- public original downloads remain Media-owned, use immutable ETags and a
+  download filename without exposing storage keys;
+- attachment cards are rendered at the end of Full News with localized sizes,
+  file-type icons, hashes and a direct download action;
+- attachments nested inside a Content Gate never leak through the ungated
+  article attachment summary.

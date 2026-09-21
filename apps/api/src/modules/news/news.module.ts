@@ -6,6 +6,7 @@ import { PrismaModule } from '@api/core/database';
 import { EventsModule } from '@api/core/events';
 import { EditorModule } from '../editor';
 import { InteractionsModule } from '../interactions';
+import { MediaModule } from '../media/media.module';
 
 import { NewsInteractionPolicy } from './application/services/news-interaction.policy';
 import { NewsDeliveryService } from './application/services/news-delivery.service';
@@ -42,6 +43,7 @@ import {
     EventsModule,
     EditorModule,
     InteractionsModule,
+    MediaModule,
   ],
   providers: [
     NewsDeliveryResolver,

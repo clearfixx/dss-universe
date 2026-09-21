@@ -70,11 +70,16 @@ export type CreateNewsDraft = {
   plainText: string;
   searchText: string;
   coverMediaId: string | null;
+  attachmentMediaIds: string[];
 };
 
 export type CreateNewsDraftRequest = Omit<
   CreateNewsDraft,
-  'document' | 'plainText' | 'searchText' | 'templateData'
+  | 'document'
+  | 'plainText'
+  | 'searchText'
+  | 'templateData'
+  | 'attachmentMediaIds'
 > & { documentJson: string; templateData?: unknown };
 
 export type SaveNewsDraft = CreateNewsDraft & {
@@ -85,5 +90,10 @@ export type SaveNewsDraft = CreateNewsDraft & {
 
 export type SaveNewsDraftRequest = Omit<
   SaveNewsDraft,
-  'document' | 'plainText' | 'searchText' | 'authorId' | 'templateData'
+  | 'document'
+  | 'plainText'
+  | 'searchText'
+  | 'authorId'
+  | 'templateData'
+  | 'attachmentMediaIds'
 > & { documentJson: string; templateData?: unknown };

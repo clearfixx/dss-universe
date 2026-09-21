@@ -97,6 +97,7 @@ export type FullNewsItem = ShortNewsItem & {
   allowRating: boolean;
   allowSharing: boolean;
   allowIndexing: boolean;
+  attachments: NewsAttachment[];
   related: Array<{
     id: string;
     type: 'RELATED' | 'CONTEXTUAL' | 'SERIES';
@@ -108,4 +109,19 @@ export type FullNewsItem = ShortNewsItem & {
     coverMediaId: string | null;
     displayPublishedAt: Date;
   }>;
+};
+
+export type NewsAttachment = {
+  id: string;
+  mediaId: string;
+  label: string;
+  filename: string;
+  mimeType: string;
+  extension: string;
+  size: number;
+  kind: string;
+  checksumSha256: string;
+  checksumSha1: string | null;
+  checksumMd5: string | null;
+  downloadUrl: string;
 };

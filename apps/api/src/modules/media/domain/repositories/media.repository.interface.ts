@@ -42,6 +42,7 @@ export interface MediaRepository {
     mediaId: string,
     variantName: string,
   ): Promise<MediaVariant | null>;
+  findPublicOriginal(mediaId: string): Promise<MediaVariant | null>;
   findDeliveryCandidate(
     mediaId: string,
     variantName: string,

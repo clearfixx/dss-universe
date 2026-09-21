@@ -27,6 +27,7 @@ export type DeliveredMedia = {
   content: Buffer;
   mimeType: string;
   checksum: string;
+  originalFilename?: string;
 };
 
 @Injectable()
@@ -42,7 +43,10 @@ export class MediaDeliveryService {
     mediaId: string,
     variantName: string,
   ): Promise<DeliveredMedia> {
-    const variant = await this.media.findPublicVariant(mediaId, variantName);
+    const variant =
+      variantName === 'original'
+        ? await this.media.findPublicOriginal(mediaId)
+        : await this.media.findPublicVariant(mediaId, variantName);
     if (!variant) {
       throw new NotFoundException('Media variant not found.');
     }
@@ -51,6 +55,7 @@ export class MediaDeliveryService {
       content: await this.storage.read(variant.storageKey),
       mimeType: variant.mimeType,
       checksum: variant.checksum,
+      originalFilename: variant.originalFilename,
     };
   }
 

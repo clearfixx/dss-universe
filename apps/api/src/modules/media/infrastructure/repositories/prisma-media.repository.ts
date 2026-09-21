@@ -210,6 +210,37 @@ export class PrismaMediaRepository implements MediaRepository {
       : null;
   }
 
+  async findPublicOriginal(mediaId: string) {
+    const media = await this.prisma.media.findFirst({
+      where: {
+        id: mediaId,
+        status: MediaStatus.READY,
+        visibility: MediaVisibility.PUBLIC,
+        deletedAt: null,
+      },
+    });
+    return media
+      ? {
+          id: media.id,
+          mediaId: media.id,
+          name: 'original',
+          storageProvider:
+            media.storageProvider as unknown as MediaStorageProvider,
+          bucket: media.bucket,
+          storageKey: media.storageKey,
+          mimeType: media.mimeType,
+          extension: media.extension,
+          size: media.size,
+          checksum: media.checksum,
+          width: media.width,
+          height: media.height,
+          metadata: PrismaMediaMapper.toMetadata(media.metadata),
+          createdAt: media.createdAt,
+          originalFilename: media.originalFilename,
+        }
+      : null;
+  }
+
   async findDeliveryCandidate(mediaId: string, variantName: string) {
     const variant = await this.prisma.mediaVariant.findFirst({
       where: {

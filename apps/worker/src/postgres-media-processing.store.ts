@@ -85,7 +85,8 @@ export class PostgresMediaProcessingStore implements MediaProcessingStore {
         `UPDATE "media" SET
           "status" = 'READY'::"MediaStatus", "storageKey" = $2,
           "mimeType" = $3, "extension" = $4, "size" = $5, "checksum" = $6,
-          "width" = $7, "height" = $8, "readyAt" = NOW(), "updatedAt" = NOW(),
+          "checksumSha1" = $7, "checksumMd5" = $8,
+          "width" = $9, "height" = $10, "readyAt" = NOW(), "updatedAt" = NOW(),
           "failureCode" = NULL, "failureReason" = NULL
          WHERE "id" = $1 AND "status" = 'PROCESSING'::"MediaStatus"`,
         [
@@ -95,6 +96,8 @@ export class PostgresMediaProcessingStore implements MediaProcessingStore {
           result.original.extension,
           result.original.size,
           result.original.checksum,
+          result.original.checksumSha1,
+          result.original.checksumMd5,
           result.original.width,
           result.original.height,
         ],

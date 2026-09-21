@@ -9,6 +9,10 @@ import {
 
 import { EditorService } from '../../../editor';
 import {
+  MEDIA_REPOSITORY,
+  type MediaRepository,
+} from '../../../media/domain/repositories/media.repository.interface';
+import {
   NEWS_REPOSITORY,
   type NewsRepository,
 } from '../../domain/repositories/news.repository.interface';
@@ -28,6 +32,7 @@ export class NewsService {
     @Inject(NEWS_REPOSITORY) private readonly news: NewsRepository,
     private readonly editor: EditorService,
     private readonly templates: NewsPostTemplateService,
+    @Inject(MEDIA_REPOSITORY) private readonly media: MediaRepository,
   ) {}
 
   async createDraft(input: CreateNewsDraftRequest): Promise<NewsArticle> {
@@ -58,6 +63,10 @@ export class NewsService {
     }
 
     const projection = this.editor.normalize(input.documentJson, 'NEWS');
+    const attachmentMediaIds = await this.validateMediaReferences(
+      projection.document,
+      input.authorId,
+    );
     const templateData = this.templates.normalize(
       input.postType,
       input.templateData,
@@ -75,6 +84,7 @@ export class NewsService {
       plainText: projection.plainText,
       searchText: projection.searchText,
       coverMediaId,
+      attachmentMediaIds,
     });
   }
 
@@ -113,6 +123,10 @@ export class NewsService {
       );
     }
     const projection = this.editor.normalize(input.documentJson, 'NEWS');
+    const attachmentMediaIds = await this.validateMediaReferences(
+      projection.document,
+      actorId,
+    );
     const templateData = this.templates.normalize(
       input.postType,
       input.templateData,
@@ -133,6 +147,7 @@ export class NewsService {
       plainText: projection.plainText,
       searchText: projection.searchText,
       coverMediaId,
+      attachmentMediaIds,
     });
     if (!saved) {
       throw new ConflictException(
@@ -162,5 +177,31 @@ export class NewsService {
     if (!LANGUAGE_PATTERN.test(language)) {
       throw new BadRequestException('News language has an invalid format.');
     }
+  }
+
+  private async validateMediaReferences(
+    document: import('@dss/editor').EditorDocument,
+    actorId: string,
+  ): Promise<string[]> {
+    const ids = new Set<string>();
+    const visit = (node: import('@dss/editor').EditorNode): void => {
+      if (node.type === 'attachment') {
+        const mediaId = node.attrs?.mediaId;
+        if (typeof mediaId === 'string') ids.add(mediaId);
+      }
+      node.content?.forEach(visit);
+    };
+    visit(document.content);
+    await Promise.all(
+      [...ids].map(async (id) => {
+        const media = await this.media.findById(id);
+        if (!media || (media.ownerId !== actorId && !media.isPublic)) {
+          throw new BadRequestException(
+            'News attachment is unavailable to this author.',
+          );
+        }
+      }),
+    );
+    return [...ids];
   }
 }

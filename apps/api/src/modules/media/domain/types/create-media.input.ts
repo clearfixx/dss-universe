@@ -32,6 +32,8 @@ export type CreateMediaInput = {
   extension: string;
   size: number;
   checksum: string;
+  checksumSha1?: string | null;
+  checksumMd5?: string | null;
   width?: number | null;
   height?: number | null;
   durationMs?: number | null;
