@@ -1,6 +1,6 @@
 # Phase 10 — News Platform Architecture
 
-> Status: Packages 10.0–10.1 implemented
+> Status: Packages 10.0–10.3 implemented
 
 ## Product boundary
 
@@ -74,13 +74,12 @@ identities and routing metadata, never the article body.
 
 ## Deferred packages
 
-- permissions and taxonomy — 10.2;
-- editor autosave and revision commands — 10.3;
 - post-template validation — 10.4;
 - review, dates and publication — 10.5–10.6;
 - Short/Full delivery and UI — 10.7–10.8;
 - ratings, comments, files, views and sharing — 10.9–10.12;
-- editorial workspace and platform integrations — 10.13–10.16.
+- permission-guarded editorial/GraphQL surfaces and platform integrations —
+  10.13–10.16.
 
 ## Package 10.1 invariants
 
@@ -90,3 +89,16 @@ identities and routing metadata, never the article body.
 4. Every article owns exactly one immutable Interaction Target coordinate.
 5. No article commits without Audit and Outbox evidence.
 6. No shared interaction is authorized against an unpublished draft.
+
+## Packages 10.2–10.3 delivery
+
+- hierarchical categories with post-type and interaction defaults;
+- one database-enforced primary category per article;
+- normalized tags and many-to-many article coordinates;
+- category/post-type scoped field definitions using bounded typed values;
+- no arbitrary HTML custom fields;
+- News-owned optimistic saves for `DRAFT` and `CHANGES_REQUESTED` states;
+- canonical `NEWS` validation on every save;
+- an immutable revision, Audit record and body-free Outbox event per accepted
+  version;
+- stale base versions fail without changing the article.

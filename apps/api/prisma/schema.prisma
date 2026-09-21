@@ -188,6 +188,21 @@ enum NewsVisibility {
   MEMBERS
 }
 
+enum NewsFieldType {
+  SHORT_TEXT
+  LONG_TEXT
+  NUMBER
+  BOOLEAN
+  DATETIME
+  SELECT
+  MULTI_SELECT
+  URL
+  MEDIA
+  GALLERY
+  FILE
+  MEMBER
+}
+
 model User {
   id            String     @id @default(uuid())
   email         String     @unique
@@ -399,15 +414,119 @@ model NewsArticle {
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
 
-  interactionTarget InteractionTarget @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
-  author            User              @relation("NewsAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  interactionTarget InteractionTarget     @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
+  author            User                  @relation("NewsAuthor", fields: [authorId], references: [id], onDelete: Restrict)
   revisions         NewsRevision[]
+  categories        NewsArticleCategory[]
+  tags              NewsArticleTag[]
+  fieldValues       NewsFieldValue[]
 
   @@unique([language, slug])
   @@index([status, publishedAt, id])
   @@index([authorId, status, updatedAt])
   @@index([postType, status, publishedAt])
   @@map("news_articles")
+}
+
+model NewsCategory {
+  id               String         @id @default(uuid())
+  parentId         String?
+  name             String
+  slug             String         @unique
+  description      String?
+  icon             String?
+  sortOrder        Int            @default(0)
+  isActive         Boolean        @default(true)
+  allowedPostTypes NewsPostType[] @default([STANDARD, TEXT, GALLERY, VIDEO, AUDIO])
+  allowComments    Boolean        @default(true)
+  allowRating      Boolean        @default(true)
+  allowIndexing    Boolean        @default(true)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  parent           NewsCategory?         @relation("NewsCategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children         NewsCategory[]        @relation("NewsCategoryTree")
+  articles         NewsArticleCategory[]
+  fieldDefinitions NewsFieldDefinition[]
+
+  @@index([parentId, isActive, sortOrder])
+  @@map("news_categories")
+}
+
+model NewsArticleCategory {
+  articleId  String
+  categoryId String
+  isPrimary  Boolean @default(false)
+  position   Int     @default(0)
+
+  article  NewsArticle  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  category NewsCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@id([articleId, categoryId])
+  @@index([categoryId, isPrimary, position])
+  @@map("news_article_categories")
+}
+
+model NewsTag {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  articles NewsArticleTag[]
+
+  @@map("news_tags")
+}
+
+model NewsArticleTag {
+  articleId String
+  tagId     String
+
+  article NewsArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  tag     NewsTag     @relation(fields: [tagId], references: [id], onDelete: Restrict)
+
+  @@id([articleId, tagId])
+  @@index([tagId, articleId])
+  @@map("news_article_tags")
+}
+
+model NewsFieldDefinition {
+  id              String        @id @default(uuid())
+  categoryId      String?
+  postType        NewsPostType?
+  key             String
+  label           String
+  type            NewsFieldType
+  required        Boolean       @default(false)
+  showInShort     Boolean       @default(false)
+  showInFull      Boolean       @default(true)
+  includeInSearch Boolean       @default(false)
+  filterable      Boolean       @default(false)
+  options         Json?         @db.JsonB
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  category NewsCategory?    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  values   NewsFieldValue[]
+
+  @@index([categoryId, postType, isActive])
+  @@map("news_field_definitions")
+}
+
+model NewsFieldValue {
+  articleId    String
+  definitionId String
+  value        Json     @db.JsonB
+  updatedAt    DateTime @updatedAt
+
+  article    NewsArticle         @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  definition NewsFieldDefinition @relation(fields: [definitionId], references: [id], onDelete: Restrict)
+
+  @@id([articleId, definitionId])
+  @@index([definitionId, articleId])
+  @@map("news_field_values")
 }
 
 model NewsRevision {

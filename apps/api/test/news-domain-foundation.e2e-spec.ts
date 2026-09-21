@@ -1,4 +1,4 @@
-import type { INestApplication } from '@nestjs/common';
+import { ConflictException, type INestApplication } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { createEmptyEditorDocument } from '@dss/editor';
 import type { App } from 'supertest/types';
@@ -6,15 +6,17 @@ import type { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/core/database';
 import { InteractionTargetsService } from './../src/modules/interactions';
-import { NewsService } from './../src/modules/news';
+import { NewsService, NewsTaxonomyService } from './../src/modules/news';
 
 describe('News domain foundation (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
   let news: NewsService;
   let targets: InteractionTargetsService;
+  let taxonomy: NewsTaxonomyService;
   const articleIds: string[] = [];
   const userIds: string[] = [];
+  const taxonomyIds: string[] = [];
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -25,6 +27,7 @@ describe('News domain foundation (e2e)', () => {
     prisma = app.get(PrismaService);
     news = app.get(NewsService);
     targets = app.get(InteractionTargetsService);
+    taxonomy = app.get(NewsTaxonomyService);
   });
 
   afterAll(async () => {
@@ -65,6 +68,19 @@ describe('News domain foundation (e2e)', () => {
           ],
         },
       });
+      await prisma.newsFieldDefinition.deleteMany({
+        where: { id: { in: taxonomyIds } },
+      });
+      await prisma.newsCategory.deleteMany({
+        where: { id: { in: taxonomyIds } },
+      });
+      await prisma.newsTag.deleteMany({ where: { id: { in: taxonomyIds } } });
+      await prisma.auditRecord.deleteMany({
+        where: { targetId: { in: taxonomyIds } },
+      });
+      await prisma.outboxEvent.deleteMany({
+        where: { producer: 'dss.api.news', aggregateId: { in: taxonomyIds } },
+      });
       await prisma.user.deleteMany({ where: { id: { in: userIds } } });
     }
     if (app) await app.close();
@@ -80,6 +96,42 @@ describe('News domain foundation (e2e)', () => {
       },
     });
     userIds.push(author.id);
+
+    const category = await taxonomy.createCategory({
+      actorId: author.id,
+      parentId: null,
+      name: 'Development',
+      slug: `development-${suffix}`,
+      description: 'Developer platform news.',
+      icon: 'code',
+      sortOrder: 10,
+      isActive: true,
+      allowedPostTypes: ['STANDARD', 'TEXT'],
+      allowComments: true,
+      allowRating: true,
+      allowIndexing: true,
+    });
+    const tag = await taxonomy.createTag({
+      actorId: author.id,
+      name: 'Platform',
+      slug: `platform-${suffix}`,
+    });
+    const field = await taxonomy.createFieldDefinition({
+      actorId: author.id,
+      categoryId: category.id,
+      postType: 'STANDARD',
+      key: `difficulty_${suffix}`,
+      label: 'Difficulty',
+      type: 'SELECT',
+      required: false,
+      showInShort: true,
+      showInFull: true,
+      includeInSearch: true,
+      filterable: true,
+      options: ['beginner', 'advanced'],
+      isActive: true,
+    });
+    taxonomyIds.push(category.id, tag.id, field.id);
 
     const document = createEmptyEditorDocument('NEWS');
     document.content.content = [
@@ -132,5 +184,47 @@ describe('News domain foundation (e2e)', () => {
       allowed: false,
       reason: 'NEWS_NOT_PUBLISHED',
     });
+
+    document.content.content = [
+      {
+        type: 'paragraph',
+        content: [{ type: 'text', text: 'The station is fully operational.' }],
+      },
+    ];
+    const saved = await news.saveDraft(author.id, {
+      articleId: article.id,
+      baseVersion: 1,
+      changeSummary: 'Expanded status',
+      postType: 'STANDARD',
+      visibility: 'PUBLIC',
+      language: 'uk',
+      slug: article.slug,
+      title: 'Station fully online',
+      shortText: 'The station is fully operational for every developer.',
+      documentJson: JSON.stringify(document),
+      coverMediaId: null,
+    });
+    expect(saved).toMatchObject({
+      currentVersion: 2,
+      plainText: 'The station is fully operational.',
+    });
+    await expect(
+      prisma.newsRevision.findMany({ where: { articleId: article.id } }),
+    ).resolves.toHaveLength(2);
+    await expect(
+      news.saveDraft(author.id, {
+        articleId: article.id,
+        baseVersion: 1,
+        changeSummary: null,
+        postType: 'STANDARD',
+        visibility: 'PUBLIC',
+        language: 'uk',
+        slug: article.slug,
+        title: 'Stale title',
+        shortText: 'This stale tab must not overwrite the current draft.',
+        documentJson: JSON.stringify(document),
+        coverMediaId: null,
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
   });
 });

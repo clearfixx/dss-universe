@@ -12,6 +12,7 @@ import type { NewsRepository } from '../../domain/repositories/news.repository.i
 import type {
   CreateNewsDraft,
   NewsArticle,
+  SaveNewsDraft,
 } from '../../domain/types/news-article.type';
 
 const PRODUCER = 'dss.api.news';
@@ -131,6 +132,95 @@ export class PrismaNewsRepository implements NewsRepository {
       where: { language_slug: { language, slug } },
     });
     return article ? this.toDomain(article) : null;
+  }
+
+  async saveDraft(input: SaveNewsDraft): Promise<NewsArticle | null> {
+    try {
+      return await this.prisma.$transaction(async (transaction) => {
+        const nextVersion = input.baseVersion + 1;
+        const changed = await transaction.newsArticle.updateMany({
+          where: {
+            id: input.articleId,
+            authorId: input.authorId,
+            currentVersion: input.baseVersion,
+            status: { in: ['DRAFT', 'CHANGES_REQUESTED'] },
+          },
+          data: {
+            postType: input.postType,
+            visibility: input.visibility,
+            language: input.language,
+            slug: input.slug,
+            title: input.title,
+            shortText: input.shortText,
+            document: input.document as unknown as Prisma.InputJsonValue,
+            plainText: input.plainText,
+            searchText: input.searchText,
+            coverMediaId: input.coverMediaId,
+            currentVersion: nextVersion,
+          },
+        });
+        if (changed.count !== 1) return null;
+        const revision = await transaction.newsRevision.create({
+          data: {
+            articleId: input.articleId,
+            version: nextVersion,
+            editorId: input.authorId,
+            postType: input.postType,
+            language: input.language,
+            slug: input.slug,
+            title: input.title,
+            shortText: input.shortText,
+            document: input.document as unknown as Prisma.InputJsonValue,
+            plainText: input.plainText,
+            searchText: input.searchText,
+            coverMediaId: input.coverMediaId,
+            changeSummary: input.changeSummary,
+          },
+        });
+        const article = await transaction.newsArticle.findUniqueOrThrow({
+          where: { id: input.articleId },
+        });
+        const payload = {
+          articleId: article.id,
+          authorId: input.authorId,
+          revisionId: revision.id,
+          version: nextVersion,
+          previousVersion: input.baseVersion,
+          status: article.status,
+        };
+        await this.audit.append(transaction, {
+          action: 'news.article.draft_saved',
+          actorType: 'USER',
+          actorId: input.authorId,
+          targetType: OWNER_TYPE,
+          targetId: article.id,
+          metadata: payload,
+        });
+        await this.outbox.append(
+          transaction,
+          createEventEnvelope({
+            name: 'news.article.draft-saved.v1',
+            version: 1,
+            category: 'domain',
+            producer: PRODUCER,
+            actorId: input.authorId,
+            aggregate: { type: OWNER_TYPE, id: article.id },
+            payload,
+          }),
+        );
+        return this.toDomain(article);
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'News slug already exists for this language.',
+        );
+      }
+      throw error;
+    }
   }
 
   private toDomain(article: NewsArticleRow): NewsArticle {

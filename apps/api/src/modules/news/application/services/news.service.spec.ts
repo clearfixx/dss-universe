@@ -12,10 +12,12 @@ describe('NewsService', () => {
   let editor: Pick<EditorService, 'normalize'>;
   let service: NewsService;
   let createDraft: jest.Mock;
+  let saveDraft: jest.Mock;
   let normalize: jest.Mock;
 
   beforeEach(() => {
     createDraft = jest.fn();
+    saveDraft = jest.fn();
     normalize = jest.fn().mockReturnValue({
       document,
       canonicalJson: JSON.stringify(document),
@@ -26,6 +28,7 @@ describe('NewsService', () => {
       createDraft,
       findById: jest.fn(),
       findBySlug: jest.fn().mockResolvedValue(null),
+      saveDraft,
     };
     editor = {
       normalize,
@@ -84,6 +87,73 @@ describe('NewsService', () => {
     await expect(
       service.createDraft({
         authorId: 'author-1',
+        postType: 'STANDARD',
+        visibility: 'PUBLIC',
+        language: 'uk',
+        slug: 'station-update',
+        title: 'Station update',
+        shortText: 'A concise station update.',
+        documentJson: JSON.stringify(document),
+        coverMediaId: null,
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('advances an owned draft from the supplied optimistic version', async () => {
+    const current = {
+      id: 'article-1',
+      authorId: 'author-1',
+      status: 'DRAFT',
+      currentVersion: 1,
+    } as NewsArticle;
+    repository.findById.mockResolvedValue(current);
+    repository.findBySlug.mockResolvedValue(current);
+    saveDraft.mockResolvedValue({
+      ...current,
+      currentVersion: 2,
+    });
+
+    await expect(
+      service.saveDraft('author-1', {
+        articleId: 'article-1',
+        baseVersion: 1,
+        changeSummary: 'Expanded intro',
+        postType: 'STANDARD',
+        visibility: 'PUBLIC',
+        language: 'uk',
+        slug: 'station-update',
+        title: 'Station update',
+        shortText: 'A concise station update.',
+        documentJson: JSON.stringify(document),
+        coverMediaId: null,
+      }),
+    ).resolves.toMatchObject({ currentVersion: 2 });
+    expect(saveDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        articleId: 'article-1',
+        authorId: 'author-1',
+        baseVersion: 1,
+        document,
+      }),
+    );
+  });
+
+  it('surfaces an optimistic conflict instead of overwriting a newer draft', async () => {
+    const current = {
+      id: 'article-1',
+      authorId: 'author-1',
+      status: 'DRAFT',
+      currentVersion: 2,
+    } as NewsArticle;
+    repository.findById.mockResolvedValue(current);
+    repository.findBySlug.mockResolvedValue(current);
+    saveDraft.mockResolvedValue(null);
+
+    await expect(
+      service.saveDraft('author-1', {
+        articleId: 'article-1',
+        baseVersion: 1,
+        changeSummary: null,
         postType: 'STANDARD',
         visibility: 'PUBLIC',
         language: 'uk',

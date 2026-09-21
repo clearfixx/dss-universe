@@ -71,3 +71,14 @@ export type CreateNewsDraftRequest = Omit<
   CreateNewsDraft,
   'document' | 'plainText' | 'searchText'
 > & { documentJson: string };
+
+export type SaveNewsDraft = CreateNewsDraft & {
+  articleId: string;
+  baseVersion: number;
+  changeSummary: string | null;
+};
+
+export type SaveNewsDraftRequest = Omit<
+  SaveNewsDraft,
+  'document' | 'plainText' | 'searchText' | 'authorId'
+> & { documentJson: string };
