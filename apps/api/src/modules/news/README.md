@@ -16,7 +16,9 @@ Packages 10.4–10.7 add post-template validation, permission-owned editorial
 transitions, scheduled publication and the canonical Short News delivery
 projection. Scheduled material stays private until server activation; public
 queries use stable cursors and compose engagement from Interaction Platform.
-Full News delivery and UI remain in their scheduled Phase 10 packages.
+Packages 10.8–10.9 add public Full News delivery, catalog/UI contracts,
+viewer-aware votes and bookmarks, and bounded voter statistics. Comments,
+files, unique views and sharing remain in their scheduled Phase 10 packages.
 
 The pagination correction adds an audited policy for News and News comments,
 parallel cursor and numbered delivery, chronological neighbors, and explicit

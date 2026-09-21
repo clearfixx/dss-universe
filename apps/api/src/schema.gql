@@ -443,6 +443,32 @@ type EditorDocumentPreview {
   searchText: String!
 }
 
+type FullNews {
+  allowComments: Boolean!
+  allowIndexing: Boolean!
+  allowRating: Boolean!
+  allowSharing: Boolean!
+  author: NewsAuthor!
+  coverMediaId: ID
+  displayPublishedAt: DateTime!
+  documentJson: String!
+  engagement: NewsEngagement!
+  featured: Boolean!
+  id: ID!
+  interactionTargetId: ID!
+  language: String!
+  postType: NewsPostType!
+  primaryCategory: NewsCategorySummary
+  publishedAt: DateTime!
+  related: [NewsRelatedItem!]!
+  shortText: String!
+  slug: String!
+  tags: [NewsTagSummary!]!
+  templateDataJson: String!
+  title: String!
+  visibility: NewsVisibility!
+}
+
 input GiveReputationInput {
   reason: String!
   recipientId: ID!
@@ -829,11 +855,96 @@ type Mutation {
   updateViewerSocialLinks(input: UpdateViewerSocialLinksInput!): [UserSocialLink!]!
 }
 
+type NewsAuthor {
+  avatarUrl: String
+  displayName: String
+  id: ID!
+  username: String!
+}
+
+input NewsBrowseInput {
+  categorySlug: String
+  featured: Boolean
+  homepage: Boolean
+  language: String
+  page: Int
+  pageSize: Int
+  postType: NewsPostType
+  search: String
+  tagSlug: String
+}
+
+type NewsCategorySummary {
+  icon: String
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+type NewsEngagement {
+  bookmarkedByViewer: Boolean!
+  commentCount: Int!
+  downvotes: Int!
+  score: Int!
+  upvotes: Int!
+  viewCount: Int
+  viewerReaction: NewsVoteKind
+}
+
+type NewsNavigation {
+  next: NewsNavigationItem
+  previous: NewsNavigationItem
+}
+
+type NewsNavigationItem {
+  coverMediaId: ID
+  displayPublishedAt: DateTime!
+  id: ID!
+  language: String!
+  slug: String!
+  title: String!
+}
+
 enum NewsPaginationMode {
   BOTH
   DISABLED
   LOAD_MORE
   PAGES
+}
+
+enum NewsPostType {
+  AUDIO
+  GALLERY
+  STANDARD
+  TEXT
+  VIDEO
+}
+
+type NewsRatingVote {
+  actor: NewsAuthor!
+  id: ID!
+  kind: NewsVoteKind!
+  updatedAt: DateTime!
+}
+
+type NewsRatingVotePage {
+  items: [NewsRatingVote!]!
+  page: Int!
+  pageSize: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+type NewsRelatedItem {
+  anchorText: String!
+  coverMediaId: ID
+  displayPublishedAt: DateTime!
+  id: ID!
+  language: String!
+  shortText: String!
+  slug: String!
+  title: String!
+  type: String!
 }
 
 type NewsSettings {
@@ -844,6 +955,22 @@ type NewsSettings {
   newsPaginationMode: NewsPaginationMode!
   newsPaginationThreshold: Int!
   updatedAt: DateTime!
+}
+
+type NewsTagSummary {
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+enum NewsVisibility {
+  MEMBERS
+  PUBLIC
+}
+
+enum NewsVoteKind {
+  DOWNVOTE
+  UPVOTE
 }
 
 enum NotificationCategory {
@@ -867,6 +994,14 @@ type NotificationPreferences {
   emailCategories: [NotificationCategory!]!
   emailEnabled: Boolean!
   inAppCategories: [NotificationCategory!]!
+}
+
+type NumberedNewsPage {
+  items: [ShortNews!]!
+  page: Int!
+  pageSize: Int!
+  total: Int!
+  totalPages: Int!
 }
 
 type PresenceSummary {
@@ -948,6 +1083,7 @@ type Query {
   evaluateContentGate(id: ID!): ContentGateEvaluationModel!
   followers(pagination: UsersPageInput, userId: ID!): UsersPageModel!
   following(pagination: UsersPageInput, userId: ID!): UsersPageModel!
+  fullNews(language: String!, slug: String!): FullNews
   interactionTarget(id: ID!): InteractionTarget!
   interactionTargetAccess(capability: InteractionCapability!, targetId: ID!): InteractionAccessDecision!
   leaderboard(input: LeaderboardInput): LeaderboardPage!
@@ -960,6 +1096,9 @@ type Query {
   mediaUploadSession(id: String!): MediaUploadSession!
   members(input: MembersDirectoryInput): MembersDirectoryPage!
   moderationAnnotations(commentId: ID, interactionTargetId: ID!): [ModerationAnnotation!]!
+  news(input: NewsBrowseInput): NumberedNewsPage!
+  newsNavigation(articleId: ID!): NewsNavigation!
+  newsRatingVotes(articleId: ID!, page: Int! = 1, pageSize: Int! = 20): NewsRatingVotePage!
   newsSettings: NewsSettings!
   presenceSummary: PresenceSummary!
   previewEditorDocument(input: PreviewEditorDocumentInput!): EditorDocumentPreview!
@@ -1163,6 +1302,25 @@ type SetReactionPayload {
   changed: Boolean!
   reaction: Reaction!
   summary: ReactionSummary!
+}
+
+type ShortNews {
+  author: NewsAuthor!
+  coverMediaId: ID
+  displayPublishedAt: DateTime!
+  engagement: NewsEngagement!
+  featured: Boolean!
+  id: ID!
+  interactionTargetId: ID!
+  language: String!
+  postType: NewsPostType!
+  primaryCategory: NewsCategorySummary
+  publishedAt: DateTime!
+  shortText: String!
+  slug: String!
+  tags: [NewsTagSummary!]!
+  title: String!
+  visibility: NewsVisibility!
 }
 
 input UpdateCommunityPointRuleInput {

@@ -29,6 +29,10 @@ import { PrismaNewsSettingsRepository } from './infrastructure/repositories/pris
 import { PrismaNewsTaxonomyRepository } from './infrastructure/repositories/prisma-news-taxonomy.repository';
 import { PrismaNewsWorkflowRepository } from './infrastructure/repositories/prisma-news-workflow.repository';
 import { NewsSettingsResolver } from './presentation/graphql/news-settings.graphql';
+import {
+  NewsDeliveryResolver,
+  OptionalNewsJwtGuard,
+} from './presentation/graphql/news-delivery.graphql';
 
 @Module({
   imports: [
@@ -40,6 +44,8 @@ import { NewsSettingsResolver } from './presentation/graphql/news-settings.graph
     InteractionsModule,
   ],
   providers: [
+    NewsDeliveryResolver,
+    OptionalNewsJwtGuard,
     NewsSettingsResolver,
     NewsService,
     NewsDeliveryService,

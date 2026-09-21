@@ -1,0 +1,185 @@
+query NewsCatalog($input: NewsBrowseInput) {
+  news(input: $input) {
+    total
+    page
+    pageSize
+    totalPages
+    items {
+      id
+      interactionTargetId
+      postType
+      language
+      slug
+      title
+      shortText
+      coverMediaId
+      displayPublishedAt
+      featured
+      author {
+        id
+        username
+        displayName
+        avatarUrl
+      }
+      primaryCategory {
+        id
+        name
+        slug
+        icon
+      }
+      tags {
+        id
+        name
+        slug
+      }
+      engagement {
+        viewCount
+        commentCount
+        upvotes
+        downvotes
+        score
+        bookmarkedByViewer
+        viewerReaction
+      }
+    }
+  }
+  newsSettings {
+    newsPaginationMode
+    newsPaginationThreshold
+    newsPageSize
+  }
+}
+
+query FullNewsPage($language: String!, $slug: String!) {
+  fullNews(language: $language, slug: $slug) {
+    id
+    interactionTargetId
+    postType
+    language
+    slug
+    title
+    shortText
+    coverMediaId
+    displayPublishedAt
+    featured
+    allowComments
+    allowRating
+    allowSharing
+    allowIndexing
+    documentJson
+    templateDataJson
+    author {
+      id
+      username
+      displayName
+      avatarUrl
+    }
+    primaryCategory {
+      id
+      name
+      slug
+      icon
+    }
+    tags {
+      id
+      name
+      slug
+    }
+    engagement {
+      viewCount
+      commentCount
+      upvotes
+      downvotes
+      score
+      bookmarkedByViewer
+      viewerReaction
+    }
+    related {
+      id
+      type
+      anchorText
+      language
+      slug
+      title
+      shortText
+      coverMediaId
+      displayPublishedAt
+    }
+  }
+}
+
+query NewsNavigation($articleId: ID!) {
+  newsNavigation(articleId: $articleId) {
+    previous {
+      id
+      language
+      slug
+      title
+      coverMediaId
+      displayPublishedAt
+    }
+    next {
+      id
+      language
+      slug
+      title
+      coverMediaId
+      displayPublishedAt
+    }
+  }
+}
+
+query NewsRatingVotes($articleId: ID!, $page: Int!, $pageSize: Int!) {
+  newsRatingVotes(articleId: $articleId, page: $page, pageSize: $pageSize) {
+    total
+    page
+    pageSize
+    totalPages
+    items {
+      id
+      kind
+      updatedAt
+      actor {
+        id
+        username
+        displayName
+        avatarUrl
+      }
+    }
+  }
+}
+
+mutation SetNewsVote($input: SetReactionInput!) {
+  setReaction(input: $input) {
+    changed
+    summary {
+      upvotes
+      downvotes
+      score
+      viewerReaction
+    }
+  }
+}
+
+mutation ClearNewsVote($interactionTargetId: ID!) {
+  clearReaction(interactionTargetId: $interactionTargetId) {
+    upvotes
+    downvotes
+    score
+    viewerReaction
+  }
+}
+
+mutation SaveNewsBookmark($interactionTargetId: ID!) {
+  saveBookmark(interactionTargetId: $interactionTargetId) {
+    saved
+    changed
+  }
+}
+
+mutation RemoveNewsBookmark($interactionTargetId: ID!) {
+  removeBookmark(interactionTargetId: $interactionTargetId) {
+    saved
+    changed
+  }
+}

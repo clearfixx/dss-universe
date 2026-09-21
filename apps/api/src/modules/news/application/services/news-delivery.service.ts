@@ -9,6 +9,8 @@ import {
   type NewsPostType,
 } from '../../domain/types/news-article.type';
 import type {
+  FullNewsItem,
+  NewsRatingVote,
   ShortNewsConnection,
   ShortNewsItem,
   ShortNewsNumberedPage,
@@ -93,6 +95,48 @@ export class NewsDeliveryService {
 
   navigation(articleId: string): Promise<NewsChronologicalNavigation> {
     return this.delivery.chronologicalNavigation(articleId);
+  }
+
+  fullBySlug(
+    language: string,
+    slug: string,
+    viewerId?: string,
+  ): Promise<FullNewsItem | null> {
+    const normalizedLanguage = language.trim();
+    const normalizedSlug = this.slug(slug, 'article');
+    if (!LANGUAGE_PATTERN.test(normalizedLanguage) || !normalizedSlug) {
+      throw new BadRequestException('News address is invalid.');
+    }
+    return this.delivery.findFullBySlug(
+      normalizedLanguage,
+      normalizedSlug,
+      viewerId,
+    );
+  }
+
+  ratingVotes(
+    articleId: string,
+    page = 1,
+    pageSize = 20,
+  ): Promise<{
+    items: NewsRatingVote[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }> {
+    if (!articleId.trim()) {
+      throw new BadRequestException('News article is required.');
+    }
+    if (!Number.isInteger(page) || page < 1) {
+      throw new BadRequestException('Rating page must be a positive integer.');
+    }
+    if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > 100) {
+      throw new BadRequestException(
+        'Rating page size must be between 1 and 100.',
+      );
+    }
+    return this.delivery.ratingVotes(articleId, page, pageSize);
   }
 
   private slug(value: string | undefined, label: string): string | undefined {

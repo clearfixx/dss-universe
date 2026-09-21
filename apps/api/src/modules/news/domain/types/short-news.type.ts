@@ -49,6 +49,7 @@ export type ShortNewsItem = {
     downvotes: number;
     score: number;
     bookmarkedByViewer: boolean;
+    viewerReaction: 'UPVOTE' | 'DOWNVOTE' | null;
   };
 };
 
@@ -75,4 +76,36 @@ export type ShortNewsNumberedPage = {
 
 export type ShortNewsConnection = ShortNewsPage & {
   endCursor: string | null;
+};
+
+export type NewsRatingVote = {
+  id: string;
+  kind: 'UPVOTE' | 'DOWNVOTE';
+  updatedAt: Date;
+  actor: {
+    id: string;
+    username: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+  };
+};
+
+export type FullNewsItem = ShortNewsItem & {
+  documentJson: string;
+  templateDataJson: string;
+  allowComments: boolean;
+  allowRating: boolean;
+  allowSharing: boolean;
+  allowIndexing: boolean;
+  related: Array<{
+    id: string;
+    type: 'RELATED' | 'CONTEXTUAL' | 'SERIES';
+    anchorText: string;
+    language: string;
+    slug: string;
+    title: string;
+    shortText: string;
+    coverMediaId: string | null;
+    displayPublishedAt: Date;
+  }>;
 };

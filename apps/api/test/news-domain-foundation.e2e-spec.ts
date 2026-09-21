@@ -66,6 +66,9 @@ describe('News domain foundation (e2e)', () => {
       await prisma.bookmark.deleteMany({
         where: { interactionTargetId: { in: targetIds } },
       });
+      await prisma.reaction.deleteMany({
+        where: { interactionTargetId: { in: targetIds } },
+      });
       await prisma.reactionAggregate.deleteMany({
         where: { interactionTargetId: { in: targetIds } },
       });
@@ -419,6 +422,20 @@ describe('News domain foundation (e2e)', () => {
         total: 14,
       },
     });
+    await prisma.reaction.createMany({
+      data: [
+        {
+          interactionTargetId: article.interactionTargetId,
+          actorId: author.id,
+          kind: 'UPVOTE',
+        },
+        {
+          interactionTargetId: article.interactionTargetId,
+          actorId: reviewer.id,
+          kind: 'DOWNVOTE',
+        },
+      ],
+    });
     await prisma.bookmark.create({
       data: {
         interactionTargetId: article.interactionTargetId,
@@ -512,6 +529,28 @@ describe('News domain foundation (e2e)', () => {
         target: { slug: second.slug, title: second.title },
       },
     ]);
+    const fullNews = await delivery.fullBySlug('uk', article.slug, author.id);
+    expect(fullNews).toMatchObject({
+      id: article.id,
+      engagement: {
+        score: 10,
+        bookmarkedByViewer: true,
+        viewerReaction: 'UPVOTE',
+      },
+      related: [{ slug: second.slug, type: 'RELATED' }],
+    });
+    expect(fullNews?.documentJson).toContain('fully operational');
+    const votePage = await delivery.ratingVotes(article.id, 1, 20);
+    expect(votePage).toMatchObject({
+      total: 2,
+    });
+    expect(
+      new Set(
+        votePage.items.map(({ kind, actor }) => `${kind}:${actor.username}`),
+      ),
+    ).toEqual(
+      new Set([`UPVOTE:${author.username}`, `DOWNVOTE:${reviewer.username}`]),
+    );
     await expect(
       prisma.newsEditorialDecision.findMany({
         where: { articleId: article.id },

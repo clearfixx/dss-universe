@@ -1,5 +1,7 @@
 import type { NewsChronologicalNavigation } from '../types/news-links.type';
 import type {
+  FullNewsItem,
+  NewsRatingVote,
   ShortNewsNumberedPage,
   ShortNewsNumberedQuery,
   ShortNewsPage,
@@ -16,4 +18,20 @@ export interface NewsDeliveryRepository {
   chronologicalNavigation(
     articleId: string,
   ): Promise<NewsChronologicalNavigation>;
+  findFullBySlug(
+    language: string,
+    slug: string,
+    viewerId?: string,
+  ): Promise<FullNewsItem | null>;
+  ratingVotes(
+    articleId: string,
+    page: number,
+    pageSize: number,
+  ): Promise<{
+    items: NewsRatingVote[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }>;
 }

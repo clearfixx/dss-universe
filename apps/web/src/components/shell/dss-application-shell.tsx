@@ -23,6 +23,7 @@ import {
   LayoutDashboard,
   Menu,
   MessageSquare,
+  Newspaper,
   Orbit,
   Search,
   Settings,
@@ -46,6 +47,7 @@ import { useShellStore } from "@/stores/shell.store";
 
 const navigation = [
   { href: "/command-deck", label: "Command Deck", icon: LayoutDashboard },
+  { href: "/news", label: "News", icon: Newspaper },
   { href: "/members", label: "Astronauts", icon: Users },
   { href: "/research", label: "Research Lab", icon: BookOpen },
   { href: "/community", label: "Community Hub", icon: MessageSquare },
@@ -66,7 +68,8 @@ function Navigation() {
           href={href}
           className={cn(
             "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white",
-            pathname === href && "bg-violet-500/15 text-violet-200",
+            (pathname === href || pathname.startsWith(`${href}/`)) &&
+              "bg-violet-500/15 text-violet-200",
           )}
         >
           <Icon className="size-4" />

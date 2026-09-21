@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, ReactionKind } from '@prisma/client';
 
 import { PrismaService } from '@api/core/database';
 import type { NewsDeliveryRepository } from '../../domain/repositories/news-delivery.repository.interface';
@@ -8,6 +8,8 @@ import type {
   NewsChronologicalNeighbor,
 } from '../../domain/types/news-links.type';
 import type {
+  FullNewsItem,
+  NewsRatingVote,
   ShortNewsItem,
   ShortNewsNumberedPage,
   ShortNewsNumberedQuery,
@@ -98,6 +100,130 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
     };
   }
 
+  async findFullBySlug(
+    language: string,
+    slug: string,
+    viewerId?: string,
+  ): Promise<FullNewsItem | null> {
+    const rows = await this.rows({ language, viewerId }, 0, 1, undefined, {
+      slug,
+    });
+    const short = this.toItems(rows).at(0);
+    if (!short) return null;
+    const article = await this.prisma.newsArticle.findUnique({
+      where: { id: short.id },
+      select: {
+        document: true,
+        templateData: true,
+        allowComments: true,
+        allowRating: true,
+        allowSharing: true,
+        allowIndexing: true,
+        outgoingLinks: {
+          where: { targetArticle: { status: 'PUBLISHED' } },
+          orderBy: [{ position: 'asc' }, { createdAt: 'asc' }],
+          select: {
+            id: true,
+            type: true,
+            anchorText: true,
+            targetArticle: {
+              select: {
+                language: true,
+                slug: true,
+                title: true,
+                shortText: true,
+                coverMediaId: true,
+                displayPublishedAt: true,
+                publishedAt: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    if (!article) return null;
+    return {
+      ...short,
+      documentJson: JSON.stringify(article.document),
+      templateDataJson: JSON.stringify(article.templateData),
+      allowComments: article.allowComments,
+      allowRating: article.allowRating,
+      allowSharing: article.allowSharing,
+      allowIndexing: article.allowIndexing,
+      related: article.outgoingLinks.flatMap((link) => {
+        const date =
+          link.targetArticle.displayPublishedAt ??
+          link.targetArticle.publishedAt;
+        return date
+          ? [
+              {
+                id: link.id,
+                type: link.type,
+                anchorText: link.anchorText,
+                language: link.targetArticle.language,
+                slug: link.targetArticle.slug,
+                title: link.targetArticle.title,
+                shortText: link.targetArticle.shortText,
+                coverMediaId: link.targetArticle.coverMediaId,
+                displayPublishedAt: date,
+              },
+            ]
+          : [];
+      }),
+    };
+  }
+
+  async ratingVotes(
+    articleId: string,
+    page: number,
+    pageSize: number,
+  ): Promise<{
+    items: NewsRatingVote[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }> {
+    const article = await this.prisma.newsArticle.findFirst({
+      where: { id: articleId, status: 'PUBLISHED', allowRating: true },
+      select: { interactionTargetId: true },
+    });
+    if (!article) return { items: [], total: 0, page, pageSize, totalPages: 0 };
+    const where = {
+      interactionTargetId: article.interactionTargetId,
+      kind: { in: [ReactionKind.UPVOTE, ReactionKind.DOWNVOTE] },
+    };
+    const [rows, total] = await this.prisma.$transaction([
+      this.prisma.reaction.findMany({
+        where,
+        orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        select: {
+          id: true,
+          kind: true,
+          updatedAt: true,
+          actor: {
+            select: {
+              id: true,
+              username: true,
+              displayName: true,
+              avatarUrl: true,
+            },
+          },
+        },
+      }),
+      this.prisma.reaction.count({ where }),
+    ]);
+    return {
+      items: rows as NewsRatingVote[],
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+    };
+  }
+
   private where(
     input: SharedQuery,
     cursor?: ShortNewsQuery['cursor'],
@@ -170,9 +296,10 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
     skip: number,
     take: number,
     cursor?: ShortNewsQuery['cursor'],
+    extraWhere?: Prisma.NewsArticleWhereInput,
   ) {
     return this.prisma.newsArticle.findMany({
-      where: this.where(input, cursor),
+      where: { ...this.where(input, cursor), ...extraWhere },
       orderBy: [{ publishedAt: 'desc' }, { id: 'desc' }],
       skip,
       take,
@@ -221,6 +348,16 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
               take: 1,
               select: { id: true },
             },
+            reactions: {
+              where: input.viewerId
+                ? {
+                    actorId: input.viewerId,
+                    kind: { in: ['UPVOTE', 'DOWNVOTE'] },
+                  }
+                : { id: '' },
+              take: 1,
+              select: { kind: true },
+            },
             _count: {
               select: { comments: { where: { deletedAt: null } } },
             },
@@ -261,6 +398,10 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
           downvotes: row.interactionTarget.reactionAggregate?.downvotes ?? 0,
           score: row.interactionTarget.reactionAggregate?.score ?? 0,
           bookmarkedByViewer: row.interactionTarget.bookmarks.length === 1,
+          viewerReaction: (() => {
+            const kind = row.interactionTarget.reactions.at(0)?.kind;
+            return kind === 'UPVOTE' || kind === 'DOWNVOTE' ? kind : null;
+          })(),
         },
       };
     });

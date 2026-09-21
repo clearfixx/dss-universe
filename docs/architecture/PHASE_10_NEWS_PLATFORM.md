@@ -1,6 +1,6 @@
 # Phase 10 — News Platform Architecture
 
-> Status: Packages 10.0–10.7 implemented
+> Status: Packages 10.0–10.9 implemented
 
 ## Product boundary
 
@@ -78,8 +78,7 @@ identities and routing metadata, never the article body.
 
 ## Deferred packages
 
-- Full News delivery and initial UI — 10.8;
-- ratings, comments, files, views and sharing — 10.9–10.12;
+- comments, files, views and sharing — 10.10–10.12;
 - permission-guarded editorial/GraphQL surfaces and platform integrations —
   10.13–10.16.
 
@@ -159,3 +158,19 @@ identities and routing metadata, never the article body.
 Forum discussion links are intentionally not represented by an opaque or
 unverified identifier. The integration is delivered with canonical Forum Topic
 ownership in Phase 13.
+
+## Packages 10.8–10.9 delivery
+
+- public numbered News catalog with URL-backed search, category and post-type
+  filters, configured pagination and dynamic load-more composition;
+- canonical Full News projection by language and slug, including the validated
+  editor document, author, taxonomy, engagement, related links and visibility
+  flags;
+- public News routes with dynamic metadata, safe structured-document rendering,
+  loading/error/not-found states and chronological navigation;
+- authenticated upvote/downvote toggles and private bookmark state reuse the
+  shared Interaction Platform instead of creating News-owned duplicates;
+- the rating counter opens a bounded public ledger of voter profile, vote and
+  timestamp, while aggregate score remains `upvotes - downvotes`;
+- optional authentication enriches public delivery with only the current
+  viewer's reaction and bookmark state.

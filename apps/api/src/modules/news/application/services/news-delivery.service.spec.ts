@@ -8,6 +8,8 @@ describe('NewsDeliveryService', () => {
   let repository: jest.Mocked<NewsDeliveryRepository>;
   let browseShort: jest.Mock;
   let browseShortNumbered: jest.Mock;
+  let findFullBySlug: jest.Mock;
+  let ratingVotes: jest.Mock;
   let service: NewsDeliveryService;
   const item = {
     id: 'article-1',
@@ -26,10 +28,20 @@ describe('NewsDeliveryService', () => {
       pageSize: 20,
       totalPages: 1,
     });
+    findFullBySlug = jest.fn().mockResolvedValue(null);
+    ratingVotes = jest.fn().mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      pageSize: 20,
+      totalPages: 0,
+    });
     repository = {
       browseShort,
       browseShortNumbered,
       chronologicalNavigation: jest.fn(),
+      findFullBySlug,
+      ratingVotes,
     };
     service = new NewsDeliveryService(repository);
   });
@@ -77,5 +89,25 @@ describe('NewsDeliveryService', () => {
       service.browseShort({ language: 'UKRAINIAN' }),
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(browseShort).not.toHaveBeenCalled();
+  });
+
+  it('normalizes a full News address and preserves viewer context', async () => {
+    await service.fullBySlug('uk', ' News-Signal ', 'viewer-1');
+    expect(findFullBySlug).toHaveBeenCalledWith(
+      'uk',
+      'news-signal',
+      'viewer-1',
+    );
+  });
+
+  it('bounds public rating statistics', async () => {
+    await service.ratingVotes('article-1', 2, 25);
+    expect(ratingVotes).toHaveBeenCalledWith('article-1', 2, 25);
+    expect(() => service.ratingVotes('article-1', 0, 25)).toThrow(
+      BadRequestException,
+    );
+    expect(() => service.ratingVotes('article-1', 1, 101)).toThrow(
+      BadRequestException,
+    );
   });
 });
