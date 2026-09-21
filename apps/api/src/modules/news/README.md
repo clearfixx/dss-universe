@@ -21,8 +21,9 @@ viewer-aware votes and bookmarks, and bounded voter statistics. Package 10.10
 adds paginated Reddit-like comment trees, replies, per-comment rating,
 low-score disclosure and tombstone-safe branch delivery. Package 10.11 binds
 News attachments to DSS Media references and exposes safe file metadata,
-SHA-256/SHA-1/MD5 digests and public original downloads. Unique views and
-sharing remain in their scheduled Phase 10 package.
+SHA-256/SHA-1/MD5 digests and public original downloads. Package 10.12 adds
+real unique views plus retry-safe total and per-channel sharing counters through
+the canonical Interaction Target.
 
 The pagination correction adds an audited policy for News and News comments,
 parallel cursor and numbered delivery, chronological neighbors, and explicit

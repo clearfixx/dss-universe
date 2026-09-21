@@ -130,6 +130,16 @@ enum ReactionKind {
   DOWNVOTE
 }
 
+enum ShareChannel {
+  FACEBOOK
+  X
+  THREADS
+  INSTAGRAM
+  PINTEREST
+  COPY_LINK
+  PRINT
+}
+
 enum ContentReportCategory {
   SPAM
   HARASSMENT
@@ -273,6 +283,8 @@ model User {
   mentionsReceived        Mention[]                    @relation("MentionRecipient")
   reactions               Reaction[]
   bookmarks               Bookmark[]
+  interactionViews        InteractionView[]
+  interactionShares       InteractionShare[]
   titleGrants             UserTitleGrant[]
   selectedTitle           UserTitleSelection?
   achievementAwards       AchievementAward[]
@@ -400,6 +412,8 @@ model InteractionTarget {
   reactions             Reaction[]
   reactionAggregate     ReactionAggregate?
   bookmarks             Bookmark[]
+  views                 InteractionView[]
+  shares                InteractionShare[]
   mentions              Mention[]
   reports               ContentReport[]
   moderationAnnotations ModerationAnnotation[]
@@ -409,6 +423,40 @@ model InteractionTarget {
   @@index([kind, status])
   @@index([ownerModule, status])
   @@map("interaction_targets")
+}
+
+model InteractionView {
+  id                  String   @id @default(uuid())
+  interactionTargetId String
+  actorId             String?
+  viewerKey           String
+  createdAt           DateTime @default(now())
+  lastSeenAt          DateTime @updatedAt
+
+  interactionTarget InteractionTarget @relation(fields: [interactionTargetId], references: [id], onDelete: Cascade)
+  actor             User?             @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@unique([interactionTargetId, viewerKey])
+  @@index([interactionTargetId, createdAt])
+  @@index([actorId, createdAt])
+  @@map("interaction_views")
+}
+
+model InteractionShare {
+  id                  String       @id @default(uuid())
+  interactionTargetId String
+  actorId             String?
+  viewerKey           String
+  channel             ShareChannel
+  createdAt           DateTime     @default(now())
+
+  interactionTarget InteractionTarget @relation(fields: [interactionTargetId], references: [id], onDelete: Cascade)
+  actor             User?             @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@unique([interactionTargetId, channel, viewerKey])
+  @@index([interactionTargetId, channel])
+  @@index([actorId, createdAt])
+  @@map("interaction_shares")
 }
 
 model NewsArticle {

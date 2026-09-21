@@ -29,6 +29,8 @@ import { InteractionTargetWriterService } from './application/services/interacti
 import { InteractionTargetsService } from './application/services/interaction-targets.service';
 import { ModerationService } from './application/services/moderation.service';
 import { ReactionsService } from './application/services/reactions.service';
+import { AudienceEngagementService } from './application/services/audience-engagement.service';
+import { AUDIENCE_ENGAGEMENT_REPOSITORY } from './domain/repositories/audience-engagement.repository.interface';
 import { BOOKMARKS_REPOSITORY } from './domain/repositories/bookmarks.repository.interface';
 import { COMMENT_DRAFTS_REPOSITORY } from './domain/repositories/comment-drafts.repository.interface';
 import { COMMENTS_REPOSITORY } from './domain/repositories/comments.repository.interface';
@@ -41,6 +43,8 @@ import { PrismaCommentsRepository } from './infrastructure/repositories/prisma-c
 import { PrismaInteractionTargetsRepository } from './infrastructure/repositories/prisma-interaction-targets.repository';
 import { PrismaModerationRepository } from './infrastructure/repositories/prisma-moderation.repository';
 import { PrismaReactionsRepository } from './infrastructure/repositories/prisma-reactions.repository';
+import { PrismaAudienceEngagementRepository } from './infrastructure/repositories/prisma-audience-engagement.repository';
+import { AudienceEngagementResolver } from './presentation/graphql/resolvers/audience-engagement.resolver';
 import { BookmarksResolver } from './presentation/graphql/resolvers/bookmarks.resolver';
 import { CommentDraftsResolver } from './presentation/graphql/resolvers/comment-drafts.resolver';
 import { CommentsResolver } from './presentation/graphql/resolvers/comments.resolver';
@@ -64,8 +68,14 @@ import { ReactionsResolver } from './presentation/graphql/resolvers/reactions.re
     CommentsResolver,
     ReactionsService,
     ReactionsResolver,
+    AudienceEngagementService,
+    AudienceEngagementResolver,
     ModerationService,
     ModerationResolver,
+    {
+      provide: AUDIENCE_ENGAGEMENT_REPOSITORY,
+      useClass: PrismaAudienceEngagementRepository,
+    },
     {
       provide: BOOKMARKS_REPOSITORY,
       useClass: PrismaBookmarksRepository,
@@ -99,6 +109,7 @@ import { ReactionsResolver } from './presentation/graphql/resolvers/reactions.re
     CommentDraftsService,
     CommentsService,
     ReactionsService,
+    AudienceEngagementService,
     ModerationService,
   ],
 })

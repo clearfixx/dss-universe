@@ -21,12 +21,18 @@ export { InteractionTargetsService } from './application/services/interaction-ta
 export { CommentsService } from './application/services/comments.service';
 export { CommentInteractionPolicy } from './application/services/comment-interaction.policy';
 export { ReactionsService } from './application/services/reactions.service';
+export { AudienceEngagementService } from './application/services/audience-engagement.service';
 export { ModerationService } from './application/services/moderation.service';
 export type {
   InteractionCapability,
   InteractionTarget,
   InteractionTargetPolicy,
 } from './domain/types/interaction-target.type';
+export type {
+  AudienceEngagementResult,
+  ShareChannel,
+  ShareChannelCount,
+} from './domain/types/audience-engagement.type';
 
 /**
  * Public barrels are airlocks: export only what another module truly needs.

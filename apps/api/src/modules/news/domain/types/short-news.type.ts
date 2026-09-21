@@ -97,6 +97,20 @@ export type FullNewsItem = ShortNewsItem & {
   allowRating: boolean;
   allowSharing: boolean;
   allowIndexing: boolean;
+  sharing: {
+    total: number;
+    channels: Array<{
+      channel:
+        | 'FACEBOOK'
+        | 'X'
+        | 'THREADS'
+        | 'INSTAGRAM'
+        | 'PINTEREST'
+        | 'COPY_LINK'
+        | 'PRINT';
+      count: number;
+    }>;
+  };
   attachments: NewsAttachment[];
   related: Array<{
     id: string;

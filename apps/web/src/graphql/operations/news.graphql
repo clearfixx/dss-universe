@@ -66,6 +66,13 @@ query FullNewsPage($language: String!, $slug: String!) {
     allowRating
     allowSharing
     allowIndexing
+    sharing {
+      total
+      channels {
+        channel
+        count
+      }
+    }
     documentJson
     templateDataJson
     author {
@@ -118,6 +125,30 @@ query FullNewsPage($language: String!, $slug: String!) {
       checksumSha1
       checksumMd5
       downloadUrl
+    }
+  }
+}
+
+mutation RecordNewsView($input: RecordViewInput!) {
+  recordInteractionView(input: $input) {
+    changed
+    viewCount
+    shareCount
+    shares {
+      channel
+      count
+    }
+  }
+}
+
+mutation RecordNewsShare($input: RecordShareInput!) {
+  recordInteractionShare(input: $input) {
+    changed
+    viewCount
+    shareCount
+    shares {
+      channel
+      count
     }
   }
 }

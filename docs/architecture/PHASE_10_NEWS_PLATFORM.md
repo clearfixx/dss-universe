@@ -1,6 +1,6 @@
 # Phase 10 — News Platform Architecture
 
-> Status: Packages 10.0–10.11 implemented
+> Status: Packages 10.0–10.12 implemented
 
 ## Product boundary
 
@@ -78,7 +78,6 @@ identities and routing metadata, never the article body.
 
 ## Deferred packages
 
-- views and sharing — 10.12;
 - permission-guarded editorial/GraphQL surfaces and platform integrations —
   10.13–10.16.
 
@@ -205,3 +204,18 @@ ownership in Phase 13.
   file-type icons, hashes and a direct download action;
 - attachments nested inside a Content Gate never leak through the ungated
   article attachment summary.
+
+## Package 10.12 delivery
+
+- the shared Interaction Platform owns unique views and share identities;
+- authenticated views deduplicate by account, while anonymous browser tokens
+  are irreversibly hashed before persistence and raw IP addresses are never
+  stored;
+- retry-safe database uniqueness prevents refreshes and repeated share clicks
+  from inflating totals;
+- Short and Full News expose real unique-view counts instead of a nullable
+  placeholder;
+- Full News exposes total and per-channel sharing for Facebook, X, Threads,
+  Instagram, Pinterest, copied links and print views;
+- the public article records a view after hydration and renders share,
+  copy-link and print controls only when sharing is enabled.

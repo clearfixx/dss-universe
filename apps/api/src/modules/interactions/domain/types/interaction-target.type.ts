@@ -14,7 +14,12 @@
 
 export type InteractionTargetStatus = 'ACTIVE' | 'LOCKED' | 'RETIRED';
 
-export type InteractionCapability = 'READ' | 'COMMENT' | 'REACT' | 'BOOKMARK';
+export type InteractionCapability =
+  | 'READ'
+  | 'COMMENT'
+  | 'REACT'
+  | 'BOOKMARK'
+  | 'SHARE';
 
 export type InteractionTarget = {
   id: string;

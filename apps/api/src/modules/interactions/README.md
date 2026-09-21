@@ -28,6 +28,8 @@ Knowledge Forge, Academy, Profile Wall, or future modules.
   target.
 - Reaction aggregates and vote score are rebuildable projections.
 - Bookmarks owns private, idempotent saved-item relationships.
+- Audience engagement owns privacy-safe unique views and idempotent per-channel
+  share relationships; anonymous visitor tokens are hashed before persistence.
 - Bookmark lists expose only the authenticated owner's target coordinates.
 - Comments resolves bounded `@username` mentions to active user relations.
 - Mention state follows comment edits and tombstones without deleting history.
@@ -39,7 +41,8 @@ Knowledge Forge, Academy, Profile Wall, or future modules.
 
 ## Boundary
 
-Owning modules decide whether a user may read, comment, react, or bookmark.
+Owning modules decide whether a user may read, comment, react, bookmark, or
+share.
 Future Comments, Reactions, and Bookmarks modules store only the canonical
 `interactionTargetId`; they must not recreate unconstrained
 `targetType + targetId` relationships.

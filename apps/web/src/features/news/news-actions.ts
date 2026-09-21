@@ -9,6 +9,9 @@ import {
   RemoveNewsBookmarkDocument,
   SaveNewsBookmarkDocument,
   SetNewsVoteDocument,
+  RecordNewsShareDocument,
+  RecordNewsViewDocument,
+  type ShareChannel,
   type NewsVoteKind,
   type NewsBrowseInput,
 } from "@/gql/graphql";
@@ -24,6 +27,36 @@ async function context() {
   const token = (await cookies()).get("dss_access_token")?.value;
   if (!token) throw new Error("Увійдіть, щоб оцінювати та зберігати новини.");
   return { headers: { authorization: `Bearer ${token}` } };
+}
+
+async function optionalContext() {
+  const token = (await cookies()).get("dss_access_token")?.value;
+  return token ? { headers: { authorization: `Bearer ${token}` } } : undefined;
+}
+
+export async function recordNewsView(
+  interactionTargetId: string,
+  visitorId: string,
+) {
+  const result = await getClient().mutate({
+    mutation: RecordNewsViewDocument,
+    variables: { input: { interactionTargetId, visitorId } },
+    context: await optionalContext(),
+  });
+  return result.data?.recordInteractionView ?? null;
+}
+
+export async function recordNewsShare(
+  interactionTargetId: string,
+  visitorId: string,
+  channel: ShareChannel,
+) {
+  const result = await getClient().mutate({
+    mutation: RecordNewsShareDocument,
+    variables: { input: { interactionTargetId, visitorId, channel } },
+    context: await optionalContext(),
+  });
+  return result.data?.recordInteractionShare ?? null;
 }
 
 export async function loadMoreNews(input: NewsBrowseInput) {

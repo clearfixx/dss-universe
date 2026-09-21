@@ -61,9 +61,20 @@ export enum NewsVoteKindModel {
   DOWNVOTE = 'DOWNVOTE',
 }
 
+export enum NewsShareChannelModel {
+  FACEBOOK = 'FACEBOOK',
+  X = 'X',
+  THREADS = 'THREADS',
+  INSTAGRAM = 'INSTAGRAM',
+  PINTEREST = 'PINTEREST',
+  COPY_LINK = 'COPY_LINK',
+  PRINT = 'PRINT',
+}
+
 registerEnumType(NewsPostTypeModel, { name: 'NewsPostType' });
 registerEnumType(NewsVisibilityModel, { name: 'NewsVisibility' });
 registerEnumType(NewsVoteKindModel, { name: 'NewsVoteKind' });
+registerEnumType(NewsShareChannelModel, { name: 'NewsShareChannel' });
 
 @ObjectType('NewsAuthor')
 class NewsAuthorModel {
@@ -150,6 +161,19 @@ class NewsAttachmentModel {
   @Field() downloadUrl!: string;
 }
 
+@ObjectType('NewsShareChannelCount')
+class NewsShareChannelCountModel {
+  @Field(() => NewsShareChannelModel) channel!: NewsShareChannelModel;
+  @Field(() => Int) count!: number;
+}
+
+@ObjectType('NewsSharing')
+class NewsSharingModel {
+  @Field(() => Int) total!: number;
+  @Field(() => [NewsShareChannelCountModel])
+  channels!: NewsShareChannelCountModel[];
+}
+
 @ObjectType('FullNews')
 class FullNewsModel extends ShortNewsModel {
   @Field() documentJson!: string;
@@ -160,6 +184,7 @@ class FullNewsModel extends ShortNewsModel {
   @Field() allowIndexing!: boolean;
   @Field(() => [NewsRelatedItemModel]) related!: NewsRelatedItemModel[];
   @Field(() => [NewsAttachmentModel]) attachments!: NewsAttachmentModel[];
+  @Field(() => NewsSharingModel) sharing!: NewsSharingModel;
 }
 
 @ObjectType('NumberedNewsPage')

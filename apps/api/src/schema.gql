@@ -105,6 +105,13 @@ type ApiInfo {
   transport: String!
 }
 
+type AudienceEngagement {
+  changed: Boolean!
+  shareCount: Int!
+  shares: [ShareChannelCount!]!
+  viewCount: Int!
+}
+
 type AuthPayloadModel {
   tokens: AuthTokensModel!
   user: Viewer!
@@ -463,6 +470,7 @@ type FullNews {
   primaryCategory: NewsCategorySummary
   publishedAt: DateTime!
   related: [NewsRelatedItem!]!
+  sharing: NewsSharing!
   shortText: String!
   slug: String!
   tags: [NewsTagSummary!]!
@@ -814,6 +822,8 @@ type Mutation {
   logout: LogoutResultModel!
   markActivityFeedVisited: ActivityFeedVisit!
   reactivateAccount(input: LoginInput!): AuthPayloadModel!
+  recordInteractionShare(input: RecordShareInput!): AudienceEngagement!
+  recordInteractionView(input: RecordViewInput!): AudienceEngagement!
   refreshTokens(input: RefreshTokenInput!): AuthPayloadModel!
   register(input: RegisterInput!): AuthPayloadModel!
   rejectQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
@@ -1001,6 +1011,26 @@ type NewsSettings {
   newsPaginationMode: NewsPaginationMode!
   newsPaginationThreshold: Int!
   updatedAt: DateTime!
+}
+
+enum NewsShareChannel {
+  COPY_LINK
+  FACEBOOK
+  INSTAGRAM
+  PINTEREST
+  PRINT
+  THREADS
+  X
+}
+
+type NewsShareChannelCount {
+  channel: NewsShareChannel!
+  count: Int!
+}
+
+type NewsSharing {
+  channels: [NewsShareChannelCount!]!
+  total: Int!
 }
 
 type NewsTagSummary {
@@ -1199,6 +1229,17 @@ type ReactionSummary {
   viewerReaction: ReactionKind
 }
 
+input RecordShareInput {
+  channel: ShareChannel!
+  interactionTargetId: ID!
+  visitorId: String!
+}
+
+input RecordViewInput {
+  interactionTargetId: ID!
+  visitorId: String!
+}
+
 input RefreshTokenInput {
   refreshToken: String!
 }
@@ -1349,6 +1390,21 @@ type SetReactionPayload {
   changed: Boolean!
   reaction: Reaction!
   summary: ReactionSummary!
+}
+
+enum ShareChannel {
+  COPY_LINK
+  FACEBOOK
+  INSTAGRAM
+  PINTEREST
+  PRINT
+  THREADS
+  X
+}
+
+type ShareChannelCount {
+  channel: ShareChannel!
+  count: Int!
 }
 
 type ShortNews {

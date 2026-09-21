@@ -21,6 +21,16 @@ import type {
   ShortNewsQuery,
 } from '../../domain/types/short-news.type';
 
+const SHARE_CHANNELS = [
+  'FACEBOOK',
+  'X',
+  'THREADS',
+  'INSTAGRAM',
+  'PINTEREST',
+  'COPY_LINK',
+  'PRINT',
+] as const;
+
 type SharedQuery = Omit<ShortNewsQuery, 'first' | 'cursor'>;
 
 @Injectable()
@@ -146,6 +156,14 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
       },
     });
     if (!article) return null;
+    const shareGroups = await this.prisma.interactionShare.groupBy({
+      by: ['channel'],
+      where: { interactionTargetId: short.interactionTargetId },
+      _count: { _all: true },
+    });
+    const shareCounts = new Map(
+      shareGroups.map((group) => [group.channel, group._count._all]),
+    );
     const attachmentLabels = this.attachmentLabels(article.document);
     const attachmentReferences = attachmentLabels.size
       ? await this.prisma.mediaReference.findMany({
@@ -175,6 +193,16 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
       allowRating: article.allowRating,
       allowSharing: article.allowSharing,
       allowIndexing: article.allowIndexing,
+      sharing: {
+        total: shareGroups.reduce(
+          (total, group) => total + group._count._all,
+          0,
+        ),
+        channels: SHARE_CHANNELS.map((channel) => ({
+          channel,
+          count: shareCounts.get(channel) ?? 0,
+        })),
+      },
       attachments: [...attachmentLabels].flatMap(([mediaId, label]) => {
         const reference = referencesByMediaId.get(mediaId);
         if (!reference) return [];
@@ -554,7 +582,10 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
               select: { kind: true },
             },
             _count: {
-              select: { comments: { where: { deletedAt: null } } },
+              select: {
+                comments: { where: { deletedAt: null } },
+                views: true,
+              },
             },
           },
         },
@@ -587,7 +618,7 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
         primaryCategory: row.categories.at(0)?.category ?? null,
         tags: row.tags.map(({ tag }) => tag),
         engagement: {
-          viewCount: null,
+          viewCount: row.interactionTarget._count.views,
           commentCount: row.interactionTarget._count.comments,
           upvotes: row.interactionTarget.reactionAggregate?.upvotes ?? 0,
           downvotes: row.interactionTarget.reactionAggregate?.downvotes ?? 0,

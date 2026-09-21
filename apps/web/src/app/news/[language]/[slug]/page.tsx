@@ -14,6 +14,7 @@ import { NewsComments } from "@/features/news/news-comments";
 import { NewsDocument } from "@/features/news/news-document";
 import { NewsEngagement } from "@/features/news/news-engagement";
 import { NewsAttachments } from "@/features/news/news-attachments";
+import { NewsAudience } from "@/features/news/news-audience";
 
 type Props = { params: Promise<{ language: string; slug: string }> };
 
@@ -136,6 +137,13 @@ export default async function FullNewsRoute({ params }: Props) {
           </aside>
         </div>
         <NewsAttachments items={article.attachments} />
+        <NewsAudience
+          interactionTargetId={article.interactionTargetId}
+          title={article.title}
+          initialViewCount={article.engagement.viewCount ?? 0}
+          initialSharing={article.sharing}
+          sharingEnabled={article.allowSharing}
+        />
         {comments ? (
           <NewsComments
             articleId={article.id}

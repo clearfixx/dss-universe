@@ -56,6 +56,9 @@ export class NewsInteractionPolicy
     if (capability === 'REACT' && !article.allowRating) {
       return { allowed: false, reason: 'NEWS_RATING_DISABLED' };
     }
+    if (capability === 'SHARE' && !article.allowSharing) {
+      return { allowed: false, reason: 'NEWS_SHARING_DISABLED' };
+    }
     return { allowed: true };
   }
 }
