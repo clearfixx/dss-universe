@@ -106,3 +106,19 @@ mutation CancelNewsSchedule($input: NewsDecisionInput!) {
     }
   }
 }
+
+mutation SetNewsPin($input: SetNewsPinInput!) {
+  setNewsPin(input: $input) {
+    id
+    articleId
+    scope
+    categoryId
+    expiresAt
+  }
+}
+
+mutation RemoveNewsPin($articleId: ID!) {
+  removeNewsPin(articleId: $articleId) {
+    success
+  }
+}

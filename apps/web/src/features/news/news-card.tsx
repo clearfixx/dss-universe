@@ -1,4 +1,11 @@
-import { Bookmark, Eye, MessageCircle, Star, ThumbsUp } from "lucide-react";
+import {
+  Bookmark,
+  Eye,
+  MessageCircle,
+  Pin,
+  Star,
+  ThumbsUp,
+} from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +29,11 @@ export function NewsCard({ item }: { item: NewsCardItem }) {
         <div className="absolute inset-0 opacity-50 [background-image:radial-gradient(circle,rgba(255,255,255,.9)_0_1px,transparent_1px)] [background-size:31px_31px]" />
         <div className="absolute inset-x-5 bottom-5 flex items-center justify-between">
           <Badge variant="secondary">{item.postType}</Badge>
-          {item.featured ? (
+          {item.pin ? (
+            <Badge className="gap-1 bg-cyan-300 text-slate-950">
+              <Pin className="size-3 fill-current" /> Закріплено
+            </Badge>
+          ) : item.featured ? (
             <Badge className="gap-1 bg-amber-400 text-slate-950">
               <Star className="size-3 fill-current" /> Featured
             </Badge>

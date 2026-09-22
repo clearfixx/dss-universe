@@ -28,6 +28,11 @@ export type ShortNewsItem = {
   publishedAt: Date;
   displayPublishedAt: Date;
   featured: boolean;
+  pin: {
+    scope: 'GLOBAL' | 'CATEGORY';
+    categoryId: string | null;
+    expiresAt: Date | null;
+  } | null;
   author: {
     id: string;
     username: string;
@@ -55,6 +60,7 @@ export type ShortNewsItem = {
 
 export type ShortNewsPage = {
   items: ShortNewsItem[];
+  pinnedItems: ShortNewsItem[];
   hasNextPage: boolean;
 };
 
@@ -68,6 +74,7 @@ export type ShortNewsNumberedQuery = Omit<
 
 export type ShortNewsNumberedPage = {
   items: ShortNewsItem[];
+  pinnedItems: ShortNewsItem[];
   total: number;
   page: number;
   pageSize: number;

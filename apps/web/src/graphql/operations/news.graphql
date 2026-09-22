@@ -4,6 +4,49 @@ query NewsCatalog($input: NewsBrowseInput) {
     page
     pageSize
     totalPages
+    pinnedItems {
+      id
+      interactionTargetId
+      postType
+      language
+      slug
+      title
+      shortText
+      coverMediaId
+      displayPublishedAt
+      featured
+      pin {
+        scope
+        categoryId
+        expiresAt
+      }
+      author {
+        id
+        username
+        displayName
+        avatarUrl
+      }
+      primaryCategory {
+        id
+        name
+        slug
+        icon
+      }
+      tags {
+        id
+        name
+        slug
+      }
+      engagement {
+        viewCount
+        commentCount
+        upvotes
+        downvotes
+        score
+        bookmarkedByViewer
+        viewerReaction
+      }
+    }
     items {
       id
       interactionTargetId
@@ -15,6 +58,11 @@ query NewsCatalog($input: NewsBrowseInput) {
       coverMediaId
       displayPublishedAt
       featured
+      pin {
+        scope
+        categoryId
+        expiresAt
+      }
       author {
         id
         username
@@ -62,6 +110,11 @@ query FullNewsPage($language: String!, $slug: String!) {
     coverMediaId
     displayPublishedAt
     featured
+    pin {
+      scope
+      categoryId
+      expiresAt
+    }
     allowComments
     allowRating
     allowSharing

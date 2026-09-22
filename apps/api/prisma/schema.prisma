@@ -235,6 +235,11 @@ enum NewsInternalLinkType {
   SERIES
 }
 
+enum NewsPinScope {
+  GLOBAL
+  CATEGORY
+}
+
 model User {
   id            String     @id @default(uuid())
   email         String     @unique
@@ -300,6 +305,7 @@ model User {
   newsScheduled           NewsArticle[]                @relation("NewsScheduler")
   newsSettingsUpdated     NewsSettings[]               @relation("NewsSettingsUpdater")
   newsLinksCreated        NewsInternalLink[]           @relation("NewsLinkCreator")
+  newsPins                NewsPin[]                    @relation("NewsPinActor")
 
   refreshTokenHash String?
   emailVerifiedAt  DateTime?
@@ -503,6 +509,7 @@ model NewsArticle {
   editorialHistory  NewsEditorialDecision[]
   outgoingLinks     NewsInternalLink[]      @relation("NewsOutgoingLinks")
   incomingLinks     NewsInternalLink[]      @relation("NewsIncomingLinks")
+  pin               NewsPin?
 
   @@unique([language, slug])
   @@index([status, publishedAt, id])
@@ -510,6 +517,25 @@ model NewsArticle {
   @@index([authorId, status, updatedAt])
   @@index([postType, status, publishedAt])
   @@map("news_articles")
+}
+
+model NewsPin {
+  id         String       @id @default(uuid())
+  articleId  String       @unique
+  scope      NewsPinScope
+  categoryId String?
+  expiresAt  DateTime?
+  pinnedById String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  article  NewsArticle  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  category NewsCategory? @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  pinnedBy User          @relation("NewsPinActor", fields: [pinnedById], references: [id], onDelete: Restrict)
+
+  @@index([scope, expiresAt, createdAt])
+  @@index([categoryId, expiresAt, createdAt])
+  @@map("news_pins")
 }
 
 model NewsSettings {
@@ -569,6 +595,7 @@ model NewsCategory {
   children         NewsCategory[]        @relation("NewsCategoryTree")
   articles         NewsArticleCategory[]
   fieldDefinitions NewsFieldDefinition[]
+  pins             NewsPin[]
 
   @@index([parentId, isActive, sortOrder])
   @@map("news_categories")

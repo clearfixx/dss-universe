@@ -15,9 +15,15 @@ import type {
   NewsEditorialFieldsFragment,
   NewsPostType,
   NewsVisibility,
+  NewsPinScope,
 } from "@/gql/graphql";
 
-import { createDraft, runNewsWorkflow, saveDraft } from "./newsroom-actions";
+import {
+  createDraft,
+  manageNewsPin,
+  runNewsWorkflow,
+  saveDraft,
+} from "./newsroom-actions";
 
 function initialDocument(
   article?: NewsEditorialFieldsFragment | null,
@@ -54,6 +60,9 @@ export function NewsEditorWorkspace({
   const [status, setStatus] = useState(article?.status ?? "DRAFT");
   const [reason, setReason] = useState("");
   const [scheduledFor, setScheduledFor] = useState("");
+  const [pinScope, setPinScope] = useState<NewsPinScope>("GLOBAL");
+  const [pinCategoryId, setPinCategoryId] = useState("");
+  const [pinExpiresAt, setPinExpiresAt] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const editable =
@@ -109,6 +118,27 @@ export function NewsEditorWorkspace({
           setCurrentVersion(updated.currentVersion);
         }
         setMessage("Статус оновлено.");
+        router.refresh();
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : "Дія недоступна.");
+      }
+    });
+  };
+
+  const pin = (action: "set" | "remove") => {
+    if (!article) return;
+    startTransition(async () => {
+      try {
+        await manageNewsPin(action, article.id, {
+          scope: pinScope,
+          categoryId: pinScope === "CATEGORY" ? pinCategoryId : undefined,
+          expiresAt: pinExpiresAt
+            ? new Date(pinExpiresAt).toISOString()
+            : undefined,
+        });
+        setMessage(
+          action === "set" ? "Новину закріплено." : "Закріплення знято.",
+        );
         router.refresh();
       } catch (error) {
         setMessage(error instanceof Error ? error.message : "Дія недоступна.");
@@ -303,6 +333,49 @@ export function NewsEditorWorkspace({
                     Скасувати план
                   </Button>
                 ) : null}
+              </div>
+            </section>
+          ) : null}
+          {article && status === "PUBLISHED" ? (
+            <section className="space-y-3 rounded-2xl border border-cyan-400/15 bg-cyan-400/5 p-5">
+              <h2 className="font-semibold">Закріплення</h2>
+              <select
+                className="h-9 w-full rounded-md border border-white/10 bg-slate-950 px-3"
+                value={pinScope}
+                onChange={(event) =>
+                  setPinScope(event.target.value as NewsPinScope)
+                }
+              >
+                <option value="GLOBAL">У всіх новинах</option>
+                <option value="CATEGORY">У категорії</option>
+              </select>
+              {pinScope === "CATEGORY" ? (
+                <Input
+                  value={pinCategoryId}
+                  onChange={(event) => setPinCategoryId(event.target.value)}
+                  placeholder="UUID категорії"
+                />
+              ) : null}
+              <label className="block space-y-2 text-sm text-slate-300">
+                Закріпити до (необовʼязково)
+                <Input
+                  type="datetime-local"
+                  value={pinExpiresAt}
+                  onChange={(event) => setPinExpiresAt(event.target.value)}
+                />
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" onClick={() => pin("set")} disabled={pending}>
+                  Закріпити
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => pin("remove")}
+                  disabled={pending}
+                >
+                  Зняти
+                </Button>
               </div>
             </section>
           ) : null}

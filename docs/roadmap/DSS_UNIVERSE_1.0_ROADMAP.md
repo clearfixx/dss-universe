@@ -1103,7 +1103,7 @@ Delivered Activity Feed completion:
 
 # Phase 10 — News Platform
 
-**Status: active.** Packages 10.0–10.14 establish the frozen product contracts,
+**Status: active.** Packages 10.0–10.15 establish the frozen product contracts,
 canonical News draft aggregate, hierarchical taxonomy, typed field definitions,
 optimistic News-owned revision saves, validated post templates and the audited
 author-to-review-to-publication workflow. They also deliver scheduled
@@ -1116,6 +1116,8 @@ evidence remain mandatory at every accepted write.
 Package 10.13 exposes the authenticated author and staff editorial GraphQL
 surface while preserving service-owned workflow and permission checks.
 Package 10.14 adds the author and reviewer Newsroom UI on top of that contract.
+Package 10.15 adds permission-backed global/category pinning with optional
+expiration and duplicate-free pinned presentation before the regular catalog.
 
 ## Scope
 

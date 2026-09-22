@@ -105,7 +105,9 @@ export default async function NewsPage({ searchParams }: Props) {
             <div className="flex items-end justify-between gap-4">
               <div>
                 <p className="text-sm text-slate-500">Отримано сигналів</p>
-                <p className="text-2xl font-semibold">{data.news.total}</p>
+                <p className="text-2xl font-semibold">
+                  {data.news.total + data.news.pinnedItems.length}
+                </p>
               </div>
               <p className="text-sm text-slate-500">
                 Сторінка {data.news.page} з {Math.max(data.news.totalPages, 1)}

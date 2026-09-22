@@ -177,6 +177,11 @@ export const PERMISSIONS = {
     label: 'Manage News links',
     description: 'Allows managing explicit SEO links between News articles.',
   },
+  NewsPinsManage: {
+    key: 'news.pins.manage',
+    label: 'Manage pinned News',
+    description: 'Allows pinning published News globally or within a category.',
+  },
 
   RolesRead: {
     key: 'roles.read',

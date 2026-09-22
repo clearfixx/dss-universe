@@ -58,6 +58,7 @@ const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     Permission.ModerationAnnotationsManage,
     Permission.NewsReview,
     Permission.NewsLinksManage,
+    Permission.NewsPinsManage,
   ],
 
   admin: [
@@ -95,6 +96,7 @@ const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     Permission.NewsTaxonomyManage,
     Permission.NewsSettingsManage,
     Permission.NewsLinksManage,
+    Permission.NewsPinsManage,
   ],
 
   owner: PERMISSION_LIST.map((permission) => permission.key),

@@ -1,6 +1,6 @@
 # Phase 10 — News Platform Architecture
 
-> Status: Packages 10.0–10.14 implemented
+> Status: Packages 10.0–10.15 implemented
 
 ## Product boundary
 
@@ -78,7 +78,19 @@ identities and routing metadata, never the article body.
 
 ## Deferred packages
 
-- pinning and platform integrations — 10.15–10.16.
+- platform integrations — 10.16.
+
+## Package 10.15 delivery
+
+- dedicated global or category-scoped pin records, separate from Featured;
+- optional expiration with expired pins excluded at read time;
+- only published News may be pinned, and category pins must reference a
+  category already assigned to the article;
+- `news.pins.manage` authorization with transactional Audit and Outbox
+  evidence for set, replace and remove operations;
+- pinned cards are presented in a distinct catalog section and excluded from
+  ordinary pagination to prevent duplicate delivery;
+- Newsroom controls expose scope, category coordinate and optional expiration.
 
 ## Package 10.1 invariants
 

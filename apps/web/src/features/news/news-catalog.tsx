@@ -39,6 +39,25 @@ export function NewsCatalog({ initial, input, mode }: Props) {
 
   return (
     <div className="space-y-8" aria-busy={pending}>
+      {initial.pinnedItems.length ? (
+        <section className="space-y-4" aria-labelledby="pinned-news-title">
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-gradient-to-r from-cyan-400/50 to-transparent" />
+            <h2
+              id="pinned-news-title"
+              className="text-sm font-semibold uppercase tracking-[0.22em] text-cyan-300"
+            >
+              Закріплені сигнали
+            </h2>
+          </div>
+          <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
+            {initial.pinnedItems.map((item) => (
+              <NewsCard key={`pinned-${item.id}`} item={item} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {items.length ? (
         <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
           {items.map((item) => (

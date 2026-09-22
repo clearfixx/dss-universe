@@ -12,6 +12,9 @@ import {
   SaveNewsDraftDocument,
   ScheduleNewsDocument,
   SubmitNewsForReviewDocument,
+  SetNewsPinDocument,
+  RemoveNewsPinDocument,
+  type NewsPinScope,
   type CreateNewsDraftInput,
   type SaveNewsDraftInput,
 } from "@/gql/graphql";
@@ -21,6 +24,38 @@ async function context() {
   const token = (await cookies()).get("dss_access_token")?.value;
   if (!token) throw new Error("Увійдіть, щоб працювати з новинами.");
   return { headers: { authorization: `Bearer ${token}` } };
+}
+
+export async function manageNewsPin(
+  action: "set" | "remove",
+  articleId: string,
+  options?: { scope: NewsPinScope; categoryId?: string; expiresAt?: string },
+) {
+  const auth = await context();
+  const client = getClient();
+  if (action === "set") {
+    if (!options) throw new Error("Оберіть область закріплення.");
+    await client.mutate({
+      mutation: SetNewsPinDocument,
+      variables: {
+        input: {
+          articleId,
+          scope: options.scope,
+          categoryId: options.categoryId || undefined,
+          expiresAt: options.expiresAt || undefined,
+        },
+      },
+      context: auth,
+    });
+  } else {
+    await client.mutate({
+      mutation: RemoveNewsPinDocument,
+      variables: { articleId },
+      context: auth,
+    });
+  }
+  revalidatePath("/news");
+  revalidatePath(`/newsroom/${articleId}`);
 }
 
 export async function createDraft(input: CreateNewsDraftInput) {

@@ -71,10 +71,23 @@ export enum NewsShareChannelModel {
   PRINT = 'PRINT',
 }
 
+export enum NewsPinScopeModel {
+  GLOBAL = 'GLOBAL',
+  CATEGORY = 'CATEGORY',
+}
+
 registerEnumType(NewsPostTypeModel, { name: 'NewsPostType' });
 registerEnumType(NewsVisibilityModel, { name: 'NewsVisibility' });
 registerEnumType(NewsVoteKindModel, { name: 'NewsVoteKind' });
 registerEnumType(NewsShareChannelModel, { name: 'NewsShareChannel' });
+registerEnumType(NewsPinScopeModel, { name: 'NewsPinScope' });
+
+@ObjectType('NewsPin')
+export class NewsPinModel {
+  @Field(() => NewsPinScopeModel) scope!: NewsPinScopeModel;
+  @Field(() => ID, { nullable: true }) categoryId!: string | null;
+  @Field(() => GraphQLISODateTime, { nullable: true }) expiresAt!: Date | null;
+}
 
 @ObjectType('NewsAuthor')
 class NewsAuthorModel {
@@ -125,6 +138,7 @@ class ShortNewsModel {
   @Field(() => GraphQLISODateTime) publishedAt!: Date;
   @Field(() => GraphQLISODateTime) displayPublishedAt!: Date;
   @Field() featured!: boolean;
+  @Field(() => NewsPinModel, { nullable: true }) pin!: NewsPinModel | null;
   @Field(() => NewsAuthorModel) author!: NewsAuthorModel;
   @Field(() => NewsCategorySummaryModel, { nullable: true })
   primaryCategory!: NewsCategorySummaryModel | null;
@@ -189,6 +203,7 @@ class FullNewsModel extends ShortNewsModel {
 
 @ObjectType('NumberedNewsPage')
 class NumberedNewsPageModel {
+  @Field(() => [ShortNewsModel]) pinnedItems!: ShortNewsModel[];
   @Field(() => [ShortNewsModel]) items!: ShortNewsModel[];
   @Field(() => Int) total!: number;
   @Field(() => Int) page!: number;

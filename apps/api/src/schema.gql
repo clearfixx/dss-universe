@@ -478,6 +478,7 @@ type FullNews {
   id: ID!
   interactionTargetId: ID!
   language: String!
+  pin: NewsPin
   postType: NewsPostType!
   primaryCategory: NewsCategorySummary
   publishedAt: DateTime!
@@ -844,6 +845,7 @@ type Mutation {
   register(input: RegisterInput!): AuthPayloadModel!
   rejectQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
   removeBookmark(interactionTargetId: ID!): BookmarkMutationPayload!
+  removeNewsPin(articleId: ID!): RemoveNewsPinResult!
   removeComment(commentId: ID!, reason: String): Comment!
   removeProfileWallPost(postId: ID!, reason: String): ProfileWallPost!
   removeViewerAvatar: Viewer!
@@ -870,6 +872,7 @@ type Mutation {
   scheduleNews(input: ScheduleNewsInput!): NewsEditorialTransition!
   selectCustomTitle(grantId: ID!): UserTitleGrant!
   setReaction(input: SetReactionInput!): SetReactionPayload!
+  setNewsPin(input: SetNewsPinInput!): ManagedNewsPin!
   setViewerAvatar(mediaId: ID!): Viewer!
   setViewerCover(mediaId: ID!): Viewer!
   submitNewsForReview(articleId: ID!): NewsEditorialTransition!
@@ -885,6 +888,17 @@ type Mutation {
   updateViewerPrivacy(input: UpdateUserPrivacyInput!): UserPrivacySettings!
   updateViewerProfile(input: UpdateViewerProfileInput!): Viewer!
   updateViewerSocialLinks(input: UpdateViewerSocialLinksInput!): [UserSocialLink!]!
+}
+
+type ManagedNewsPin {
+  articleId: ID!
+  categoryId: ID
+  createdAt: DateTime!
+  expiresAt: DateTime
+  id: ID!
+  pinnedById: ID!
+  scope: NewsPinScope!
+  updatedAt: DateTime!
 }
 
 enum NewsArticleStatus {
@@ -1072,6 +1086,17 @@ enum NewsPaginationMode {
   PAGES
 }
 
+type NewsPin {
+  categoryId: ID
+  expiresAt: DateTime
+  scope: NewsPinScope!
+}
+
+enum NewsPinScope {
+  CATEGORY
+  GLOBAL
+}
+
 enum NewsPostType {
   AUDIO
   GALLERY
@@ -1178,10 +1203,15 @@ type NotificationPreferences {
 
 type NumberedNewsPage {
   items: [ShortNews!]!
+  pinnedItems: [ShortNews!]!
   page: Int!
   pageSize: Int!
   total: Int!
   totalPages: Int!
+}
+
+type RemoveNewsPinResult {
+  success: Boolean!
 }
 
 type PresenceSummary {
@@ -1548,6 +1578,7 @@ type ShortNews {
   id: ID!
   interactionTargetId: ID!
   language: String!
+  pin: NewsPin
   postType: NewsPostType!
   primaryCategory: NewsCategorySummary
   publishedAt: DateTime!
@@ -1556,6 +1587,13 @@ type ShortNews {
   tags: [NewsTagSummary!]!
   title: String!
   visibility: NewsVisibility!
+}
+
+input SetNewsPinInput {
+  articleId: ID!
+  categoryId: ID
+  expiresAt: DateTime
+  scope: NewsPinScope!
 }
 
 input UpdateCommunityPointRuleInput {

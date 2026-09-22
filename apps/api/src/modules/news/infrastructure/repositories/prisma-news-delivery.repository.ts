@@ -38,9 +38,14 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async browseShort(input: ShortNewsQuery): Promise<ShortNewsPage> {
-    const rows = await this.rows(input, 0, input.first + 1, input.cursor);
+    const pinnedRows = await this.pinnedRows(input);
+    const pinnedIds = pinnedRows.map(({ id }) => id);
+    const rows = await this.rows(input, 0, input.first + 1, input.cursor, {
+      id: { notIn: pinnedIds },
+    });
     return {
       items: this.toItems(rows.slice(0, input.first)),
+      pinnedItems: this.toItems(pinnedRows),
       hasNextPage: rows.length > input.first,
     };
   }
@@ -48,12 +53,24 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
   async browseShortNumbered(
     input: ShortNewsNumberedQuery,
   ): Promise<ShortNewsNumberedPage> {
+    const pinnedRows = await this.pinnedRows(input);
+    const pinnedIds = pinnedRows.map(({ id }) => id);
+    const unpinnedWhere = { ...this.where(input), id: { notIn: pinnedIds } };
     const [rows, total] = await this.prisma.$transaction([
-      this.rows(input, (input.page - 1) * input.pageSize, input.pageSize),
-      this.prisma.newsArticle.count({ where: this.where(input) }),
+      this.rows(
+        input,
+        (input.page - 1) * input.pageSize,
+        input.pageSize,
+        undefined,
+        {
+          id: { notIn: pinnedIds },
+        },
+      ),
+      this.prisma.newsArticle.count({ where: unpinnedWhere }),
     ]);
     return {
       items: this.toItems(rows),
+      pinnedItems: this.toItems(pinnedRows),
       total,
       page: input.page,
       pageSize: input.pageSize,
@@ -539,6 +556,9 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
         publishedAt: true,
         displayPublishedAt: true,
         featured: true,
+        pin: {
+          select: { scope: true, categoryId: true, expiresAt: true },
+        },
         author: {
           select: {
             id: true,
@@ -614,6 +634,7 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
         publishedAt,
         displayPublishedAt: row.displayPublishedAt ?? publishedAt,
         featured: row.featured,
+        pin: row.pin,
         author: row.author,
         primaryCategory: row.categories.at(0)?.category ?? null,
         tags: row.tags.map(({ tag }) => tag),
@@ -630,6 +651,32 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
           })(),
         },
       };
+    });
+  }
+
+  private pinnedRows(input: SharedQuery) {
+    const now = new Date();
+    return this.rows(input, 0, 20, undefined, {
+      pin: {
+        is: {
+          AND: [
+            { OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
+            {
+              OR: [
+                { scope: 'GLOBAL' },
+                ...(input.categorySlug
+                  ? [
+                      {
+                        scope: 'CATEGORY' as const,
+                        category: { slug: input.categorySlug, isActive: true },
+                      },
+                    ]
+                  : []),
+              ],
+            },
+          ],
+        },
+      },
     });
   }
 
