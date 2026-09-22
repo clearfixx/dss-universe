@@ -1,6 +1,6 @@
 # Phase 10 — News Platform Architecture
 
-> Status: Packages 10.0–10.13 implemented
+> Status: Packages 10.0–10.14 implemented
 
 ## Product boundary
 
@@ -78,7 +78,7 @@ identities and routing metadata, never the article body.
 
 ## Deferred packages
 
-- author/editor workspace UI, pinning and platform integrations — 10.14–10.16.
+- pinning and platform integrations — 10.15–10.16.
 
 ## Package 10.1 invariants
 
@@ -232,3 +232,16 @@ ownership in Phase 13.
 - the paginated editorial list scopes ordinary users to their own articles and
   opens the global, status-filterable queue only to reviewers and publishers;
 - public Short/Full News delivery remains separate from editorial drafts.
+
+## Package 10.14 delivery
+
+- authenticated `/newsroom` lists the author's articles or the staff editorial
+  queue returned by the permission-scoped 10.13 contract;
+- `/newsroom/new` and `/newsroom/[articleId]` compose metadata, template type,
+  visibility, cover identity and the canonical `NEWS` DSS Editor profile;
+- saves carry the current revision and update local optimistic state so a
+  second save cannot accidentally reuse a stale version;
+- status-aware controls expose submit, request changes, approve, publish,
+  schedule and schedule cancellation while the API remains authoritative;
+- unauthenticated and unauthorized routes fail into explicit UI states rather
+  than leaking editorial content.

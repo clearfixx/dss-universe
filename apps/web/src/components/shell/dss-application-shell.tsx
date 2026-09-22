@@ -24,6 +24,7 @@ import {
   Menu,
   MessageSquare,
   Newspaper,
+  PenLine,
   Orbit,
   Search,
   Settings,
@@ -48,6 +49,7 @@ import { useShellStore } from "@/stores/shell.store";
 const navigation = [
   { href: "/command-deck", label: "Command Deck", icon: LayoutDashboard },
   { href: "/news", label: "News", icon: Newspaper },
+  { href: "/newsroom", label: "Newsroom", icon: PenLine },
   { href: "/members", label: "Astronauts", icon: Users },
   { href: "/research", label: "Research Lab", icon: BookOpen },
   { href: "/community", label: "Community Hub", icon: MessageSquare },

@@ -1,0 +1,108 @@
+fragment NewsEditorialFields on NewsEditorialArticle {
+  id
+  interactionTargetId
+  authorId
+  postType
+  status
+  visibility
+  language
+  slug
+  title
+  shortText
+  documentJson
+  templateDataJson
+  coverMediaId
+  currentVersion
+  approvedVersion
+  allowComments
+  allowRating
+  allowSharing
+  allowIndexing
+  showOnHomepage
+  featured
+  submittedAt
+  approvedAt
+  scheduledFor
+  publishedAt
+  displayPublishedAt
+  createdAt
+  updatedAt
+}
+
+query EditorialNews($input: NewsEditorialBrowseInput) {
+  editorialNews(input: $input) {
+    total
+    page
+    pageSize
+    totalPages
+    items {
+      ...NewsEditorialFields
+    }
+  }
+}
+
+query NewsEditorialArticle($articleId: ID!) {
+  newsEditorialArticle(articleId: $articleId) {
+    ...NewsEditorialFields
+  }
+}
+
+mutation CreateNewsDraft($input: CreateNewsDraftInput!) {
+  createNewsDraft(input: $input) {
+    ...NewsEditorialFields
+  }
+}
+
+mutation SaveNewsDraft($input: SaveNewsDraftInput!) {
+  saveNewsDraft(input: $input) {
+    ...NewsEditorialFields
+  }
+}
+
+mutation SubmitNewsForReview($articleId: ID!) {
+  submitNewsForReview(articleId: $articleId) {
+    article {
+      ...NewsEditorialFields
+    }
+  }
+}
+
+mutation RequestNewsChanges($input: NewsDecisionInput!) {
+  requestNewsChanges(input: $input) {
+    article {
+      ...NewsEditorialFields
+    }
+  }
+}
+
+mutation ApproveNews($input: NewsDecisionInput!) {
+  approveNews(input: $input) {
+    article {
+      ...NewsEditorialFields
+    }
+  }
+}
+
+mutation PublishNews($input: PublishNewsInput!) {
+  publishNews(input: $input) {
+    article {
+      ...NewsEditorialFields
+    }
+  }
+}
+
+mutation ScheduleNews($input: ScheduleNewsInput!) {
+  scheduleNews(input: $input) {
+    article {
+      ...NewsEditorialFields
+    }
+  }
+}
+
+mutation CancelNewsSchedule($input: NewsDecisionInput!) {
+  cancelNewsSchedule(input: $input) {
+    article {
+      ...NewsEditorialFields
+    }
+  }
+}
