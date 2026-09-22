@@ -64,6 +64,37 @@ describe("PostgresActivityProjector", () => {
 
     expect(query.mock.calls.at(-1)?.[0]).toContain('SET "retractedAt"');
   });
+
+  it("projects a published News signal with allow-listed discovery metadata", async () => {
+    await projector.project({
+      eventId: "event-news-1",
+      eventName: "news.article.published.v1",
+      eventVersion: 1,
+      category: "domain",
+      producer: "dss.api.news",
+      actorId: "publisher-1",
+      aggregateType: "NewsArticle",
+      aggregateId: "article-1",
+      payload: {
+        authorId: "author-1",
+        language: "uk",
+        slug: "station-update",
+        title: "Оновлення станції",
+        visibility: "PUBLIC",
+        categorySlug: "releases",
+        tags: "nextjs,dss",
+        document: "must not enter the feed",
+      },
+      occurredAt: "2026-09-22T12:00:00.000Z",
+    });
+
+    const values = query.mock.calls.at(-1)?.[1] as unknown[];
+    expect(values).toContain("author-1");
+    expect(values).toContain("PUBLIC");
+    expect(values).toContain("NewsArticle");
+    expect(JSON.stringify(values)).toContain("station-update");
+    expect(JSON.stringify(values)).not.toContain("must not enter the feed");
+  });
 });
 
 /**

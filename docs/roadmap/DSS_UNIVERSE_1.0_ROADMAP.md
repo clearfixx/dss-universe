@@ -1103,7 +1103,7 @@ Delivered Activity Feed completion:
 
 # Phase 10 — News Platform
 
-**Status: active.** Packages 10.0–10.15 establish the frozen product contracts,
+**Status: complete.** Packages 10.0–10.16 establish the frozen product contracts,
 canonical News draft aggregate, hierarchical taxonomy, typed field definitions,
 optimistic News-owned revision saves, validated post templates and the audited
 author-to-review-to-publication workflow. They also deliver scheduled
@@ -1118,6 +1118,8 @@ surface while preserving service-owned workflow and permission checks.
 Package 10.14 adds the author and reviewer Newsroom UI on top of that contract.
 Package 10.15 adds permission-backed global/category pinning with optional
 expiration and duplicate-free pinned presentation before the regular catalog.
+Package 10.16 connects publication to Activity, Search, SEO, Notifications and
+Gamification through allow-listed events and public discovery metadata.
 
 ## Scope
 
@@ -1188,6 +1190,9 @@ DRAFT → IN_REVIEW → SCHEDULED/PUBLISHED → ARCHIVED
 - News and News-comment pagination follows the audited admin policy;
 - previous/next navigation and internal SEO links resolve only published News;
 - News contributes to Feed, Search, SEO, Notifications and Gamification.
+
+Before Phase 11 begins, delivery returns to Phase 5 for the approved Auth UX
+Completion bridge: registration, login, secure session recovery and logout.
 
 ---
 

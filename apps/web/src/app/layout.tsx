@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 
 import { AppProviders } from "@/components/providers/app-providers";
+import { siteConfig } from "@/config/site.config";
 
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.url),
   title: "DSS Universe",
   description: "Build. Share. Learn. Grow. Together.",
 };

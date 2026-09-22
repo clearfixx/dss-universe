@@ -1,6 +1,6 @@
 # Phase 10 — News Platform Architecture
 
-> Status: Packages 10.0–10.15 implemented
+> Status: Packages 10.0–10.16 implemented — Phase 10 complete
 
 ## Product boundary
 
@@ -76,10 +76,6 @@ Creation writes the article, initial revision, Interaction Target, Audit record
 and `news.article.created.v1` Outbox event in one transaction. Payloads carry
 identities and routing metadata, never the article body.
 
-## Deferred packages
-
-- platform integrations — 10.16.
-
 ## Package 10.15 delivery
 
 - dedicated global or category-scoped pin records, separate from Featured;
@@ -91,6 +87,21 @@ identities and routing metadata, never the article body.
 - pinned cards are presented in a distinct catalog section and excluded from
   ordinary pagination to prevent duplicate delivery;
 - Newsroom controls expose scope, category coordinate and optional expiration.
+
+## Package 10.16 delivery
+
+- publication events carry allow-listed canonical discovery metadata and the
+  author coordinate required by Search, Activity and Gamification consumers;
+- the Activity worker projects published News idempotently without copying the
+  article body or trusting the publishing moderator as the author;
+- editorial transitions emit durable Notifications-owned routing signals for
+  reviewers and authors while inbox/email delivery remains owned by Phase 15;
+- the existing configurable `news.published` Community Points rule consumes
+  the author coordinate, and the same event remains compatible with
+  achievement rules;
+- public catalog search continues to use the canonical News search projection;
+- canonical metadata, Open Graph, Twitter cards, NewsArticle JSON-LD and a
+  public-only News sitemap complete the current SEO integration.
 
 ## Package 10.1 invariants
 

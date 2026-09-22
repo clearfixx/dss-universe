@@ -107,6 +107,37 @@ describe('CommunityPointsService', () => {
     );
   });
 
+  it('awards a published News event to the author, not the publisher', async () => {
+    const newsRule = {
+      ...rule,
+      key: 'news.published',
+      eventName: 'news.article.published.v1',
+      payloadValue: null,
+      points: 10,
+      dailyLimit: 5,
+    };
+    repository.matchingRules.mockResolvedValue([newsRule]);
+    repository.award.mockResolvedValue({
+      status: 'AWARDED',
+      entry: { ...entry, userId: 'author-1', ruleKey: newsRule.key },
+    });
+
+    await service.consume(
+      event({
+        eventName: newsRule.eventName,
+        actorId: 'publisher-1',
+        aggregateType: 'NewsArticle',
+        aggregateId: 'article-1',
+        payload: { authorId: 'author-1', articleId: 'article-1' },
+      }),
+    );
+
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(repository.award).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: 'author-1', rule: newsRule }),
+    );
+  });
+
   it('ignores integration events without an enabled rule', async () => {
     repository.matchingRules.mockResolvedValue([]);
 

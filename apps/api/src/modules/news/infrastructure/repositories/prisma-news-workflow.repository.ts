@@ -54,9 +54,30 @@ export class PrismaNewsWorkflowRepository implements NewsWorkflowRepository {
       const article = await transaction.newsArticle.findUniqueOrThrow({
         where: { id: input.articleId },
       });
+      const integration = await transaction.newsArticle.findUniqueOrThrow({
+        where: { id: input.articleId },
+        select: {
+          authorId: true,
+          language: true,
+          slug: true,
+          title: true,
+          visibility: true,
+          allowIndexing: true,
+          categories: {
+            where: { isPrimary: true },
+            take: 1,
+            select: { category: { select: { slug: true } } },
+          },
+          tags: {
+            orderBy: { tag: { slug: 'asc' } },
+            select: { tag: { select: { slug: true } } },
+          },
+        },
+      });
       const eventStem = input.action.toLowerCase().replace('_', '-');
       const payload = {
         articleId: input.articleId,
+        authorId: integration.authorId,
         actorId: input.actorId,
         action: input.action,
         status: input.nextStatus,
@@ -65,6 +86,13 @@ export class PrismaNewsWorkflowRepository implements NewsWorkflowRepository {
         reason: input.reason,
         scheduledFor: input.scheduledFor?.toISOString() ?? null,
         displayPublishedAt: input.displayPublishedAt?.toISOString() ?? null,
+        language: integration.language,
+        slug: integration.slug,
+        title: integration.title,
+        visibility: integration.visibility,
+        allowIndexing: integration.allowIndexing,
+        categorySlug: integration.categories.at(0)?.category.slug ?? null,
+        tags: integration.tags.map(({ tag }) => tag.slug).join(','),
       };
       await this.audit.append(transaction, {
         action: `news.article.${eventStem}`,
@@ -85,6 +113,30 @@ export class PrismaNewsWorkflowRepository implements NewsWorkflowRepository {
           actorId: input.actorId,
           aggregate: { type: OWNER_TYPE, id: input.articleId },
           payload,
+        }),
+      );
+      await this.outbox.append(
+        transaction,
+        createEventEnvelope({
+          name: 'notifications.news.editorial-status.v1',
+          version: 1,
+          category: 'integration',
+          producer: PRODUCER,
+          actorId: input.actorId,
+          aggregate: { type: OWNER_TYPE, id: input.articleId },
+          payload: {
+            articleId: input.articleId,
+            authorId: integration.authorId,
+            recipientId:
+              input.action === 'SUBMITTED' ? null : integration.authorId,
+            audience:
+              input.action === 'SUBMITTED' ? 'NEWS_REVIEWERS' : 'AUTHOR',
+            status: input.nextStatus,
+            action: input.action,
+            language: integration.language,
+            slug: integration.slug,
+            title: integration.title,
+          },
         }),
       );
       return { article: this.toDomain(article), decision };

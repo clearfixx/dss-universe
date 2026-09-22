@@ -23,6 +23,7 @@ import type { IntegrationEventJob } from "@dss/jobs";
 
 const WALL_POST_CREATED_EVENT = "users.profile-wall.post-created.v1";
 const WALL_POST_RETRACTED_EVENT = "users.profile-wall.post-retracted.v1";
+const NEWS_PUBLISHED_EVENT = "news.article.published.v1";
 
 export class PostgresActivityProjector {
   constructor(private readonly pool: Pool) {}
@@ -34,7 +35,55 @@ export class PostgresActivityProjector {
     }
     if (event.eventName === WALL_POST_RETRACTED_EVENT) {
       await this.retractWallPost(event);
+      return;
     }
+    if (event.eventName === NEWS_PUBLISHED_EVENT) {
+      await this.projectPublishedNews(event);
+    }
+  }
+
+  private async projectPublishedNews(
+    event: IntegrationEventJob,
+  ): Promise<void> {
+    if (event.aggregateType !== "NewsArticle" || !event.aggregateId) {
+      throw new Error("Invalid published News activity event.");
+    }
+    const payload = this.payload(event.payload);
+    const authorId = this.optionalString(payload.authorId);
+    const language = this.optionalString(payload.language);
+    const slug = this.optionalString(payload.slug);
+    const title = this.optionalString(payload.title);
+    if (!authorId || !language || !slug || !title) {
+      throw new Error("Published News activity metadata is incomplete.");
+    }
+    await this.pool.query(
+      `INSERT INTO "activity_entries"
+       ("id", "sourceEventId", "actorId", "module", "action",
+        "subjectType", "subjectId", "visibility", "metadata",
+        "occurredAt", "createdAt", "updatedAt")
+       VALUES (
+         $1, $2, $3, 'NEWS', 'NEWS_ARTICLE_PUBLISHED', $4, $5,
+         $6::"ActivityVisibility", $7::jsonb,
+         $8::timestamptz AT TIME ZONE 'UTC', NOW(), NOW()
+       )
+       ON CONFLICT ("sourceEventId") DO NOTHING`,
+      [
+        randomUUID(),
+        event.eventId,
+        authorId,
+        event.aggregateType,
+        event.aggregateId,
+        payload.visibility === "MEMBERS" ? "MEMBERS" : "PUBLIC",
+        JSON.stringify({
+          language,
+          slug,
+          title,
+          categorySlug: this.optionalString(payload.categorySlug),
+          tags: this.optionalString(payload.tags),
+        }),
+        event.occurredAt,
+      ],
+    );
   }
 
   private async projectWallPost(event: IntegrationEventJob): Promise<void> {

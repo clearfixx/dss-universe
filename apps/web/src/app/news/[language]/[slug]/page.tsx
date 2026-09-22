@@ -15,6 +15,7 @@ import { NewsDocument } from "@/features/news/news-document";
 import { NewsEngagement } from "@/features/news/news-engagement";
 import { NewsAttachments } from "@/features/news/news-attachments";
 import { NewsAudience } from "@/features/news/news-audience";
+import { siteConfig } from "@/config/site.config";
 
 type Props = { params: Promise<{ language: string; slug: string }> };
 
@@ -22,10 +23,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { language, slug } = await params;
   const article = await loadFullNews(language, slug);
   if (!article) return { title: "Новину не знайдено | DSS Universe" };
+  const canonical = `/news/${article.language}/${article.slug}`;
   return {
     title: `${article.title} | DSS Universe`,
     description: article.shortText,
     robots: { index: article.allowIndexing, follow: article.allowIndexing },
+    alternates: { canonical },
+    openGraph: {
+      type: "article",
+      url: canonical,
+      title: article.title,
+      description: article.shortText,
+      publishedTime: String(article.displayPublishedAt),
+      authors: [`/profile/${article.author.username}`],
+      tags: article.tags.map((tag) => tag.name),
+      locale: article.language,
+      siteName: siteConfig.name,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.title,
+      description: article.shortText,
+    },
   };
 }
 
@@ -38,14 +57,39 @@ export default async function FullNewsRoute({ params }: Props) {
   const { language, slug } = await params;
   const article = await loadFullNews(language, slug);
   if (!article) notFound();
-  const navigation = await loadNewsNavigation(article.id);
-  const comments = article.allowComments
-    ? await loadNewsComments(article.id, 1)
-    : null;
+  const [navigation, comments] = await Promise.all([
+    loadNewsNavigation(article.id),
+    article.allowComments ? loadNewsComments(article.id, 1) : null,
+  ]);
   const articlePath = `/news/${article.language}/${article.slug}`;
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    headline: article.title,
+    description: article.shortText,
+    datePublished: String(article.displayPublishedAt),
+    inLanguage: article.language,
+    mainEntityOfPage: new URL(articlePath, siteConfig.url).toString(),
+    author: {
+      "@type": "Person",
+      name: article.author.displayName ?? article.author.username,
+      url: new URL(
+        `/profile/${article.author.username}`,
+        siteConfig.url,
+      ).toString(),
+    },
+    publisher: { "@type": "Organization", name: siteConfig.name },
+    keywords: article.tags.map((tag) => tag.name).join(", "),
+  };
 
   return (
     <DssApplicationShell>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData).replaceAll("<", "\\u003c"),
+        }}
+      />
       <article className="mx-auto max-w-6xl space-y-8">
         <Link
           href="/news"

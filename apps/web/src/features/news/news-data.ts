@@ -29,6 +29,16 @@ export async function loadNewsCatalog(input: NewsBrowseInput) {
   return result.data;
 }
 
+export async function loadPublicNewsCatalog(input: NewsBrowseInput) {
+  const result = await getClient().query({
+    query: NewsCatalogDocument,
+    variables: { input },
+    fetchPolicy: "no-cache",
+  });
+  if (!result.data) throw new Error("NEWS_CATALOG_UNAVAILABLE");
+  return result.data;
+}
+
 export const loadFullNews = cache(async (language: string, slug: string) => {
   const result = await getClient().query({
     query: FullNewsPageDocument,
