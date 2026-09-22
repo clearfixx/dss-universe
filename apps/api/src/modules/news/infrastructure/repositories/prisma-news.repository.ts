@@ -12,6 +12,8 @@ import type { NewsRepository } from '../../domain/repositories/news.repository.i
 import type {
   CreateNewsDraft,
   NewsArticle,
+  NewsEditorialListPage,
+  NewsEditorialListQuery,
   SaveNewsDraft,
 } from '../../domain/types/news-article.type';
 
@@ -141,6 +143,31 @@ export class PrismaNewsRepository implements NewsRepository {
       where: { language_slug: { language, slug } },
     });
     return article ? this.toDomain(article) : null;
+  }
+
+  async listEditorial(
+    input: NewsEditorialListQuery,
+  ): Promise<NewsEditorialListPage> {
+    const where: Prisma.NewsArticleWhereInput = {
+      ...(input.includeAll ? {} : { authorId: input.actorId }),
+      ...(input.statuses?.length ? { status: { in: input.statuses } } : {}),
+    };
+    const [rows, total] = await this.prisma.$transaction([
+      this.prisma.newsArticle.findMany({
+        where,
+        orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+        skip: (input.page - 1) * input.pageSize,
+        take: input.pageSize,
+      }),
+      this.prisma.newsArticle.count({ where }),
+    ]);
+    return {
+      items: rows.map((row) => this.toDomain(row)),
+      total,
+      page: input.page,
+      pageSize: input.pageSize,
+      totalPages: Math.ceil(total / input.pageSize),
+    };
   }
 
   async saveDraft(input: SaveNewsDraft): Promise<NewsArticle | null> {

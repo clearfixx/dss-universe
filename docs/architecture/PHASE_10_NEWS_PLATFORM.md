@@ -1,6 +1,6 @@
 # Phase 10 — News Platform Architecture
 
-> Status: Packages 10.0–10.12 implemented
+> Status: Packages 10.0–10.13 implemented
 
 ## Product boundary
 
@@ -78,8 +78,7 @@ identities and routing metadata, never the article body.
 
 ## Deferred packages
 
-- permission-guarded editorial/GraphQL surfaces and platform integrations —
-  10.13–10.16.
+- author/editor workspace UI, pinning and platform integrations — 10.14–10.16.
 
 ## Package 10.1 invariants
 
@@ -219,3 +218,17 @@ ownership in Phase 13.
   Instagram, Pinterest, copied links and print views;
 - the public article records a view after hydration and renders share,
   copy-link and print controls only when sharing is enabled.
+
+## Package 10.13 delivery
+
+- authenticated GraphQL commands expose draft creation and optimistic saves
+  without accepting a caller-supplied author identity;
+- the full editorial lifecycle is available through explicit submit, request
+  changes, approve, publish, schedule and schedule-cancellation mutations;
+- workflow services remain the permission-enforcing boundary for review and
+  publication, so GraphQL cannot bypass revision or state invariants;
+- canonical editor and template JSON are returned only to the author or users
+  holding `news.review` or `news.publish`;
+- the paginated editorial list scopes ordinary users to their own articles and
+  opens the global, status-filterable queue only to reviewers and publishers;
+- public Short/Full News delivery remains separate from editorial drafts.

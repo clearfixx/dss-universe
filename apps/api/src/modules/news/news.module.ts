@@ -30,6 +30,7 @@ import { PrismaNewsSettingsRepository } from './infrastructure/repositories/pris
 import { PrismaNewsTaxonomyRepository } from './infrastructure/repositories/prisma-news-taxonomy.repository';
 import { PrismaNewsWorkflowRepository } from './infrastructure/repositories/prisma-news-workflow.repository';
 import { NewsSettingsResolver } from './presentation/graphql/news-settings.graphql';
+import { NewsEditorialResolver } from './presentation/graphql/news-editorial.graphql';
 import {
   NewsDeliveryResolver,
   OptionalNewsJwtGuard,
@@ -49,6 +50,7 @@ import {
     NewsDeliveryResolver,
     OptionalNewsJwtGuard,
     NewsSettingsResolver,
+    NewsEditorialResolver,
     NewsService,
     NewsDeliveryService,
     NewsLinksService,

@@ -19,6 +19,8 @@ import {
 import type {
   CreateNewsDraftRequest,
   NewsArticle,
+  NewsEditorialListPage,
+  NewsEditorialListQuery,
   SaveNewsDraftRequest,
 } from '../../domain/types/news-article.type';
 import { NewsPostTemplateService } from './news-post-template.service';
@@ -90,6 +92,10 @@ export class NewsService {
 
   findById(id: string): Promise<NewsArticle | null> {
     return this.news.findById(id);
+  }
+
+  listEditorial(input: NewsEditorialListQuery): Promise<NewsEditorialListPage> {
+    return this.news.listEditorial(input);
   }
 
   async saveDraft(

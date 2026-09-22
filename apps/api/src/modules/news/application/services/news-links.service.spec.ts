@@ -24,6 +24,7 @@ describe('NewsLinksService', () => {
       createDraft: jest.fn(),
       findById: jest.fn().mockResolvedValue({ status: 'PUBLISHED' }),
       findBySlug: jest.fn(),
+      listEditorial: jest.fn(),
       saveDraft: jest.fn(),
     };
     access = jest.fn().mockResolvedValue({ roles: [], permissions: [] });

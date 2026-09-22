@@ -24,6 +24,9 @@ News attachments to DSS Media references and exposes safe file metadata,
 SHA-256/SHA-1/MD5 digests and public original downloads. Package 10.12 adds
 real unique views plus retry-safe total and per-channel sharing counters through
 the canonical Interaction Target.
+Package 10.13 exposes authenticated draft, editorial queue and lifecycle
+GraphQL operations. Author identity is always derived from authentication;
+review and publication permissions remain enforced inside application services.
 
 The pagination correction adds an audited policy for News and News comments,
 parallel cursor and numbered delivery, chronological neighbors, and explicit

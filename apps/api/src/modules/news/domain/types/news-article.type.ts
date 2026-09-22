@@ -97,3 +97,19 @@ export type SaveNewsDraftRequest = Omit<
   | 'templateData'
   | 'attachmentMediaIds'
 > & { documentJson: string; templateData?: unknown };
+
+export type NewsEditorialListQuery = {
+  actorId: string;
+  includeAll: boolean;
+  statuses?: NewsArticleStatus[];
+  page: number;
+  pageSize: number;
+};
+
+export type NewsEditorialListPage = {
+  items: NewsArticle[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};

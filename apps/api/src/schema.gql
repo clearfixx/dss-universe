@@ -370,6 +370,18 @@ input CreateModerationAnnotationInput {
   reason: String!
 }
 
+input CreateNewsDraftInput {
+  coverMediaId: ID
+  documentJson: String!
+  language: String!
+  postType: NewsPostType!
+  shortText: String!
+  slug: String!
+  templateDataJson: String
+  title: String!
+  visibility: NewsVisibility!
+}
+
 input CreateWallPostInput {
   body: String
   imageMediaId: ID
@@ -801,8 +813,10 @@ input ModerationPageInput {
 
 type Mutation {
   abortMediaUpload(id: String!): MediaUploadSession!
+  approveNews(input: NewsDecisionInput!): NewsEditorialTransition!
   awardAchievement(input: ManualAchievementAwardInput!): AchievementAward!
   blockUser(userId: ID!): UserBlockResult!
+  cancelNewsSchedule(input: NewsDecisionInput!): NewsEditorialTransition!
   changeViewerEmail(input: ChangeEmailInput!): LogoutResultModel!
   changeViewerPassword(input: ChangePasswordInput!): LogoutResultModel!
   clearReaction(interactionTargetId: ID!): ReactionSummary!
@@ -810,6 +824,7 @@ type Mutation {
   createContentGate(input: CreateContentGateInput!): ContentGateModel!
   createCustomTitle(input: CreateCustomTitleInput!): CustomTitle!
   createModerationAnnotation(input: CreateModerationAnnotationInput!): ModerationAnnotation!
+  createNewsDraft(input: CreateNewsDraftInput!): NewsEditorialArticle!
   createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
   deactivateAccount(input: DeactivateAccountInput!): LogoutResultModel!
   discardCommentDraft(draftId: ID!): Boolean!
@@ -821,6 +836,7 @@ type Mutation {
   login(input: LoginInput!): AuthPayloadModel!
   logout: LogoutResultModel!
   markActivityFeedVisited: ActivityFeedVisit!
+  publishNews(input: PublishNewsInput!): NewsEditorialTransition!
   reactivateAccount(input: LoginInput!): AuthPayloadModel!
   recordInteractionShare(input: RecordShareInput!): AudienceEngagement!
   recordInteractionView(input: RecordViewInput!): AudienceEngagement!
@@ -833,6 +849,7 @@ type Mutation {
   removeViewerAvatar: Viewer!
   removeViewerCover: Viewer!
   reportContent(input: ReportContentInput!): ContentReport!
+  requestNewsChanges(input: NewsDecisionInput!): NewsEditorialTransition!
   rescanQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
   retryFailedMedia(mediaId: ID!): MediaLibraryItem!
   reverseCommunityPoints(input: ReverseCommunityPointsInput!): CommunityPointEntry!
@@ -849,10 +866,13 @@ type Mutation {
   saveAchievementRule(input: SaveAchievementRuleInput!): AchievementRule!
   saveBookmark(interactionTargetId: ID!): BookmarkMutationPayload!
   saveCommentDraft(input: SaveCommentDraftInput!): CommentDraft!
+  saveNewsDraft(input: SaveNewsDraftInput!): NewsEditorialArticle!
+  scheduleNews(input: ScheduleNewsInput!): NewsEditorialTransition!
   selectCustomTitle(grantId: ID!): UserTitleGrant!
   setReaction(input: SetReactionInput!): SetReactionPayload!
   setViewerAvatar(mediaId: ID!): Viewer!
   setViewerCover(mediaId: ID!): Viewer!
+  submitNewsForReview(articleId: ID!): NewsEditorialTransition!
   unblockUser(userId: ID!): UserBlockResult!
   unfollowUser(userId: ID!): UserSocialGraphSummary!
   updateCommunityPointRule(input: UpdateCommunityPointRuleInput!): CommunityPointRule!
@@ -865,6 +885,16 @@ type Mutation {
   updateViewerPrivacy(input: UpdateUserPrivacyInput!): UserPrivacySettings!
   updateViewerProfile(input: UpdateViewerProfileInput!): Viewer!
   updateViewerSocialLinks(input: UpdateViewerSocialLinksInput!): [UserSocialLink!]!
+}
+
+enum NewsArticleStatus {
+  APPROVED
+  ARCHIVED
+  CHANGES_REQUESTED
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  SCHEDULED
 }
 
 type NewsAttachment {
@@ -935,6 +965,80 @@ type NewsCommentsPage {
   pageSize: Int!
   total: Int!
   totalPages: Int!
+}
+
+input NewsDecisionInput {
+  articleId: ID!
+  reason: String
+}
+
+enum NewsEditorialAction {
+  APPROVED
+  CHANGES_REQUESTED
+  PUBLISHED
+  SCHEDULED
+  SCHEDULE_CANCELLED
+  SUBMITTED
+}
+
+type NewsEditorialArticle {
+  allowComments: Boolean!
+  allowIndexing: Boolean!
+  allowRating: Boolean!
+  allowSharing: Boolean!
+  approvedAt: DateTime
+  approvedVersion: Int
+  authorId: ID!
+  coverMediaId: ID
+  createdAt: DateTime!
+  currentVersion: Int!
+  displayPublishedAt: DateTime
+  documentJson: String!
+  featured: Boolean!
+  id: ID!
+  interactionTargetId: ID!
+  language: String!
+  postType: NewsPostType!
+  publishedAt: DateTime
+  scheduledFor: DateTime
+  shortText: String!
+  showOnHomepage: Boolean!
+  slug: String!
+  status: NewsArticleStatus!
+  submittedAt: DateTime
+  templateDataJson: String!
+  title: String!
+  updatedAt: DateTime!
+  visibility: NewsVisibility!
+}
+
+input NewsEditorialBrowseInput {
+  page: Int
+  pageSize: Int
+  statuses: [NewsArticleStatus!]
+}
+
+type NewsEditorialDecision {
+  action: NewsEditorialAction!
+  actorId: ID!
+  articleId: ID!
+  createdAt: DateTime!
+  id: ID!
+  reason: String
+  revisionVersion: Int!
+}
+
+type NewsEditorialPage {
+  items: [NewsEditorialArticle!]!
+  page: Int!
+  pageSize: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+type NewsEditorialTransition {
+  article: NewsEditorialArticle!
+  decision: NewsEditorialDecision!
 }
 
 type NewsEngagement {
@@ -1139,6 +1243,11 @@ type ProfileWallPost {
   updatedAt: String!
 }
 
+input PublishNewsInput {
+  articleId: ID!
+  displayPublishedAt: DateTime
+}
+
 type Query {
   achievementRules: [AchievementRule!]!
   achievements: [Achievement!]!
@@ -1156,6 +1265,7 @@ type Query {
   customTitlesAdmin: [CustomTitle!]!
   deliverEditorDocument(input: PreviewEditorDocumentInput!): EditorDocumentDelivery!
   editorMedia(input: MediaLibraryInput): MediaLibraryConnection!
+  editorialNews(input: NewsEditorialBrowseInput): NewsEditorialPage!
   evaluateContentGate(id: ID!): ContentGateEvaluationModel!
   followers(pagination: UsersPageInput, userId: ID!): UsersPageModel!
   following(pagination: UsersPageInput, userId: ID!): UsersPageModel!
@@ -1174,6 +1284,7 @@ type Query {
   moderationAnnotations(commentId: ID, interactionTargetId: ID!): [ModerationAnnotation!]!
   news(input: NewsBrowseInput): NumberedNewsPage!
   newsComments(articleId: ID!, page: Int! = 1, pageSize: Int): NewsCommentsPage!
+  newsEditorialArticle(articleId: ID!): NewsEditorialArticle!
   newsNavigation(articleId: ID!): NewsNavigation!
   newsRatingVotes(articleId: ID!, page: Int! = 1, pageSize: Int! = 20): NewsRatingVotePage!
   newsSettings: NewsSettings!
@@ -1379,6 +1490,27 @@ input SaveCommentDraftInput {
   documentJson: String!
   interactionTargetId: ID!
   parentId: ID
+}
+
+input SaveNewsDraftInput {
+  articleId: ID!
+  baseVersion: Int!
+  changeSummary: String
+  coverMediaId: ID
+  documentJson: String!
+  language: String!
+  postType: NewsPostType!
+  shortText: String!
+  slug: String!
+  templateDataJson: String
+  title: String!
+  visibility: NewsVisibility!
+}
+
+input ScheduleNewsInput {
+  articleId: ID!
+  displayPublishedAt: DateTime
+  scheduledFor: DateTime!
 }
 
 input SetReactionInput {

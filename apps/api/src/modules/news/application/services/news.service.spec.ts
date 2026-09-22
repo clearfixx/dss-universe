@@ -32,6 +32,7 @@ describe('NewsService', () => {
       createDraft,
       findById: jest.fn(),
       findBySlug: jest.fn().mockResolvedValue(null),
+      listEditorial: jest.fn(),
       saveDraft,
     };
     editor = {

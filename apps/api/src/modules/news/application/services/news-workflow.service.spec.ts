@@ -40,6 +40,7 @@ describe('NewsWorkflowService', () => {
       createDraft: jest.fn(),
       findById: jest.fn().mockResolvedValue(draft),
       findBySlug: jest.fn(),
+      listEditorial: jest.fn(),
       saveDraft: jest.fn(),
     };
     transition = jest

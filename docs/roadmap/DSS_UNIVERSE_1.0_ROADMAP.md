@@ -1103,7 +1103,7 @@ Delivered Activity Feed completion:
 
 # Phase 10 — News Platform
 
-**Status: active.** Packages 10.0–10.12 establish the frozen product contracts,
+**Status: active.** Packages 10.0–10.13 establish the frozen product contracts,
 canonical News draft aggregate, hierarchical taxonomy, typed field definitions,
 optimistic News-owned revision saves, validated post templates and the audited
 author-to-review-to-publication workflow. They also deliver scheduled
@@ -1113,6 +1113,8 @@ Reddit-like comment trees, unique views and per-channel sharing counters are now
 connected to the shared Interaction Platform.
 Interaction Target ownership and transactional Audit/Outbox
 evidence remain mandatory at every accepted write.
+Package 10.13 exposes the authenticated author and staff editorial GraphQL
+surface while preserving service-owned workflow and permission checks.
 
 ## Scope
 
