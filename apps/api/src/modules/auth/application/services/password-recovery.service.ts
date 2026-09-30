@@ -11,6 +11,8 @@ import { REDIS_CONNECTION } from '@api/core/cache';
 import { QueueRegistryService } from '@api/core/queue/services/queue-registry.service';
 import { PrismaPasswordResetRepository } from '../../infrastructure/repositories/prisma-password-reset.repository';
 import { PasswordHashService } from './password-hash.service';
+import { PrismaService } from '@api/core/database';
+import { SecurityAlertService } from './security-alert.service';
 
 const RATE_LIMIT = `local n = redis.call('INCR', KEYS[1]); if n == 1 then redis.call('EXPIRE', KEYS[1], 900) end; return n`;
 
@@ -22,6 +24,8 @@ export class PasswordRecoveryService {
     private readonly queues: QueueRegistryService,
     private readonly resets: PrismaPasswordResetRepository,
     private readonly passwords: PasswordHashService,
+    private readonly prisma: PrismaService,
+    private readonly securityAlerts: SecurityAlertService,
   ) {}
 
   async request(email: string, ip: string): Promise<{ success: boolean }> {
@@ -81,14 +85,22 @@ export class PasswordRecoveryService {
         'Too many attempts. Please try again later.',
       );
     const passwordHash = await this.passwords.hash(password);
-    const consumed = await this.resets.consume(
-      createHash('sha256').update(token).digest('hex'),
-      passwordHash,
-    );
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const candidate = await this.prisma.passwordReset.findUnique({
+      where: { tokenHash },
+      select: { user: { select: { email: true } } },
+    });
+    const consumed = await this.resets.consume(tokenHash, passwordHash);
     if (!consumed)
       throw new BadRequestException(
         'This reset link is invalid or expired. Request a new link.',
       );
+    if (candidate) {
+      await this.securityAlerts.notify(
+        'PASSWORD_RECOVERED',
+        candidate.user.email,
+      );
+    }
     return { success: true };
   }
 

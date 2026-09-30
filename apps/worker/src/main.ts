@@ -5,6 +5,7 @@ import pino from "pino";
 import nodemailer from "nodemailer";
 import { createPasswordRecoveryProcessor } from "./password-recovery.processor.js";
 import { createEmailVerificationProcessor } from "./email-verification.processor.js";
+import { createSecurityEmailAlertProcessor } from "./security-email-alert.processor.js";
 import {
   DSS_QUEUE_NAMES,
   type DeadLetterIntegrationEventJob,
@@ -12,6 +13,7 @@ import {
   type MediaProcessingJob,
   type PasswordRecoveryJob,
   type EmailVerificationJob,
+  type SecurityEmailAlertJob,
 } from "@dss/jobs";
 import { DeadLetterService } from "./dead-letter.service.js";
 import { createIntegrationEventProcessor } from "./integration-event.processor.js";
@@ -32,6 +34,7 @@ const logger = pino({
   level: process.env.LOG_LEVEL ?? "info",
 });
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const mailConfigured = Boolean(process.env.MAIL_HOST && process.env.MAIL_FROM);
 const recoveryConfigured = Boolean(
   process.env.MAIL_HOST &&
   process.env.MAIL_FROM &&
@@ -42,7 +45,7 @@ const verificationConfigured = Boolean(
   process.env.MAIL_FROM &&
   process.env.EMAIL_VERIFICATION_WEB_URL,
 );
-const mailTransport = recoveryConfigured || verificationConfigured
+const mailTransport = mailConfigured
   ? nodemailer.createTransport({
       host: process.env.MAIL_HOST,
       port: Number(process.env.MAIL_PORT ?? 587),
@@ -60,29 +63,44 @@ const mailTransport = recoveryConfigured || verificationConfigured
       debug: false,
     })
   : null;
-const recoveryWorker = mailTransport
-  ? new Worker<PasswordRecoveryJob>(
-      DSS_QUEUE_NAMES.PASSWORD_RECOVERY,
-      createPasswordRecoveryProcessor(
-        pool,
-        (mail) =>
-          mailTransport.sendMail({ ...mail, from: process.env.MAIL_FROM }),
-        process.env.PASSWORD_RESET_WEB_URL!,
+const recoveryWorker =
+  mailTransport && recoveryConfigured
+    ? new Worker<PasswordRecoveryJob>(
+        DSS_QUEUE_NAMES.PASSWORD_RECOVERY,
+        createPasswordRecoveryProcessor(
+          pool,
+          (mail) =>
+            mailTransport.sendMail({ ...mail, from: process.env.MAIL_FROM }),
+          process.env.PASSWORD_RESET_WEB_URL!,
+        ),
+        { connection, concurrency: 1 },
+      )
+    : null;
+const verificationWorker =
+  mailTransport && verificationConfigured
+    ? new Worker<EmailVerificationJob>(
+        DSS_QUEUE_NAMES.EMAIL_VERIFICATION,
+        createEmailVerificationProcessor(
+          pool,
+          (mail) =>
+            mailTransport.sendMail({ ...mail, from: process.env.MAIL_FROM }),
+          process.env.EMAIL_VERIFICATION_WEB_URL!,
+        ),
+        { connection, concurrency: 1 },
+      )
+    : null;
+const securityAlertWorker = mailTransport
+  ? new Worker<SecurityEmailAlertJob>(
+      DSS_QUEUE_NAMES.SECURITY_EMAIL_ALERTS,
+      createSecurityEmailAlertProcessor((mail) =>
+        mailTransport.sendMail({ ...mail, from: process.env.MAIL_FROM }),
       ),
-      { connection, concurrency: 1 },
+      { connection, concurrency: 2 },
     )
   : null;
-const verificationWorker = mailTransport && verificationConfigured
-  ? new Worker<EmailVerificationJob>(
-      DSS_QUEUE_NAMES.EMAIL_VERIFICATION,
-      createEmailVerificationProcessor(
-        pool,
-        (mail) => mailTransport.sendMail({ ...mail, from: process.env.MAIL_FROM }),
-        process.env.EMAIL_VERIFICATION_WEB_URL!,
-      ),
-      { connection, concurrency: 1 },
-    )
-  : null;
+securityAlertWorker?.on("failed", (job) => {
+  logger.error({ jobId: job?.id }, "Security email alert delivery failed");
+});
 verificationWorker?.on("failed", (job) => {
   logger.error({ jobId: job?.id }, "Email verification delivery failed");
 });
@@ -171,6 +189,7 @@ async function shutdown(): Promise<void> {
   await mediaWorker.close();
   await recoveryWorker?.close();
   await verificationWorker?.close();
+  await securityAlertWorker?.close();
   mailTransport?.close();
   await deadLetterQueue.close();
   await pool.end();

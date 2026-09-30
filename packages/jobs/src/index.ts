@@ -4,6 +4,7 @@ export const DSS_QUEUE_NAMES = {
   MEDIA_PROCESSING: "dss.media-processing",
   PASSWORD_RECOVERY: "dss.password-recovery",
   EMAIL_VERIFICATION: "dss.email-verification",
+  SECURITY_EMAIL_ALERTS: "dss.security-email-alerts",
 } as const;
 
 /** Contains no password or reset credential. Removed after processing. */
@@ -13,6 +14,17 @@ export type EmailVerificationJob = {
   userId: string;
   email: string;
   requestedAt: string;
+};
+export type SecurityAlertKind =
+  | "ACCOUNT_LOCKED"
+  | "PASSWORD_CHANGED"
+  | "PASSWORD_RECOVERED"
+  | "EMAIL_CHANGED";
+export type SecurityEmailAlertJob = {
+  eventId: string;
+  kind: SecurityAlertKind;
+  email: string;
+  occurredAt: string;
 };
 export const DSS_JOB_NAMES = {
   DISPATCH_INTEGRATION_EVENT: "dispatch-integration-event.v1",

@@ -7,6 +7,7 @@ import { PrismaService } from '@api/core/database';
 import { AuditWriterService } from '@api/core/audit';
 import type { AuthClient } from '../types/auth-client.type';
 import { LoginRateLimitedException } from '../../domain/exceptions/login-rate-limited.exception';
+import { SecurityAlertService } from './security-alert.service';
 
 const RECORD_FAILURE = `
 local failures = redis.call('INCR', KEYS[1])
@@ -28,6 +29,7 @@ export class LoginAbuseProtectionService {
     private readonly config: ConfigService,
     private readonly prisma: PrismaService,
     private readonly audit: AuditWriterService,
+    private readonly securityAlerts: SecurityAlertService,
   ) {}
 
   async assertAllowed(
@@ -74,11 +76,16 @@ export class LoginAbuseProtectionService {
     ]);
     if (!account) return;
 
+    let lockedEmail: string | undefined;
     await this.prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM users WHERE id = ${account.id} FOR UPDATE`;
       const current = await tx.user.findUnique({
         where: { id: account.id },
-        select: { loginFailedAttempts: true, loginLockedUntil: true },
+        select: {
+          email: true,
+          loginFailedAttempts: true,
+          loginLockedUntil: true,
+        },
       });
       if (!current) return;
       const attempts = current.loginFailedAttempts + 1;
@@ -102,8 +109,12 @@ export class LoginAbuseProtectionService {
           userAgent: client.userAgent,
           metadata: { attempts, lockMinutes: lockMs / 60_000 },
         });
+        lockedEmail = current.email;
       }
     });
+    if (lockedEmail) {
+      await this.securityAlerts.notify('ACCOUNT_LOCKED', lockedEmail);
+    }
   }
 
   async recordSuccess(

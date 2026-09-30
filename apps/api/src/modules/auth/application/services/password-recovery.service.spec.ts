@@ -10,6 +10,8 @@ describe('PasswordRecoveryService', () => {
   const add = jest.fn();
   const consume = jest.fn<Promise<boolean>, [string, string]>();
   const hash = jest.fn();
+  const findUnique = jest.fn();
+  const notify = jest.fn();
   const service = new PasswordRecoveryService(
     { eval: evalRedis } as unknown as IORedis,
     new ConfigService({
@@ -21,6 +23,8 @@ describe('PasswordRecoveryService', () => {
     { passwordRecovery: { add } } as unknown as QueueRegistryService,
     { consume } as unknown as PrismaPasswordResetRepository,
     { hash } as unknown as PasswordHashService,
+    { passwordReset: { findUnique } } as never,
+    { notify } as never,
   );
   beforeEach(() => {
     jest.clearAllMocks();
@@ -28,6 +32,8 @@ describe('PasswordRecoveryService', () => {
     add.mockResolvedValue({});
     consume.mockResolvedValue(true);
     hash.mockResolvedValue('bcrypt-hash');
+    findUnique.mockResolvedValue({ user: { email: 'dev@example.test' } });
+    notify.mockResolvedValue(undefined);
   });
 
   it('queues all valid addresses without querying accounts and returns the same response', async () => {
@@ -66,6 +72,10 @@ describe('PasswordRecoveryService', () => {
       'bcrypt-hash',
     );
     expect(consume.mock.calls[0][0]).not.toBe(token);
+    expect(notify).toHaveBeenCalledWith(
+      'PASSWORD_RECOVERED',
+      'dev@example.test',
+    );
   });
   it('rejects expired or already consumed credentials', async () => {
     consume.mockResolvedValue(false);

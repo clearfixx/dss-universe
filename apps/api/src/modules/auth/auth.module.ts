@@ -52,6 +52,7 @@ import { EmailVerificationService } from './application/services/email-verificat
 import { PrismaEmailVerificationRepository } from './infrastructure/repositories/prisma-email-verification.repository';
 import { EmailVerificationResolver } from './presentation/graphql/resolvers/email-verification.resolver';
 import { LoginAbuseProtectionService } from './application/services/login-abuse-protection.service';
+import { SecurityAlertService } from './application/services/security-alert.service';
 
 @Module({
   imports: [UsersModule, AuthCoreModule, AuthorizationModule],
@@ -64,6 +65,7 @@ import { LoginAbuseProtectionService } from './application/services/login-abuse-
     PrismaEmailVerificationRepository,
     EmailVerificationResolver,
     LoginAbuseProtectionService,
+    SecurityAlertService,
     AuthService,
     PasswordHashService,
     TokenService,

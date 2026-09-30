@@ -53,6 +53,7 @@ import { AuthSessionService } from './auth-session.service';
 import type { AuthClient } from '../types/auth-client.type';
 import { EmailVerificationService } from './email-verification.service';
 import { LoginAbuseProtectionService } from './login-abuse-protection.service';
+import { SecurityAlertService } from './security-alert.service';
 
 const DUMMY_PASSWORD_HASH =
   '$2b$12$C6UzMDM.H6dfI/f/IKcEe.4vA0Z8F7z7G1V1K2N1g1qjQm7u8Yw6K';
@@ -67,6 +68,7 @@ export class AuthService {
     private readonly sessions: AuthSessionService,
     private readonly emailVerification: EmailVerificationService,
     private readonly loginProtection: LoginAbuseProtectionService,
+    private readonly securityAlerts: SecurityAlertService,
   ) {}
 
   async register(dto: RegisterDto, client: AuthClient = {}) {
@@ -211,6 +213,7 @@ export class AuthService {
       throw new EmailAlreadyExistsException();
     }
     await this.usersRepository.changeEmail(userId, normalizedEmail);
+    await this.securityAlerts.notify('EMAIL_CHANGED', user.email);
     return { success: true };
   }
 
@@ -219,9 +222,13 @@ export class AuthService {
     currentPassword: string,
     newPassword: string,
   ) {
-    await this.requireActiveUserWithPassword(userId, currentPassword);
+    const user = await this.requireActiveUserWithPassword(
+      userId,
+      currentPassword,
+    );
     const passwordHash = await this.passwordHashService.hash(newPassword);
     await this.usersRepository.changePasswordHash(userId, passwordHash);
+    await this.securityAlerts.notify('PASSWORD_CHANGED', user.email);
     return { success: true };
   }
 

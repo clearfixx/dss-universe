@@ -23,6 +23,7 @@ import type { TokenService } from './token.service';
 import type { AuthSessionService } from './auth-session.service';
 import type { EmailVerificationService } from './email-verification.service';
 import type { LoginAbuseProtectionService } from './login-abuse-protection.service';
+import type { SecurityAlertService } from './security-alert.service';
 
 const user: UserRecord = {
   id: 'user-1',
@@ -81,6 +82,9 @@ describe('AuthService', () => {
     recordFailure: jest.fn(),
     recordSuccess: jest.fn(),
   } as unknown as jest.Mocked<LoginAbuseProtectionService>;
+  const securityAlerts = {
+    notify: jest.fn(),
+  } as unknown as jest.Mocked<SecurityAlertService>;
   const service = new AuthService(
     usersRepository,
     passwordHashService,
@@ -88,6 +92,7 @@ describe('AuthService', () => {
     sessions,
     emailVerification,
     loginProtection,
+    securityAlerts,
   );
 
   beforeEach(() => {

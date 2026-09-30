@@ -41,11 +41,13 @@ describe('LoginAbuseProtectionService', () => {
     ),
   };
   const audit = { append: jest.fn() };
+  const securityAlerts = { notify: jest.fn() };
   const service = new LoginAbuseProtectionService(
     redis as never,
     config as never,
     prisma as never,
     audit as never,
+    securityAlerts as never,
   );
 
   beforeEach(() => {
@@ -62,6 +64,7 @@ describe('LoginAbuseProtectionService', () => {
 
   it('creates a durable account lock on the configured failed attempt', async () => {
     tx.user.findUnique.mockResolvedValue({
+      email: 'astro@dss.test',
       loginFailedAttempts: 4,
       loginLockedUntil: null,
     });
@@ -83,6 +86,10 @@ describe('LoginAbuseProtectionService', () => {
         action: 'auth.login.locked',
         result: 'DENIED',
       }),
+    );
+    expect(securityAlerts.notify).toHaveBeenCalledWith(
+      'ACCOUNT_LOCKED',
+      expect.any(String),
     );
     expect(JSON.stringify(redis.eval.mock.calls)).not.toContain(
       'astro@dss.test',
