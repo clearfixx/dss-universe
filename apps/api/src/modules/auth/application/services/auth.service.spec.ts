@@ -21,6 +21,8 @@ import { AuthService } from './auth.service';
 import type { PasswordHashService } from './password-hash.service';
 import type { TokenService } from './token.service';
 import type { AuthSessionService } from './auth-session.service';
+import type { EmailVerificationService } from './email-verification.service';
+import type { LoginAbuseProtectionService } from './login-abuse-protection.service';
 
 const user: UserRecord = {
   id: 'user-1',
@@ -71,11 +73,21 @@ describe('AuthService', () => {
     list: jest.fn(),
     revokeOthers: jest.fn(),
   } as unknown as jest.Mocked<AuthSessionService>;
+  const emailVerification = {
+    requestAfterRegistration: jest.fn(),
+  } as unknown as jest.Mocked<EmailVerificationService>;
+  const loginProtection = {
+    assertAllowed: jest.fn(),
+    recordFailure: jest.fn(),
+    recordSuccess: jest.fn(),
+  } as unknown as jest.Mocked<LoginAbuseProtectionService>;
   const service = new AuthService(
     usersRepository,
     passwordHashService,
     tokenService,
     sessions,
+    emailVerification,
+    loginProtection,
   );
 
   beforeEach(() => {
@@ -186,7 +198,16 @@ describe('AuthService', () => {
     await expect(
       service.login({ email: user.email, password: 'correct-password' }),
     ).rejects.toBeInstanceOf(InvalidCredentialsException);
-    expect(passwordHashService.compare.mock.calls).toHaveLength(0);
+    expect(passwordHashService.compare.mock.calls).toContainEqual([
+      'correct-password',
+      user.passwordHash,
+    ]);
+    expect(loginProtection.recordFailure.mock.calls).toContainEqual([
+      user.email,
+      undefined,
+      expect.objectContaining({ id: user.id }),
+      {},
+    ]);
   });
 
   it('normalizes and changes email after credential confirmation', async () => {

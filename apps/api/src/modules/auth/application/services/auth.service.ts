@@ -51,6 +51,11 @@ import { PasswordHashService } from './password-hash.service';
 import { TokenService } from './token.service';
 import { AuthSessionService } from './auth-session.service';
 import type { AuthClient } from '../types/auth-client.type';
+import { EmailVerificationService } from './email-verification.service';
+import { LoginAbuseProtectionService } from './login-abuse-protection.service';
+
+const DUMMY_PASSWORD_HASH =
+  '$2b$12$C6UzMDM.H6dfI/f/IKcEe.4vA0Z8F7z7G1V1K2N1g1qjQm7u8Yw6K';
 
 @Injectable()
 export class AuthService {
@@ -60,6 +65,8 @@ export class AuthService {
     private readonly passwordHashService: PasswordHashService,
     private readonly tokenService: TokenService,
     private readonly sessions: AuthSessionService,
+    private readonly emailVerification: EmailVerificationService,
+    private readonly loginProtection: LoginAbuseProtectionService,
   ) {}
 
   async register(dto: RegisterDto, client: AuthClient = {}) {
@@ -79,27 +86,30 @@ export class AuthService {
       passwordHash,
     });
 
-    return this.issueAuthResponse(user.id, client);
+    const response = await this.issueAuthResponse(user.id, client);
+    await this.emailVerification.requestAfterRegistration(user.id, user.email);
+    return response;
   }
 
   async login(dto: LoginDto, client: AuthClient = {}) {
-    const user = await this.usersRepository.findByEmail(
-      this.normalizeEmail(dto.email),
-    );
-
-    if (!user || user.status !== UserStatus.ACTIVE) {
-      throw new InvalidCredentialsException();
-    }
-
+    const email = this.normalizeEmail(dto.email);
+    await this.loginProtection.assertAllowed(email, client.ipAddress);
+    const user = await this.usersRepository.findByEmail(email);
+    await this.loginProtection.assertAllowed(email, client.ipAddress, user);
     const isPasswordValid = await this.passwordHashService.compare(
       dto.password,
-      user.passwordHash,
+      user?.passwordHash ?? DUMMY_PASSWORD_HASH,
     );
-
-    if (!isPasswordValid) {
+    if (!user || user.status !== UserStatus.ACTIVE || !isPasswordValid) {
+      await this.loginProtection.recordFailure(
+        email,
+        client.ipAddress,
+        user,
+        client,
+      );
       throw new InvalidCredentialsException();
     }
-
+    await this.loginProtection.recordSuccess(email, user, client);
     return this.issueAuthResponse(user.id, client);
   }
 
@@ -165,16 +175,24 @@ export class AuthService {
   }
 
   async reactivateAccount(dto: LoginDto, client: AuthClient = {}) {
-    const user = await this.usersRepository.findByEmail(
-      this.normalizeEmail(dto.email),
+    const email = this.normalizeEmail(dto.email);
+    await this.loginProtection.assertAllowed(email, client.ipAddress);
+    const user = await this.usersRepository.findByEmail(email);
+    await this.loginProtection.assertAllowed(email, client.ipAddress, user);
+    const passwordValid = await this.passwordHashService.compare(
+      dto.password,
+      user?.passwordHash ?? DUMMY_PASSWORD_HASH,
     );
-    if (
-      !user ||
-      user.status !== UserStatus.DEACTIVATED ||
-      !(await this.passwordHashService.compare(dto.password, user.passwordHash))
-    ) {
+    if (!user || user.status !== UserStatus.DEACTIVATED || !passwordValid) {
+      await this.loginProtection.recordFailure(
+        email,
+        client.ipAddress,
+        user,
+        client,
+      );
       throw new InvalidCredentialsException();
     }
+    await this.loginProtection.recordSuccess(email, user, client);
     await this.usersRepository.reactivateAccount(user.id);
     return this.issueAuthResponse(user.id, client);
   }

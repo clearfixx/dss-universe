@@ -117,7 +117,7 @@ export class UserPresenceService {
 
   async visibleStatuses(
     userIds: string[],
-    viewerId: string,
+    viewerId?: string,
   ): Promise<Map<string, boolean>> {
     const uniqueIds = [...new Set(userIds)];
     if (uniqueIds.length === 0) return new Map();
@@ -132,7 +132,8 @@ export class UserPresenceService {
         const settings = privacy.get(userId);
         const visible =
           userId === viewerId ||
-          (settings?.profileVisibility !== 'PRIVATE' &&
+          ((settings?.profileVisibility === 'PUBLIC' ||
+            (settings?.profileVisibility === 'MEMBERS' && Boolean(viewerId))) &&
             settings?.showOnlineStatus === true);
         return [userId, visible && online.get(userId) === true];
       }),

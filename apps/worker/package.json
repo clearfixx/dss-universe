@@ -17,6 +17,7 @@
     "@dss/jobs": "workspace:*",
     "bullmq": "^5.80.6",
     "ioredis": "^5.11.1",
+    "nodemailer": "^10.0.10",
     "pg": "^8.22.0",
     "pino": "^10.3.1",
     "sharp": "^0.35.3"
@@ -25,6 +26,7 @@
     "@dss/eslint-config": "workspace:*",
     "@dss/tsconfig": "workspace:*",
     "@types/node": "^24.13.2",
+    "@types/nodemailer": "^8.0.2",
     "@types/pg": "^8.20.0",
     "@vitest/coverage-v8": "^4.0.18",
     "eslint": "^9.18.0",

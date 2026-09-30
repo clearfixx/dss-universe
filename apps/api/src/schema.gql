@@ -638,6 +638,17 @@ type LogoutResultModel {
   success: Boolean!
 }
 
+type ManagedNewsPin {
+  articleId: ID!
+  categoryId: ID
+  createdAt: DateTime!
+  expiresAt: DateTime
+  id: ID!
+  pinnedById: ID!
+  scope: NewsPinScope!
+  updatedAt: DateTime!
+}
+
 input ManualAchievementAwardInput {
   achievementId: ID!
   reason: String!
@@ -845,14 +856,17 @@ type Mutation {
   register(input: RegisterInput!): AuthPayloadModel!
   rejectQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
   removeBookmark(interactionTargetId: ID!): BookmarkMutationPayload!
-  removeNewsPin(articleId: ID!): RemoveNewsPinResult!
   removeComment(commentId: ID!, reason: String): Comment!
+  removeNewsPin(articleId: ID!): RemoveNewsPinResult!
   removeProfileWallPost(postId: ID!, reason: String): ProfileWallPost!
   removeViewerAvatar: Viewer!
   removeViewerCover: Viewer!
   reportContent(input: ReportContentInput!): ContentReport!
+  requestEmailVerification: LogoutResultModel!
   requestNewsChanges(input: NewsDecisionInput!): NewsEditorialTransition!
+  requestPasswordRecovery(input: RequestPasswordRecoveryInput!): LogoutResultModel!
   rescanQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
+  resetPassword(input: ResetPasswordInput!): LogoutResultModel!
   retryFailedMedia(mediaId: ID!): MediaLibraryItem!
   reverseCommunityPoints(input: ReverseCommunityPointsInput!): CommunityPointEntry!
   reverseReputation(input: ReverseReputationInput!): ReputationEntry!
@@ -871,8 +885,8 @@ type Mutation {
   saveNewsDraft(input: SaveNewsDraftInput!): NewsEditorialArticle!
   scheduleNews(input: ScheduleNewsInput!): NewsEditorialTransition!
   selectCustomTitle(grantId: ID!): UserTitleGrant!
-  setReaction(input: SetReactionInput!): SetReactionPayload!
   setNewsPin(input: SetNewsPinInput!): ManagedNewsPin!
+  setReaction(input: SetReactionInput!): SetReactionPayload!
   setViewerAvatar(mediaId: ID!): Viewer!
   setViewerCover(mediaId: ID!): Viewer!
   submitNewsForReview(articleId: ID!): NewsEditorialTransition!
@@ -888,17 +902,7 @@ type Mutation {
   updateViewerPrivacy(input: UpdateUserPrivacyInput!): UserPrivacySettings!
   updateViewerProfile(input: UpdateViewerProfileInput!): Viewer!
   updateViewerSocialLinks(input: UpdateViewerSocialLinksInput!): [UserSocialLink!]!
-}
-
-type ManagedNewsPin {
-  articleId: ID!
-  categoryId: ID
-  createdAt: DateTime!
-  expiresAt: DateTime
-  id: ID!
-  pinnedById: ID!
-  scope: NewsPinScope!
-  updatedAt: DateTime!
+  verifyEmail(input: VerifyEmailInput!): LogoutResultModel!
 }
 
 enum NewsArticleStatus {
@@ -1203,15 +1207,11 @@ type NotificationPreferences {
 
 type NumberedNewsPage {
   items: [ShortNews!]!
-  pinnedItems: [ShortNews!]!
   page: Int!
   pageSize: Int!
+  pinnedItems: [ShortNews!]!
   total: Int!
   totalPages: Int!
-}
-
-type RemoveNewsPinResult {
-  success: Boolean!
 }
 
 type PresenceSummary {
@@ -1392,6 +1392,10 @@ input RegisterInput {
   username: String!
 }
 
+type RemoveNewsPinResult {
+  success: Boolean!
+}
+
 input ReportContentInput {
   category: ContentReportCategory!
   commentId: ID
@@ -1446,6 +1450,15 @@ type ReputationReversal {
   createdAt: DateTime!
   id: ID!
   reason: String!
+}
+
+input RequestPasswordRecoveryInput {
+  email: String!
+}
+
+input ResetPasswordInput {
+  password: String!
+  token: String!
 }
 
 input ReverseCommunityPointsInput {
@@ -1543,6 +1556,13 @@ input ScheduleNewsInput {
   scheduledFor: DateTime!
 }
 
+input SetNewsPinInput {
+  articleId: ID!
+  categoryId: ID
+  expiresAt: DateTime
+  scope: NewsPinScope!
+}
+
 input SetReactionInput {
   interactionTargetId: ID!
   kind: ReactionKind!
@@ -1587,13 +1607,6 @@ type ShortNews {
   tags: [NewsTagSummary!]!
   title: String!
   visibility: NewsVisibility!
-}
-
-input SetNewsPinInput {
-  articleId: ID!
-  categoryId: ID
-  expiresAt: DateTime
-  scope: NewsPinScope!
 }
 
 input UpdateCommunityPointRuleInput {
@@ -1761,6 +1774,10 @@ type UsersPageModel {
   page: Int!
   total: Int!
   totalPages: Int!
+}
+
+input VerifyEmailInput {
+  token: String!
 }
 
 type Viewer {

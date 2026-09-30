@@ -31,6 +31,9 @@
  */
 
 import { Module } from '@nestjs/common';
+import { PasswordRecoveryService } from './application/services/password-recovery.service';
+import { PrismaPasswordResetRepository } from './infrastructure/repositories/prisma-password-reset.repository';
+import { PasswordRecoveryResolver } from './presentation/graphql/resolvers/password-recovery.resolver';
 
 import { AuthCoreModule } from '@api/core/auth';
 import { AuthorizationModule } from '@api/core/authorization';
@@ -45,11 +48,22 @@ import { AuthResolver } from './presentation/graphql/resolvers/auth.resolver';
 import { AuthSessionService } from './application/services/auth-session.service';
 import { AUTH_SESSION_REPOSITORY } from './domain/repositories/auth-session.repository.interface';
 import { PrismaAuthSessionRepository } from './infrastructure/repositories/prisma-auth-session.repository';
+import { EmailVerificationService } from './application/services/email-verification.service';
+import { PrismaEmailVerificationRepository } from './infrastructure/repositories/prisma-email-verification.repository';
+import { EmailVerificationResolver } from './presentation/graphql/resolvers/email-verification.resolver';
+import { LoginAbuseProtectionService } from './application/services/login-abuse-protection.service';
 
 @Module({
   imports: [UsersModule, AuthCoreModule, AuthorizationModule],
   controllers: [AuthController],
   providers: [
+    PasswordRecoveryService,
+    PrismaPasswordResetRepository,
+    PasswordRecoveryResolver,
+    EmailVerificationService,
+    PrismaEmailVerificationRepository,
+    EmailVerificationResolver,
+    LoginAbuseProtectionService,
     AuthService,
     PasswordHashService,
     TokenService,

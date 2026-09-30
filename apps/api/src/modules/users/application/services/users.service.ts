@@ -190,7 +190,7 @@ export class UsersService {
 
   async getPublicByUsername(
     username: string,
-    viewerId: string,
+    viewerId?: string,
   ): Promise<UserResponseDto> {
     const user = await this.usersRepository.findPublicByUsername(username);
     return this.toPublicProfile(user, viewerId);
@@ -203,12 +203,14 @@ export class UsersService {
 
   private async toPublicProfile(
     user: UserRecord | null,
-    viewerId: string,
+    viewerId?: string,
   ): Promise<UserResponseDto> {
     const response = this.toResponseDto(this.requireUser(user));
     const visibility = await this.privacy.visibilityFor(response.id, viewerId);
     const extendedProfileVisible =
-      response.id === viewerId || visibility.profileVisibility !== 'PRIVATE';
+      response.id === viewerId ||
+      (visibility.profileVisibility === 'PUBLIC' && !viewerId) ||
+      (visibility.profileVisibility !== 'PRIVATE' && Boolean(viewerId));
     return {
       ...response,
       bio: extendedProfileVisible ? response.bio : null,

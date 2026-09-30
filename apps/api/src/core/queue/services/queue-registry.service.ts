@@ -1,4 +1,9 @@
-import { Inject, Injectable, type OnApplicationShutdown } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  type BeforeApplicationShutdown,
+  type OnModuleInit,
+} from '@nestjs/common';
 import { Queue } from 'bullmq';
 import type IORedis from 'ioredis';
 import {
@@ -6,15 +11,27 @@ import {
   type DeadLetterIntegrationEventJob,
   type IntegrationEventJob,
   type MediaProcessingJob,
+  type PasswordRecoveryJob,
+  type EmailVerificationJob,
 } from '@dss/jobs';
 import { REDIS_CONNECTION } from '../../cache';
 
 @Injectable()
-export class QueueRegistryService implements OnApplicationShutdown {
+export class QueueRegistryService
+  implements OnModuleInit, BeforeApplicationShutdown
+{
   readonly integrationEvents: Queue<IntegrationEventJob>;
   readonly integrationEventDeadLetters: Queue<DeadLetterIntegrationEventJob>;
   readonly mediaProcessing: Queue<MediaProcessingJob>;
+  readonly passwordRecovery: Queue<PasswordRecoveryJob>;
+  readonly emailVerification: Queue<EmailVerificationJob>;
   constructor(@Inject(REDIS_CONNECTION) connection: IORedis) {
+    this.emailVerification = new Queue(DSS_QUEUE_NAMES.EMAIL_VERIFICATION, {
+      connection,
+    });
+    this.passwordRecovery = new Queue(DSS_QUEUE_NAMES.PASSWORD_RECOVERY, {
+      connection,
+    });
     this.integrationEvents = new Queue(DSS_QUEUE_NAMES.INTEGRATION_EVENTS, {
       connection,
     });
@@ -26,7 +43,18 @@ export class QueueRegistryService implements OnApplicationShutdown {
       connection,
     });
   }
-  async onApplicationShutdown(): Promise<void> {
+  async onModuleInit(): Promise<void> {
+    await Promise.all([
+      this.passwordRecovery.waitUntilReady(),
+      this.emailVerification.waitUntilReady(),
+      this.integrationEvents.waitUntilReady(),
+      this.integrationEventDeadLetters.waitUntilReady(),
+      this.mediaProcessing.waitUntilReady(),
+    ]);
+  }
+  async beforeApplicationShutdown(): Promise<void> {
+    await this.passwordRecovery.close();
+    await this.emailVerification.close();
     await this.integrationEvents.close();
     await this.integrationEventDeadLetters.close();
     await this.mediaProcessing.close();

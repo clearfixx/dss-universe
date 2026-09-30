@@ -22,6 +22,18 @@ export const validationSchema = Joi.object({
 
   JWT_ACCESS_EXPIRES_IN: Joi.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: Joi.string().default('7d'),
+  AUTH_LOGIN_FAILURE_LIMIT: Joi.number().integer().min(3).max(20).default(5),
+  AUTH_LOGIN_LOCK_MINUTES: Joi.number().integer().min(1).max(1440).default(15),
+  AUTH_LOGIN_IP_FAILURE_LIMIT: Joi.number()
+    .integer()
+    .min(5)
+    .max(500)
+    .default(30),
+  AUTH_LOGIN_WINDOW_MINUTES: Joi.number()
+    .integer()
+    .min(1)
+    .max(1440)
+    .default(15),
 
   REDIS_HOST: Joi.string().default('localhost'),
   REDIS_PORT: Joi.number().default(6379),
@@ -46,6 +58,9 @@ export const validationSchema = Joi.object({
     .default(30_000),
 
   MAIL_HOST: Joi.string().allow('').optional(),
+  MAIL_FROM: Joi.string().email().allow('').optional(),
+  PASSWORD_RESET_WEB_URL: Joi.string().uri().optional(),
+  EMAIL_VERIFICATION_WEB_URL: Joi.string().uri().optional(),
   MAIL_PORT: Joi.number().optional(),
   MAIL_USER: Joi.string().allow('').optional(),
   MAIL_PASSWORD: Joi.string().allow('').optional(),

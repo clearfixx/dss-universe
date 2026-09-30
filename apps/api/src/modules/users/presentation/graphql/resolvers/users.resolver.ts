@@ -12,7 +12,7 @@
  * ===============================================================
  */
 
-import { UseGuards } from '@nestjs/common';
+import { ExecutionContext, Injectable, UseGuards } from '@nestjs/common';
 import {
   Args,
   ID,
@@ -22,7 +22,9 @@ import {
   Query,
   ResolveField,
   Resolver,
+  GqlExecutionContext,
 } from '@nestjs/graphql';
+import { AuthGuard } from '@nestjs/passport';
 
 import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
 import {
@@ -71,6 +73,19 @@ import { ProfileCompletionService } from '../../../application/services/profile-
 import { ProfileCompletionModel } from '../models/profile-completion.model';
 import { UserActivityFeedService } from '../../../application/services/user-activity-feed.service';
 import { UserActivityPageModel } from '../models/user-activity.model';
+
+@Injectable()
+class OptionalUsersJwtGuard extends AuthGuard('jwt') {
+  getRequest(context: ExecutionContext) {
+    return GqlExecutionContext.create(context).getContext<{
+      req: { user?: AuthenticatedUser };
+    }>().req;
+  }
+
+  handleRequest<TUser>(error: unknown, user: TUser): TUser | undefined {
+    return error ? undefined : user;
+  }
+}
 
 @Resolver(() => UserModel)
 export class UsersResolver {
@@ -137,9 +152,9 @@ export class UsersResolver {
   @ResolveField('socialLinks', () => [UserSocialLinkModel])
   socialLinksForUser(
     @Parent() user: UserModel,
-    @AuthUser() authenticated: AuthenticatedUser,
+    @AuthUser() authenticated?: AuthenticatedUser,
   ): Promise<UserSocialLinkModel[]> {
-    return this.visibleSocialLinks(user.id, authenticated.id);
+    return this.visibleSocialLinks(user.id, authenticated?.id);
   }
 
   @ResolveField('followerCount', () => Int)
@@ -155,18 +170,20 @@ export class UsersResolver {
   @ResolveField('isFollowedByViewer', () => Boolean)
   isFollowedByViewer(
     @Parent() user: UserModel,
-    @AuthUser() authenticated: AuthenticatedUser,
+    @AuthUser() authenticated?: AuthenticatedUser,
   ): Promise<boolean> {
-    return this.graph.isFollowing(authenticated.id, user.id);
+    return authenticated
+      ? this.graph.isFollowing(authenticated.id, user.id)
+      : Promise.resolve(false);
   }
 
   @ResolveField('isOnline', () => Boolean)
   async isOnline(
     @Parent() user: UserModel,
-    @AuthUser() authenticated: AuthenticatedUser,
+    @AuthUser() authenticated?: AuthenticatedUser,
   ): Promise<boolean> {
     return (
-      (await this.presence.visibleStatuses([user.id], authenticated.id)).get(
+      (await this.presence.visibleStatuses([user.id], authenticated?.id)).get(
         user.id,
       ) ?? false
     );
@@ -267,14 +284,14 @@ export class UsersResolver {
   }
 
   @Query(() => UserModel)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(OptionalUsersJwtGuard)
   async userByUsername(
     @Args('username') username: string,
-    @AuthUser() authenticated: AuthenticatedUser,
+    @AuthUser() authenticated?: AuthenticatedUser,
   ) {
     const user = await this.usersService.getPublicByUsername(
       username,
-      authenticated.id,
+      authenticated?.id,
     );
 
     return UserGraphqlMapper.fromResponse(user);
@@ -423,7 +440,7 @@ export class UsersResolver {
 
   private async visibleSocialLinks(
     userId: string,
-    viewerId: string,
+    viewerId?: string,
   ): Promise<UserSocialLinkModel[]> {
     const visibility = await this.privacy.visibilityFor(userId, viewerId);
     return visibility.showSocialLinks ? this.socialLinks.load(userId) : [];

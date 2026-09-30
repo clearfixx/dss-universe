@@ -82,7 +82,7 @@ export class UserPrivacyService {
 
   async visibilityFor(
     userId: string,
-    viewerId: string,
+    viewerId?: string,
   ): Promise<UserPrivacySettings> {
     const settings = await this.get(userId);
     if (userId === viewerId) {
@@ -98,7 +98,10 @@ export class UserPrivacyService {
         allowWallPosts: true,
       };
     }
-    if (settings.profileVisibility === 'PRIVATE') {
+    if (
+      settings.profileVisibility === 'PRIVATE' ||
+      (settings.profileVisibility === 'MEMBERS' && !viewerId)
+    ) {
       return {
         ...settings,
         showLocation: false,

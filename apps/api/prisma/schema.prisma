@@ -258,6 +258,8 @@ model User {
   status        UserStatus @default(ACTIVE)
   deactivatedAt DateTime?
   authVersion   Int        @default(0)
+  loginFailedAttempts Int   @default(0)
+  loginLockedUntil    DateTime?
 
   media               Media[]              @relation("MediaOwner")
   avatarMedia         Media?               @relation("UserAvatar", fields: [avatarMediaId], references: [id], onDelete: SetNull)
@@ -267,6 +269,8 @@ model User {
   roles                   UserRole[]
   directPermissions       UserPermission[]
   sessions                Session[]
+  passwordReset           PasswordReset?
+  emailVerification       EmailVerification?
   socialLinks             UserSocialLink[]
   privacySettings         UserPrivacySettings?
   followers               UserFollow[]                 @relation("UserFollowers")
@@ -1165,6 +1169,27 @@ model RolePermission {
 
   @@id([roleId, permissionId])
   @@map("role_permissions")
+}
+
+model PasswordReset {
+  userId      String   @id
+  tokenHash   String   @unique
+  authVersion Int
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_resets")
+}
+
+model EmailVerification {
+  userId    String   @id
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("email_verifications")
 }
 
 model Session {

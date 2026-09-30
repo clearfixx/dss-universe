@@ -34,6 +34,8 @@ export interface UserRecord {
   status: UserStatus;
   deactivatedAt: Date | null;
   authVersion: number;
+  loginFailedAttempts?: number;
+  loginLockedUntil?: Date | null;
   refreshTokenHash: string | null;
   emailVerifiedAt: Date | null;
   lastSeenAt: Date | null;

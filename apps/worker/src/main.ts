@@ -2,11 +2,16 @@ import { Queue, Worker } from "bullmq";
 import { Redis } from "ioredis";
 import { Pool } from "pg";
 import pino from "pino";
+import nodemailer from "nodemailer";
+import { createPasswordRecoveryProcessor } from "./password-recovery.processor.js";
+import { createEmailVerificationProcessor } from "./email-verification.processor.js";
 import {
   DSS_QUEUE_NAMES,
   type DeadLetterIntegrationEventJob,
   type IntegrationEventJob,
   type MediaProcessingJob,
+  type PasswordRecoveryJob,
+  type EmailVerificationJob,
 } from "@dss/jobs";
 import { DeadLetterService } from "./dead-letter.service.js";
 import { createIntegrationEventProcessor } from "./integration-event.processor.js";
@@ -27,6 +32,68 @@ const logger = pino({
   level: process.env.LOG_LEVEL ?? "info",
 });
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const recoveryConfigured = Boolean(
+  process.env.MAIL_HOST &&
+  process.env.MAIL_FROM &&
+  process.env.PASSWORD_RESET_WEB_URL,
+);
+const verificationConfigured = Boolean(
+  process.env.MAIL_HOST &&
+  process.env.MAIL_FROM &&
+  process.env.EMAIL_VERIFICATION_WEB_URL,
+);
+const mailTransport = recoveryConfigured || verificationConfigured
+  ? nodemailer.createTransport({
+      host: process.env.MAIL_HOST,
+      port: Number(process.env.MAIL_PORT ?? 587),
+      secure: Number(process.env.MAIL_PORT ?? 587) === 465,
+      requireTLS:
+        process.env.NODE_ENV === "production" &&
+        Number(process.env.MAIL_PORT ?? 587) !== 465,
+      auth: process.env.MAIL_USER
+        ? { user: process.env.MAIL_USER, pass: process.env.MAIL_PASSWORD }
+        : undefined,
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 20_000,
+      logger: false,
+      debug: false,
+    })
+  : null;
+const recoveryWorker = mailTransport
+  ? new Worker<PasswordRecoveryJob>(
+      DSS_QUEUE_NAMES.PASSWORD_RECOVERY,
+      createPasswordRecoveryProcessor(
+        pool,
+        (mail) =>
+          mailTransport.sendMail({ ...mail, from: process.env.MAIL_FROM }),
+        process.env.PASSWORD_RESET_WEB_URL!,
+      ),
+      { connection, concurrency: 1 },
+    )
+  : null;
+const verificationWorker = mailTransport && verificationConfigured
+  ? new Worker<EmailVerificationJob>(
+      DSS_QUEUE_NAMES.EMAIL_VERIFICATION,
+      createEmailVerificationProcessor(
+        pool,
+        (mail) => mailTransport.sendMail({ ...mail, from: process.env.MAIL_FROM }),
+        process.env.EMAIL_VERIFICATION_WEB_URL!,
+      ),
+      { connection, concurrency: 1 },
+    )
+  : null;
+verificationWorker?.on("failed", (job) => {
+  logger.error({ jobId: job?.id }, "Email verification delivery failed");
+});
+recoveryWorker?.on("failed", (job) => {
+  // SMTP errors can include recipients or message content. Keep logs secret-free.
+  logger.error({ jobId: job?.id }, "Password recovery delivery failed");
+});
+if (!recoveryConfigured)
+  logger.warn(
+    "Password recovery worker disabled: configure SMTP and PASSWORD_RESET_WEB_URL",
+  );
 const consumerName = "dss.worker.integration-events.v2";
 const deadLetterQueue = new Queue<DeadLetterIntegrationEventJob>(
   DSS_QUEUE_NAMES.INTEGRATION_EVENTS_DEAD_LETTER,
@@ -102,6 +169,9 @@ async function shutdown(): Promise<void> {
   clearInterval(heartbeat);
   await worker.close();
   await mediaWorker.close();
+  await recoveryWorker?.close();
+  await verificationWorker?.close();
+  mailTransport?.close();
   await deadLetterQueue.close();
   await pool.end();
   await connection.quit();

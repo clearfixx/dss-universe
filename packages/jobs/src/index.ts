@@ -2,7 +2,18 @@ export const DSS_QUEUE_NAMES = {
   INTEGRATION_EVENTS: "dss.integration-events",
   INTEGRATION_EVENTS_DEAD_LETTER: "dss.integration-events.dead-letter",
   MEDIA_PROCESSING: "dss.media-processing",
+  PASSWORD_RECOVERY: "dss.password-recovery",
+  EMAIL_VERIFICATION: "dss.email-verification",
 } as const;
+
+/** Contains no password or reset credential. Removed after processing. */
+export type PasswordRecoveryJob = { email: string; requestedAt: string };
+/** Contains no verification credential. Removed after processing. */
+export type EmailVerificationJob = {
+  userId: string;
+  email: string;
+  requestedAt: string;
+};
 export const DSS_JOB_NAMES = {
   DISPATCH_INTEGRATION_EVENT: "dispatch-integration-event.v1",
   DEAD_LETTER_INTEGRATION_EVENT: "dead-letter-integration-event.v1",

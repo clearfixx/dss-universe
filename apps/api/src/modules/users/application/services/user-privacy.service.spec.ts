@@ -108,4 +108,30 @@ describe('UserPrivacyService', () => {
       }),
     );
   });
+
+  it('treats an anonymous visitor as outside a members-only profile', async () => {
+    findByUserId.mockResolvedValue({
+      userId: 'user-1',
+      profileVisibility: 'MEMBERS',
+      showLocation: true,
+      showWebsite: true,
+      showSocialLinks: true,
+      showLastSeen: true,
+      showOnlineStatus: true,
+      allowFollowers: true,
+      showFollows: true,
+      allowWallPosts: true,
+    });
+
+    await expect(service.visibilityFor('user-1')).resolves.toEqual(
+      expect.objectContaining({
+        showLocation: false,
+        showWebsite: false,
+        showSocialLinks: false,
+        showLastSeen: false,
+        showOnlineStatus: false,
+        showFollows: false,
+      }),
+    );
+  });
 });
