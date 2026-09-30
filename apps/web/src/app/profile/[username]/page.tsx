@@ -6,7 +6,7 @@
  * 📄 File: apps/web/src/app/profile/[username]/page.tsx
  *
  * 🎯 Purpose:
- * Composes the authenticated public user profile route.
+ * Composes the privacy-aware public user profile route.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -14,7 +14,7 @@
 
 import type { Metadata } from "next";
 
-import { DssApplicationShell } from "@/components/shell/dss-application-shell";
+import { DssApplicationShell } from "@/components/shell/session-application-shell";
 import { ErrorState } from "@/components/states/async-states";
 import { loadPublicProfile } from "@/features/profile/profile-data";
 import { ProfileView } from "@/features/profile/profile-view";
@@ -42,7 +42,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       <DssApplicationShell>
         <ErrorState
           title="Профіль недоступний"
-          description="Увійдіть у DSS Universe або перевірте ім’я користувача."
+          description="Перевірте ім’я користувача або налаштування приватності профілю."
         />
       </DssApplicationShell>
     );

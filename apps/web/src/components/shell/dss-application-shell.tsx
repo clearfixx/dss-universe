@@ -21,6 +21,8 @@ import {
   Boxes,
   GraduationCap,
   LayoutDashboard,
+  LogIn,
+  LogOut,
   Menu,
   MessageSquare,
   Newspaper,
@@ -45,6 +47,8 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useShellStore } from "@/stores/shell.store";
+import { logoutAction } from "@/features/auth/auth-actions";
+import type { SessionViewer } from "@/features/auth/session-contract";
 
 const navigation = [
   { href: "/command-deck", label: "Command Deck", icon: LayoutDashboard },
@@ -82,7 +86,11 @@ function Navigation() {
   );
 }
 
-export function DssApplicationShell({ children }: PropsWithChildren) {
+export function DssApplicationShell({
+  children,
+  viewer,
+}: PropsWithChildren<{ viewer: SessionViewer | null }>) {
+  const pathname = usePathname();
   const open = useShellStore((state) => state.mobileNavigationOpen);
   const setOpen = useShellStore((state) => state.setMobileNavigationOpen);
 
@@ -127,20 +135,47 @@ export function DssApplicationShell({ children }: PropsWithChildren) {
             <Button variant="ghost" size="icon" aria-label="Notifications">
               <Bell />
             </Button>
-            <Button asChild variant="ghost" size="icon" aria-label="Settings">
-              <Link href="/settings/profile">
-                <Settings />
-              </Link>
-            </Button>
-            <div className="ml-2 flex items-center gap-3 border-l border-white/10 pl-4">
-              <Avatar>
-                <AvatarFallback>AF</AvatarFallback>
-              </Avatar>
-              <div className="hidden text-sm sm:block">
-                <p className="font-medium">Astronaut</p>
-                <p className="text-xs text-slate-500">Commander</p>
-              </div>
-            </div>
+            {viewer ? (
+              <>
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Settings"
+                >
+                  <Link href="/settings/profile">
+                    <Settings />
+                  </Link>
+                </Button>
+                <form action={logoutAction}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    type="submit"
+                    aria-label="Sign out"
+                  >
+                    <LogOut />
+                  </Button>
+                </form>
+                <div className="ml-2 flex items-center gap-3 border-l border-white/10 pl-4">
+                  <Avatar>
+                    <AvatarFallback>{viewerInitials(viewer)}</AvatarFallback>
+                  </Avatar>
+                  <div className="hidden text-sm sm:block">
+                    <p className="font-medium">
+                      {viewer.displayName || viewer.username}
+                    </p>
+                    <p className="text-xs text-slate-500">@{viewer.username}</p>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/login?returnTo=${encodeURIComponent(pathname)}`}>
+                  <LogIn /> Sign in
+                </Link>
+              </Button>
+            )}
           </div>
         </header>
         <main className="p-4 sm:p-6 lg:p-8">{children}</main>
@@ -158,4 +193,13 @@ export function DssApplicationShell({ children }: PropsWithChildren) {
       </Sheet>
     </div>
   );
+}
+
+function viewerInitials(viewer: SessionViewer | null) {
+  const value = viewer?.displayName?.trim() || viewer?.username || "DSS";
+  return value
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
 }

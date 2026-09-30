@@ -129,6 +129,7 @@ export function ProfileView({
   const activeTab = useProfileUiStore((state) => state.activeTab);
   const setActiveTab = useProfileUiStore((state) => state.setActiveTab);
   const [pending, startTransition] = useTransition();
+  const isGuest = viewerId.length === 0;
   const isOwner = viewerId === profile.id;
   const selectedTitle = gamification?.userCustomTitles.find(
     (grant) => grant.selected && grant.title.isActive,
@@ -227,6 +228,12 @@ export function ProfileView({
                     <Pencil /> Редагувати профіль
                   </Link>
                 </Button>
+              ) : isGuest ? (
+                <Button asChild>
+                  <Link href={`/login?returnTo=/profile/${profile.username}`}>
+                    <UserPlus /> Увійти, щоб підписатися
+                  </Link>
+                </Button>
               ) : (
                 <Button
                   onClick={toggleFollow}
@@ -291,7 +298,9 @@ export function ProfileView({
         <div className="space-y-5">
           {showWall ? (
             <>
-              <WallComposer profile={profile} viewerId={viewerId} />
+              {isGuest ? null : (
+                <WallComposer profile={profile} viewerId={viewerId} />
+              )}
               <WallFeed wall={wall} profile={profile} />
             </>
           ) : null}
@@ -309,7 +318,7 @@ export function ProfileView({
           />
           <AchievementsCard gamification={gamification} />
           <ProgressHistoryCard gamification={gamification} />
-          {!isOwner ? <ReputationCard profile={profile} /> : null}
+          {!isOwner && !isGuest ? <ReputationCard profile={profile} /> : null}
           <ContributionCard profile={profile} wall={wall} activity={activity} />
           {showActivity ? <ActivityFeed activity={activity} compact /> : null}
         </div>

@@ -1,4 +1,4 @@
-import { DssApplicationShell } from "@/components/shell/dss-application-shell";
+import { DssApplicationShell } from "@/components/shell/session-application-shell";
 import { ErrorState } from "@/components/states/async-states";
 import { NewsEditorWorkspace } from "@/features/newsroom/news-editor-workspace";
 import { loadEditorialArticle } from "@/features/newsroom/newsroom-data";

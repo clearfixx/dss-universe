@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { DssApplicationShell } from "@/components/shell/dss-application-shell";
+import { DssApplicationShell } from "@/components/shell/session-application-shell";
 import { Badge } from "@/components/ui/badge";
 import {
   loadFullNews,

@@ -12,7 +12,7 @@
  * ===============================================================
  */
 
-import { DssApplicationShell } from "@/components/shell/dss-application-shell";
+import { DssApplicationShell } from "@/components/shell/session-application-shell";
 import { ErrorState } from "@/components/states/async-states";
 import { loadProfileSettings } from "@/features/profile/profile-data";
 import { ProfileSettingsView } from "@/features/settings/profile-settings-view";

@@ -50,6 +50,7 @@ import {
   updateNotificationSettings,
   updatePrivacySettings,
   updateProfileSettings,
+  requestViewerEmailVerification,
 } from "../profile/profile-actions";
 
 type Settings = ProfileSettingsQuery;
@@ -365,6 +366,18 @@ export function ProfileSettingsView({ settings }: { settings: Settings }) {
           description={`Email: ${viewer.email}. Зміна credentials завершує активні сесії.`}
         >
           <div className="space-y-5">
+            <div className="rounded-lg border border-white/10 p-3 text-sm">
+              <p>
+                Email: {viewer.emailVerifiedAt ? "підтверджено" : "не підтверджено"}
+              </p>
+              {!viewer.emailVerifiedAt ? (
+                <form action={requestViewerEmailVerification} className="mt-2">
+                  <Button type="submit" size="sm" variant="outline">
+                    Надіслати лист підтвердження
+                  </Button>
+                </form>
+              ) : null}
+            </div>
             <form action={changeViewerEmail} className="space-y-3">
               <Field label="Новий email">
                 <Input name="email" type="email" required />

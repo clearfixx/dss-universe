@@ -2,7 +2,7 @@ export const siteConfig = {
   name: "DSS Universe",
   fullName: "Developer Space Station Universe",
   description:
-    "A space-themed developer platform for learning, building, sharing, and growing.",
+    "A connected developer platform for building, sharing, and inspiring what comes next.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   apiUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api",
   graphqlUrl:

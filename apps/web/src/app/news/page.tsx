@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { DssApplicationShell } from "@/components/shell/dss-application-shell";
+import { DssApplicationShell } from "@/components/shell/session-application-shell";
 import { NewsCatalog } from "@/features/news/news-catalog";
 import { loadNewsCatalog } from "@/features/news/news-data";
 import type { NewsPaginationMode } from "@/features/news/news-pagination";

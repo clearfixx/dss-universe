@@ -28,6 +28,7 @@ vi.mock("../profile/profile-actions", () => ({
   updateNotificationSettings: vi.fn(),
   updatePrivacySettings: vi.fn(),
   updateProfileSettings: vi.fn(),
+  requestViewerEmailVerification: vi.fn(),
 }));
 
 import { ProfileSettingsView } from "./profile-settings-view";
@@ -38,6 +39,7 @@ const settings: ProfileSettingsQuery = {
     username: "astro",
     displayName: "Astro DSS",
     email: "astro@example.com",
+    emailVerifiedAt: null,
     bio: "Building the Universe.",
     location: "Kyiv",
     website: "https://dss.example",

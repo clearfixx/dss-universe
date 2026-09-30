@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { DssApplicationShell } from "@/components/shell/dss-application-shell";
+import { DssApplicationShell } from "@/components/shell/session-application-shell";
 import { EmptyState } from "@/components/states/async-states";
 
 const moduleNames: Record<string, string> = {

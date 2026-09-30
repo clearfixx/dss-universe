@@ -16,6 +16,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import {
@@ -29,6 +30,7 @@ import {
   RemoveViewerCoverDocument,
   RevokeOtherViewerDeviceSessionsDocument,
   RevokeViewerDeviceSessionDocument,
+  RequestViewerEmailVerificationDocument,
   SetViewerAvatarDocument,
   SetViewerCoverDocument,
   SelectViewerCustomTitleDocument,
@@ -41,6 +43,11 @@ import {
   type ProfileVisibility,
 } from "@/gql/graphql";
 import { getClient } from "@/lib/apollo/rsc-client";
+import {
+  ACCESS_COOKIE,
+  PERSISTENT_SESSION_COOKIE,
+  REFRESH_COOKIE,
+} from "@/features/auth/session-contract";
 
 async function context() {
   const token = (await cookies()).get("dss_access_token")?.value;
@@ -212,6 +219,14 @@ export async function revokeOtherSessions(): Promise<void> {
   revalidatePath("/settings/profile");
 }
 
+export async function requestViewerEmailVerification(): Promise<void> {
+  await getClient().mutate({
+    mutation: RequestViewerEmailVerificationDocument,
+    context: await context(),
+  });
+  revalidatePath("/settings/profile");
+}
+
 export async function updateViewerMedia(
   kind: "avatar" | "cover",
   formData: FormData,
@@ -251,7 +266,8 @@ export async function changeViewerEmail(formData: FormData): Promise<void> {
     },
     context: await context(),
   });
-  (await cookies()).delete("dss_access_token");
+  await clearLocalSession();
+  redirect("/login?reason=credentials-changed");
 }
 
 export async function changeViewerPassword(formData: FormData): Promise<void> {
@@ -265,7 +281,8 @@ export async function changeViewerPassword(formData: FormData): Promise<void> {
     },
     context: await context(),
   });
-  (await cookies()).delete("dss_access_token");
+  await clearLocalSession();
+  redirect("/login?reason=credentials-changed");
 }
 
 export async function deactivateViewerAccount(
@@ -278,7 +295,15 @@ export async function deactivateViewerAccount(
     },
     context: await context(),
   });
-  (await cookies()).delete("dss_access_token");
+  await clearLocalSession();
+  redirect("/login?reason=account-deactivated");
+}
+
+async function clearLocalSession() {
+  const store = await cookies();
+  store.delete(ACCESS_COOKIE);
+  store.delete(REFRESH_COOKIE);
+  store.delete(PERSISTENT_SESSION_COOKIE);
 }
 
 /**

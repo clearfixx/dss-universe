@@ -265,8 +265,8 @@ export function UniverseArrival() {
         <nav aria-label="Universe">
           <a href="#modules">Modules</a>
           <a href="#mission">Our mission</a>
-          <Link href="/command-deck">
-            Command Deck <ArrowRight size={13} />
+          <Link href="/login">
+            Sign in <ArrowRight size={13} />
           </Link>
         </nav>
         <span className={styles.preview}>EXPERIENCE PREVIEW</span>
@@ -335,8 +335,8 @@ export function UniverseArrival() {
             Knowledge. Community. AI. All connected.
           </p>
           <div className={styles.actions}>
-            <Link href="/command-deck" className={styles.primary}>
-              Enter Station <ArrowRight size={16} />
+            <Link href="/register" className={styles.primary}>
+              Join DSS <ArrowRight size={16} />
             </Link>
             <a href="#modules">
               Explore the Universe <span>↗</span>

@@ -21,6 +21,7 @@ import {
   MembersDirectoryDocument,
   ProfileGamificationDocument,
   ProfileSettingsDocument,
+  ProfileViewerDocument,
   ProfileWallDocument,
   PublicProfileDocument,
   UserActivityDocument,
@@ -35,8 +36,13 @@ async function authorizationContext() {
   return { headers: { authorization: `Bearer ${token}` } };
 }
 
+async function optionalAuthorizationContext() {
+  const token = (await cookies()).get("dss_access_token")?.value;
+  return token ? { headers: { authorization: `Bearer ${token}` } } : {};
+}
+
 export async function loadPublicProfile(username: string) {
-  const context = await authorizationContext();
+  const context = await optionalAuthorizationContext();
   const profileResult = await getClient().query({
     query: PublicProfileDocument,
     variables: { username },
@@ -45,6 +51,25 @@ export async function loadPublicProfile(username: string) {
   });
   const profile = profileResult.data?.userByUsername;
   if (!profile) throw new Error("PROFILE_NOT_FOUND");
+
+  const authenticated = "headers" in context;
+  const viewerResult = authenticated
+    ? await getClient().query({
+        query: ProfileViewerDocument,
+        context,
+        fetchPolicy: "no-cache",
+      })
+    : null;
+
+  if (!authenticated) {
+    return {
+      viewerId: "",
+      profile,
+      wall: undefined,
+      activity: undefined,
+      gamification: undefined,
+    };
+  }
 
   const [wallResult, activityResult, gamificationResult] = await Promise.all([
     getClient().query({
@@ -74,7 +99,7 @@ export async function loadPublicProfile(username: string) {
   ]);
 
   return {
-    viewerId: profileResult.data?.viewer.id ?? "",
+    viewerId: viewerResult?.data?.viewer.id ?? "",
     profile,
     wall: wallResult.data?.profileWall,
     activity: activityResult.data?.userActivity,

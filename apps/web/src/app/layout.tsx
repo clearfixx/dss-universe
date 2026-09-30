@@ -8,7 +8,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: "DSS Universe",
-  description: "Build. Share. Learn. Grow. Together.",
+  description: "Build. Share. Inspire.",
 };
 
 export default function RootLayout({

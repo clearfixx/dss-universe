@@ -13,7 +13,7 @@
  */
 
 import { MediaLibrary } from "@/components/media/media-library";
-import { DssApplicationShell } from "@/components/shell/dss-application-shell";
+import { DssApplicationShell } from "@/components/shell/session-application-shell";
 
 type MediaPageProps = {
   searchParams: Promise<{

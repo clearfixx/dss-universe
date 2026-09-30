@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 
 import { CommandDeckOverview } from "@/components/shell/command-deck-overview";
-import { DssApplicationShell } from "@/components/shell/dss-application-shell";
+import { DssApplicationShell } from "@/components/shell/session-application-shell";
 import { GuestLanding } from "@/components/shell/guest-landing";
 import { loadViewerActivityFeed } from "@/features/activity/activity-data";
 

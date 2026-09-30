@@ -88,10 +88,10 @@ export function GuestLanding() {
           </p>
         </div>
         <Link
-          href="/command-deck"
+          href="/register"
           className="flex items-center gap-3 text-sm text-blue-300"
         >
-          Enter Station <ArrowRight size={16} />
+          Join DSS Universe <ArrowRight size={16} />
         </Link>
       </section>
       <footer className="mx-auto max-w-7xl border-t border-white/10 px-6 py-7 text-xs text-slate-500">

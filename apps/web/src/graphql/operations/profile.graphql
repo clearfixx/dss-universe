@@ -1,7 +1,4 @@
 query PublicProfile($username: String!) {
-  viewer {
-    id
-  }
   userByUsername(username: $username) {
     id
     username
@@ -26,6 +23,12 @@ query PublicProfile($username: String!) {
       url
       position
     }
+  }
+}
+
+query ProfileViewer {
+  viewer {
+    id
   }
 }
 
@@ -194,6 +197,7 @@ query ProfileSettings {
     username
     displayName
     email
+    emailVerifiedAt
     bio
     location
     website
@@ -355,6 +359,12 @@ mutation RevokeOtherViewerDeviceSessions {
   revokeOtherViewerSessions {
     success
     revokedCount
+  }
+}
+
+mutation RequestViewerEmailVerification {
+  requestEmailVerification {
+    success
   }
 }
 
