@@ -247,6 +247,10 @@ query ProfileSettings {
     emailCategories
     digestFrequency
   }
+  viewerTwoFactorStatus {
+    enabled
+    recoveryCodesRemaining
+  }
 }
 
 mutation FollowProfile($userId: ID!) {
@@ -382,6 +386,25 @@ mutation ChangeViewerPassword($input: ChangePasswordInput!) {
 
 mutation DeactivateViewerAccount($input: DeactivateAccountInput!) {
   deactivateAccount(input: $input) {
+    success
+  }
+}
+
+mutation BeginViewerTwoFactorSetup {
+  beginViewerTwoFactorSetup {
+    secret
+    otpauthUri
+  }
+}
+
+mutation ConfirmViewerTwoFactorSetup($input: ConfirmTwoFactorInput!) {
+  confirmViewerTwoFactorSetup(input: $input) {
+    recoveryCodes
+  }
+}
+
+mutation DisableViewerTwoFactor($input: DisableTwoFactorInput!) {
+  disableViewerTwoFactor(input: $input) {
     success
   }
 }

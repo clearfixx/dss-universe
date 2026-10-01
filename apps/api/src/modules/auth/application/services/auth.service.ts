@@ -54,6 +54,7 @@ import type { AuthClient } from '../types/auth-client.type';
 import { EmailVerificationService } from './email-verification.service';
 import { LoginAbuseProtectionService } from './login-abuse-protection.service';
 import { SecurityAlertService } from './security-alert.service';
+import { TwoFactorService } from './two-factor.service';
 
 const DUMMY_PASSWORD_HASH =
   '$2b$12$C6UzMDM.H6dfI/f/IKcEe.4vA0Z8F7z7G1V1K2N1g1qjQm7u8Yw6K';
@@ -69,6 +70,7 @@ export class AuthService {
     private readonly emailVerification: EmailVerificationService,
     private readonly loginProtection: LoginAbuseProtectionService,
     private readonly securityAlerts: SecurityAlertService,
+    private readonly twoFactor: TwoFactorService,
   ) {}
 
   async register(dto: RegisterDto, client: AuthClient = {}) {
@@ -110,6 +112,19 @@ export class AuthService {
         client,
       );
       throw new InvalidCredentialsException();
+    }
+    try {
+      await this.twoFactor.assertLogin(user.id, dto.twoFactorCode);
+    } catch (error) {
+      if (dto.twoFactorCode) {
+        await this.loginProtection.recordFailure(
+          email,
+          client.ipAddress,
+          user,
+          client,
+        );
+      }
+      throw error;
     }
     await this.loginProtection.recordSuccess(email, user, client);
     return this.issueAuthResponse(user.id, client);
@@ -193,6 +208,19 @@ export class AuthService {
         client,
       );
       throw new InvalidCredentialsException();
+    }
+    try {
+      await this.twoFactor.assertLogin(user.id, dto.twoFactorCode);
+    } catch (error) {
+      if (dto.twoFactorCode) {
+        await this.loginProtection.recordFailure(
+          email,
+          client.ipAddress,
+          user,
+          client,
+        );
+      }
+      throw error;
     }
     await this.loginProtection.recordSuccess(email, user, client);
     await this.usersRepository.reactivateAccount(user.id);

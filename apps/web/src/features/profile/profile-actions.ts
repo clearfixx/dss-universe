@@ -20,10 +20,13 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import {
+  BeginViewerTwoFactorSetupDocument,
   ChangeViewerEmailDocument,
   ChangeViewerPasswordDocument,
   CreateProfileWallPostDocument,
   DeactivateViewerAccountDocument,
+  DisableViewerTwoFactorDocument,
+  ConfirmViewerTwoFactorSetupDocument,
   FollowProfileDocument,
   GiveProfileReputationDocument,
   RemoveViewerAvatarDocument,
@@ -297,6 +300,78 @@ export async function deactivateViewerAccount(
   });
   await clearLocalSession();
   redirect("/login?reason=account-deactivated");
+}
+
+export type TwoFactorActionState = {
+  status: "idle" | "error" | "ready" | "enabled";
+  message?: string;
+  secret?: string;
+  otpauthUri?: string;
+  recoveryCodes?: string[];
+};
+
+export async function beginViewerTwoFactorSetup(
+  _state: TwoFactorActionState,
+): Promise<TwoFactorActionState> {
+  void _state;
+  try {
+    const result = await getClient().mutate({
+      mutation: BeginViewerTwoFactorSetupDocument,
+      context: await context(),
+    });
+    const setup = result.data?.beginViewerTwoFactorSetup;
+    if (!setup) throw new Error("SETUP_UNAVAILABLE");
+    return {
+      status: "ready",
+      secret: setup.secret,
+      otpauthUri: setup.otpauthUri,
+    };
+  } catch {
+    return {
+      status: "error",
+      message: "Не вдалося розпочати налаштування 2FA.",
+    };
+  }
+}
+
+export async function confirmViewerTwoFactorSetup(
+  _state: TwoFactorActionState,
+  formData: FormData,
+): Promise<TwoFactorActionState> {
+  try {
+    const result = await getClient().mutate({
+      mutation: ConfirmViewerTwoFactorSetupDocument,
+      variables: { input: { code: String(formData.get("code") ?? "").trim() } },
+      context: await context(),
+    });
+    const confirmation = result.data?.confirmViewerTwoFactorSetup;
+    if (!confirmation) throw new Error("CONFIRMATION_UNAVAILABLE");
+    revalidatePath("/settings/profile");
+    return { status: "enabled", recoveryCodes: confirmation.recoveryCodes };
+  } catch {
+    return {
+      status: "error",
+      message:
+        "Код не підтверджено. Перевірте час у застосунку й спробуйте ще раз.",
+    };
+  }
+}
+
+export async function disableViewerTwoFactor(
+  formData: FormData,
+): Promise<void> {
+  await getClient().mutate({
+    mutation: DisableViewerTwoFactorDocument,
+    variables: {
+      input: {
+        password: String(formData.get("password") ?? ""),
+        code: String(formData.get("code") ?? "").trim(),
+      },
+    },
+    context: await context(),
+  });
+  await clearLocalSession();
+  redirect("/login?reason=two-factor-disabled");
 }
 
 async function clearLocalSession() {

@@ -57,6 +57,7 @@ export async function loginAction(
   const parsed = loginSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
+    twoFactorCode: formData.get("twoFactorCode"),
   });
   const values = {
     email: String(formData.get("email") ?? ""),
@@ -303,6 +304,9 @@ function publicAuthError(
 ): string {
   if (field === "register" && /email|already|exist/i.test(message ?? "")) {
     return "An account with this email already exists.";
+  }
+  if (field === "login" && /two-factor|recovery code/i.test(message ?? "")) {
+    return "Enter a valid authenticator or recovery code.";
   }
   if (field === "login") return "Email or password is incorrect.";
   return "The account could not be created. Please review your details.";

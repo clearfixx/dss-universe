@@ -9,6 +9,7 @@ import {
   LoaderCircle,
   LockKeyhole,
   Mail,
+  Shield,
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
@@ -62,6 +63,18 @@ export function AuthForm({
     >
       {mode !== "recovery" ? (
         <input type="hidden" name="returnTo" value={returnTo} />
+      ) : null}
+
+      {mode === "login" ? (
+        <AuthField
+          name="twoFactorCode"
+          label="Authenticator or recovery code (if enabled)"
+          icon={<Shield />}
+          autoComplete="one-time-code"
+          placeholder="123456 or abcdef-123456"
+          errors={state.fields?.twoFactorCode}
+          required={false}
+        />
       ) : null}
       {mode === "register" ? (
         <>

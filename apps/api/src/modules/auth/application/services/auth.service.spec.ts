@@ -17,6 +17,7 @@ import { UserStatus } from '@prisma/client';
 import type { UsersRepository } from '../../../users/domain/repositories/users.repository.interface';
 import type { UserRecord } from '../../../users/domain/types/user-record.type';
 import { InvalidCredentialsException } from '../../domain/exceptions/invalid-credentials.exception';
+import { TwoFactorRequiredException } from '../../domain/exceptions/two-factor-required.exception';
 import { AuthService } from './auth.service';
 import type { PasswordHashService } from './password-hash.service';
 import type { TokenService } from './token.service';
@@ -24,6 +25,7 @@ import type { AuthSessionService } from './auth-session.service';
 import type { EmailVerificationService } from './email-verification.service';
 import type { LoginAbuseProtectionService } from './login-abuse-protection.service';
 import type { SecurityAlertService } from './security-alert.service';
+import type { TwoFactorService } from './two-factor.service';
 
 const user: UserRecord = {
   id: 'user-1',
@@ -85,6 +87,9 @@ describe('AuthService', () => {
   const securityAlerts = {
     notify: jest.fn(),
   } as unknown as jest.Mocked<SecurityAlertService>;
+  const twoFactor = {
+    assertLogin: jest.fn(),
+  } as unknown as jest.Mocked<TwoFactorService>;
   const service = new AuthService(
     usersRepository,
     passwordHashService,
@@ -93,10 +98,12 @@ describe('AuthService', () => {
     emailVerification,
     loginProtection,
     securityAlerts,
+    twoFactor,
   );
 
   beforeEach(() => {
     jest.clearAllMocks();
+    twoFactor.assertLogin.mockResolvedValue(undefined);
   });
 
   it('logs in with valid credentials and persists a hashed device session', async () => {
@@ -127,6 +134,10 @@ describe('AuthService', () => {
       'new-refresh-hash',
       {},
     ]);
+    expect(twoFactor.assertLogin.mock.calls).toContainEqual([
+      user.id,
+      undefined,
+    ]);
   });
 
   it('rejects invalid passwords without issuing tokens', async () => {
@@ -137,6 +148,38 @@ describe('AuthService', () => {
       service.login({ email: user.email, password: 'wrong-password' }),
     ).rejects.toBeInstanceOf(InvalidCredentialsException);
     expect(tokenService.generateTokens.mock.calls).toHaveLength(0);
+  });
+
+  it('requires 2FA after password verification without counting a missing code as abuse', async () => {
+    usersRepository.findByEmail.mockResolvedValue(user);
+    passwordHashService.compare.mockResolvedValue(true);
+    twoFactor.assertLogin.mockRejectedValue(new TwoFactorRequiredException());
+
+    await expect(
+      service.login({ email: user.email, password: 'correct-password' }),
+    ).rejects.toBeInstanceOf(TwoFactorRequiredException);
+    expect(loginProtection.recordFailure.mock.calls).toHaveLength(0);
+    expect(tokenService.generateTokens.mock.calls).toHaveLength(0);
+  });
+
+  it('counts an invalid submitted second factor as a failed login', async () => {
+    usersRepository.findByEmail.mockResolvedValue(user);
+    passwordHashService.compare.mockResolvedValue(true);
+    twoFactor.assertLogin.mockRejectedValue(new TwoFactorRequiredException());
+
+    await expect(
+      service.login({
+        email: user.email,
+        password: 'correct-password',
+        twoFactorCode: '123456',
+      }),
+    ).rejects.toBeInstanceOf(TwoFactorRequiredException);
+    expect(loginProtection.recordFailure.mock.calls).toContainEqual([
+      user.email,
+      undefined,
+      user,
+      {},
+    ]);
   });
 
   it('normalizes refresh verification failures to invalid credentials', async () => {
@@ -188,6 +231,10 @@ describe('AuthService', () => {
         password: 'correct-password',
       }),
     ).resolves.toMatchObject({ user: { status: UserStatus.ACTIVE } });
+    expect(twoFactor.assertLogin.mock.calls).toContainEqual([
+      user.id,
+      undefined,
+    ]);
     expect(usersRepository.reactivateAccount.mock.calls).toContainEqual([
       user.id,
     ]);

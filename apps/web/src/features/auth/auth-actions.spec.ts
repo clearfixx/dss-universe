@@ -79,6 +79,29 @@ describe("session server actions", () => {
     );
   });
 
+  it("submits a second factor and gives a specific retry prompt", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      Response.json({
+        errors: [
+          { message: "A valid two-factor or recovery code is required." },
+        ],
+      }),
+    );
+    const form = new FormData();
+    form.set("email", "dev@dss.test");
+    form.set("password", "strong-pass");
+    form.set("twoFactorCode", "123456");
+
+    await expect(
+      loginAction(initialAuthFormState, form),
+    ).resolves.toMatchObject({
+      status: "error",
+      message: "Enter a valid authenticator or recovery code.",
+    });
+    const request = fetchMock.mock.calls[0]?.[1];
+    expect(String(request?.body)).toContain('"twoFactorCode":"123456"');
+  });
+
   it("revokes the API session, clears every cookie and returns to login", async () => {
     mocks.cookieGet.mockReturnValue({ value: "access" });
     const fetchMock = vi

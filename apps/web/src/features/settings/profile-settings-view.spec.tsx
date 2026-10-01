@@ -18,9 +18,12 @@ import { describe, expect, it, vi } from "vitest";
 import type { ProfileSettingsQuery } from "@/gql/graphql";
 
 vi.mock("../profile/profile-actions", () => ({
+  beginViewerTwoFactorSetup: vi.fn(),
   changeViewerEmail: vi.fn(),
   changeViewerPassword: vi.fn(),
   deactivateViewerAccount: vi.fn(),
+  disableViewerTwoFactor: vi.fn(),
+  confirmViewerTwoFactorSetup: vi.fn(),
   removeViewerMedia: vi.fn(),
   revokeOtherSessions: vi.fn(),
   revokeSession: vi.fn(),
@@ -85,6 +88,10 @@ const settings: ProfileSettingsQuery = {
     emailCategories: ["MENTIONS"],
     digestFrequency: "WEEKLY",
   },
+  viewerTwoFactorStatus: {
+    enabled: false,
+    recoveryCodesRemaining: 0,
+  },
 };
 
 describe("ProfileSettingsView", () => {
@@ -98,6 +105,9 @@ describe("ProfileSettingsView", () => {
     expect(screen.getByDisplayValue("Astro DSS")).toBeInTheDocument();
     expect(screen.getByText("DSS Test Browser")).toBeInTheDocument();
     expect(screen.getByText("Поточна")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Налаштувати 2FA" }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Переглянути профіль" }),
     ).toHaveAttribute("href", "/profile/astro");

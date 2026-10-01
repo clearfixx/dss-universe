@@ -53,6 +53,9 @@ import { PrismaEmailVerificationRepository } from './infrastructure/repositories
 import { EmailVerificationResolver } from './presentation/graphql/resolvers/email-verification.resolver';
 import { LoginAbuseProtectionService } from './application/services/login-abuse-protection.service';
 import { SecurityAlertService } from './application/services/security-alert.service';
+import { TotpService } from './application/services/totp.service';
+import { TwoFactorService } from './application/services/two-factor.service';
+import { TwoFactorResolver } from './presentation/graphql/resolvers/two-factor.resolver';
 
 @Module({
   imports: [UsersModule, AuthCoreModule, AuthorizationModule],
@@ -66,6 +69,9 @@ import { SecurityAlertService } from './application/services/security-alert.serv
     EmailVerificationResolver,
     LoginAbuseProtectionService,
     SecurityAlertService,
+    TotpService,
+    TwoFactorService,
+    TwoFactorResolver,
     AuthService,
     PasswordHashService,
     TokenService,

@@ -1191,8 +1191,10 @@ DRAFT → IN_REVIEW → SCHEDULED/PUBLISHED → ARCHIVED
 - previous/next navigation and internal SEO links resolve only published News;
 - News contributes to Feed, Search, SEO, Notifications and Gamification.
 
-Before Phase 11 begins, delivery returns to Phase 5 for the approved Auth UX
-Completion bridge: registration, login, secure session recovery and logout.
+Before Phase 11 begins, delivery completes the approved Auth UX Completion
+bridge from the authentication backlog: registration, login, secure session
+recovery, logout and 2FA. This is a bridge after Phase 10, not a rollback to or
+restart of Phase 5.
 
 ---
 

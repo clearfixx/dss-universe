@@ -52,6 +52,7 @@ import {
   updateProfileSettings,
   requestViewerEmailVerification,
 } from "../profile/profile-actions";
+import { TwoFactorSettings } from "./two-factor-settings";
 
 type Settings = ProfileSettingsQuery;
 
@@ -75,6 +76,7 @@ export function ProfileSettingsView({ settings }: { settings: Settings }) {
     viewerProfileCompletion: completion,
     viewerNotificationPreferences: notifications,
     viewerSessions: sessions,
+    viewerTwoFactorStatus: twoFactor,
   } = settings;
 
   return (
@@ -366,9 +368,14 @@ export function ProfileSettingsView({ settings }: { settings: Settings }) {
           description={`Email: ${viewer.email}. Зміна credentials завершує активні сесії.`}
         >
           <div className="space-y-5">
+            <TwoFactorSettings
+              enabled={twoFactor.enabled}
+              recoveryCodesRemaining={twoFactor.recoveryCodesRemaining}
+            />
             <div className="rounded-lg border border-white/10 p-3 text-sm">
               <p>
-                Email: {viewer.emailVerifiedAt ? "підтверджено" : "не підтверджено"}
+                Email:{" "}
+                {viewer.emailVerifiedAt ? "підтверджено" : "не підтверджено"}
               </p>
               {!viewer.emailVerifiedAt ? (
                 <form action={requestViewerEmailVerification} className="mt-2">

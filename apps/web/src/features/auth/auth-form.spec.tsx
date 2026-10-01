@@ -46,6 +46,9 @@ describe("authentication form UX", () => {
     expect(
       screen.getByRole("link", { name: "Forgot password?" }),
     ).toHaveAttribute("href", "/forgot-password");
+    expect(
+      screen.getByLabelText("Authenticator or recovery code (if enabled)"),
+    ).not.toBeRequired();
     expect(screen.queryByText(/continue with GitHub/i)).not.toBeInTheDocument();
     expect(
       container.querySelector<HTMLInputElement>('input[name="returnTo"]')

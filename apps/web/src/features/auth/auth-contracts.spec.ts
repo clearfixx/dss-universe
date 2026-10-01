@@ -9,6 +9,21 @@ describe("auth form contracts", () => {
       password: "strong-pass",
     });
     expect(result.email).toBe("DEV@example.com");
+    expect(result.twoFactorCode).toBeUndefined();
+  });
+
+  it("accepts authenticator and recovery codes but rejects malformed values", () => {
+    const base = { email: "dev@example.com", password: "strong-pass" };
+    expect(
+      loginSchema.safeParse({ ...base, twoFactorCode: "123456" }).success,
+    ).toBe(true);
+    expect(
+      loginSchema.safeParse({ ...base, twoFactorCode: "ABCDEF-123456" })
+        .success,
+    ).toBe(true);
+    expect(
+      loginSchema.safeParse({ ...base, twoFactorCode: "12345" }).success,
+    ).toBe(false);
   });
 
   it("rejects registration when confirmation differs", () => {

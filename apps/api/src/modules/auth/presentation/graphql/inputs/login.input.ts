@@ -13,7 +13,13 @@
  */
 
 import { Field, InputType } from '@nestjs/graphql';
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  Matches,
+  MinLength,
+} from 'class-validator';
 
 @InputType()
 export class LoginInput {
@@ -25,4 +31,10 @@ export class LoginInput {
   @IsString()
   @MinLength(8)
   password!: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  @Matches(/^(?:\d{6}|[a-f0-9]{6}-[a-f0-9]{6})$/i)
+  twoFactorCode?: string;
 }

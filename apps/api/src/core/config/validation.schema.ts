@@ -34,6 +34,11 @@ export const validationSchema = Joi.object({
     .min(1)
     .max(1440)
     .default(15),
+  AUTH_2FA_ENCRYPTION_KEY: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string().min(32).required(),
+    otherwise: Joi.string().min(32).default('development-2fa-key-change-this'),
+  }),
 
   REDIS_HOST: Joi.string().default('localhost'),
   REDIS_PORT: Joi.number().default(6379),

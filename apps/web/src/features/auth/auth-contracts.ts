@@ -21,7 +21,20 @@ const password = z
   .string()
   .min(8, "Password must contain at least 8 characters.");
 
-export const loginSchema = z.object({ email, password });
+export const loginSchema = z.object({
+  email,
+  password,
+  twoFactorCode: z.preprocess(
+    (value) => String(value ?? "").trim() || undefined,
+    z
+      .string()
+      .regex(
+        /^(?:\d{6}|[a-f0-9]{6}-[a-f0-9]{6})$/i,
+        "Enter a 6-digit authenticator code or a recovery code.",
+      )
+      .optional(),
+  ),
+});
 
 export const registerSchema = z
   .object({

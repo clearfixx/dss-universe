@@ -632,10 +632,34 @@ type LevelTransitionHistory {
 input LoginInput {
   email: String!
   password: String!
+  twoFactorCode: String
 }
 
 type LogoutResultModel {
   success: Boolean!
+}
+
+input ConfirmTwoFactorInput {
+  code: String!
+}
+
+input DisableTwoFactorInput {
+  code: String!
+  password: String!
+}
+
+type TwoFactorConfirmationModel {
+  recoveryCodes: [String!]!
+}
+
+type TwoFactorSetupModel {
+  otpauthUri: String!
+  secret: String!
+}
+
+type TwoFactorStatusModel {
+  enabled: Boolean!
+  recoveryCodesRemaining: Int!
 }
 
 type ManagedNewsPin {
@@ -828,9 +852,11 @@ type Mutation {
   approveNews(input: NewsDecisionInput!): NewsEditorialTransition!
   awardAchievement(input: ManualAchievementAwardInput!): AchievementAward!
   blockUser(userId: ID!): UserBlockResult!
+  beginViewerTwoFactorSetup: TwoFactorSetupModel!
   cancelNewsSchedule(input: NewsDecisionInput!): NewsEditorialTransition!
   changeViewerEmail(input: ChangeEmailInput!): LogoutResultModel!
   changeViewerPassword(input: ChangePasswordInput!): LogoutResultModel!
+  confirmViewerTwoFactorSetup(input: ConfirmTwoFactorInput!): TwoFactorConfirmationModel!
   clearReaction(interactionTargetId: ID!): ReactionSummary!
   createComment(input: CreateCommentInput!): Comment!
   createContentGate(input: CreateContentGateInput!): ContentGateModel!
@@ -839,6 +865,7 @@ type Mutation {
   createNewsDraft(input: CreateNewsDraftInput!): NewsEditorialArticle!
   createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
   deactivateAccount(input: DeactivateAccountInput!): LogoutResultModel!
+  disableViewerTwoFactor(input: DisableTwoFactorInput!): LogoutResultModel!
   discardCommentDraft(draftId: ID!): Boolean!
   editComment(input: EditCommentInput!): Comment!
   followUser(userId: ID!): UserSocialGraphSummary!
@@ -1341,6 +1368,7 @@ type Query {
   viewerPrivacySettings: UserPrivacySettings!
   viewerProfileCompletion: ProfileCompletion!
   viewerSessions: [AuthSession!]!
+  viewerTwoFactorStatus: TwoFactorStatusModel!
 }
 
 type Reaction {
