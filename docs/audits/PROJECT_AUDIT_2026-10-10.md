@@ -204,6 +204,21 @@ only a News-local search projection. No dedicated shared Search Platform
 module or cross-module indexing contract was found. Phase 10 wording must be
 corrected or the missing platform boundary must be scheduled explicitly.
 
+### R6 — Custom groups and Premium have no settled phase owner
+
+Phase 5 requires custom access groups and allow-listed delegation. Phase 7
+defers groups to Phase 8, but Phase 8 implements gamification rather than IAM
+groups. Phase 9 defers Premium override enforcement to Phase 14. Knowledge
+Forge Guardians are needed by Phase 11, so this ownership gap must be resolved
+before implementation. The full phase matrix is recorded in
+`docs/audits/ROADMAP_AUDIT_2026-10-10.md`.
+
+### R7 — Legacy phase documents look authoritative
+
+`docs/roadmap/phases.md` and `docs/roadmap/milestones.md` retain an obsolete
+Phase 0–4 model without a superseded marker. They conflict with the canonical
+25-phase roadmap and must be archived or labeled historical.
+
 ## Quality-gate findings
 
 CI currently checks architecture/license rules, Prisma, lint, typecheck,

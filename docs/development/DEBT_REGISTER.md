@@ -46,6 +46,9 @@ active package safe and buildable.
 | DEBT-021 | High     | OPEN   | Quality orchestration | Clean-checkout lint/typecheck fail until `@dss/editor` is manually built.                                | D1/D6                    |
 | DEBT-022 | Medium   | OPEN   | Formatting            | Repository Prettier check reports 52 non-compliant files.                                                | D5/D6                    |
 | DEBT-023 | Medium   | OPEN   | Worker tests          | Sharp output cleanup fails with `EBUSY` on Windows in the current diagnostic run.                        | D0.6/D6                  |
+| DEBT-024 | Critical | OPEN   | IAM/product ownership | Custom groups, delegation, Premium and Guardian membership have no settled implementation owner.         | D1/D2                    |
+| DEBT-025 | High     | OPEN   | Roadmap sources       | Legacy phase/milestone files expose a conflicting phase numbering system without superseded markers.     | D1                       |
+| DEBT-026 | High     | OPEN   | Completion evidence   | Phase 9/10 completion gates are not currently reproducible from the red repository baseline.             | D1/D6                    |
 
 ## Entry policy
 
