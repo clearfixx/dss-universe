@@ -1,0 +1,328 @@
+# DSS Universe — Project Audit
+
+> Status: Static audit in progress; runtime verification blocked
+>
+> Date: 2026-10-10
+>
+> Branch: `phase/audit-and-debt-closure`
+
+## Purpose
+
+This audit establishes a truthful baseline before DSS Universe begins Phase 11.
+It compares the canonical roadmap, architecture rules, repository structure,
+module boundaries, development environment, quality gates and implemented code.
+
+The audit does not authorize Phase 11 implementation. Phase 11 begins only
+after the debt-closure scope is reviewed and accepted.
+
+## Model recommendation
+
+Architecture reconciliation, boundary redesign and phase planning should use
+`gpt-6.1-sol` with high or xhigh reasoning. Mechanical documentation cleanup,
+File Passport insertion and routine test additions may use a lower-cost model
+after the architectural decisions are frozen.
+
+## Audit rules
+
+- Backend and architecture are the current priority.
+- Frontend changes are limited to the smallest verification surface required
+  by a backend capability.
+- No new visual design, complex UI/UX or speculative frontend behavior is in
+  scope.
+- Every new source file follows DSS File Passport v3.0/v3.1.
+- One file owns one coherent responsibility.
+- Modules must not import another module's internals or persistence adapters.
+- Sensitive state must not cross a module boundary without an explicit,
+  minimal and reviewed contract.
+- Defects outside the accepted package are recorded in the debt register and
+  reported before they are implemented.
+
+## Repository position
+
+The implemented repository is materially ahead of its status documentation.
+
+- Phases 1–7 are represented as complete by the canonical roadmap.
+- Phase 8 contains delivered Reputation, Community Points, Levels, Custom
+  Titles, Achievements, Leaderboards and frontend packages, but remains marked
+  `IN PROGRESS`.
+- Phase 9 has a completion audit and is marked complete.
+- Phase 10 packages 10.0–10.16 are marked complete.
+- The post-Phase-10 Auth UX bridge includes session UX, password recovery,
+  email verification, login abuse protection, security alerts, safe unlock and
+  two-factor authentication.
+- Phase 11 has not started and remains the next product phase after debt
+  closure.
+
+The `Current Position` section in the canonical roadmap still points to Phase 4. `PROJECT_CONTEXT.md` still reports Phase 3/5-era state. These sections are
+not reliable descriptions of the current repository.
+
+## Environment baseline
+
+| Capability            | Current state                                                 | Required action                                                |
+| --------------------- | ------------------------------------------------------------- | -------------------------------------------------------------- |
+| Node.js               | 22.22.3                                                       | Install/use pinned 24.18.0                                     |
+| pnpm                  | Pinned 11.9.0, Corepack requires network in the current shell | Revalidate under Node 24                                       |
+| Docker Desktop        | Installed, engine previously stuck in `starting`              | Repair and run Compose health checks                           |
+| PostgreSQL            | Declared in Compose                                           | Runtime verification pending                                   |
+| Redis                 | Declared in Compose                                           | Runtime verification pending                                   |
+| pgAdmin               | Declared in Compose                                           | Runtime verification pending                                   |
+| MinIO/S3              | Not declared in Compose                                       | Decide local MinIO topology or verify an external endpoint     |
+| ClamAV                | Not declared in Compose                                       | Add/verify a development scanner service                       |
+| SMTP                  | Not declared in Compose                                       | Add a local mail catcher or verify a development SMTP endpoint |
+| Observability backend | Not declared in Compose                                       | Define optional local OTLP backend and fallback behavior       |
+| GitHub CLI            | Missing from PATH                                             | Install and authenticate before automated PR/CI work           |
+| Root `.env`           | Exists but misses many keys from `.env.example`               | Reconcile without exposing secret values                       |
+| API `.env`            | Exists but misses newer Auth/AI/Mail keys                     | Reconcile without exposing secret values                       |
+
+The current Compose file contains only `postgres`, `redis` and `pgadmin`.
+
+## Architecture findings
+
+### A1 — Authentication is coupled to Users internals
+
+`AuthService` imports the Users repository contract and mapper through internal
+paths. Auth application services also read or update user-owned persistence
+directly. The JWT strategy reads Prisma `UserStatus` through the Session/User
+relationship.
+
+This violates the intended ownership boundary. Authentication should operate
+on an opaque subject/account credential contract and session state. Public
+profile, social data and Users persistence must not be visible to Auth.
+
+The redesign must distinguish:
+
+- credentials and authenticators;
+- opaque subject identity;
+- account lifecycle eligibility;
+- public/private profile data;
+- authorization permissions.
+
+Registration may require an explicit orchestration boundary. It must not be
+implemented by allowing Auth to own the Users aggregate.
+
+### A2 — Application services bypass repository boundaries
+
+Several Auth application services inject `PrismaService` directly. IAM role,
+permission and user-access services also contain direct persistence logic.
+This contradicts the documented flow `application -> repository contract ->
+infrastructure adapter`.
+
+### A3 — Cross-module synchronous service coupling
+
+Reputation, Achievements, Community Points and Levels import `UsersService`.
+Levels also imports `CommunityPointsService`.
+
+Not every cross-module interaction can be asynchronous, but dependencies must
+be expressed as narrow ports, immutable projections or events rather than
+general-purpose foreign services. A module may know a stable capability
+contract; it must not know another module's internals, database model or
+unrelated data.
+
+### A4 — Architecture validation is too narrow
+
+The current checker catches domain-to-outer-layer imports, presentation access
+to Prisma/repositories and imports of another module's infrastructure folder.
+It does not catch:
+
+- module-to-module service coupling;
+- application-layer Prisma access;
+- Prisma enums/types leaking into domain and presentation;
+- deep imports of another module's domain/application files;
+- missing public API boundaries;
+- Auth/Users ownership violations;
+- DSS File Passport coverage.
+
+The current checker passes despite the confirmed violations above.
+
+### A5 — Prisma types leak beyond infrastructure
+
+Prisma enums and types are imported by domain, application and presentation
+files in multiple modules. Domain contracts should use module-owned enums and
+types. Infrastructure mappers should translate Prisma representations.
+
+### A6 — File Passport adoption is incomplete
+
+A preliminary scan found 247 files without `DSS Universe` in their first 30
+lines out of 786 TS/TSX/JS source-like files. This number includes generated,
+framework and configuration files and must be classified before remediation.
+
+New authored source files must comply immediately. Existing files should be
+migrated in bounded packages rather than through an unreviewable repository-
+wide comment rewrite.
+
+### A7 — Standards contain conflicting rules
+
+Older backend standards place authentication and authorization together in
+`core/auth` and show role-based decorators. Newer documents separate Auth,
+Authorization and IAM and require permission-based checks. The canonical rule
+must be reconciled before architecture enforcement is expanded.
+
+## Product and roadmap findings
+
+### R1 — Phase status is not truthful
+
+The roadmap's lower `Current Position` section and `PROJECT_CONTEXT.md` are
+stale. Phase 8 is still `IN PROGRESS` while Phases 9 and 10 are complete.
+
+### R2 — Phase 5 is not formally closed
+
+The Auth UX bridge is substantially implemented, but custom access groups,
+allow-listed delegation, Premium ownership and the full security baseline lack
+one explicit closure decision.
+
+### R3 — Phase 8 lacks a closure audit
+
+The major Phase 8 packages exist. A dedicated acceptance matrix must determine
+whether the remaining status is documentation debt or missing behavior.
+
+### R4 — Phase 11 must not start on an ambiguous baseline
+
+Knowledge Forge depends on Editor, Media, Interactions, Activity,
+Gamification, Search, Audit and Outbox. Its architecture brainstorm must happen
+after ownership and infrastructure debt that can force later rewrites is
+resolved.
+
+## Quality-gate findings
+
+CI currently checks architecture/license rules, Prisma, lint, typecheck,
+coverage, API E2E, GraphQL generated output, build, Web E2E and high-severity
+dependency audit.
+
+The root `quality` command is not equivalent to CI: it omits API E2E, Web E2E,
+GraphQL consistency and explicit coverage. A canonical local full-gate command
+or documented command sequence is required.
+
+Runtime quality status is not yet verified because the pinned Node version and
+working Docker services are unavailable.
+
+## Proposed debt-closure sequence
+
+### Package D0 — Environment and deterministic onboarding
+
+- install/select Node 24.18.0 and pnpm 11.9.0;
+- repair Docker Desktop;
+- reconcile local environment files by key;
+- add or explicitly design local MinIO, ClamAV, SMTP catcher and optional OTLP;
+- provision disposable development and test databases;
+- install/authenticate GitHub CLI;
+- prove clean install and documented startup.
+
+Recommended model: lower-cost model for configuration mechanics; use
+`gpt-6.1-sol` if Docker/service topology requires architectural changes.
+
+### Package D1 — Canonical documentation and status reconciliation
+
+- update roadmap Current Position;
+- update Project Context;
+- audit and close or defer Phase 5 scope explicitly;
+- create the Phase 8 completion audit;
+- repair malformed or conflicting workflow/standards documents;
+- define the branch convention for all future phases.
+
+Recommended model: `gpt-6.1-sol` high because status decisions affect scope and
+architecture.
+
+### Package D2 — Architecture enforcement design
+
+- freeze Auth, identity/account, Users, IAM and Authorization ownership;
+- define permitted synchronous ports and event/projection boundaries;
+- update architecture documents and ADRs;
+- expand the checker only after the canonical rules are approved.
+
+Recommended model: `gpt-6.1-sol` xhigh.
+
+### Package D3 — Auth/Users/IAM boundary remediation
+
+- remove Users internals from Auth;
+- move direct Prisma access behind owned repositories;
+- separate credential/session data from user profile data;
+- preserve external API behavior and migrations where possible;
+- add boundary, security and regression tests.
+
+Recommended model: `gpt-6.1-sol` xhigh.
+
+### Package D4 — Cross-module contract remediation
+
+- replace broad `UsersService` and `CommunityPointsService` dependencies with
+  narrow ports, projections or event consumers;
+- remove Prisma representation leakage from domain/application/presentation;
+- strengthen public module APIs and architecture tests.
+
+Recommended model: `gpt-6.1-sol` high or xhigh.
+
+### Package D5 — File Passport and file-responsibility audit
+
+- classify authored, generated, configuration and vendor-like files;
+- enforce Passports for new authored files;
+- migrate missing Passports by module in reviewable packages;
+- split files that contain unrelated responsibilities;
+- avoid changing generated files manually.
+
+Recommended model: lower-cost model after classification rules are frozen.
+
+### Package D6 — Full baseline quality gate
+
+- format check;
+- lint;
+- typecheck;
+- Prisma validation and generation;
+- unit and coverage suites;
+- API E2E;
+- GraphQL consistency;
+- production build;
+- architecture and license checks;
+- Web smoke/E2E without visual redesign;
+- dependency audit.
+
+Recommended model: lower-cost model for routine execution; escalate to
+`gpt-6.1-sol` for non-trivial failures.
+
+### Package D7 — Debt-phase review and release gate
+
+- review the full diff and migrations;
+- verify documentation truthfulness;
+- commit each accepted package;
+- push the phase branch;
+- open a PR and observe CI;
+- merge only after user review and successful checks.
+
+## Phase 11 entry criteria
+
+Phase 11 may begin when:
+
+1. the environment and disposable databases are reproducible;
+2. Phase 5 and Phase 8 have explicit closure/defer decisions;
+3. Auth/Users/IAM ownership is frozen or remediated enough not to force a
+   Knowledge Forge rewrite;
+4. the full baseline quality gate passes;
+5. roadmap and Project Context identify Phase 11 as next;
+6. the Phase 11 brainstorm is reviewed;
+7. a dedicated Phase 11 branch is created from the accepted baseline.
+
+## Phase 11 brainstorm agenda
+
+Before implementation, decide:
+
+- Knowledge Forge aggregate and revision ownership;
+- category/page identity and slug/language rules;
+- draft, review, publish, reject and rollback state machine;
+- Guardian permissions and protected-page policy;
+- immutable revision and optimistic concurrency rules;
+- Editor profile and safe delivery projections;
+- Media references and attachment lifecycle;
+- shared comments/bookmarks/reactions integration;
+- Search, SEO, Activity and Gamification event contracts;
+- deletion, tombstone, retention and moderation behavior;
+- minimum verification frontend without new visual design;
+- package sequence and Definition of Done.
+
+## Audit completion blockers
+
+- Node 24.18.0 is not active.
+- Docker Engine and required services are not healthy.
+- GitHub CLI is unavailable.
+- External/local MinIO, ClamAV, SMTP and observability endpoints are not yet
+  proven.
+
+The static findings are actionable, but this audit cannot be marked complete
+until the runtime and CI-facing checks are executed.
