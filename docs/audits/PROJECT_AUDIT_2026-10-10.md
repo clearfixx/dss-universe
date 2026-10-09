@@ -217,6 +217,18 @@ or documented command sequence is required.
 Runtime quality status is not yet verified because the pinned Node version and
 working Docker services are unavailable.
 
+The available Node 22 diagnostic run found that repository formatting fails on
+52 files and root tests fail in the Worker (20 passed, 3 failed). It also proved
+that clean-checkout lint and typecheck require a manual `@dss/editor` build;
+both pass after that build. Production build, Prisma validation and the current
+architecture/license scripts pass under Node 22. Full command evidence is in
+`docs/audits/QUALITY_AUDIT_2026-10-10.md`.
+
+Worker path-containment checks are unsafe on Windows because they test only the
+`../` separator form while `path.relative()` returns `..\\`. An escaping storage
+key therefore proceeds to ClamAV connection or file processing instead of being
+rejected. This is a Critical security defect.
+
 The dependency audit currently reports 140 advisories: 7 critical, 63 high,
 61 moderate and 9 low. Critical findings include multiple Next.js advisories,
 `proxy-addr`, `handlebars` and `shell-quote`. Production-impacting high findings
@@ -253,6 +265,16 @@ Recommended model: lower-cost model for configuration mechanics; use
 
 Recommended model: `gpt-6.1-sol` high for impact analysis and upgrade planning;
 use a lower-cost model for frozen version edits and routine verification.
+
+### Package D0.6 — Worker path-containment security fix
+
+- define one narrow, platform-correct storage-key resolver;
+- replace duplicated scanner/processor containment logic;
+- cover Windows and POSIX separators, absolute paths and sibling-prefix cases;
+- ensure invalid paths fail before network or filesystem side effects;
+- rerun Worker unit tests under Node 24 on Windows and CI.
+
+Recommended model: `gpt-6.1-sol` high because this is a security boundary.
 
 ### Package D1 — Canonical documentation and status reconciliation
 
@@ -337,14 +359,15 @@ Phase 11 may begin when:
 1. the environment and disposable databases are reproducible;
 2. critical and high dependency findings are remediated or accepted with
    evidence, an owner and an expiry;
-3. Phase 5, the Phase 6 storage-provider scope and Phase 8 have explicit
+3. Worker path-containment is fixed and cross-platform tests pass;
+4. Phase 5, the Phase 6 storage-provider scope and Phase 8 have explicit
    closure/defer decisions;
-4. Auth/Users/IAM ownership is frozen or remediated enough not to force a
+5. Auth/Users/IAM ownership is frozen or remediated enough not to force a
    Knowledge Forge rewrite;
-5. the full baseline quality gate passes;
-6. roadmap and Project Context identify Phase 11 as next;
-7. the Phase 11 brainstorm is reviewed;
-8. a dedicated Phase 11 branch is created from the accepted baseline.
+6. the full baseline quality gate passes from a clean checkout;
+7. roadmap and Project Context identify Phase 11 as next;
+8. the Phase 11 brainstorm is reviewed;
+9. a dedicated Phase 11 branch is created from the accepted baseline.
 
 ## Phase 11 brainstorm agenda
 
