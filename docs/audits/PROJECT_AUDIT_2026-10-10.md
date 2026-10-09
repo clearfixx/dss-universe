@@ -267,6 +267,9 @@ frontend work, but security remediation cannot be deferred as visual polish.
 
 ## Proposed debt-closure sequence
 
+The executable branch, dependency, model and acceptance schedule is maintained
+in `docs/development/PRE_PHASE_11_EXECUTION_PLAN.md`.
+
 ### Package D0 — Environment and deterministic onboarding
 
 - install/select Node 24.18.0 and pnpm 11.9.0;
