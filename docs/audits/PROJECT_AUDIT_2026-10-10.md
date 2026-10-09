@@ -71,6 +71,7 @@ not reliable descriptions of the current repository.
 | SMTP                  | Not declared in Compose                                       | Add a local mail catcher or verify a development SMTP endpoint |
 | Observability backend | Not declared in Compose                                       | Define optional local OTLP backend and fallback behavior       |
 | GitHub CLI            | Missing from PATH                                             | Install and authenticate before automated PR/CI work           |
+| Git remote            | Read access verified with `git ls-remote`                     | Write and PR access remain unverified                          |
 | Root `.env`           | Exists but misses many keys from `.env.example`               | Reconcile without exposing secret values                       |
 | API `.env`            | Exists but misses newer Auth/AI/Mail keys                     | Reconcile without exposing secret values                       |
 
@@ -157,6 +158,13 @@ Older backend standards place authentication and authorization together in
 Authorization and IAM and require permission-based checks. The canonical rule
 must be reconciled before architecture enforcement is expanded.
 
+### A8 — Storage portability is declared but not implemented
+
+Media configuration exposes local, MinIO and S3 provider choices, but the
+runtime binds only the local storage provider. The media worker explicitly
+rejects non-local providers. This is a contract-to-implementation mismatch,
+not merely an unavailable local service.
+
 ## Product and roadmap findings
 
 ### R1 — Phase status is not truthful
@@ -182,6 +190,13 @@ Gamification, Search, Audit and Outbox. Its architecture brainstorm must happen
 after ownership and infrastructure debt that can force later rewrites is
 resolved.
 
+### R5 — Search Platform claims exceed the implementation evidence
+
+Phase 10 documentation describes Search integration, but the repository shows
+only a News-local search projection. No dedicated shared Search Platform
+module or cross-module indexing contract was found. Phase 10 wording must be
+corrected or the missing platform boundary must be scheduled explicitly.
+
 ## Quality-gate findings
 
 CI currently checks architecture/license rules, Prisma, lint, typecheck,
@@ -194,6 +209,14 @@ or documented command sequence is required.
 
 Runtime quality status is not yet verified because the pinned Node version and
 working Docker services are unavailable.
+
+The dependency audit currently reports 140 advisories: 7 critical, 63 high,
+61 moderate and 9 low. Critical findings include multiple Next.js advisories,
+`proxy-addr`, `handlebars` and `shell-quote`. Production-impacting high findings
+also include Sharp, Joi, Multer, Undici, `ws`, ProseMirror and GraphQL tooling.
+The Next.js advisory set requires at least 16.3.8 for the currently reported
+issues. Frontend dependency remediation must be coordinated with the active
+frontend work, but security remediation cannot be deferred as visual polish.
 
 ## Proposed debt-closure sequence
 
@@ -209,6 +232,20 @@ working Docker services are unavailable.
 
 Recommended model: lower-cost model for configuration mechanics; use
 `gpt-6.1-sol` if Docker/service topology requires architectural changes.
+
+### Package D0.5 — Critical dependency remediation
+
+- classify production and development advisories by reachable impact;
+- update Next.js to at least 16.3.8 and apply safe direct patch/minor updates
+  such as Sharp and Joi where compatibility is verified;
+- determine whether vulnerable transitive packages require parent upgrades,
+  overrides or replacement;
+- run the complete quality gate and focused security regression tests;
+- reach zero critical/high advisories or document a time-bound exception with
+  evidence, owner and expiry.
+
+Recommended model: `gpt-6.1-sol` high for impact analysis and upgrade planning;
+use a lower-cost model for frozen version edits and routine verification.
 
 ### Package D1 — Canonical documentation and status reconciliation
 
@@ -291,13 +328,16 @@ Recommended model: lower-cost model for routine execution; escalate to
 Phase 11 may begin when:
 
 1. the environment and disposable databases are reproducible;
-2. Phase 5 and Phase 8 have explicit closure/defer decisions;
-3. Auth/Users/IAM ownership is frozen or remediated enough not to force a
+2. critical and high dependency findings are remediated or accepted with
+   evidence, an owner and an expiry;
+3. Phase 5, the Phase 6 storage-provider scope and Phase 8 have explicit
+   closure/defer decisions;
+4. Auth/Users/IAM ownership is frozen or remediated enough not to force a
    Knowledge Forge rewrite;
-4. the full baseline quality gate passes;
-5. roadmap and Project Context identify Phase 11 as next;
-6. the Phase 11 brainstorm is reviewed;
-7. a dedicated Phase 11 branch is created from the accepted baseline.
+5. the full baseline quality gate passes;
+6. roadmap and Project Context identify Phase 11 as next;
+7. the Phase 11 brainstorm is reviewed;
+8. a dedicated Phase 11 branch is created from the accepted baseline.
 
 ## Phase 11 brainstorm agenda
 
@@ -321,6 +361,7 @@ Before implementation, decide:
 - Node 24.18.0 is not active.
 - Docker Engine and required services are not healthy.
 - GitHub CLI is unavailable.
+- Git remote write access and PR creation are unverified.
 - External/local MinIO, ClamAV, SMTP and observability endpoints are not yet
   proven.
 
