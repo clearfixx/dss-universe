@@ -172,6 +172,13 @@ runtime binds only the local storage provider. The media worker explicitly
 rejects non-local providers. This is a contract-to-implementation mismatch,
 not merely an unavailable local service.
 
+### A9 — Public module APIs expose broad concrete services
+
+Many module roots export application services directly, and several use
+unrestricted wildcard exports. This turns nominal public boundaries into broad
+coupling surfaces. Detailed dependency, Prisma-leak and checker evidence is in
+`docs/audits/ARCHITECTURE_BOUNDARY_AUDIT_2026-10-10.md`.
+
 ## Product and roadmap findings
 
 ### R1 — Phase status is not truthful

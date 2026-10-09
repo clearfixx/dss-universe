@@ -49,6 +49,8 @@ active package safe and buildable.
 | DEBT-024 | Critical | OPEN   | IAM/product ownership | Custom groups, delegation, Premium and Guardian membership have no settled implementation owner.         | D1/D2                    |
 | DEBT-025 | High     | OPEN   | Roadmap sources       | Legacy phase/milestone files expose a conflicting phase numbering system without superseded markers.     | D1                       |
 | DEBT-026 | High     | OPEN   | Completion evidence   | Phase 9/10 completion gates are not currently reproducible from the red repository baseline.             | D1/D6                    |
+| DEBT-027 | High     | OPEN   | Public APIs           | Module roots broadly export concrete services and wildcard surfaces, enabling structural coupling.       | D2/D4                    |
+| DEBT-028 | High     | OPEN   | Architecture rules    | Approved documents conflict on whether application services may access database services directly.       | D1/D2                    |
 
 ## Entry policy
 
