@@ -77,6 +77,12 @@ not reliable descriptions of the current repository.
 
 The current Compose file contains only `postgres`, `redis` and `pgadmin`.
 
+The Worker has no environment template or validation path, Web defaults to API
+port 4000 while onboarding uses 3001, and the Bash-only bootstrap uses the wrong
+pnpm filter name. Compose also lacks health checks and an isolated local test
+topology. Detailed evidence is in
+`docs/audits/INFRASTRUCTURE_AUDIT_2026-10-10.md`.
+
 ## Architecture findings
 
 ### A1 — Authentication is coupled to Users internals
@@ -246,10 +252,10 @@ both pass after that build. Production build, Prisma validation and the current
 architecture/license scripts pass under Node 22. Full command evidence is in
 `docs/audits/QUALITY_AUDIT_2026-10-10.md`.
 
-Worker path-containment checks are unsafe on Windows because they test only the
-`../` separator form while `path.relative()` returns `..\\`. An escaping storage
-key therefore proceeds to ClamAV connection or file processing instead of being
-rejected. This is a Critical security defect.
+Local storage path-containment checks are unsafe on Windows because the API and
+Worker test only the `../` separator form while `path.relative()` returns
+`..\\`. An escaping storage key can therefore proceed to filesystem, ClamAV or
+processing work instead of being rejected. This is a Critical security defect.
 
 The dependency audit currently reports 140 advisories: 7 critical, 63 high,
 61 moderate and 9 low. Critical findings include multiple Next.js advisories,
