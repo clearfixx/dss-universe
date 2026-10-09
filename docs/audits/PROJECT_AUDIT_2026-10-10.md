@@ -143,13 +143,20 @@ types. Infrastructure mappers should translate Prisma representations.
 
 ### A6 — File Passport adoption is incomplete
 
-A preliminary scan found 247 files without `DSS Universe` in their first 30
-lines out of 786 TS/TSX/JS source-like files. This number includes generated,
-framework and configuration files and must be classified before remediation.
+A preliminary scan found 247 files without `DSS Universe` in their first 35
+lines out of 786 TS/TSX/module-JS source candidates. Including the Prisma schema
+produces 248 of 787, but the specification does not clearly classify `.prisma`.
+Generated, framework and configuration files must also be classified before
+remediation. Detailed evidence is recorded in
+`docs/audits/FILE_PASSPORT_AUDIT_2026-10-10.md`.
 
 New authored source files must comply immediately. Existing files should be
 migrated in bounded packages rather than through an unreviewable repository-
 wide comment rewrite.
+
+The canonical specification is itself inconsistent: it identifies as v3.0,
+appends v3.1 separately, contains an unclosed Official Template code fence and
+does not define generated/configuration/schema exclusions.
 
 ### A7 — Standards contain conflicting rules
 

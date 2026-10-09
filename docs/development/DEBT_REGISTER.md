@@ -41,6 +41,7 @@ active package safe and buildable.
 | DEBT-016 | Critical | OPEN   | Dependencies         | Audit reports 7 critical and 63 high advisories, including Next.js RCE/SSRF-class findings.              | D0.5                     |
 | DEBT-017 | High     | OPEN   | Media/storage        | Media declares MinIO/S3 support, but only local storage is bound and the worker rejects other providers. | D1/D2 or storage package |
 | DEBT-018 | High     | OPEN   | Search               | Phase 10 claims Search integration, but no shared Search Platform or indexing contract was found.        | D1/pre-Phase 11          |
+| DEBT-019 | High     | OPEN   | File Passport        | The canonical specification has version/rendering defects and no generated/config/schema classification. | D1/D5                    |
 
 ## Entry policy
 
