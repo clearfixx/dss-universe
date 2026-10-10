@@ -12,7 +12,7 @@
  * ===============================================================
  */
 
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -45,14 +45,48 @@ describe('LocalStorageProvider', () => {
     );
   });
 
-  it('rejects paths outside the configured uploads root', async () => {
+  it.each([
+    '../outside',
+    '..\\outside',
+    'C:\\outside',
+    '/outside',
+    'safe/../outside',
+  ])('rejects unsafe directory %s without writing files', async (directory) => {
     const provider = new LocalStorageProvider();
     await expect(
       provider.save({
         buffer: Buffer.from('escape'),
-        directory: '../outside',
+        directory,
         filename: 'file.txt',
       }),
     ).rejects.toThrow('escapes the configured uploads root');
+    expect(await readdir(uploadsRoot)).toEqual([]);
   });
+
+  it.each([
+    '../escape',
+    '..\\escape',
+    '/absolute',
+    'C:\\absolute',
+    'file:stream',
+  ])('rejects unsafe read/delete key %s', async (key) => {
+    const provider = new LocalStorageProvider();
+    await expect(provider.read(key)).rejects.toThrow('Storage key');
+    await expect(provider.delete(key)).rejects.toThrow('Storage key');
+  });
+
+  it.each(['../escape', '..\\escape', 'CON', 'file:stream'])(
+    'rejects unsafe filename %s before creating directories',
+    async (filename) => {
+      const provider = new LocalStorageProvider();
+      await expect(
+        provider.save({
+          buffer: Buffer.from('test'),
+          directory: 'new/directory',
+          filename,
+        }),
+      ).rejects.toThrow('Storage key');
+      expect(await readdir(uploadsRoot)).toEqual([]);
+    },
+  );
 });

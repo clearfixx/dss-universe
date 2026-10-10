@@ -103,6 +103,23 @@ in D6. This is not evidence of an assertion failure or a passing full gate.
 
 ## Entry policy
 
+### D0.6 containment remediation progress
+
+DEBT-020 and DEBT-023 have local fixes on `debt/d0-6-storage-security`;
+they remain OPEN pending Windows/Ubuntu CI and owner review. API and both Worker
+consumers share `@dss/storage`; variant validation precedes filesystem effects.
+Sharp metadata inspection is buffer-backed in tests; production caching is unchanged.
+Evidence: `docs/audits/D0_6_STORAGE_SECURITY_2026-10-10.md`.
+
+### DEBT-037 — Physical storage containment threat model (Medium, OPEN, D2/D6)
+
+Lexical key validation cannot prevent a pre-existing symlink/junction or a local
+filesystem race from redirecting IO outside uploads. D0.6 assumes directories are
+application-controlled. There is no established remote exploit under this assumption.
+Decide whether hostile local writers are in scope; if so, design OS-specific physical
+containment and TOCTOU defenses. Do not silently expand this package or describe
+lexical checks as sandbox isolation.
+
 Every new entry should include evidence, impact, proposed ownership and a clear
 decision before implementation. Discovery is not permission to expand the
 current package silently.

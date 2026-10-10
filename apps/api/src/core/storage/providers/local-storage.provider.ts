@@ -10,6 +10,7 @@
  * Universe media features.
  *
  * 🧠 Responsibilities:
+ * • validates portable storage keys before filesystem effects;
  * • writes uploaded files to the local filesystem;
  * • creates missing upload directories;
  * • returns stable public URLs for stored files;
@@ -21,6 +22,7 @@
  *
  * ⚠️ Important:
  * Feature modules should depend on StorageService, not this provider directly.
+ * Containment is lexical; uploads directories must be application-controlled.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -28,7 +30,8 @@
 
 import { Injectable } from '@nestjs/common';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
-import { dirname, isAbsolute, relative, resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { normalizeStorageKey, resolveStorageKey } from '@dss/storage';
 
 import type {
   SavedFile,
@@ -43,8 +46,8 @@ export class LocalStorageProvider implements StorageProvider {
   );
 
   async save(input: SaveFileInput): Promise<SavedFile> {
-    const safeDirectory = this.normalizeRelativePath(input.directory);
-    const safeFilename = this.normalizeRelativePath(input.filename);
+    const safeDirectory = normalizeStorageKey(input.directory);
+    const safeFilename = normalizeStorageKey(input.filename);
     const relativePath = `${safeDirectory}/${safeFilename}`;
     const absolutePath = this.resolveWithinRoot(relativePath);
 
@@ -61,7 +64,7 @@ export class LocalStorageProvider implements StorageProvider {
   }
 
   async delete(path: string): Promise<void> {
-    const safePath = this.normalizeRelativePath(path);
+    const safePath = normalizeStorageKey(path);
     const absolutePath = this.resolveWithinRoot(safePath);
 
     await rm(absolutePath, {
@@ -70,25 +73,12 @@ export class LocalStorageProvider implements StorageProvider {
   }
 
   async read(path: string): Promise<Buffer> {
-    const safePath = this.normalizeRelativePath(path);
+    const safePath = normalizeStorageKey(path);
     return readFile(this.resolveWithinRoot(safePath));
   }
 
-  private normalizeRelativePath(value: string): string {
-    return value.replaceAll('\\', '/').replace(/^\/+/, '');
-  }
-
   private resolveWithinRoot(path: string): string {
-    const absolutePath = resolve(this.uploadsRoot, path);
-    const relativePath = relative(this.uploadsRoot, absolutePath);
-    if (
-      isAbsolute(relativePath) ||
-      relativePath === '..' ||
-      relativePath.startsWith('../')
-    ) {
-      throw new Error('Storage path escapes the configured uploads root.');
-    }
-    return absolutePath;
+    return resolveStorageKey(this.uploadsRoot, path);
   }
 }
 
