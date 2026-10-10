@@ -30,7 +30,7 @@ active package safe and buildable.
 | DEBT-005 | High     | OPEN     | Architecture tooling  | Boundary checker passes despite known ownership and layering violations.                                             | D2–D4                  |
 | DEBT-006 | High     | ACCEPTED | Roadmap               | Current Position and Project Context reconciled in D1; owner PR review pending.                                      | D1                     |
 | DEBT-007 | High     | ACCEPTED | Phase 8               | Phase 8 classified implemented with completion audit; runtime/owner acceptance remains pending.                      | D1/D6                  |
-| DEBT-008 | High     | OPEN     | Phase 5               | Auth bridge exists, but custom groups/Premium/security closure is not explicit.                                      | D1                     |
+| DEBT-008 | High     | OPEN     | Phase 5               | Auth bridge exists; groups/Premium ownership approved, implementation awaits separately scoped package.              | D3.5 / D6              |
 | DEBT-009 | Medium   | OPEN     | File Passport         | Preliminary scan reports 247 potentially non-compliant source-like files; classification is required.                | D5                     |
 | DEBT-010 | Medium   | OPEN     | Standards             | Older Auth/Authorization and role-based guidance conflicts with newer permission-based boundaries.                   | D1–D2                  |
 | DEBT-011 | Medium   | ACCEPTED | Workflow docs         | Canonical phase/workflow fencing repaired in D1; documentation checks pass, review pending.                          | D1                     |
@@ -44,9 +44,9 @@ active package safe and buildable.
 | DEBT-019 | High     | ACCEPTED | File Passport         | Passport v3.1 rendering repaired in D1; generated/config/schema classification remains D5 work.                      | D1/D5                  |
 | DEBT-020 | Critical | OPEN     | Media security        | Windows separators bypass upload-root containment in API storage and two Worker consumers.                           | D0.6                   |
 | DEBT-021 | High     | ACCEPTED | Quality orchestration | D0 adds shared-package build ordering; local lint/typecheck pass, clean CI evidence remains required.                | D0/D6                  |
-| DEBT-022 | Medium   | OPEN     | Formatting            | Latest repository Prettier check reports 50 non-compliant files (initial audit: 52).                                 | D5/D6                  |
+| DEBT-022 | Medium   | OPEN     | Formatting            | D2 repository Prettier check reports 41 legacy non-compliant files (initial audit: 52).                              | D5/D6                  |
 | DEBT-023 | Medium   | OPEN     | Worker tests          | Sharp output cleanup fails with `EBUSY` on Windows in the current diagnostic run.                                    | D0.6/D6                |
-| DEBT-024 | Critical | OPEN     | IAM/product ownership | IAM assignment/Authorization decisions/Guardian capability ownership approved; groups/Premium implementation absent. | D2/owned package       |
+| DEBT-024 | Critical | OPEN     | IAM/product ownership | IAM assignment/Authorization decisions/Guardian capability ownership approved; groups/Premium implementation absent. | D3.5 scope approval    |
 | DEBT-025 | High     | ACCEPTED | Roadmap sources       | Legacy phases/milestones marked historical and linked to canonical roadmap; review pending.                          | D1                     |
 | DEBT-026 | High     | OPEN     | Completion evidence   | Phase 9/10 completion gates are not currently reproducible from the red repository baseline.                         | D1/D6                  |
 | DEBT-027 | High     | OPEN     | Public APIs           | Module roots broadly export concrete services and wildcard surfaces, enabling structural coupling.                   | D2/D4                  |
@@ -58,6 +58,29 @@ active package safe and buildable.
 | DEBT-033 | Medium   | ACCEPTED | Observability         | Explicit telemetry startup and optional collector verified; no persistent monitoring backend claimed.                | D0                     |
 
 ## Additional D0 verification findings
+
+### D2 architecture contracts and inventory
+
+[ADR-003](../architecture/adr/003-subject-and-access-ownership.md) records the explicit
+owner approval: Auth owns opaque subject/credentials, Users owns profiles, separate
+composition coordinates registration and response assembly. No D2 production or
+schema change implements this yet; DEBT-001/002/004/027 remain OPEN.
+[ADR-004](../architecture/adr/004-module-integration-contracts.md) describes synchronous
+security ports, Outbox events, minimized projections and named public APIs for review.
+
+The [frozen report-only inventory](../architecture/ARCHITECTURE_TOOLING.md) contains
+156 diagnostics: 20 allocated to D3, 136 to D4. It exposes wildcard/concrete public
+exports, foreign internals/services and persistence leaks, without waiving them.
+DEBT-005 enforcement remains OPEN until D4; a baseline match is not compliance.
+DEBT-010/028 documentation direction is reconciled; runtime/manual review remains.
+DEBT-024 requires a separate D3.5 IAM groups/Premium scope approval and package,
+scheduled after D3 and before final D6/D7 readiness. No implementation authorization
+or Phase 14 sanction completion is implied. DEBT-037 remains an unresolved physical
+storage threat-model decision, not a promise of sandbox isolation.
+
+The current formatting count after D2 is 41 legacy files (43 after D1, 50 after
+D0.6). Two touched historical ADRs were formatted while marking their status;
+D2 does not mechanically reformat unrelated source.
 
 ### D1 documentation reconciliation
 

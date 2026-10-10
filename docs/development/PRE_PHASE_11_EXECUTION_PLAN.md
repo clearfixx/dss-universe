@@ -55,6 +55,7 @@ debt/d0-6-storage-security
 debt/d1-canonical-documentation
 debt/d2-architecture-contracts
 debt/d3-auth-identity-boundary
+debt/d3-5-iam-access-groups (reserved; separate scope approval required)
 debt/d4-module-boundaries
 debt/d5-file-passports
 debt/d6-quality-baseline
@@ -101,6 +102,10 @@ D0 Environment ───────────────┐
                                       |
                                       v
                          D3 Auth/Identity boundary
+                                      |
+                                      v
+                         D3.5 IAM groups scope/approval
+                         (implementation separately authorized)
                                       |
                                       v
                          D4 Module boundaries
@@ -279,6 +284,24 @@ Exit gate: boundary checks plus security/unit/integration/E2E tests; migration
 apply/rollback strategy reviewed; no secret or profile leakage.
 
 Model: `gpt-6.1-sol` xhigh.
+
+### D3.5 — IAM access groups and Premium readiness (scheduled, not authorized)
+
+Reserved branch: `debt/d3-5-iam-access-groups`, only after its scope approval.
+
+D1 retains generic groups/Premium in 1.0; D2 establishes ownership in
+[ADR-003](../architecture/adr/003-subject-and-access-ownership.md). The implementation
+is absent and not absorbed into D3 boundary remediation or Knowledge Forge.
+After D3, prepare a separate brainstorm covering IAM-owned membership, grants,
+expiry/revocation, delegation allowlists/audit and Authorization-owned Guardian
+capability/deny precedence. Owner approval is required before implementation.
+
+Exit gate before D6/D7 readiness: approved scope, owned implementation and security
+tests for generic groups/Premium/Guardian; no always-allow placeholder or implied
+Phase 14 sanction implementation. Deferring Search/S3 does not waive this gate.
+D4 planning may proceed independently, but Phase 11 cannot bypass this decision.
+
+Model: `gpt-6.1-sol` xhigh for the separate brainstorm and security design.
 
 ### D4 — Cross-module contract remediation
 

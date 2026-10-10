@@ -36,6 +36,13 @@ user-role assignments;
 user-permission assignments;
 effective access summaries.
 
+Generic access-group membership/assignment and Premium grants belong to IAM.
+Authorization owns the effective capability decision, including denial precedence.
+Auth works with an opaque subject and credentials, not a Users profile aggregate.
+Registration and combined responses use explicit composition.
+See [ADR-003](adr/003-subject-and-access-ownership.md) for the owner-approved direction
+and [ADR-004](adr/004-module-integration-contracts.md) for integration design.
+
 IAM does not own login, password hashing, or token refresh.
 
 ## Guards
@@ -59,3 +66,9 @@ exporting every concrete service or using wildcard exports.
 Repositories access data.
 
 Repositories should not decide business rules.
+
+## Evidence, not false green
+
+The [AST inventory and frozen baseline](ARCHITECTURE_TOOLING.md) expose existing
+D3/D4 debt. Report-only success or a matching baseline does not prove architectural
+compliance. The older checker is only a small blocking subset.

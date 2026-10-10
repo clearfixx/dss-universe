@@ -4,6 +4,11 @@
 > Status: Approved
 > Applies to: Backend (NestJS API)
 
+Ownership clarification: [ADR-003](adr/003-subject-and-access-ownership.md) records
+the owner-approved D3 direction; [ADR-004](adr/004-module-integration-contracts.md)
+specifies integration design for D3/D4 review. Known production violations remain
+debt in the [report-only tooling inventory](ARCHITECTURE_TOOLING.md).
+
 ---
 
 # Purpose
@@ -186,7 +191,7 @@ The Core layer contains application-wide infrastructure.
 
 Examples:
 
-- Auth
+- Authentication transport mechanics (not Auth business ownership)
 - Config
 - Database
 - Security
@@ -262,9 +267,11 @@ Every module should expose a public API through:
 index.ts
 ```
 
-Consumers should import from the module root whenever possible.
+Consumers use explicitly published named contracts from the module root.
 
-Avoid deep imports across module boundaries.
+Do not deep-import foreign internals. Composition wiring is not permission to
+inject foreign broad services. Export only explicit named symbols; no wildcard
+or namespace surfaces. Application ports contain no Prisma/provider types.
 
 ---
 
@@ -328,9 +335,10 @@ Infrastructure provides implementations.
 
 # Reference Module
 
-The Users module is the reference implementation of DSS Universe architecture.
+The Users module is a structural reference for layer/folder conventions.
 
-New modules should follow the same structure and conventions.
+New modules should follow the same structure and conventions, not copy its known
+Prisma representation leaks or broad public services recorded in D2/D4.
 
 ---
 

@@ -1,3 +1,26 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Architecture Tooling
+ * 📄 File: scripts/check-architecture.mjs
+ *
+ * 🎯 Purpose:
+ * Preserves the existing blocking subset of API architecture checks.
+ *
+ * 🧠 Responsibilities:
+ * • checks legacy domain, presentation and foreign infrastructure patterns;
+ * • fails this subset without claiming full architectural compliance.
+ *
+ * 🏗️ Architecture:
+ * Read-only legacy gate; the AST inventory is maintained separately in D2.
+ *
+ * ⚠️ Important:
+ * Known debt outside this subset remains visible in architecture:report.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { readdir, readFile } from "node:fs/promises";
 import { extname, join, relative, sep } from "node:path";
 
@@ -64,4 +87,6 @@ if (violations.length > 0) {
   process.exit(1);
 }
 
-console.log("Architecture boundaries are valid.");
+console.log(
+  "Legacy architecture subset passed; see report-only inventory for unclosed debt.",
+);

@@ -1,0 +1,1101 @@
+{
+  "version": 1,
+  "date": "2026-10-10",
+  "sourceBase": "c6eb539",
+  "status": "review inventory; not a waiver or compliance certificate",
+  "scope": "Authored API modules/core TypeScript; excludes tests/declarations; bounded syntactic analysis",
+  "findings": [
+    {
+      "id": "[\"concrete-public-export\",\"apps/api/src/modules/achievements/index.ts\",\"./application/services/achievements.service: AchievementsService\"]",
+      "rule": "concrete-public-export",
+      "file": "apps/api/src/modules/achievements/index.ts",
+      "detail": "./application/services/achievements.service: AchievementsService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"concrete-public-export\",\"apps/api/src/modules/community-points/index.ts\",\"./application/services/community-points.service: CommunityPointsService\"]",
+      "rule": "concrete-public-export",
+      "file": "apps/api/src/modules/community-points/index.ts",
+      "detail": "./application/services/community-points.service: CommunityPointsService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"concrete-public-export\",\"apps/api/src/modules/custom-titles/index.ts\",\"./application/services/custom-titles.service: CustomTitlesService\"]",
+      "rule": "concrete-public-export",
+      "file": "apps/api/src/modules/custom-titles/index.ts",
+      "detail": "./application/services/custom-titles.service: CustomTitlesService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"concrete-public-export\",\"apps/api/src/modules/interactions/index.ts\",\"./application/services/audience-engagement.service: AudienceEngagementService\"]",
+      "rule": "concrete-public-export",
+      "file": "apps/api/src/modules/interactions/index.ts",
+      "detail": "./application/services/audience-engagement.service: AudienceEngagementService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"concrete-public-export\",\"apps/api/src/modules/interactions/index.ts\",\"./application/services/bookmarks.service: BookmarksService\"]",
+      "rule": "concrete-public-export",
+      "file": "apps/api/src/modules/interactions/index.ts",
+      "detail": "./application/services/bookmarks.service: BookmarksService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"concrete-public-export\",\"apps/api/src/modules/interactions/index.ts\",\"./application/services/comment-drafts.service: CommentDraftsService\"]",
+      "rule": "concrete-public-export",
+      "file": "apps/api/src/modules/interactions/index.ts",
+      "detail": "./application/services/comment-drafts.service: CommentDraftsService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"concrete-public-export\",\"apps/api/src/modules/interactions/index.ts\",\"./application/services/comments.service: CommentsService\"]",
+      "rule": "concrete-public-export",
+      "file": "apps/api/src/modules/interactions/index.ts",
+      "detail": "./application/services/comments.service: CommentsService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"concrete-public-export\",\"apps/api/src/modules/interactions/index.ts\",\"./application/services/interaction-policy-registry.service: InteractionPolicyRegistryService\"]",
+      "rule": "concrete-public-export",
+      "file": "apps/api/src/modules/interactions/index.ts",
+      "detail": "./application/services/interaction-policy-registry.service: InteractionPolicyRegistryService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"concrete-public-export\",\"apps/api/src/modules/interactions/index.ts\",\"./application/services/interaction-target-writer.service: InteractionTargetWriterService\"]",
+      "rule": "concrete-public-export",
+      "file": "apps/api/src/modules/interactions/index.ts",
+      "detail": "./application/services/interaction-target-writer.service: InteractionTargetWriterService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"concrete-public-export\",\"apps/api/src/modules/interactions/index.ts\",\"./application/services/interaction-targets.service: InteractionTargetsService\"]",
+      "rule": "concrete-public-export",
+      "file": "apps/api/src/modules/interactions/index.ts",
+      "detail": "./application/services/interaction-targets.service: InteractionTargetsService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"concrete-public-export\",\"apps/api/src/modules/interactions/index.ts\",\"./application/services/moderation.service: ModerationService\"]",
+      "rule": "concrete-public-export",
+      "file": "apps/api/src/modules/interactions/index.ts",
+      "detail": "./application/services/moderation.service: ModerationService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"concrete-public-export\",\"apps/api/src/modules/interactions/index.ts\",\"./application/services/reactions.service: ReactionsService\"]",
+      "rule": "concrete-public-export",
+      "file": "apps/api/src/modules/interactions/index.ts",
+      "detail": "./application/services/reactions.service: ReactionsService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"concrete-public-export\",\"apps/api/src/modules/leaderboards/index.ts\",\"./application/services/leaderboards.service: LeaderboardsService\"]",
+      "rule": "concrete-public-export",
+      "file": "apps/api/src/modules/leaderboards/index.ts",
+      "detail": "./application/services/leaderboards.service: LeaderboardsService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"concrete-public-export\",\"apps/api/src/modules/levels/index.ts\",\"./application/services/levels.service: LevelsService\"]",
+      "rule": "concrete-public-export",
+      "file": "apps/api/src/modules/levels/index.ts",
+      "detail": "./application/services/levels.service: LevelsService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"concrete-public-export\",\"apps/api/src/modules/reputation/index.ts\",\"./application/services/reputation.service: ReputationService\"]",
+      "rule": "concrete-public-export",
+      "file": "apps/api/src/modules/reputation/index.ts",
+      "detail": "./application/services/reputation.service: ReputationService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"concrete-public-export\",\"apps/api/src/modules/users/index.ts\",\"./application/services/user-block.service: UserBlockService\"]",
+      "rule": "concrete-public-export",
+      "file": "apps/api/src/modules/users/index.ts",
+      "detail": "./application/services/user-block.service: UserBlockService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"concrete-public-export\",\"apps/api/src/modules/users/index.ts\",\"./application/services/users.service: UsersService\"]",
+      "rule": "concrete-public-export",
+      "file": "apps/api/src/modules/users/index.ts",
+      "detail": "./application/services/users.service: UsersService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/achievements/application/services/achievements.service.ts\",\"@api/modules/users: UsersService\"]",
+      "rule": "foreign-concrete-service",
+      "file": "apps/api/src/modules/achievements/application/services/achievements.service.ts",
+      "detail": "@api/modules/users: UsersService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/auth/application/services/auth.service.ts\",\"../../../users/domain/mappers/user.mapper: UserMapper\"]",
+      "rule": "foreign-concrete-service",
+      "file": "apps/api/src/modules/auth/application/services/auth.service.ts",
+      "detail": "../../../users/domain/mappers/user.mapper: UserMapper",
+      "package": "D3"
+    },
+    {
+      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/auth/presentation/graphql/resolvers/auth.resolver.ts\",\"../../../../users/presentation/graphql/mappers/user-graphql.mapper: UserGraphqlMapper\"]",
+      "rule": "foreign-concrete-service",
+      "file": "apps/api/src/modules/auth/presentation/graphql/resolvers/auth.resolver.ts",
+      "detail": "../../../../users/presentation/graphql/mappers/user-graphql.mapper: UserGraphqlMapper",
+      "package": "D3"
+    },
+    {
+      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/community-points/application/services/community-points.service.ts\",\"@api/modules/users: UsersService\"]",
+      "rule": "foreign-concrete-service",
+      "file": "apps/api/src/modules/community-points/application/services/community-points.service.ts",
+      "detail": "@api/modules/users: UsersService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/editor/application/services/editor-content-delivery.service.ts\",\"../../../content-access/application/services/content-gates.service: ContentGatesService\"]",
+      "rule": "foreign-concrete-service",
+      "file": "apps/api/src/modules/editor/application/services/editor-content-delivery.service.ts",
+      "detail": "../../../content-access/application/services/content-gates.service: ContentGatesService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/interactions/application/services/comment-drafts.service.ts\",\"../../../editor/application/services/editor.service: EditorService\"]",
+      "rule": "foreign-concrete-service",
+      "file": "apps/api/src/modules/interactions/application/services/comment-drafts.service.ts",
+      "detail": "../../../editor/application/services/editor.service: EditorService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/interactions/application/services/comments.service.ts\",\"../../../editor/application/services/editor.service: EditorService\"]",
+      "rule": "foreign-concrete-service",
+      "file": "apps/api/src/modules/interactions/application/services/comments.service.ts",
+      "detail": "../../../editor/application/services/editor.service: EditorService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/levels/application/services/levels.service.ts\",\"@api/modules/community-points: CommunityPointsService\"]",
+      "rule": "foreign-concrete-service",
+      "file": "apps/api/src/modules/levels/application/services/levels.service.ts",
+      "detail": "@api/modules/community-points: CommunityPointsService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/levels/application/services/levels.service.ts\",\"@api/modules/users: UsersService\"]",
+      "rule": "foreign-concrete-service",
+      "file": "apps/api/src/modules/levels/application/services/levels.service.ts",
+      "detail": "@api/modules/users: UsersService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts\",\"../../../../users/application/services/users.service: UsersService\"]",
+      "rule": "foreign-concrete-service",
+      "file": "apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts",
+      "detail": "../../../../users/application/services/users.service: UsersService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts\",\"../../../../users/presentation/graphql/mappers/user-graphql.mapper: UserGraphqlMapper\"]",
+      "rule": "foreign-concrete-service",
+      "file": "apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts",
+      "detail": "../../../../users/presentation/graphql/mappers/user-graphql.mapper: UserGraphqlMapper",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/news/application/services/news-interaction.policy.ts\",\"../../../interactions: InteractionPolicyRegistryService\"]",
+      "rule": "foreign-concrete-service",
+      "file": "apps/api/src/modules/news/application/services/news-interaction.policy.ts",
+      "detail": "../../../interactions: InteractionPolicyRegistryService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/news/application/services/news.service.ts\",\"../../../editor: EditorService\"]",
+      "rule": "foreign-concrete-service",
+      "file": "apps/api/src/modules/news/application/services/news.service.ts",
+      "detail": "../../../editor: EditorService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/news/infrastructure/repositories/prisma-news.repository.ts\",\"../../../interactions: InteractionTargetWriterService\"]",
+      "rule": "foreign-concrete-service",
+      "file": "apps/api/src/modules/news/infrastructure/repositories/prisma-news.repository.ts",
+      "detail": "../../../interactions: InteractionTargetWriterService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/reputation/application/services/reputation.service.ts\",\"@api/modules/users: UserBlockService, UsersService\"]",
+      "rule": "foreign-concrete-service",
+      "file": "apps/api/src/modules/reputation/application/services/reputation.service.ts",
+      "detail": "@api/modules/users: UserBlockService, UsersService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/users/application/services/profile-wall-interaction.policy.ts\",\"../../../interactions: InteractionPolicyRegistryService\"]",
+      "rule": "foreign-concrete-service",
+      "file": "apps/api/src/modules/users/application/services/profile-wall-interaction.policy.ts",
+      "detail": "../../../interactions: InteractionPolicyRegistryService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/users/application/services/user-activity-feed.service.ts\",\"../../../activity: ActivityFeedService\"]",
+      "rule": "foreign-concrete-service",
+      "file": "apps/api/src/modules/users/application/services/user-activity-feed.service.ts",
+      "detail": "../../../activity: ActivityFeedService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/users/infrastructure/repositories/prisma-user-wall.repository.ts\",\"../../../interactions: InteractionTargetWriterService\"]",
+      "rule": "foreign-concrete-service",
+      "file": "apps/api/src/modules/users/infrastructure/repositories/prisma-user-wall.repository.ts",
+      "detail": "../../../interactions: InteractionTargetWriterService",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-private-import\",\"apps/api/src/modules/auth/application/services/auth.service.ts\",\"../../../users/domain/mappers/user.mapper\"]",
+      "rule": "foreign-private-import",
+      "file": "apps/api/src/modules/auth/application/services/auth.service.ts",
+      "detail": "../../../users/domain/mappers/user.mapper",
+      "package": "D3"
+    },
+    {
+      "id": "[\"foreign-private-import\",\"apps/api/src/modules/auth/application/services/auth.service.ts\",\"../../../users/domain/repositories/users.repository.interface\"]",
+      "rule": "foreign-private-import",
+      "file": "apps/api/src/modules/auth/application/services/auth.service.ts",
+      "detail": "../../../users/domain/repositories/users.repository.interface",
+      "package": "D3"
+    },
+    {
+      "id": "[\"foreign-private-import\",\"apps/api/src/modules/auth/presentation/graphql/models/auth-payload.model.ts\",\"../../../../users/presentation/graphql/models/viewer.model\"]",
+      "rule": "foreign-private-import",
+      "file": "apps/api/src/modules/auth/presentation/graphql/models/auth-payload.model.ts",
+      "detail": "../../../../users/presentation/graphql/models/viewer.model",
+      "package": "D3"
+    },
+    {
+      "id": "[\"foreign-private-import\",\"apps/api/src/modules/auth/presentation/graphql/resolvers/auth.resolver.ts\",\"../../../../users/presentation/graphql/mappers/user-graphql.mapper\"]",
+      "rule": "foreign-private-import",
+      "file": "apps/api/src/modules/auth/presentation/graphql/resolvers/auth.resolver.ts",
+      "detail": "../../../../users/presentation/graphql/mappers/user-graphql.mapper",
+      "package": "D3"
+    },
+    {
+      "id": "[\"foreign-private-import\",\"apps/api/src/modules/editor/application/services/editor-content-delivery.service.ts\",\"../../../content-access/application/services/content-gates.service\"]",
+      "rule": "foreign-private-import",
+      "file": "apps/api/src/modules/editor/application/services/editor-content-delivery.service.ts",
+      "detail": "../../../content-access/application/services/content-gates.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-private-import\",\"apps/api/src/modules/editor/application/services/editor-content-delivery.service.ts\",\"../../../content-access/domain/types/content-gate.type\"]",
+      "rule": "foreign-private-import",
+      "file": "apps/api/src/modules/editor/application/services/editor-content-delivery.service.ts",
+      "detail": "../../../content-access/domain/types/content-gate.type",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-private-import\",\"apps/api/src/modules/editor/application/types/editor-delivery.type.ts\",\"../../../content-access/domain/types/content-gate.type\"]",
+      "rule": "foreign-private-import",
+      "file": "apps/api/src/modules/editor/application/types/editor-delivery.type.ts",
+      "detail": "../../../content-access/domain/types/content-gate.type",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-private-import\",\"apps/api/src/modules/interactions/application/services/comment-drafts.service.ts\",\"../../../editor/application/services/editor.service\"]",
+      "rule": "foreign-private-import",
+      "file": "apps/api/src/modules/interactions/application/services/comment-drafts.service.ts",
+      "detail": "../../../editor/application/services/editor.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-private-import\",\"apps/api/src/modules/interactions/application/services/comments.service.ts\",\"../../../editor/application/services/editor.service\"]",
+      "rule": "foreign-private-import",
+      "file": "apps/api/src/modules/interactions/application/services/comments.service.ts",
+      "detail": "../../../editor/application/services/editor.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-private-import\",\"apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts\",\"../../../../users/application/services/users.service\"]",
+      "rule": "foreign-private-import",
+      "file": "apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts",
+      "detail": "../../../../users/application/services/users.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-private-import\",\"apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts\",\"../../../../users/presentation/graphql/mappers/user-graphql.mapper\"]",
+      "rule": "foreign-private-import",
+      "file": "apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts",
+      "detail": "../../../../users/presentation/graphql/mappers/user-graphql.mapper",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-private-import\",\"apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts\",\"../../../../users/presentation/graphql/models/viewer.model\"]",
+      "rule": "foreign-private-import",
+      "file": "apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts",
+      "detail": "../../../../users/presentation/graphql/models/viewer.model",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-private-import\",\"apps/api/src/modules/news/application/services/news-workflow.service.ts\",\"../../../media/domain/enums/media-status.enum\"]",
+      "rule": "foreign-private-import",
+      "file": "apps/api/src/modules/news/application/services/news-workflow.service.ts",
+      "detail": "../../../media/domain/enums/media-status.enum",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-private-import\",\"apps/api/src/modules/news/application/services/news-workflow.service.ts\",\"../../../media/domain/enums/media-visibility.enum\"]",
+      "rule": "foreign-private-import",
+      "file": "apps/api/src/modules/news/application/services/news-workflow.service.ts",
+      "detail": "../../../media/domain/enums/media-visibility.enum",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-private-import\",\"apps/api/src/modules/news/application/services/news-workflow.service.ts\",\"../../../media/domain/repositories/media.repository.interface\"]",
+      "rule": "foreign-private-import",
+      "file": "apps/api/src/modules/news/application/services/news-workflow.service.ts",
+      "detail": "../../../media/domain/repositories/media.repository.interface",
+      "package": "D4"
+    },
+    {
+      "id": "[\"foreign-private-import\",\"apps/api/src/modules/news/application/services/news.service.ts\",\"../../../media/domain/repositories/media.repository.interface\"]",
+      "rule": "foreign-private-import",
+      "file": "apps/api/src/modules/news/application/services/news.service.ts",
+      "detail": "../../../media/domain/repositories/media.repository.interface",
+      "package": "D4"
+    },
+    {
+      "id": "[\"namespace-import\",\"apps/api/src/core/config/validation.schema.ts\",\"joi\"]",
+      "rule": "namespace-import",
+      "file": "apps/api/src/core/config/validation.schema.ts",
+      "detail": "joi",
+      "package": "D4"
+    },
+    {
+      "id": "[\"namespace-import\",\"apps/api/src/modules/auth/application/services/password-hash.service.ts\",\"bcrypt\"]",
+      "rule": "namespace-import",
+      "file": "apps/api/src/modules/auth/application/services/password-hash.service.ts",
+      "detail": "bcrypt",
+      "package": "D3"
+    },
+    {
+      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/auth/application/services/auth.service.ts\",\"@prisma/client\"]",
+      "rule": "persistence-outside-infrastructure",
+      "file": "apps/api/src/modules/auth/application/services/auth.service.ts",
+      "detail": "@prisma/client",
+      "package": "D3"
+    },
+    {
+      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/auth/application/services/email-verification.service.ts\",\"@api/core/database\"]",
+      "rule": "persistence-outside-infrastructure",
+      "file": "apps/api/src/modules/auth/application/services/email-verification.service.ts",
+      "detail": "@api/core/database",
+      "package": "D3"
+    },
+    {
+      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/auth/application/services/login-abuse-protection.service.ts\",\"@api/core/database\"]",
+      "rule": "persistence-outside-infrastructure",
+      "file": "apps/api/src/modules/auth/application/services/login-abuse-protection.service.ts",
+      "detail": "@api/core/database",
+      "package": "D3"
+    },
+    {
+      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/auth/application/services/password-recovery.service.ts\",\"@api/core/database\"]",
+      "rule": "persistence-outside-infrastructure",
+      "file": "apps/api/src/modules/auth/application/services/password-recovery.service.ts",
+      "detail": "@api/core/database",
+      "package": "D3"
+    },
+    {
+      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/auth/application/services/two-factor.service.ts\",\"@api/core/database\"]",
+      "rule": "persistence-outside-infrastructure",
+      "file": "apps/api/src/modules/auth/application/services/two-factor.service.ts",
+      "detail": "@api/core/database",
+      "package": "D3"
+    },
+    {
+      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/content-access/presentation/graphql/content-gates.graphql.ts\",\"@prisma/client\"]",
+      "rule": "persistence-outside-infrastructure",
+      "file": "apps/api/src/modules/content-access/presentation/graphql/content-gates.graphql.ts",
+      "detail": "@prisma/client",
+      "package": "D4"
+    },
+    {
+      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/editor/presentation/graphql/editor.model.ts\",\"@prisma/client\"]",
+      "rule": "persistence-outside-infrastructure",
+      "file": "apps/api/src/modules/editor/presentation/graphql/editor.model.ts",
+      "detail": "@prisma/client",
+      "package": "D4"
+    },
+    {
+      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/iam/permissions/permissions.service.ts\",\"@api/core/database\"]",
+      "rule": "persistence-outside-infrastructure",
+      "file": "apps/api/src/modules/iam/permissions/permissions.service.ts",
+      "detail": "@api/core/database",
+      "package": "D3"
+    },
+    {
+      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/iam/roles/roles.service.ts\",\"@api/core/database\"]",
+      "rule": "persistence-outside-infrastructure",
+      "file": "apps/api/src/modules/iam/roles/roles.service.ts",
+      "detail": "@api/core/database",
+      "package": "D3"
+    },
+    {
+      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/iam/roles/roles.service.ts\",\"@prisma/client\"]",
+      "rule": "persistence-outside-infrastructure",
+      "file": "apps/api/src/modules/iam/roles/roles.service.ts",
+      "detail": "@prisma/client",
+      "package": "D3"
+    },
+    {
+      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/iam/user-access/user-access.service.ts\",\"@api/core/database\"]",
+      "rule": "persistence-outside-infrastructure",
+      "file": "apps/api/src/modules/iam/user-access/user-access.service.ts",
+      "detail": "@api/core/database",
+      "package": "D3"
+    },
+    {
+      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/interactions/application/services/interaction-target-writer.service.ts\",\"@api/core/database\"]",
+      "rule": "persistence-outside-infrastructure",
+      "file": "apps/api/src/modules/interactions/application/services/interaction-target-writer.service.ts",
+      "detail": "@api/core/database",
+      "package": "D4"
+    },
+    {
+      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/reputation/application/services/reputation.service.ts\",\"@prisma/client\"]",
+      "rule": "persistence-outside-infrastructure",
+      "file": "apps/api/src/modules/reputation/application/services/reputation.service.ts",
+      "detail": "@prisma/client",
+      "package": "D4"
+    },
+    {
+      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/users/application/dto/responses/user.response.dto.ts\",\"@prisma/client\"]",
+      "rule": "persistence-outside-infrastructure",
+      "file": "apps/api/src/modules/users/application/dto/responses/user.response.dto.ts",
+      "detail": "@prisma/client",
+      "package": "D4"
+    },
+    {
+      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/users/application/services/users.service.ts\",\"@prisma/client\"]",
+      "rule": "persistence-outside-infrastructure",
+      "file": "apps/api/src/modules/users/application/services/users.service.ts",
+      "detail": "@prisma/client",
+      "package": "D4"
+    },
+    {
+      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/users/domain/options/list-users.options.ts\",\"@prisma/client\"]",
+      "rule": "persistence-outside-infrastructure",
+      "file": "apps/api/src/modules/users/domain/options/list-users.options.ts",
+      "detail": "@prisma/client",
+      "package": "D4"
+    },
+    {
+      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/users/domain/types/safe-user.type.ts\",\"@prisma/client\"]",
+      "rule": "persistence-outside-infrastructure",
+      "file": "apps/api/src/modules/users/domain/types/safe-user.type.ts",
+      "detail": "@prisma/client",
+      "package": "D4"
+    },
+    {
+      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/users/domain/types/update-user-data.type.ts\",\"@prisma/client\"]",
+      "rule": "persistence-outside-infrastructure",
+      "file": "apps/api/src/modules/users/domain/types/update-user-data.type.ts",
+      "detail": "@prisma/client",
+      "package": "D4"
+    },
+    {
+      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/users/domain/types/user-record.type.ts\",\"@prisma/client\"]",
+      "rule": "persistence-outside-infrastructure",
+      "file": "apps/api/src/modules/users/domain/types/user-record.type.ts",
+      "detail": "@prisma/client",
+      "package": "D4"
+    },
+    {
+      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/users/presentation/graphql/resolvers/users.resolver.ts\",\"@prisma/client\"]",
+      "rule": "persistence-outside-infrastructure",
+      "file": "apps/api/src/modules/users/presentation/graphql/resolvers/users.resolver.ts",
+      "detail": "@prisma/client",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/audit/index.ts\",\"./audit.module\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/audit/index.ts",
+      "detail": "./audit.module",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/audit/index.ts\",\"./services/audit-redaction.service\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/audit/index.ts",
+      "detail": "./services/audit-redaction.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/audit/index.ts\",\"./services/audit-writer.service\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/audit/index.ts",
+      "detail": "./services/audit-writer.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/audit/index.ts\",\"./types/audit-entry.type\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/audit/index.ts",
+      "detail": "./types/audit-entry.type",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/config/index.ts\",\"./configuration.module\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/config/index.ts",
+      "detail": "./configuration.module",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/config/index.ts\",\"./validation.schema\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/config/index.ts",
+      "detail": "./validation.schema",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/database/exceptions/index.ts\",\"./database.exception\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/database/exceptions/index.ts",
+      "detail": "./database.exception",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/database/exceptions/index.ts\",\"./prisma-error.mapper\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/database/exceptions/index.ts",
+      "detail": "./prisma-error.mapper",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/database/exceptions/index.ts\",\"./prisma-exception.filter\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/database/exceptions/index.ts",
+      "detail": "./prisma-exception.filter",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/database/index.ts\",\"./constants/database.constants\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/database/index.ts",
+      "detail": "./constants/database.constants",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/database/index.ts\",\"./exceptions\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/database/index.ts",
+      "detail": "./exceptions",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/database/index.ts\",\"./pagination\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/database/index.ts",
+      "detail": "./pagination",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/database/index.ts\",\"./prisma.module\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/database/index.ts",
+      "detail": "./prisma.module",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/database/index.ts\",\"./services/prisma.service\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/database/index.ts",
+      "detail": "./services/prisma.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/database/index.ts\",\"./transactions\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/database/index.ts",
+      "detail": "./transactions",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/database/pagination/index.ts\",\"./pagination.helper\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/database/pagination/index.ts",
+      "detail": "./pagination.helper",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/database/pagination/index.ts\",\"./pagination.types\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/database/pagination/index.ts",
+      "detail": "./pagination.types",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/events/index.ts\",\"./events.module\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/events/index.ts",
+      "detail": "./events.module",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/events/index.ts\",\"./factories/event-envelope.factory\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/events/index.ts",
+      "detail": "./factories/event-envelope.factory",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/events/index.ts\",\"./services/outbox-writer.service\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/events/index.ts",
+      "detail": "./services/outbox-writer.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/graphql/index.ts\",\"./graphql-core.module\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/graphql/index.ts",
+      "detail": "./graphql-core.module",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/graphql/index.ts\",\"./types/graphql-context.type\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/graphql/index.ts",
+      "detail": "./types/graphql-context.type",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/index.ts\",\"./auth\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/index.ts",
+      "detail": "./auth",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/index.ts\",\"./authorization\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/index.ts",
+      "detail": "./authorization",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/index.ts\",\"./cache\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/index.ts",
+      "detail": "./cache",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/index.ts\",\"./config\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/index.ts",
+      "detail": "./config",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/index.ts\",\"./database\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/index.ts",
+      "detail": "./database",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/index.ts\",\"./events\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/index.ts",
+      "detail": "./events",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/index.ts\",\"./graphql\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/index.ts",
+      "detail": "./graphql",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/index.ts\",\"./queue\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/index.ts",
+      "detail": "./queue",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/index.ts\",\"./storage\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/index.ts",
+      "detail": "./storage",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/observability/index.ts\",\"./observability.module\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/observability/index.ts",
+      "detail": "./observability.module",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/queue/index.ts\",\"./queue.module\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/queue/index.ts",
+      "detail": "./queue.module",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/queue/index.ts\",\"./services/outbox-dispatcher.service\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/queue/index.ts",
+      "detail": "./services/outbox-dispatcher.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/queue/index.ts\",\"./services/queue-operations.service\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/queue/index.ts",
+      "detail": "./services/queue-operations.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/core/queue/index.ts\",\"./services/queue-registry.service\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/core/queue/index.ts",
+      "detail": "./services/queue-registry.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/activity/index.ts\",\"./activity.module\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/activity/index.ts",
+      "detail": "./activity.module",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/activity/index.ts\",\"./application/services/activity-feed.service\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/activity/index.ts",
+      "detail": "./application/services/activity-feed.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/ai-core/index.ts\",\"./ai-core.module\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/ai-core/index.ts",
+      "detail": "./ai-core.module",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/ai-core/index.ts\",\"./application/services/editor-ai.service\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/ai-core/index.ts",
+      "detail": "./application/services/editor-ai.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/ai-core/index.ts\",\"./domain/types/editor-ai-command.type\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/ai-core/index.ts",
+      "detail": "./domain/types/editor-ai-command.type",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/content-access/index.ts\",\"./application/services/content-gates.service\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/content-access/index.ts",
+      "detail": "./application/services/content-gates.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/content-access/index.ts\",\"./content-access.module\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/content-access/index.ts",
+      "detail": "./content-access.module",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/editor/index.ts\",\"./application/services/editor-content-delivery.service\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/editor/index.ts",
+      "detail": "./application/services/editor-content-delivery.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/editor/index.ts\",\"./application/services/editor.service\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/editor/index.ts",
+      "detail": "./application/services/editor.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/editor/index.ts\",\"./application/types/editor-delivery.type\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/editor/index.ts",
+      "detail": "./application/types/editor-delivery.type",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/editor/index.ts\",\"./editor.module\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/editor/index.ts",
+      "detail": "./editor.module",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/iam/index.ts\",\"./permissions\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/iam/index.ts",
+      "detail": "./permissions",
+      "package": "D3"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/iam/index.ts\",\"./roles\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/iam/index.ts",
+      "detail": "./roles",
+      "package": "D3"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/iam/index.ts\",\"./safety\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/iam/index.ts",
+      "detail": "./safety",
+      "package": "D3"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/iam/index.ts\",\"./user-access\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/iam/index.ts",
+      "detail": "./user-access",
+      "package": "D3"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/media/domain/index.ts\",\"./entities/media.entity\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/media/domain/index.ts",
+      "detail": "./entities/media.entity",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/media/domain/index.ts\",\"./enums/media-kind.enum\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/media/domain/index.ts",
+      "detail": "./enums/media-kind.enum",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/media/domain/index.ts\",\"./enums/media-status.enum\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/media/domain/index.ts",
+      "detail": "./enums/media-status.enum",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/media/domain/index.ts\",\"./enums/media-storage-provider.enum\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/media/domain/index.ts",
+      "detail": "./enums/media-storage-provider.enum",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/media/domain/index.ts\",\"./enums/media-upload-status.enum\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/media/domain/index.ts",
+      "detail": "./enums/media-upload-status.enum",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/media/domain/index.ts\",\"./enums/media-visibility.enum\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/media/domain/index.ts",
+      "detail": "./enums/media-visibility.enum",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/media/domain/index.ts\",\"./exceptions/media-upload-policy.exception\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/media/domain/index.ts",
+      "detail": "./exceptions/media-upload-policy.exception",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/media/domain/index.ts\",\"./repositories/media-upload-session.repository.interface\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/media/domain/index.ts",
+      "detail": "./repositories/media-upload-session.repository.interface",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/media/domain/index.ts\",\"./repositories/media.repository.interface\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/media/domain/index.ts",
+      "detail": "./repositories/media.repository.interface",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/media/domain/index.ts\",\"./types/create-media.input\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/media/domain/index.ts",
+      "detail": "./types/create-media.input",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/media/domain/index.ts\",\"./types/media-dimensions.type\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/media/domain/index.ts",
+      "detail": "./types/media-dimensions.type",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/media/domain/index.ts\",\"./types/media-metadata.type\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/media/domain/index.ts",
+      "detail": "./types/media-metadata.type",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/media/domain/index.ts\",\"./types/media-reference.type\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/media/domain/index.ts",
+      "detail": "./types/media-reference.type",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/media/domain/index.ts\",\"./types/media-upload-policy.type\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/media/domain/index.ts",
+      "detail": "./types/media-upload-policy.type",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/media/domain/index.ts\",\"./types/media-upload-session.type\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/media/domain/index.ts",
+      "detail": "./types/media-upload-session.type",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/media/domain/index.ts\",\"./types/media-variant.type\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/media/domain/index.ts",
+      "detail": "./types/media-variant.type",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/media/domain/index.ts\",\"./types/update-media.input\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/media/domain/index.ts",
+      "detail": "./types/update-media.input",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/news/index.ts\",\"./application/services/news-delivery.service\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/news/index.ts",
+      "detail": "./application/services/news-delivery.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/news/index.ts\",\"./application/services/news-links.service\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/news/index.ts",
+      "detail": "./application/services/news-links.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/news/index.ts\",\"./application/services/news-post-template.service\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/news/index.ts",
+      "detail": "./application/services/news-post-template.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/news/index.ts\",\"./application/services/news-scheduler.service\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/news/index.ts",
+      "detail": "./application/services/news-scheduler.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/news/index.ts\",\"./application/services/news-settings.service\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/news/index.ts",
+      "detail": "./application/services/news-settings.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/news/index.ts\",\"./application/services/news-taxonomy.service\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/news/index.ts",
+      "detail": "./application/services/news-taxonomy.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/news/index.ts\",\"./application/services/news-workflow.service\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/news/index.ts",
+      "detail": "./application/services/news-workflow.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/news/index.ts\",\"./application/services/news.service\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/news/index.ts",
+      "detail": "./application/services/news.service",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/news/index.ts\",\"./domain/types/news-article.type\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/news/index.ts",
+      "detail": "./domain/types/news-article.type",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/news/index.ts\",\"./domain/types/news-editorial.type\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/news/index.ts",
+      "detail": "./domain/types/news-editorial.type",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/news/index.ts\",\"./domain/types/news-links.type\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/news/index.ts",
+      "detail": "./domain/types/news-links.type",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/news/index.ts\",\"./domain/types/news-settings.type\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/news/index.ts",
+      "detail": "./domain/types/news-settings.type",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/news/index.ts\",\"./domain/types/news-taxonomy.type\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/news/index.ts",
+      "detail": "./domain/types/news-taxonomy.type",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/news/index.ts\",\"./domain/types/short-news.type\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/news/index.ts",
+      "detail": "./domain/types/short-news.type",
+      "package": "D4"
+    },
+    {
+      "id": "[\"wildcard-export\",\"apps/api/src/modules/news/index.ts\",\"./news.module\"]",
+      "rule": "wildcard-export",
+      "file": "apps/api/src/modules/news/index.ts",
+      "detail": "./news.module",
+      "package": "D4"
+    }
+  ]
+}

@@ -1944,7 +1944,8 @@ Closure status:
 
 Current work:
   pre-Phase-11 environment, security, architecture and quality debt closure
-  D0 / D0.5 / D0.6 implemented on review branches; D1 documentation active
+  D0 / D0.5 / D0.6 / D1 implemented on review branches
+  D2 architecture contracts and report-only inventory in verification/review
 
 Next product phase:
   Phase 11 — Knowledge Forge, not started
@@ -1952,7 +1953,10 @@ Next product phase:
 ```
 
 Execution authority: [pre-Phase-11 plan](../development/PRE_PHASE_11_EXECUTION_PLAN.md).
-Open scope decisions are tracked in [D1 decisions](../development/D1_SCOPE_DECISIONS.md).
+Scope decisions are tracked in [D1 decisions](../development/D1_SCOPE_DECISIONS.md)
+and [Auth ownership ADR-003](../architecture/adr/003-subject-and-access-ownership.md).
+D3.5 IAM groups/Premium is scheduled for separate scope approval, not silently
+implemented inside D3 or Phase 11.
 Review branches and draft PRs are not merged/accepted releases.
 
 ---
