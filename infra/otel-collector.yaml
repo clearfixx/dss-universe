@@ -1,0 +1,37 @@
+# ===============================================================
+# 🚀 DSS Universe
+# ---------------------------------------------------------------
+# 📦 Module: Local Observability
+# 📄 File: infra/otel-collector.yaml
+#
+# 🎯 Purpose:
+# Accepts local OTLP traces for opt-in environment verification.
+#
+# ⚠️ Important:
+# Debug output is not a persistent telemetry backend. Use synthetic data only.
+#
+# 🚀 Build. Share. Grow.
+# ===============================================================
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 128
+    spike_limit_mib: 32
+  batch:
+
+exporters:
+  debug:
+    verbosity: basic
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [debug]

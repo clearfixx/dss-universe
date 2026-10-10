@@ -9,6 +9,7 @@
     "pnpm": "11.9.0"
   },
   "scripts": {
+    "bootstrap": "node scripts/bootstrap.mjs",
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
