@@ -1,6 +1,12 @@
+# ADR-001 — Core authentication mechanics (historical)
+
+Superseded for ownership and authorization by [ADR-003](003-subject-and-access-ownership.md).
+Keep this implementation-era record as history; role guards are not current
+permission policy. Core retains transport mechanics, not profile ownership.
+
 ## Status
 
-Approved
+Historical; superseded direction, not guidance for new Auth business code.
 
 ## Context
 

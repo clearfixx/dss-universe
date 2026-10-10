@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-10 — pre-Phase-11 debt closure / D1
+> Updated: 2026-10-10 — pre-Phase-11 debt closure / D2
 
 ## Product and authority
 
@@ -41,10 +41,14 @@ Phase 11 has not started. Current work is debt closure, not a return to Phase 4.
 | D0               | Environment implementation on review branch; baseline acceptance remains red   |
 | D0.5             | Dependency remediation and local braces mitigation; audit still has one high   |
 | D0.6             | Portable storage checks; focused Windows/Linux CI passes; review pending       |
-| D1               | Canonical documentation reconciliation active                                  |
+| D1               | Canonical documentation implemented; owner PR review pending                   |
+| D2               | Contracts and report-only inventory implemented; verification/review pending   |
 
-Branches/PRs are stacked review artifacts, not accepted releases. D1 starts from
-`debt/d0-6-storage-security`; no red PR is merged to establish a false baseline.
+Branches/PRs are stacked review artifacts, not accepted releases. D2 starts from
+`debt/d1-canonical-documentation`; no red PR is merged to establish a false baseline.
+The owner approved the Auth/subject/profile direction in
+[ADR-003](architecture/adr/003-subject-and-access-ownership.md). D3.5 groups/Premium
+is separately scheduled for scope approval, not silently included in D3/Phase 11.
 
 ## Repository map
 
