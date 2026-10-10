@@ -85,7 +85,9 @@ Coverage proves:
 
 ## Phase boundary
 
-Phase 8 is complete after this package.
+All Phase 8 packages are implemented after this package. This historical delivery
+claim does not establish current release acceptance; see the
+[Phase 8 completion audit](PHASE_8_COMPLETION_AUDIT.md).
 
 Phase 9 introduces the shared Interaction Platform and content target registry.
 Gamification may consume its semantic events later, but the frontend must not

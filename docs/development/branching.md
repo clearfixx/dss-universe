@@ -1,5 +1,10 @@
 # Branching Strategy
 
+> Current convention (owner-approved): `audit/`, `debt/`, `phase/`, `hotfix/`.
+> One branch per phase and one reviewable branch per debt package; never `codex/`.
+> The `feature/` examples below are historical. Follow
+> [Phase Workflow](phase-workflow.md) for current execution and stacked PR rules.
+
 > This document defines the Git branching strategy used by DSS Universe.
 >
 > Its purpose is to keep development organized, maintain a stable main branch, and provide a predictable workflow for every feature.

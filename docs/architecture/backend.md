@@ -1,5 +1,10 @@
 # DSS Backend Standard v1.0
 
+> Historical draft with legacy flat-layout examples. For current layered
+> modules and ownership use [Architecture Rules](ARCHITECTURE_RULES.md) and
+> [Module Boundaries](module-boundaries.md). Do not regenerate existing modules
+> from this older skeleton or treat its embedded file drafts as active standards.
+
 ## Core principles
 
 DSS Universe backend is built on NestJS, but follows its own internal architecture standard.

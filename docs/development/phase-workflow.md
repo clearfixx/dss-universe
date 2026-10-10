@@ -1,98 +1,58 @@
 # DSS Phase Workflow
 
-## Purpose
+## Authority and phase entry
 
-This document defines the development workflow used during DSS Universe phases.
+Follow the [canonical roadmap](../roadmap/DSS_UNIVERSE_1.0_ROADMAP.md),
+[current context](../PROJECT_CONTEXT.md) and
+[pre-Phase-11 plan](PRE_PHASE_11_EXECUTION_PLAN.md). Phase 11 is not authorized
+until D7 acceptance and a separate approved brainstorm.
 
-The goal is to avoid guessing, reduce rework, and keep architecture decisions intentional.
+Before each phase, brainstorm what will be built, how, why, ownership, alternatives,
+threat model, data lifecycle, dependencies and acceptance tests. A fresh phase
+uses its own `phase/<number>-<name>` branch after approval.
 
-## Core Rule
+## Snapshot before code
 
-Do not write code blindly.
+Use repository-aware read-only inspection; do not regenerate existing modules.
 
-If the current architecture context is unclear, stop and perform an audit before continuing.
+```powershell
+git status --short
+rg --files apps/api/src
+rg --files apps/api/src/modules/<module-name>
+rg --files apps/api/src/core
+```
 
-## Phase Start Snapshot
+Confirm existing files, allowed changes, forbidden changes, module ownership and
+phase scope. If missing context would change architecture/product behavior, ask
+the owner; otherwise make a documented narrow assumption.
 
-Before starting a new phase, create a snapshot of the relevant project area.
+## Execution flow
 
-For a full backend phase:
+Snapshot → architecture review → owner-approved scope → package branch →
+implementation → verification → documentation → review/PR/CI → acceptance.
 
-```bash
-find apps/api/src -type f | sort
+Each debt package uses `debt/<package>`; audits use `audit/`, urgent isolated
+fixes `hotfix/`. No `codex/` branches. Never mix multiple product phases in
+one long-lived implementation branch. Stacked draft PRs must state their base;
+they are not accepted baselines and must not be merged while required gates are red.
 
-For a specific module:
+## Package controls
 
-find apps/api/src/modules/<module-name> -type f | sort
+- Preserve architecture/style and user edits; use explicit named imports/exports.
+- Each file has one owned responsibility; DTOs contain only their contract.
+- Use narrow cross-module capabilities/events, not foreign internals.
+- New/materially changed authored files follow the canonical File Passport.
+- Do not edit generated output by hand.
+- Frontend remains minimal verification using existing libraries; design work
+  belongs to its separate owner.
+- Newly discovered out-of-scope defects go into the debt register and are reported.
+- Migrations/seed use disposable local/test databases.
+- New ideas require impact review and approval before expanding scope.
 
-For Core:
+Run the [full verification matrix](workflow.md#verification-contract).
+Record actual results, skips, cache hits and baseline failures. A watcher or a
+successful unit suite is not full build/E2E evidence.
 
-find apps/api/src/core -type f | sort
-Execution Flow
-
-Each phase should follow this order:
-
-Snapshot
-  ↓
-Architecture Audit
-  ↓
-Execution Plan
-  ↓
-Code
-  ↓
-Build
-  ↓
-Architecture Audit
-  ↓
-Commit
-Audit Before Code
-
-Before writing code, confirm:
-
-what files already exist;
-what files need to be created;
-what files need to be modified;
-what files must not be touched;
-which module owns the responsibility;
-whether the change belongs to the current phase.
-No Guessing Rule
-
-If implementation would require guessing:
-
-stop;
-say that context is insufficient;
-request a snapshot or file audit;
-continue only after the current state is clear.
-70 / 30 Rule
-
-Default work ratio:
-
-70% code
-30% audit, refactoring, documentation
-
-This does not mean skipping architecture.
-
-It means audits should support forward progress, not replace it.
-
-Scope Control
-
-If a small change reveals a larger architecture issue:
-
-do not silently expand the phase;
-explain the issue;
-decide whether to include it now or move it to a later phase.
-Commit Rule
-
-Commit only after:
-
-build passes;
-architecture boundaries are reviewed;
-generated or moved files are staged correctly;
-Git diff reflects the intended change.
-DSS Principle
-
-Architecture first.
-
-Code second.
-
-Guessing never.
+Commit focused changes, push and open a PR; preserve review findings and CI evidence.
+No false green status, no silent baseline suppression. Recommend the next model
+only in the completed package's final report, before the owner launches it.

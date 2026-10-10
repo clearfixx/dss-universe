@@ -1,5 +1,8 @@
 # Phase 9 — Completion Audit
 
+> Historical delivery claim, not a fresh green acceptance gate. Current runtime
+> acceptance is pending D6/D7; see [Project Context](../PROJECT_CONTEXT.md).
+
 ## Decision
 
 Phase 9 is complete. Its responsibility is the reusable interaction, editor,
@@ -32,7 +35,7 @@ roadmap phases.
 
 - News publication workflows — Phase 10.
 - Knowledge Forge revisions and review — Phase 11.
-- Community Hub topics and category subscriptions — Phase 12.
+- Community Hub topics and category subscriptions — Phase 13.
 - Moderation sanctions and Premium override enforcement — Phase 14.
 - Notification inbox and delivery — Phase 15.
 - Full Universe Landing feed presentation — Phase 19.

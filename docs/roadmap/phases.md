@@ -1,5 +1,9 @@
 # Development Phases
 
+> HISTORICAL / SUPERSEDED. This pre-1.0 numbering is retained as history,
+> not an execution plan. Use the [canonical 1.0 roadmap](DSS_UNIVERSE_1.0_ROADMAP.md)
+> and [current context](../PROJECT_CONTEXT.md). Statuses below are historical.
+
 > This document defines the major development phases of DSS Universe.
 >
 > Each phase represents a significant milestone in the evolution of the project.

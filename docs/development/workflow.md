@@ -1,5 +1,9 @@
 # Development Workflow
 
+> Canonical development lifecycle. Current phase/package rules are in
+> [Phase Workflow](phase-workflow.md) and the
+> [pre-Phase-11 plan](PRE_PHASE_11_EXECUTION_PLAN.md).
+
 > This document defines the standard development lifecycle used throughout DSS Universe.
 >
 > Every feature, improvement, bug fix, and architectural change follows this workflow.
@@ -156,6 +160,39 @@ Completed work becomes part of the next project release.
 Release documentation should accurately describe the implemented changes.
 
 ---
+
+## Verification contract
+
+Use exact pinned Node/pnpm and disposable test services. Root `pnpm quality`
+is currently a **subset**, not CI parity: it stops on formatting and omits
+coverage, generation, migrations, API E2E, GraphQL consistency, Web E2E and audit.
+D6 owns executable orchestration repair; D1 documents the gap without suppressing it.
+
+| Gate                  | Command / current CI behavior                                                              |
+| --------------------- | ------------------------------------------------------------------------------------------ |
+| Install               | `pnpm install --frozen-lockfile`                                                           |
+| Format                | `pnpm format:check`; required locally, currently absent from CI                            |
+| Architecture/licenses | `pnpm architecture:check`                                                                  |
+| Prisma schema/client  | `pnpm db:validate` and `pnpm db:generate`                                                  |
+| Migrations            | `pnpm --filter @dss/api db:deploy` against disposable test DB only                         |
+| Seed                  | `pnpm --filter @dss/api db:seed` when data acceptance requires it; not currently a CI step |
+| Lint/types            | `pnpm lint`, `pnpm typecheck`                                                              |
+| Unit/coverage         | `pnpm test:cov`; Turbo builds prerequisite workspace packages                              |
+| API E2E               | `pnpm --filter @dss/api test:e2e`                                                          |
+| Generated GraphQL     | `pnpm graphql:check` after schema/client readiness                                         |
+| Build                 | `pnpm build`; record cached versus fresh outputs                                           |
+| Web E2E               | `pnpm --filter @dss/web test:e2e`; CI installs Chromium first                              |
+| Dependency security   | `pnpm audit --audit-level high`, `pnpm test:dependency-patches`                            |
+| Storage security      | `storage-security.yml`: Windows/Ubuntu keys, API storage, full Worker tests                |
+
+Read `.github/workflows/ci.yml` and `storage-security.yml` for exact environment,
+service ports and ordering. CI DB port is 5433; local disposable test Compose uses 5434. Never run migrations against a guessed environment or the dev DB by accident.
+Direct app tests may require shared package builds; root Turbo gates supply them.
+Fresh-checkout acceptance must not rely on stale dist, generated clients or cache.
+
+Record each command's outcome, not merely a command list. Distinguish implemented,
+verified, historically delivered and owner-accepted. Baseline red checks remain
+visible with an owned debt entry; no silent skips, ignored advisories or merge.
 
 # Continuous Improvement
 

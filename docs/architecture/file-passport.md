@@ -1,6 +1,10 @@
 # DSS Universe — File Passport Specification 🛰️
 
-## Version 3.0
+## Version 3.1
+
+> Rendering errata repaired in D1 (2026-10-10). Existing v3.1 templates and
+> engineering intent are preserved. Generated/config/schema classification
+> remains a D5 decision; this repair does not authorize manual generated edits.
 
 ---
 
@@ -49,24 +53,27 @@ It gives every source file a small piece of architectural memory.
 
 Bad:
 
-````ts
+```ts
 /**
  * Purpose:
  * Role service.
  */
+```
 
 Good:
 
+```ts
 /**
  * Purpose:
  * Coordinates role management operations and encapsulates business logic related to roles.
  */
+```
 
 The Passport should explain why the file exists.
 
 It should not simply repeat the filename.
 
-3.2 Passport explains architectural intent
+### 3.2 Passport explains architectural intent
 
 A File Passport should describe the architectural intent of the file.
 
@@ -78,23 +85,27 @@ Example:
 
 Bad:
 
+```ts
 /**
  * Purpose:
  * Calls Prisma to get users.
  */
+```
 
 Better:
 
+```ts
 /**
  * Purpose:
  * Provides the Users module with a repository adapter for reading and updating user records.
  */
+```
 
 The first version describes current implementation.
 
 The second version describes the architectural role.
 
-3.3 Passport must stay truthful
+### 3.3 Passport must stay truthful
 
 If the file changes responsibility, update the Passport.
 
@@ -102,7 +113,7 @@ If the Passport lies, it is a bug.
 
 Outdated documentation is worse than missing documentation because it actively misleads future maintainers.
 
-3.4 Passport should help, not decorate
+### 3.4 Passport should help, not decorate
 
 Do not write noise.
 
@@ -112,7 +123,7 @@ A good Passport answers questions before they are asked.
 
 A bad Passport only makes the file longer.
 
-3.5 Passport scales with file importance
+### 3.5 Passport scales with file importance
 
 Small DTOs may have short Passports.
 
@@ -126,7 +137,7 @@ Do not add fake importance.
 
 Do not under-document critical infrastructure.
 
-3.6 Humor is allowed, chaos is not
+### 3.6 Humor is allowed, chaos is not
 
 Small jokes and Easter eggs are welcome when they are:
 
@@ -140,7 +151,7 @@ Humor should make architecture easier to remember.
 
 It should never turn the codebase into a meme wall.
 
-3.7 Passport comes before implementation
+### 3.7 Passport comes before implementation
 
 A source file should start with its DSS File Passport.
 
@@ -150,7 +161,7 @@ Code second.
 
 The maintainer should understand the file before reading the implementation.
 
-3.8 Full file paths are required
+### 3.8 Full file paths are required
 
 The 📄 File field should use the full project-relative path.
 
@@ -166,7 +177,7 @@ Full paths make Passports searchable, clear, and unambiguous.
 
 This is especially important in a large monorepo where many modules may contain files with the same name.
 
-3.9 Passport format must be consistent
+### 3.9 Passport format must be consistent
 
 Do not invent local Passport styles.
 
@@ -176,7 +187,7 @@ Then gradually migrate the codebase during planned cleanup.
 
 The specification is the source of truth.
 
-3.10 Architecture placeholders are allowed
+### 3.10 Architecture placeholders are allowed
 
 Some files may exist before they contain implementation.
 
@@ -194,7 +205,7 @@ They establish architecture.
 
 If such a file exists, it must still contain a Passport explaining why this placeholder exists and what belongs there later.
 
-3.11 Barrel files are architecture files
+### 3.11 Barrel files are architecture files
 
 Barrel files are not “just exports”.
 
@@ -208,16 +219,17 @@ export type { UserResponseDto } from './user.response.dto';
 
 Even if this is the only code in the file, the file still has an architectural role.
 
-3.12 End-of-file mission messages are optional
+### 3.12 End-of-file mission messages are optional
 
 Large architectural files may end with a short mission message.
 
 Example:
 
-/**
- * 🛰️ UsersService is the airlock between user data
- * and the rest of DSS Universe.
- */
+/\*\*
+
+- 🛰️ UsersService is the airlock between user data
+- and the rest of DSS Universe.
+  \*/
 
 Mission messages at the end of files are optional.
 
@@ -225,7 +237,7 @@ They should be short, memorable, and architecture-related.
 
 They must never replace the main Passport.
 
-3.13 Folder documentation is encouraged
+### 3.13 Folder documentation is encouraged
 
 Important architectural folders may contain their own README.md.
 
@@ -296,12 +308,13 @@ Examples:
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+```
 
 The Official Template should be the default choice.
 
 Use the Minimal Template only when the file is truly simple.
 
-5. Minimal Template
+## 5. Minimal Template
 
 Use this for very small files.
 
@@ -314,6 +327,8 @@ Constants
 Barrel files
 Small utility types
 Simple helper functions
+
+```ts
 /**
  * ===============================================================
  * 🚀 DSS Universe
@@ -326,12 +341,14 @@ Simple helper functions
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+```
 
 Small files should stay small.
 
 Do not write an Extended Passport for a simple DTO.
 
-6. Sections Explained
+## 6. Sections Explained
+
 🚀 DSS Universe
 
 Project identity.
@@ -454,40 +471,40 @@ reminders.
 
 Avoid writing implementation details here.
 
-7. Emoji Dictionary
+## 7. Emoji Dictionary
 
 The emoji system provides quick visual context.
 
 It should remain consistent across the entire project.
 
-Emoji	Meaning
-🚀	DSS Universe / project identity
-📦	Module
-📄	File
-🎯	Purpose
-🧠	Responsibilities / business logic
-🏗️	Architecture
-⚠️	Important warning
-💡	Notes / hints
-🛰️	Mission / system-level note
-🔐	Authentication
-🛡️	Authorization / guards
-👤	Users
-🗄️	Repository / database access
-🌱	Seed
-🧬	Prisma schema / data model
-🧪	Tests
-📝	DTO / API contract
-📚	Types
-📜	Constants
-🧩	Decorator / composition
-🔧	Utility
-🎨	UI component
-🤖	AI module
-⚙️	System module
-📰	Blog / content
-💬	Forum / communication
-🎓	Academy / learning
+Emoji Meaning
+🚀 DSS Universe / project identity
+📦 Module
+📄 File
+🎯 Purpose
+🧠 Responsibilities / business logic
+🏗️ Architecture
+⚠️ Important warning
+💡 Notes / hints
+🛰️ Mission / system-level note
+🔐 Authentication
+🛡️ Authorization / guards
+👤 Users
+🗄️ Repository / database access
+🌱 Seed
+🧬 Prisma schema / data model
+🧪 Tests
+📝 DTO / API contract
+📚 Types
+📜 Constants
+🧩 Decorator / composition
+🔧 Utility
+🎨 UI component
+🤖 AI module
+⚙️ System module
+📰 Blog / content
+💬 Forum / communication
+🎓 Academy / learning
 
 Do not invent new emoji randomly.
 
@@ -521,7 +538,7 @@ Their purpose is to reinforce important architectural ideas.
 /**
  * 🛰️ Never change seed order without coffee and a good reason.
  */
-````
+```
 
 ---
 
@@ -1493,7 +1510,7 @@ Documentation preserves the intent.
 
 **🚀 Build. Share. Grow.**
 
-# File Passport v3.1 — "Engineering with Personality"
+## 19. File Passport v3.1 — "Engineering with Personality"
 
 ## Easter Eggs 🥚
 

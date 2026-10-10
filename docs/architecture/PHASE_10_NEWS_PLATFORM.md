@@ -1,6 +1,8 @@
 # Phase 10 — News Platform Architecture
 
-> Status: Packages 10.0–10.16 implemented — Phase 10 complete
+> Status: Packages 10.0–10.16 implemented — current acceptance pending
+>
+> See [Phase 10 completion audit](PHASE_10_COMPLETION_AUDIT.md).
 
 ## Product boundary
 
