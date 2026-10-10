@@ -28,6 +28,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build storage contract
         run: pnpm --filter @dss/storage build
+      - name: Build Worker job contract
+        run: pnpm --filter @dss/jobs build
       - name: Verify portable keys
         run: pnpm --filter @dss/storage test
       - name: Verify API persistence boundary
