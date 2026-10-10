@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/main.ts",
-    "start": "node dist/main.js",
+    "dev": "node --env-file-if-exists=.env --import tsx --watch src/main.ts",
+    "start": "node --env-file-if-exists=.env dist/main.js",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src test --max-warnings=0",

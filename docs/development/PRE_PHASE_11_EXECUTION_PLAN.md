@@ -69,6 +69,10 @@ its history intact and apply the convention from the next branch.
 
 ## Model-selection policy
 
+Recommend the model for the next package after reporting the current package's
+results, before the owner starts that next task. Do not change models or start
+the next package automatically while that choice is pending.
+
 | Work class                                            | Recommended model | Reasoning  |
 | ----------------------------------------------------- | ----------------- | ---------- |
 | Architecture, security, migrations, ownership         | `gpt-6.1-sol`     | high/xhigh |

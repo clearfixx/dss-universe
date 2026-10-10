@@ -1,3 +1,16 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: News Attachments
+ * 📄 File: apps/web/src/features/news/news-attachments.spec.tsx
+ *
+ * 🎯 Purpose:
+ * Verifies attachment metadata and download links use the configured API endpoint.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
@@ -33,7 +46,7 @@ describe("NewsAttachments", () => {
     expect(screen.getByText("MD5")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Завантажити/ })).toHaveAttribute(
       "href",
-      "http://localhost:4000/api/media/public/media-1/original",
+      "http://localhost:3001/api/media/public/media-1/original",
     );
   });
 

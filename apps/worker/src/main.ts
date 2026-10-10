@@ -1,4 +1,28 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Worker
+ * 📄 File: apps/worker/src/main.ts
+ *
+ * 🎯 Purpose:
+ * Composes background consumers and manages their process lifecycle.
+ *
+ * 🧠 Responsibilities:
+ * • validates configuration before opening connections;
+ * • wires queue processors and manages heartbeat and shutdown.
+ *
+ * 🏗️ Architecture:
+ * Worker composition root; business rules live in processors.
+ *
+ * ⚠️ Important:
+ * Mail failures must not expose recipients or message contents in logs.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { Queue, Worker } from "bullmq";
+import { validateWorkerEnvironment } from "./environment.js";
 import { Redis } from "ioredis";
 import { Pool } from "pg";
 import pino from "pino";
@@ -23,6 +47,8 @@ import { createMediaProcessingProcessor } from "./media-processing.processor.js"
 import { PostgresMediaProcessingStore } from "./postgres-media-processing.store.js";
 import { ClamAvMediaMalwareScanner } from "./clamav-media-malware.scanner.js";
 import { PostgresActivityProjector } from "./postgres-activity.projector.js";
+
+validateWorkerEnvironment(process.env);
 
 const connection = new Redis({
   host: process.env.REDIS_HOST ?? "localhost",
