@@ -21,6 +21,7 @@
     "test:unit": "turbo test:unit",
     "test:e2e": "turbo test:e2e",
     "test:cov": "turbo test:cov",
+    "test:dependency-patches": "node --test scripts/braces-patch.test.mjs",
     "db:validate": "pnpm --filter @dss/api db:validate",
     "db:generate": "pnpm --filter @dss/api db:generate",
     "architecture:check": "node scripts/check-architecture.mjs && node scripts/check-editor-licenses.mjs",

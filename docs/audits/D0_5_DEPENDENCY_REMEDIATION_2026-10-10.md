@@ -180,7 +180,39 @@ Verification after the override:
 - Latest audit: **0 critical / 1 high / 10 moderate / 0 low**. The remaining
   high is braces; this package remains unaccepted and must not be merged.
 
-## Final acceptance requirements
+## Approved local braces mitigation
+
+The owner approved preparing the proposed local security patch. Registered
+pnpm patch `patches/braces@3.0.3.patch` adds fixed parser/AST depth bounds.
+Design, limits and removal policy are in `patches/README.md`. Application
+architecture and UI are unchanged. Audit suppressions remain absent.
+
+Verification:
+
+- Before patching: 12 of 14 new tests fail; normal behavior checks pass.
+- After patching: all 14 pass against the installed Nest dependency chain.
+- 300 one-off differential result/error comparisons against pristine 3.0.3
+  match for representative alternatives, ranges, escaped/quoted literals,
+  parentheses, dollar braces and incomplete patterns.
+- A 4,500-level pattern below maxLength gives RangeError in pristine braces;
+  the patched package rejects it with the deliberate depth-limit error.
+- Frozen install passes and records a patch hash in the lockfile.
+- Web: 59 tests passed; shared Editor: 9 passed after patch installation.
+- Lint/typecheck: 7/7 tasks passed; build: 5/5 passed. Prisma validation and
+  architecture/license checks passed after patch installation.
+- API rerun: 294 passed, one known containment failure, three skipped. Worker
+  rerun: 25 passed, three known containment/Sharp cleanup failures. Neither
+  failure set changed; remediation belongs to D0.6/D6.
+- Audit still reports **0 critical / 1 high / 10 moderate** because a local
+  patch does not change the vulnerable upstream version. No clean-audit or
+  release-ready claim is made. Security CI includes patch regression tests
+  without replacing its audit step.
+
+The mitigation is implemented, but owner/security review and the overall
+quality gate remain required. Earlier statements that no patch was applied
+describe the previous baseline, before this approval.
+
+## Release gate
 
 No unaccepted critical/high findings, reviewed dependency paths, reproducible
 frozen installation, Prisma generation/validation, lint, typecheck, tests,
