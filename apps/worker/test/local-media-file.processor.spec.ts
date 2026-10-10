@@ -1,10 +1,18 @@
 /**
- * DSS File Passport
- * File: apps/worker/test/local-media-file.processor.spec.ts
- * Purpose: Verifies real Sharp image conversion and Media variant generation.
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Media Worker
+ * 📄 File: apps/worker/test/local-media-file.processor.spec.ts
+ *
+ * 🎯 Purpose:
+ * Verifies real image conversion and preflight rejection of unsafe keys.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
-import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import type { MediaProcessingJob } from "@dss/jobs";
@@ -75,9 +83,13 @@ describe("LocalMediaFileProcessor", () => {
       height: 64,
     });
     expect(
-      await sharp(join(root, job.destinationKey)).metadata(),
+      await sharp(await readFile(join(root, job.destinationKey))).metadata(),
     ).toMatchObject({
       format: "webp",
+    });
+    await new LocalMediaFileProcessor(root).cleanupSource(job);
+    await expect(readFile(sourcePath)).rejects.toMatchObject({
+      code: "ENOENT",
     });
   });
 
@@ -92,4 +104,34 @@ describe("LocalMediaFileProcessor", () => {
       "escapes the configured uploads root",
     );
   });
+
+  it.each(["../outside.webp", "..\\outside.webp", "C:\\outside.webp"])(
+    "validates variant %s before reading or writing any file",
+    async (storageKey) => {
+      root = await mkdtemp(join(tmpdir(), "dss-media-worker-"));
+      const job = {
+        storageProvider: "LOCAL",
+        temporaryKey: "missing.png",
+        destinationKey: "media/original.webp",
+        processingKind: "IMAGE",
+        variants: [{ storageKey }],
+      } as MediaProcessingJob;
+      await expect(
+        new LocalMediaFileProcessor(root).transform(job),
+      ).rejects.toThrow("Storage key");
+      expect(await readdir(root)).toEqual([]);
+    },
+  );
+
+  it.each(["../outside", "..\\outside", "C:\\outside"])(
+    "rejects unsafe source cleanup key %s",
+    async (temporaryKey) => {
+      root = await mkdtemp(join(tmpdir(), "dss-media-worker-"));
+      await expect(
+        new LocalMediaFileProcessor(root).cleanupSource({
+          temporaryKey,
+        } as MediaProcessingJob),
+      ).rejects.toThrow("Storage key");
+    },
+  );
 });

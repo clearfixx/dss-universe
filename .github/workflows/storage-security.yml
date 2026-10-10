@@ -1,0 +1,38 @@
+name: Storage security
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  containment:
+    name: Containment (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable Corepack
+        run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build storage contract
+        run: pnpm --filter @dss/storage build
+      - name: Build Worker job contract
+        run: pnpm --filter @dss/jobs build
+      - name: Verify portable keys
+        run: pnpm --filter @dss/storage test
+      - name: Verify API persistence boundary
+        run: pnpm --filter @dss/api test:unit --runInBand local-storage.provider.spec
+      - name: Verify Worker boundaries and image cleanup
+        run: pnpm --filter @dss/worker test --maxWorkers=2

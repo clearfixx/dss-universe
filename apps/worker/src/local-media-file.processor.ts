@@ -1,12 +1,31 @@
 /**
- * DSS File Passport
- * File: apps/worker/src/local-media-file.processor.ts
- * Purpose: Transforms local Media binaries into permanent originals and variants.
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Media Worker
+ * 📄 File: apps/worker/src/local-media-file.processor.ts
+ *
+ * 🎯 Purpose:
+ * Transforms local Media binaries into permanent originals and variants.
+ *
+ * 🧠 Responsibilities:
+ * • validates every storage key before filesystem effects;
+ * • converts binaries and describes resulting files.
+ *
+ * 🏗️ Architecture:
+ * Worker infrastructure adapter consuming the shared storage contract.
+ *
+ * ⚠️ Important:
+ * Media policy belongs outside this adapter; uploads directories are trusted.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 import { createHash } from "node:crypto";
 import { access, copyFile, mkdir, readFile, rm, stat } from "node:fs/promises";
-import { dirname, extname, isAbsolute, relative, resolve } from "node:path";
+import { dirname, extname, resolve } from "node:path";
+import { resolveStorageKey } from "@dss/storage";
 import type { MediaProcessingJob, MediaProcessingVariantSpec } from "@dss/jobs";
 import sharp, { type Sharp } from "sharp";
 import type {
@@ -35,6 +54,10 @@ export class LocalMediaFileProcessor implements MediaFileProcessor {
 
     const sourcePath = this.resolveKey(job.temporaryKey);
     const destinationPath = this.resolveKey(job.destinationKey);
+    const variantsToWrite = job.variants.map((variant) => ({
+      variant,
+      destinationPath: this.resolveKey(variant.storageKey),
+    }));
     await access(sourcePath);
     await mkdir(dirname(destinationPath), { recursive: true });
 
@@ -56,7 +79,9 @@ export class LocalMediaFileProcessor implements MediaFileProcessor {
       job.destinationKey,
     );
     const variants = await Promise.all(
-      job.variants.map((variant) => this.writeVariant(sourcePath, variant)),
+      variantsToWrite.map(({ variant, destinationPath: variantPath }) =>
+        this.writeVariant(sourcePath, variant, variantPath),
+      ),
     );
     return { original, variants };
   }
@@ -85,8 +110,8 @@ export class LocalMediaFileProcessor implements MediaFileProcessor {
   private async writeVariant(
     sourcePath: string,
     variant: MediaProcessingVariantSpec,
+    destinationPath: string,
   ): Promise<ProcessedMediaFile> {
-    const destinationPath = this.resolveKey(variant.storageKey);
     await mkdir(dirname(destinationPath), { recursive: true });
     const info = await this.openImage(sourcePath)
       .rotate()
@@ -142,16 +167,7 @@ export class LocalMediaFileProcessor implements MediaFileProcessor {
   }
 
   private resolveKey(key: string): string {
-    const path = resolve(this.uploadsRoot, key.replaceAll("\\", "/"));
-    const relativePath = relative(this.uploadsRoot, path);
-    if (
-      isAbsolute(relativePath) ||
-      relativePath === ".." ||
-      relativePath.startsWith("../")
-    ) {
-      throw new Error("Media storage key escapes the configured uploads root.");
-    }
-    return path;
+    return resolveStorageKey(this.uploadsRoot, key);
   }
 
   private openImage(path: string): Sharp {
