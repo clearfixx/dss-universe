@@ -1,6 +1,6 @@
 # D0.5 — Dependency security remediation
 
-> Status: IN PROGRESS — not accepted or release-ready
+> Status: IN PROGRESS — Prisma config override verified; braces remains a blocker
 >
 > Branch: `debt/d0-5-dependencies`
 >
@@ -143,7 +143,44 @@ PR #3 CI run `38073373262` reports dependency audit and Web smoke failures;
 quality has reached API E2E and is still in progress at inspection. Later
 GraphQL/build CI steps are not yet verified. No workflow change was made.
 
-## Required completion gate
+## Approved deepmerge-ts override verification
+
+After the reachability review, the owner explicitly approved investigating
+the narrow major override. Workspace override:
+`@prisma/config@7.10.0>deepmerge-ts: 8.0.0`. No other parent is overridden;
+Prisma remains stable 7.10.0. Earlier no-major-approval statements above
+describe the prior review state, not this subsequently approved change.
+
+Upstream [v8 release notes](https://github.com/RebeccaStevens/deepmerge-ts/releases/tag/v8.0.0)
+describe changed Map merging, renamed custom metadata types and corrected
+deepmergeInto mutation behavior. The inspected Prisma path calls deepmerge
+on configuration records, not those renamed custom APIs or deepmergeInto.
+Local checks do not establish compatibility for arbitrary external configs.
+
+Verification after the override:
+
+- `pnpm why -r deepmerge-ts`: one installed version, 8.0.0, through Prisma config.
+- Frozen lockfile installation passed.
+- Prisma validate and generate passed with client 7.10.0.
+- Existing disposable dss_test database: all 52 migrations already applied;
+  status and deploy passed without pending migrations.
+- Separate fresh disposable database `dss_d05_mergecompat` on test PostgreSQL
+  port 5434: all 52 migrations applied successfully, then seed completed.
+  This database is intentionally retained for follow-up verification; no
+  development database or existing test data was reset.
+- One-off Node assertions resolved deepmerge through Prisma's own dependency
+  path: plain nested config merge, unchanged input objects and recursive graph
+  handling all passed without stack exhaustion. No exploit workload was run
+  against the application service.
+- Lint: 7/7 tasks passed; typecheck: 7/7 passed; build: 5/5 passed, with unchanged
+  package cache reuse. API was rebuilt after the lockfile change.
+- Architecture/license checks passed. API unit rerun: 71 suites passed, one
+  failed, one skipped; 294 tests passed, one failed, three skipped. The single
+  failure remains the existing storage containment defect (DEBT-020).
+- Latest audit: **0 critical / 1 high / 10 moderate / 0 low**. The remaining
+  high is braces; this package remains unaccepted and must not be merged.
+
+## Final acceptance requirements
 
 No unaccepted critical/high findings, reviewed dependency paths, reproducible
 frozen installation, Prisma generation/validation, lint, typecheck, tests,

@@ -62,9 +62,10 @@ active package safe and buildable.
 ### D0.5 dependency remediation progress
 
 Branch `debt/d0-5-dependencies` reduces DEBT-016 from 7 critical / 63 high /
-61 moderate / 9 low to 0 critical / 2 high / 10 moderate / 0 low. It is not
-resolved: braces has no available registry patch and deepmerge-ts requires an
-unapproved major update through Prisma configuration. No advisory suppression
+61 moderate / 9 low to 0 critical / 1 high / 10 moderate / 0 low. It is not
+resolved: braces has no available registry patch. The owner-approved narrow
+deepmerge-ts 8 override through Prisma configuration passes fresh migrations,
+seed, generation and config compatibility checks. No advisory suppression
 or risk exception was applied. Evidence and pending gates are recorded in
 `docs/audits/D0_5_DEPENDENCY_REMEDIATION_2026-10-10.md`.
 
