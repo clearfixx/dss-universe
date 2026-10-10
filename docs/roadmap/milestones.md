@@ -1,5 +1,10 @@
 # Project Milestones
 
+> HISTORICAL / SUPERSEDED. These milestones describe an earlier planning model.
+> They do not identify current work or current implementation gaps. Use the
+> [canonical 1.0 roadmap](DSS_UNIVERSE_1.0_ROADMAP.md) and
+> [current context](../PROJECT_CONTEXT.md).
+
 > This document defines the major milestones of DSS Universe.
 >
 > A milestone represents a significant achievement in the project's evolution.

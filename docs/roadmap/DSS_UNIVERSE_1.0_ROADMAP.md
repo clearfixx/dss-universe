@@ -288,7 +288,8 @@ Restore the originally approved GraphQL/Apollo architecture and prepare Web for 
 - schema/codegen checks run in CI;
 - no entity is cached by both Apollo and TanStack Query.
 
-Phase 3 met this Definition of Done on 2026-07-18. The active delivery stage is Phase 4.
+Phase 3 historically met this Definition of Done on 2026-07-18.
+Use Current Position for the active stage, not this chronological milestone.
 
 ---
 
@@ -397,11 +398,19 @@ Delivered in the final Phase 4 package:
 - retries and failures are observable;
 - sensitive application action creates an audit entry.
 
-Phase 4 met this Definition of Done on 2026-07-18. The active delivery stage is Phase 5.
+Phase 4 historically met this Definition of Done on 2026-07-18.
+Use Current Position for the active stage, not this chronological milestone.
 
 ---
 
 # Phase 5 — Authentication, IAM, Access Groups and Security
+
+## Status
+
+PARTIALLY DELIVERED — Auth UX bridge implemented; generic access groups,
+delegation and Premium ownership remain unresolved closure work. Existing
+roles/direct permissions are not custom groups. Do not treat Phase 5 as complete.
+See [D1 decisions](../development/D1_SCOPE_DECISIONS.md).
 
 ## Existing foundation
 
@@ -464,8 +473,12 @@ Phase 4 met this Definition of Done on 2026-07-18. The active delivery stage is 
 ## Status
 
 ```text
-COMPLETE
+LOCAL IMPLEMENTATION COMPLETE — current acceptance pending
 ```
+
+Owner decision DEC-D1-02 narrows current runtime scope to LOCAL. MinIO/S3
+remain separate unclosed debt, not Phase 11 prerequisites. Provider identities
+do not constitute operational adapters; full acceptance still requires D6/D7.
 
 ## Foundation
 
@@ -473,7 +486,8 @@ COMPLETE
 - Media, MediaVariant, MediaReference, MediaUploadSession and MediaAuditLog;
 - status lifecycle: PENDING, UPLOADING, PROCESSING, READY, FAILED, REJECTED, QUARANTINED, DELETING, DELETED;
 - visibility: PUBLIC, AUTHENTICATED, PRIVATE, RESTRICTED;
-- Local, MinIO and S3-compatible storage contracts;
+- extensible storage contracts with operational LOCAL adapter;
+- MinIO/S3 provider identities reserved; adapters remain separate debt;
 - safe storage keys;
 - upload policies;
 - ownership and references;
@@ -700,8 +714,12 @@ Delivered in the Profile Foundation package:
 ## Status
 
 ```text
-IN PROGRESS
+IMPLEMENTED — formal acceptance pending
 ```
+
+All named packages have implementations. This does not accept architectural
+exceptions or establish a green runtime/release gate. See the
+[Phase 8 completion audit](../architecture/PHASE_8_COMPLETION_AUDIT.md).
 
 Delivered in the Reputation Ledger foundation package:
 
@@ -877,7 +895,7 @@ All points use a reversible ledger. Deleted/moderated/unpublished content may re
 
 # Phase 9 — Interaction Platform, Shared Content, Editor, Content Gates and Activity Feed
 
-**Status: complete.** The reusable platform foundations and Phase 9 acceptance
+**Status: historically delivered; current acceptance pending.** The reusable platform foundations and Phase 9 acceptance
 criteria are implemented. Product-owned News, Forum, Knowledge Forge, Academy
 and Moderation integrations remain in their scheduled phases.
 
@@ -1103,7 +1121,7 @@ Delivered Activity Feed completion:
 
 # Phase 10 — News Platform
 
-**Status: complete.** Packages 10.0–10.16 establish the frozen product contracts,
+**Status: implemented; current acceptance pending.** Packages 10.0–10.16 establish the frozen product contracts,
 canonical News draft aggregate, hierarchical taxonomy, typed field definitions,
 optimistic News-owned revision saves, validated post templates and the audited
 author-to-review-to-publication workflow. They also deliver scheduled
@@ -1118,8 +1136,12 @@ surface while preserving service-owned workflow and permission checks.
 Package 10.14 adds the author and reviewer Newsroom UI on top of that contract.
 Package 10.15 adds permission-backed global/category pinning with optional
 expiration and duplicate-free pinned presentation before the regular catalog.
-Package 10.16 connects publication to Activity, Search, SEO, Notifications and
-Gamification through allow-listed events and public discovery metadata.
+Package 10.16 connects publication to Activity, SEO and Gamification through
+allow-listed events and public discovery metadata. Search is a News-local
+projection, not a delivered shared Search Platform. Notifications are durable
+routing signals; inbox/email delivery remains Phase 15 work. Historical package
+completion is not current release acceptance; see the
+[Phase 10 completion audit](../architecture/PHASE_10_COMPLETION_AUDIT.md).
 
 ## Scope
 
@@ -1912,21 +1934,26 @@ DSS Universe 1.0 is complete when:
 ## 7. Current Position
 
 ```text
-Completed foundation:
-  product/architecture reconciliation, engineering quality gate,
-  GraphQL/Apollo API, Auth/Users GraphQL vertical slice,
-  generated Web operations and DSS Application Shell
+Implemented product delivery:
+  foundations through Phase 10 and the post-Phase-10 Auth UX bridge
+
+Closure status:
+  Phase 5 partial; Phase 6 LOCAL implementation with provider scope debt;
+  Phase 8 implemented, acceptance pending; historical completion of
+  Phases 1–4, 7, 9 and 10 is not a current green release gate
 
 Current work:
-  Phase 4 — Core Platform Services
+  pre-Phase-11 environment, security, architecture and quality debt closure
+  D0 / D0.5 / D0.6 implemented on review branches; D1 documentation active
 
-Uncommitted technical WIP:
-  early Core Storage and Media skeleton
-
-Next implementation sequence:
-  Events/Outbox → Redis/Jobs/Worker → Audit/Observability →
-  aligned Media/Avatar
+Next product phase:
+  Phase 11 — Knowledge Forge, not started
+  Only after D7 acceptance and an approved Phase 11 brainstorm
 ```
+
+Execution authority: [pre-Phase-11 plan](../development/PRE_PHASE_11_EXECUTION_PLAN.md).
+Open scope decisions are tracked in [D1 decisions](../development/D1_SCOPE_DECISIONS.md).
+Review branches and draft PRs are not merged/accepted releases.
 
 ---
 

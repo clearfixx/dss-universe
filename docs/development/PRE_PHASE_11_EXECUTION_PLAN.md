@@ -1,6 +1,6 @@
 # DSS Universe — Pre-Phase-11 Debt Closure Plan
 
-> Status: Proposed for owner approval
+> Status: Owner-authorized execution; individual scope decisions remain explicit
 >
 > Prepared: 2026-10-10
 >
@@ -429,4 +429,7 @@ The plan is based on:
 - `docs/audits/FILE_PASSPORT_AUDIT_2026-10-10.md`;
 - `docs/development/DEBT_REGISTER.md`.
 
-This plan becomes active only after owner review.
+The owner authorized autonomous debt closure in the working conversation.
+This does not authorize Phase 11 implementation, blanket acceptance of historical
+exceptions, or merging red PRs. D1 ownership/storage/Search decisions are recorded
+in [D1 scope decisions](D1_SCOPE_DECISIONS.md).
