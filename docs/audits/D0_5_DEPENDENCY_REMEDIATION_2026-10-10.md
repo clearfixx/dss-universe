@@ -92,7 +92,58 @@ application uses 5.5.1. This peer warning is not a new security exception.
 Parcel watcher build script is explicitly disabled; do not authorize newly
 introduced install-time code without review.
 
-## Exit gate
+## Follow-up reachability review
+
+The continuation review confirms both high findings also appear in
+`pnpm audit --prod` (0 critical / 2 high / 9 moderate). Moving tools between
+dependency sections therefore cannot be treated as a security fix.
+
+### deepmerge-ts
+
+Installed `@prisma/config` 7.10.0 imports `deepmerge` in
+`loadConfigTsOrJs` and passes it as c12's configuration merger. That loader
+disables remote config extension, RC files and package.json loading.
+The repository's `apps/api/prisma.config.ts` supplies a static schema path,
+migration/seed paths and an environment-derived database URL. No direct
+application import of deepmerge-ts was found. The advisory specifically
+requires recursive JavaScript object graphs; ordinary JSON cannot express
+that condition. No request-to-merger route was identified in this review.
+
+This is a scoped static assessment, not proof of universal unreachability.
+Trusted repository/configuration execution remains an assumption. Latest
+stable @prisma/config is still 7.10.0 and pins deepmerge-ts 7.1.5. Version
+8.0.0 is published, but a scoped override crosses a major compatibility
+boundary and requires owner approval plus Prisma config/client/migration
+regression verification. Prisma prerelease major upgrades are not proposed.
+
+### braces
+
+Nest GraphQL's `mergeTypesByPaths` returns before calling glob utilities when
+typePaths is absent or empty. The repository's Core GraphQL uses
+autoSchemaFile/code-first and supplies no typePaths. Web GraphQL codegen uses
+the checked-in literal pattern `src/graphql/**/*.graphql`. No application
+import of braces, micromatch or fast-glob was found in authored application
+source or compiled API output. This does not exclude all transitive runtime
+uses; it establishes the inspected schema/codegen paths use trusted inputs.
+
+The registry still reports braces 3.0.3 as latest and rejects 3.0.4. The
+upstream advisory says no patched version. No replacement, vendored patch,
+audit exclusion or change to schema discovery was applied.
+
+### Proposed decision, not an accepted exception
+
+- For deepmerge-ts: authorize only the @prisma/config 7.10.0 -> deepmerge-ts
+  8.0.0 override investigation and regression checks, with rollback on
+  incompatibility; do not upgrade Prisma to a prerelease.
+- For braces: retain the release blocker until a published fix or an approved
+  reviewed local patch is available. A time-limited exception is an owner
+  decision, not an automatic consequence of limited observed reachability.
+
+PR #3 CI run `38073373262` reports dependency audit and Web smoke failures;
+quality has reached API E2E and is still in progress at inspection. Later
+GraphQL/build CI steps are not yet verified. No workflow change was made.
+
+## Required completion gate
 
 No unaccepted critical/high findings, reviewed dependency paths, reproducible
 frozen installation, Prisma generation/validation, lint, typecheck, tests,
