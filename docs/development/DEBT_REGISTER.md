@@ -105,8 +105,9 @@ in D6. This is not evidence of an assertion failure or a passing full gate.
 
 ### D0.6 containment remediation progress
 
-DEBT-020 and DEBT-023 have local fixes on `debt/d0-6-storage-security`;
-they remain OPEN pending Windows/Ubuntu CI and owner review. API and both Worker
+DEBT-020 and DEBT-023 have fixes on `debt/d0-6-storage-security`;
+focused Windows/Ubuntu CI run `38077108683` passes. Owner acceptance remains pending
+and the entries are not marked resolved before review. API and both Worker
 consumers share `@dss/storage`; variant validation precedes filesystem effects.
 Sharp metadata inspection is buffer-backed in tests; production caching is unchanged.
 Evidence: `docs/audits/D0_6_STORAGE_SECURITY_2026-10-10.md`.

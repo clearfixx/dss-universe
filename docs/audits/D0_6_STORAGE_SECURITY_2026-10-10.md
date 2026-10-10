@@ -1,7 +1,7 @@
 # D0.6 — Portable storage containment
 
 Branch: `debt/d0-6-storage-security`, stacked on `debt/d0-5-dependencies`.
-Status: implemented locally; cross-platform CI and owner review pending.
+Status: implemented; focused Windows/Ubuntu CI passes; owner review pending.
 
 ## Finding and remediation
 
@@ -49,6 +49,9 @@ verifies production source cleanup, and recursive temporary-root cleanup succeed
   are formatted separately. No baseline files are rewritten to force a green gate.
 - `.github/workflows/storage-security.yml` runs focused API tests, shared keys
   and the full Worker suite on Windows and Ubuntu without database dependencies.
+  Run `38077108683` on code commit `c0a5137` passes both platforms (Ubuntu 43s,
+  Windows 1m37s). Quality Gate run `38077108638` has a failing dependency audit;
+  quality and Web smoke jobs are still pending at this checkpoint.
 - No migration, UI, policy or authorization change.
 
 This package does not close D0.5's audit advisory, Web smoke drift or API E2E
