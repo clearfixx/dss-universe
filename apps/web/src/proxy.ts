@@ -1,3 +1,27 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Web Session Routing
+ * 📄 File: apps/web/src/proxy.ts
+ *
+ * 🎯 Purpose:
+ * Routes guest and protected page requests using existing session contracts.
+ *
+ * 🧠 Responsibilities:
+ * • redirects requests according to session freshness;
+ * • delegates token renewal to the authentication API;
+ * • propagates or clears session cookies without exposing token contents.
+ *
+ * 🏗️ Architecture:
+ * Request adapter; backend remains the authority for authentication.
+ *
+ * ⚠️ Important:
+ * Preserve safe return paths and distinguish API unavailability from rejection.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
@@ -97,7 +121,7 @@ async function refreshSession(refreshToken: string): Promise<RefreshResult> {
   try {
     const response = await fetch(
       process.env.NEXT_PUBLIC_GRAPHQL_URL ??
-        "http://localhost:4000/api/graphql",
+        "http://localhost:3001/api/graphql",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

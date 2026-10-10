@@ -51,11 +51,32 @@ active package safe and buildable.
 | DEBT-026 | High     | OPEN     | Completion evidence   | Phase 9/10 completion gates are not currently reproducible from the red repository baseline.               | D1/D6                    |
 | DEBT-027 | High     | OPEN     | Public APIs           | Module roots broadly export concrete services and wildcard surfaces, enabling structural coupling.         | D2/D4                    |
 | DEBT-028 | High     | OPEN     | Architecture rules    | Approved documents conflict on whether application services may access database services directly.         | D1/D2                    |
-| DEBT-029 | High     | OPEN     | Worker environment    | Worker has no env template/schema loading and may start with undefined DB or silently disabled mail.       | D0                       |
-| DEBT-030 | High     | OPEN     | Endpoint contract     | Web defaults to API port 4000 while onboarding/API examples use 3001; root uses a third variable name.     | D0                       |
-| DEBT-031 | High     | OPEN     | Bootstrap             | Bash-only bootstrap is not Windows-compatible, uses wrong package filters and claims readiness too early.  | D0                       |
-| DEBT-032 | Medium   | OPEN     | Compose               | Local Compose lacks health checks, isolated test services and deterministic pgAdmin pinning.               | D0                       |
-| DEBT-033 | Medium   | OPEN     | Observability         | OpenTelemetry starts without a configured exporter/collector or verified signal delivery.                  | D0                       |
+| DEBT-029 | High     | ACCEPTED | Worker environment    | D0 adds env loading, template and fail-fast validation; readiness verified, acceptance gate remains red.   | D0                       |
+| DEBT-030 | High     | ACCEPTED | Endpoint contract     | D0 aligns Web API/GraphQL defaults and examples to 3001; root/application ownership documented.            | D0                       |
+| DEBT-031 | High     | ACCEPTED | Bootstrap             | Node bootstrap verified on Windows with DB alignment guard; existing env files preserved.                  | D0                       |
+| DEBT-032 | Medium   | ACCEPTED | Compose               | Dev/test healthchecks verified; original pgAdmin image pinned by digest; acceptance gate remains red.      | D0                       |
+| DEBT-033 | Medium   | ACCEPTED | Observability         | Explicit telemetry startup and optional collector verified; no persistent monitoring backend claimed.      | D0                       |
+
+## Additional D0 verification findings
+
+### DEBT-034 — Web smoke selectors drift (High, OPEN, D6 / frontend owner)
+
+CI run `38064940272` fails Web smoke; the earlier run's logs explicitly wait
+for `getByRole('link', { name: 'Enter Station' })` in `arrival.spec.ts:96`.
+The current login/home surface does not expose that legacy entry point.
+Impact: browser CI is red despite successful manual dev login. Reconcile
+expected user journeys with the frontend owner before changing tests or UI.
+No frontend redesign or smoke-test suppression is authorized by D0.
+
+### DEBT-035 — Local test concurrency exhausts memory (Medium, OPEN, D6)
+
+A repeated Web unit-test run with dev processes and Docker services running
+crashed multiple Node workers with `NewSpace::EnsureCurrentCapacity` and
+`Committing semi space failed` allocation failures. Earlier identical tests
+passed. Impact: the default local parallelism is not reliable under this
+machine's concurrent workload. Retry with stopped dev processes and
+`vitest run --maxWorkers=2`; evaluate a documented resource-aware test policy
+in D6. This is not evidence of an assertion failure or a passing full gate.
 
 ## Entry policy
 

@@ -25,6 +25,10 @@ on audit PR #1. Implementation commit: `48578bb`.
 - Isolated test PostgreSQL (5434) and Redis (6380) passed healthchecks while dev
   services remained running; all 52 migrations applied to the test database.
 - Independent Web test run passed: 25 files, 59 tests.
+- Web API and GraphQL fallback ports, including session renewal, are aligned to
+  3001 without changing UI. The attachment-link unit test was aligned as well.
+  All 59 Web tests passed again with `--maxWorkers=2` after a parallel-run OOM;
+  the resource constraint is tracked separately as DEBT-035.
 - Five telemetry-startup tests passed: no implicit exporter, explicit OTLP,
   explicit console export, no implicit OTLP endpoint and explicit SDK disable.
 - API readiness returned HTTP 200 with database, Redis, queues and Worker up.
@@ -59,6 +63,11 @@ on audit PR #1. Implementation commit: `48578bb`.
   This reinforces D0.6's security priority.
 - Repository formatting check reports 50 files. No broad automatic rewrite was
   performed; frontend and documentation cleanup remain separately scoped.
+- CI on documentation commit `cf4f461` passed architecture, Prisma/migrations,
+  lint, typecheck and Linux unit coverage. Dependency audit failed with 140
+  advisories (7 critical, 63 high, 61 moderate, 9 low). Web smoke failed on
+  legacy UI selectors (DEBT-034). API E2E and subsequent stages were still
+  running when this evidence was recorded; no success is inferred for them.
 
 ## Still required before acceptance
 
