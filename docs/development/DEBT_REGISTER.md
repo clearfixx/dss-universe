@@ -59,6 +59,29 @@ active package safe and buildable.
 
 ## Additional D0 verification findings
 
+### D0.5 dependency remediation progress
+
+Branch `debt/d0-5-dependencies` reduces DEBT-016 from 7 critical / 63 high /
+61 moderate / 9 low to 0 critical / 1 high / 10 moderate / 0 low. It is not
+resolved: braces has no available registry patch. The owner-approved narrow
+deepmerge-ts 8 override through Prisma configuration passes fresh migrations,
+seed, generation and config compatibility checks. No advisory suppression
+or risk exception was applied. Evidence and pending gates are recorded in
+`docs/audits/D0_5_DEPENDENCY_REMEDIATION_2026-10-10.md`.
+
+The approved braces local depth-guard patch passes 14 regression tests and
+300 differential comparisons. This is a mitigation pending review, not an
+accepted audit exception; DEBT-016 remains OPEN and security CI stays strict.
+
+### DEBT-036 — Upstream braces expansion error (Low, OPEN, D6)
+
+Differential compatibility review finds pristine braces 3.0.3 and the patched
+copy both throw TypeError for expansion of some parenthesized patterns such
+as `src/a/(a|b).ts`. This is separate from depth exhaustion; the patch preserves
+the upstream result/error behavior. No affected application path is established.
+Review supported pattern policy if such expansion is introduced; do not silently
+absorb an upstream behavior rewrite into D0.5.
+
 ### DEBT-034 — Web smoke selectors drift (High, OPEN, D6 / frontend owner)
 
 CI run `38064940272` fails Web smoke; the earlier run's logs explicitly wait

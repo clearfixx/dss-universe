@@ -128,3 +128,6 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm audit --audit-level high
+      - name: Verify local dependency patches
+        if: always()
+        run: pnpm test:dependency-patches

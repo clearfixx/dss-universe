@@ -15,24 +15,24 @@
   },
   "dependencies": {
     "@dss/jobs": "workspace:*",
-    "bullmq": "^5.80.6",
+    "bullmq": "^5.81.5",
     "ioredis": "^5.11.1",
-    "nodemailer": "^10.0.10",
-    "pg": "^8.22.0",
-    "pino": "^10.3.1",
-    "sharp": "^0.35.3"
+    "nodemailer": "^10.0.16",
+    "pg": "^8.23.1",
+    "pino": "^10.4.0",
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@dss/eslint-config": "workspace:*",
     "@dss/tsconfig": "workspace:*",
-    "@types/node": "^24.13.2",
+    "@types/node": "^24.19.1",
     "@types/nodemailer": "^8.0.2",
-    "@types/pg": "^8.20.0",
-    "@vitest/coverage-v8": "^4.0.18",
-    "eslint": "^9.18.0",
-    "tsx": "^4.22.4",
-    "typescript": "^5.7.3",
-    "typescript-eslint": "^8.62.0",
-    "vitest": "^4.0.18"
+    "@types/pg": "^8.23.1",
+    "@vitest/coverage-v8": "^4.1.11",
+    "eslint": "^9.39.5",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.71.1",
+    "vitest": "^4.1.11"
   }
 }
