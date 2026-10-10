@@ -5,6 +5,9 @@ test/format failures. Draft review only; not approved for merge or Phase 11.
 
 Branch: `debt/d0-environment`.
 
+Review: [draft PR #2](https://github.com/clearfixx/dss-universe/pull/2), stacked
+on audit PR #1. Implementation commit: `48578bb`.
+
 ## Verified
 
 - Bootstrap completed with Node 24.18.0 and pnpm 11.9.0.
