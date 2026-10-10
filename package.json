@@ -50,13 +50,13 @@
     "api:seed": "pnpm --filter @dss/api db:seed"
   },
   "devDependencies": {
-    "@nestjs/cli": "^11.0.23",
-    "@types/pg": "^8.20.0",
+    "@nestjs/cli": "^11.0.24",
+    "@types/pg": "^8.23.1",
     "prettier": "3.8.4",
-    "turbo": "latest"
+    "turbo": "2.11.2"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.8.0",
-    "pg": "^8.22.0"
+    "@prisma/adapter-pg": "^7.10.0",
+    "pg": "^8.23.1"
   }
 }

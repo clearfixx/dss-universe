@@ -4,9 +4,12 @@ packages:
 
 overrides:
   multer: ">=2.2.0"
+  "@graphql-tools/utils@12.0.0": "12.0.3"
+  "prisma@7.10.0>mysql2": "3.23.1"
 
 allowBuilds:
   "@apollo/protobufjs": false
+  "@parcel/watcher": false
   "@prisma/engines": true
   "@scarf/scarf": false
   bcrypt: true

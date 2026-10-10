@@ -59,6 +59,15 @@ active package safe and buildable.
 
 ## Additional D0 verification findings
 
+### D0.5 dependency remediation progress
+
+Branch `debt/d0-5-dependencies` reduces DEBT-016 from 7 critical / 63 high /
+61 moderate / 9 low to 0 critical / 2 high / 10 moderate / 0 low. It is not
+resolved: braces has no available registry patch and deepmerge-ts requires an
+unapproved major update through Prisma configuration. No advisory suppression
+or risk exception was applied. Evidence and pending gates are recorded in
+`docs/audits/D0_5_DEPENDENCY_REMEDIATION_2026-10-10.md`.
+
 ### DEBT-034 — Web smoke selectors drift (High, OPEN, D6 / frontend owner)
 
 CI run `38064940272` fails Web smoke; the earlier run's logs explicitly wait

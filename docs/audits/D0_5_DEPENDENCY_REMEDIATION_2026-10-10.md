@@ -1,0 +1,100 @@
+# D0.5 — Dependency security remediation
+
+> Status: IN PROGRESS — not accepted or release-ready
+>
+> Branch: `debt/d0-5-dependencies`
+>
+> Baseline: D0 commit `0e49af2`; stacked on `debt/d0-environment` pending review.
+
+## Scope and constraints
+
+Security updates only. No UI redesign, module ownership changes, schema changes,
+major dependency upgrades or audit suppressions. Existing red checks remain
+release blockers. Dependency declarations and the generated lockfile must be
+reviewed together; an audit result alone is not compatibility evidence.
+
+## Baseline evidence
+
+`pnpm audit --json` reports 140 findings: 7 critical, 63 high, 61 moderate,
+9 low. Counts are advisory entries, not distinct exploitable vulnerabilities.
+
+Runtime-exposed priority groups include Next.js, Express/proxy-addr, Multer,
+Sharp, Joi and editor/ProseMirror dependencies. Tooling groups include
+Handlebars through test tooling, shell-quote, Vitest, GraphQL code generation,
+and Prisma development tooling. OpenTelemetry auto-instrumentation also brings
+drivers not used by the application: dependency presence must not be confused
+with an enabled runtime integration. Full path/reachability classification is
+still pending and no risk exceptions have been accepted.
+
+The registry identifies Next 16.3.8 as a patched version for the latest reported
+Next findings. Upgrade Next and eslint-config-next together from 16.2.9 to
+16.3.8, staying on major 16. The local Next upgrade guide was read before edits.
+Root Turbo's floating `latest` declaration is pinned to the existing locked
+2.11.2 before recursive in-range updates, avoiding an implicit major upgrade.
+
+Upstream references:
+
+- [Next image optimization SSRF advisory](https://github.com/vercel/next.js/security/advisories/GHSA-cjq9-62q9-8jv4)
+- [Sharp bundled librsvg advisory](https://github.com/lovell/sharp/security/advisories/GHSA-wq5f-xc86-pv6w)
+
+## Verification status
+
+- Baseline D0 CI run `38065396646`: dependency audit and Web smoke failed;
+  API E2E remains in progress at inspection. No successful CI build is claimed.
+- Local dev processes stopped before installation to avoid Windows locks and
+  concurrent-memory pressure. Docker databases and volumes preserved.
+- Recursive in-range update completed. Next/eslint-config-next 16.3.8,
+  Prisma family 7.10.0, Sharp 0.35.5 and Vitest/coverage 4.1.11 are aligned.
+- Narrow overrides: GraphQL Tools utils 12.0.0 -> 12.0.3 (Nest pins it),
+  Prisma 7.10.0's mysql2 3.15.3 -> 3.23.1. No major override applied.
+- Audit now reports **0 critical, 2 high, 10 moderate, 0 low**.
+- Frozen installation passed again after aligning API Prettier.
+- Prisma generation/validation and architecture/license checks passed.
+- Typecheck: 7/7 tasks passed.
+- Web unit tests: 25 files / 59 tests passed with two workers.
+- Worker: 25 passed / 3 failed, matching the known containment/Sharp cleanup
+  baseline (DEBT-020/023). Not waived by this package.
+- The initial lint run exposed formatter-version drift after API Prettier's
+  in-range update. API Prettier is now pinned to the existing root 3.8.4;
+  no application code was reformatted. Repeat lint: 7/7 tasks passed.
+- Production build: 5/5 tasks passed, including Next 16.3.8.
+- API unit tests: 71 suites passed, one failed, one skipped; 294 tests passed,
+  one failed, three skipped. The failure is the known storage-containment bug.
+- Shared Editor: 2 files / 9 tests passed.
+- Root format check: existing 50 files remain non-compliant. Changed files
+  were formatted independently; no broad formatting rewrite applied.
+- API E2E, coverage, browser E2E and generated GraphQL consistency are not
+  claimed as verified for this dependency update. Full gate remains red.
+
+## Remaining risks requiring a decision
+
+1. **High: deepmerge-ts 7.1.5**, pinned by latest stable @prisma/config 7.10.0.
+   The advisory's fix starts at major 8. No unapproved major override is used.
+   Configuration merging is a tooling/configuration path; full runtime
+   reachability assessment remains necessary before any exception.
+2. **High: braces 3.0.3**, via micromatch/fast-glob in Nest schema tooling and
+   Web tooling. npm audit proposes 3.0.4, but the registry rejects that version
+   and identifies 3.0.3 as latest. The GitHub advisory says no patched version.
+   A failed trial override was removed; install was then successful. Do not
+   suppress the advisory or claim a nonexistent patch is installed.
+3. Moderate: js-yaml via Swagger (reported fix major 5), sprintf-js via test
+   tooling, and eight OpenTelemetry instrumentations. The latter require
+   coordinated updates beyond their current pre-1.0 compatibility ranges.
+   These are not automatically approved merely because their major is zero.
+
+Sources: [braces advisory](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm),
+[deepmerge-ts advisory](https://github.com/advisories/GHSA-ggr8-5vv4-36mx).
+
+No security exception, major upgrade or replacement package is authorized by
+this report. Owner decision is required before changing those boundaries.
+The legacy Apollo Playground plugin still declares Apollo Server ^4 while the
+application uses 5.5.1. This peer warning is not a new security exception.
+Parcel watcher build script is explicitly disabled; do not authorize newly
+introduced install-time code without review.
+
+## Exit gate
+
+No unaccepted critical/high findings, reviewed dependency paths, reproducible
+frozen installation, Prisma generation/validation, lint, typecheck, tests,
+production build and architecture/license checks. Report existing baseline
+failures separately; do not merge until required checks are green.
