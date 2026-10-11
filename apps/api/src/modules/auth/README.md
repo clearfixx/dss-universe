@@ -71,8 +71,13 @@ Do not access Prisma directly from Auth application services.
 
 PasswordRecoveryService now uses the owned PasswordResetRepository port. Atomic
 consumption returns only the committed notification email; rollback or denial
-does not send a recovered alert. Login-abuse, verification and 2FA persistence
+does not send a recovered alert. Verification and 2FA persistence
 separation remains D3.3 work, not a precedent for new application ORM imports.
+
+LoginAbuseProtectionService now delegates durable attempt counters, locking and
+atomic audit to LoginAbuseRepository. Redis policy and post-commit alerts remain
+application orchestration; no ORM transaction crosses the owned port. Email
+verification and 2FA persistence boundaries are still pending D3.3 work.
 
 Do not store raw passwords.
 

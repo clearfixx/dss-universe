@@ -137,6 +137,66 @@ describe('DSS API (e2e)', () => {
     processingPool = new Pool({ connectionString: process.env.DATABASE_URL });
   });
 
+  it('persists a failed-login lock with audit and denies a valid password while locked', async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const email = `login-lock-${suffix}@dss.test`;
+    const identity = await app.get(AuthenticationPresentationService).register({
+      email,
+      username: `login-lock-${suffix}`,
+      displayName: 'Lock Pilot',
+      password: 'correct-password-123',
+    });
+    const prisma = app.get(PrismaService);
+    await prisma.user.update({
+      where: { id: identity.user.id },
+      data: { loginFailedAttempts: 4 },
+    });
+    const notify = jest
+      .spyOn(app.get(SecurityAlertService), 'notify')
+      .mockResolvedValue(undefined);
+    try {
+      await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({ email, password: 'wrong-password-123' })
+        .expect(401);
+      const account = await prisma.user.findUniqueOrThrow({
+        where: { id: identity.user.id },
+        select: { loginFailedAttempts: true, loginLockedUntil: true },
+      });
+      expect(account.loginFailedAttempts).toBe(5);
+      expect(account.loginLockedUntil?.getTime()).toBeGreaterThan(Date.now());
+      expect(notify).toHaveBeenCalledWith('ACCOUNT_LOCKED', email);
+      expect(
+        await prisma.auditRecord.count({
+          where: { targetId: identity.user.id, action: 'auth.login.locked' },
+        }),
+      ).toBe(1);
+      await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({ email, password: 'correct-password-123' })
+        .expect(429);
+      await prisma.user.update({
+        where: { id: identity.user.id },
+        data: { loginLockedUntil: null },
+      });
+      await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({ email, password: 'correct-password-123' })
+        .expect(201);
+      expect(
+        (
+          await prisma.user.findUniqueOrThrow({
+            where: { id: identity.user.id },
+            select: { loginFailedAttempts: true },
+          })
+        ).loginFailedAttempts,
+      ).toBe(0);
+      expect(notify).toHaveBeenCalledTimes(1);
+    } finally {
+      notify.mockRestore();
+    }
+  });
+
   it('consumes password recovery through GraphQL and immediately revokes prior sessions', async () => {
     const suffix = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const email = `recovery-${suffix}@dss.test`;

@@ -45,6 +45,11 @@ port and verifies real reset concurrency/rollback plus GraphQL revocation/replay
 See [recovery evidence](../audits/D3_3_RECOVERY_BOUNDARY_2026-10-11.md).
 Current frozen inventory is 147. Other auxiliary dependencies remain open.
 
+The following D3.3 increment transfers login-abuse SQL/audit transactions to an
+owned repository and proves real concurrency/rollback plus HTTP lock behavior.
+See [login-abuse evidence](../audits/D3_3_LOGIN_ABUSE_BOUNDARY_2026-10-11.md).
+Current inventory is 146; verification, 2FA and infrastructure ports remain open.
+
 - The JWT strategy sees subject ID, session ID and auth version for eligibility.
 - Each request reads authoritative state; no positive security cache.
 - Missing/revoked/expired sessions, inactive accounts, mismatched owners or

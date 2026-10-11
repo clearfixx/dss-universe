@@ -5,6 +5,12 @@
 
 ## Latest increment
 
+[D3.3 login-abuse boundary](D3_3_LOGIN_ABUSE_BOUNDARY_2026-10-11.md) transfers
+durable counters/locks and audit to an Auth-owned transaction adapter. Full API
+units with both DB suites pass (392 tests); four selected real E2E pass, including
+lock/audit/429 and successful reset. Current reviewed inventory is 146 findings.
+Email verification, 2FA and Redis/queue capability review remain open.
+
 [D3.3 recovery boundary](D3_3_RECOVERY_BOUNDARY_2026-10-11.md) removes direct
 Prisma/concrete adapter dependencies from password recovery. Atomic reset
 consumption returns only the committed notification email. Full API units with

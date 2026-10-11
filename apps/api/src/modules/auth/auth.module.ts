@@ -36,6 +36,8 @@ import { Module } from '@nestjs/common';
 import { PasswordRecoveryService } from './application/services/password-recovery.service';
 import { PrismaPasswordResetRepository } from './infrastructure/repositories/prisma-password-reset.repository';
 import { PASSWORD_RESET_REPOSITORY } from './domain/repositories/password-reset.repository.interface';
+import { LOGIN_ABUSE_REPOSITORY } from './domain/repositories/login-abuse.repository.interface';
+import { PrismaLoginAbuseRepository } from './infrastructure/repositories/prisma-login-abuse.repository';
 import { PasswordRecoveryResolver } from './presentation/graphql/resolvers/password-recovery.resolver';
 
 import {
@@ -97,6 +99,7 @@ import { PrismaAccountCredentialsRepository } from './infrastructure/repositorie
     PrismaEmailVerificationRepository,
     EmailVerificationResolver,
     LoginAbuseProtectionService,
+    { provide: LOGIN_ABUSE_REPOSITORY, useClass: PrismaLoginAbuseRepository },
     SecurityAlertService,
     TotpService,
     TwoFactorService,

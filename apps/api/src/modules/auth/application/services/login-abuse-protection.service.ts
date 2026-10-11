@@ -1,10 +1,37 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Authentication
+ * 📄 File: apps/api/src/modules/auth/application/services/login-abuse-protection.service.ts
+ *
+ * 🎯 Purpose:
+ * Coordinates identity/IP throttling and durable login-attempt transitions.
+ *
+ * 🧠 Responsibilities:
+ * • applies configured login limits and private Redis keys;
+ * • delegates durable counters and audit to an Auth-owned repository;
+ * • sends lock alerts only after a committed transition.
+ *
+ * 🏗️ Architecture:
+ * Auth application orchestration without ORM access or profile dependencies.
+ *
+ * ⚠️ Important:
+ * Missing security infrastructure must not silently permit authentication.
+ * Redis counters and SQL writes are not one distributed transaction.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHmac } from 'node:crypto';
 import type IORedis from 'ioredis';
 import { REDIS_CONNECTION } from '@api/core/cache';
-import { PrismaService } from '@api/core/database';
-import { AuditWriterService } from '@api/core/audit';
+import {
+  LOGIN_ABUSE_REPOSITORY,
+  type LoginAbuseRepository,
+} from '../../domain/repositories/login-abuse.repository.interface';
 import type { AuthClient } from '../types/auth-client.type';
 import { LoginRateLimitedException } from '../../domain/exceptions/login-rate-limited.exception';
 import { SecurityAlertService } from './security-alert.service';
@@ -27,8 +54,8 @@ export class LoginAbuseProtectionService {
   constructor(
     @Inject(REDIS_CONNECTION) private readonly redis: IORedis,
     private readonly config: ConfigService,
-    private readonly prisma: PrismaService,
-    private readonly audit: AuditWriterService,
+    @Inject(LOGIN_ABUSE_REPOSITORY)
+    private readonly attempts: LoginAbuseRepository,
     private readonly securityAlerts: SecurityAlertService,
   ) {}
 
@@ -76,44 +103,16 @@ export class LoginAbuseProtectionService {
     ]);
     if (!account) return;
 
-    let lockedEmail: string | undefined;
-    await this.prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT id FROM users WHERE id = ${account.id} FOR UPDATE`;
-      const current = await tx.user.findUnique({
-        where: { id: account.id },
-        select: {
-          email: true,
-          loginFailedAttempts: true,
-          loginLockedUntil: true,
-        },
-      });
-      if (!current) return;
-      const attempts = current.loginFailedAttempts + 1;
-      const shouldLock = attempts >= this.number('AUTH_LOGIN_FAILURE_LIMIT', 5);
-      const lockedUntil = shouldLock
-        ? new Date(Date.now() + lockMs)
-        : current.loginLockedUntil;
-      await tx.user.update({
-        where: { id: account.id },
-        data: { loginFailedAttempts: attempts, loginLockedUntil: lockedUntil },
-      });
-      if (shouldLock && !current.loginLockedUntil) {
-        await this.audit.append(tx, {
-          action: 'auth.login.locked',
-          actorType: 'SYSTEM',
-          targetType: 'User',
-          targetId: account.id,
-          result: 'DENIED',
-          reason: 'Repeated invalid login credentials',
-          ipAddress: client.ipAddress,
-          userAgent: client.userAgent,
-          metadata: { attempts, lockMinutes: lockMs / 60_000 },
-        });
-        lockedEmail = current.email;
-      }
-    });
-    if (lockedEmail) {
-      await this.securityAlerts.notify('ACCOUNT_LOCKED', lockedEmail);
+    const locked = await this.attempts.recordFailure(
+      account.id,
+      {
+        failureLimit: this.number('AUTH_LOGIN_FAILURE_LIMIT', 5),
+        lockMs,
+      },
+      { ipAddress: client.ipAddress, userAgent: client.userAgent },
+    );
+    if (locked) {
+      await this.securityAlerts.notify('ACCOUNT_LOCKED', locked.email);
     }
   }
 
@@ -126,20 +125,9 @@ export class LoginAbuseProtectionService {
       this.redis.del(this.failureKey('identity', email)),
       this.redis.del(this.blockedKey('identity', email)),
     ]);
-    await this.prisma.$transaction(async (tx) => {
-      await tx.user.update({
-        where: { id: account.id },
-        data: { loginFailedAttempts: 0, loginLockedUntil: null },
-      });
-      await this.audit.append(tx, {
-        action: 'auth.login.succeeded',
-        actorType: 'USER',
-        actorId: account.id,
-        targetType: 'User',
-        targetId: account.id,
-        ipAddress: client.ipAddress,
-        userAgent: client.userAgent,
-      });
+    await this.attempts.recordSuccess(account.id, {
+      ipAddress: client.ipAddress,
+      userAgent: client.userAgent,
     });
   }
 

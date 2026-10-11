@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-11 — pre-Phase-11 debt closure / D3.2 composition transferred
+> Updated: 2026-10-11 — pre-Phase-11 debt closure / D3.3 auxiliary boundaries in progress
 
 ## Product and authority
 
