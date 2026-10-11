@@ -18,6 +18,7 @@ import type { UsersRepository } from '../../../users/domain/repositories/users.r
 import type { UserRecord } from '../../../users/domain/types/user-record.type';
 import { InvalidCredentialsException } from '../../domain/exceptions/invalid-credentials.exception';
 import { TwoFactorRequiredException } from '../../domain/exceptions/two-factor-required.exception';
+import type { AccountCredentials } from '../../domain/types/account-credentials.type';
 import type { AccountCredentialsRepository } from '../../domain/repositories/account-credentials.repository.interface';
 import { AuthService } from './auth.service';
 import type { PasswordHashService } from './password-hash.service';
@@ -51,12 +52,23 @@ const user: UserRecord = {
   updatedAt: new Date('2026-01-01T00:00:00.000Z'),
 };
 
+const credentials: AccountCredentials = {
+  id: user.id,
+  email: user.email,
+  passwordHash: user.passwordHash,
+  status: 'ACTIVE',
+  authVersion: 0,
+  loginFailedAttempts: 0,
+  loginLockedUntil: null,
+};
+
 describe('AuthService', () => {
   const usersRepository = {
-    findByEmail: jest.fn(),
     findById: jest.fn(),
   } as unknown as jest.Mocked<UsersRepository>;
   const accountCredentials: jest.Mocked<AccountCredentialsRepository> = {
+    findById: jest.fn(),
+    findByEmail: jest.fn(),
     deactivateAccount: jest.fn(),
     reactivateAccount: jest.fn(),
     changeEmail: jest.fn(),
@@ -105,13 +117,15 @@ describe('AuthService', () => {
   );
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
     twoFactor.assertLogin.mockResolvedValue(undefined);
+    usersRepository.findById.mockResolvedValue(user);
+    accountCredentials.findById.mockResolvedValue(credentials);
   });
 
   it('logs in with valid credentials and persists a hashed device session', async () => {
-    usersRepository.findByEmail.mockResolvedValue(user);
-    usersRepository.findById.mockResolvedValue(user);
+    accountCredentials.findByEmail.mockResolvedValue(credentials);
+    accountCredentials.findById.mockResolvedValue(credentials);
     passwordHashService.compare.mockResolvedValue(true);
     tokenService.generateTokens.mockResolvedValue({
       accessToken: 'access-token',
@@ -127,6 +141,15 @@ describe('AuthService', () => {
     expect(result.user).not.toHaveProperty('passwordHash');
     expect(result.user).not.toHaveProperty('refreshTokenHash');
     expect(result.tokens.accessToken).toBe('access-token');
+    expect(tokenService.generateTokens.mock.calls[0]).toEqual([
+      {
+        id: credentials.id,
+        email: credentials.email,
+        authVersion: credentials.authVersion,
+        username: user.username,
+      },
+      expect.any(String),
+    ]);
     expect(passwordHashService.hash.mock.calls).toContainEqual([
       'refresh-token',
     ]);
@@ -142,8 +165,81 @@ describe('AuthService', () => {
     ]);
   });
 
+  it('uses the dummy password path for unknown credentials without loading a profile', async () => {
+    accountCredentials.findByEmail.mockResolvedValue(null);
+    passwordHashService.compare.mockResolvedValue(false);
+    await expect(
+      service.login({ email: 'unknown@dss.test', password: 'wrong' }),
+    ).rejects.toBeInstanceOf(InvalidCredentialsException);
+    expect(passwordHashService.compare.mock.calls[0]).toEqual([
+      'wrong',
+      expect.any(String),
+    ]);
+    expect(usersRepository.findById.mock.calls).toHaveLength(0);
+    expect(tokenService.generateTokens.mock.calls).toHaveLength(0);
+  });
+
+  it('never falls back to Users when credential authority is unavailable', async () => {
+    const error = new Error('credential authority unavailable');
+    accountCredentials.findByEmail.mockRejectedValue(error);
+    await expect(
+      service.login({ email: user.email, password: 'correct-password' }),
+    ).rejects.toBe(error);
+    expect(usersRepository.findById.mock.calls).toHaveLength(0);
+    expect(tokenService.generateTokens.mock.calls).toHaveLength(0);
+  });
+
+  it('keeps credential version authoritative when refreshing legacy profile claims', async () => {
+    tokenService.verifyRefreshToken.mockResolvedValue({
+      sub: credentials.id,
+      sid: 'session-1',
+      ver: credentials.authVersion,
+      email: user.email,
+      username: user.username,
+      roles: [],
+      permissions: [],
+    });
+    sessions.findActive.mockResolvedValue({
+      id: 'session-1',
+      userId: credentials.id,
+      tokenHash: 'private-token-hash',
+      userAgent: null,
+      ipAddress: null,
+      expiresAt: new Date('2099-01-01'),
+      revokedAt: null,
+      createdAt: new Date('2026-01-01'),
+      updatedAt: new Date('2026-01-01'),
+    });
+    usersRepository.findById.mockResolvedValue({ ...user, authVersion: 99 });
+    passwordHashService.compare.mockResolvedValue(true);
+    passwordHashService.hash.mockResolvedValue('rotated-hash');
+    tokenService.generateTokens.mockResolvedValue({
+      accessToken: 'access',
+      refreshToken: 'refresh',
+    });
+    const result = await service.refresh({ refreshToken: 'old-refresh' });
+    expect(result.tokens).toEqual({
+      accessToken: 'access',
+      refreshToken: 'refresh',
+    });
+    expect(tokenService.generateTokens.mock.calls[0]).toEqual([
+      {
+        id: credentials.id,
+        email: credentials.email,
+        authVersion: credentials.authVersion,
+        username: user.username,
+      },
+      'session-1',
+    ]);
+    expect(sessions.rotate.mock.calls[0]).toEqual([
+      'session-1',
+      credentials.id,
+      'rotated-hash',
+    ]);
+  });
+
   it('rejects invalid passwords without issuing tokens', async () => {
-    usersRepository.findByEmail.mockResolvedValue(user);
+    accountCredentials.findByEmail.mockResolvedValue(credentials);
     passwordHashService.compare.mockResolvedValue(false);
 
     await expect(
@@ -153,7 +249,7 @@ describe('AuthService', () => {
   });
 
   it('requires 2FA after password verification without counting a missing code as abuse', async () => {
-    usersRepository.findByEmail.mockResolvedValue(user);
+    accountCredentials.findByEmail.mockResolvedValue(credentials);
     passwordHashService.compare.mockResolvedValue(true);
     twoFactor.assertLogin.mockRejectedValue(new TwoFactorRequiredException());
 
@@ -165,7 +261,7 @@ describe('AuthService', () => {
   });
 
   it('counts an invalid submitted second factor as a failed login', async () => {
-    usersRepository.findByEmail.mockResolvedValue(user);
+    accountCredentials.findByEmail.mockResolvedValue(credentials);
     passwordHashService.compare.mockResolvedValue(true);
     twoFactor.assertLogin.mockRejectedValue(new TwoFactorRequiredException());
 
@@ -179,7 +275,7 @@ describe('AuthService', () => {
     expect(loginProtection.recordFailure.mock.calls).toContainEqual([
       user.email,
       undefined,
-      user,
+      credentials,
       {},
     ]);
   });
@@ -195,7 +291,7 @@ describe('AuthService', () => {
   });
 
   it('deactivates an active account only after password confirmation', async () => {
-    usersRepository.findById.mockResolvedValue(user);
+    accountCredentials.findById.mockResolvedValue(credentials);
     passwordHashService.compare.mockResolvedValue(true);
     accountCredentials.deactivateAccount.mockResolvedValue(undefined);
 
@@ -209,13 +305,12 @@ describe('AuthService', () => {
 
   it('reactivates only a deactivated account and rotates its tokens', async () => {
     const deactivated = {
-      ...user,
+      ...credentials,
       status: UserStatus.DEACTIVATED,
-      deactivatedAt: new Date(),
     };
-    usersRepository.findByEmail.mockResolvedValue(deactivated);
+    accountCredentials.findByEmail.mockResolvedValue(deactivated);
     accountCredentials.reactivateAccount.mockResolvedValue(undefined);
-    usersRepository.findById.mockResolvedValue(user);
+    accountCredentials.findById.mockResolvedValue(credentials);
     passwordHashService.compare.mockResolvedValue(true);
     passwordHashService.hash.mockResolvedValue('rotated-refresh-hash');
     tokenService.generateTokens.mockResolvedValue({
@@ -239,10 +334,9 @@ describe('AuthService', () => {
   });
 
   it('rejects normal login for a deactivated account', async () => {
-    usersRepository.findByEmail.mockResolvedValue({
-      ...user,
+    accountCredentials.findByEmail.mockResolvedValue({
+      ...credentials,
       status: UserStatus.DEACTIVATED,
-      deactivatedAt: new Date(),
     });
 
     await expect(
@@ -261,8 +355,8 @@ describe('AuthService', () => {
   });
 
   it('normalizes and changes email after credential confirmation', async () => {
-    usersRepository.findById.mockResolvedValue(user);
-    usersRepository.findByEmail.mockResolvedValue(null);
+    accountCredentials.findById.mockResolvedValue(credentials);
+    accountCredentials.findByEmail.mockResolvedValue(null);
     passwordHashService.compare.mockResolvedValue(true);
     accountCredentials.changeEmail.mockResolvedValue(undefined);
 
@@ -276,7 +370,7 @@ describe('AuthService', () => {
   });
 
   it('rotates the password hash after current-password confirmation', async () => {
-    usersRepository.findById.mockResolvedValue(user);
+    accountCredentials.findById.mockResolvedValue(credentials);
     passwordHashService.compare.mockResolvedValue(true);
     passwordHashService.hash.mockResolvedValue('next-password-hash');
     accountCredentials.changePasswordHash.mockResolvedValue(undefined);

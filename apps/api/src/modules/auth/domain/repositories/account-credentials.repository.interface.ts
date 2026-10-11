@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/modules/auth/domain/repositories/account-credentials.repository.interface.ts
  *
  * 🎯 Purpose:
- * Defines Auth-owned credential and account-state writes for opaque subjects.
+ * Defines Auth-owned credential reads and account-state writes for opaque subjects.
  *
  * ⚠️ Important:
  * Commands include authoritative state guards, session invalidation and audit.
@@ -16,7 +16,11 @@
  * ===============================================================
  */
 
+import type { AccountCredentials } from '../types/account-credentials.type';
+
 export interface AccountCredentialsRepository {
+  findById(subjectId: string): Promise<AccountCredentials | null>;
+  findByEmail(email: string): Promise<AccountCredentials | null>;
   deactivateAccount(subjectId: string): Promise<void>;
   reactivateAccount(subjectId: string): Promise<void>;
   changeEmail(subjectId: string, email: string): Promise<void>;

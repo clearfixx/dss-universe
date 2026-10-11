@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/modules/auth/infrastructure/repositories/prisma-account-credentials.repository.spec.ts
  *
  * 🎯 Purpose:
- * Verifies guarded credential writes, invalidation and transaction failure propagation.
+ * Verifies credential read allowlisting, guarded writes and transaction failures.
  *
  * 🧠 Responsibilities:
  * • characterizes account-state and credential transition persistence;
@@ -24,6 +24,7 @@
 
 import type { AuditWriterService } from '@api/core/audit';
 import type { PrismaService } from '@api/core/database';
+import type { AccountCredentials } from '../../domain/types/account-credentials.type';
 
 import { PrismaAccountCredentialsRepository } from './prisma-account-credentials.repository';
 
@@ -33,12 +34,16 @@ describe('PrismaAccountCredentialsRepository', () => {
     session: { updateMany: jest.fn() },
   };
   const append = jest.fn();
+  const findUnique = jest.fn<Promise<AccountCredentials | null>, [unknown]>();
   const runTransaction = jest.fn(
     (operation: (tx: typeof transaction) => Promise<void>) =>
       operation(transaction),
   );
   const repository = new PrismaAccountCredentialsRepository(
-    { $transaction: runTransaction } as unknown as PrismaService,
+    {
+      user: { findUnique },
+      $transaction: runTransaction,
+    } as unknown as PrismaService,
     { append } as unknown as AuditWriterService,
   );
 
@@ -48,6 +53,59 @@ describe('PrismaAccountCredentialsRepository', () => {
     transaction.user.update.mockResolvedValue({ id: 'subject-1' });
     transaction.session.updateMany.mockResolvedValue({ count: 2 });
     append.mockResolvedValue('audit-1');
+  });
+
+  it.each(['id', 'email'] as const)(
+    'selects and returns only Auth-owned credentials by %s',
+    async (key) => {
+      const account: AccountCredentials = {
+        id: 'subject-1',
+        email: 'subject@dss.test',
+        passwordHash: 'private-hash',
+        status: 'ACTIVE',
+        authVersion: 3,
+        loginFailedAttempts: 2,
+        loginLockedUntil: null,
+      };
+      const extended = {
+        ...account,
+        username: 'private-profile',
+        bio: 'private-bio',
+        refreshTokenHash: 'legacy-secret',
+      };
+      findUnique.mockResolvedValue(extended);
+      const result =
+        key === 'id'
+          ? await repository.findById(account.id)
+          : await repository.findByEmail(account.email);
+      expect(findUnique).toHaveBeenCalledWith({
+        where: key === 'id' ? { id: account.id } : { email: account.email },
+        select: {
+          id: true,
+          email: true,
+          passwordHash: true,
+          status: true,
+          authVersion: true,
+          loginFailedAttempts: true,
+          loginLockedUntil: true,
+        },
+      });
+      expect(result).toEqual(account);
+      expect(runTransaction).not.toHaveBeenCalled();
+    },
+  );
+
+  it('returns null for an absent subject', async () => {
+    findUnique.mockResolvedValue(null);
+    await expect(repository.findById('absent')).resolves.toBeNull();
+  });
+
+  it('propagates read failure instead of fabricating eligible credentials', async () => {
+    const error = new Error('database unavailable');
+    findUnique.mockRejectedValue(error);
+    await expect(repository.findByEmail('subject@dss.test')).rejects.toBe(
+      error,
+    );
   });
 
   it('deactivates only an active subject and revokes sessions before audit', async () => {

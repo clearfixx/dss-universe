@@ -11,7 +11,8 @@
  *
  * 🧠 Responsibilities:
  * • validates user credentials;
- * • delegates credential/account-state writes to the Auth-owned repository;
+ * • reads credentials and eligibility through the Auth-owned repository;
+ * • delegates credential/account-state writes to the same owned boundary;
  * • creates user accounts through the Users repository boundary;
  * • issues access and refresh tokens through TokenService;
  * • stores refresh token hashes;
@@ -25,6 +26,8 @@
  * ⚠️ Important:
  * Never store raw passwords or raw refresh tokens.
  * AuthService must not know JWT secrets or sign/verify tokens directly.
+ * Users reads below are transitional profile/token presentation only; security
+ * eligibility and password checks must use the Auth-owned credential snapshot.
  *
  * 💡 Notes:
  * Authentication opens the airlock.
@@ -35,7 +38,6 @@
  */
 
 import { Inject, Injectable } from '@nestjs/common';
-import { UserStatus } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 
 import { UserMapper } from '../../../users/domain/mappers/user.mapper';
@@ -82,7 +84,7 @@ export class AuthService {
 
   async register(dto: RegisterDto, client: AuthClient = {}) {
     const email = this.normalizeEmail(dto.email);
-    const existingUser = await this.usersRepository.findByEmail(email);
+    const existingUser = await this.accountCredentials.findByEmail(email);
 
     if (existingUser) {
       throw new EmailAlreadyExistsException();
@@ -105,13 +107,13 @@ export class AuthService {
   async login(dto: LoginDto, client: AuthClient = {}) {
     const email = this.normalizeEmail(dto.email);
     await this.loginProtection.assertAllowed(email, client.ipAddress);
-    const user = await this.usersRepository.findByEmail(email);
+    const user = await this.accountCredentials.findByEmail(email);
     await this.loginProtection.assertAllowed(email, client.ipAddress, user);
     const isPasswordValid = await this.passwordHashService.compare(
       dto.password,
       user?.passwordHash ?? DUMMY_PASSWORD_HASH,
     );
-    if (!user || user.status !== UserStatus.ACTIVE || !isPasswordValid) {
+    if (!user || user.status !== 'ACTIVE' || !isPasswordValid) {
       await this.loginProtection.recordFailure(
         email,
         client.ipAddress,
@@ -144,13 +146,13 @@ export class AuthService {
       );
 
       const [user, session] = await Promise.all([
-        this.usersRepository.findById(payload.sub),
+        this.accountCredentials.findById(payload.sub),
         this.sessions.findActive(payload.sid, payload.sub),
       ]);
 
       if (
         !user ||
-        user.status !== UserStatus.ACTIVE ||
+        user.status !== 'ACTIVE' ||
         user.authVersion !== payload.ver ||
         !session
       ) {
@@ -166,13 +168,23 @@ export class AuthService {
         throw new InvalidCredentialsException();
       }
 
-      const tokens = await this.tokenService.generateTokens(user, session.id);
+      const profile = await this.usersRepository.findById(user.id);
+      if (!profile) throw new InvalidCredentialsException();
+      const tokens = await this.tokenService.generateTokens(
+        {
+          id: user.id,
+          email: user.email,
+          authVersion: user.authVersion,
+          username: profile.username,
+        },
+        session.id,
+      );
       const tokenHash = await this.passwordHashService.hash(
         tokens.refreshToken,
       );
       await this.sessions.rotate(session.id, user.id, tokenHash);
       return {
-        user: UserMapper.toSafeUser(user),
+        user: UserMapper.toSafeUser(profile),
         tokens,
       };
     } catch {
@@ -186,10 +198,10 @@ export class AuthService {
   }
 
   async deactivateAccount(userId: string, password: string) {
-    const user = await this.usersRepository.findById(userId);
+    const user = await this.accountCredentials.findById(userId);
     if (
       !user ||
-      user.status !== UserStatus.ACTIVE ||
+      user.status !== 'ACTIVE' ||
       !(await this.passwordHashService.compare(password, user.passwordHash))
     ) {
       throw new InvalidCredentialsException();
@@ -201,13 +213,13 @@ export class AuthService {
   async reactivateAccount(dto: LoginDto, client: AuthClient = {}) {
     const email = this.normalizeEmail(dto.email);
     await this.loginProtection.assertAllowed(email, client.ipAddress);
-    const user = await this.usersRepository.findByEmail(email);
+    const user = await this.accountCredentials.findByEmail(email);
     await this.loginProtection.assertAllowed(email, client.ipAddress, user);
     const passwordValid = await this.passwordHashService.compare(
       dto.password,
       user?.passwordHash ?? DUMMY_PASSWORD_HASH,
     );
-    if (!user || user.status !== UserStatus.DEACTIVATED || !passwordValid) {
+    if (!user || user.status !== 'DEACTIVATED' || !passwordValid) {
       await this.loginProtection.recordFailure(
         email,
         client.ipAddress,
@@ -243,7 +255,7 @@ export class AuthService {
     if (normalizedEmail === user.email.toLowerCase()) {
       return { success: true };
     }
-    const existing = await this.usersRepository.findByEmail(normalizedEmail);
+    const existing = await this.accountCredentials.findByEmail(normalizedEmail);
     if (existing) {
       throw new EmailAlreadyExistsException();
     }
@@ -285,21 +297,31 @@ export class AuthService {
   }
 
   private async issueAuthResponse(userId: string, client: AuthClient) {
-    const user = await this.usersRepository.findById(userId);
+    const user = await this.accountCredentials.findById(userId);
 
-    if (!user || user.status !== UserStatus.ACTIVE) {
+    if (!user || user.status !== 'ACTIVE') {
       throw new InvalidCredentialsException();
     }
 
+    const profile = await this.usersRepository.findById(user.id);
+    if (!profile) throw new InvalidCredentialsException();
     const sessionId = randomUUID();
-    const tokens = await this.tokenService.generateTokens(user, sessionId);
+    const tokens = await this.tokenService.generateTokens(
+      {
+        id: user.id,
+        email: user.email,
+        authVersion: user.authVersion,
+        username: profile.username,
+      },
+      sessionId,
+    );
     const refreshTokenHash = await this.passwordHashService.hash(
       tokens.refreshToken,
     );
     await this.sessions.create(sessionId, user.id, refreshTokenHash, client);
 
     return {
-      user: UserMapper.toSafeUser(user),
+      user: UserMapper.toSafeUser(profile),
       tokens,
     };
   }
@@ -308,10 +330,10 @@ export class AuthService {
     userId: string,
     password: string,
   ) {
-    const user = await this.usersRepository.findById(userId);
+    const user = await this.accountCredentials.findById(userId);
     if (
       !user ||
-      user.status !== UserStatus.ACTIVE ||
+      user.status !== 'ACTIVE' ||
       !(await this.passwordHashService.compare(password, user.passwordHash))
     ) {
       throw new InvalidCredentialsException();

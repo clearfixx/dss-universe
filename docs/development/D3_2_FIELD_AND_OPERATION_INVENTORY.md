@@ -55,7 +55,8 @@ private imports with public exports of the same broad repository.
 The dedicated credential/account-state writes in the migration map are now
 Auth-owned commands; see [command-transfer evidence](../audits/D3_ACCOUNT_CREDENTIAL_COMMANDS_2026-10-11.md).
 The unused legacy Users refresh-hash update operation is removed. Credential
-reads, registration, token display claims and presentation composition still need
+reads are now Auth-owned as well; see [credential-read evidence](../audits/D3_CREDENTIAL_READ_BOUNDARY_2026-10-11.md).
+Registration, token display claims and presentation composition still need
 migration; this is not completion of the entire map.
 
 Current `PrismaUsersRepository.create` transaction creates the row and default

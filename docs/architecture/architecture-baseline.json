@@ -377,13 +377,6 @@
       "package": "D3"
     },
     {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/auth/application/services/auth.service.ts\",\"@prisma/client\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/auth/application/services/auth.service.ts",
-      "detail": "@prisma/client",
-      "package": "D3"
-    },
-    {
       "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/auth/application/services/email-verification.service.ts\",\"@api/core/database\"]",
       "rule": "persistence-outside-infrastructure",
       "file": "apps/api/src/modules/auth/application/services/email-verification.service.ts",

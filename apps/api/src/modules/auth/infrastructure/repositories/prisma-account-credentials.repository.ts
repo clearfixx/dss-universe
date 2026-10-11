@@ -6,9 +6,10 @@
  * 📄 File: apps/api/src/modules/auth/infrastructure/repositories/prisma-account-credentials.repository.ts
  *
  * 🎯 Purpose:
- * Persists credential and account-state transitions without exposing profiles.
+ * Reads and persists Auth credential/state data without exposing profiles.
  *
  * 🧠 Responsibilities:
+ * • selects only Auth-owned credential, eligibility and abuse-state fields;
  * • guards transitions against current authoritative account state;
  * • atomically invalidates sessions and records attributable audit evidence;
  * • increments access version when credentials change.
@@ -32,6 +33,7 @@ import { AuditWriterService } from '@api/core/audit';
 import { PrismaService } from '@api/core/database';
 
 import type { AccountCredentialsRepository } from '../../domain/repositories/account-credentials.repository.interface';
+import type { AccountCredentials } from '../../domain/types/account-credentials.type';
 
 @Injectable()
 export class PrismaAccountCredentialsRepository implements AccountCredentialsRepository {
@@ -39,6 +41,41 @@ export class PrismaAccountCredentialsRepository implements AccountCredentialsRep
     private readonly prisma: PrismaService,
     private readonly audit: AuditWriterService,
   ) {}
+
+  findById(subjectId: string): Promise<AccountCredentials | null> {
+    return this.findCredentials({ id: subjectId });
+  }
+
+  findByEmail(email: string): Promise<AccountCredentials | null> {
+    return this.findCredentials({ email });
+  }
+
+  private async findCredentials(
+    where: { id: string } | { email: string },
+  ): Promise<AccountCredentials | null> {
+    const account = await this.prisma.user.findUnique({
+      where,
+      select: {
+        id: true,
+        email: true,
+        passwordHash: true,
+        status: true,
+        authVersion: true,
+        loginFailedAttempts: true,
+        loginLockedUntil: true,
+      },
+    });
+    if (!account) return null;
+    return {
+      id: account.id,
+      email: account.email,
+      passwordHash: account.passwordHash,
+      status: account.status,
+      authVersion: account.authVersion,
+      loginFailedAttempts: account.loginFailedAttempts,
+      loginLockedUntil: account.loginLockedUntil,
+    };
+  }
 
   async deactivateAccount(subjectId: string): Promise<void> {
     const now = new Date();

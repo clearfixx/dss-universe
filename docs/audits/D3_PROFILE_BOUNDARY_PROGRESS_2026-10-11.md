@@ -40,6 +40,11 @@ imports Users internals. No universal facade or duplicate identity was introduce
 
 ## CI and remaining work
 
+Latest D3.2 increment: [Auth-owned credential reads](D3_CREDENTIAL_READ_BOUNDARY_2026-10-11.md).
+Security reads now use a private seven-field Auth contract. AuthService no longer
+imports Prisma; the reviewed architecture inventory decreases to 155 findings.
+Registration and legacy profile/token presentation composition remain open.
+
 Subsequent D3.2 increment: [Auth-owned credential/account-state commands](D3_ACCOUNT_CREDENTIAL_COMMANDS_2026-10-11.md).
 Four mutations are removed from Users and implemented behind an Auth-owned port;
 real database rollback and stale deactivation guards are covered. Full D3.2 is
