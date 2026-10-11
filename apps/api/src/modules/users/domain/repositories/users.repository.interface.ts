@@ -11,7 +11,7 @@
  * 🧠 Responsibilities:
  * • declares user read/write repository operations;
  * • keeps application services independent from Prisma;
- * • defines the repository API used by UsersService and trusted backend modules.
+ * • defines internal Users operations, excluding Auth credential/state commands.
  *
  * 🏗️ Architecture:
  * Domain repository contract.
@@ -58,19 +58,6 @@ export interface UsersRepository {
   update(id: string, data: UpdateUserContract): Promise<UserRecord>;
 
   updateById(id: string, data: UpdateUserData): Promise<UserRecord>;
-
-  updateRefreshTokenHash(
-    userId: string,
-    refreshTokenHash: string | null,
-  ): Promise<UserRecord>;
-
-  deactivateAccount(userId: string): Promise<UserRecord>;
-
-  reactivateAccount(userId: string): Promise<UserRecord>;
-
-  changeEmail(userId: string, email: string): Promise<UserRecord>;
-
-  changePasswordHash(userId: string, passwordHash: string): Promise<UserRecord>;
 
   existsByEmail(email: string): Promise<boolean>;
 

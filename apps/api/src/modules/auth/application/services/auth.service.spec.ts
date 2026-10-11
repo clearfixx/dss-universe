@@ -18,6 +18,7 @@ import type { UsersRepository } from '../../../users/domain/repositories/users.r
 import type { UserRecord } from '../../../users/domain/types/user-record.type';
 import { InvalidCredentialsException } from '../../domain/exceptions/invalid-credentials.exception';
 import { TwoFactorRequiredException } from '../../domain/exceptions/two-factor-required.exception';
+import type { AccountCredentialsRepository } from '../../domain/repositories/account-credentials.repository.interface';
 import { AuthService } from './auth.service';
 import type { PasswordHashService } from './password-hash.service';
 import type { TokenService } from './token.service';
@@ -54,12 +55,13 @@ describe('AuthService', () => {
   const usersRepository = {
     findByEmail: jest.fn(),
     findById: jest.fn(),
-    updateRefreshTokenHash: jest.fn(),
+  } as unknown as jest.Mocked<UsersRepository>;
+  const accountCredentials: jest.Mocked<AccountCredentialsRepository> = {
     deactivateAccount: jest.fn(),
     reactivateAccount: jest.fn(),
     changeEmail: jest.fn(),
     changePasswordHash: jest.fn(),
-  } as unknown as jest.Mocked<UsersRepository>;
+  };
   const passwordHashService = {
     compare: jest.fn(),
     hash: jest.fn(),
@@ -99,6 +101,7 @@ describe('AuthService', () => {
     loginProtection,
     securityAlerts,
     twoFactor,
+    accountCredentials,
   );
 
   beforeEach(() => {
@@ -115,7 +118,6 @@ describe('AuthService', () => {
       refreshToken: 'refresh-token',
     });
     passwordHashService.hash.mockResolvedValue('new-refresh-hash');
-    usersRepository.updateRefreshTokenHash.mockResolvedValue(user);
 
     const result = await service.login({
       email: user.email,
@@ -195,16 +197,12 @@ describe('AuthService', () => {
   it('deactivates an active account only after password confirmation', async () => {
     usersRepository.findById.mockResolvedValue(user);
     passwordHashService.compare.mockResolvedValue(true);
-    usersRepository.deactivateAccount.mockResolvedValue({
-      ...user,
-      status: UserStatus.DEACTIVATED,
-      deactivatedAt: new Date(),
-    });
+    accountCredentials.deactivateAccount.mockResolvedValue(undefined);
 
     await expect(
       service.deactivateAccount(user.id, 'correct-password'),
     ).resolves.toEqual({ success: true });
-    expect(usersRepository.deactivateAccount.mock.calls).toContainEqual([
+    expect(accountCredentials.deactivateAccount.mock.calls).toContainEqual([
       user.id,
     ]);
   });
@@ -216,7 +214,7 @@ describe('AuthService', () => {
       deactivatedAt: new Date(),
     };
     usersRepository.findByEmail.mockResolvedValue(deactivated);
-    usersRepository.reactivateAccount.mockResolvedValue(user);
+    accountCredentials.reactivateAccount.mockResolvedValue(undefined);
     usersRepository.findById.mockResolvedValue(user);
     passwordHashService.compare.mockResolvedValue(true);
     passwordHashService.hash.mockResolvedValue('rotated-refresh-hash');
@@ -235,7 +233,7 @@ describe('AuthService', () => {
       user.id,
       undefined,
     ]);
-    expect(usersRepository.reactivateAccount.mock.calls).toContainEqual([
+    expect(accountCredentials.reactivateAccount.mock.calls).toContainEqual([
       user.id,
     ]);
   });
@@ -266,17 +264,12 @@ describe('AuthService', () => {
     usersRepository.findById.mockResolvedValue(user);
     usersRepository.findByEmail.mockResolvedValue(null);
     passwordHashService.compare.mockResolvedValue(true);
-    usersRepository.changeEmail.mockResolvedValue({
-      ...user,
-      email: 'new@dss.test',
-      emailVerifiedAt: null,
-      authVersion: 1,
-    });
+    accountCredentials.changeEmail.mockResolvedValue(undefined);
 
     await expect(
       service.changeEmail(user.id, '  NEW@DSS.TEST ', 'correct-password'),
     ).resolves.toEqual({ success: true });
-    expect(usersRepository.changeEmail.mock.calls).toContainEqual([
+    expect(accountCredentials.changeEmail.mock.calls).toContainEqual([
       user.id,
       'new@dss.test',
     ]);
@@ -286,11 +279,7 @@ describe('AuthService', () => {
     usersRepository.findById.mockResolvedValue(user);
     passwordHashService.compare.mockResolvedValue(true);
     passwordHashService.hash.mockResolvedValue('next-password-hash');
-    usersRepository.changePasswordHash.mockResolvedValue({
-      ...user,
-      passwordHash: 'next-password-hash',
-      authVersion: 1,
-    });
+    accountCredentials.changePasswordHash.mockResolvedValue(undefined);
 
     await expect(
       service.changePassword(user.id, 'current-password', 'next-password'),
@@ -298,7 +287,7 @@ describe('AuthService', () => {
     expect(passwordHashService.hash.mock.calls).toContainEqual([
       'next-password',
     ]);
-    expect(usersRepository.changePasswordHash.mock.calls).toContainEqual([
+    expect(accountCredentials.changePasswordHash.mock.calls).toContainEqual([
       user.id,
       'next-password-hash',
     ]);

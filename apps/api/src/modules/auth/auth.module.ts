@@ -64,12 +64,18 @@ import { TwoFactorResolver } from './presentation/graphql/resolvers/two-factor.r
 import { AccessSessionValidationService } from './application/services/access-session-validation.service';
 import { ACCESS_SESSION_REPOSITORY } from './domain/repositories/access-session.repository.interface';
 import { PrismaAccessSessionRepository } from './infrastructure/repositories/prisma-access-session.repository';
+import { ACCOUNT_CREDENTIALS_REPOSITORY } from './domain/repositories/account-credentials.repository.interface';
+import { PrismaAccountCredentialsRepository } from './infrastructure/repositories/prisma-account-credentials.repository';
 
 @Module({
   imports: [UsersModule, AuthCoreModule, AuthorizationModule],
   controllers: [AuthController],
   providers: [
     JwtStrategy,
+    {
+      provide: ACCOUNT_CREDENTIALS_REPOSITORY,
+      useClass: PrismaAccountCredentialsRepository,
+    },
     AccessSessionValidationService,
     {
       provide: ACCESS_SESSION_VALIDATOR,

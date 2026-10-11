@@ -11,6 +11,7 @@
  *
  * 🧠 Responsibilities:
  * • validates user credentials;
+ * • delegates credential/account-state writes to the Auth-owned repository;
  * • creates user accounts through the Users repository boundary;
  * • issues access and refresh tokens through TokenService;
  * • stores refresh token hashes;
@@ -55,6 +56,10 @@ import { EmailVerificationService } from './email-verification.service';
 import { LoginAbuseProtectionService } from './login-abuse-protection.service';
 import { SecurityAlertService } from './security-alert.service';
 import { TwoFactorService } from './two-factor.service';
+import {
+  ACCOUNT_CREDENTIALS_REPOSITORY,
+  type AccountCredentialsRepository,
+} from '../../domain/repositories/account-credentials.repository.interface';
 
 const DUMMY_PASSWORD_HASH =
   '$2b$12$C6UzMDM.H6dfI/f/IKcEe.4vA0Z8F7z7G1V1K2N1g1qjQm7u8Yw6K';
@@ -71,6 +76,8 @@ export class AuthService {
     private readonly loginProtection: LoginAbuseProtectionService,
     private readonly securityAlerts: SecurityAlertService,
     private readonly twoFactor: TwoFactorService,
+    @Inject(ACCOUNT_CREDENTIALS_REPOSITORY)
+    private readonly accountCredentials: AccountCredentialsRepository,
   ) {}
 
   async register(dto: RegisterDto, client: AuthClient = {}) {
@@ -187,7 +194,7 @@ export class AuthService {
     ) {
       throw new InvalidCredentialsException();
     }
-    await this.usersRepository.deactivateAccount(userId);
+    await this.accountCredentials.deactivateAccount(userId);
     return { success: true };
   }
 
@@ -223,7 +230,7 @@ export class AuthService {
       throw error;
     }
     await this.loginProtection.recordSuccess(email, user, client);
-    await this.usersRepository.reactivateAccount(user.id);
+    await this.accountCredentials.reactivateAccount(user.id);
     return this.issueAuthResponse(user.id, client);
   }
 
@@ -240,7 +247,7 @@ export class AuthService {
     if (existing) {
       throw new EmailAlreadyExistsException();
     }
-    await this.usersRepository.changeEmail(userId, normalizedEmail);
+    await this.accountCredentials.changeEmail(userId, normalizedEmail);
     await this.securityAlerts.notify('EMAIL_CHANGED', user.email);
     return { success: true };
   }
@@ -255,7 +262,7 @@ export class AuthService {
       currentPassword,
     );
     const passwordHash = await this.passwordHashService.hash(newPassword);
-    await this.usersRepository.changePasswordHash(userId, passwordHash);
+    await this.accountCredentials.changePasswordHash(userId, passwordHash);
     await this.securityAlerts.notify('PASSWORD_CHANGED', user.email);
     return { success: true };
   }

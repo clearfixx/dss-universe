@@ -52,6 +52,12 @@ private imports with public exports of the same broad repository.
 
 ## Registration and failure characterization still required
 
+The dedicated credential/account-state writes in the migration map are now
+Auth-owned commands; see [command-transfer evidence](../audits/D3_ACCOUNT_CREDENTIAL_COMMANDS_2026-10-11.md).
+The unused legacy Users refresh-hash update operation is removed. Credential
+reads, registration, token display claims and presentation composition still need
+migration; this is not completion of the entire map.
+
 Current `PrismaUsersRepository.create` transaction creates the row and default
 `user` role assignment. Session creation happens later. Email verification enqueue
 is deliberately best-effort. Preserve that distinction: failure before account

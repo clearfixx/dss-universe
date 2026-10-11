@@ -40,6 +40,11 @@ imports Users internals. No universal facade or duplicate identity was introduce
 
 ## CI and remaining work
 
+Subsequent D3.2 increment: [Auth-owned credential/account-state commands](D3_ACCOUNT_CREDENTIAL_COMMANDS_2026-10-11.md).
+Four mutations are removed from Users and implemented behind an Auth-owned port;
+real database rollback and stale deactivation guards are covered. Full D3.2 is
+still open; consult that increment's separate verification results.
+
 Observed D3.1 CI run 38141775550 passes architecture, Prisma/migrations, lint,
 typecheck and unit coverage. Dependency audit and Web smoke fail. API E2E remains
 running at observation; no completion claim. Ubuntu and Windows storage

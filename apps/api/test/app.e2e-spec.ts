@@ -6,7 +6,8 @@
  * 📄 File: apps/api/test/app.e2e-spec.ts
  *
  * 🎯 Purpose:
- * Verifies REST compatibility and the GraphQL Auth/Users vertical slice.
+ * Verifies REST compatibility and the GraphQL Auth/Users vertical slice,
+ * including credential transaction rollback and authoritative state guards.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -26,6 +27,11 @@ import type { App } from 'supertest/types';
 
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/core/database';
+import { AuditWriterService } from './../src/core/audit';
+import {
+  ACCOUNT_CREDENTIALS_REPOSITORY,
+  type AccountCredentialsRepository,
+} from './../src/modules/auth/domain/repositories/account-credentials.repository.interface';
 import { QueueRegistryService } from './../src/core/queue';
 import { StorageService } from './../src/core/storage';
 import { EDITOR_CODE_HIGHLIGHTER } from './../src/modules/editor/application/contracts/editor-code-highlighter.interface';
@@ -185,6 +191,92 @@ describe('DSS API (e2e)', () => {
       .send({ refreshToken: loginBody.tokens.refreshToken })
       .expect(201);
     assertProfile(refreshed.body as Parameters<typeof assertProfile>[0]);
+  });
+
+  it('rolls back credential changes and session revocation when audit fails', async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const registered = await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send({
+        email: `rollback-${suffix}@dss.test`,
+        username: `rollback-${suffix}`,
+        displayName: 'Rollback Explorer',
+        password: 'Rollback-password-123!',
+      })
+      .expect(201);
+    const body = registered.body as {
+      user: { id: string };
+      tokens: { accessToken: string };
+    };
+    const prisma = app.get(PrismaService);
+    const snapshot = () =>
+      prisma.user.findUniqueOrThrow({
+        where: { id: body.user.id },
+        select: {
+          passwordHash: true,
+          authVersion: true,
+          sessions: {
+            select: { id: true, revokedAt: true },
+            orderBy: { id: 'asc' },
+          },
+        },
+      });
+    const before = await snapshot();
+    expect(before.sessions).toHaveLength(1);
+    const auditFailure = new Error('injected audit failure');
+    const auditSpy = jest
+      .spyOn(app.get(AuditWriterService), 'append')
+      .mockRejectedValueOnce(auditFailure);
+    try {
+      await expect(
+        app
+          .get<AccountCredentialsRepository>(ACCOUNT_CREDENTIALS_REPOSITORY)
+          .changePasswordHash(body.user.id, 'never-committed-test-hash'),
+      ).rejects.toBe(auditFailure);
+    } finally {
+      auditSpy.mockRestore();
+    }
+    expect(await snapshot()).toEqual(before);
+    await request(app.getHttpServer())
+      .get('/api/auth/me')
+      .set('authorization', `Bearer ${body.tokens.accessToken}`)
+      .expect(200);
+  });
+
+  it('rejects stale self-deactivation after the account becomes blocked', async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const registered = await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send({
+        email: `state-guard-${suffix}@dss.test`,
+        username: `state-guard-${suffix}`,
+        displayName: 'State Explorer',
+        password: 'State-password-123!',
+      })
+      .expect(201);
+    const body = registered.body as {
+      user: { id: string };
+      tokens: { accessToken: string };
+    };
+    const prisma = app.get(PrismaService);
+    await prisma.user.update({
+      where: { id: body.user.id },
+      data: { status: 'BANNED' },
+    });
+    await expect(
+      app
+        .get<AccountCredentialsRepository>(ACCOUNT_CREDENTIALS_REPOSITORY)
+        .deactivateAccount(body.user.id),
+    ).rejects.toMatchObject({ code: 'P2025' });
+    const account = await prisma.user.findUniqueOrThrow({
+      where: { id: body.user.id },
+      select: { status: true, deactivatedAt: true },
+    });
+    expect(account).toEqual({ status: 'BANNED', deactivatedAt: null });
+    await request(app.getHttpServer())
+      .get('/api/auth/me')
+      .set('authorization', `Bearer ${body.tokens.accessToken}`)
+      .expect(401);
   });
 
   it('exposes separate liveness and dependency readiness with request IDs', async () => {
