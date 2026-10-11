@@ -17,6 +17,7 @@
 import { ValidationPipe, type INestApplication } from '@nestjs/common';
 import { GraphQLSchemaHost } from '@nestjs/graphql';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { printSchema } from 'graphql';
 import { rm } from 'node:fs/promises';
@@ -179,6 +180,45 @@ describe('DSS API (e2e)', () => {
       });
       expect(body.tokens.accessToken).toEqual(expect.any(String));
       expect(body.tokens.refreshToken).toEqual(expect.any(String));
+      const jwt = app.get(JwtService);
+      const access = jwt.decode<Record<string, unknown>>(
+        body.tokens.accessToken,
+      );
+      const refresh = jwt.decode<Record<string, unknown>>(
+        body.tokens.refreshToken,
+      );
+      expect(Object.keys(access).sort()).toEqual(
+        [
+          'sub',
+          'email',
+          'ver',
+          'sid',
+          'username',
+          'roles',
+          'permissions',
+          'iat',
+          'exp',
+        ].sort(),
+      );
+      expect(access).toMatchObject({
+        sub: body.user.id,
+        email: credentials.email,
+        username: credentials.username,
+        ver: 0,
+        sid: expect.any(String) as string,
+        roles: ['user'],
+        permissions: expect.any(Array) as string[],
+      });
+      expect(Number(access.exp) - Number(access.iat)).toBe(15 * 60);
+      expect(Object.keys(refresh).sort()).toEqual(
+        ['sub', 'ver', 'sid', 'iat', 'exp'].sort(),
+      );
+      expect(refresh).toMatchObject({
+        sub: access.sub,
+        ver: access.ver,
+        sid: access.sid,
+      });
+      expect(Number(refresh.exp) - Number(refresh.iat)).toBe(7 * 24 * 60 * 60);
     };
 
     const registered = await request(app.getHttpServer())

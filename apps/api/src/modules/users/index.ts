@@ -27,6 +27,10 @@
  */
 
 export { UsersModule } from './users.module';
+export {
+  PROFILE_DISPLAY_READER,
+  type ProfileDisplayReader,
+} from './contracts/profile-display-reader.contract';
 export { UsersService } from './application/services/users.service';
 export { UserBlockService } from './application/services/user-block.service';
 

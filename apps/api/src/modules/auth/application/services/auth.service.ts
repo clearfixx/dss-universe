@@ -26,7 +26,7 @@
  * ⚠️ Important:
  * Never store raw passwords or raw refresh tokens.
  * AuthService must not know JWT secrets or sign/verify tokens directly.
- * Users reads below are transitional profile/token presentation only; security
+ * Users reads below are transitional profile-response presentation only; security
  * eligibility and password checks must use the Auth-owned credential snapshot.
  *
  * 💡 Notes:
@@ -175,7 +175,6 @@ export class AuthService {
           id: user.id,
           email: user.email,
           authVersion: user.authVersion,
-          username: profile.username,
         },
         session.id,
       );
@@ -311,7 +310,6 @@ export class AuthService {
         id: user.id,
         email: user.email,
         authVersion: user.authVersion,
-        username: profile.username,
       },
       sessionId,
     );

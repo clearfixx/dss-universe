@@ -16,14 +16,20 @@ auth/
 │   ├── dto/
 │   ├── services/
 │   └── types/
+├── contracts/
 ├── domain/
 │   ├── constants/
 │   └── exceptions/
+├── infrastructure/
 ├── presentation/
 │   └── controllers/
 ├── README.md
 └── auth.module.ts
-Architecture Flow
+```
+
+## Transitional response/registration flow
+
+```txt
 AuthController
   ↓
 AuthService
@@ -31,25 +37,36 @@ AuthService
 UsersRepository
   ↓
 UserRecord
+```
 
-Token issuing:
+## Token issuing
 
+```txt
 AuthService
   ↓
 TokenService
   ↓
-PermissionsService
+AccessTokenIssuer (Auth-owned opaque contract)
   ↓
-PermissionsRepository
-  ↓
-Prisma
-Rules
+Identity composition adapter
+  ├─ Users ProfileDisplayReader (username only)
+  └─ Authorization access profile
+```
+
+## Rules
 
 Authentication verifies identity.
 
 Authorization decides access.
 
 Do not move permission rules into Authentication.
+
+The root installs IdentityCompositionModule to bind access-token issuance.
+Auth supplies only subject ID, email and access version. Legacy username and
+permission claims are composed outside Auth; refresh tokens contain only
+subject/session/version. No positive eligibility cache is introduced.
+UsersRepository/UserMapper dependencies above remain transitional D3.2 debts,
+not the target registration/presentation architecture.
 
 Do not access Prisma directly from Auth application services.
 
@@ -61,7 +78,7 @@ Refresh tokens may be returned once to the client, but only hashed versions may 
 
 Controllers must stay thin.
 
-Current Boundary
+## Current boundary
 
 Authentication currently owns:
 
@@ -88,17 +105,13 @@ and still belongs to an active user with the matching authentication version.
 Owners can list safe session metadata, revoke one session, or revoke every
 other session while keeping the current device online.
 
-Authorization Core owns:
+Authorization Core supplies effective access profiles and permission guards.
+IAM owns role/permission assignment; Auth owns neither policy nor assignments.
 
-roles;
-permissions;
-effective access profiles;
-permission guards.
-Notes
+## Notes
 
 Authentication opens the airlock.
 
 Authorization decides which rooms are safe to enter.
 
 🚀 Build. Share. Grow.
-```

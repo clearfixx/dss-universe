@@ -146,7 +146,6 @@ describe('AuthService', () => {
         id: credentials.id,
         email: credentials.email,
         authVersion: credentials.authVersion,
-        username: user.username,
       },
       expect.any(String),
     ]);
@@ -194,10 +193,6 @@ describe('AuthService', () => {
       sub: credentials.id,
       sid: 'session-1',
       ver: credentials.authVersion,
-      email: user.email,
-      username: user.username,
-      roles: [],
-      permissions: [],
     });
     sessions.findActive.mockResolvedValue({
       id: 'session-1',
@@ -227,7 +222,6 @@ describe('AuthService', () => {
         id: credentials.id,
         email: credentials.email,
         authVersion: credentials.authVersion,
-        username: user.username,
       },
       'session-1',
     ]);

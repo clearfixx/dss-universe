@@ -40,6 +40,11 @@ imports Users internals. No universal facade or duplicate identity was introduce
 
 ## CI and remaining work
 
+Production preparation: [legacy token-claims composition](D3_TOKEN_CLAIMS_COMPOSITION_2026-10-11.md)
+removes username from Auth's token input and assembles legacy display/access
+claims through a root-owned adapter and a username-only Users contract.
+Registration and combined response orchestration remain open.
+
 Registration preparation: [real failure-boundary characterization](D3_REGISTRATION_FAILURE_BOUNDARIES_2026-10-11.md)
 establishes atomic account/role rollback, post-commit session denial and
 best-effort mail behavior before ownership transfer. This does not close D3.2.

@@ -52,6 +52,10 @@ private imports with public exports of the same broad repository.
 
 ## Registration and failure characterization still required
 
+[Legacy token-claims composition](../audits/D3_TOKEN_CLAIMS_COMPOSITION_2026-10-11.md)
+now owns display/access enrichment. Auth token input has only opaque ID, email
+and access version; registration and combined profile responses still need migration.
+
 [Registration failure characterization](../audits/D3_REGISTRATION_FAILURE_BOUNDARIES_2026-10-11.md)
 now tests real transaction rollback after default-role insertion, username
 conflict, post-commit session failure and best-effort verification-mail failure.

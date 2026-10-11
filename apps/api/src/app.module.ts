@@ -72,6 +72,7 @@ import { ObservabilityModule } from '@api/core/observability';
 import { HealthModule } from '@api/health';
 
 import { AppController } from './app.controller';
+import { IdentityCompositionModule } from './composition/identity/identity-composition.module';
 import { AchievementsModule } from './modules/achievements';
 import { ActivityModule } from './modules/activity';
 import { AiCoreModule } from './modules/ai-core';
@@ -102,6 +103,7 @@ import { UsersModule } from './modules/users/users.module';
     HealthModule,
     ActivityModule,
     UsersModule,
+    IdentityCompositionModule,
     AuthModule,
     AuthorizationModule,
     IamModule,
