@@ -1,3 +1,27 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Authentication
+ * 📄 File: apps/api/src/modules/auth/application/services/password-recovery.service.ts
+ *
+ * 🎯 Purpose:
+ * Coordinates non-enumerating recovery requests and credential-confirmed reset.
+ *
+ * 🧠 Responsibilities:
+ * • validates input and applies existing rate limits;
+ * • hashes reset credentials and invokes an atomic owned persistence contract;
+ * • requests a best-effort security alert only after successful consumption.
+ *
+ * 🏗️ Architecture:
+ * Auth application orchestration; no ORM access or profile dependency.
+ *
+ * ⚠️ Important:
+ * Request responses must not reveal whether an email has an account.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import {
   BadRequestException,
   Inject,
@@ -9,9 +33,11 @@ import { createHash, createHmac } from 'node:crypto';
 import type IORedis from 'ioredis';
 import { REDIS_CONNECTION } from '@api/core/cache';
 import { QueueRegistryService } from '@api/core/queue/services/queue-registry.service';
-import { PrismaPasswordResetRepository } from '../../infrastructure/repositories/prisma-password-reset.repository';
+import {
+  PASSWORD_RESET_REPOSITORY,
+  type PasswordResetRepository,
+} from '../../domain/repositories/password-reset.repository.interface';
 import { PasswordHashService } from './password-hash.service';
-import { PrismaService } from '@api/core/database';
 import { SecurityAlertService } from './security-alert.service';
 
 const RATE_LIMIT = `local n = redis.call('INCR', KEYS[1]); if n == 1 then redis.call('EXPIRE', KEYS[1], 900) end; return n`;
@@ -22,9 +48,9 @@ export class PasswordRecoveryService {
     @Inject(REDIS_CONNECTION) private readonly redis: IORedis,
     private readonly config: ConfigService,
     private readonly queues: QueueRegistryService,
-    private readonly resets: PrismaPasswordResetRepository,
+    @Inject(PASSWORD_RESET_REPOSITORY)
+    private readonly resets: PasswordResetRepository,
     private readonly passwords: PasswordHashService,
-    private readonly prisma: PrismaService,
     private readonly securityAlerts: SecurityAlertService,
   ) {}
 
@@ -86,21 +112,12 @@ export class PasswordRecoveryService {
       );
     const passwordHash = await this.passwords.hash(password);
     const tokenHash = createHash('sha256').update(token).digest('hex');
-    const candidate = await this.prisma.passwordReset.findUnique({
-      where: { tokenHash },
-      select: { user: { select: { email: true } } },
-    });
     const consumed = await this.resets.consume(tokenHash, passwordHash);
     if (!consumed)
       throw new BadRequestException(
         'This reset link is invalid or expired. Request a new link.',
       );
-    if (candidate) {
-      await this.securityAlerts.notify(
-        'PASSWORD_RECOVERED',
-        candidate.user.email,
-      );
-    }
+    await this.securityAlerts.notify('PASSWORD_RECOVERED', consumed.email);
     return { success: true };
   }
 

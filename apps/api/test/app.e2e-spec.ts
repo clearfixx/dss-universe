@@ -20,6 +20,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { printSchema } from 'graphql';
+import { createHash, randomBytes } from 'node:crypto';
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Pool } from 'pg';
@@ -34,6 +35,7 @@ import { AuditWriterService } from './../src/core/audit';
 import { AuthenticationPresentationService } from './../src/composition/identity/application/authentication-presentation.service';
 import { AuthSessionService } from './../src/modules/auth/application/services/auth-session.service';
 import { TokenService } from './../src/modules/auth/application/services/token.service';
+import { SecurityAlertService } from './../src/modules/auth/application/services/security-alert.service';
 import { PrismaRegistrationTransaction } from './../src/composition/identity/infrastructure/prisma-registration-transaction';
 import {
   ACCOUNT_CREDENTIALS_REPOSITORY,
@@ -133,6 +135,69 @@ describe('DSS API (e2e)', () => {
     );
     await app.init();
     processingPool = new Pool({ connectionString: process.env.DATABASE_URL });
+  });
+
+  it('consumes password recovery through GraphQL and immediately revokes prior sessions', async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const email = `recovery-${suffix}@dss.test`;
+    const identity = await app.get(AuthenticationPresentationService).register({
+      email,
+      username: `recovery-${suffix}`,
+      displayName: 'Recovery Pilot',
+      password: 'old-password-123',
+    });
+    const prisma = app.get(PrismaService);
+    const token = randomBytes(32).toString('hex');
+    await prisma.passwordReset.create({
+      data: {
+        userId: identity.user.id,
+        tokenHash: createHash('sha256').update(token).digest('hex'),
+        authVersion: 0,
+        expiresAt: new Date(Date.now() + 60_000),
+      },
+    });
+    const notify = jest
+      .spyOn(app.get(SecurityAlertService), 'notify')
+      .mockResolvedValue(undefined);
+    try {
+      const response = await request(app.getHttpServer())
+        .post('/api/graphql')
+        .send({
+          query:
+            'mutation($input: ResetPasswordInput!) { resetPassword(input: $input) { success } }',
+          variables: { input: { token, password: 'new-password-123' } },
+        })
+        .expect(200);
+      expect(response.body).toEqual({
+        data: { resetPassword: { success: true } },
+      });
+      expect(notify).toHaveBeenCalledWith('PASSWORD_RECOVERED', email);
+      await request(app.getHttpServer())
+        .get('/api/auth/me')
+        .set('Authorization', `Bearer ${identity.tokens.accessToken}`)
+        .expect(401);
+      await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({ email, password: 'new-password-123' })
+        .expect(201);
+      const replay = await request(app.getHttpServer())
+        .post('/api/graphql')
+        .send({
+          query:
+            'mutation($input: ResetPasswordInput!) { resetPassword(input: $input) { success } }',
+          variables: { input: { token, password: 'replay-password-123' } },
+        })
+        .expect(200);
+      expect((replay.body as GraphqlErrorResponse).errors).toHaveLength(1);
+      expect(notify).toHaveBeenCalledTimes(1);
+      expect(
+        await prisma.passwordReset.findUnique({
+          where: { userId: identity.user.id },
+        }),
+      ).toBeNull();
+    } finally {
+      notify.mockRestore();
+    }
   });
 
   it('preserves the REST application status endpoint', async () => {

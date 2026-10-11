@@ -1,16 +1,31 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Authentication
+ * 📄 File: apps/api/src/modules/auth/application/services/password-recovery.service.spec.ts
+ *
+ * 🎯 Purpose:
+ * Verifies private recovery input, non-enumeration and post-commit alert ordering.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import type IORedis from 'ioredis';
 import { ConfigService } from '@nestjs/config';
 import { PasswordRecoveryService } from './password-recovery.service';
 import type { QueueRegistryService } from '@api/core/queue/services/queue-registry.service';
-import type { PrismaPasswordResetRepository } from '../../infrastructure/repositories/prisma-password-reset.repository';
+import type { PasswordResetRepository } from '../../domain/repositories/password-reset.repository.interface';
 import type { PasswordHashService } from './password-hash.service';
 
 describe('PasswordRecoveryService', () => {
   const evalRedis = jest.fn();
   const add = jest.fn();
-  const consume = jest.fn<Promise<boolean>, [string, string]>();
+  const consume = jest.fn<
+    ReturnType<PasswordResetRepository['consume']>,
+    [string, string]
+  >();
   const hash = jest.fn();
-  const findUnique = jest.fn();
   const notify = jest.fn();
   const service = new PasswordRecoveryService(
     { eval: evalRedis } as unknown as IORedis,
@@ -21,18 +36,16 @@ describe('PasswordRecoveryService', () => {
       JWT_REFRESH_SECRET: 'test-secret',
     }),
     { passwordRecovery: { add } } as unknown as QueueRegistryService,
-    { consume } as unknown as PrismaPasswordResetRepository,
+    { consume },
     { hash } as unknown as PasswordHashService,
-    { passwordReset: { findUnique } } as never,
     { notify } as never,
   );
   beforeEach(() => {
     jest.clearAllMocks();
     evalRedis.mockResolvedValue(1);
     add.mockResolvedValue({});
-    consume.mockResolvedValue(true);
+    consume.mockResolvedValue({ email: 'dev@example.test' });
     hash.mockResolvedValue('bcrypt-hash');
-    findUnique.mockResolvedValue({ user: { email: 'dev@example.test' } });
     notify.mockResolvedValue(undefined);
   });
 
@@ -78,10 +91,19 @@ describe('PasswordRecoveryService', () => {
     );
   });
   it('rejects expired or already consumed credentials', async () => {
-    consume.mockResolvedValue(false);
+    consume.mockResolvedValue(null);
     await expect(
       service.reset('a'.repeat(64), 'new-password', '127.0.0.1'),
     ).rejects.toThrow('invalid or expired');
+    expect(notify).not.toHaveBeenCalled();
+  });
+
+  it('never sends a recovered alert when the transaction fails', async () => {
+    consume.mockRejectedValueOnce(new Error('audit rollback'));
+    await expect(
+      service.reset('a'.repeat(64), 'new-password', '127.0.0.1'),
+    ).rejects.toThrow('audit rollback');
+    expect(notify).not.toHaveBeenCalled();
   });
   it('rejects malformed credentials and bcrypt-truncated Unicode passwords before hashing', async () => {
     await expect(

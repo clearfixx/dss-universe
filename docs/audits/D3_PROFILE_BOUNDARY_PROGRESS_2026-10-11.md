@@ -5,10 +5,17 @@
 
 ## Latest increment
 
+[D3.3 recovery boundary](D3_3_RECOVERY_BOUNDARY_2026-10-11.md) removes direct
+Prisma/concrete adapter dependencies from password recovery. Atomic reset
+consumption returns only the committed notification email. Full API units with
+the isolated DB suite pass (382 tests); the new GraphQL case proves immediate
+revocation and replay denial. The reviewed inventory is now 147 findings.
+D3.3 remains open for abuse controls, verification, 2FA and infrastructure ports.
+
 [Registration and presentation transfer](D3_REGISTRATION_PRESENTATION_COMPOSITION_2026-10-11.md)
 removes the remaining Users/profile imports from Auth. Root composition now owns
 atomic shared-row enrollment and combined REST/GraphQL presentation. The reviewed
-architecture inventory is 148 findings (seven removed, none added). Existing API
+architecture inventory at that increment is 148 findings (seven removed, none added). Existing API
 and JWT contracts are preserved. D3.3 auxiliary boundaries are next; overall D3
 and full release acceptance remain open. DEBT-040 tracks pre-existing REST DTO
 runtime validation metadata; no silent validation-policy change is included.

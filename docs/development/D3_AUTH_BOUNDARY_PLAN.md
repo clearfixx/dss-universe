@@ -40,6 +40,11 @@ Auth no longer depends on Users. The reviewed frozen inventory is now 148
 findings, down from the original 156; outstanding findings are not waived.
 D3.3 auxiliary dependencies are next, not Phase 11 or implicit D3.5 approval.
 
+The first D3.3 increment transfers password recovery persistence to an Auth-owned
+port and verifies real reset concurrency/rollback plus GraphQL revocation/replay.
+See [recovery evidence](../audits/D3_3_RECOVERY_BOUNDARY_2026-10-11.md).
+Current frozen inventory is 147. Other auxiliary dependencies remain open.
+
 - The JWT strategy sees subject ID, session ID and auth version for eligibility.
 - Each request reads authoritative state; no positive security cache.
 - Missing/revoked/expired sessions, inactive accounts, mismatched owners or
