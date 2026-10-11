@@ -34,7 +34,7 @@ import type { UserRecord } from '../types/user-record.type';
 import type { SafeUser } from '../types/safe-user.type';
 
 export class UserMapper {
-  static toSafeUser(user: UserRecord): SafeUser {
+  static toSafeUser(user: Pick<UserRecord, keyof SafeUser>): SafeUser {
     return {
       id: user.id,
       email: user.email,

@@ -7,7 +7,7 @@
  *
  * 🎯 Purpose:
  * Verifies Members Directory filtering and deterministic sorting at the
- * Prisma repository boundary, including the transitional default-role creation.
+ * Prisma repository boundary. Registration is tested in identity composition.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -117,49 +117,5 @@ describe('PrismaUsersRepository', () => {
         ],
       },
     });
-  });
-
-  it('creates an account and assigns the default user role atomically', async () => {
-    const createdUser = { id: 'user-1' };
-    const transaction = {
-      role: {
-        findUniqueOrThrow: jest.fn().mockResolvedValue({ id: 'role-user' }),
-      },
-      user: {
-        create: jest.fn().mockResolvedValue(createdUser),
-      },
-      userRole: {
-        create: jest.fn().mockResolvedValue({}),
-      },
-    };
-    const prisma = {
-      $transaction: jest.fn(
-        (operation: (client: typeof transaction) => Promise<unknown>) =>
-          operation(transaction),
-      ),
-    } as unknown as PrismaService;
-    const repository = new PrismaUsersRepository(prisma);
-
-    const result = await repository.create({
-      email: 'user@dss.test',
-      username: 'user',
-      passwordHash: 'hash',
-    });
-
-    expect(result).toBe(createdUser);
-    expect(transaction.role.findUniqueOrThrow.mock.calls).toContainEqual([
-      {
-        where: { name: 'user' },
-        select: { id: true },
-      },
-    ]);
-    expect(transaction.userRole.create.mock.calls).toContainEqual([
-      {
-        data: {
-          userId: 'user-1',
-          roleId: 'role-user',
-        },
-      },
-    ]);
   });
 });

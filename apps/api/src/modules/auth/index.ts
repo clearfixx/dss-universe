@@ -16,3 +16,12 @@ export {
   type AccessTokenIssuer,
 } from './contracts/access-token-issuer.contract';
 export type { TokenSubject } from './contracts/token-subject.type';
+export {
+  AUTHENTICATION_FLOWS,
+  type AuthenticationFlows,
+  type AuthenticationResult,
+  type LoginCredentials,
+} from './contracts/authentication-flows.contract';
+export type { CredentialSubjectStore } from './contracts/credential-subject-store.contract';
+export type { AuthClient } from './application/types/auth-client.type';
+export { AUTH_ERRORS } from './domain/constants/auth-errors.constant';

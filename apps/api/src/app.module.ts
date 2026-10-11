@@ -76,7 +76,7 @@ import { IdentityCompositionModule } from './composition/identity/identity-compo
 import { AchievementsModule } from './modules/achievements';
 import { ActivityModule } from './modules/activity';
 import { AiCoreModule } from './modules/ai-core';
-import { AuthModule } from './modules/auth/auth.module';
+import { IdentityPresentationModule } from './composition/identity/identity-presentation.module';
 import { CommunityPointsModule } from './modules/community-points';
 import { ContentAccessModule } from './modules/content-access';
 import { CustomTitlesModule } from './modules/custom-titles';
@@ -104,7 +104,7 @@ import { UsersModule } from './modules/users/users.module';
     ActivityModule,
     UsersModule,
     IdentityCompositionModule,
-    AuthModule,
+    IdentityPresentationModule,
     AuthorizationModule,
     IamModule,
     InteractionsModule,

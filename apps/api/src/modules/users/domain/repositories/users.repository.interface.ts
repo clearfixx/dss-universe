@@ -30,7 +30,6 @@
 
 import type { PaginatedResult } from '@api/shared';
 
-import type { CreateUserContract } from '../contracts/create-user.contract';
 import type { UpdateUserContract } from '../contracts/update-user.contract';
 import type { UpdateUserData } from '../types/update-user-data.type';
 import type { UserRecord } from '../types/user-record.type';
@@ -52,8 +51,6 @@ export interface UsersRepository {
   findPublicById(id: string): Promise<UserRecord | null>;
 
   findPublicByUsername(username: string): Promise<UserRecord | null>;
-
-  create(data: CreateUserContract): Promise<UserRecord>;
 
   update(id: string, data: UpdateUserContract): Promise<UserRecord>;
 

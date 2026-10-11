@@ -31,10 +31,10 @@ import type { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/core/database';
 import { AuditWriterService } from './../src/core/audit';
-import { AuthService } from './../src/modules/auth/application/services/auth.service';
+import { AuthenticationPresentationService } from './../src/composition/identity/application/authentication-presentation.service';
 import { AuthSessionService } from './../src/modules/auth/application/services/auth-session.service';
 import { TokenService } from './../src/modules/auth/application/services/token.service';
-import { PrismaUsersRepository } from './../src/modules/users/infrastructure/repositories/prisma-users.repository';
+import { PrismaRegistrationTransaction } from './../src/composition/identity/infrastructure/prisma-registration-transaction';
 import {
   ACCOUNT_CREDENTIALS_REPOSITORY,
   type AccountCredentialsRepository,
@@ -247,7 +247,7 @@ describe('DSS API (e2e)', () => {
       displayName: 'Registration Explorer',
       password: 'Registration-password-123!',
     };
-    const auth = app.get(AuthService);
+    const auth = app.get(AuthenticationPresentationService);
     const owner = await auth.register(input);
     const conflictingEmail = `registration-conflict-${suffix}@dss.test`;
     await expect(
@@ -287,15 +287,16 @@ describe('DSS API (e2e)', () => {
         },
       },
     });
-    const repository = new PrismaUsersRepository(
+    const registration = new PrismaRegistrationTransaction(
       failingClient as unknown as PrismaService,
     );
     await expect(
-      repository.create({
-        email,
-        username: `registration-atomic-${suffix}`,
-        passwordHash: 'synthetic-hash-never-committed',
-      }),
+      registration
+        .forProfile({ username: `registration-atomic-${suffix}` })
+        .create({
+          email,
+          passwordHash: 'synthetic-hash-never-committed',
+        }),
     ).rejects.toBe(failure);
     expect(assignedSubjectId).toEqual(expect.any(String));
     expect(await prisma.user.findUnique({ where: { email } })).toBeNull();
@@ -322,7 +323,9 @@ describe('DSS API (e2e)', () => {
     const tokenSpy = jest.spyOn(app.get(TokenService), 'generateTokens');
     let mintedAccessToken: string;
     try {
-      await expect(app.get(AuthService).register(input)).rejects.toBe(failure);
+      await expect(
+        app.get(AuthenticationPresentationService).register(input),
+      ).rejects.toBe(failure);
       expect(tokenSpy.mock.results).toHaveLength(1);
       const minted = (await tokenSpy.mock.results[0].value) as Awaited<
         ReturnType<TokenService['generateTokens']>
@@ -346,7 +349,7 @@ describe('DSS API (e2e)', () => {
       .get('/api/auth/me')
       .set('Authorization', `Bearer ${mintedAccessToken}`)
       .expect(401);
-    const recovered = await app.get(AuthService).login({
+    const recovered = await app.get(AuthenticationPresentationService).login({
       email: input.email,
       password: input.password,
     });

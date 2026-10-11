@@ -27,6 +27,7 @@
  * ===============================================================
  */
 export { IamModule } from './iam.module';
+export { REGISTRATION_ROLE_NAME } from './contracts/registration-role.policy';
 
 export * from './permissions';
 export * from './roles';

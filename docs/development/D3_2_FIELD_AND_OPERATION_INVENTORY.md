@@ -93,5 +93,21 @@ the declared safe contract and no Web consumer reference was found. This is a
 security-boundary correction, not a claim of byte-for-byte accidental-field
 compatibility. It does not yet remove Auth's dependency on the Users mapper.
 
-Full D3.2 remains open until the operation migration and its failure/security
-tests above are implemented. D3.3/D3.4 and D3.5 remain separately tracked.
+## Registration and presentation transfer implemented
+
+The migration targets above are historical starting points. Registration now
+uses Auth credential enrollment, a composition-owned atomic shared-row/default-role
+transaction and post-commit Auth session completion. UsersRepository.create and
+the unused credential-bearing CreateUserContract are removed. Auth has no Users
+imports, public-profile mapper or combined AuthPayload model.
+
+REST register/login/refresh and GraphQL register/login/refresh/reactivate are now
+root-owned presentation composition. Users publishes a sixteen-field viewer read
+projection and its presentation mapping. Auth publishes only opaque flow results.
+Existing operation/schema names, JWT shape and failure-boundary tests are preserved.
+The presentation response explicitly copies supported fields and rejects a profile
+for a different subject, even when an adapter returns an overbroad runtime object.
+
+See [transfer evidence](../audits/D3_REGISTRATION_PRESENTATION_COMPOSITION_2026-10-11.md).
+D3.2 implementation is transferred; overall D3/security acceptance remains open.
+D3.3/D3.4 and separately scoped D3.5 are not completed by this change.

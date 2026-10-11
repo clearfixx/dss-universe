@@ -28,6 +28,11 @@
 
 export { UsersModule } from './users.module';
 export {
+  VIEWER_PROFILE_READER,
+  type ViewerProfileReader,
+  type ViewerProfile,
+} from './contracts/viewer-profile.contract';
+export {
   PROFILE_DISPLAY_READER,
   type ProfileDisplayReader,
 } from './contracts/profile-display-reader.contract';

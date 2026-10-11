@@ -2,8 +2,8 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: Authentication
- * 📄 File: apps/api/src/modules/auth/application/dto/register.dto.ts
+ * 📦 Module: Identity Composition
+ * 📄 File: apps/api/src/composition/identity/presentation/dto/register.dto.ts
  *
  * 🎯 Purpose:
  * Defines the request contract for user registration.

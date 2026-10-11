@@ -34,6 +34,12 @@ presentation contract is a D3.2 decision, not a hidden token-format change.
 
 ## D3.1 invariants
 
+D3.2 registration/presentation transfer is implemented; see
+[current evidence](../audits/D3_REGISTRATION_PRESENTATION_COMPOSITION_2026-10-11.md).
+Auth no longer depends on Users. The reviewed frozen inventory is now 148
+findings, down from the original 156; outstanding findings are not waived.
+D3.3 auxiliary dependencies are next, not Phase 11 or implicit D3.5 approval.
+
 - The JWT strategy sees subject ID, session ID and auth version for eligibility.
 - Each request reads authoritative state; no positive security cache.
 - Missing/revoked/expired sessions, inactive accounts, mismatched owners or

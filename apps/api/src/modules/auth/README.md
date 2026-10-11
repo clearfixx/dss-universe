@@ -27,16 +27,13 @@ auth/
 └── auth.module.ts
 ```
 
-## Transitional response/registration flow
+## Registration and combined presentation
 
 ```txt
-AuthController
-  ↓
-AuthService
-  ↓
-UsersRepository
-  ↓
-UserRecord
+Identity presentation composition
+  ├─ Auth AuthenticationFlows (opaque subject ID and tokens)
+  ├─ RegistrationTransaction (shared row + IAM default role, atomic)
+  └─ Users ViewerProfileReader (allowlisted public presentation)
 ```
 
 ## Token issuing
@@ -65,8 +62,10 @@ The root installs IdentityCompositionModule to bind access-token issuance.
 Auth supplies only subject ID, email and access version. Legacy username and
 permission claims are composed outside Auth; refresh tokens contain only
 subject/session/version. No positive eligibility cache is introduced.
-UsersRepository/UserMapper dependencies above remain transitional D3.2 debts,
-not the target registration/presentation architecture.
+Auth no longer imports UsersRepository/UserMapper or profile presentation.
+Credential enrollment accepts a trusted write-only store and returns only an ID.
+Initial session creation follows the account transaction; mail remains best-effort.
+The combined REST/GraphQL operations and models live outside feature applications.
 
 Do not access Prisma directly from Auth application services.
 

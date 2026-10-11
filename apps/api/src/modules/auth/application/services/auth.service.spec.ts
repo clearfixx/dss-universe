@@ -12,10 +12,6 @@
  * ===============================================================
  */
 
-import { UserStatus } from '@prisma/client';
-
-import type { UsersRepository } from '../../../users/domain/repositories/users.repository.interface';
-import type { UserRecord } from '../../../users/domain/types/user-record.type';
 import { InvalidCredentialsException } from '../../domain/exceptions/invalid-credentials.exception';
 import { TwoFactorRequiredException } from '../../domain/exceptions/two-factor-required.exception';
 import type { AccountCredentials } from '../../domain/types/account-credentials.type';
@@ -29,27 +25,14 @@ import type { LoginAbuseProtectionService } from './login-abuse-protection.servi
 import type { SecurityAlertService } from './security-alert.service';
 import type { TwoFactorService } from './two-factor.service';
 
-const user: UserRecord = {
+const user: AccountCredentials = {
   id: 'user-1',
   email: 'astronaut@dss.test',
-  username: 'astronaut',
   passwordHash: 'password-hash',
-  displayName: 'Astronaut',
-  bio: null,
-  location: null,
-  website: null,
-  technologies: [],
-  interests: [],
-  avatarUrl: null,
-  coverUrl: null,
-  status: UserStatus.ACTIVE,
-  deactivatedAt: null,
+  status: 'ACTIVE',
   authVersion: 0,
-  refreshTokenHash: 'refresh-hash',
-  emailVerifiedAt: null,
-  lastSeenAt: null,
-  createdAt: new Date('2026-01-01T00:00:00.000Z'),
-  updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+  loginFailedAttempts: 0,
+  loginLockedUntil: null,
 };
 
 const credentials: AccountCredentials = {
@@ -63,9 +46,6 @@ const credentials: AccountCredentials = {
 };
 
 describe('AuthService', () => {
-  const usersRepository = {
-    findById: jest.fn(),
-  } as unknown as jest.Mocked<UsersRepository>;
   const accountCredentials: jest.Mocked<AccountCredentialsRepository> = {
     findById: jest.fn(),
     findByEmail: jest.fn(),
@@ -105,7 +85,6 @@ describe('AuthService', () => {
     assertLogin: jest.fn(),
   } as unknown as jest.Mocked<TwoFactorService>;
   const service = new AuthService(
-    usersRepository,
     passwordHashService,
     tokenService,
     sessions,
@@ -119,8 +98,81 @@ describe('AuthService', () => {
   beforeEach(() => {
     jest.resetAllMocks();
     twoFactor.assertLogin.mockResolvedValue(undefined);
-    usersRepository.findById.mockResolvedValue(user);
     accountCredentials.findById.mockResolvedValue(credentials);
+  });
+
+  it('enrolls normalized credentials through a write-only store without a profile', async () => {
+    accountCredentials.findByEmail.mockResolvedValue(null);
+    passwordHashService.hash.mockResolvedValue('credential-hash');
+    const store = { create: jest.fn().mockResolvedValue(user.id) };
+    await expect(
+      service.enroll('  ASTRONAUT@DSS.TEST ', 'password', store),
+    ).resolves.toBe(user.id);
+    expect(store.create).toHaveBeenCalledWith({
+      email: user.email,
+      passwordHash: 'credential-hash',
+    });
+    expect(tokenService.generateTokens.mock.calls).toHaveLength(0);
+    expect(emailVerification.requestAfterRegistration.mock.calls).toHaveLength(
+      0,
+    );
+  });
+
+  it('does not hash or persist an already registered email', async () => {
+    accountCredentials.findByEmail.mockResolvedValue(credentials);
+    const store = { create: jest.fn() };
+    await expect(service.enroll(user.email, 'password', store)).rejects.toThrow(
+      'User with this email already exists',
+    );
+    expect(passwordHashService.hash.mock.calls).toHaveLength(0);
+    expect(store.create).not.toHaveBeenCalled();
+  });
+
+  it('propagates enrollment failure without creating a session or sending mail', async () => {
+    accountCredentials.findByEmail.mockResolvedValue(null);
+    passwordHashService.hash.mockResolvedValue('credential-hash');
+    const error = new Error('transaction failed');
+    const store = { create: jest.fn().mockRejectedValue(error) };
+    await expect(service.enroll(user.email, 'password', store)).rejects.toBe(
+      error,
+    );
+    expect(sessions.create.mock.calls).toHaveLength(0);
+    expect(emailVerification.requestAfterRegistration.mock.calls).toHaveLength(
+      0,
+    );
+  });
+
+  it('rejects completion for an unavailable account without tokens or mail', async () => {
+    accountCredentials.findById.mockResolvedValue({
+      ...credentials,
+      status: 'BANNED',
+    });
+    await expect(service.completeRegistration(user.id)).rejects.toBeInstanceOf(
+      InvalidCredentialsException,
+    );
+    expect(tokenService.generateTokens.mock.calls).toHaveLength(0);
+    expect(emailVerification.requestAfterRegistration.mock.calls).toHaveLength(
+      0,
+    );
+  });
+
+  it('persists the registration session before requesting verification mail', async () => {
+    tokenService.generateTokens.mockResolvedValue({
+      accessToken: 'access',
+      refreshToken: 'refresh',
+    });
+    passwordHashService.hash.mockResolvedValue('refresh-hash');
+    await expect(service.completeRegistration(user.id)).resolves.toEqual({
+      subjectId: user.id,
+      tokens: { accessToken: 'access', refreshToken: 'refresh' },
+    });
+    expect(sessions.create.mock.invocationCallOrder[0]).toBeLessThan(
+      emailVerification.requestAfterRegistration.mock.invocationCallOrder[0],
+    );
+    expect(emailVerification.requestAfterRegistration.mock.calls[0]).toEqual([
+      user.id,
+      user.email,
+    ]);
   });
 
   it('logs in with valid credentials and persists a hashed device session', async () => {
@@ -138,8 +190,8 @@ describe('AuthService', () => {
       password: 'correct-password',
     });
 
-    expect(result.user).not.toHaveProperty('passwordHash');
-    expect(result.user).not.toHaveProperty('refreshTokenHash');
+    expect(Object.keys(result).sort()).toEqual(['subjectId', 'tokens']);
+    expect(result.subjectId).toBe(credentials.id);
     expect(result.tokens.accessToken).toBe('access-token');
     expect(tokenService.generateTokens.mock.calls[0]).toEqual([
       {
@@ -174,7 +226,6 @@ describe('AuthService', () => {
       'wrong',
       expect.any(String),
     ]);
-    expect(usersRepository.findById.mock.calls).toHaveLength(0);
     expect(tokenService.generateTokens.mock.calls).toHaveLength(0);
   });
 
@@ -184,11 +235,10 @@ describe('AuthService', () => {
     await expect(
       service.login({ email: user.email, password: 'correct-password' }),
     ).rejects.toBe(error);
-    expect(usersRepository.findById.mock.calls).toHaveLength(0);
     expect(tokenService.generateTokens.mock.calls).toHaveLength(0);
   });
 
-  it('keeps credential version authoritative when refreshing legacy profile claims', async () => {
+  it('uses the authoritative credential version when rotating a session', async () => {
     tokenService.verifyRefreshToken.mockResolvedValue({
       sub: credentials.id,
       sid: 'session-1',
@@ -205,7 +255,6 @@ describe('AuthService', () => {
       createdAt: new Date('2026-01-01'),
       updatedAt: new Date('2026-01-01'),
     });
-    usersRepository.findById.mockResolvedValue({ ...user, authVersion: 99 });
     passwordHashService.compare.mockResolvedValue(true);
     passwordHashService.hash.mockResolvedValue('rotated-hash');
     tokenService.generateTokens.mockResolvedValue({
@@ -298,9 +347,9 @@ describe('AuthService', () => {
   });
 
   it('reactivates only a deactivated account and rotates its tokens', async () => {
-    const deactivated = {
+    const deactivated: AccountCredentials = {
       ...credentials,
-      status: UserStatus.DEACTIVATED,
+      status: 'DEACTIVATED',
     };
     accountCredentials.findByEmail.mockResolvedValue(deactivated);
     accountCredentials.reactivateAccount.mockResolvedValue(undefined);
@@ -317,7 +366,7 @@ describe('AuthService', () => {
         email: user.email,
         password: 'correct-password',
       }),
-    ).resolves.toMatchObject({ user: { status: UserStatus.ACTIVE } });
+    ).resolves.toMatchObject({ subjectId: user.id });
     expect(twoFactor.assertLogin.mock.calls).toContainEqual([
       user.id,
       undefined,
@@ -330,7 +379,7 @@ describe('AuthService', () => {
   it('rejects normal login for a deactivated account', async () => {
     accountCredentials.findByEmail.mockResolvedValue({
       ...credentials,
-      status: UserStatus.DEACTIVATED,
+      status: 'DEACTIVATED',
     });
 
     await expect(

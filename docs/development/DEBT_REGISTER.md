@@ -133,6 +133,11 @@ machine's concurrent workload. Retry with stopped dev processes and
 `vitest run --maxWorkers=2`; evaluate a documented resource-aware test policy
 in D6. This is not evidence of an assertion failure or a passing full gate.
 
+D3.2 also reproduced resource exhaustion with the default parallel API coverage
+command while other gates ran: one Jest worker crashed and a read-only Git diff
+allocation failed. Retry API coverage sequentially with `--runInBand`; keep this
+separate from a functional assertion failure or justification to lower thresholds.
+
 ## Entry policy
 
 ### D0.6 containment remediation progress
@@ -172,6 +177,31 @@ requirements and pending details. Perform a product gap/naming review before the
 Phase 11 brainstorm, coordinated with the frontend documentation workstream;
 do not silently rename routes, collapse modules or implement unrelated features
 inside D3.
+
+### DEBT-040 — REST authentication DTO runtime metadata (High, OPEN, D6 / API validation review)
+
+The original AuthController imports RegisterDto, LoginDto and RefreshTokenDto as
+type-only symbols. Nest's reflected body parameter metadata therefore does not
+reference the DTO constructors (read-only reflection prints `Function` for all
+three body parameters); class-validator decorators cannot enforce those
+DTOs through the global ValidationPipe. The relocated composition controller
+preserves this existing behavior, not a newly accepted validation policy.
+GraphQL uses runtime input classes and is a separate path. Existing successful
+REST registration tests omit displayName although RegisterDto declares it required.
+Review required/optional fields and invalid-input compatibility, then switch to
+runtime DTO imports with explicit regression tests. Do not silently turn this
+boundary refactor into an API validation behavior change; no exemption is granted.
+
+### DEBT-041 — Nondeterministic TOTP envelope tamper assertion (Medium, OPEN, D6 / Auth test owner)
+
+A sequential D3.2 coverage run fails the unchanged TotpService test at line 23:
+`decrypt(first.slice(0, -1) + 'x')` does not throw. The ciphertext is random and
+the last base64url character can already be `x`, leaving the original bytes
+unchanged. This is evidence of a flawed corruption test, not evidence of an
+AES-GCM authentication bypass. Replace it in a separately reviewed test fix with
+deterministic byte corruption and unchanged-envelope control. Keep the assertion
+and security behavior; do not skip it, weaken encryption or claim rerun success
+resolves the nondeterminism. No TOTP production/test edit is included in D3.2.
 
 Every new entry should include evidence, impact, proposed ownership and a clear
 decision before implementation. Discovery is not permission to expand the

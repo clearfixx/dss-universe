@@ -16,23 +16,6 @@
  * ===============================================================
  */
 
-import type { UserStatus } from '@prisma/client';
+import type { ViewerProfile } from '../../contracts/viewer-profile.contract';
 
-export interface SafeUser {
-  id: string;
-  email: string;
-  username: string;
-  displayName: string | null;
-  bio: string | null;
-  location: string | null;
-  website: string | null;
-  technologies: string[];
-  interests: string[];
-  avatarUrl: string | null;
-  coverUrl: string | null;
-  status: UserStatus;
-  emailVerifiedAt: Date | null;
-  lastSeenAt: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export type SafeUser = ViewerProfile;

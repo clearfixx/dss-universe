@@ -11,9 +11,10 @@
  * 🧠 Responsibilities:
  * • loads users by id, email, and username;
  * • checks whether user email or username already exists;
- * • creates and updates user records;
+ * • updates profile records;
  * • deletes user records when explicitly requested.
  * Credential changes and account-state transitions are owned by Auth infrastructure.
+ * Initial shared-row creation belongs to the registration composition transaction.
  *
  * 🏗️ Architecture:
  * Infrastructure repository.
@@ -35,7 +36,6 @@ import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '@api/core/database';
 
-import type { CreateUserContract } from '../../domain/contracts/create-user.contract';
 import type { UpdateUserContract } from '../../domain/contracts/update-user.contract';
 import type { UsersRepository } from '../../domain/repositories/users.repository.interface';
 import type { UpdateUserData } from '../../domain/types/update-user-data.type';
@@ -134,23 +134,6 @@ export class PrismaUsersRepository implements UsersRepository {
     });
 
     return count > 0;
-  }
-
-  create(data: CreateUserContract): Promise<UserRecord> {
-    return this.prisma.$transaction(async (transaction) => {
-      const defaultRole = await transaction.role.findUniqueOrThrow({
-        where: { name: 'user' },
-        select: { id: true },
-      });
-      const user = await transaction.user.create({ data });
-      await transaction.userRole.create({
-        data: {
-          userId: user.id,
-          roleId: defaultRole.id,
-        },
-      });
-      return user;
-    });
   }
 
   update(id: string, data: UpdateUserContract): Promise<UserRecord> {

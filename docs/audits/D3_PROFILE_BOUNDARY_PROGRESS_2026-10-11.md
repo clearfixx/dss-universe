@@ -3,7 +3,17 @@
 > Branch: `debt/d3-auth-identity-boundary`, stacked on D2.
 > Status: partial D3 implementation; not ready for release acceptance or merge.
 
-## Changes
+## Latest increment
+
+[Registration and presentation transfer](D3_REGISTRATION_PRESENTATION_COMPOSITION_2026-10-11.md)
+removes the remaining Users/profile imports from Auth. Root composition now owns
+atomic shared-row enrollment and combined REST/GraphQL presentation. The reviewed
+architecture inventory is 148 findings (seven removed, none added). Existing API
+and JWT contracts are preserved. D3.3 auxiliary boundaries are next; overall D3
+and full release acceptance remain open. DEBT-040 tracks pre-existing REST DTO
+runtime validation metadata; no silent validation-policy change is included.
+
+## Historical increments
 
 D3.1 isolates authoritative session validation from the core JWT strategy.
 Evidence: [D3.1 report](D3_1_ACCESS_SESSION_BOUNDARY_2026-10-11.md).
@@ -65,7 +75,6 @@ running at observation; no completion claim. Ubuntu and Windows storage
 containment pass. These observations apply
 to the earlier D3.1 commit, not automatically to the new profile fix.
 
-Full quality acceptance remains red. Existing DEBT-016/034/038 and formatting
-debts are not waived. No merge is requested. Next work is the D3.2 narrow credential
-and registration/presentation composition described in the inventory, followed
-by D3.3/D3.4 and separately scoped D3.5. Stop before Phase 11 for its brainstorm.
+Full quality acceptance remains red. Existing DEBT-016/034/038/040 and formatting
+debts are not waived. No merge is requested. Next work is D3.3/D3.4 and separately
+scoped D3.5. Stop before Phase 11 for its brainstorm.

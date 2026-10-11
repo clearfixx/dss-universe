@@ -11,7 +11,19 @@ username-only read contract; Authorization remains the access-claim authority.
 No credentials, ORM records, positive eligibility cache or database clients
 cross these ports. Missing authority fails token issuance.
 
-Registration and combined transport response orchestration are the next D3.2
-steps, not responsibilities already implemented by this token adapter. The
-existing UsersRepository and UserMapper dependencies in Auth remain tracked
-until those callers are migrated; this folder does not legitimize them.
+IdentityPresentationModule now installs the existing profile-bearing REST and
+GraphQL operations. AuthenticationPresentationService coordinates opaque Auth
+flows and the Users-owned sixteen-field ViewerProfileReader. No feature imports
+composition. AuthModule no longer imports Users or private profile mappers.
+
+Registration binds a profile to a trusted Auth-owned write-only credential store.
+PrismaRegistrationTransaction commits the shared identity/profile row and the
+IAM-owned baseline role atomically; only the subject ID returns. This narrow
+infrastructure capability receives a password hash for persistence, never as
+a profile or business response. Prisma never crosses its application contract.
+Sessions are created after commit; verification mail remains best-effort.
+
+Presentation failure returns no combined success/token pair. It does not undo
+an already committed account, created session or refresh rotation. This is not
+a distributed transaction or a guarantee of automatic retry after refresh failure.
+See the D3 registration/presentation evidence for exact gates and remaining debts.

@@ -9,24 +9,19 @@
  * Exposes authentication application use cases through GraphQL mutations.
  *
  * ⚠️ Important:
- * This resolver does not redefine the refresh-session model planned for Phase 5.
+ * Only Auth-owned account/session operations belong here.
+ * Profile-bearing authentication mutations belong to identity composition.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 
 import { UseGuards } from '@nestjs/common';
-import { Args, Context, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 
 import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
-import type { GraphqlContext } from '@api/core/graphql';
 
-import { UserGraphqlMapper } from '../../../../users/presentation/graphql/mappers/user-graphql.mapper';
 import { AuthService } from '../../../application/services/auth.service';
-import { LoginInput } from '../inputs/login.input';
-import { RefreshTokenInput } from '../inputs/refresh-token.input';
-import { RegisterInput } from '../inputs/register.input';
-import { AuthPayloadModel } from '../models/auth-payload.model';
 import { LogoutResultModel } from '../models/logout-result.model';
 import { DeactivateAccountInput } from '../inputs/deactivate-account.input';
 import { ChangeEmailInput } from '../inputs/change-email.input';
@@ -37,44 +32,6 @@ import { RevokeSessionsResultModel } from '../models/revoke-sessions-result.mode
 @Resolver()
 export class AuthResolver {
   constructor(private readonly authService: AuthService) {}
-
-  @Mutation(() => AuthPayloadModel)
-  async register(
-    @Args('input') input: RegisterInput,
-    @Context() context: GraphqlContext,
-  ): Promise<AuthPayloadModel> {
-    const result = await this.authService.register(input, this.client(context));
-
-    return {
-      user: UserGraphqlMapper.viewerFromSafeUser(result.user),
-      tokens: result.tokens,
-    };
-  }
-
-  @Mutation(() => AuthPayloadModel)
-  async login(
-    @Args('input') input: LoginInput,
-    @Context() context: GraphqlContext,
-  ): Promise<AuthPayloadModel> {
-    const result = await this.authService.login(input, this.client(context));
-
-    return {
-      user: UserGraphqlMapper.viewerFromSafeUser(result.user),
-      tokens: result.tokens,
-    };
-  }
-
-  @Mutation(() => AuthPayloadModel)
-  async refreshTokens(
-    @Args('input') input: RefreshTokenInput,
-  ): Promise<AuthPayloadModel> {
-    const result = await this.authService.refresh(input);
-
-    return {
-      user: UserGraphqlMapper.viewerFromSafeUser(result.user),
-      tokens: result.tokens,
-    };
-  }
 
   @Mutation(() => LogoutResultModel)
   @UseGuards(JwtAuthGuard)
@@ -89,21 +46,6 @@ export class AuthResolver {
     @Args('input') input: DeactivateAccountInput,
   ): Promise<{ success: boolean }> {
     return this.authService.deactivateAccount(user.id, input.password);
-  }
-
-  @Mutation(() => AuthPayloadModel)
-  async reactivateAccount(
-    @Args('input') input: LoginInput,
-    @Context() context: GraphqlContext,
-  ): Promise<AuthPayloadModel> {
-    const result = await this.authService.reactivateAccount(
-      input,
-      this.client(context),
-    );
-    return {
-      user: UserGraphqlMapper.viewerFromSafeUser(result.user),
-      tokens: result.tokens,
-    };
   }
 
   @Mutation(() => LogoutResultModel)
@@ -162,12 +104,5 @@ export class AuthResolver {
     @AuthUser() user: AuthenticatedUser,
   ): Promise<{ success: boolean; revokedCount: number }> {
     return this.authService.revokeOtherSessions(user.id, user.sessionId);
-  }
-
-  private client(context: GraphqlContext) {
-    return {
-      userAgent: context.req.get('user-agent'),
-      ipAddress: context.req.ip,
-    };
   }
 }

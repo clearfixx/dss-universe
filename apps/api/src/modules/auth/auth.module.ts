@@ -11,12 +11,13 @@
  * 🧠 Responsibilities:
  * • registers the AuthController;
  * • registers authentication application services;
- * • imports Users, Core Auth, and Authorization dependencies.
+ * • imports Core Auth and Authorization dependencies, never Users;
  * • binds the Core JWT strategy to the Auth-owned session validation capability.
  *
  * 🏗️ Architecture:
  * NestJS feature module.
- * Authentication handles login, registration, refresh, and logout.
+ * Authentication handles credentials, sessions and opaque authentication flows.
+ * Combined profile-bearing transport is wired in IdentityPresentationModule.
  * Authorization remains a separate concern.
  *
  * ⚠️ Important:
@@ -43,7 +44,7 @@ import {
 } from '@api/core/auth';
 import { AuthorizationModule } from '@api/core/authorization';
 
-import { UsersModule } from '../users/users.module';
+import { AUTHENTICATION_FLOWS } from './contracts/authentication-flows.contract';
 
 import { AuthService } from './application/services/auth.service';
 import { PasswordHashService } from './application/services/password-hash.service';
@@ -68,7 +69,7 @@ import { ACCOUNT_CREDENTIALS_REPOSITORY } from './domain/repositories/account-cr
 import { PrismaAccountCredentialsRepository } from './infrastructure/repositories/prisma-account-credentials.repository';
 
 @Module({
-  imports: [UsersModule, AuthCoreModule, AuthorizationModule],
+  imports: [AuthCoreModule, AuthorizationModule],
   controllers: [AuthController],
   providers: [
     JwtStrategy,
@@ -97,6 +98,7 @@ import { PrismaAccountCredentialsRepository } from './infrastructure/repositorie
     TwoFactorService,
     TwoFactorResolver,
     AuthService,
+    { provide: AUTHENTICATION_FLOWS, useExisting: AuthService },
     PasswordHashService,
     TokenService,
     AuthSessionService,
@@ -106,6 +108,6 @@ import { PrismaAccountCredentialsRepository } from './infrastructure/repositorie
       useClass: PrismaAuthSessionRepository,
     },
   ],
-  exports: [AuthService],
+  exports: [AUTHENTICATION_FLOWS],
 })
 export class AuthModule {}

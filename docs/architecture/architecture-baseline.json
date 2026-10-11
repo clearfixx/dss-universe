@@ -132,20 +132,6 @@
       "package": "D4"
     },
     {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/auth/application/services/auth.service.ts\",\"../../../users/domain/mappers/user.mapper: UserMapper\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/auth/application/services/auth.service.ts",
-      "detail": "../../../users/domain/mappers/user.mapper: UserMapper",
-      "package": "D3"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/auth/presentation/graphql/resolvers/auth.resolver.ts\",\"../../../../users/presentation/graphql/mappers/user-graphql.mapper: UserGraphqlMapper\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/auth/presentation/graphql/resolvers/auth.resolver.ts",
-      "detail": "../../../../users/presentation/graphql/mappers/user-graphql.mapper: UserGraphqlMapper",
-      "package": "D3"
-    },
-    {
       "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/community-points/application/services/community-points.service.ts\",\"@api/modules/users: UsersService\"]",
       "rule": "foreign-concrete-service",
       "file": "apps/api/src/modules/community-points/application/services/community-points.service.ts",
@@ -249,34 +235,6 @@
       "file": "apps/api/src/modules/users/infrastructure/repositories/prisma-user-wall.repository.ts",
       "detail": "../../../interactions: InteractionTargetWriterService",
       "package": "D4"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/auth/application/services/auth.service.ts\",\"../../../users/domain/mappers/user.mapper\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/auth/application/services/auth.service.ts",
-      "detail": "../../../users/domain/mappers/user.mapper",
-      "package": "D3"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/auth/application/services/auth.service.ts\",\"../../../users/domain/repositories/users.repository.interface\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/auth/application/services/auth.service.ts",
-      "detail": "../../../users/domain/repositories/users.repository.interface",
-      "package": "D3"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/auth/presentation/graphql/models/auth-payload.model.ts\",\"../../../../users/presentation/graphql/models/viewer.model\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/auth/presentation/graphql/models/auth-payload.model.ts",
-      "detail": "../../../../users/presentation/graphql/models/viewer.model",
-      "package": "D3"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/auth/presentation/graphql/resolvers/auth.resolver.ts\",\"../../../../users/presentation/graphql/mappers/user-graphql.mapper\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/auth/presentation/graphql/resolvers/auth.resolver.ts",
-      "detail": "../../../../users/presentation/graphql/mappers/user-graphql.mapper",
-      "package": "D3"
     },
     {
       "id": "[\"foreign-private-import\",\"apps/api/src/modules/editor/application/services/editor-content-delivery.service.ts\",\"../../../content-access/application/services/content-gates.service\"]",
@@ -478,13 +436,6 @@
       "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/users/domain/options/list-users.options.ts\",\"@prisma/client\"]",
       "rule": "persistence-outside-infrastructure",
       "file": "apps/api/src/modules/users/domain/options/list-users.options.ts",
-      "detail": "@prisma/client",
-      "package": "D4"
-    },
-    {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/users/domain/types/safe-user.type.ts\",\"@prisma/client\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/users/domain/types/safe-user.type.ts",
       "detail": "@prisma/client",
       "package": "D4"
     },

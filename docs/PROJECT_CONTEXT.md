@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-11 — pre-Phase-11 debt closure / D3.2 in progress
+> Updated: 2026-10-11 — pre-Phase-11 debt closure / D3.2 composition transferred
 
 ## Product and authority
 
@@ -45,6 +45,7 @@ Phase 11 has not started. Current work is debt closure, not a return to Phase 4.
 | D0.6             | Portable storage checks; focused Windows/Linux CI passes; review pending       |
 | D1               | Canonical documentation implemented; owner PR review pending                   |
 | D2               | Contracts and report-only inventory implemented; verification/review pending   |
+| D3               | Auth profile/registration separation transferred; D3.3/D3.4 acceptance open    |
 
 Branches/PRs are stacked review artifacts, not accepted releases. D3 starts from
 `debt/d2-architecture-contracts`; no red PR is merged to establish a false baseline.
@@ -106,7 +107,7 @@ read `apps/web/AGENTS.md` and installed Next.js documentation.
 - Preserve existing conventions and ownership; DTOs remain DTOs.
 - No foreign infrastructure imports or broad service coupling. Use explicit
   capabilities, contracts, projections or versioned events.
-- Auth owns authentication, not public profiles; known violations await D2/D3.
+- Auth owns authentication, not public profiles; root composition assembles profiles.
 - Prisma stays behind owned adapters; known leaks are debt, not precedent.
 - Explicit named imports/exports; no wildcard barrel exports in new work.
 - Domain models are not transport/Prisma representations; resolvers stay thin.

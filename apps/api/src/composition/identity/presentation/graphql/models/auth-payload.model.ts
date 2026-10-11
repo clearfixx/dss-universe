@@ -2,8 +2,8 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: Authentication
- * 📄 File: apps/api/src/modules/auth/presentation/graphql/models/auth-payload.model.ts
+ * 📦 Module: Identity Composition
+ * 📄 File: apps/api/src/composition/identity/presentation/graphql/models/auth-payload.model.ts
  *
  * 🎯 Purpose:
  * Defines the GraphQL authentication result.
@@ -14,8 +14,8 @@
 
 import { Field, ObjectType } from '@nestjs/graphql';
 
-import { ViewerModel } from '../../../../users/presentation/graphql/models/viewer.model';
-import { AuthTokensModel } from './auth-tokens.model';
+import { ViewerModel } from '@api/modules/users/presentation';
+import { AuthTokensModel } from '@api/modules/auth/presentation';
 
 @ObjectType()
 export class AuthPayloadModel {
