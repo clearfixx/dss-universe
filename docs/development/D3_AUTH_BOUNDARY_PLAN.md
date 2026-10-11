@@ -27,6 +27,8 @@ revocation; no new tables are required by the approved direction.
    this refactor or permission to implement new product functionality.
 
 Each step requires evidence and review. D3.1 does not close the whole Auth debt.
+The [D3.2 field/operation inventory](D3_2_FIELD_AND_OPERATION_INVENTORY.md)
+records current ownership, migration targets and the first safe-profile fix.
 Existing JWT profile fields remain for compatibility during D3.1; their future
 presentation contract is a D3.2 decision, not a hidden token-format change.
 

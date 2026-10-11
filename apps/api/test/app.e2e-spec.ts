@@ -129,6 +129,64 @@ describe('DSS API (e2e)', () => {
       .expect({ app: 'DSS Universe API', status: 'ok' });
   });
 
+  it('allowlists REST authentication profiles across registration, login and refresh', async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const credentials = {
+      email: `profile-boundary-${suffix}@dss.test`,
+      username: `profile-boundary-${suffix}`,
+      displayName: 'Boundary Explorer',
+      password: 'Boundary-password-123!',
+    };
+    const expectedKeys = [
+      'id',
+      'email',
+      'username',
+      'displayName',
+      'bio',
+      'location',
+      'website',
+      'technologies',
+      'interests',
+      'avatarUrl',
+      'coverUrl',
+      'status',
+      'emailVerifiedAt',
+      'lastSeenAt',
+      'createdAt',
+      'updatedAt',
+    ].sort();
+    const assertProfile = (body: {
+      user: Record<string, unknown>;
+      tokens: { accessToken: string; refreshToken: string };
+    }) => {
+      expect(Object.keys(body.user).sort()).toEqual(expectedKeys);
+      expect(body.user).toMatchObject({
+        email: credentials.email,
+        username: credentials.username,
+        displayName: credentials.displayName,
+      });
+      expect(body.tokens.accessToken).toEqual(expect.any(String));
+      expect(body.tokens.refreshToken).toEqual(expect.any(String));
+    };
+
+    const registered = await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send(credentials)
+      .expect(201);
+    assertProfile(registered.body as Parameters<typeof assertProfile>[0]);
+    const loggedIn = await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email: credentials.email, password: credentials.password })
+      .expect(201);
+    const loginBody = loggedIn.body as Parameters<typeof assertProfile>[0];
+    assertProfile(loginBody);
+    const refreshed = await request(app.getHttpServer())
+      .post('/api/auth/refresh')
+      .send({ refreshToken: loginBody.tokens.refreshToken })
+      .expect(201);
+    assertProfile(refreshed.body as Parameters<typeof assertProfile>[0]);
+  });
+
   it('exposes separate liveness and dependency readiness with request IDs', async () => {
     const live = await request(app.getHttpServer())
       .get('/api/health/live')

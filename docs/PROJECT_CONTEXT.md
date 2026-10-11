@@ -50,6 +50,9 @@ Branches/PRs are stacked review artifacts, not accepted releases. D3 starts from
 `debt/d2-architecture-contracts`; no red PR is merged to establish a false baseline.
 The [D3 package plan](development/D3_AUTH_BOUNDARY_PLAN.md) stages the Auth boundary
 refactor. D3.1 addresses access-session validation only; D3 remains incomplete.
+The initial D3.2 safe-profile allowlist and field/operation inventory are recorded
+in [D3 progress](audits/D3_PROFILE_BOUNDARY_PROGRESS_2026-10-11.md). Registration
+and profile composition are not yet migrated; no full Auth isolation is claimed.
 The owner approved the Auth/subject/profile direction in
 [ADR-003](architecture/adr/003-subject-and-access-ownership.md). D3.5 groups/Premium
 is separately scheduled for scope approval, not silently included in D3/Phase 11.
