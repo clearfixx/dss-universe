@@ -12,6 +12,7 @@
  * • registers the AuthController;
  * • registers authentication application services;
  * • imports Users, Core Auth, and Authorization dependencies.
+ * • binds the Core JWT strategy to the Auth-owned session validation capability.
  *
  * 🏗️ Architecture:
  * NestJS feature module.
@@ -35,7 +36,11 @@ import { PasswordRecoveryService } from './application/services/password-recover
 import { PrismaPasswordResetRepository } from './infrastructure/repositories/prisma-password-reset.repository';
 import { PasswordRecoveryResolver } from './presentation/graphql/resolvers/password-recovery.resolver';
 
-import { AuthCoreModule } from '@api/core/auth';
+import {
+  ACCESS_SESSION_VALIDATOR,
+  AuthCoreModule,
+  JwtStrategy,
+} from '@api/core/auth';
 import { AuthorizationModule } from '@api/core/authorization';
 
 import { UsersModule } from '../users/users.module';
@@ -56,11 +61,24 @@ import { SecurityAlertService } from './application/services/security-alert.serv
 import { TotpService } from './application/services/totp.service';
 import { TwoFactorService } from './application/services/two-factor.service';
 import { TwoFactorResolver } from './presentation/graphql/resolvers/two-factor.resolver';
+import { AccessSessionValidationService } from './application/services/access-session-validation.service';
+import { ACCESS_SESSION_REPOSITORY } from './domain/repositories/access-session.repository.interface';
+import { PrismaAccessSessionRepository } from './infrastructure/repositories/prisma-access-session.repository';
 
 @Module({
   imports: [UsersModule, AuthCoreModule, AuthorizationModule],
   controllers: [AuthController],
   providers: [
+    JwtStrategy,
+    AccessSessionValidationService,
+    {
+      provide: ACCESS_SESSION_VALIDATOR,
+      useExisting: AccessSessionValidationService,
+    },
+    {
+      provide: ACCESS_SESSION_REPOSITORY,
+      useClass: PrismaAccessSessionRepository,
+    },
     PasswordRecoveryService,
     PrismaPasswordResetRepository,
     PasswordRecoveryResolver,

@@ -39,6 +39,12 @@ Controller
 
 Business authentication flows such as login, registration, refresh, and logout belong to the **Authentication module**, not here.
 
+`JwtStrategy` delegates current session eligibility through `AccessSessionValidator`
+using only subject ID, session ID and auth version. The Auth feature composes the
+strategy with its owned validation service and persistence adapter. Core neither
+imports a feature module nor inspects ORM records. `AuthCoreModule` exports shared
+JWT infrastructure; the feature registers the strategy alongside its capability.
+
 ---
 
 ## Must contain

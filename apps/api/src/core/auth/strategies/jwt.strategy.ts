@@ -2,8 +2,8 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 🔐 Module: Authentication
- * 📄 File: jwt.strategy.ts
+ * 📦 Module: Core Authentication
+ * 📄 File: apps/api/src/core/auth/strategies/jwt.strategy.ts
  *
  * 🎯 Purpose:
  * Validates access tokens and creates the authenticated request user.
@@ -11,7 +11,8 @@
  * 🧠 Responsibilities:
  * • extracts JWT from Authorization Bearer header;
  * • validates token expiration and signature;
- * • maps JwtPayload into AuthenticatedUser.
+ * • checks current session eligibility through a consumer-owned capability;
+ * • maps JwtPayload into AuthenticatedUser only after that check succeeds.
  *
  * 🏗️ Architecture:
  * Passport JWT strategy.
@@ -26,6 +27,7 @@
  *
  * ⚠️ Important:
  * This strategy must stay aligned with TokenService and JwtPayload.
+ * It must not read Prisma/User records or own account eligibility policy.
  *
  * 💡 Notes:
  * If this strategy accepts the token,
@@ -35,18 +37,23 @@
  * ===============================================================
  */
 
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { UserStatus } from '@prisma/client';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 import type { AuthenticatedUser } from '../types/authenticated-user.type';
 import type { JwtPayload } from '../types/jwt-payload.type';
-import { PrismaService } from '@api/core/database';
+import {
+  ACCESS_SESSION_VALIDATOR,
+  type AccessSessionValidator,
+} from '../contracts/access-session-validator.interface';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    @Inject(ACCESS_SESSION_VALIDATOR)
+    private readonly sessions: AccessSessionValidator,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -55,23 +62,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
-    const session = await this.prisma.session.findUnique({
-      where: { id: payload.sid },
-      select: {
-        userId: true,
-        revokedAt: true,
-        expiresAt: true,
-        user: { select: { status: true, authVersion: true } },
-      },
+    const active = await this.sessions.isActive({
+      subjectId: payload.sub,
+      sessionId: payload.sid,
+      authVersion: payload.ver,
     });
-    if (
-      !session ||
-      session.userId !== payload.sub ||
-      session.revokedAt !== null ||
-      session.expiresAt.getTime() <= Date.now() ||
-      session.user.status !== UserStatus.ACTIVE ||
-      session.user.authVersion !== payload.ver
-    ) {
+    if (!active) {
       throw new UnauthorizedException('Account is not active.');
     }
     return {

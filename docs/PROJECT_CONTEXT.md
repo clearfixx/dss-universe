@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-10 — pre-Phase-11 debt closure / D2
+> Updated: 2026-10-11 — pre-Phase-11 debt closure / D3.1
 
 ## Product and authority
 
@@ -12,7 +12,9 @@ Build. Share. Learn. Grow. Together.
 News, Knowledge Forge, Research Lab, Community Hub, Academy and Downloads are
 separate products. Shared Media, Editor, interactions, authorization, events
 and gamification support them without owning their content lifecycles.
-Mission Control is administration; Command Deck is the user's dashboard.
+Mission Control is the user's dashboard; Command Deck is administration.
+The [owner's product vision](development/PRODUCT_VISION_1_0.md) corrects historical
+naming and records 1.0 scope; roadmap/module naming reconciliation remains open.
 
 Read these sources before selecting work:
 
@@ -44,8 +46,10 @@ Phase 11 has not started. Current work is debt closure, not a return to Phase 4.
 | D1               | Canonical documentation implemented; owner PR review pending                   |
 | D2               | Contracts and report-only inventory implemented; verification/review pending   |
 
-Branches/PRs are stacked review artifacts, not accepted releases. D2 starts from
-`debt/d1-canonical-documentation`; no red PR is merged to establish a false baseline.
+Branches/PRs are stacked review artifacts, not accepted releases. D3 starts from
+`debt/d2-architecture-contracts`; no red PR is merged to establish a false baseline.
+The [D3 package plan](development/D3_AUTH_BOUNDARY_PLAN.md) stages the Auth boundary
+refactor. D3.1 addresses access-session validation only; D3 remains incomplete.
 The owner approved the Auth/subject/profile direction in
 [ADR-003](architecture/adr/003-subject-and-access-ownership.md). D3.5 groups/Premium
 is separately scheduled for scope approval, not silently included in D3/Phase 11.

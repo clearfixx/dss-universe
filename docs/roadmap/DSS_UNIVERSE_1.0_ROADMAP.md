@@ -12,6 +12,12 @@
 
 ## 1. Purpose
 
+Owner clarification recorded on 2026-10-11 takes precedence over historical
+product naming: Mission Control is the user dashboard; Command Deck is
+administration. See [Product Vision 1.0](../development/PRODUCT_VISION_1_0.md).
+Full scope/module naming reconciliation remains tracked as DEBT-039; this note
+does not rename existing routes or claim newly described features are delivered.
+
 This document is the canonical working roadmap for DSS Universe 1.0.
 
 It combines:

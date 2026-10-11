@@ -2,8 +2,8 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 🔐 Module: Authentication
- * 📄 File: index.ts
+ * 📦 Module: Core Authentication
+ * 📄 File: apps/api/src/core/auth/index.ts
  *
  * 🎯 Purpose:
  * Public API for Auth Core.
@@ -38,6 +38,12 @@ export { JwtAuthGuard } from './guards/jwt-auth.guard';
 export { RolesGuard } from './guards/roles.guard';
 
 export { JwtStrategy } from './strategies/jwt.strategy';
+
+export {
+  ACCESS_SESSION_VALIDATOR,
+  type AccessSessionValidator,
+} from './contracts/access-session-validator.interface';
+export type { AccessSessionClaim } from './types/access-session-claim.type';
 
 export type { AuthenticatedUser } from './types/authenticated-user.type';
 export type { JwtPayload } from './types/jwt-payload.type';

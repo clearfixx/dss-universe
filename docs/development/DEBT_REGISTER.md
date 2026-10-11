@@ -153,6 +153,26 @@ Decide whether hostile local writers are in scope; if so, design OS-specific phy
 containment and TOCTOU defenses. Do not silently expand this package or describe
 lexical checks as sandbox isolation.
 
+### DEBT-038 — API E2E exceeds CI job limit (High, OPEN, D6)
+
+D2 Quality Gate run `38083005484` started API E2E at 20:17:17 UTC on 2026-10-10
+and cancelled it at 02:15:22 UTC on 2026-10-11 after the six-hour job limit.
+GraphQL contract verification and build were skipped. This is not a passing E2E
+gate. Diagnose test/process lifecycle and infrastructure in D6; do not hide the
+failure with force-exit or skipped assertions. D3.1's six selected real API E2E
+tests pass locally in 40.952 seconds, but do not reproduce the complete CI suite.
+
+### DEBT-039 — Owner vision and historical product naming (Medium, OPEN, D1 follow-up)
+
+The owner explicitly names Mission Control as the user dashboard and Command Deck
+as administration. Historical documents and the existing dashboard route disagree.
+The owner's wiki-style Research Lab also needs reconciliation with Knowledge Forge
+and the separately planned Research Lab. See `PRODUCT_VISION_1_0.md` for full 1.0
+requirements and pending details. Perform a product gap/naming review before the
+Phase 11 brainstorm, coordinated with the frontend documentation workstream;
+do not silently rename routes, collapse modules or implement unrelated features
+inside D3.
+
 Every new entry should include evidence, impact, proposed ownership and a clear
 decision before implementation. Discovery is not permission to expand the
 current package silently.
