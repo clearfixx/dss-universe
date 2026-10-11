@@ -5,17 +5,25 @@
 
 ## Latest increment
 
+[D3.3 verification boundary](D3_3_EMAIL_VERIFICATION_BOUNDARY_2026-10-11.md)
+transfers pending-destination reads and atomic token consumption to a private
+Auth-owned port. Full API units pass (401 tests, including isolated DB suites);
+four selected real E2E pass, including GraphQL verification/audit/replay denial.
+Current reviewed inventory is 145 findings. 2FA and infrastructure ports remain.
+
+## Previous increments
+
 [D3.3 login-abuse boundary](D3_3_LOGIN_ABUSE_BOUNDARY_2026-10-11.md) transfers
 durable counters/locks and audit to an Auth-owned transaction adapter. Full API
 units with both DB suites pass (392 tests); four selected real E2E pass, including
 lock/audit/429 and successful reset. Current reviewed inventory is 146 findings.
-Email verification, 2FA and Redis/queue capability review remain open.
+At that increment, email verification, 2FA and infrastructure review remained open.
 
 [D3.3 recovery boundary](D3_3_RECOVERY_BOUNDARY_2026-10-11.md) removes direct
 Prisma/concrete adapter dependencies from password recovery. Atomic reset
 consumption returns only the committed notification email. Full API units with
 the isolated DB suite pass (382 tests); the new GraphQL case proves immediate
-revocation and replay denial. The reviewed inventory is now 147 findings.
+revocation and replay denial. The reviewed inventory at that increment was 147 findings.
 D3.3 remains open for abuse controls, verification, 2FA and infrastructure ports.
 
 [Registration and presentation transfer](D3_REGISTRATION_PRESENTATION_COMPOSITION_2026-10-11.md)

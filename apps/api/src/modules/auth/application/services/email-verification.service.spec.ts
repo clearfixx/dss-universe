@@ -1,3 +1,16 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Authentication
+ * 📄 File: apps/api/src/modules/auth/application/services/email-verification.service.spec.ts
+ *
+ * 🎯 Purpose:
+ * Verifies orchestration through the owned verification port without database access.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { BadRequestException } from '@nestjs/common';
 import { createHash } from 'node:crypto';
 import { EmailVerificationService } from './email-verification.service';
@@ -15,23 +28,18 @@ describe('EmailVerificationService', () => {
     ),
     getOrThrow: jest.fn().mockReturnValue('secret'),
   };
-  const prisma = {
-    user: {
-      findUnique: jest.fn().mockResolvedValue({
-        email: 'astro@dss.test',
-        emailVerifiedAt: null,
-        status: 'ACTIVE',
-      }),
-    },
-  };
   const queues = { emailVerification: { add: jest.fn() } };
-  const credentials = { consume: jest.fn() };
+  const credentials = {
+    consume: jest.fn(),
+    findPendingDestination: jest
+      .fn()
+      .mockResolvedValue({ email: 'astro@dss.test' }),
+  };
   const service = new EmailVerificationService(
     redis as never,
     config as never,
-    prisma as never,
     queues as never,
-    credentials as never,
+    credentials,
   );
 
   beforeEach(() => jest.clearAllMocks());
@@ -45,6 +53,44 @@ describe('EmailVerificationService', () => {
       expect.objectContaining({ userId: 'user-1', email: 'astro@dss.test' }),
       expect.any(Object),
     );
+    expect(credentials.findPendingDestination).toHaveBeenCalledWith('user-1');
+  });
+
+  it('returns generic success without rate-limit or queue work for no pending destination', async () => {
+    credentials.findPendingDestination.mockResolvedValueOnce(null);
+    await expect(service.request('unknown', '127.0.0.1')).resolves.toEqual({
+      success: true,
+    });
+    expect(redis.eval).not.toHaveBeenCalled();
+    expect(queues.emailVerification.add).not.toHaveBeenCalled();
+  });
+
+  it('does not deliver when either resend limit is exhausted', async () => {
+    redis.eval.mockResolvedValueOnce(4).mockResolvedValueOnce(1);
+    await expect(service.request('user-1', '127.0.0.1')).resolves.toEqual({
+      success: true,
+    });
+    expect(queues.emailVerification.add).not.toHaveBeenCalled();
+  });
+
+  it('propagates authoritative storage failure without sending mail', async () => {
+    credentials.findPendingDestination.mockRejectedValueOnce(
+      new Error('database unavailable'),
+    );
+    await expect(service.request('user-1', '127.0.0.1')).rejects.toThrow(
+      'database unavailable',
+    );
+    expect(queues.emailVerification.add).not.toHaveBeenCalled();
+  });
+
+  it('keeps registration successful if asynchronous delivery fails', async () => {
+    queues.emailVerification.add.mockRejectedValueOnce(
+      new Error('queue unavailable'),
+    );
+    await expect(
+      service.requestAfterRegistration('user-1', 'astro@dss.test'),
+    ).resolves.toBeUndefined();
+    expect(credentials.findPendingDestination).not.toHaveBeenCalled();
   });
 
   it('accepts a valid single-use token digest', async () => {

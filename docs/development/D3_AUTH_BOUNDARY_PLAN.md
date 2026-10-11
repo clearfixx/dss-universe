@@ -50,6 +50,11 @@ owned repository and proves real concurrency/rollback plus HTTP lock behavior.
 See [login-abuse evidence](../audits/D3_3_LOGIN_ABUSE_BOUNDARY_2026-10-11.md).
 Current inventory is 146; verification, 2FA and infrastructure ports remain open.
 
+The next D3.3 increment isolates verification persistence and verifies real
+single-use consumption/rollback plus GraphQL state/audit/replay denial.
+See [verification evidence](../audits/D3_3_EMAIL_VERIFICATION_BOUNDARY_2026-10-11.md).
+Current inventory is 145; 2FA and infrastructure capability review remain open.
+
 - The JWT strategy sees subject ID, session ID and auth version for eligibility.
 - Each request reads authoritative state; no positive security cache.
 - Missing/revoked/expired sessions, inactive accounts, mismatched owners or

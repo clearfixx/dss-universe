@@ -59,6 +59,7 @@ import { AUTH_SESSION_REPOSITORY } from './domain/repositories/auth-session.repo
 import { PrismaAuthSessionRepository } from './infrastructure/repositories/prisma-auth-session.repository';
 import { EmailVerificationService } from './application/services/email-verification.service';
 import { PrismaEmailVerificationRepository } from './infrastructure/repositories/prisma-email-verification.repository';
+import { EMAIL_VERIFICATION_REPOSITORY } from './domain/repositories/email-verification.repository.interface';
 import { EmailVerificationResolver } from './presentation/graphql/resolvers/email-verification.resolver';
 import { LoginAbuseProtectionService } from './application/services/login-abuse-protection.service';
 import { SecurityAlertService } from './application/services/security-alert.service';
@@ -96,7 +97,10 @@ import { PrismaAccountCredentialsRepository } from './infrastructure/repositorie
     },
     PasswordRecoveryResolver,
     EmailVerificationService,
-    PrismaEmailVerificationRepository,
+    {
+      provide: EMAIL_VERIFICATION_REPOSITORY,
+      useClass: PrismaEmailVerificationRepository,
+    },
     EmailVerificationResolver,
     LoginAbuseProtectionService,
     { provide: LOGIN_ABUSE_REPOSITORY, useClass: PrismaLoginAbuseRepository },

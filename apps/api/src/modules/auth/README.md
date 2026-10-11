@@ -77,7 +77,9 @@ separation remains D3.3 work, not a precedent for new application ORM imports.
 LoginAbuseProtectionService now delegates durable attempt counters, locking and
 atomic audit to LoginAbuseRepository. Redis policy and post-commit alerts remain
 application orchestration; no ORM transaction crosses the owned port. Email
-verification and 2FA persistence boundaries are still pending D3.3 work.
+Verification now uses an owned persistence port for minimal pending-destination
+reads and atomic consumption/audit. Redis/queue capabilities and 2FA persistence
+boundaries are still pending D3.3 work.
 
 Do not store raw passwords.
 

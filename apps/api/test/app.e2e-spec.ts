@@ -485,6 +485,62 @@ describe('DSS API (e2e)', () => {
       .expect(200);
   });
 
+  it('verifies email through GraphQL once with persisted state and audit', async () => {
+    const suffix = randomBytes(8).toString('hex');
+    const registered = await app
+      .get(AuthenticationPresentationService)
+      .register({
+        email: `verification-${suffix}@dss.test`,
+        username: `verification-${suffix}`,
+        password: 'Verification-password-123!',
+      });
+    const prisma = app.get(PrismaService);
+    const token = randomBytes(32).toString('hex');
+    await prisma.emailVerification.create({
+      data: {
+        userId: registered.user.id,
+        tokenHash: createHash('sha256').update(token).digest('hex'),
+        expiresAt: new Date(Date.now() + 60_000),
+      },
+    });
+    const verify = () =>
+      request(app.getHttpServer())
+        .post('/api/graphql')
+        .send({
+          query:
+            'mutation Verify($input: VerifyEmailInput!) { verifyEmail(input: $input) { success } }',
+          variables: { input: { token } },
+        });
+    const first = await verify().expect(200);
+    expect(first.body).toEqual({ data: { verifyEmail: { success: true } } });
+    expect(
+      (
+        await prisma.user.findUniqueOrThrow({
+          where: { id: registered.user.id },
+          select: { emailVerifiedAt: true },
+        })
+      ).emailVerifiedAt,
+    ).toBeInstanceOf(Date);
+    expect(
+      await prisma.emailVerification.count({
+        where: { userId: registered.user.id },
+      }),
+    ).toBe(0);
+    expect(
+      await prisma.auditRecord.count({
+        where: { action: 'auth.email.verified', targetId: registered.user.id },
+      }),
+    ).toBe(1);
+    const replay = await verify().expect(200);
+    expect(replay.body).toMatchObject({
+      errors: [
+        expect.objectContaining({
+          message: 'Invalid or expired verification link.',
+        }),
+      ],
+    });
+  });
+
   it('keeps registration successful when verification email enqueue fails', async () => {
     const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const config = app.get(ConfigService);

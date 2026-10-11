@@ -335,13 +335,6 @@
       "package": "D3"
     },
     {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/auth/application/services/email-verification.service.ts\",\"@api/core/database\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/auth/application/services/email-verification.service.ts",
-      "detail": "@api/core/database",
-      "package": "D3"
-    },
-    {
       "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/auth/application/services/two-factor.service.ts\",\"@api/core/database\"]",
       "rule": "persistence-outside-infrastructure",
       "file": "apps/api/src/modules/auth/application/services/two-factor.service.ts",
