@@ -7,7 +7,8 @@
  *
  * 🎯 Purpose:
  * Verifies REST compatibility and the GraphQL Auth/Users vertical slice,
- * including credential transaction rollback and authoritative state guards.
+ * including registration failure boundaries, credential transaction rollback
+ * and authoritative state guards.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -15,6 +16,7 @@
 
 import { ValidationPipe, type INestApplication } from '@nestjs/common';
 import { GraphQLSchemaHost } from '@nestjs/graphql';
+import { ConfigService } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { printSchema } from 'graphql';
 import { rm } from 'node:fs/promises';
@@ -28,6 +30,10 @@ import type { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/core/database';
 import { AuditWriterService } from './../src/core/audit';
+import { AuthService } from './../src/modules/auth/application/services/auth.service';
+import { AuthSessionService } from './../src/modules/auth/application/services/auth-session.service';
+import { TokenService } from './../src/modules/auth/application/services/token.service';
+import { PrismaUsersRepository } from './../src/modules/users/infrastructure/repositories/prisma-users.repository';
 import {
   ACCOUNT_CREDENTIALS_REPOSITORY,
   type AccountCredentialsRepository,
@@ -191,6 +197,170 @@ describe('DSS API (e2e)', () => {
       .send({ refreshToken: loginBody.tokens.refreshToken })
       .expect(201);
     assertProfile(refreshed.body as Parameters<typeof assertProfile>[0]);
+  });
+
+  it('leaves no new account or session when registration conflicts on username', async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const input = {
+      email: `registration-owner-${suffix}@dss.test`,
+      username: `registration-owner-${suffix}`,
+      displayName: 'Registration Explorer',
+      password: 'Registration-password-123!',
+    };
+    const auth = app.get(AuthService);
+    const owner = await auth.register(input);
+    const conflictingEmail = `registration-conflict-${suffix}@dss.test`;
+    await expect(
+      auth.register({ ...input, email: conflictingEmail }),
+    ).rejects.toMatchObject({ code: 'P2002' });
+    const prisma = app.get(PrismaService);
+    expect(
+      await prisma.user.findUnique({ where: { email: conflictingEmail } }),
+    ).toBeNull();
+    const retained = await prisma.user.findUniqueOrThrow({
+      where: { id: owner.user.id },
+      select: {
+        roles: { select: { role: { select: { name: true } } } },
+        sessions: { select: { id: true } },
+      },
+    });
+    expect(retained.roles).toEqual([{ role: { name: 'user' } }]);
+    expect(retained.sessions).toHaveLength(1);
+  });
+
+  it('rolls back registration when default role assignment fails after its database write', async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const email = `registration-atomic-${suffix}@dss.test`;
+    const prisma = app.get(PrismaService);
+    const failure = new Error('injected failure after role assignment write');
+    let assignedSubjectId: string | undefined;
+    // This client extension retains the real interactive transaction. Unlike
+    // a transaction mock, throwing after the SQL insert proves database rollback.
+    const failingClient = prisma.$extends({
+      query: {
+        userRole: {
+          async create({ args, query }) {
+            const assignment = await query(args);
+            assignedSubjectId = assignment.userId;
+            throw failure;
+          },
+        },
+      },
+    });
+    const repository = new PrismaUsersRepository(
+      failingClient as unknown as PrismaService,
+    );
+    await expect(
+      repository.create({
+        email,
+        username: `registration-atomic-${suffix}`,
+        passwordHash: 'synthetic-hash-never-committed',
+      }),
+    ).rejects.toBe(failure);
+    expect(assignedSubjectId).toEqual(expect.any(String));
+    expect(await prisma.user.findUnique({ where: { email } })).toBeNull();
+    expect(
+      await prisma.userRole.count({ where: { userId: assignedSubjectId! } }),
+    ).toBe(0);
+    expect(
+      await prisma.session.count({ where: { userId: assignedSubjectId! } }),
+    ).toBe(0);
+  });
+
+  it('retains the committed registration but denies minted tokens when session persistence fails', async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const input = {
+      email: `registration-session-${suffix}@dss.test`,
+      username: `registration-session-${suffix}`,
+      displayName: 'Registration Explorer',
+      password: 'Registration-password-123!',
+    };
+    const failure = new Error('injected session persistence failure');
+    const sessionSpy = jest
+      .spyOn(app.get(AuthSessionService), 'create')
+      .mockRejectedValueOnce(failure);
+    const tokenSpy = jest.spyOn(app.get(TokenService), 'generateTokens');
+    let mintedAccessToken: string;
+    try {
+      await expect(app.get(AuthService).register(input)).rejects.toBe(failure);
+      expect(tokenSpy.mock.results).toHaveLength(1);
+      const minted = (await tokenSpy.mock.results[0].value) as Awaited<
+        ReturnType<TokenService['generateTokens']>
+      >;
+      mintedAccessToken = minted.accessToken;
+    } finally {
+      sessionSpy.mockRestore();
+      tokenSpy.mockRestore();
+    }
+    const committed = await app.get(PrismaService).user.findUniqueOrThrow({
+      where: { email: input.email },
+      select: {
+        id: true,
+        roles: { select: { role: { select: { name: true } } } },
+        sessions: { select: { id: true } },
+      },
+    });
+    expect(committed.roles).toEqual([{ role: { name: 'user' } }]);
+    expect(committed.sessions).toHaveLength(0);
+    await request(app.getHttpServer())
+      .get('/api/auth/me')
+      .set('Authorization', `Bearer ${mintedAccessToken}`)
+      .expect(401);
+    const recovered = await app.get(AuthService).login({
+      email: input.email,
+      password: input.password,
+    });
+    expect(recovered.user.id).toBe(committed.id);
+    await request(app.getHttpServer())
+      .get('/api/auth/me')
+      .set('Authorization', `Bearer ${recovered.tokens.accessToken}`)
+      .expect(200);
+  });
+
+  it('keeps registration successful when verification email enqueue fails', async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const config = app.get(ConfigService);
+    const originalGet = config.get.bind(config) as (key: string) => unknown;
+    const configSpy = jest
+      .spyOn(config, 'get')
+      .mockImplementation((key: string) => {
+        if (key === 'MAIL_HOST') return 'localhost';
+        if (key === 'MAIL_FROM') return 'test@dss.test';
+        if (key === 'EMAIL_VERIFICATION_WEB_URL')
+          return 'http://localhost/verify-email';
+        return originalGet(key);
+      });
+    const enqueueSpy = jest
+      .spyOn(app.get(QueueRegistryService).emailVerification, 'add')
+      .mockRejectedValueOnce(new Error('injected mail queue failure'));
+    try {
+      const registered = await request(app.getHttpServer())
+        .post('/api/auth/register')
+        .send({
+          email: `registration-mail-${suffix}@dss.test`,
+          username: `registration-mail-${suffix}`,
+          password: 'Registration-password-123!',
+        })
+        .expect(201);
+      expect(enqueueSpy.mock.calls).toHaveLength(1);
+      const body = registered.body as {
+        user: { id: string };
+        tokens: { accessToken: string };
+      };
+      const committed = await app.get(PrismaService).user.findUniqueOrThrow({
+        where: { id: body.user.id },
+        select: { emailVerifiedAt: true, sessions: { select: { id: true } } },
+      });
+      expect(committed.emailVerifiedAt).toBeNull();
+      expect(committed.sessions).toHaveLength(1);
+      await request(app.getHttpServer())
+        .get('/api/auth/me')
+        .set('Authorization', `Bearer ${body.tokens.accessToken}`)
+        .expect(200);
+    } finally {
+      enqueueSpy.mockRestore();
+      configSpy.mockRestore();
+    }
   });
 
   it('rolls back credential changes and session revocation when audit fails', async () => {

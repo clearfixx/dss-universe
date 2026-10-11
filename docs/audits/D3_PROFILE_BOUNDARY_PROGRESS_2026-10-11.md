@@ -40,6 +40,10 @@ imports Users internals. No universal facade or duplicate identity was introduce
 
 ## CI and remaining work
 
+Registration preparation: [real failure-boundary characterization](D3_REGISTRATION_FAILURE_BOUNDARIES_2026-10-11.md)
+establishes atomic account/role rollback, post-commit session denial and
+best-effort mail behavior before ownership transfer. This does not close D3.2.
+
 Latest D3.2 increment: [Auth-owned credential reads](D3_CREDENTIAL_READ_BOUNDARY_2026-10-11.md).
 Security reads now use a private seven-field Auth contract. AuthService no longer
 imports Prisma; the reviewed architecture inventory decreases to 155 findings.

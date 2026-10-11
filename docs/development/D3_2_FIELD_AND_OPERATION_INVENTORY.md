@@ -52,6 +52,11 @@ private imports with public exports of the same broad repository.
 
 ## Registration and failure characterization still required
 
+[Registration failure characterization](../audits/D3_REGISTRATION_FAILURE_BOUNDARIES_2026-10-11.md)
+now tests real transaction rollback after default-role insertion, username
+conflict, post-commit session failure and best-effort verification-mail failure.
+The registration composition itself remains to be implemented.
+
 The dedicated credential/account-state writes in the migration map are now
 Auth-owned commands; see [command-transfer evidence](../audits/D3_ACCOUNT_CREDENTIAL_COMMANDS_2026-10-11.md).
 The unused legacy Users refresh-hash update operation is removed. Credential
