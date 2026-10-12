@@ -78,8 +78,9 @@ LoginAbuseProtectionService now delegates durable attempt counters, locking and
 atomic audit to LoginAbuseRepository. Redis policy and post-commit alerts remain
 application orchestration; no ORM transaction crosses the owned port. Email
 Verification now uses an owned persistence port for minimal pending-destination
-reads and atomic consumption/audit. Redis/queue capabilities and 2FA persistence
-boundaries are still pending D3.3 work.
+reads and atomic consumption/audit. 2FA likewise uses an owned port for credential
+reads and locked state/audit transitions. Redis/queue capabilities remain D3.3
+work; DEBT-042 tracks inherited lifecycle concurrency concerns separately.
 
 Do not store raw passwords.
 

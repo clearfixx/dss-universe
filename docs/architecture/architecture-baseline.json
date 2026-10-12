@@ -335,13 +335,6 @@
       "package": "D3"
     },
     {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/auth/application/services/two-factor.service.ts\",\"@api/core/database\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/auth/application/services/two-factor.service.ts",
-      "detail": "@api/core/database",
-      "package": "D3"
-    },
-    {
       "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/content-access/presentation/graphql/content-gates.graphql.ts\",\"@prisma/client\"]",
       "rule": "persistence-outside-infrastructure",
       "file": "apps/api/src/modules/content-access/presentation/graphql/content-gates.graphql.ts",

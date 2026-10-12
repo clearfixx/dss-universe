@@ -1,54 +1,54 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { PrismaService } from '@api/core/database';
-import { AuditWriterService } from '@api/core/audit';
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Authentication
+ * 📄 File: apps/api/src/modules/auth/application/services/two-factor.service.ts
+ *
+ * 🎯 Purpose:
+ * Coordinates second-factor setup, login proof and password-protected disabling.
+ *
+ * 🧠 Responsibilities:
+ * • generates and verifies credential material;
+ * • translates persistence outcomes into existing public errors;
+ * • returns recovery plaintext only after confirmation commits.
+ *
+ * 🏗️ Architecture:
+ * Auth application service using a private port; no ORM/profile dependency.
+ *
+ * ⚠️ Important:
+ * Confirmation verification runs under lock through a pure callback.
+ * Never log secrets. Existing split disable proof is preserved.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { PasswordHashService } from './password-hash.service';
 import { TotpService } from './totp.service';
 import { TwoFactorRequiredException } from '../../domain/exceptions/two-factor-required.exception';
+import {
+  TWO_FACTOR_REPOSITORY,
+  type TwoFactorRepository,
+} from '../../domain/repositories/two-factor.repository.interface';
 
 @Injectable()
 export class TwoFactorService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly audit: AuditWriterService,
+    @Inject(TWO_FACTOR_REPOSITORY)
+    private readonly credentials: TwoFactorRepository,
     private readonly passwords: PasswordHashService,
     private readonly totp: TotpService,
   ) {}
-
-  async status(userId: string) {
-    const record = await this.prisma.userTwoFactor.findUnique({
-      where: { userId },
-      select: { enabledAt: true, recoveryCodeHashes: true },
-    });
-    return {
-      enabled: Boolean(record?.enabledAt),
-      recoveryCodesRemaining: record?.recoveryCodeHashes.length ?? 0,
-    };
+  status(userId: string) {
+    return this.credentials.status(userId);
   }
-
   async begin(userId: string, email: string) {
     const secret = this.totp.createSecret();
-    const encryptedSecret = this.totp.encrypt(secret);
-    await this.prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT "userId" FROM user_two_factor WHERE "userId" = ${userId} FOR UPDATE`;
-      const current = await tx.userTwoFactor.findUnique({
-        where: { userId },
-        select: { enabledAt: true },
-      });
-      if (current?.enabledAt) {
-        throw new BadRequestException(
-          'Two-factor authentication is already enabled.',
-        );
-      }
-      await tx.userTwoFactor.upsert({
-        where: { userId },
-        create: { userId, encryptedSecret },
-        update: {
-          encryptedSecret,
-          recoveryCodeHashes: [],
-          enabledAt: null,
-        },
-      });
-    });
+    if (!(await this.credentials.begin(userId, this.totp.encrypt(secret))))
+      throw new BadRequestException(
+        'Two-factor authentication is already enabled.',
+      );
     const label = encodeURIComponent(`DSS Universe:${email}`);
     const issuer = encodeURIComponent('DSS Universe');
     return {
@@ -56,97 +56,44 @@ export class TwoFactorService {
       otpauthUri: `otpauth://totp/${label}?secret=${secret}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30`,
     };
   }
-
   async confirm(userId: string, code: string) {
     const recoveryCodes = Array.from({ length: 10 }, () =>
       this.totp.recoveryCode(),
     );
-    await this.prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT "userId" FROM user_two_factor WHERE "userId" = ${userId} FOR UPDATE`;
-      const record = await tx.userTwoFactor.findUnique({ where: { userId } });
-      if (!record || record.enabledAt) {
-        throw new BadRequestException('No pending two-factor setup exists.');
-      }
-      if (!this.totp.verify(this.totp.decrypt(record.encryptedSecret), code)) {
-        throw new BadRequestException('Invalid two-factor code.');
-      }
-      await tx.userTwoFactor.update({
-        where: { userId },
-        data: {
-          enabledAt: new Date(),
-          recoveryCodeHashes: recoveryCodes.map((value) =>
-            this.totp.recoveryHash(value),
-          ),
-        },
-      });
-      await this.audit.append(tx, {
-        action: 'auth.two-factor.enabled',
-        actorType: 'USER',
-        actorId: userId,
-        targetType: 'User',
-        targetId: userId,
-      });
-    });
+    const result = await this.credentials.confirm(
+      userId,
+      (encryptedSecret) =>
+        this.totp.verify(this.totp.decrypt(encryptedSecret), code),
+      recoveryCodes.map((value) => this.totp.recoveryHash(value)),
+    );
+    if (result === 'missing')
+      throw new BadRequestException('No pending two-factor setup exists.');
+    if (result === 'invalid')
+      throw new BadRequestException('Invalid two-factor code.');
     return { recoveryCodes };
   }
-
   async assertLogin(userId: string, code?: string): Promise<void> {
-    const record = await this.prisma.userTwoFactor.findUnique({
-      where: { userId },
-    });
-    if (!record?.enabledAt) return;
+    const encryptedSecret = await this.credentials.findEnabledSecret(userId);
+    if (encryptedSecret === null) return;
     if (!code) throw new TwoFactorRequiredException();
-    if (this.totp.verify(this.totp.decrypt(record.encryptedSecret), code))
-      return;
-
-    const recoveryHash = this.totp.recoveryHash(code);
-    await this.prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT "userId" FROM user_two_factor WHERE "userId" = ${userId} FOR UPDATE`;
-      const current = await tx.userTwoFactor.findUnique({ where: { userId } });
-      const index = current?.recoveryCodeHashes.indexOf(recoveryHash) ?? -1;
-      if (index < 0) throw new TwoFactorRequiredException();
-      await tx.userTwoFactor.update({
-        where: { userId },
-        data: {
-          recoveryCodeHashes: current!.recoveryCodeHashes.filter(
-            (_, position) => position !== index,
-          ),
-        },
-      });
-      await this.audit.append(tx, {
-        action: 'auth.two-factor.recovery-code-used',
-        actorType: 'USER',
-        actorId: userId,
-        targetType: 'User',
-        targetId: userId,
-      });
-    });
+    if (this.totp.verify(this.totp.decrypt(encryptedSecret), code)) return;
+    if (
+      !(await this.credentials.consumeRecovery(
+        userId,
+        this.totp.recoveryHash(code),
+      ))
+    )
+      throw new TwoFactorRequiredException();
   }
-
   async disable(userId: string, password: string, code: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user || !(await this.passwords.compare(password, user.passwordHash))) {
+    const passwordHash = await this.credentials.findPasswordHash(userId);
+    if (
+      passwordHash === null ||
+      !(await this.passwords.compare(password, passwordHash))
+    )
       throw new BadRequestException('Invalid credentials.');
-    }
     await this.assertLogin(userId, code);
-    await this.prisma.$transaction(async (tx) => {
-      await tx.userTwoFactor.delete({ where: { userId } });
-      await tx.session.updateMany({
-        where: { userId, revokedAt: null },
-        data: { revokedAt: new Date() },
-      });
-      await tx.user.update({
-        where: { id: userId },
-        data: { authVersion: { increment: 1 } },
-      });
-      await this.audit.append(tx, {
-        action: 'auth.two-factor.disabled',
-        actorType: 'USER',
-        actorId: userId,
-        targetType: 'User',
-        targetId: userId,
-      });
-    });
+    await this.credentials.disable(userId);
     return { success: true };
   }
 }

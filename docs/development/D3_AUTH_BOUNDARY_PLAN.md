@@ -55,6 +55,13 @@ single-use consumption/rollback plus GraphQL state/audit/replay denial.
 See [verification evidence](../audits/D3_3_EMAIL_VERIFICATION_BOUNDARY_2026-10-11.md).
 Current inventory is 145; 2FA and infrastructure capability review remain open.
 
+The second-factor persistence transfer is implemented through an owned port with
+locked confirmation, one-use recovery and transactional revocation/audit tests.
+See [2FA evidence](../audits/D3_3_TWO_FACTOR_BOUNDARY_2026-10-11.md).
+Current inventory is 144. Infrastructure review remains. The owner approved
+DEBT-042 as a separate D3.4 package: atomic proof/mutation under a subject lock,
+deterministic concurrency tests and unchanged public API. It remains unimplemented.
+
 - The JWT strategy sees subject ID, session ID and auth version for eligibility.
 - Each request reads authoritative state; no positive security cache.
 - Missing/revoked/expired sessions, inactive accounts, mismatched owners or

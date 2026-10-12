@@ -5,6 +5,15 @@
 
 ## Latest increment
 
+[D3.3 second-factor boundary](D3_3_TWO_FACTOR_BOUNDARY_2026-10-11.md)
+transfers all 2FA persistence/audit transactions to a private Auth-owned port.
+415 full API units (including DB suites) and four selected real E2E pass, including
+one-use recovery and immediate revocation after disabling. Inventory is 144.
+Infrastructure review remains; DEBT-042 records inherited lifecycle races for
+an owner-approved separate D3.4 correction, not a silently changed protocol.
+
+## Previous increment
+
 [D3.3 verification boundary](D3_3_EMAIL_VERIFICATION_BOUNDARY_2026-10-11.md)
 transfers pending-destination reads and atomic token consumption to a private
 Auth-owned port. Full API units pass (401 tests, including isolated DB suites);

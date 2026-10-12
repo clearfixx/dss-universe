@@ -36,6 +36,7 @@ import { AuthenticationPresentationService } from './../src/composition/identity
 import { AuthSessionService } from './../src/modules/auth/application/services/auth-session.service';
 import { TokenService } from './../src/modules/auth/application/services/token.service';
 import { SecurityAlertService } from './../src/modules/auth/application/services/security-alert.service';
+import { TotpService } from './../src/modules/auth/application/services/totp.service';
 import { PrismaRegistrationTransaction } from './../src/composition/identity/infrastructure/prisma-registration-transaction';
 import {
   ACCOUNT_CREDENTIALS_REPOSITORY,
@@ -483,6 +484,105 @@ describe('DSS API (e2e)', () => {
       .get('/api/auth/me')
       .set('Authorization', `Bearer ${recovered.tokens.accessToken}`)
       .expect(200);
+  });
+
+  it('enables second factor through GraphQL and revokes sessions on disabling', async () => {
+    const suffix = randomBytes(8).toString('hex');
+    const input = {
+      email: `factor-${suffix}@dss.test`,
+      username: `factor-${suffix}`,
+      password: 'Factor-password-123!',
+    };
+    const identity = await app
+      .get(AuthenticationPresentationService)
+      .register(input);
+    const token = identity.tokens.accessToken;
+    const setup = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        query: 'mutation { beginViewerTwoFactorSetup { secret otpauthUri } }',
+      })
+      .expect(200);
+    const setupBody = setup.body as {
+      data: { beginViewerTwoFactorSetup: { secret: string } };
+    };
+    const totp = app.get(TotpService);
+    const secret = setupBody.data.beginViewerTwoFactorSetup.secret;
+    const code = () => totp.code(secret, Math.floor(Date.now() / 30_000));
+    const confirmed = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        query:
+          'mutation Confirm($input: ConfirmTwoFactorInput!) { confirmViewerTwoFactorSetup(input: $input) { recoveryCodes } }',
+        variables: { input: { code: code() } },
+      })
+      .expect(200);
+    const confirmationBody = confirmed.body as {
+      data: { confirmViewerTwoFactorSetup: { recoveryCodes: string[] } };
+    };
+    const recoveryCodes =
+      confirmationBody.data.confirmViewerTwoFactorSetup.recoveryCodes;
+    expect(recoveryCodes).toHaveLength(10);
+    const prisma = app.get(PrismaService);
+    const stored = await prisma.userTwoFactor.findUniqueOrThrow({
+      where: { userId: identity.user.id },
+    });
+    expect(stored.encryptedSecret).not.toContain(secret);
+    expect(stored.recoveryCodeHashes).toEqual(
+      recoveryCodes.map((value) => totp.recoveryHash(value)),
+    );
+    await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email: input.email, password: input.password })
+      .expect(401);
+    await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({
+        email: input.email,
+        password: input.password,
+        twoFactorCode: recoveryCodes[0],
+      })
+      .expect(201);
+    await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({
+        email: input.email,
+        password: input.password,
+        twoFactorCode: recoveryCodes[0],
+      })
+      .expect(401);
+    const disabled = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        query:
+          'mutation Disable($input: DisableTwoFactorInput!) { disableViewerTwoFactor(input: $input) { success } }',
+        variables: { input: { password: input.password, code: code() } },
+      })
+      .expect(200);
+    expect(disabled.body).toEqual({
+      data: { disableViewerTwoFactor: { success: true } },
+    });
+    await request(app.getHttpServer())
+      .get('/api/auth/me')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(401);
+    expect(
+      await prisma.userTwoFactor.count({ where: { userId: identity.user.id } }),
+    ).toBe(0);
+    for (const action of [
+      'auth.two-factor.enabled',
+      'auth.two-factor.recovery-code-used',
+      'auth.two-factor.disabled',
+    ]) {
+      expect(
+        await prisma.auditRecord.count({
+          where: { targetId: identity.user.id, action },
+        }),
+      ).toBe(1);
+    }
   });
 
   it('verifies email through GraphQL once with persisted state and audit', async () => {

@@ -65,6 +65,8 @@ import { LoginAbuseProtectionService } from './application/services/login-abuse-
 import { SecurityAlertService } from './application/services/security-alert.service';
 import { TotpService } from './application/services/totp.service';
 import { TwoFactorService } from './application/services/two-factor.service';
+import { TWO_FACTOR_REPOSITORY } from './domain/repositories/two-factor.repository.interface';
+import { PrismaTwoFactorRepository } from './infrastructure/repositories/prisma-two-factor.repository';
 import { TwoFactorResolver } from './presentation/graphql/resolvers/two-factor.resolver';
 import { AccessSessionValidationService } from './application/services/access-session-validation.service';
 import { ACCESS_SESSION_REPOSITORY } from './domain/repositories/access-session.repository.interface';
@@ -107,6 +109,7 @@ import { PrismaAccountCredentialsRepository } from './infrastructure/repositorie
     SecurityAlertService,
     TotpService,
     TwoFactorService,
+    { provide: TWO_FACTOR_REPOSITORY, useClass: PrismaTwoFactorRepository },
     TwoFactorResolver,
     AuthService,
     { provide: AUTHENTICATION_FLOWS, useExisting: AuthService },
