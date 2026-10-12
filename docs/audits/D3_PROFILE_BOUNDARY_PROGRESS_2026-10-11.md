@@ -5,6 +5,15 @@
 
 ## Latest increment
 
+[D3.4 IAM permission persistence](D3_4_IAM_PERMISSION_PERSISTENCE.md) isolates
+permission CRUD and atomic creation audit behind an IAM-owned contract. Full
+uncached units pass: API 477 including IAM DB tests, Web 59, Worker 36. Four
+selected real E2E pass, including IAM HTTP denial/CRUD/rollback. Inventory is 143.
+Roles/access persistence and DEBT-043 current-permission enforcement remain open.
+The [review summary](D3_REVIEW_SUMMARY.md) describes the current PR as a whole.
+
+## Earlier increment
+
 [D3.3 login-abuse counter](D3_3_LOGIN_ABUSE_COUNTER.md) moves the final Auth
 application Redis commands behind a private capability. Existing keys, thresholds,
 expiry and identity-only reset are preserved. Uncached units pass: API 465 with

@@ -225,6 +225,35 @@ revocation and version increment. Deterministic DB barriers and a real API rollb
 case verify the corrected ordering. See [D3.4 evidence](../audits/D3_4_TWO_FACTOR_ATOMIC_LIFECYCLE.md).
 Implementation is not full D3 acceptance or permission to merge a red PR.
 
+### DEBT-043 — Stale JWT permission grants after IAM revocation (High, OPEN, D3.4)
+
+Current JwtStrategy validates authoritative session/account eligibility, then copies
+`payload.roles` and `payload.permissions` into the request principal. PermissionsGuard
+checks that copied set. IAM role/direct-permission revocation does not increment
+authVersion or revoke sessions. Code inspection therefore shows no authoritative
+permission refresh on this guarded path: a previously issued token can retain a
+revoked grant until expiry or another session-invalidating change. This is a
+code-path assessment; no production incident or runtime exploit is claimed.
+
+ADR-003 requires synchronous authoritative access decisions and immediate denial.
+Resolve through an Authorization-owned capability/composition boundary, with real
+tests using the same token before and after revocation, removal and grant changes,
+plus fail-closed storage errors. Do not couple Auth to IAM assignments or silently
+invalidate every authentication session as a substitute for access ownership.
+This is a separate D3.4 security increment; the permission persistence transfer
+does not fix it or claim complete access acceptance.
+
+### DEBT-044 — GraphQL generator barrel drift (Medium, OPEN, D6)
+
+On the D3.4 IAM persistence tree, `pnpm graphql:check` successfully parses the
+unchanged API schema and Web operations, then exits 1 on its generated diff:
+`apps/web/src/gql/index.ts` gains `/* eslint-disable */` above its existing export.
+No schema or operation changes are involved. The verification side effect was
+restored to the previously clean tracked version, with no hand-edited generated
+implementation. Reconcile the checked-in output and configured generator in D6,
+coordinated with the Web workstream, then prove clean regeneration. Do not waive
+the consistency gate or claim it passes from successful generation alone.
+
 Every new entry should include evidence, impact, proposed ownership and a clear
 decision before implementation. Discovery is not permission to expand the
 current package silently.

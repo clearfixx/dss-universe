@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-11 — pre-Phase-11 debt closure / D3.3 auxiliary boundaries in progress
+> Updated: 2026-10-12 — pre-Phase-11 debt closure / D3.4 IAM boundaries in progress
 
 ## Product and authority
 
@@ -65,6 +65,12 @@ is separately scheduled for scope approval, not silently included in D3/Phase 11
 The separately approved [D3.4 factor lifecycle correction](audits/D3_4_TWO_FACTOR_ATOMIC_LIFECYCLE.md)
 implements subject locking and atomic disable proof/mutation, including recovery
 rollback. Broader D3.3/D3.4 acceptance and full release gates remain open.
+
+Auth auxiliary Redis/queue capabilities are isolated. IAM permission persistence
+now uses an owned adapter with atomic audit; roles/access remediation remains.
+DEBT-043 records stale JWT-derived permissions after assignment revocation, which
+must be resolved before authoritative access acceptance. Current review evidence
+is summarized in [D3 review](audits/D3_REVIEW_SUMMARY.md).
 
 ## Repository map
 

@@ -349,13 +349,6 @@
       "package": "D4"
     },
     {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/iam/permissions/permissions.service.ts\",\"@api/core/database\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/iam/permissions/permissions.service.ts",
-      "detail": "@api/core/database",
-      "package": "D3"
-    },
-    {
       "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/iam/roles/roles.service.ts\",\"@api/core/database\"]",
       "rule": "persistence-outside-infrastructure",
       "file": "apps/api/src/modules/iam/roles/roles.service.ts",

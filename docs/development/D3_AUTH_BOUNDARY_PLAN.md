@@ -74,6 +74,12 @@ Login-abuse Redis counters now use a private owned capability; see
 [login counter evidence](../audits/D3_3_LOGIN_ABUSE_COUNTER.md).
 IAM/public-contract review and broader D3 acceptance remain open.
 
+IAM permission persistence now uses a private owned repository with atomic creation
+audit; see [IAM evidence](../audits/D3_4_IAM_PERMISSION_PERSISTENCE.md). The reviewed
+inventory is 143. Roles/access persistence and public contracts remain open.
+DEBT-043 records stale JWT-derived permissions after IAM revocation; authoritative
+access decisions need a separate D3.4 security increment before acceptance.
+
 - The JWT strategy sees subject ID, session ID and auth version for eligibility.
 - Each request reads authoritative state; no positive security cache.
 - Missing/revoked/expired sessions, inactive accounts, mismatched owners or

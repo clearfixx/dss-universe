@@ -138,6 +138,126 @@ describe('DSS API (e2e)', () => {
     processingPool = new Pool({ connectionString: process.env.DATABASE_URL });
   });
 
+  it('manages IAM permissions through the owned repository and rolls back failed audit', async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const email = `iam-${suffix}@dss.test`;
+    const password = 'iam-test-password-123';
+    const presentation = app.get(AuthenticationPresentationService);
+    const identity = await presentation.register({
+      email,
+      password,
+      username: `iam-${suffix}`,
+      displayName: 'IAM Pilot',
+    });
+    const prisma = app.get(PrismaService);
+    const key = `test.iam.${suffix}`;
+    const deniedKey = `${key}.denied`;
+    const rollbackKey = `${key}.rollback`;
+    try {
+      await request(app.getHttpServer())
+        .get('/api/iam/permissions')
+        .expect(401);
+      await request(app.getHttpServer())
+        .post('/api/iam/permissions')
+        .set('Authorization', `Bearer ${identity.tokens.accessToken}`)
+        .send({ key: deniedKey, label: 'Denied' })
+        .expect(403);
+      expect(await prisma.permission.count({ where: { key: deniedKey } })).toBe(
+        0,
+      );
+      for (const permissionKey of ['permissions.read', 'permissions.manage']) {
+        const permission = await prisma.permission.upsert({
+          where: { key: permissionKey },
+          update: {},
+          create: { key: permissionKey, label: permissionKey },
+        });
+        await prisma.userPermission.create({
+          data: { userId: identity.user.id, permissionId: permission.id },
+        });
+      }
+      const manager = await presentation.login({ email, password });
+      const bearer = `Bearer ${manager.tokens.accessToken}`;
+      const created = await request(app.getHttpServer())
+        .post('/api/iam/permissions')
+        .set('Authorization', bearer)
+        .send({ key, label: 'Created', ignored: 'not persisted' })
+        .expect(201);
+      const record = created.body as {
+        id: string;
+        key: string;
+        label: string;
+        description: string | null;
+        createdAt: string;
+        updatedAt: string;
+      };
+      expect(Object.keys(record).sort()).toEqual(
+        ['id', 'key', 'label', 'description', 'createdAt', 'updatedAt'].sort(),
+      );
+      expect(
+        await prisma.auditRecord.count({
+          where: {
+            targetId: record.id,
+            actorId: identity.user.id,
+            action: 'iam.permission.created',
+          },
+        }),
+      ).toBe(1);
+      await request(app.getHttpServer())
+        .post('/api/iam/permissions')
+        .set('Authorization', bearer)
+        .send({ key, label: 'Duplicate' })
+        .expect(409);
+      const listed = await request(app.getHttpServer())
+        .get('/api/iam/permissions')
+        .set('Authorization', bearer)
+        .expect(200);
+      expect(listed.body).toEqual(expect.arrayContaining([record]));
+      const updated = await request(app.getHttpServer())
+        .patch(`/api/iam/permissions/${record.id}`)
+        .set('Authorization', bearer)
+        .send({ label: 'Updated' })
+        .expect(200);
+      expect((updated.body as { label: string }).label).toBe('Updated');
+      const append = jest
+        .spyOn(app.get(AuditWriterService), 'append')
+        .mockRejectedValueOnce(
+          new Error('Synthetic IAM permission audit failure'),
+        );
+      try {
+        await request(app.getHttpServer())
+          .post('/api/iam/permissions')
+          .set('Authorization', bearer)
+          .send({ key: rollbackKey, label: 'Rollback' })
+          .expect(500);
+        expect(
+          await prisma.permission.count({ where: { key: rollbackKey } }),
+        ).toBe(0);
+      } finally {
+        append.mockRestore();
+      }
+      const removed = await request(app.getHttpServer())
+        .delete(`/api/iam/permissions/${record.id}`)
+        .set('Authorization', bearer)
+        .expect(200);
+      expect(removed.body).toEqual({
+        deleted: true,
+        permission: updated.body as typeof record,
+      });
+      await request(app.getHttpServer())
+        .get(`/api/iam/permissions/${record.id}`)
+        .set('Authorization', bearer)
+        .expect(404);
+    } finally {
+      await prisma.permission.deleteMany({
+        where: { key: { startsWith: key } },
+      });
+      await prisma.auditRecord.deleteMany({
+        where: { actorId: identity.user.id },
+      });
+      await prisma.user.delete({ where: { id: identity.user.id } });
+    }
+  });
+
   it('persists a failed-login lock with audit and denies a valid password while locked', async () => {
     const suffix = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const email = `login-lock-${suffix}@dss.test`;

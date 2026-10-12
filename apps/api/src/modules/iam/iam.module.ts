@@ -3,7 +3,7 @@
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
  * 🛡️ Module: IAM
- * 📄 File: iam.module.ts
+ * 📄 File: apps/api/src/modules/iam/iam.module.ts
  *
  * 🎯 Purpose:
  * Assembles role, permission, and user access management features.
@@ -11,7 +11,7 @@
  * 🧠 Responsibilities:
  * • registers IAM controllers;
  * • registers IAM services;
- * • provides Prisma access for IAM workflows;
+ * • binds owned persistence contracts to IAM infrastructure adapters;
  * • defines the IAM module boundary.
  *
  * 🏗️ Architecture:
@@ -22,7 +22,7 @@
  * Authentication still owns login, identity, and tokens.
  *
  * 💡 Notes:
- * IAM is Mission Control for permissions.
+ * IAM supplies permission management in Command Deck.
  * Handle the big red buttons carefully. 🚨
  *
  * 🚀 Build. Share. Grow.
@@ -37,6 +37,8 @@ import { PermissionsController, PermissionsService } from './permissions';
 import { RolesController, RolesService } from './roles';
 import { IamSafetyService } from './safety';
 import { UserAccessController, UserAccessService } from './user-access';
+import { IAM_PERMISSION_REPOSITORY } from './permissions/contracts/permission.repository.interface';
+import { PrismaPermissionRepository } from './infrastructure/repositories/prisma-permission.repository';
 
 @Module({
   imports: [PrismaModule],
@@ -44,6 +46,10 @@ import { UserAccessController, UserAccessService } from './user-access';
   providers: [
     RolesService,
     PermissionsService,
+    {
+      provide: IAM_PERMISSION_REPOSITORY,
+      useClass: PrismaPermissionRepository,
+    },
     UserAccessService,
     IamSafetyService,
   ],
