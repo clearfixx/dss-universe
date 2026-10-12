@@ -16,7 +16,7 @@ import { createHash } from 'node:crypto';
 import { EmailVerificationService } from './email-verification.service';
 
 describe('EmailVerificationService', () => {
-  const redis = { eval: jest.fn().mockResolvedValue(1) };
+  const limits = { allow: jest.fn().mockResolvedValue(true) };
   const config = {
     get: jest.fn(
       (key: string) =>
@@ -36,7 +36,7 @@ describe('EmailVerificationService', () => {
       .mockResolvedValue({ email: 'astro@dss.test' }),
   };
   const service = new EmailVerificationService(
-    redis as never,
+    limits,
     config as never,
     delivery,
     credentials,
@@ -59,12 +59,12 @@ describe('EmailVerificationService', () => {
     await expect(service.request('unknown', '127.0.0.1')).resolves.toEqual({
       success: true,
     });
-    expect(redis.eval).not.toHaveBeenCalled();
+    expect(limits.allow).not.toHaveBeenCalled();
     expect(delivery.enqueue).not.toHaveBeenCalled();
   });
 
   it('does not deliver when either resend limit is exhausted', async () => {
-    redis.eval.mockResolvedValueOnce(4).mockResolvedValueOnce(1);
+    limits.allow.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
     await expect(service.request('user-1', '127.0.0.1')).resolves.toEqual({
       success: true,
     });
@@ -78,6 +78,15 @@ describe('EmailVerificationService', () => {
     await expect(service.request('user-1', '127.0.0.1')).rejects.toThrow(
       'database unavailable',
     );
+    expect(delivery.enqueue).not.toHaveBeenCalled();
+  });
+  it('fails closed when attempt accounting is unavailable', async () => {
+    limits.allow.mockRejectedValueOnce(new Error('Redis unavailable'));
+    await expect(service.request('user-1', '127.0.0.1')).rejects.toThrow(
+      'Redis unavailable',
+    );
+    expect(limits.allow).toHaveBeenCalledWith('user', 'user-1', 3);
+    expect(limits.allow).toHaveBeenCalledWith('ip', '127.0.0.1', 20);
     expect(delivery.enqueue).not.toHaveBeenCalled();
   });
 

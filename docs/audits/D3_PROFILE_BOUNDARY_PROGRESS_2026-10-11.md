@@ -5,6 +5,14 @@
 
 ## Latest increment
 
+[D3.3 recovery/verification rate limits](D3_3_RECOVERY_VERIFICATION_RATE_LIMITS.md)
+move Redis keys, Lua and HMAC into private adapters behind separate Auth capabilities.
+Fixed-window TTL and namespace compatibility are proved in real Redis. Full
+monorepo units pass: API 453 (DB/Redis opt-ins), Web 59, Worker 36; four selected
+real E2E pass. Login-abuse Redis isolation and release acceptance remain open.
+
+## Earlier increment
+
 [D3.3 recovery/verification delivery](D3_3_RECOVERY_VERIFICATION_DELIVERY.md)
 removes the remaining broad queue registries from Auth application services.
 Separate private capabilities preserve payload/retry/failure policy. 433 direct

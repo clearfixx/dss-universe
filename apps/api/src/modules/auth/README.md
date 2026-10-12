@@ -71,16 +71,18 @@ Do not access Prisma directly from Auth application services.
 
 PasswordRecoveryService now uses the owned PasswordResetRepository port. Atomic
 consumption returns only the committed notification email; rollback or denial
-does not send a recovered alert. Verification and 2FA persistence
-separation remains D3.3 work, not a precedent for new application ORM imports.
+does not send a recovered alert. Verification and 2FA persistence also use owned
+ports; none is a precedent for new application ORM imports.
 
 LoginAbuseProtectionService now delegates durable attempt counters, locking and
 atomic audit to LoginAbuseRepository. Redis policy and post-commit alerts remain
 application orchestration; no ORM transaction crosses the owned port. Email
 Verification now uses an owned persistence port for minimal pending-destination
 reads and atomic consumption/audit. 2FA likewise uses an owned port for credential
-reads and locked state/audit transitions. Redis/queue capabilities remain D3.3
-work. All Auth application delivery now uses separate owned capabilities for
+reads and locked state/audit transitions. Recovery/verification attempt budgets
+use separate private capabilities; Redis adapters own compatible HMAC keys and
+fixed TTL. Login-abuse Redis isolation remains D3.3 work.
+All Auth application delivery now uses separate owned capabilities for
 recovery, verification and alerts; only infrastructure receives the broad queue
 registry. Explicit recovery/resend failures propagate; registration mail remains
 best-effort. The separately approved DEBT-042 correction serializes factor mutations

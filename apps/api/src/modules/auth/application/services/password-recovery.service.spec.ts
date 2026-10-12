@@ -11,14 +11,13 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import type IORedis from 'ioredis';
 import { ConfigService } from '@nestjs/config';
 import { PasswordRecoveryService } from './password-recovery.service';
 import type { PasswordResetRepository } from '../../domain/repositories/password-reset.repository.interface';
 import type { PasswordHashService } from './password-hash.service';
 
 describe('PasswordRecoveryService', () => {
-  const evalRedis = jest.fn();
+  const allow = jest.fn();
   const add = jest.fn();
   const consume = jest.fn<
     ReturnType<PasswordResetRepository['consume']>,
@@ -27,7 +26,7 @@ describe('PasswordRecoveryService', () => {
   const hash = jest.fn();
   const notify = jest.fn();
   const service = new PasswordRecoveryService(
-    { eval: evalRedis } as unknown as IORedis,
+    { allow },
     new ConfigService({
       MAIL_HOST: 'localhost',
       MAIL_FROM: 'dss@example.test',
@@ -41,7 +40,7 @@ describe('PasswordRecoveryService', () => {
   );
   beforeEach(() => {
     jest.clearAllMocks();
-    evalRedis.mockResolvedValue(1);
+    allow.mockResolvedValue(true);
     add.mockResolvedValue({});
     consume.mockResolvedValue({ email: 'dev@example.test' });
     hash.mockResolvedValue('bcrypt-hash');
@@ -56,12 +55,11 @@ describe('PasswordRecoveryService', () => {
       expect.objectContaining({ email: 'new@example.test' }),
     );
     expect(consume).not.toHaveBeenCalled();
-    expect(JSON.stringify(evalRedis.mock.calls)).not.toContain(
-      'new@example.test',
-    );
+    expect(allow).toHaveBeenCalledWith('email', 'new@example.test', 3);
+    expect(allow).toHaveBeenCalledWith('request-ip', '127.0.0.1', 20);
   });
   it('silently suppresses rate-limited delivery', async () => {
-    evalRedis.mockResolvedValue(100);
+    allow.mockResolvedValue(false);
     expect(await service.request('dev@example.test', '127.0.0.1')).toEqual({
       success: true,
     });
@@ -75,7 +73,7 @@ describe('PasswordRecoveryService', () => {
     expect(consume).not.toHaveBeenCalled();
   });
   it('fails closed when Redis is unavailable', async () => {
-    evalRedis.mockRejectedValue(new Error('offline'));
+    allow.mockRejectedValue(new Error('offline'));
     await expect(
       service.request('dev@example.test', '127.0.0.1'),
     ).rejects.toThrow();
@@ -100,6 +98,17 @@ describe('PasswordRecoveryService', () => {
       service.reset('a'.repeat(64), 'new-password', '127.0.0.1'),
     ).rejects.toThrow('invalid or expired');
     expect(notify).not.toHaveBeenCalled();
+  });
+  it('applies reset budgets before hashing or consuming credentials', async () => {
+    allow.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    const token = 'a'.repeat(64);
+    await expect(
+      service.reset(token, 'new-password', '127.0.0.1'),
+    ).rejects.toThrow('Too many attempts');
+    expect(allow).toHaveBeenCalledWith('token', token, 5);
+    expect(allow).toHaveBeenCalledWith('reset-ip', '127.0.0.1', 30);
+    expect(hash).not.toHaveBeenCalled();
+    expect(consume).not.toHaveBeenCalled();
   });
 
   it('never sends a recovered alert when the transaction fails', async () => {

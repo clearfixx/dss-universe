@@ -69,6 +69,10 @@ import { PASSWORD_RECOVERY_DELIVERY } from './domain/contracts/password-recovery
 import { EMAIL_VERIFICATION_DELIVERY } from './domain/contracts/email-verification-delivery.interface';
 import { BullmqPasswordRecoveryDelivery } from './infrastructure/delivery/bullmq-password-recovery-delivery';
 import { BullmqEmailVerificationDelivery } from './infrastructure/delivery/bullmq-email-verification-delivery';
+import { RECOVERY_RATE_LIMIT } from './domain/contracts/recovery-rate-limit.interface';
+import { VERIFICATION_RATE_LIMIT } from './domain/contracts/verification-rate-limit.interface';
+import { RedisRecoveryRateLimit } from './infrastructure/rate-limits/redis-recovery-rate-limit';
+import { RedisVerificationRateLimit } from './infrastructure/rate-limits/redis-verification-rate-limit';
 import { TotpService } from './application/services/totp.service';
 import { TwoFactorService } from './application/services/two-factor.service';
 import { TWO_FACTOR_REPOSITORY } from './domain/repositories/two-factor.repository.interface';
@@ -99,6 +103,7 @@ import { PrismaAccountCredentialsRepository } from './infrastructure/repositorie
       useClass: PrismaAccessSessionRepository,
     },
     PasswordRecoveryService,
+    { provide: RECOVERY_RATE_LIMIT, useClass: RedisRecoveryRateLimit },
     {
       provide: PASSWORD_RECOVERY_DELIVERY,
       useClass: BullmqPasswordRecoveryDelivery,
@@ -109,6 +114,7 @@ import { PrismaAccountCredentialsRepository } from './infrastructure/repositorie
     },
     PasswordRecoveryResolver,
     EmailVerificationService,
+    { provide: VERIFICATION_RATE_LIMIT, useClass: RedisVerificationRateLimit },
     {
       provide: EMAIL_VERIFICATION_DELIVERY,
       useClass: BullmqEmailVerificationDelivery,

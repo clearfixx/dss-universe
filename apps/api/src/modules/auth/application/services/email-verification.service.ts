@@ -30,9 +30,11 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createHash, createHmac } from 'node:crypto';
-import type IORedis from 'ioredis';
-import { REDIS_CONNECTION } from '@api/core/cache';
+import { createHash } from 'node:crypto';
+import {
+  VERIFICATION_RATE_LIMIT,
+  type VerificationRateLimit,
+} from '../../domain/contracts/verification-rate-limit.interface';
 import {
   EMAIL_VERIFICATION_DELIVERY,
   type EmailVerificationDelivery,
@@ -42,12 +44,11 @@ import {
   type EmailVerificationRepository,
 } from '../../domain/repositories/email-verification.repository.interface';
 
-const RATE_LIMIT = `local n = redis.call('INCR', KEYS[1]); if n == 1 then redis.call('EXPIRE', KEYS[1], 900) end; return n`;
-
 @Injectable()
 export class EmailVerificationService {
   constructor(
-    @Inject(REDIS_CONNECTION) private readonly redis: IORedis,
+    @Inject(VERIFICATION_RATE_LIMIT)
+    private readonly limits: VerificationRateLimit,
     private readonly config: ConfigService,
     @Inject(EMAIL_VERIFICATION_DELIVERY)
     private readonly delivery: EmailVerificationDelivery,
@@ -66,8 +67,8 @@ export class EmailVerificationService {
       return { success: true };
     }
     const [accountAllowed, clientAllowed] = await Promise.all([
-      this.allow('user', userId, 3),
-      this.allow('ip', ip, 20),
+      this.limits.allow('user', userId, 3),
+      this.limits.allow('ip', ip, 20),
     ]);
     if (accountAllowed && clientAllowed) {
       await this.enqueue(userId, destination.email);
@@ -112,21 +113,5 @@ export class EmailVerificationService {
       email,
       requestedAt: new Date().toISOString(),
     });
-  }
-
-  private async allow(scope: string, value: string, limit: number) {
-    const secret = this.config.getOrThrow<string>('JWT_REFRESH_SECRET');
-    const digest = createHmac('sha256', secret)
-      .update(`email-verification:${scope}:${value}`)
-      .digest('hex');
-    return (
-      Number(
-        await this.redis.eval(
-          RATE_LIMIT,
-          1,
-          `dss:email-verification:${scope}:${digest}`,
-        ),
-      ) <= limit
-    );
   }
 }

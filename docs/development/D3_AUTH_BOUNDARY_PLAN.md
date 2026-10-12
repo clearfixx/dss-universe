@@ -68,7 +68,9 @@ Security-alert delivery now uses a private Auth capability rather than the broad
 queue registry. See [delivery evidence and remaining matrix](../audits/D3_3_SECURITY_ALERT_DELIVERY.md).
 Recovery/verification delivery is now isolated through separate owned capabilities;
 see [queue boundary evidence](../audits/D3_3_RECOVERY_VERIFICATION_DELIVERY.md).
-Redis counter adapters remain D3.3 work.
+Recovery/verification counters now use owned attempt-budget capabilities; see
+[Redis evidence](../audits/D3_3_RECOVERY_VERIFICATION_RATE_LIMITS.md).
+Login-abuse Redis counters remain D3.3 work.
 
 - The JWT strategy sees subject ID, session ID and auth version for eligibility.
 - Each request reads authoritative state; no positive security cache.

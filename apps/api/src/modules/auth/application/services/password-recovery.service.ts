@@ -29,9 +29,11 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createHash, createHmac } from 'node:crypto';
-import type IORedis from 'ioredis';
-import { REDIS_CONNECTION } from '@api/core/cache';
+import { createHash } from 'node:crypto';
+import {
+  RECOVERY_RATE_LIMIT,
+  type RecoveryRateLimit,
+} from '../../domain/contracts/recovery-rate-limit.interface';
 import {
   PASSWORD_RECOVERY_DELIVERY,
   type PasswordRecoveryDelivery,
@@ -43,12 +45,10 @@ import {
 import { PasswordHashService } from './password-hash.service';
 import { SecurityAlertService } from './security-alert.service';
 
-const RATE_LIMIT = `local n = redis.call('INCR', KEYS[1]); if n == 1 then redis.call('EXPIRE', KEYS[1], 900) end; return n`;
-
 @Injectable()
 export class PasswordRecoveryService {
   constructor(
-    @Inject(REDIS_CONNECTION) private readonly redis: IORedis,
+    @Inject(RECOVERY_RATE_LIMIT) private readonly limits: RecoveryRateLimit,
     private readonly config: ConfigService,
     @Inject(PASSWORD_RECOVERY_DELIVERY)
     private readonly delivery: PasswordRecoveryDelivery,
@@ -71,8 +71,8 @@ export class PasswordRecoveryService {
       );
     }
     const [addressAllowed, clientAllowed] = await Promise.all([
-      this.allow('email', normalized, 3),
-      this.allow('request-ip', ip, 20),
+      this.limits.allow('email', normalized, 3),
+      this.limits.allow('request-ip', ip, 20),
     ]);
     if (addressAllowed && clientAllowed) {
       // Queue every address, including unknown addresses. No account lookup or
@@ -98,8 +98,8 @@ export class PasswordRecoveryService {
       throw new BadRequestException('Invalid reset link or password.');
     }
     const [tokenAllowed, clientAllowed] = await Promise.all([
-      this.allow('token', token, 5),
-      this.allow('reset-ip', ip, 30),
+      this.limits.allow('token', token, 5),
+      this.limits.allow('reset-ip', ip, 30),
     ]);
     if (!tokenAllowed || !clientAllowed)
       throw new BadRequestException(
@@ -114,21 +114,5 @@ export class PasswordRecoveryService {
       );
     await this.securityAlerts.notify('PASSWORD_RECOVERED', consumed.email);
     return { success: true };
-  }
-
-  private async allow(
-    scope: string,
-    value: string,
-    limit: number,
-  ): Promise<boolean> {
-    const secret = this.config.getOrThrow<string>('JWT_REFRESH_SECRET');
-    const digest = createHmac('sha256', secret)
-      .update(`password-recovery:${scope}:${value}`)
-      .digest('hex');
-    return (
-      Number(
-        await this.redis.eval(RATE_LIMIT, 1, `dss:recovery:${scope}:${digest}`),
-      ) <= limit
-    );
   }
 }

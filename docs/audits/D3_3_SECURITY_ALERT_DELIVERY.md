@@ -34,14 +34,15 @@ No dependency, migration, JWT, generated schema or frontend changes.
 
 ## Remaining infrastructure review
 
-| Consumer                    | Remaining dependency   | Next action                                                    |
-| --------------------------- | ---------------------- | -------------------------------------------------------------- |
-| PasswordRecoveryService     | Redis Lua/HMAC         | Owned resend-limit capability; delivery isolated subsequently  |
-| EmailVerificationService    | Redis Lua/HMAC         | Owned resend-limit capability; delivery isolated subsequently  |
-| LoginAbuseProtectionService | Redis Lua/private keys | Owned abuse-counter capability preserving failure policy       |
-| SecurityAlertService        | Private delivery port  | Implemented here; worker lifecycle/retention is not redesigned |
+| Consumer                    | Remaining dependency              | Next action                                                    |
+| --------------------------- | --------------------------------- | -------------------------------------------------------------- |
+| PasswordRecoveryService     | Private delivery/rate-limit ports | Both isolated subsequently                                     |
+| EmailVerificationService    | Private delivery/rate-limit ports | Both isolated subsequently                                     |
+| LoginAbuseProtectionService | Redis Lua/private keys            | Owned abuse-counter capability preserving failure policy       |
+| SecurityAlertService        | Private delivery port             | Implemented here; worker lifecycle/retention is not redesigned |
 
 See [subsequent delivery evidence](D3_3_RECOVERY_VERIFICATION_DELIVERY.md).
+See [subsequent rate-limit evidence](D3_3_RECOVERY_VERIFICATION_RATE_LIMITS.md).
 Do not claim D3.3 closed from this increment. The approved DEBT-042 correction is
 implemented separately; broader D3.4 IAM acceptance and later debt packages remain open. Full CI/release acceptance is
 not implied by the selected regressions.
