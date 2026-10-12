@@ -3,14 +3,14 @@
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
  * 🛡️ Module: IAM
- * 📄 File: index.ts
+ * 📄 File: apps/api/src/modules/iam/index.ts
  *
  * 🎯 Purpose:
  * Public API for the IAM module.
  *
  * 🧠 Responsibilities:
  * • exports IamModule;
- * • exposes IAM feature slices through explicit module boundaries;
+ * • exposes the registration role policy required by root composition;
  * • keeps external imports clean and predictable.
  *
  * 🏗️ Architecture:
@@ -28,8 +28,3 @@
  */
 export { IamModule } from './iam.module';
 export { REGISTRATION_ROLE_NAME } from './contracts/registration-role.policy';
-
-export * from './permissions';
-export * from './roles';
-export * from './safety';
-export * from './user-access';

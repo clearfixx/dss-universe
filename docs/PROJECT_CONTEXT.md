@@ -39,7 +39,10 @@ D3.4 now refreshes current request roles/permissions after session validation;
 same-token REST/GraphQL revocation and fail-closed authority errors are covered.
 DEBT-043 is implemented pending review. IAM role persistence is now isolated;
 subject assignment persistence is also isolated, preserving protected revocation.
-Reviewed architecture inventory is 140. Public contracts and D3 acceptance remain.
+Reviewed architecture inventory is 136. IAM exposes only module assembly and
+registration policy, with no concrete Nest provider exports. Auth assembly uses
+its named public root. D3 acceptance remains open.
+See [public contract evidence](audits/D3_4_PUBLIC_INTEGRATION_CONTRACTS.md).
 See [assignment evidence](audits/D3_4_IAM_SUBJECT_ASSIGNMENT_PERSISTENCE.md).
 See [role boundary evidence](audits/D3_4_IAM_ROLE_PERSISTENCE.md).
 Full API E2E is not green: fixture contamination and News cleanup/assertion drift

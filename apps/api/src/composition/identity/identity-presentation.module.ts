@@ -20,7 +20,7 @@
  * ===============================================================
  */
 import { Module } from '@nestjs/common';
-import { AuthModule } from '@api/modules/auth/auth.module';
+import { AuthModule } from '@api/modules/auth';
 import { UsersModule } from '@api/modules/users';
 import { IdentityCompositionModule } from './identity-composition.module';
 import { AuthenticationPresentationService } from './application/authentication-presentation.service';

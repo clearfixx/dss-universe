@@ -11,6 +11,7 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+export { AuthModule } from './auth.module';
 export {
   ACCESS_TOKEN_ISSUER,
   type AccessTokenIssuer,

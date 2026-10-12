@@ -734,34 +734,6 @@
       "package": "D4"
     },
     {
-      "id": "[\"wildcard-export\",\"apps/api/src/modules/iam/index.ts\",\"./permissions\"]",
-      "rule": "wildcard-export",
-      "file": "apps/api/src/modules/iam/index.ts",
-      "detail": "./permissions",
-      "package": "D3"
-    },
-    {
-      "id": "[\"wildcard-export\",\"apps/api/src/modules/iam/index.ts\",\"./roles\"]",
-      "rule": "wildcard-export",
-      "file": "apps/api/src/modules/iam/index.ts",
-      "detail": "./roles",
-      "package": "D3"
-    },
-    {
-      "id": "[\"wildcard-export\",\"apps/api/src/modules/iam/index.ts\",\"./safety\"]",
-      "rule": "wildcard-export",
-      "file": "apps/api/src/modules/iam/index.ts",
-      "detail": "./safety",
-      "package": "D3"
-    },
-    {
-      "id": "[\"wildcard-export\",\"apps/api/src/modules/iam/index.ts\",\"./user-access\"]",
-      "rule": "wildcard-export",
-      "file": "apps/api/src/modules/iam/index.ts",
-      "detail": "./user-access",
-      "package": "D3"
-    },
-    {
       "id": "[\"wildcard-export\",\"apps/api/src/modules/media/domain/index.ts\",\"./entities/media.entity\"]",
       "rule": "wildcard-export",
       "file": "apps/api/src/modules/media/domain/index.ts",

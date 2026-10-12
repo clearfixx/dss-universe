@@ -25,10 +25,60 @@ import { test } from "node:test";
 import { deepEqual, equal, ok } from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { analyzeBoundaries, compareBaseline } from "./analyze-boundaries.mjs";
 import { findDependencyCycles } from "./find-dependency-cycles.mjs";
 
 const path = "apps/api/src/modules/auth/application/login.ts";
+const requireApi = createRequire(
+  new URL("../../apps/api/package.json", import.meta.url),
+);
+const { createSourceFile, ScriptTarget, isExportDeclaration, isNamedExports } =
+  requireApi("typescript");
+
+for (const [moduleName, expected] of [
+  ["iam", ["IamModule", "REGISTRATION_ROLE_NAME"]],
+  [
+    "auth",
+    [
+      "AuthModule",
+      "ACCESS_TOKEN_ISSUER",
+      "AccessTokenIssuer",
+      "TokenSubject",
+      "AUTHENTICATION_FLOWS",
+      "AuthenticationFlows",
+      "AuthenticationResult",
+      "LoginCredentials",
+      "CredentialSubjectStore",
+      "AuthClient",
+      "AUTH_ERRORS",
+    ],
+  ],
+]) {
+  test(`${moduleName} publishes only the approved named integration contracts`, () => {
+    const source = readFileSync(
+      new URL(
+        `../../apps/api/src/modules/${moduleName}/index.ts`,
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    const ast = createSourceFile("index.ts", source, ScriptTarget.Latest, true);
+    const names = [];
+    for (const statement of ast.statements) {
+      if (!isExportDeclaration(statement)) continue;
+      ok(
+        statement.exportClause && isNamedExports(statement.exportClause),
+        "wildcard and namespace exports are forbidden",
+      );
+      names.push(
+        ...statement.exportClause.elements.map((element) => element.name.text),
+      );
+    }
+    deepEqual(names.sort(), [...expected].sort());
+  });
+}
 const analyze = (source, file = path) =>
   analyzeBoundaries([{ path: file, source }]);
 const rules = (source, file) =>

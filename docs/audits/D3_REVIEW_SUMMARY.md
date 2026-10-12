@@ -29,11 +29,11 @@ subsequent requests; authority failures deny access without token fallback.
 
 ## Validation and review limits
 
-- Full uncached units: API 524 with explicit DB/Redis opt-ins, Web 59, Worker 36.
+- Full uncached units: API 525 with explicit DB/Redis opt-ins, Web 59, Worker 36.
 - Selected real API E2E: IAM permission CRUD/denial/rollback, login lock,
   password recovery and second-factor rollback/retry pass.
 - Changed-file formatting, lint, Prisma validation, typecheck and build pass. Architecture fixtures pass;
-  reviewed inventory decreased from 156 at D2 to 140 known findings.
+  reviewed inventory decreased from 156 at D2 to 136 known findings.
 - Source headers follow File Passport 3.1; exports added here are named.
 - Root formatting, dependency audit, full API/Web E2E and final CI acceptance
   remain unresolved baseline gates. This PR stays draft and must not be merged
@@ -45,6 +45,10 @@ subsequent requests; authority failures deny access without token fallback.
 - GraphQL consistency also remains red: generated barrel comment drift is
   recorded in DEBT-044. Schema and operations are unchanged.
 
+IAM publishes only assembly and registration policy, with no concrete Nest
+provider exports. Auth assembly uses its named public root. Surface regressions
+and 10 selected Authorization/Audit HTTP E2E tests pass.
+
 No schema migrations, dependency changes or frontend redesign are included.
 D3.5 generic groups/Premium and Phase 11 implementation are outside this PR.
 
@@ -54,4 +58,5 @@ Detailed evidence: [D3 progress](D3_PROFILE_BOUNDARY_PROGRESS_2026-10-11.md),
 [authoritative request access](D3_4_AUTHORITATIVE_REQUEST_ACCESS.md),
 [IAM role persistence](D3_4_IAM_ROLE_PERSISTENCE.md),
 [last privileged holder protection](D3_4_LAST_ADMIN_REVOCATION_REVIEW.md),
-[subject assignment persistence](D3_4_IAM_SUBJECT_ASSIGNMENT_PERSISTENCE.md).
+[subject assignment persistence](D3_4_IAM_SUBJECT_ASSIGNMENT_PERSISTENCE.md),
+[public integration contracts](D3_4_PUBLIC_INTEGRATION_CONTRACTS.md).

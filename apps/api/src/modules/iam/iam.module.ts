@@ -68,11 +68,5 @@ import { PrismaSubjectAccessRepository } from './infrastructure/repositories/pri
     },
     IamSafetyService,
   ],
-  exports: [
-    RolesService,
-    PermissionsService,
-    UserAccessService,
-    IamSafetyService,
-  ],
 })
 export class IamModule {}

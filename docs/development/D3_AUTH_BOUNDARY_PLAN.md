@@ -92,6 +92,13 @@ access decisions need a separate D3.4 security increment before acceptance.
 
 ## Verification and known baseline
 
+D3.4 public contract follow-up (2026-10-12): IAM exports only assembly and
+registration policy, with no concrete Nest provider exports. Auth assembly uses
+its named public root. API 525 units, Web 59, Worker 36, 10 Authorization/Audit
+HTTP E2E and 30 architecture tests pass; lint, typecheck, Prisma validation and
+build pass. Inventory is 136 after removing four resolved IAM wildcard identities.
+D3 acceptance remains open. See [evidence](../audits/D3_4_PUBLIC_INTEGRATION_CONTRACTS.md).
+
 Subject-assignment persistence is now isolated behind a private IAM repository;
 the service owns summary/union policy and retains the separate protected role
 revocation capability. API 524 units and eight real authorization E2E pass.
