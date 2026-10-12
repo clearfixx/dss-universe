@@ -39,12 +39,15 @@ import { IamSafetyService } from './safety';
 import { UserAccessController, UserAccessService } from './user-access';
 import { IAM_PERMISSION_REPOSITORY } from './permissions/contracts/permission.repository.interface';
 import { PrismaPermissionRepository } from './infrastructure/repositories/prisma-permission.repository';
+import { IAM_ROLE_REPOSITORY } from './roles/contracts/role.repository.interface';
+import { PrismaRoleRepository } from './infrastructure/repositories/prisma-role.repository';
 
 @Module({
   imports: [PrismaModule],
   controllers: [RolesController, PermissionsController, UserAccessController],
   providers: [
     RolesService,
+    { provide: IAM_ROLE_REPOSITORY, useClass: PrismaRoleRepository },
     PermissionsService,
     {
       provide: IAM_PERMISSION_REPOSITORY,

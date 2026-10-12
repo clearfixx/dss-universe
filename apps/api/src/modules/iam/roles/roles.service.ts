@@ -2,193 +2,112 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 🛡️ Module: IAM Roles
- * 📄 File: roles.service.ts
+ * 📦 Module: IAM Roles
+ * 📄 File: apps/api/src/modules/iam/roles/roles.service.ts
  *
  * 🎯 Purpose:
- * Coordinates role management operations and role-permission assignments.
+ * Coordinates role management and protects role-related business rules.
  *
  * 🧠 Responsibilities:
- * • creates, reads, updates, and deletes roles;
- * • assigns permissions to roles;
- * • revokes permissions from roles;
- * • protects system roles through IAM safety checks.
+ * • checks role names and permission existence;
+ * • protects system roles through IAM safety checks;
+ * • delegates persistence through the private role repository.
  *
  * 🏗️ Architecture:
- * IAM business service.
- *
- * RolesController
- *   ↓
- * RolesService
- *   ↓
- * Prisma / IamSafetyService
+ * IAM application service. No ORM types, selectors or transaction clients.
  *
  * ⚠️ Important:
- * Backend authorization checks permissions, not role names.
- * Roles are containers for permissions.
- *
- * 💡 Notes:
- * Roles are boring until someone deletes admin.
- * That is why safety exists. ☕
+ * Preserve existing mutation rules; roles are permission containers.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-
 import {
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { Prisma } from '@prisma/client';
-
-import { PrismaService } from '@api/core/database';
-
 import type { CreateRoleDto } from './dto/create-role.dto';
 import type { AssignRoleDto } from './dto/assign-role.dto';
 import type { UpdateRoleDto } from './dto/update-role.dto';
 import { IamSafetyService } from '../safety';
 import type { RoleWithPermissions } from './types/role-with-permissions.type';
-
-const roleWithPermissionsSelect = {
-  id: true,
-  name: true,
-  label: true,
-  description: true,
-  isSystem: true,
-  permissions: {
-    select: {
-      permission: {
-        select: {
-          id: true,
-          key: true,
-          label: true,
-          description: true,
-        },
-      },
-    },
-    orderBy: {
-      permission: {
-        key: 'asc',
-      },
-    },
-  },
-} satisfies Prisma.RoleSelect;
-
-type RoleWithPermissionsPayload = Prisma.RoleGetPayload<{
-  select: typeof roleWithPermissionsSelect;
-}>;
+import {
+  IAM_ROLE_REPOSITORY,
+  type RoleRepository,
+} from './contracts/role.repository.interface';
 
 @Injectable()
 export class RolesService {
   constructor(
-    private readonly prisma: PrismaService,
+    @Inject(IAM_ROLE_REPOSITORY) private readonly roles: RoleRepository,
     private readonly iamSafetyService: IamSafetyService,
   ) {}
 
   async create(dto: CreateRoleDto): Promise<RoleWithPermissions> {
-    const existingRole = await this.prisma.role.findUnique({
-      where: { name: dto.name },
-      select: { id: true },
-    });
-
-    if (existingRole) {
+    if (await this.roles.findIdByName(dto.name)) {
       throw new ConflictException(`Role "${dto.name}" already exists.`);
     }
-
     if (dto.permissionIds?.length) {
-      await this.assertPermissionsExist(dto.permissionIds);
+      const ids = [...new Set(dto.permissionIds)];
+      if ((await this.roles.countPermissions(ids)) !== ids.length) {
+        throw new NotFoundException(
+          'One or more permissions were not found. IAM refuses to guess permissions. 🛰️',
+        );
+      }
     }
-
-    const role = await this.prisma.role.create({
-      data: {
-        name: dto.name,
-        label: dto.label,
-        description: dto.description,
-        permissions: dto.permissionIds?.length
-          ? {
-              create: dto.permissionIds.map((permissionId) => ({
-                permissionId,
-              })),
-            }
-          : undefined,
-      },
-      select: roleWithPermissionsSelect,
+    return this.roles.create({
+      name: dto.name,
+      label: dto.label,
+      description: dto.description,
+      permissionIds: dto.permissionIds,
     });
-
-    return this.mapRole(role);
   }
 
-  async findAll(): Promise<RoleWithPermissions[]> {
-    const roles = await this.prisma.role.findMany({
-      orderBy: { name: 'asc' },
-      select: roleWithPermissionsSelect,
-    });
-
-    return roles.map((role) => this.mapRole(role));
+  findAll(): Promise<RoleWithPermissions[]> {
+    return this.roles.findAll();
   }
 
   async findOne(id: string): Promise<RoleWithPermissions> {
-    const role = await this.prisma.role.findUnique({
-      where: { id },
-      select: roleWithPermissionsSelect,
-    });
-
-    if (!role) {
+    const role = await this.roles.findById(id);
+    if (!role)
       throw new NotFoundException(`Role with id "${id}" was not found.`);
-    }
-
-    return this.mapRole(role);
+    return role;
   }
 
   async update(id: string, dto: UpdateRoleDto): Promise<RoleWithPermissions> {
     const role = await this.assertRoleExists(id);
-
     if (role.isSystem) {
       this.iamSafetyService.assertSystemRoleCanBeModified({
         roleName: role.name,
         isSystem: role.isSystem,
       });
     }
-
     if (dto.name && dto.name !== role.name) {
       this.iamSafetyService.assertRoleCanBeRenamed(role.name);
-      await this.assertRoleNameIsAvailable(dto.name, id);
+      const existingId = await this.roles.findIdByName(dto.name);
+      if (existingId && existingId !== id)
+        throw new ConflictException(`Role "${dto.name}" already exists.`);
     }
-
-    const updatedRole = await this.prisma.role.update({
-      where: { id },
-      data: {
-        name: dto.name,
-        label: dto.label,
-        description: dto.description,
-      },
-      select: roleWithPermissionsSelect,
+    return this.roles.update(id, {
+      name: dto.name,
+      label: dto.label,
+      description: dto.description,
     });
-
-    return this.mapRole(updatedRole);
   }
 
   async remove(id: string) {
     const role = await this.assertRoleExists(id);
-
     this.iamSafetyService.assertRoleCanBeDeleted(role.name);
-
     if (role.isSystem) {
       this.iamSafetyService.assertSystemRoleCanBeModified({
         roleName: role.name,
         isSystem: role.isSystem,
       });
     }
-
-    await this.prisma.role.delete({
-      where: { id },
-    });
-
-    return {
-      deleted: true,
-      role,
-    };
+    await this.roles.remove(id);
+    return { deleted: true, role };
   }
 
   async assignPermission(
@@ -197,32 +116,12 @@ export class RolesService {
   ): Promise<RoleWithPermissions> {
     await this.assertRoleExists(roleId);
     await this.assertPermissionExists(dto.permissionId);
-
-    const existingAssignment = await this.prisma.rolePermission.findUnique({
-      where: {
-        roleId_permissionId: {
-          roleId,
-          permissionId: dto.permissionId,
-        },
-      },
-      select: {
-        roleId: true,
-      },
-    });
-
-    if (existingAssignment) {
+    if (await this.roles.hasPermission(roleId, dto.permissionId)) {
       throw new ConflictException(
         'Permission is already assigned to this role.',
       );
     }
-
-    await this.prisma.rolePermission.create({
-      data: {
-        roleId,
-        permissionId: dto.permissionId,
-      },
-    });
-
+    await this.roles.assignPermission(roleId, dto.permissionId);
     return this.findOne(roleId);
   }
 
@@ -232,115 +131,25 @@ export class RolesService {
   ): Promise<RoleWithPermissions> {
     await this.assertRoleExists(roleId);
     await this.assertPermissionExists(permissionId);
-
-    const existingAssignment = await this.prisma.rolePermission.findUnique({
-      where: {
-        roleId_permissionId: {
-          roleId,
-          permissionId,
-        },
-      },
-      select: {
-        roleId: true,
-      },
-    });
-
-    if (!existingAssignment) {
+    if (!(await this.roles.hasPermission(roleId, permissionId))) {
       throw new NotFoundException(
         'Permission assignment was not found for this role.',
       );
     }
-
-    await this.prisma.rolePermission.delete({
-      where: {
-        roleId_permissionId: {
-          roleId,
-          permissionId,
-        },
-      },
-    });
-
+    await this.roles.revokePermission(roleId, permissionId);
     return this.findOne(roleId);
   }
 
   private async assertRoleExists(id: string) {
-    const role = await this.prisma.role.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        name: true,
-        label: true,
-        description: true,
-        isSystem: true,
-      },
-    });
-
-    if (!role) {
+    const role = await this.roles.findRecordById(id);
+    if (!role)
       throw new NotFoundException(`Role with id "${id}" was not found.`);
-    }
-
     return role;
   }
 
   private async assertPermissionExists(id: string): Promise<void> {
-    const permission = await this.prisma.permission.findUnique({
-      where: { id },
-      select: { id: true },
-    });
-
-    if (!permission) {
+    if (!(await this.roles.permissionExists(id))) {
       throw new NotFoundException(`Permission with id "${id}" was not found.`);
     }
-  }
-
-  private async assertPermissionsExist(permissionIds: string[]): Promise<void> {
-    const uniquePermissionIds = [...new Set(permissionIds)];
-
-    const existingPermissions = await this.prisma.permission.findMany({
-      where: {
-        id: {
-          in: uniquePermissionIds,
-        },
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    if (existingPermissions.length !== uniquePermissionIds.length) {
-      throw new NotFoundException(
-        'One or more permissions were not found. IAM refuses to guess permissions. 🛰️',
-      );
-    }
-  }
-
-  private async assertRoleNameIsAvailable(
-    name: string,
-    currentRoleId: string,
-  ): Promise<void> {
-    const existingRole = await this.prisma.role.findUnique({
-      where: { name },
-      select: { id: true },
-    });
-
-    if (existingRole && existingRole.id !== currentRoleId) {
-      throw new ConflictException(`Role "${name}" already exists.`);
-    }
-  }
-
-  private mapRole(role: RoleWithPermissionsPayload): RoleWithPermissions {
-    return {
-      id: role.id,
-      name: role.name,
-      label: role.label,
-      description: role.description,
-      isSystem: role.isSystem,
-      permissions: role.permissions.map(({ permission }) => ({
-        id: permission.id,
-        key: permission.key,
-        label: permission.label,
-        description: permission.description,
-      })),
-    };
   }
 }

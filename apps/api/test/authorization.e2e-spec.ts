@@ -132,7 +132,13 @@ describe('authoritative request access (e2e)', () => {
     await app.init();
     prisma = app.get(PrismaService);
     const manager = await register();
-    for (const key of ['permissions.manage', 'roles.update', 'roles.delete']) {
+    for (const key of [
+      'permissions.manage',
+      'roles.create',
+      'roles.read',
+      'roles.update',
+      'roles.delete',
+    ]) {
       const permission = await prisma.permission.upsert({
         where: { key },
         update: {},
@@ -166,6 +172,72 @@ describe('authoritative request access (e2e)', () => {
       await prisma.user.deleteMany({ where: { id: { in: subjects } } });
     }
     await app?.close();
+  });
+
+  it('preserves protected role CRUD, assignment errors and response fields through HTTP', async () => {
+    const name = `${probeRoleName}-crud`;
+    await request(app.getHttpServer())
+      .post('/api/iam/roles')
+      .send({ name, label: 'Role' })
+      .expect(401);
+    const unprivileged = await register();
+    await request(app.getHttpServer())
+      .post('/api/iam/roles')
+      .set('Authorization', `Bearer ${unprivileged.tokens.accessToken}`)
+      .send({ name, label: 'Role' })
+      .expect(403);
+    expect(await prisma.role.count({ where: { name } })).toBe(0);
+    const created = await manage('post', 'roles')
+      .send({ name, label: 'Role', permissionIds: [probePermissionId] })
+      .expect(201);
+    const id = (created.body as { id: string }).id;
+    roles.push(id);
+    expect(Object.keys(created.body as object).sort()).toEqual(
+      ['id', 'name', 'label', 'description', 'isSystem', 'permissions'].sort(),
+    );
+    expect(created.body).toMatchObject({
+      name,
+      isSystem: false,
+      permissions: [{ id: probePermissionId, key: probePermissionKey }],
+    });
+    await manage('post', 'roles')
+      .send({ name, label: 'Duplicate' })
+      .expect(409);
+    await request(app.getHttpServer())
+      .get(`/api/iam/roles/${id}`)
+      .set('Authorization', `Bearer ${managerToken}`)
+      .expect(200);
+    await manage('post', `roles/${id}/permissions`)
+      .send({ permissionId: probePermissionId })
+      .expect(409);
+    await manage(
+      'delete',
+      `roles/${id}/permissions/${probePermissionId}`,
+    ).expect(200);
+    await manage(
+      'delete',
+      `roles/${id}/permissions/${probePermissionId}`,
+    ).expect(404);
+    await manage('post', `roles/${id}/permissions`)
+      .send({ permissionId: probePermissionId })
+      .expect(201);
+    await manage('patch', `roles/${id}`).send({ label: 'Changed' }).expect(200);
+    await manage('delete', `roles/${id}`).expect(200);
+    await manage('delete', `roles/${id}`).expect(404);
+    const system = await prisma.role.create({
+      data: { name: `${name}-system`, label: 'System', isSystem: true },
+    });
+    roles.push(system.id);
+    await manage('patch', `roles/${system.id}`)
+      .send({ label: 'Unsafe' })
+      .expect(400);
+    await manage('delete', `roles/${system.id}`).expect(400);
+    expect(
+      await prisma.role.findUnique({
+        where: { id: system.id },
+        select: { label: true },
+      }),
+    ).toEqual({ label: 'System' });
   });
 
   it('honors direct revoke, grant, key rename and permission deletion with the same JWT', async () => {

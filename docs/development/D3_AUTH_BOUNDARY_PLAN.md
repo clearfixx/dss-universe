@@ -92,6 +92,13 @@ access decisions need a separate D3.4 security increment before acceptance.
 
 ## Verification and known baseline
 
+IAM role persistence is isolated through a private port and adapter; safety
+rules and response behavior remain unchanged. Fifteen service/DB tests and five
+real authorization/role E2E cases pass. The reviewed inventory is now 141 after
+removing exactly two resolved RolesService persistence imports. Subject
+assignment persistence and public contracts remain open.
+See [role evidence](../audits/D3_4_IAM_ROLE_PERSISTENCE.md).
+
 D3.4 request access now refreshes roles and permissions after authoritative
 session validation through narrow Core Auth/Authorization ports and root
 composition. Four same-token REST/GraphQL E2E cases pass; DEBT-043 is implemented
