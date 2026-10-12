@@ -28,7 +28,7 @@ describe('EmailVerificationService', () => {
     ),
     getOrThrow: jest.fn().mockReturnValue('secret'),
   };
-  const queues = { emailVerification: { add: jest.fn() } };
+  const delivery = { enqueue: jest.fn() };
   const credentials = {
     consume: jest.fn(),
     findPendingDestination: jest
@@ -38,7 +38,7 @@ describe('EmailVerificationService', () => {
   const service = new EmailVerificationService(
     redis as never,
     config as never,
-    queues as never,
+    delivery,
     credentials,
   );
 
@@ -48,10 +48,8 @@ describe('EmailVerificationService', () => {
     await expect(service.request('user-1', '127.0.0.1')).resolves.toEqual({
       success: true,
     });
-    expect(queues.emailVerification.add).toHaveBeenCalledWith(
-      'email-verification.v1',
+    expect(delivery.enqueue).toHaveBeenCalledWith(
       expect.objectContaining({ userId: 'user-1', email: 'astro@dss.test' }),
-      expect.any(Object),
     );
     expect(credentials.findPendingDestination).toHaveBeenCalledWith('user-1');
   });
@@ -62,7 +60,7 @@ describe('EmailVerificationService', () => {
       success: true,
     });
     expect(redis.eval).not.toHaveBeenCalled();
-    expect(queues.emailVerification.add).not.toHaveBeenCalled();
+    expect(delivery.enqueue).not.toHaveBeenCalled();
   });
 
   it('does not deliver when either resend limit is exhausted', async () => {
@@ -70,7 +68,7 @@ describe('EmailVerificationService', () => {
     await expect(service.request('user-1', '127.0.0.1')).resolves.toEqual({
       success: true,
     });
-    expect(queues.emailVerification.add).not.toHaveBeenCalled();
+    expect(delivery.enqueue).not.toHaveBeenCalled();
   });
 
   it('propagates authoritative storage failure without sending mail', async () => {
@@ -80,17 +78,22 @@ describe('EmailVerificationService', () => {
     await expect(service.request('user-1', '127.0.0.1')).rejects.toThrow(
       'database unavailable',
     );
-    expect(queues.emailVerification.add).not.toHaveBeenCalled();
+    expect(delivery.enqueue).not.toHaveBeenCalled();
   });
 
   it('keeps registration successful if asynchronous delivery fails', async () => {
-    queues.emailVerification.add.mockRejectedValueOnce(
-      new Error('queue unavailable'),
-    );
+    delivery.enqueue.mockRejectedValueOnce(new Error('queue unavailable'));
     await expect(
       service.requestAfterRegistration('user-1', 'astro@dss.test'),
     ).resolves.toBeUndefined();
     expect(credentials.findPendingDestination).not.toHaveBeenCalled();
+  });
+
+  it('propagates resend delivery failure rather than applying registration policy', async () => {
+    delivery.enqueue.mockRejectedValueOnce(new Error('queue unavailable'));
+    await expect(service.request('user-1', '127.0.0.1')).rejects.toThrow(
+      'queue unavailable',
+    );
   });
 
   it('accepts a valid single-use token digest', async () => {

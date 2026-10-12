@@ -65,6 +65,10 @@ import { LoginAbuseProtectionService } from './application/services/login-abuse-
 import { SecurityAlertService } from './application/services/security-alert.service';
 import { SECURITY_ALERT_DELIVERY } from './domain/contracts/security-alert-delivery.interface';
 import { BullmqSecurityAlertDelivery } from './infrastructure/delivery/bullmq-security-alert-delivery';
+import { PASSWORD_RECOVERY_DELIVERY } from './domain/contracts/password-recovery-delivery.interface';
+import { EMAIL_VERIFICATION_DELIVERY } from './domain/contracts/email-verification-delivery.interface';
+import { BullmqPasswordRecoveryDelivery } from './infrastructure/delivery/bullmq-password-recovery-delivery';
+import { BullmqEmailVerificationDelivery } from './infrastructure/delivery/bullmq-email-verification-delivery';
 import { TotpService } from './application/services/totp.service';
 import { TwoFactorService } from './application/services/two-factor.service';
 import { TWO_FACTOR_REPOSITORY } from './domain/repositories/two-factor.repository.interface';
@@ -96,11 +100,19 @@ import { PrismaAccountCredentialsRepository } from './infrastructure/repositorie
     },
     PasswordRecoveryService,
     {
+      provide: PASSWORD_RECOVERY_DELIVERY,
+      useClass: BullmqPasswordRecoveryDelivery,
+    },
+    {
       provide: PASSWORD_RESET_REPOSITORY,
       useClass: PrismaPasswordResetRepository,
     },
     PasswordRecoveryResolver,
     EmailVerificationService,
+    {
+      provide: EMAIL_VERIFICATION_DELIVERY,
+      useClass: BullmqEmailVerificationDelivery,
+    },
     {
       provide: EMAIL_VERIFICATION_REPOSITORY,
       useClass: PrismaEmailVerificationRepository,

@@ -32,7 +32,10 @@ import { ConfigService } from '@nestjs/config';
 import { createHash, createHmac } from 'node:crypto';
 import type IORedis from 'ioredis';
 import { REDIS_CONNECTION } from '@api/core/cache';
-import { QueueRegistryService } from '@api/core/queue/services/queue-registry.service';
+import {
+  PASSWORD_RECOVERY_DELIVERY,
+  type PasswordRecoveryDelivery,
+} from '../../domain/contracts/password-recovery-delivery.interface';
 import {
   PASSWORD_RESET_REPOSITORY,
   type PasswordResetRepository,
@@ -47,7 +50,8 @@ export class PasswordRecoveryService {
   constructor(
     @Inject(REDIS_CONNECTION) private readonly redis: IORedis,
     private readonly config: ConfigService,
-    private readonly queues: QueueRegistryService,
+    @Inject(PASSWORD_RECOVERY_DELIVERY)
+    private readonly delivery: PasswordRecoveryDelivery,
     @Inject(PASSWORD_RESET_REPOSITORY)
     private readonly resets: PasswordResetRepository,
     private readonly passwords: PasswordHashService,
@@ -73,19 +77,10 @@ export class PasswordRecoveryService {
     if (addressAllowed && clientAllowed) {
       // Queue every address, including unknown addresses. No account lookup or
       // SMTP latency is observable through the public request response.
-      await this.queues.passwordRecovery.add(
-        'password-recovery.v1',
-        {
-          email: normalized,
-          requestedAt: new Date().toISOString(),
-        },
-        {
-          attempts: 3,
-          backoff: { type: 'exponential', delay: 5000 },
-          removeOnComplete: true,
-          removeOnFail: true,
-        },
-      );
+      await this.delivery.enqueue({
+        email: normalized,
+        requestedAt: new Date().toISOString(),
+      });
     }
     return { success: true };
   }

@@ -14,7 +14,6 @@
 import type IORedis from 'ioredis';
 import { ConfigService } from '@nestjs/config';
 import { PasswordRecoveryService } from './password-recovery.service';
-import type { QueueRegistryService } from '@api/core/queue/services/queue-registry.service';
 import type { PasswordResetRepository } from '../../domain/repositories/password-reset.repository.interface';
 import type { PasswordHashService } from './password-hash.service';
 
@@ -35,7 +34,7 @@ describe('PasswordRecoveryService', () => {
       PASSWORD_RESET_WEB_URL: 'http://localhost:3100/reset-password',
       JWT_REFRESH_SECRET: 'test-secret',
     }),
-    { passwordRecovery: { add } } as unknown as QueueRegistryService,
+    { enqueue: add },
     { consume },
     { hash } as unknown as PasswordHashService,
     { notify } as never,
@@ -54,9 +53,7 @@ describe('PasswordRecoveryService', () => {
       success: true,
     });
     expect(add).toHaveBeenCalledWith(
-      'password-recovery.v1',
       expect.objectContaining({ email: 'new@example.test' }),
-      expect.objectContaining({ removeOnComplete: true, removeOnFail: true }),
     );
     expect(consume).not.toHaveBeenCalled();
     expect(JSON.stringify(evalRedis.mock.calls)).not.toContain(
@@ -69,6 +66,13 @@ describe('PasswordRecoveryService', () => {
       success: true,
     });
     expect(add).not.toHaveBeenCalled();
+  });
+  it('propagates request delivery failure without account lookup', async () => {
+    add.mockRejectedValueOnce(new Error('queue unavailable'));
+    await expect(
+      service.request('unknown@example.test', '127.0.0.1'),
+    ).rejects.toThrow('queue unavailable');
+    expect(consume).not.toHaveBeenCalled();
   });
   it('fails closed when Redis is unavailable', async () => {
     evalRedis.mockRejectedValue(new Error('offline'));

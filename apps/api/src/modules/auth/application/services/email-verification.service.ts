@@ -33,7 +33,10 @@ import { ConfigService } from '@nestjs/config';
 import { createHash, createHmac } from 'node:crypto';
 import type IORedis from 'ioredis';
 import { REDIS_CONNECTION } from '@api/core/cache';
-import { QueueRegistryService } from '@api/core/queue/services/queue-registry.service';
+import {
+  EMAIL_VERIFICATION_DELIVERY,
+  type EmailVerificationDelivery,
+} from '../../domain/contracts/email-verification-delivery.interface';
 import {
   EMAIL_VERIFICATION_REPOSITORY,
   type EmailVerificationRepository,
@@ -46,7 +49,8 @@ export class EmailVerificationService {
   constructor(
     @Inject(REDIS_CONNECTION) private readonly redis: IORedis,
     private readonly config: ConfigService,
-    private readonly queues: QueueRegistryService,
+    @Inject(EMAIL_VERIFICATION_DELIVERY)
+    private readonly delivery: EmailVerificationDelivery,
     @Inject(EMAIL_VERIFICATION_REPOSITORY)
     private readonly credentials: EmailVerificationRepository,
   ) {}
@@ -103,16 +107,11 @@ export class EmailVerificationService {
   }
 
   private async enqueue(userId: string, email: string): Promise<void> {
-    await this.queues.emailVerification.add(
-      'email-verification.v1',
-      { userId, email, requestedAt: new Date().toISOString() },
-      {
-        attempts: 3,
-        backoff: { type: 'exponential', delay: 5000 },
-        removeOnComplete: true,
-        removeOnFail: true,
-      },
-    );
+    await this.delivery.enqueue({
+      userId,
+      email,
+      requestedAt: new Date().toISOString(),
+    });
   }
 
   private async allow(scope: string, value: string, limit: number) {

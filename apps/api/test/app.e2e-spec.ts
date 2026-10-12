@@ -681,6 +681,90 @@ describe('DSS API (e2e)', () => {
     });
   });
 
+  it('persists credential-free recovery and verification delivery jobs through real BullMQ', async () => {
+    const suffix = randomBytes(8).toString('hex');
+    const email = `delivery-${suffix}@dss.test`;
+    const unknown = `unknown-${suffix}@dss.test`;
+    const queues = app.get<QueueRegistryService>(QueueRegistryService);
+    const config = app.get<ConfigService>(ConfigService);
+    const originalGet = config.get.bind(config) as (key: string) => unknown;
+    const configSpy = jest
+      .spyOn(config, 'get')
+      .mockImplementation((key: string) => {
+        const settings: Record<string, string> = {
+          MAIL_HOST: 'localhost',
+          MAIL_FROM: 'no-reply@example.com',
+          EMAIL_VERIFICATION_WEB_URL: 'http://localhost/verify-email',
+          PASSWORD_RESET_WEB_URL: 'http://localhost/reset-password',
+        };
+        return settings[key] ?? originalGet(key);
+      });
+    try {
+      await request(app.getHttpServer())
+        .post('/api/auth/register')
+        .send({
+          email,
+          username: `delivery-${suffix}`,
+          password: 'Delivery-password-123!',
+        })
+        .expect(201);
+      const recovered = await request(app.getHttpServer())
+        .post('/api/graphql')
+        .send({
+          query:
+            'mutation Request($input: RequestPasswordRecoveryInput!) { requestPasswordRecovery(input: $input) { success } }',
+          variables: { input: { email: unknown.toUpperCase() } },
+        })
+        .expect(200);
+      expect(recovered.body).toEqual({
+        data: { requestPasswordRecovery: { success: true } },
+      });
+      const recovery = (
+        await queues.passwordRecovery.getJobs(['wait', 'delayed'], 0, -1)
+      ).find((job) => job.data.email === unknown);
+      const verification = (
+        await queues.emailVerification.getJobs(['wait', 'delayed'], 0, -1)
+      ).find((job) => job.data.email === email);
+      expect(recovery).toBeDefined();
+      expect(verification).toBeDefined();
+      expect(recovery?.name).toBe('password-recovery.v1');
+      expect(verification?.name).toBe('email-verification.v1');
+      expect(Object.keys(recovery!.data).sort()).toEqual([
+        'email',
+        'requestedAt',
+      ]);
+      expect(Object.keys(verification!.data).sort()).toEqual([
+        'email',
+        'requestedAt',
+        'userId',
+      ]);
+      for (const job of [recovery!, verification!]) {
+        expect(job.opts).toMatchObject({
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 5000 },
+          removeOnComplete: true,
+          removeOnFail: true,
+        });
+      }
+    } finally {
+      configSpy.mockRestore();
+      for (const job of await queues.passwordRecovery.getJobs(
+        ['wait', 'delayed'],
+        0,
+        -1,
+      )) {
+        if (job.data.email === unknown) await job.remove();
+      }
+      for (const job of await queues.emailVerification.getJobs(
+        ['wait', 'delayed'],
+        0,
+        -1,
+      )) {
+        if (job.data.email === email) await job.remove();
+      }
+    }
+  });
+
   it('keeps registration successful when verification email enqueue fails', async () => {
     const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const config = app.get(ConfigService);

@@ -5,6 +5,14 @@
 
 ## Latest increment
 
+[D3.3 recovery/verification delivery](D3_3_RECOVERY_VERIFICATION_DELIVERY.md)
+removes the remaining broad queue registries from Auth application services.
+Separate private capabilities preserve payload/retry/failure policy. 433 direct
+API/DB tests and four selected real E2E pass, including persisted BullMQ jobs.
+Redis capability isolation remains next; full release acceptance remains open.
+
+## Earlier increment
+
 [D3.4 atomic second-factor lifecycle](D3_4_TWO_FACTOR_ATOMIC_LIFECYCLE.md)
 implements the separately approved DEBT-042 correction: subject-level serialization
 including first setup, and atomic password/factor proof, recovery-use audit and

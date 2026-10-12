@@ -34,13 +34,14 @@ No dependency, migration, JWT, generated schema or frontend changes.
 
 ## Remaining infrastructure review
 
-| Consumer                    | Remaining dependency                    | Next action                                                    |
-| --------------------------- | --------------------------------------- | -------------------------------------------------------------- |
-| PasswordRecoveryService     | Redis Lua/HMAC and broad queue registry | Owned resend-limit and recovery-delivery capabilities          |
-| EmailVerificationService    | Redis Lua/HMAC and broad queue registry | Owned resend-limit and verification-delivery capabilities      |
-| LoginAbuseProtectionService | Redis Lua/private keys                  | Owned abuse-counter capability preserving failure policy       |
-| SecurityAlertService        | Private delivery port                   | Implemented here; worker lifecycle/retention is not redesigned |
+| Consumer                    | Remaining dependency   | Next action                                                    |
+| --------------------------- | ---------------------- | -------------------------------------------------------------- |
+| PasswordRecoveryService     | Redis Lua/HMAC         | Owned resend-limit capability; delivery isolated subsequently  |
+| EmailVerificationService    | Redis Lua/HMAC         | Owned resend-limit capability; delivery isolated subsequently  |
+| LoginAbuseProtectionService | Redis Lua/private keys | Owned abuse-counter capability preserving failure policy       |
+| SecurityAlertService        | Private delivery port  | Implemented here; worker lifecycle/retention is not redesigned |
 
-Do not claim D3.3 closed from this increment. D3.4/approved DEBT-042 correction,
-IAM ownership and later debt packages remain open. Full CI/release acceptance is
+See [subsequent delivery evidence](D3_3_RECOVERY_VERIFICATION_DELIVERY.md).
+Do not claim D3.3 closed from this increment. The approved DEBT-042 correction is
+implemented separately; broader D3.4 IAM acceptance and later debt packages remain open. Full CI/release acceptance is
 not implied by the selected regressions.
