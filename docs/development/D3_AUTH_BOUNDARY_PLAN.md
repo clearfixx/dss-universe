@@ -92,6 +92,13 @@ access decisions need a separate D3.4 security increment before acceptance.
 
 ## Verification and known baseline
 
+D3.4 request access now refreshes roles and permissions after authoritative
+session validation through narrow Core Auth/Authorization ports and root
+composition. Four same-token REST/GraphQL E2E cases pass; DEBT-043 is implemented
+pending review. IAM role/assignment persistence remains in progress. Full E2E
+fixture/News failures are tracked in DEBT-045, not silently fixed in this package.
+See [request access evidence](../audits/D3_4_AUTHORITATIVE_REQUEST_ACCESS.md).
+
 Run focused unit and real GraphQL/session E2E tests, full API units, lint,
 typecheck, Prisma validation, build and architecture gates. Preserve the frozen
 156-finding feature inventory; core persistence was a manually tracked debt

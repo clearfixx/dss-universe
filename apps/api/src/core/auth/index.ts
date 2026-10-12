@@ -44,6 +44,10 @@ export {
   type AccessSessionValidator,
 } from './contracts/access-session-validator.interface';
 export type { AccessSessionClaim } from './types/access-session-claim.type';
+export {
+  REQUEST_ACCESS_READER,
+  type RequestAccessReader,
+} from './contracts/request-access-reader.interface';
 
 export type { AuthenticatedUser } from './types/authenticated-user.type';
 export type { JwtPayload } from './types/jwt-payload.type';

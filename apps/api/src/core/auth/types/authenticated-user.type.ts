@@ -3,15 +3,15 @@
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
  * 🔐 Module: Authentication
- * 📄 File: authenticated-user.type.ts
+ * 📄 File: apps/api/src/core/auth/types/authenticated-user.type.ts
  *
  * 🎯 Purpose:
  * Defines the authenticated user shape attached to request.user.
  *
  * 🧠 Responsibilities:
  * • represents identity after JWT validation;
- * • exposes database-driven roles;
- * • exposes effective permissions for authorization guards.
+ * • exposes roles from the authoritative access read for this request;
+ * • exposes current effective permissions for guards and services.
  *
  * 🏗️ Architecture:
  * JwtStrategy
@@ -23,6 +23,7 @@
  * ⚠️ Important:
  * Authorization reads permissions from this contract.
  * Keep it aligned with JwtPayload.
+ * Access arrays are refreshed for every authenticated request, not copied from JWT.
  *
  * 💡 Notes:
  * One user may have many hats.

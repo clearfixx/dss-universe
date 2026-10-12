@@ -54,3 +54,7 @@ export { PermissionsRepository } from './repositories/permissions.repository';
 export { PermissionsService } from './services/permissions.service';
 
 export type { UserAccessProfile } from './types/user-access-profile.type';
+export {
+  SUBJECT_ACCESS_READER,
+  type SubjectAccessReader,
+} from './contracts/subject-access-reader.interface';

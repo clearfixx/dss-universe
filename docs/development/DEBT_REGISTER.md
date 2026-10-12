@@ -225,7 +225,7 @@ revocation and version increment. Deterministic DB barriers and a real API rollb
 case verify the corrected ordering. See [D3.4 evidence](../audits/D3_4_TWO_FACTOR_ATOMIC_LIFECYCLE.md).
 Implementation is not full D3 acceptance or permission to merge a red PR.
 
-### DEBT-043 — Stale JWT permission grants after IAM revocation (High, OPEN, D3.4)
+### DEBT-043 — Stale JWT permission grants after IAM revocation (High, IMPLEMENTED / review pending, D3.4)
 
 Current JwtStrategy validates authoritative session/account eligibility, then copies
 `payload.roles` and `payload.permissions` into the request principal. PermissionsGuard
@@ -243,6 +243,14 @@ invalidate every authentication session as a substitute for access ownership.
 This is a separate D3.4 security increment; the permission persistence transfer
 does not fix it or claim complete access acceptance.
 
+The correction now reads current roles and permissions after session validation,
+through consumer-owned Core Auth and Authorization ports joined in root
+composition. Old JWT grants are not an authority. A real same-token REST test
+first reproduced revoked access returning 200 instead of 403; four corrective
+E2E tests now pass, including GraphQL and fail-closed authority errors.
+See [request access evidence](../audits/D3_4_AUTHORITATIVE_REQUEST_ACCESS.md).
+This is a per-request snapshot, not cancellation of already running commands.
+
 ### DEBT-044 — GraphQL generator barrel drift (Medium, OPEN, D6)
 
 On the D3.4 IAM persistence tree, `pnpm graphql:check` successfully parses the
@@ -253,6 +261,25 @@ restored to the previously clean tracked version, with no hand-edited generated
 implementation. Reconcile the checked-in output and configured generator in D6,
 coordinated with the Web workstream, then prove clean regeneration. Do not waive
 the consistency gate or claim it passes from successful generation alone.
+
+### DEBT-045 — API E2E shared fixtures and News cleanup drift (Medium, OPEN, D6)
+
+The full D3.4 API E2E run finished in 114.253 seconds with 44 passed and two
+failed tests. Leaderboards assumes its own 10-point subject ranks first, but an
+earlier Community Points fixture also has 10 points and an earlier creation
+timestamp. A read-only DB query confirmed the winning `points-user-*` subject
+preceded `leader-oldest-*` by about 20 seconds. The leaderboard test closes the
+app without removing its fixtures. Global rank assertions are therefore not
+isolated from other suites or previous runs.
+
+The News foundation test first timed out at five seconds. A focused rerun instead
+failed because it expected `viewCount: null` and received `0`; cleanup then tried
+to delete an interaction target, rejected by the DB rule requiring retirement.
+Jest subsequently reported open handles. News and leaderboard source/tests were
+not changed by the request-access increment. D6 must establish owned fixtures,
+correct cleanup and explicit view-count contract acceptance before correcting
+assertions. Do not weaken DB protections, extend timeouts blindly, or call the
+full E2E gate green. No out-of-scope implementation is included here.
 
 Every new entry should include evidence, impact, proposed ownership and a clear
 decision before implementation. Discovery is not permission to expand the

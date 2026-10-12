@@ -29,6 +29,12 @@ approved ADRs or recorded owner decisions.
 
 ## Current position
 
+D3.4 now refreshes current request roles/permissions after session validation;
+same-token REST/GraphQL revocation and fail-closed authority errors are covered.
+DEBT-043 is implemented pending review; IAM role/assignment persistence remains.
+Full API E2E is not green: fixture contamination and News cleanup/assertion drift
+are DEBT-045. See [access evidence](audits/D3_4_AUTHORITATIVE_REQUEST_ACCESS.md).
+
 Product implementation has progressed through Phase 10 and the Auth UX bridge.
 Phase 11 has not started. Current work is debt closure, not a return to Phase 4.
 
