@@ -63,6 +63,8 @@ import { EMAIL_VERIFICATION_REPOSITORY } from './domain/repositories/email-verif
 import { EmailVerificationResolver } from './presentation/graphql/resolvers/email-verification.resolver';
 import { LoginAbuseProtectionService } from './application/services/login-abuse-protection.service';
 import { SecurityAlertService } from './application/services/security-alert.service';
+import { SECURITY_ALERT_DELIVERY } from './domain/contracts/security-alert-delivery.interface';
+import { BullmqSecurityAlertDelivery } from './infrastructure/delivery/bullmq-security-alert-delivery';
 import { TotpService } from './application/services/totp.service';
 import { TwoFactorService } from './application/services/two-factor.service';
 import { TWO_FACTOR_REPOSITORY } from './domain/repositories/two-factor.repository.interface';
@@ -107,6 +109,7 @@ import { PrismaAccountCredentialsRepository } from './infrastructure/repositorie
     LoginAbuseProtectionService,
     { provide: LOGIN_ABUSE_REPOSITORY, useClass: PrismaLoginAbuseRepository },
     SecurityAlertService,
+    { provide: SECURITY_ALERT_DELIVERY, useClass: BullmqSecurityAlertDelivery },
     TotpService,
     TwoFactorService,
     { provide: TWO_FACTOR_REPOSITORY, useClass: PrismaTwoFactorRepository },

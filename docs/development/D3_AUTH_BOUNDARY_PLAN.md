@@ -62,6 +62,10 @@ Current inventory is 144. Infrastructure review remains. The owner approved
 DEBT-042 as a separate D3.4 package: atomic proof/mutation under a subject lock,
 deterministic concurrency tests and unchanged public API. It remains unimplemented.
 
+Security-alert delivery now uses a private Auth capability rather than the broad
+queue registry. See [delivery evidence and remaining matrix](../audits/D3_3_SECURITY_ALERT_DELIVERY.md).
+Recovery/verification delivery and Redis counter adapters remain D3.3 work.
+
 - The JWT strategy sees subject ID, session ID and auth version for eligibility.
 - Each request reads authoritative state; no positive security cache.
 - Missing/revoked/expired sessions, inactive accounts, mismatched owners or

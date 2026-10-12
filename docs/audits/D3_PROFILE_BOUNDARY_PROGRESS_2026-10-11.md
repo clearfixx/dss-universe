@@ -5,6 +5,13 @@
 
 ## Latest increment
 
+[D3.3 security-alert delivery](D3_3_SECURITY_ALERT_DELIVERY.md) replaces the broad
+queue registry in SecurityAlertService with a private owned delivery capability.
+418 API units and three selected real E2E pass. Retry/payload/best-effort behavior
+is preserved; recovery/verification queues and Redis counters remain open.
+
+## Earlier increment
+
 [D3.3 second-factor boundary](D3_3_TWO_FACTOR_BOUNDARY_2026-10-11.md)
 transfers all 2FA persistence/audit transactions to a private Auth-owned port.
 415 full API units (including DB suites) and four selected real E2E pass, including
