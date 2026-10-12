@@ -80,7 +80,10 @@ application orchestration; no ORM transaction crosses the owned port. Email
 Verification now uses an owned persistence port for minimal pending-destination
 reads and atomic consumption/audit. 2FA likewise uses an owned port for credential
 reads and locked state/audit transitions. Redis/queue capabilities remain D3.3
-work; DEBT-042 tracks inherited lifecycle concurrency concerns separately.
+work. The separately approved DEBT-042 correction serializes factor mutations
+under a subject lock, including first setup. Disable verifies password and factor
+in the same transaction as recovery-use audit, deletion and session revocation;
+audit failure cannot consume a recovery code without disabling.
 
 Do not store raw passwords.
 

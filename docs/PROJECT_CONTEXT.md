@@ -53,7 +53,7 @@ The [D3 package plan](development/D3_AUTH_BOUNDARY_PLAN.md) stages the Auth boun
 refactor. D3.1 addresses access-session validation only; D3 remains incomplete.
 The initial D3.2 safe-profile allowlist and field/operation inventory are recorded
 in [D3 progress](audits/D3_PROFILE_BOUNDARY_PROGRESS_2026-10-11.md). Registration
-and profile-response composition are not yet migrated; no full Auth isolation is claimed.
+and profile-response composition have since migrated; no full Auth isolation is claimed.
 Credential reads/writes are now Auth-owned. Legacy access-token display/access
 claims are assembled in [identity composition](audits/D3_TOKEN_CLAIMS_COMPOSITION_2026-10-11.md),
 not supplied as profile data by Auth. Registration failure boundaries are
@@ -61,6 +61,10 @@ characterized against the real disposable database before ownership transfer.
 The owner approved the Auth/subject/profile direction in
 [ADR-003](architecture/adr/003-subject-and-access-ownership.md). D3.5 groups/Premium
 is separately scheduled for scope approval, not silently included in D3/Phase 11.
+
+The separately approved [D3.4 factor lifecycle correction](audits/D3_4_TWO_FACTOR_ATOMIC_LIFECYCLE.md)
+implements subject locking and atomic disable proof/mutation, including recovery
+rollback. Broader D3.3/D3.4 acceptance and full release gates remain open.
 
 ## Repository map
 

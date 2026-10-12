@@ -203,7 +203,7 @@ deterministic byte corruption and unchanged-envelope control. Keep the assertion
 and security behavior; do not skip it, weaken encryption or claim rerun success
 resolves the nondeterminism. No TOTP production/test edit is included in D3.2.
 
-### DEBT-042 — Second-factor lifecycle concurrency review (High, OPEN, D3.4 / Auth acceptance)
+### DEBT-042 — Second-factor lifecycle concurrency review (High, IMPLEMENTED / review pending, D3.4)
 
 Code inspection of the pre-refactor TwoFactorService shows that disable validates
 the password and second factor before starting its delete/revoke/version/audit
@@ -218,6 +218,12 @@ concurrent begin/confirm/disable tests. Do not silently redesign the protocol in
 the persistence transfer. The owner approved a separate D3.4 corrective package:
 atomic proof/mutation under a subject lock, deterministic concurrency tests and
 unchanged public API. Approval does not mean the defect is fixed.
+
+The approved correction now locks the subject for all factor mutations and
+verifies disable proof in the same transaction as recovery-use audit, deletion,
+revocation and version increment. Deterministic DB barriers and a real API rollback
+case verify the corrected ordering. See [D3.4 evidence](../audits/D3_4_TWO_FACTOR_ATOMIC_LIFECYCLE.md).
+Implementation is not full D3 acceptance or permission to merge a red PR.
 
 Every new entry should include evidence, impact, proposed ownership and a clear
 decision before implementation. Discovery is not permission to expand the

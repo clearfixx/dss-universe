@@ -18,7 +18,7 @@
  *
  * ⚠️ Important:
  * Confirmation verification runs under lock through a pure callback.
- * Never log secrets. Existing split disable proof is preserved.
+ * Disable proof and mutation share the subject lock. Never log secrets.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -86,14 +86,16 @@ export class TwoFactorService {
       throw new TwoFactorRequiredException();
   }
   async disable(userId: string, password: string, code: string) {
-    const passwordHash = await this.credentials.findPasswordHash(userId);
-    if (
-      passwordHash === null ||
-      !(await this.passwords.compare(password, passwordHash))
-    )
+    const result = await this.credentials.disable(
+      userId,
+      (passwordHash) => this.passwords.compare(password, passwordHash),
+      (encryptedSecret) =>
+        this.totp.verify(this.totp.decrypt(encryptedSecret), code),
+      this.totp.recoveryHash(code),
+    );
+    if (result === 'invalid-password')
       throw new BadRequestException('Invalid credentials.');
-    await this.assertLogin(userId, code);
-    await this.credentials.disable(userId);
+    if (result === 'invalid-factor') throw new TwoFactorRequiredException();
     return { success: true };
   }
 }

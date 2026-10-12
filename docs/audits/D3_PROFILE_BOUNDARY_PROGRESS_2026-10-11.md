@@ -5,6 +5,14 @@
 
 ## Latest increment
 
+[D3.4 atomic second-factor lifecycle](D3_4_TWO_FACTOR_ATOMIC_LIFECYCLE.md)
+implements the separately approved DEBT-042 correction: subject-level serialization
+including first setup, and atomic password/factor proof, recovery-use audit and
+disable/revocation. Deterministic DB barriers and real API rollback/retry verify
+the ordering. This does not close remaining D3.3 capabilities or release gates.
+
+## Earlier increment
+
 [D3.3 security-alert delivery](D3_3_SECURITY_ALERT_DELIVERY.md) replaces the broad
 queue registry in SecurityAlertService with a private owned delivery capability.
 418 API units and three selected real E2E pass. Retry/payload/best-effort behavior

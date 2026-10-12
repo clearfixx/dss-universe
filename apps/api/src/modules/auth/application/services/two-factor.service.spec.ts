@@ -50,6 +50,7 @@ describe('TwoFactorService', () => {
     credentials.findPasswordHash.mockResolvedValue('password-hash');
     totp.verify.mockReturnValue(true);
     compare.mockResolvedValue(true);
+    credentials.disable.mockResolvedValue('disabled');
   });
   it('delegates safe status without credential reads', async () => {
     credentials.status.mockResolvedValue({
@@ -124,16 +125,36 @@ describe('TwoFactorService', () => {
     );
   });
   it('requires password and second factor before delegating atomic disable', async () => {
-    compare.mockResolvedValueOnce(false);
+    credentials.disable.mockResolvedValueOnce('invalid-password');
     await expect(
       service.disable('u', 'wrong', '123456'),
     ).rejects.toBeInstanceOf(BadRequestException);
-    expect(credentials.disable).not.toHaveBeenCalled();
     await expect(service.disable('u', 'correct', '123456')).resolves.toEqual({
       success: true,
     });
-    expect(credentials.disable).toHaveBeenCalledWith('u');
+    const args = credentials.disable.mock.calls[1] as [
+      string,
+      (hash: string) => Promise<boolean>,
+      (secret: string) => boolean,
+      string,
+    ];
+    expect(args[0]).toBe('u');
+    expect(await args[1]('password-hash')).toBe(true);
+    expect(args[2]('encrypted')).toBe(true);
+    expect(args[3]).toBe('hash:123456');
+    expect(credentials.findPasswordHash).not.toHaveBeenCalled();
+    expect(credentials.findEnabledSecret).not.toHaveBeenCalled();
     expect(compare).toHaveBeenLastCalledWith('correct', 'password-hash');
+  });
+  it('denies invalid factor and propagates transactional failures', async () => {
+    credentials.disable.mockResolvedValueOnce('invalid-factor');
+    await expect(service.disable('u', 'correct', 'bad')).rejects.toBeInstanceOf(
+      TwoFactorRequiredException,
+    );
+    credentials.disable.mockRejectedValueOnce(new Error('audit failed'));
+    await expect(service.disable('u', 'correct', '123456')).rejects.toThrow(
+      'audit failed',
+    );
   });
   it('does not return recovery plaintext after transaction failure', async () => {
     credentials.confirm.mockRejectedValueOnce(new Error('audit failed'));

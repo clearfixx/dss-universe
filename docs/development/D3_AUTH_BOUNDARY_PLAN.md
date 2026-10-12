@@ -60,7 +60,9 @@ locked confirmation, one-use recovery and transactional revocation/audit tests.
 See [2FA evidence](../audits/D3_3_TWO_FACTOR_BOUNDARY_2026-10-11.md).
 Current inventory is 144. Infrastructure review remains. The owner approved
 DEBT-042 as a separate D3.4 package: atomic proof/mutation under a subject lock,
-deterministic concurrency tests and unchanged public API. It remains unimplemented.
+deterministic concurrency tests and unchanged public API. The correction is now
+implemented; see [atomic lifecycle evidence](../audits/D3_4_TWO_FACTOR_ATOMIC_LIFECYCLE.md).
+Broader D3.4 acceptance and baseline quality debts remain open.
 
 Security-alert delivery now uses a private Auth capability rather than the broad
 queue registry. See [delivery evidence and remaining matrix](../audits/D3_3_SECURITY_ALERT_DELIVERY.md).

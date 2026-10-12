@@ -10,14 +10,15 @@
  *
  * 🧠 Responsibilities:
  * • reads minimal credential state;
- * • serializes setup and recovery consumption with existing row locks;
+ * • serializes lifecycle mutations with an existing subject row lock;
  * • commits disabling, revocation and audit atomically.
  *
  * 🏗️ Architecture:
  * Private Auth adapter; confirmation invokes a pure verifier under lock.
  *
  * ⚠️ Important:
- * No transaction client crosses the port. Preserve existing lock/policy semantics.
+ * Lock subject before factor state, including when no factor row exists.
+ * No transaction client crosses the port.
  * Secret material must never enter audit metadata.
  *
  * 🚀 Build. Share. Grow.
@@ -46,7 +47,7 @@ export class PrismaTwoFactorRepository implements TwoFactorRepository {
   }
   async begin(userId: string, encryptedSecret: string): Promise<boolean> {
     return this.prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT "userId" FROM user_two_factor WHERE "userId" = ${userId} FOR UPDATE`;
+      await tx.$queryRaw`SELECT id FROM users WHERE id = ${userId} FOR UPDATE`;
       const current = await tx.userTwoFactor.findUnique({
         where: { userId },
         select: { enabledAt: true },
@@ -66,7 +67,7 @@ export class PrismaTwoFactorRepository implements TwoFactorRepository {
     recoveryHashes: string[],
   ): Promise<'confirmed' | 'missing' | 'invalid'> {
     return this.prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT "userId" FROM user_two_factor WHERE "userId" = ${userId} FOR UPDATE`;
+      await tx.$queryRaw`SELECT id FROM users WHERE id = ${userId} FOR UPDATE`;
       const record = await tx.userTwoFactor.findUnique({
         where: { userId },
         select: { enabledAt: true, encryptedSecret: true },
@@ -99,7 +100,7 @@ export class PrismaTwoFactorRepository implements TwoFactorRepository {
     recoveryHash: string,
   ): Promise<boolean> {
     return this.prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT "userId" FROM user_two_factor WHERE "userId" = ${userId} FOR UPDATE`;
+      await tx.$queryRaw`SELECT id FROM users WHERE id = ${userId} FOR UPDATE`;
       const current = await tx.userTwoFactor.findUnique({
         where: { userId },
         select: { recoveryCodeHashes: true },
@@ -131,8 +132,40 @@ export class PrismaTwoFactorRepository implements TwoFactorRepository {
     });
     return record?.passwordHash ?? null;
   }
-  async disable(userId: string): Promise<void> {
-    await this.prisma.$transaction(async (tx) => {
+  async disable(
+    userId: string,
+    verifyPassword: (passwordHash: string) => Promise<boolean>,
+    verifyFactor: (encryptedSecret: string) => boolean,
+    recoveryHash: string,
+  ): Promise<'disabled' | 'invalid-password' | 'invalid-factor'> {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM users WHERE id = ${userId} FOR UPDATE`;
+      const subject = await tx.user.findUnique({
+        where: { id: userId },
+        select: { passwordHash: true },
+      });
+      if (!subject || !(await verifyPassword(subject.passwordHash)))
+        return 'invalid-password';
+      const factor = await tx.userTwoFactor.findUnique({
+        where: { userId },
+        select: {
+          enabledAt: true,
+          encryptedSecret: true,
+          recoveryCodeHashes: true,
+        },
+      });
+      if (!factor) return 'invalid-factor';
+      if (factor.enabledAt && !verifyFactor(factor.encryptedSecret)) {
+        if (!factor.recoveryCodeHashes.includes(recoveryHash))
+          return 'invalid-factor';
+        await this.audit.append(tx, {
+          action: 'auth.two-factor.recovery-code-used',
+          actorType: 'USER',
+          actorId: userId,
+          targetType: 'User',
+          targetId: userId,
+        });
+      }
       await tx.userTwoFactor.delete({ where: { userId } });
       await tx.session.updateMany({
         where: { userId, revokedAt: null },
@@ -149,6 +182,7 @@ export class PrismaTwoFactorRepository implements TwoFactorRepository {
         targetType: 'User',
         targetId: userId,
       });
+      return 'disabled';
     });
   }
 }

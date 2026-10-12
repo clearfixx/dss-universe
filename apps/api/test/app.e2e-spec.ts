@@ -553,13 +553,53 @@ describe('DSS API (e2e)', () => {
         twoFactorCode: recoveryCodes[0],
       })
       .expect(401);
+    const audit = app.get<AuditWriterService>(AuditWriterService);
+    const originalAppend = audit.append.bind(
+      audit,
+    ) as AuditWriterService['append'];
+    const auditFailure = jest
+      .spyOn(audit, 'append')
+      .mockImplementation((tx, input) => {
+        if (input.action === 'auth.two-factor.disabled')
+          return Promise.reject(new Error('Synthetic disable audit failure'));
+        return originalAppend(tx, input);
+      });
+    try {
+      const rejected = await request(app.getHttpServer())
+        .post('/api/graphql')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          query:
+            'mutation Disable($input: DisableTwoFactorInput!) { disableViewerTwoFactor(input: $input) { success } }',
+          variables: {
+            input: { password: input.password, code: recoveryCodes[1] },
+          },
+        })
+        .expect(200);
+      expect((rejected.body as GraphqlErrorResponse).errors).toHaveLength(1);
+      expect(
+        (
+          await prisma.userTwoFactor.findUniqueOrThrow({
+            where: { userId: identity.user.id },
+          })
+        ).recoveryCodeHashes,
+      ).toContain(totp.recoveryHash(recoveryCodes[1]));
+      await request(app.getHttpServer())
+        .get('/api/auth/me')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+    } finally {
+      auditFailure.mockRestore();
+    }
     const disabled = await request(app.getHttpServer())
       .post('/api/graphql')
       .set('Authorization', `Bearer ${token}`)
       .send({
         query:
           'mutation Disable($input: DisableTwoFactorInput!) { disableViewerTwoFactor(input: $input) { success } }',
-        variables: { input: { password: input.password, code: code() } },
+        variables: {
+          input: { password: input.password, code: recoveryCodes[1] },
+        },
       })
       .expect(200);
     expect(disabled.body).toEqual({
@@ -581,7 +621,7 @@ describe('DSS API (e2e)', () => {
         await prisma.auditRecord.count({
           where: { targetId: identity.user.id, action },
         }),
-      ).toBe(1);
+      ).toBe(action === 'auth.two-factor.recovery-code-used' ? 2 : 1);
     }
   });
 

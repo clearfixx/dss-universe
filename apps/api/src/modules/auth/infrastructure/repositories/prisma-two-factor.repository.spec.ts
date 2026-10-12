@@ -27,6 +27,7 @@ dbSuite('second-factor PostgreSQL transaction', () => {
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     options: `-c search_path=${schema},public`,
+    application_name: schema,
   });
   const prisma = new PrismaClient({ adapter: new PrismaPg(pool, { schema }) });
   const append = jest.fn(() => Promise.resolve('audit'));
@@ -71,6 +72,178 @@ dbSuite('second-factor PostgreSQL transaction', () => {
     expect(await repository.findEnabledSecret('u')).toBeNull();
     expect(await repository.findPasswordHash('u')).toBe('synthetic-hash');
     expect(await repository.findPasswordHash('missing')).toBeNull();
+  });
+  async function waitForSubjectWaiter() {
+    for (let attempt = 0; attempt < 200; attempt++) {
+      const transactions = await pool.query<{ count: string }>(
+        `SELECT count(*) FROM pg_stat_activity WHERE application_name = $1 AND wait_event_type = 'Lock' AND query LIKE '%SELECT id FROM users%'`,
+        [schema],
+      );
+      if (Number(transactions.rows[0].count)) return;
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    throw new Error('Expected subject lock contention was not observed');
+  }
+  it('locks the subject for first setup even without a factor row', async () => {
+    await prisma.userTwoFactor.delete({ where: { userId: 'u' } });
+    const blocker = await pool.connect();
+    let pending: Promise<boolean> | undefined;
+    try {
+      await blocker.query('BEGIN');
+      await blocker.query(`SELECT id FROM users WHERE id = 'u' FOR UPDATE`);
+      pending = repository.begin('u', 'first-secret');
+      await waitForSubjectWaiter();
+      expect(await prisma.userTwoFactor.count()).toBe(0);
+    } finally {
+      await blocker.query('ROLLBACK');
+      blocker.release();
+      await pending;
+    }
+    expect(await prisma.userTwoFactor.count()).toBe(1);
+  });
+  it('keeps a new setup behind disable proof and mutation', async () => {
+    await repository.confirm('u', () => true, ['recovery']);
+    let releaseProof!: () => void;
+    let proofStarted!: () => void;
+    const started = new Promise<void>((resolve) => {
+      proofStarted = resolve;
+    });
+    const release = new Promise<void>((resolve) => {
+      releaseProof = resolve;
+    });
+    const disabling = repository.disable(
+      'u',
+      async () => {
+        proofStarted();
+        await release;
+        return true;
+      },
+      () => true,
+      'unused',
+    );
+    await started;
+    const beginning = repository.begin('u', 'new-secret');
+    try {
+      await waitForSubjectWaiter();
+    } finally {
+      releaseProof();
+    }
+    expect(await disabling).toBe('disabled');
+    expect(await beginning).toBe(true);
+    expect(
+      await prisma.userTwoFactor.findUnique({
+        where: { userId: 'u' },
+        select: { encryptedSecret: true },
+      }),
+    ).toEqual({ encryptedSecret: 'new-secret' });
+  });
+  it('checks the current password after waiting for a credential change', async () => {
+    const blocker = await pool.connect();
+    const verify = jest.fn((hash: string) =>
+      Promise.resolve(hash === 'synthetic-hash'),
+    );
+    let pending: ReturnType<typeof repository.disable> | undefined;
+    try {
+      await blocker.query('BEGIN');
+      await blocker.query(
+        `UPDATE users SET "passwordHash" = 'replacement-hash' WHERE id = 'u'`,
+      );
+      pending = repository.disable('u', verify, () => true, 'unused');
+      await waitForSubjectWaiter();
+      expect(verify).not.toHaveBeenCalled();
+      await blocker.query('COMMIT');
+      expect(await pending).toBe('invalid-password');
+      expect(verify).toHaveBeenCalledWith('replacement-hash');
+      expect(await prisma.userTwoFactor.count()).toBe(1);
+    } finally {
+      await blocker.query('ROLLBACK');
+      blocker.release();
+      await pending;
+    }
+  });
+  it('serializes confirmation behind disable without enabling a deleted setup', async () => {
+    let releaseProof!: () => void;
+    let proofStarted!: () => void;
+    const started = new Promise<void>((resolve) => {
+      proofStarted = resolve;
+    });
+    const release = new Promise<void>((resolve) => {
+      releaseProof = resolve;
+    });
+    const disabling = repository.disable(
+      'u',
+      async () => {
+        proofStarted();
+        await release;
+        return true;
+      },
+      () => true,
+      'unused',
+    );
+    await started;
+    const verify = jest.fn(() => true);
+    const confirming = repository.confirm('u', verify, ['h']);
+    try {
+      await waitForSubjectWaiter();
+    } finally {
+      releaseProof();
+    }
+    expect(await disabling).toBe('disabled');
+    expect(await confirming).toBe('missing');
+    expect(verify).not.toHaveBeenCalled();
+  });
+  it('rejects invalid proofs without mutation and consumes recovery atomically', async () => {
+    await repository.confirm('u', () => true, ['recovery']);
+    append.mockClear();
+    expect(
+      await repository.disable(
+        'u',
+        () => Promise.resolve(false),
+        () => true,
+        'recovery',
+      ),
+    ).toBe('invalid-password');
+    expect(
+      await repository.disable(
+        'u',
+        () => Promise.resolve(true),
+        () => false,
+        'wrong',
+      ),
+    ).toBe('invalid-factor');
+    expect(append).not.toHaveBeenCalled();
+    append
+      .mockResolvedValueOnce('audit')
+      .mockRejectedValueOnce(new Error('disable audit failed'));
+    await expect(
+      repository.disable(
+        'u',
+        () => Promise.resolve(true),
+        () => false,
+        'recovery',
+      ),
+    ).rejects.toThrow('disable audit failed');
+    expect((await repository.status('u')).recoveryCodesRemaining).toBe(1);
+    expect(
+      await repository.disable(
+        'u',
+        () => Promise.resolve(true),
+        () => false,
+        'recovery',
+      ),
+    ).toBe('disabled');
+  });
+  it('allows only one concurrent TOTP disable to revoke and audit', async () => {
+    await repository.confirm('u', () => true, ['h']);
+    append.mockClear();
+    const verify = jest.fn((secret: string) => secret === 'encrypted');
+    const results = await Promise.all([
+      repository.disable('u', () => Promise.resolve(true), verify, 'unused'),
+      repository.disable('u', () => Promise.resolve(true), verify, 'unused'),
+    ]);
+    expect(results.sort()).toEqual(['disabled', 'invalid-factor']);
+    expect(verify).toHaveBeenCalledTimes(1);
+    expect(append).toHaveBeenCalledTimes(1);
   });
   it('replaces pending setup but refuses enabled setup', async () => {
     expect(await repository.begin('u', 'replacement')).toBe(true);
@@ -141,7 +314,12 @@ dbSuite('second-factor PostgreSQL transaction', () => {
       where: { id: 'u' },
       select: { authVersion: true },
     });
-    await repository.disable('u');
+    await repository.disable(
+      'u',
+      () => Promise.resolve(true),
+      () => true,
+      'unused',
+    );
     expect(await repository.findEnabledSecret('u')).toBeNull();
     expect(await prisma.userTwoFactor.count()).toBe(0);
     expect(
@@ -167,7 +345,14 @@ dbSuite('second-factor PostgreSQL transaction', () => {
       select: { authVersion: true },
     });
     append.mockRejectedValueOnce(new Error('audit failed'));
-    await expect(repository.disable('u')).rejects.toThrow('audit failed');
+    await expect(
+      repository.disable(
+        'u',
+        () => Promise.resolve(true),
+        () => true,
+        'unused',
+      ),
+    ).rejects.toThrow('audit failed');
     expect(await prisma.userTwoFactor.count()).toBe(1);
     expect(
       (

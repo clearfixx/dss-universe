@@ -24,6 +24,11 @@ export interface TwoFactorRepository {
   findEnabledSecret(subjectId: string): Promise<string | null>;
   consumeRecovery(subjectId: string, recoveryHash: string): Promise<boolean>;
   findPasswordHash(subjectId: string): Promise<string | null>;
-  disable(subjectId: string): Promise<void>;
+  disable(
+    subjectId: string,
+    verifyPassword: (passwordHash: string) => Promise<boolean>,
+    verifyFactor: (encryptedSecret: string) => boolean,
+    recoveryHash: string,
+  ): Promise<'disabled' | 'invalid-password' | 'invalid-factor'>;
 }
 export const TWO_FACTOR_REPOSITORY = Symbol('TWO_FACTOR_REPOSITORY');
