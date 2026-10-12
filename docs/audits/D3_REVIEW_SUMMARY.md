@@ -17,6 +17,11 @@ Role management now has its own private repository, with safety policy retained
 in RolesService and explicit ordered projections in infrastructure. Subject
 assignment remediation remains in progress.
 
+The last privileged role-holder revocation safeguard is not connected to IAM
+mutations (DEBT-046). Isolated service probes reproduce missing denial. The owner
+approved a separate atomic correction; implementation and permanent regressions
+remain required before D3 acceptance.
+
 Authenticated requests now read current roles and permissions through narrow
 consumer ports joined in root composition. Revoked JWT grants cannot authorize
 subsequent requests; authority failures deny access without token fallback.

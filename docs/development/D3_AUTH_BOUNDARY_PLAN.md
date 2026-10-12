@@ -92,6 +92,12 @@ access decisions need a separate D3.4 security increment before acceptance.
 
 ## Verification and known baseline
 
+Before completing the subject-assignment persistence transfer, DEBT-046 requires
+the owner-approved atomic last privileged role-holder protection. The existing
+safety helper is not connected to revocation. Two isolated probes reproduced
+successful sole-holder removal. See [approved security scope](../audits/D3_4_LAST_ADMIN_REVOCATION_REVIEW.md).
+The corrective implementation and permanent DB/HTTP/concurrency tests remain open.
+
 IAM role persistence is isolated through a private port and adapter; safety
 rules and response behavior remain unchanged. Fifteen service/DB tests and five
 real authorization/role E2E cases pass. The reviewed inventory is now 141 after

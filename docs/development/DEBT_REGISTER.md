@@ -281,6 +281,26 @@ correct cleanup and explicit view-count contract acceptance before correcting
 assertions. Do not weaken DB protections, extend timeouts blindly, or call the
 full E2E gate green. No out-of-scope implementation is included here.
 
+### DEBT-046 — Last privileged role-holder removal is unguarded (High, OPEN, D3.4)
+
+At `a9c5596`, UserAccessService.revokeRole does not invoke the existing
+last-administrator safety helper or count other holders. Two isolated service
+probes expecting denial for a sole `admin` or `super_admin` assignment instead
+resolved with an empty access summary. This is controlled service-level runtime
+evidence, not a production incident or real DB/API reproduction. The endpoint
+requires `roles.update`; an authorized destructive action can remove the last
+protected assignment. No claim of anonymous access or unavoidable total lockout
+is made.
+
+The owner approved a separate corrective D3.4 package: atomic current role and
+assignment validation/count/removal under a role lock, deterministic concurrent
+revocation tests and HTTP regressions, preserving successful response shapes.
+Keep the safety rule in application policy and transactions in IAM infrastructure.
+Do not add a racy count-before-delete check. Broader usable-administrator paths
+remain an explicit acceptance concern, not automatically fixed by role counts.
+See [review and approved scope](../audits/D3_4_LAST_ADMIN_REVOCATION_REVIEW.md).
+Approval is not implementation or quality acceptance.
+
 Every new entry should include evidence, impact, proposed ownership and a clear
 decision before implementation. Discovery is not permission to expand the
 current package silently.
