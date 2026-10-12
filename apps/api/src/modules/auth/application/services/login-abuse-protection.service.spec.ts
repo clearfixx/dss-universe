@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/modules/auth/application/services/login-abuse-protection.service.spec.ts
  *
  * 🎯 Purpose:
- * Verifies fail-closed throttling, private keys and owned persistence delegation.
+ * Verifies throttling policy, fail-closed ordering and owned persistence delegation.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -15,9 +15,12 @@ import { LoginRateLimitedException } from '../../domain/exceptions/login-rate-li
 import { LoginAbuseProtectionService } from './login-abuse-protection.service';
 
 describe('LoginAbuseProtectionService', () => {
-  const redis = { exists: jest.fn(), eval: jest.fn(), del: jest.fn() };
+  const counters = {
+    isBlocked: jest.fn(),
+    recordFailure: jest.fn(),
+    clearIdentity: jest.fn(),
+  };
   const config = {
-    getOrThrow: jest.fn().mockReturnValue('refresh-secret'),
     get: jest.fn(
       (key: string) =>
         ({
@@ -31,21 +34,21 @@ describe('LoginAbuseProtectionService', () => {
   const attempts = { recordFailure: jest.fn(), recordSuccess: jest.fn() };
   const securityAlerts = { notify: jest.fn() };
   const service = new LoginAbuseProtectionService(
-    redis as never,
+    counters,
     config as never,
     attempts,
     securityAlerts as never,
   );
   beforeEach(() => {
     jest.clearAllMocks();
-    redis.exists.mockResolvedValue(0);
-    redis.eval.mockResolvedValue(1);
-    redis.del.mockResolvedValue(1);
+    counters.isBlocked.mockResolvedValue(false);
+    counters.recordFailure.mockResolvedValue(undefined);
+    counters.clearIdentity.mockResolvedValue(undefined);
     attempts.recordFailure.mockResolvedValue(null);
     attempts.recordSuccess.mockResolvedValue(undefined);
   });
   it('rejects a Redis-blocked identity before credential verification', async () => {
-    redis.exists.mockResolvedValueOnce(1);
+    counters.isBlocked.mockResolvedValueOnce(true);
     await expect(
       service.assertAllowed('astro@dss.test', '127.0.0.1'),
     ).rejects.toBeInstanceOf(LoginRateLimitedException);
@@ -59,7 +62,9 @@ describe('LoginAbuseProtectionService', () => {
     ).rejects.toBeInstanceOf(LoginRateLimitedException);
   });
   it('fails closed on unavailable Redis before durable writes', async () => {
-    redis.eval.mockRejectedValueOnce(new Error('Redis unavailable'));
+    counters.recordFailure.mockRejectedValueOnce(
+      new Error('Redis unavailable'),
+    );
     await expect(
       service.recordFailure(
         'astro@dss.test',
@@ -88,20 +93,29 @@ describe('LoginAbuseProtectionService', () => {
       'ACCOUNT_LOCKED',
       'current@dss.test',
     );
-    expect(JSON.stringify(redis.eval.mock.calls)).not.toContain(
+    expect(counters.recordFailure).toHaveBeenCalledWith(
+      'identity',
       'astro@dss.test',
+      {
+        failureLimit: 5,
+        windowMs: 900_000,
+        lockMs: 900_000,
+      },
     );
-    expect(JSON.stringify(redis.eval.mock.calls)).not.toContain('127.0.0.1');
-    expect((redis.eval.mock.calls[0] as unknown[]).slice(-3)).toEqual([
-      900_000, 5, 900_000,
-    ]);
-    expect((redis.eval.mock.calls[1] as unknown[]).slice(-3)).toEqual([
-      900_000, 30, 900_000,
-    ]);
+    expect(counters.recordFailure).toHaveBeenCalledWith('ip', '127.0.0.1', {
+      failureLimit: 30,
+      windowMs: 900_000,
+      lockMs: 900_000,
+    });
   });
   it('counts unknown accounts only in Redis without durable writes or notifications', async () => {
     await service.recordFailure('unknown@dss.test', undefined, null, {});
-    expect(redis.eval).toHaveBeenCalledTimes(2);
+    expect(counters.recordFailure).toHaveBeenCalledTimes(2);
+    expect(counters.recordFailure).toHaveBeenCalledWith(
+      'ip',
+      'unknown',
+      expect.any(Object),
+    );
     expect(attempts.recordFailure).not.toHaveBeenCalled();
     expect(securityAlerts.notify).not.toHaveBeenCalled();
   });
@@ -118,15 +132,27 @@ describe('LoginAbuseProtectionService', () => {
       { id: 'subject' },
       { ipAddress: '127.0.0.1' },
     );
-    expect(redis.del).toHaveBeenCalledTimes(2);
-    expect(
-      redis.del.mock.calls.every(([key]: [string]) =>
-        key.includes(':identity:'),
-      ),
-    ).toBe(true);
+    expect(counters.clearIdentity).toHaveBeenCalledTimes(1);
+    expect(counters.clearIdentity).toHaveBeenCalledWith('astro@dss.test');
     expect(attempts.recordSuccess).toHaveBeenCalledWith('subject', {
       ipAddress: '127.0.0.1',
       userAgent: undefined,
     });
+  });
+  it('propagates block-read failure before allowing authentication', async () => {
+    counters.isBlocked.mockRejectedValueOnce(new Error('Redis unavailable'));
+    await expect(
+      service.assertAllowed('astro@dss.test', undefined),
+    ).rejects.toThrow('Redis unavailable');
+    expect(counters.isBlocked).toHaveBeenCalledWith('ip', 'unknown');
+  });
+  it('does not persist success when clearing identity accounting fails', async () => {
+    counters.clearIdentity.mockRejectedValueOnce(
+      new Error('Redis unavailable'),
+    );
+    await expect(
+      service.recordSuccess('astro@dss.test', { id: 'subject' }, {}),
+    ).rejects.toThrow('Redis unavailable');
+    expect(attempts.recordSuccess).not.toHaveBeenCalled();
   });
 });

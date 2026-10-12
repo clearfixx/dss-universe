@@ -5,6 +5,15 @@
 
 ## Latest increment
 
+[D3.3 login-abuse counter](D3_3_LOGIN_ABUSE_COUNTER.md) moves the final Auth
+application Redis commands behind a private capability. Existing keys, thresholds,
+expiry and identity-only reset are preserved. Uncached units pass: API 465 with
+DB/Redis opt-ins, Web 59, Worker 36; four selected real E2E pass. Lint, typecheck,
+Prisma and build pass; the frozen architecture inventory remains 144. IAM/public
+contracts and full release acceptance remain open.
+
+## Earlier increment
+
 [D3.3 recovery/verification rate limits](D3_3_RECOVERY_VERIFICATION_RATE_LIMITS.md)
 move Redis keys, Lua and HMAC into private adapters behind separate Auth capabilities.
 Fixed-window TTL and namespace compatibility are proved in real Redis. Full

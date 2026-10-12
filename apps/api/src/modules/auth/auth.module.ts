@@ -73,6 +73,8 @@ import { RECOVERY_RATE_LIMIT } from './domain/contracts/recovery-rate-limit.inte
 import { VERIFICATION_RATE_LIMIT } from './domain/contracts/verification-rate-limit.interface';
 import { RedisRecoveryRateLimit } from './infrastructure/rate-limits/redis-recovery-rate-limit';
 import { RedisVerificationRateLimit } from './infrastructure/rate-limits/redis-verification-rate-limit';
+import { LOGIN_ABUSE_COUNTER } from './domain/contracts/login-abuse-counter.interface';
+import { RedisLoginAbuseCounter } from './infrastructure/rate-limits/redis-login-abuse-counter';
 import { TotpService } from './application/services/totp.service';
 import { TwoFactorService } from './application/services/two-factor.service';
 import { TWO_FACTOR_REPOSITORY } from './domain/repositories/two-factor.repository.interface';
@@ -125,6 +127,7 @@ import { PrismaAccountCredentialsRepository } from './infrastructure/repositorie
     },
     EmailVerificationResolver,
     LoginAbuseProtectionService,
+    { provide: LOGIN_ABUSE_COUNTER, useClass: RedisLoginAbuseCounter },
     { provide: LOGIN_ABUSE_REPOSITORY, useClass: PrismaLoginAbuseRepository },
     SecurityAlertService,
     { provide: SECURITY_ALERT_DELIVERY, useClass: BullmqSecurityAlertDelivery },

@@ -81,7 +81,9 @@ Verification now uses an owned persistence port for minimal pending-destination
 reads and atomic consumption/audit. 2FA likewise uses an owned port for credential
 reads and locked state/audit transitions. Recovery/verification attempt budgets
 use separate private capabilities; Redis adapters own compatible HMAC keys and
-fixed TTL. Login-abuse Redis isolation remains D3.3 work.
+fixed TTL. Login-abuse counters also use a private capability; its adapter preserves
+fixed counter expiry, renewable blocks and identity-only success reset. Thresholds
+and SQL ordering stay in application orchestration.
 All Auth application delivery now uses separate owned capabilities for
 recovery, verification and alerts; only infrastructure receives the broad queue
 registry. Explicit recovery/resend failures propagate; registration mail remains

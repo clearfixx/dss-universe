@@ -38,11 +38,12 @@ No dependency, migration, JWT, generated schema or frontend changes.
 | --------------------------- | --------------------------------- | -------------------------------------------------------------- |
 | PasswordRecoveryService     | Private delivery/rate-limit ports | Both isolated subsequently                                     |
 | EmailVerificationService    | Private delivery/rate-limit ports | Both isolated subsequently                                     |
-| LoginAbuseProtectionService | Redis Lua/private keys            | Owned abuse-counter capability preserving failure policy       |
+| LoginAbuseProtectionService | Private counter port              | Isolated subsequently; failure policy preserved                |
 | SecurityAlertService        | Private delivery port             | Implemented here; worker lifecycle/retention is not redesigned |
 
 See [subsequent delivery evidence](D3_3_RECOVERY_VERIFICATION_DELIVERY.md).
 See [subsequent rate-limit evidence](D3_3_RECOVERY_VERIFICATION_RATE_LIMITS.md).
+See [subsequent login-counter evidence](D3_3_LOGIN_ABUSE_COUNTER.md).
 Do not claim D3.3 closed from this increment. The approved DEBT-042 correction is
 implemented separately; broader D3.4 IAM acceptance and later debt packages remain open. Full CI/release acceptance is
 not implied by the selected regressions.

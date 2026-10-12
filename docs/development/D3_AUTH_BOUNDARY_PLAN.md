@@ -70,7 +70,9 @@ Recovery/verification delivery is now isolated through separate owned capabiliti
 see [queue boundary evidence](../audits/D3_3_RECOVERY_VERIFICATION_DELIVERY.md).
 Recovery/verification counters now use owned attempt-budget capabilities; see
 [Redis evidence](../audits/D3_3_RECOVERY_VERIFICATION_RATE_LIMITS.md).
-Login-abuse Redis counters remain D3.3 work.
+Login-abuse Redis counters now use a private owned capability; see
+[login counter evidence](../audits/D3_3_LOGIN_ABUSE_COUNTER.md).
+IAM/public-contract review and broader D3 acceptance remain open.
 
 - The JWT strategy sees subject ID, session ID and auth version for eligibility.
 - Each request reads authoritative state; no positive security cache.
