@@ -12,7 +12,7 @@
  * ===============================================================
  */
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import type { PrismaService } from '@api/core/database';
+import type { SubjectAccessRepository } from './contracts/subject-access.repository.interface';
 import { IamSafetyService } from '../safety';
 import type {
   RoleRevocationRepository,
@@ -26,9 +26,22 @@ describe('UserAccessService atomic role revocation', () => {
     count = 1,
     result: RoleRevocationResult = 'revoked',
   ) {
-    const findUnique = jest
-      .fn()
-      .mockResolvedValue({ id: 'subject', roles: [], directPermissions: [] });
+    const findAssignments = jest.fn().mockResolvedValue({
+      subjectId: 'subject',
+      roles: [],
+      directPermissions: [],
+    });
+    const access = {
+      findAssignments,
+      subjectExists: jest.fn(),
+      roleExists: jest.fn(),
+      permissionExists: jest.fn(),
+      hasRole: jest.fn(),
+      grantRole: jest.fn(),
+      hasDirectPermission: jest.fn(),
+      grantPermission: jest.fn(),
+      revokePermission: jest.fn(),
+    } satisfies jest.Mocked<SubjectAccessRepository>;
     const repository = {
       revoke: jest.fn(
         (
@@ -43,20 +56,20 @@ describe('UserAccessService atomic role revocation', () => {
       ),
     } satisfies RoleRevocationRepository;
     const service = new UserAccessService(
-      { user: { findUnique } } as unknown as PrismaService,
+      access,
       repository,
       new IamSafetyService(),
     );
-    return { service, findUnique, repository };
+    return { service, findAssignments, repository };
   }
   it.each(['admin', 'super_admin', ' ADMIN '])(
     'denies the sole %s holder without reading a success summary',
     async (name) => {
-      const { service, findUnique } = fixture(name);
+      const { service, findAssignments } = fixture(name);
       await expect(
         service.revokeRole('subject', 'role'),
       ).rejects.toBeInstanceOf(BadRequestException);
-      expect(findUnique).not.toHaveBeenCalled();
+      expect(findAssignments).not.toHaveBeenCalled();
     },
   );
   it.each([
@@ -82,20 +95,20 @@ describe('UserAccessService atomic role revocation', () => {
     'role-not-found',
     'assignment-not-found',
   ] as const)('preserves %s denial', async (result) => {
-    const { service, findUnique } = fixture('admin', 2, result);
+    const { service, findAssignments } = fixture('admin', 2, result);
     await expect(service.revokeRole('subject', 'role')).rejects.toBeInstanceOf(
       NotFoundException,
     );
-    expect(findUnique).not.toHaveBeenCalled();
+    expect(findAssignments).not.toHaveBeenCalled();
   });
   it('propagates failed persistence without returning a success summary', async () => {
-    const { service, repository, findUnique } = fixture();
+    const { service, repository, findAssignments } = fixture();
     repository.revoke.mockRejectedValue(
       new Error('synthetic persistence failure'),
     );
     await expect(service.revokeRole('subject', 'role')).rejects.toThrow(
       'synthetic persistence failure',
     );
-    expect(findUnique).not.toHaveBeenCalled();
+    expect(findAssignments).not.toHaveBeenCalled();
   });
 });

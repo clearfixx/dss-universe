@@ -349,13 +349,6 @@
       "package": "D4"
     },
     {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/iam/user-access/user-access.service.ts\",\"@api/core/database\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/iam/user-access/user-access.service.ts",
-      "detail": "@api/core/database",
-      "package": "D3"
-    },
-    {
       "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/interactions/application/services/interaction-target-writer.service.ts\",\"@api/core/database\"]",
       "rule": "persistence-outside-infrastructure",
       "file": "apps/api/src/modules/interactions/application/services/interaction-target-writer.service.ts",

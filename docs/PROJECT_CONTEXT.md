@@ -38,7 +38,9 @@ See [review](audits/D3_4_LAST_ADMIN_REVOCATION_REVIEW.md).
 D3.4 now refreshes current request roles/permissions after session validation;
 same-token REST/GraphQL revocation and fail-closed authority errors are covered.
 DEBT-043 is implemented pending review. IAM role persistence is now isolated;
-subject assignment persistence remains. Reviewed architecture inventory is 141.
+subject assignment persistence is also isolated, preserving protected revocation.
+Reviewed architecture inventory is 140. Public contracts and D3 acceptance remain.
+See [assignment evidence](audits/D3_4_IAM_SUBJECT_ASSIGNMENT_PERSISTENCE.md).
 See [role boundary evidence](audits/D3_4_IAM_ROLE_PERSISTENCE.md).
 Full API E2E is not green: fixture contamination and News cleanup/assertion drift
 are DEBT-045. See [access evidence](audits/D3_4_AUTHORITATIVE_REQUEST_ACCESS.md).

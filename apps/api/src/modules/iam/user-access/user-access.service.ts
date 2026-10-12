@@ -44,9 +44,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-
-import { PrismaService } from '@api/core/database';
-
 import type { GrantUserPermissionDto } from './dto/grant-user-permission.dto';
 import type { GrantUserRoleDto } from './dto/grant-user-role.dto';
 import type { UserAccessSummary } from './types/user-access-summary.type';
@@ -55,80 +52,37 @@ import {
   IAM_ROLE_REVOCATION_REPOSITORY,
   type RoleRevocationRepository,
 } from './contracts/role-revocation.repository.interface';
+import {
+  IAM_SUBJECT_ACCESS_REPOSITORY,
+  type SubjectAccessRepository,
+} from './contracts/subject-access.repository.interface';
 
 @Injectable()
 export class UserAccessService {
   constructor(
-    private readonly prisma: PrismaService,
+    @Inject(IAM_SUBJECT_ACCESS_REPOSITORY)
+    private readonly access: SubjectAccessRepository,
     @Inject(IAM_ROLE_REVOCATION_REPOSITORY)
     private readonly roleRevocations: RoleRevocationRepository,
     private readonly safety: IamSafetyService,
   ) {}
 
   async getSummary(userId: string): Promise<UserAccessSummary> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        roles: {
-          select: {
-            role: {
-              select: {
-                id: true,
-                name: true,
-                permissions: {
-                  select: {
-                    permission: {
-                      select: {
-                        key: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-          orderBy: {
-            assignedAt: 'asc',
-          },
-        },
-        directPermissions: {
-          select: {
-            permission: {
-              select: {
-                id: true,
-                key: true,
-              },
-            },
-          },
-          orderBy: {
-            assignedAt: 'asc',
-          },
-        },
-      },
-    });
-
-    if (!user) {
+    const assignments = await this.access.findAssignments(userId);
+    if (!assignments)
       throw new NotFoundException(`User with id "${userId}" was not found.`);
-    }
-
-    const rolePermissions = user.roles.flatMap(({ role }) =>
-      role.permissions.map(({ permission }) => permission.key),
+    const rolePermissions = assignments.roles.flatMap(
+      ({ permissionKeys }) => permissionKeys,
     );
-
-    const directPermissionKeys = user.directPermissions.map(
-      ({ permission }) => permission.key,
+    const directPermissionKeys = assignments.directPermissions.map(
+      ({ key }) => key,
     );
-
     return {
-      userId: user.id,
-      roles: user.roles.map(({ role }) => ({
-        id: role.id,
-        name: role.name,
-      })),
-      directPermissions: user.directPermissions.map(({ permission }) => ({
-        id: permission.id,
-        name: permission.key,
+      userId: assignments.subjectId,
+      roles: assignments.roles.map(({ id, name }) => ({ id, name })),
+      directPermissions: assignments.directPermissions.map(({ id, key }) => ({
+        id,
+        name: key,
       })),
       effectivePermissions: Array.from(
         new Set<string>([...rolePermissions, ...directPermissionKeys]),
@@ -142,30 +96,10 @@ export class UserAccessService {
   ): Promise<UserAccessSummary> {
     await this.assertUserExists(userId);
     await this.assertRoleExists(dto.roleId);
-
-    const existingAssignment = await this.prisma.userRole.findUnique({
-      where: {
-        userId_roleId: {
-          userId,
-          roleId: dto.roleId,
-        },
-      },
-      select: {
-        userId: true,
-      },
-    });
-
-    if (existingAssignment) {
+    if (await this.access.hasRole(userId, dto.roleId)) {
       throw new ConflictException('Role is already assigned to this user.');
     }
-
-    await this.prisma.userRole.create({
-      data: {
-        userId,
-        roleId: dto.roleId,
-      },
-    });
-
+    await this.access.grantRole(userId, dto.roleId);
     return this.getSummary(userId);
   }
 
@@ -196,32 +130,12 @@ export class UserAccessService {
   ): Promise<UserAccessSummary> {
     await this.assertUserExists(userId);
     await this.assertPermissionExists(dto.permissionId);
-
-    const existingAssignment = await this.prisma.userPermission.findUnique({
-      where: {
-        userId_permissionId: {
-          userId,
-          permissionId: dto.permissionId,
-        },
-      },
-      select: {
-        userId: true,
-      },
-    });
-
-    if (existingAssignment) {
+    if (await this.access.hasDirectPermission(userId, dto.permissionId)) {
       throw new ConflictException(
         'Permission is already directly assigned to this user.',
       );
     }
-
-    await this.prisma.userPermission.create({
-      data: {
-        userId,
-        permissionId: dto.permissionId,
-      },
-    });
-
+    await this.access.grantPermission(userId, dto.permissionId);
     return this.getSummary(userId);
   }
 
@@ -231,69 +145,27 @@ export class UserAccessService {
   ): Promise<UserAccessSummary> {
     await this.assertUserExists(userId);
     await this.assertPermissionExists(permissionId);
-
-    const existingAssignment = await this.prisma.userPermission.findUnique({
-      where: {
-        userId_permissionId: {
-          userId,
-          permissionId,
-        },
-      },
-      select: {
-        userId: true,
-      },
-    });
-
-    if (!existingAssignment) {
+    if (!(await this.access.hasDirectPermission(userId, permissionId))) {
       throw new NotFoundException(
         'Direct permission assignment was not found.',
       );
     }
-
-    await this.prisma.userPermission.delete({
-      where: {
-        userId_permissionId: {
-          userId,
-          permissionId,
-        },
-      },
-    });
-
+    await this.access.revokePermission(userId, permissionId);
     return this.getSummary(userId);
   }
 
   private async assertUserExists(userId: string): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true },
-    });
-
-    if (!user) {
+    if (!(await this.access.subjectExists(userId)))
       throw new NotFoundException(`User with id "${userId}" was not found.`);
-    }
   }
-
   private async assertRoleExists(roleId: string): Promise<void> {
-    const role = await this.prisma.role.findUnique({
-      where: { id: roleId },
-      select: { id: true },
-    });
-
-    if (!role) {
+    if (!(await this.access.roleExists(roleId)))
       throw new NotFoundException(`Role with id "${roleId}" was not found.`);
-    }
   }
-
   private async assertPermissionExists(permissionId: string): Promise<void> {
-    const permission = await this.prisma.permission.findUnique({
-      where: { id: permissionId },
-      select: { id: true },
-    });
-
-    if (!permission) {
+    if (!(await this.access.permissionExists(permissionId)))
       throw new NotFoundException(
         `Permission with id "${permissionId}" was not found.`,
       );
-    }
   }
 }

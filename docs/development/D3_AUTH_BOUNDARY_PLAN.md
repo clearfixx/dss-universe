@@ -92,6 +92,13 @@ access decisions need a separate D3.4 security increment before acceptance.
 
 ## Verification and known baseline
 
+Subject-assignment persistence is now isolated behind a private IAM repository;
+the service owns summary/union policy and retains the separate protected role
+revocation capability. API 524 units and eight real authorization E2E pass.
+Exactly one resolved database import was removed: reviewed inventory is 140.
+Public contracts, usable-administrator lifecycle and D3 acceptance remain open.
+See [assignment evidence](../audits/D3_4_IAM_SUBJECT_ASSIGNMENT_PERSISTENCE.md).
+
 DEBT-046's approved last privileged role-holder protection is now implemented
 through a private role-locked IAM capability and existing application policy.
 Seventeen service/DB tests and seven HTTP/GraphQL E2E cases pass, including actual

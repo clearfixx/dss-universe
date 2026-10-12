@@ -134,6 +134,7 @@ describe('authoritative request access (e2e)', () => {
     const manager = await register();
     for (const key of [
       'permissions.manage',
+      'users.read',
       'roles.create',
       'roles.read',
       'roles.update',
@@ -172,6 +173,92 @@ describe('authoritative request access (e2e)', () => {
       await prisma.user.deleteMany({ where: { id: { in: subjects } } });
     }
     await app?.close();
+  });
+
+  it('preserves subject summaries, direct/role overlap, errors and guard denial', async () => {
+    const subject = await register();
+    const denied = await register();
+    await prisma.userRole.deleteMany({ where: { userId: denied.user.id } });
+    await prisma.userPermission.deleteMany({
+      where: { userId: denied.user.id },
+    });
+    const path = `/api/iam/user-access/${subject.user.id}`;
+    await request(app.getHttpServer()).get(path).expect(401);
+    await request(app.getHttpServer())
+      .get(path)
+      .set('Authorization', `Bearer ${denied.tokens.accessToken}`)
+      .expect(403);
+    await request(app.getHttpServer())
+      .post(`${path}/permissions`)
+      .set('Authorization', `Bearer ${denied.tokens.accessToken}`)
+      .send({ permissionId: probePermissionId })
+      .expect(403);
+    expect(
+      await prisma.userPermission.count({
+        where: { userId: subject.user.id, permissionId: probePermissionId },
+      }),
+    ).toBe(0);
+    const summary = await request(app.getHttpServer())
+      .get(path)
+      .set('Authorization', `Bearer ${managerToken}`)
+      .expect(200);
+    expect(Object.keys(summary.body as object).sort()).toEqual(
+      ['userId', 'roles', 'directPermissions', 'effectivePermissions'].sort(),
+    );
+    const role = await prisma.role.create({
+      data: {
+        name: `${probeRoleName}-summary`,
+        label: 'Summary role',
+        permissions: { create: { permissionId: probePermissionId } },
+      },
+    });
+    roles.push(role.id);
+    await manage('post', `user-access/${subject.user.id}/roles`)
+      .send({ roleId: role.id })
+      .expect(201);
+    await manage('post', `user-access/${subject.user.id}/roles`)
+      .send({ roleId: role.id })
+      .expect(409);
+    const direct = await manage(
+      'post',
+      `user-access/${subject.user.id}/permissions`,
+    )
+      .send({ permissionId: probePermissionId })
+      .expect(201);
+    expect(
+      (
+        direct.body as { effectivePermissions: string[] }
+      ).effectivePermissions.filter((key) => key === probePermissionKey),
+    ).toHaveLength(1);
+    await manage('post', `user-access/${subject.user.id}/permissions`)
+      .send({ permissionId: probePermissionId })
+      .expect(409);
+    const withoutDirect = await manage(
+      'delete',
+      `user-access/${subject.user.id}/permissions/${probePermissionId}`,
+    ).expect(200);
+    expect(
+      (withoutDirect.body as { effectivePermissions: string[] })
+        .effectivePermissions,
+    ).toContain(probePermissionKey);
+    const withoutRole = await manage(
+      'delete',
+      `user-access/${subject.user.id}/roles/${role.id}`,
+    ).expect(200);
+    expect(
+      (withoutRole.body as { effectivePermissions: string[] })
+        .effectivePermissions,
+    ).not.toContain(probePermissionKey);
+    await manage(
+      'delete',
+      `user-access/${subject.user.id}/permissions/${probePermissionId}`,
+    ).expect(404);
+    await manage('post', `user-access/${subject.user.id}/permissions`)
+      .send({ permissionId: randomUUID() })
+      .expect(404);
+    await manage('post', `user-access/${randomUUID()}/roles`)
+      .send({ roleId: role.id })
+      .expect(404);
   });
 
   it.each(['admin', 'super_admin'])(
