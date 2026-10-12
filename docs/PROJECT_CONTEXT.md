@@ -29,9 +29,10 @@ approved ADRs or recorded owner decisions.
 
 ## Current position
 
-DEBT-046 is a newly confirmed IAM safety gap: revocation does not protect the
-last `admin`/`super_admin` assignment. The owner approved a separate atomic
-correction with concurrency and HTTP tests; it is not implemented yet.
+DEBT-046's approved correction now protects the last `admin`/`super_admin`
+assignment during IAM revocation using a role-locked transaction and existing
+application safety policy. Deterministic DB concurrency and HTTP tests pass;
+review and broader usable-administrator lifecycle acceptance remain open.
 See [review](audits/D3_4_LAST_ADMIN_REVOCATION_REVIEW.md).
 
 D3.4 now refreshes current request roles/permissions after session validation;

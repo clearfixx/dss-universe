@@ -41,6 +41,8 @@ import { IAM_PERMISSION_REPOSITORY } from './permissions/contracts/permission.re
 import { PrismaPermissionRepository } from './infrastructure/repositories/prisma-permission.repository';
 import { IAM_ROLE_REPOSITORY } from './roles/contracts/role.repository.interface';
 import { PrismaRoleRepository } from './infrastructure/repositories/prisma-role.repository';
+import { IAM_ROLE_REVOCATION_REPOSITORY } from './user-access/contracts/role-revocation.repository.interface';
+import { PrismaRoleRevocationRepository } from './infrastructure/repositories/prisma-role-revocation.repository';
 
 @Module({
   imports: [PrismaModule],
@@ -54,6 +56,10 @@ import { PrismaRoleRepository } from './infrastructure/repositories/prisma-role.
       useClass: PrismaPermissionRepository,
     },
     UserAccessService,
+    {
+      provide: IAM_ROLE_REVOCATION_REPOSITORY,
+      useClass: PrismaRoleRevocationRepository,
+    },
     IamSafetyService,
   ],
   exports: [

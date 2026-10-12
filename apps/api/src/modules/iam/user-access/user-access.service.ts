@@ -3,7 +3,7 @@
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
  * 🛡️ Module: IAM User Access
- * 📄 File: user-access.service.ts
+ * 📄 File: apps/api/src/modules/iam/user-access/user-access.service.ts
  *
  * 🎯 Purpose:
  * Coordinates user role and direct permission assignments.
@@ -15,6 +15,7 @@
  * • grants direct permissions to users;
  * • revokes direct permissions from users;
  * • calculates effective permissions.
+ * • delegates role revocation to an atomic, policy-checked persistence capability.
  *
  * 🏗️ Architecture:
  * IAM business service.
@@ -27,6 +28,7 @@
  *
  * ⚠️ Important:
  * Effective permissions combine role permissions and direct permissions.
+ * Role revocation checks the final protected holder inside the owned transaction.
  *
  * 💡 Notes:
  * This service answers:
@@ -38,6 +40,7 @@
 
 import {
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -47,10 +50,20 @@ import { PrismaService } from '@api/core/database';
 import type { GrantUserPermissionDto } from './dto/grant-user-permission.dto';
 import type { GrantUserRoleDto } from './dto/grant-user-role.dto';
 import type { UserAccessSummary } from './types/user-access-summary.type';
+import { IamSafetyService } from '../safety';
+import {
+  IAM_ROLE_REVOCATION_REPOSITORY,
+  type RoleRevocationRepository,
+} from './contracts/role-revocation.repository.interface';
 
 @Injectable()
 export class UserAccessService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(IAM_ROLE_REVOCATION_REPOSITORY)
+    private readonly roleRevocations: RoleRevocationRepository,
+    private readonly safety: IamSafetyService,
+  ) {}
 
   async getSummary(userId: string): Promise<UserAccessSummary> {
     const user = await this.prisma.user.findUnique({
@@ -157,34 +170,23 @@ export class UserAccessService {
   }
 
   async revokeRole(userId: string, roleId: string): Promise<UserAccessSummary> {
-    await this.assertUserExists(userId);
-    await this.assertRoleExists(roleId);
-
-    const existingAssignment = await this.prisma.userRole.findUnique({
-      where: {
-        userId_roleId: {
-          userId,
-          roleId,
-        },
+    const result = await this.roleRevocations.revoke(
+      userId,
+      roleId,
+      (state) => {
+        this.safety.assertLastAdminRoleIsNotRemoved(state);
+        return undefined;
       },
-      select: {
-        userId: true,
-      },
-    });
-
-    if (!existingAssignment) {
+    );
+    if (result === 'subject-not-found') {
+      throw new NotFoundException(`User with id "${userId}" was not found.`);
+    }
+    if (result === 'role-not-found') {
+      throw new NotFoundException(`Role with id "${roleId}" was not found.`);
+    }
+    if (result === 'assignment-not-found') {
       throw new NotFoundException('Role assignment was not found.');
     }
-
-    await this.prisma.userRole.delete({
-      where: {
-        userId_roleId: {
-          userId,
-          roleId,
-        },
-      },
-    });
-
     return this.getSummary(userId);
   }
 

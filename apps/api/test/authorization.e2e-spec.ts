@@ -174,6 +174,68 @@ describe('authoritative request access (e2e)', () => {
     await app?.close();
   });
 
+  it.each(['admin', 'super_admin'])(
+    'protects the final normalized %s assignment through HTTP',
+    async (name) => {
+      const first = await register();
+      const second = await register();
+      // Whitespace is unique to this run but normalizes to the protected role name.
+      // Never mutate the shared seeded administrative roles or their holders.
+      const suffix = [...runId]
+        .map((character) =>
+          character
+            .charCodeAt(0)
+            .toString(2)
+            .replaceAll('0', ' ')
+            .replaceAll('1', '\t'),
+        )
+        .join('');
+      const role = await prisma.role.create({
+        data: {
+          name: `${name}${suffix}`,
+          label: 'Owned privileged fixture',
+          isSystem: true,
+        },
+      });
+      roles.push(role.id);
+      await manage('post', `user-access/${first.user.id}/roles`)
+        .send({ roleId: role.id })
+        .expect(201);
+      await manage(
+        'delete',
+        `user-access/${first.user.id}/roles/${role.id}`,
+      ).expect(400);
+      expect(await prisma.userRole.count({ where: { roleId: role.id } })).toBe(
+        1,
+      );
+      await manage('post', `user-access/${second.user.id}/roles`)
+        .send({ roleId: role.id })
+        .expect(201);
+      const removed = await manage(
+        'delete',
+        `user-access/${first.user.id}/roles/${role.id}`,
+      ).expect(200);
+      expect(Object.keys(removed.body as object).sort()).toEqual(
+        ['userId', 'roles', 'directPermissions', 'effectivePermissions'].sort(),
+      );
+      expect(removed.body).toMatchObject({ userId: first.user.id });
+      await manage(
+        'delete',
+        `user-access/${first.user.id}/roles/${role.id}`,
+      ).expect(404);
+      await manage(
+        'delete',
+        `user-access/${second.user.id}/roles/${role.id}`,
+      ).expect(400);
+      expect(
+        await prisma.userRole.findMany({
+          where: { roleId: role.id },
+          select: { userId: true },
+        }),
+      ).toEqual([{ userId: second.user.id }]);
+    },
+  );
+
   it('preserves protected role CRUD, assignment errors and response fields through HTTP', async () => {
     const name = `${probeRoleName}-crud`;
     await request(app.getHttpServer())
