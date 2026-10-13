@@ -29,6 +29,11 @@ approved ADRs or recorded owner decisions.
 
 ## Current position
 
+Administrator-availability acceptance review records DEBT-047: assignment counts
+do not prove eligible recovery-capable administration. Self-deactivation and
+critical permission mutation need a separately agreed cross-owner policy. No
+runtime correction is included. See [review](audits/D3_4_ADMINISTRATOR_AVAILABILITY_REVIEW.md).
+
 DEBT-046's approved correction now protects the last `admin`/`super_admin`
 assignment during IAM revocation using a role-locked transaction and existing
 application safety policy. Deterministic DB concurrency and HTTP tests pass;

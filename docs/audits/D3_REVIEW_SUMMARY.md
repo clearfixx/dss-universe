@@ -22,6 +22,10 @@ IAM revocation now protects the final admin/super_admin assignment through a
 role-locked READ COMMITTED transaction and existing application safety policy
 (DEBT-046). Real DB lock barriers and HTTP tests cover denial, competing removals
 and rollback. Broader usable-administrator lifecycle acceptance remains open.
+Static review now records DEBT-047: inactive holders still count, self-deactivation
+has no availability policy, and critical permission changes need agreed recovery
+capabilities. No broader correction is claimed. See
+[availability review](D3_4_ADMINISTRATOR_AVAILABILITY_REVIEW.md).
 
 Authenticated requests now read current roles and permissions through narrow
 consumer ports joined in root composition. Revoked JWT grants cannot authorize

@@ -92,6 +92,13 @@ access decisions need a separate D3.4 security increment before acceptance.
 
 ## Verification and known baseline
 
+Administrator-availability review at `c9659e0` identifies DEBT-047: protected
+assignment count does not ensure eligible recovery-capable administration.
+Self-deactivation and critical permission changes need a separately agreed
+cross-owner policy, not an Auth-to-IAM dependency. Static evidence and proposed
+acceptance tests are in [review](../audits/D3_4_ADMINISTRATOR_AVAILABILITY_REVIEW.md).
+No corrective runtime implementation is included; D3 remains unaccepted.
+
 D3.4 public contract follow-up (2026-10-12): IAM exports only assembly and
 registration policy, with no concrete Nest provider exports. Auth assembly uses
 its named public root. API 525 units, Web 59, Worker 36, 10 Authorization/Audit

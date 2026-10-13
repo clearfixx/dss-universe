@@ -307,6 +307,26 @@ both privileged roles. See the report's implementation section for exact gates.
 This protects IAM role revocation, not every path to administrator ineligibility;
 broader acceptance and required CI remain open.
 
+### DEBT-047 — Assignment protection does not ensure administrator availability (High, OPEN / scope approval required, D3.4)
+
+Source review at `c9659e0` found that protected-role revocation counts inactive
+holders, while Auth self-deactivation changes eligibility without consulting an
+availability policy. IAM critical permission rename/delete and role-permission
+revocation also lack such a policy. PermissionsGuard requires actual permission
+keys, so protected role names do not prove recoverable administration. This is
+static call-path evidence, not a reproduced total lockout or irreversible loss;
+self-reactivation exists. UsersService.changeStatus is a latent ownership leak
+with no production caller found, not a demonstrated public bypass.
+
+Proposed ownership: root composition coordinates Auth eligibility and IAM
+assignment commands through narrow contracts; Authorization defines/evaluates
+the agreed recovery capability set. Do not add IAM reads to Auth. Agree that set,
+single-subject versus distributed coverage and shared concurrency boundary
+before implementing. Require deterministic cross-owner DB concurrency, rollback
+and HTTP tests. See [acceptance review](../audits/D3_4_ADMINISTRATOR_AVAILABILITY_REVIEW.md).
+No corrective implementation is authorized by this discovery. DEBT-046 remains
+implemented for its assignment-only scope; D3 acceptance remains open.
+
 Every new entry should include evidence, impact, proposed ownership and a clear
 decision before implementation. Discovery is not permission to expand the
 current package silently.
