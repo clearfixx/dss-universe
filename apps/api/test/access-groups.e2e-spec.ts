@@ -73,6 +73,7 @@ describe('access-group composed HTTP lifecycle (e2e)', () => {
   let prisma: PrismaService;
   let managerToken: string;
   let premiumId: string;
+  let ownedManagementPermissionId: string | undefined;
   const subjects: string[] = [];
   const groupIds: string[] = [];
   const roleIds: string[] = [];
@@ -135,9 +136,15 @@ describe('access-group composed HTTP lifecycle (e2e)', () => {
     prisma = app.get(PrismaService);
     const manager = await register();
     managerToken = manager.tokens.accessToken;
-    const permission = await prisma.permission.findUniqueOrThrow({
+    const existingPermission = await prisma.permission.findUnique({
       where: { key: 'permissions.manage' },
     });
+    const permission =
+      existingPermission ??
+      (await prisma.permission.create({
+        data: { key: 'permissions.manage', label: 'Group management fixture' },
+      }));
+    if (!existingPermission) ownedManagementPermissionId = permission.id;
     await prisma.userPermission.create({
       data: { userId: manager.user.id, permissionId: permission.id },
     });
@@ -154,6 +161,11 @@ describe('access-group composed HTTP lifecycle (e2e)', () => {
         where: { actorId: { in: subjects } },
       });
       await prisma.user.deleteMany({ where: { id: { in: subjects } } });
+      if (ownedManagementPermissionId) {
+        await prisma.permission.delete({
+          where: { id: ownedManagementPermissionId },
+        });
+      }
     }
     await app?.close();
   });

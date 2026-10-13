@@ -3,6 +3,10 @@
 Date: 2026-10-13. Status: IMPLEMENTED / review and full acceptance pending.
 Branch: `debt/d3-5-iam-access-groups`, stacked on `04a9d50` / draft PR #8.
 No parent review branch is merged or represented as an accepted baseline.
+Review artifact: [draft PR #9](https://github.com/clearfixx/dss-universe/pull/9).
+Initial CI at `ccbc6d1`: Dependency audit and Web smoke failed, while quality
+and both containment jobs were still running. These are observed check states,
+not confirmed failure causes; final-head CI remains pending.
 
 ## Delivered scope
 
