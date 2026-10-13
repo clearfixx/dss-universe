@@ -39,6 +39,31 @@ const { createSourceFile, ScriptTarget, isExportDeclaration, isNamedExports } =
 
 for (const [moduleName, expected] of [
   [
+    "editor",
+    [
+      "EditorModule",
+      "EDITOR_DOCUMENT_NORMALIZER",
+      "EditorDocumentNormalizer",
+      "ValidatedEditorDocument",
+      "EDITOR_GATE_DECISIONS",
+      "EditorGateDecisions",
+      "EditorGateDecision",
+      "EditorGateRequirement",
+    ],
+  ],
+  [
+    "content-access",
+    [
+      "ContentAccessModule",
+      "CONTENT_GATE_DECISIONS",
+      "ContentGateDecisions",
+      "ContentGateDecision",
+      "ContentGateRequirementKind",
+      "CONTENT_AUDIENCE_READER",
+      "ContentAudienceReader",
+    ],
+  ],
+  [
     "reputation",
     [
       "ReputationModule",

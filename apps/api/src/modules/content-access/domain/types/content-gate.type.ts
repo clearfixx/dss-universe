@@ -13,18 +13,14 @@
  * ===============================================================
  */
 
+import type { ContentGateRequirementKind } from '../../contracts/content-gate-decisions.contract';
+export {
+  CONTENT_GATE_REQUIREMENT_KINDS,
+  type ContentGateRequirementKind,
+} from '../../contracts/content-gate-decisions.contract';
+
 export const CONTENT_GATE_OPERATORS = ['ALL', 'ANY'] as const;
 export type ContentGateOperator = (typeof CONTENT_GATE_OPERATORS)[number];
-export const CONTENT_GATE_REQUIREMENT_KINDS = [
-  'ACCOUNT_AGE_DAYS',
-  'COMMENTS',
-  'FORUM_POSTS',
-  'PUBLICATIONS',
-  'REPUTATION',
-  'GROUP',
-] as const;
-export type ContentGateRequirementKind =
-  (typeof CONTENT_GATE_REQUIREMENT_KINDS)[number];
 
 export type ContentGateRequirement = {
   id: string;

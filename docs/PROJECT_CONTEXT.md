@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-13 — pre-Phase-11 debt closure / D4.2 implemented, full D4 open
+> Updated: 2026-10-13 — pre-Phase-11 debt closure / bounded D4.3a implemented, full D4 open
 
 ## Product and authority
 
@@ -29,6 +29,14 @@ approved ADRs or recorded owner decisions.
 
 ## Current position
 
+D4.3a isolates Editor normalization and Content Access decisions with published
+narrow provider contracts and separate consumer-owned ports/root adapters.
+Editor no longer receives a gate aggregate; News/comments no longer inject an
+Editor service. API/DB schema, policy and frontend are unchanged. Inventory:
+103 (15 reviewed removals, zero additions). Full opt-in units: API 639 / Web 59 /
+Worker 36; relevant E2E: 37; coverage/lint/types/build pass. Full D4.3/D4 and
+release acceptance remain open. See [evidence](audits/D4_3A_CONTENT_CONTRACTS.md).
+
 D4.2 separates Reputation account/block/existence evidence and moves profile-asset
 GraphQL composition plus atomic cross-owner writes out of Media. Broad Users and
 Reputation providers are private; no scoring, schema or frontend changes.
@@ -40,7 +48,7 @@ See [D4.2 evidence](audits/D4_2_REPUTATION_PROFILE_ASSETS.md).
 D4.1 removes broad Users/Points dependencies from Community Points, Levels and
 Achievements through minimal consumer-owned ports and root adapters. Behavior
 is preserved; no new scoring rules or frontend design. Architecture inventory
-is now 128 (seven reviewed removals, zero additions). Full opt-in units: API 609 /
+reached 128 in that increment (seven reviewed removals, zero additions). Full opt-in units: API 609 /
 Web 59 / Worker 36; relevant E2E: 20; lint/typecheck/build pass. Full D4 remains
 open. See [evidence](audits/D4_1_GAMIFICATION_BOUNDARIES.md) and the
 [remaining sequence](development/D4_MODULE_BOUNDARY_PLAN.md).

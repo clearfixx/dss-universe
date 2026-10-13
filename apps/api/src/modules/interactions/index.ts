@@ -37,3 +37,8 @@ export type {
 /**
  * Public barrels are airlocks: export only what another module truly needs.
  */
+export {
+  COMMENT_DOCUMENT_NORMALIZER,
+  type CommentDocumentNormalizer,
+  type CommentDocumentProjection,
+} from './domain/ports/comment-document-normalizer.interface';

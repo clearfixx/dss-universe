@@ -6,15 +6,23 @@
  * 📄 File: apps/api/src/modules/editor/index.ts
  *
  * 🎯 Purpose:
- * Exposes the public server-side DSS Editor module and service boundary.
+ * Exposes named normalization and redaction contracts, never concrete services.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 
-export * from './application/services/editor-content-delivery.service';
-export * from './application/services/editor.service';
-export * from './application/types/editor-delivery.type';
-export * from './editor.module';
+export { EditorModule } from './editor.module';
+export {
+  EDITOR_DOCUMENT_NORMALIZER,
+  type EditorDocumentNormalizer,
+  type ValidatedEditorDocument,
+} from './contracts/editor-document-normalizer.contract';
+export {
+  EDITOR_GATE_DECISIONS,
+  type EditorGateDecisions,
+  type EditorGateDecision,
+  type EditorGateRequirement,
+} from './domain/ports/editor-gate-decisions.interface';
 
 /** Consumers request projections; they do not invent document schemas. */

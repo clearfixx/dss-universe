@@ -59,6 +59,13 @@ active package safe and buildable.
 
 ## Additional D0 verification findings
 
+D4.3a progress for DEBT-003/027: Editor and Content Access concrete providers
+are private; News/comments consume owner-specific normalization ports and Editor
+consumes decision-only gate evidence. Fifteen findings removed (118 → 103),
+zero additions. Redaction/Premium/current revocation and persistence are verified;
+remaining interaction lifecycle, News/Media/activity, ORM and explicit-surface
+work stay OPEN. See [D4.3a evidence](../audits/D4_3A_CONTENT_CONTRACTS.md).
+
 D4.2 further progress for DEBT-003/004/027: Reputation uses minimal evidence;
 Media profile mutations and cross-owner writes are composed explicitly; broad
 Users/Reputation providers are private. Ten further findings are removed

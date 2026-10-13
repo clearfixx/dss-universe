@@ -15,6 +15,12 @@
  * • enforces one reply level and same-target parentage;
  * • limits editing, tombstoning and revision access to the author.
  *
+ * 🏗️ Architecture:
+ * Interactions owns comment rules; root composition supplies COMMENT-only normalization.
+ *
+ * ⚠️ Important:
+ * Canonical validation must complete before comment or revision persistence.
+ *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
@@ -32,7 +38,11 @@ import {
   type EditorNode,
 } from '@dss/editor';
 
-import { EditorService } from '../../../editor/application/services/editor.service';
+import {
+  COMMENT_DOCUMENT_NORMALIZER,
+  type CommentDocumentNormalizer,
+  type CommentDocumentProjection,
+} from '../../domain/ports/comment-document-normalizer.interface';
 
 import {
   COMMENTS_REPOSITORY,
@@ -52,7 +62,8 @@ export class CommentsService {
     @Inject(COMMENTS_REPOSITORY)
     private readonly comments: CommentsRepository,
     private readonly targets: InteractionTargetsService,
-    private readonly editor: EditorService,
+    @Inject(COMMENT_DOCUMENT_NORMALIZER)
+    private readonly editor: CommentDocumentNormalizer,
   ) {}
 
   async create(
@@ -188,7 +199,7 @@ export class CommentsService {
   private normalizeContent(content: {
     body?: string;
     documentJson?: string;
-  }): ReturnType<EditorService['normalize']> {
+  }): CommentDocumentProjection {
     if (Boolean(content.body) === Boolean(content.documentJson)) {
       throw new BadRequestException(
         'Provide exactly one of body or documentJson.',
@@ -197,7 +208,7 @@ export class CommentsService {
     const documentJson = content.documentJson
       ? content.documentJson
       : JSON.stringify(this.legacyDocument(content.body ?? ''));
-    const projection = this.editor.normalize(documentJson, 'COMMENT');
+    const projection = this.editor.normalize(documentJson);
     if (
       !this.hasMeaningfulContent(projection.document.content) ||
       projection.plainText.length > MAX_COMMENT_LENGTH

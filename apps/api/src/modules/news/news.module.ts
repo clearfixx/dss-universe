@@ -1,10 +1,32 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: News
+ * 📄 File: apps/api/src/modules/news/news.module.ts
+ *
+ * 🎯 Purpose:
+ * Composes News use cases and persistence without importing Editor implementations.
+ *
+ * 🧠 Responsibilities:
+ * • registers News presentation, application and repository providers;
+ * • receives canonical document normalization through root composition.
+ *
+ * 🏗️ Architecture:
+ * Nest module assembly; existing Media/Interaction dependencies remain D4.3 work.
+ *
+ * ⚠️ Important:
+ * This increment does not declare the entire News integration surface isolated.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { Module } from '@nestjs/common';
 
 import { AuditModule } from '@api/core/audit';
 import { AuthorizationModule } from '@api/core/authorization';
 import { PrismaModule } from '@api/core/database';
 import { EventsModule } from '@api/core/events';
-import { EditorModule } from '../editor';
 import { InteractionsModule } from '../interactions';
 import { MediaModule } from '../media/media.module';
 
@@ -46,7 +68,6 @@ import { NewsPinsResolver } from './presentation/graphql/news-pins.graphql';
     AuditModule,
     AuthorizationModule,
     EventsModule,
-    EditorModule,
     InteractionsModule,
     MediaModule,
   ],

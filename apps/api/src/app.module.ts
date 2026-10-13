@@ -77,6 +77,7 @@ import { AccessGroupIntegrationModule } from './composition/access-groups/access
 import { GamificationIntegrationModule } from './composition/gamification/gamification-integration.module';
 import { ReputationIntegrationModule } from './composition/reputation/reputation-integration.module';
 import { ProfileAssetCompositionModule } from './composition/profile-assets/profile-asset-composition.module';
+import { ContentIntegrationModule } from './composition/content/content-integration.module';
 import { AchievementsModule } from './modules/achievements';
 import { ActivityModule } from './modules/activity';
 import { AiCoreModule } from './modules/ai-core';
@@ -112,6 +113,7 @@ import { UsersModule } from './modules/users/users.module';
     GamificationIntegrationModule,
     ReputationIntegrationModule,
     ProfileAssetCompositionModule,
+    ContentIntegrationModule,
     IdentityPresentationModule,
     AuthorizationModule,
     IamModule,

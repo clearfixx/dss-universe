@@ -2,8 +2,9 @@
 
 Date: 2026-10-13. Status: authorized debt-remediation execution, not Phase 11.
 Branch: `debt/d4-module-boundaries`.
-Implemented increments: D4.1 and D4.2; remaining inventory 118, full D4 OPEN.
-See [D4.2 evidence](../audits/D4_2_REPUTATION_PROFILE_ASSETS.md).
+Implemented increments: D4.1, D4.2 and bounded D4.3a; remaining inventory 103,
+full D4 and the rest of D4.3 OPEN. See
+[D4.3a evidence](../audits/D4_3A_CONTENT_CONTRACTS.md).
 Review stack base: `173358d` / draft PR #9. Parent acceptance is still pending;
 no red PR is merged and this branch is not an accepted release baseline.
 Authority: approved pre-Phase-11 D4 plan and ADR-003/004.
@@ -11,7 +12,7 @@ Authority: approved pre-Phase-11 D4 plan and ADR-003/004.
 ## Outcome and invariants
 
 Close the full D4 inventory, not merely rename broad services into facades.
-Current reviewed inventory: 135 findings. Every reduction needs exact source,
+Starting inventory: 135 findings; latest reviewed inventory: 103. Every reduction needs exact source,
 behavioral and contract evidence; no automatic baseline growth or waiver.
 Keep NestJS, Prisma, PostgreSQL, Outbox/BullMQ and existing transport responses.
 Do not invent frontend design, new scoring formulas, owner policy or Phase 11 flows.
@@ -51,6 +52,21 @@ remain in their owners. Provider contracts expose neither consume commands nor
 repositories to downstream Levels.
 
 ## Verification
+
+### D4.3a transfer contract (bounded content increment)
+
+Editor publishes only NEWS/COMMENT normalization operations, not preview, gate
+creation or its concrete services. News and Interactions own separate input ports;
+root adapters fix the expected profile and pass only their required projections.
+Content Access publishes a decision-only reader (gate ID, allowed, bypassed, unmet,
+notice), never the gate owner, requirements, thresholds or timestamps. Editor owns
+its decision input shape; the root adapter translates the closed requirement kinds.
+Keep canonical validation, profile mismatch errors, recursive redaction, duplicate
+gate evaluation per request and propagation of provider failures unchanged.
+
+No persistence, interaction target lifecycle, outbox, audience policy or API schema
+changes belong to this increment. D4.3 still requires the remaining interaction,
+News/Media and activity boundaries; this increment does not close full D4.3 or D4.
 
 ### D4.2 transfer contract
 

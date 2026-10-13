@@ -321,7 +321,12 @@ Model: `gpt-6.1-sol` xhigh for the separate brainstorm and security design.
 
 Branch: `debt/d4-module-boundaries`.
 
-D4.2 is implemented on the same phase branch/PR #10; inventory is now 118 after
+D4.3a is implemented on the same phase branch/PR #10; inventory is 103 after
+15 further reviewed removals. [Evidence](../audits/D4_3A_CONTENT_CONTRACTS.md)
+records minimal Editor/Content Access contracts, 37 relevant passing E2E cases
+and the unclosed interaction/News/Media/activity scope. Full D4 remains OPEN.
+
+D4.2 was implemented on the same phase branch/PR #10; inventory reached 118 after
 ten further reviewed removals. [Evidence](../audits/D4_2_REPUTATION_PROFILE_ASSETS.md)
 records unchanged API/security behavior and remaining full D4 obligations.
 

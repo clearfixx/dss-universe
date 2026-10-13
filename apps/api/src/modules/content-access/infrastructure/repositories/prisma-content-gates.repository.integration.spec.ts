@@ -35,6 +35,8 @@ import { IamMembershipAdapter } from '../../../../composition/access-groups/infr
 import { ContentAudienceAdapter } from '../../../../composition/access-groups/infrastructure/content-audience.adapter';
 import { createEmptyEditorDocument } from '@dss/editor';
 import { ContentGatesService } from '../../application/services/content-gates.service';
+import { ContentGateDecisionsService } from '../../application/services/content-gate-decisions.service';
+import { EditorGateDecisionAdapter } from '../../../../composition/content/infrastructure/editor-gate-decision.adapter';
 import { EditorService } from '../../../editor/application/services/editor.service';
 import { EditorContentDeliveryService } from '../../../editor/application/services/editor-content-delivery.service';
 import type { EditorHtmlRenderer } from '../../../editor/infrastructure/rendering/editor-html.renderer';
@@ -87,7 +89,10 @@ dbSuite('Content Gate audience PostgreSQL integration', () => {
   const editor = new EditorService({
     render: jest.fn(),
   } as unknown as EditorHtmlRenderer);
-  const delivery = new EditorContentDeliveryService(editor, gates);
+  const delivery = new EditorContentDeliveryService(
+    editor,
+    new EditorGateDecisionAdapter(new ContentGateDecisionsService(gates)),
+  );
   const gateId = randomUUID();
 
   beforeAll(async () => {
