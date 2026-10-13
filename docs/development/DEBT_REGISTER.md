@@ -327,6 +327,11 @@ and HTTP tests. See [acceptance review](../audits/D3_4_ADMINISTRATOR_AVAILABILIT
 No corrective implementation is authorized by this discovery. DEBT-046 remains
 implemented for its assignment-only scope; D3 acceptance remains open.
 
+On 2026-10-13 the owner authorized policy design. The
+[six-key recovery proposal](DEBT_047_POLICY_PROPOSAL.md) is ready for review;
+its predicate, shared serialization and bootstrap behavior are not yet approved
+for implementation. No runtime correction is claimed.
+
 Every new entry should include evidence, impact, proposed ownership and a clear
 decision before implementation. Discovery is not permission to expand the
 current package silently.
