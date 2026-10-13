@@ -292,6 +292,12 @@ Model: `gpt-6.1-sol` xhigh.
 
 ### D3.5 — IAM access groups and Premium readiness (scheduled, not authorized)
 
+Owner approved a bounded Premium/Content Gate correction on 2026-10-13:
+audience first, automatic numeric-threshold bypass second, no staff authority.
+It has its own stacked `debt/d3-5-premium-gate-contract` branch and
+[evidence](../audits/D3_5_PREMIUM_GATE_CONTRACT.md). Wider membership/schema/
+delegation/Guardian implementation remains subject to the separate scope gate.
+
 Reserved branch: `debt/d3-5-iam-access-groups`, only after its scope approval.
 
 D1 retains generic groups/Premium in 1.0; D2 establishes ownership in

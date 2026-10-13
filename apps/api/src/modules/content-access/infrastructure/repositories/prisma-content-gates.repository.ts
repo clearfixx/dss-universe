@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/modules/content-access/infrastructure/repositories/prisma-content-gates.repository.ts
  *
  * 🎯 Purpose:
- * Persists Content Gates and projects global viewer eligibility facts.
+ * Persists Content Gates and projects facts only for active viewers.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -57,10 +57,11 @@ export class PrismaContentGatesRepository implements ContentGatesRepository {
       where: { id: userId },
       select: {
         createdAt: true,
+        status: true,
         roles: { select: { role: { select: { name: true } } } },
       },
     });
-    if (!user) return null;
+    if (!user || user.status !== 'ACTIVE') return null;
     const [comments, reputation] = await Promise.all([
       this.prisma.comment.count({
         where: { authorId: userId, deletedAt: null },

@@ -9,9 +9,9 @@
  * Creates bounded Content Gate policies and evaluates viewer eligibility.
  *
  * 🧠 Responsibilities:
- * • validates ALL/ANY policies and requirement values;
+ * • checks audience membership before ALL/ANY numeric thresholds;
  * • evaluates global account facts without receiving protected content;
- * • applies owner and Premium bypass rules explicitly;
+ * • applies author/Premium threshold bypass without overriding audience;
  * • fails closed for missing viewers or unmet policy evidence.
  *
  * 🚀 Build. Share. Grow.
@@ -71,24 +71,39 @@ export class ContentGatesService {
     if (!facts)
       throw new NotFoundException('Content Gate viewer was not found.');
 
-    if (gate.ownerId === viewerId) {
+    const audience = gate.requirements.filter(({ kind }) => kind === 'GROUP');
+    if (audience.some((requirement) => !this.isMet(requirement, facts))) {
+      return {
+        gate,
+        allowed: false,
+        bypassed: false,
+        unmet: ['GROUP'],
+        notice: 'Content audience requirements are not satisfied.',
+      };
+    }
+    const thresholds = gate.requirements.filter(({ kind }) => kind !== 'GROUP');
+    if (thresholds.length > 0 && gate.ownerId === viewerId) {
       return this.bypass(gate, 'Author preview bypass is active.');
     }
-    if (facts.groups.some((group) => group.toLowerCase() === 'premium')) {
+    if (
+      thresholds.length > 0 &&
+      facts.groups.some((group) => group.toLowerCase() === 'premium')
+    ) {
       return this.bypass(
         gate,
-        'This content is gated, but Premium has unrestricted access.',
+        'Premium bypasses numeric thresholds within the permitted audience.',
       );
     }
 
-    const results = gate.requirements.map((requirement) => ({
+    const results = thresholds.map((requirement) => ({
       kind: requirement.kind,
       met: this.isMet(requirement, facts),
     }));
     const allowed =
-      gate.operator === 'ALL'
+      results.length === 0 ||
+      (gate.operator === 'ALL'
         ? results.every(({ met }) => met)
-        : results.some(({ met }) => met);
+        : results.some(({ met }) => met));
     return {
       gate,
       allowed,

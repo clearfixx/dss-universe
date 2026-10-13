@@ -86,6 +86,7 @@ describe('authoritative request access (e2e)', () => {
   let probePermissionId: string;
   const subjects: string[] = [];
   const roles: string[] = [];
+  const gateIds: string[] = [];
 
   async function register() {
     const suffix = randomUUID();
@@ -134,6 +135,7 @@ describe('authoritative request access (e2e)', () => {
     const manager = await register();
     for (const key of [
       'permissions.manage',
+      'content-gates.configure',
       'users.read',
       'roles.create',
       'roles.read',
@@ -163,6 +165,7 @@ describe('authoritative request access (e2e)', () => {
 
   afterAll(async () => {
     if (prisma) {
+      await prisma.contentGate.deleteMany({ where: { id: { in: gateIds } } });
       await prisma.role.deleteMany({ where: { id: { in: roles } } });
       await prisma.permission.deleteMany({
         where: { key: { startsWith: probePermissionKey } },
@@ -387,6 +390,85 @@ describe('authoritative request access (e2e)', () => {
         select: { label: true },
       }),
     ).toEqual({ label: 'System' });
+  });
+
+  it('requires group audience before Premium threshold bypass without granting staff tools', async () => {
+    const premium = await register();
+    const existingPremium = await prisma.role.findUnique({
+      where: { name: 'PREMIUM' },
+    });
+    const premiumRole =
+      existingPremium ??
+      (await prisma.role.create({
+        data: { name: 'PREMIUM', label: 'Premium fixture' },
+      }));
+    if (!existingPremium) roles.push(premiumRole.id);
+    const audienceName = `${probeRoleName}-audience`;
+    const audience = await prisma.role.create({
+      data: { name: audienceName, label: 'Audience fixture' },
+    });
+    roles.push(audience.id);
+    await manage('post', `user-access/${premium.user.id}/roles`)
+      .send({ roleId: premiumRole.id })
+      .expect(201);
+    await request(app.getHttpServer())
+      .get('/api/iam/permissions')
+      .set('Authorization', `Bearer ${premium.tokens.accessToken}`)
+      .expect(403);
+    const created = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${managerToken}`)
+      .send({
+        query: `mutation { createContentGate(input: { operator: ANY, requirements: [{kind: GROUP, groupKey: "${audienceName}"}, {kind: REPUTATION, threshold: 1000000}] }) { id } }`,
+      })
+      .expect(200);
+    expect((created.body as { errors?: unknown[] }).errors).toBeUndefined();
+    const id = (created.body as { data: { createContentGate: { id: string } } })
+      .data.createContentGate.id;
+    gateIds.push(id);
+    async function evaluate() {
+      const response = await request(app.getHttpServer())
+        .post('/api/graphql')
+        .set('Authorization', `Bearer ${premium.tokens.accessToken}`)
+        .send({
+          query: `query { evaluateContentGate(id: "${id}") { allowed bypassed unmet notice } }`,
+        })
+        .expect(200);
+      expect((response.body as { errors?: unknown[] }).errors).toBeUndefined();
+      return (
+        response.body as {
+          data: {
+            evaluateContentGate: {
+              allowed: boolean;
+              bypassed: boolean;
+              unmet: string[];
+            };
+          };
+        }
+      ).data.evaluateContentGate;
+    }
+    expect(await evaluate()).toMatchObject({
+      allowed: false,
+      bypassed: false,
+      unmet: ['GROUP'],
+    });
+    await manage('post', `user-access/${premium.user.id}/roles`)
+      .send({ roleId: audience.id })
+      .expect(201);
+    expect(await evaluate()).toMatchObject({
+      allowed: true,
+      bypassed: true,
+      unmet: [],
+    });
+    await manage(
+      'delete',
+      `user-access/${premium.user.id}/roles/${audience.id}`,
+    ).expect(200);
+    expect(await evaluate()).toMatchObject({
+      allowed: false,
+      bypassed: false,
+      unmet: ['GROUP'],
+    });
   });
 
   it('honors direct revoke, grant, key rename and permission deletion with the same JWT', async () => {

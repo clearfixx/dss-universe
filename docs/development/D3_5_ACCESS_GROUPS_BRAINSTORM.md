@@ -4,6 +4,13 @@ Date: 2026-10-13. Status: BRAINSTORM / implementation approval pending.
 Authority: DEC-D1-01 and ADR-003 retain these capabilities in 1.0. This document
 does not approve product-policy details or declare D3 accepted.
 
+Owner-approved refinement: Premium is a non-staff access role. Audience access
+comes first; Premium automatically bypasses numeric thresholds only inside that
+audience. The bounded existing-gate implementation is authorized separately on
+`debt/d3-5-premium-gate-contract`; wider groups/membership/Guardian implementation
+still needs its own approved schema and mutation-authority scope. See
+[ADR-005](../architecture/adr/005-premium-audience-before-thresholds.md).
+
 ## Why before Phase 11
 
 Knowledge Forge must consume a real Guardian capability, not invent roles,
@@ -31,11 +38,13 @@ existing Outbox; no new platform, facade or UI design.
    Unknown capabilities and generic admin/moderation/security/DB/CMS/module-control
    grants are rejected. Registry keys must be reconciled before migration, not
    invented independently by each content module.
-3. Premium is an explicit entitlement, not a role-name or display-color check.
-   Recommend separate grant lifecycle; a group named Premium alone grants nothing.
-   Paid billing and Community Points redemption are outside this package.
-4. Premium may bypass ordinary Content Gates under the established contract;
-   it never grants Guardian review/publish/rollback automatically.
+3. Premium is a separate non-staff access role, with owned membership validity
+   and revocation. Display metadata alone must not grant authority. The former
+   separate PremiumGrant product-model proposal is superseded. Paid billing and
+   Community Points redemption are outside this package.
+4. Audience/group visibility is mandatory before numeric thresholds. Premium
+   automatically bypasses those numeric thresholds only after audience access;
+   it never grants Guardian review/publish/rollback, staff tools or Command Deck.
 5. Guardian is explicitly delegated Knowledge Forge authority. Fine-grained review,
    publish/reject/rollback semantics belong in Phase 11's brainstorm; D3.5 supplies
    the authoritative capability boundary and deny behavior, not revision workflows.
@@ -88,9 +97,9 @@ do not reinterpret it as the new unique owner identity.
 - `GroupCapability`: only entries from a closed reviewed capability allowlist,
   never arbitrary permission keys. IAM owns assignments; Authorization owns the
   decision and validates each requested operation against the registry.
-- `PremiumGrant`: separate opaque grant ID, subject, validity, revocation and
-  attribution; overlapping valid grants form an OR, and revocation of one does
-  not silently cancel another. No payment/Points processing is introduced.
+- Premium access-role membership uses the owned membership validity/revocation
+  model; a separate independent PremiumGrant product entity is not approved.
+  No payment/Points processing is introduced.
 - Authorization reads only effective stable group keys, effective entitlement
   and approved capabilities. Display visibility never changes authority.
 - Content Access consumes narrow membership/entitlement facts through root
@@ -98,6 +107,51 @@ do not reinterpret it as the new unique owner identity.
   separate; this package is not permission to move all statistics into IAM.
 - Existing role/direct permission behavior remains unchanged. Premium and groups
   are not inserted into JWTs as permanent authoritative claims.
+
+### Membership and Guardian contract review
+
+Source review after `5e0aa10`: current Role/RolePermission schema and
+PrismaRoleRepository.create accept arbitrary permission IDs. The bounded gate
+fix therefore cannot prove that every role called Premium is non-staff. This is
+an existing DEBT-008/024 isolation gap, not an anonymously exploitable grant path.
+
+Proposed wider D3.5 contract for approval:
+
+| Boundary             | Contract                                                                                                                                                    |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Access-role identity | AccessGroup ID and immutable canonical key; Premium is a reserved non-staff access role represented by this mechanism, not a second independent entitlement |
+| Membership           | Grant ID, subject/group IDs, validFrom, optional validUntil, revokedAt, attributable grant/revoke audit; intervals use server UTC and expiry is exclusive   |
+| Effective access     | Enabled group plus at least one valid unrevoked membership; overlap is OR, no scheduled cleanup dependency or permanent JWT grant                           |
+| Staff authority      | Access-group membership contributes no generic RolePermission/UserPermission keys; independent existing staff assignments retain their own authority        |
+| Guardian             | Explicit allowlisted Knowledge Forge capability; no Premium implication, no moderation/Command Deck permission, no resource-audience bypass                 |
+| Mutation authority   | Proposed existing permissions.manage gate checked in application and transport, never obtained from membership; audit and write atomic                      |
+| Display              | Allowlisted metadata only; renaming/recoloring a group cannot grant authority or turn it into Premium/Guardian                                              |
+
+IAM owns the grant/history storage and publishes minimal current membership facts.
+Authorization owns the capability decision, while Content Access consumes a narrow
+port wired in root composition. Auth does not acquire group or Guardian knowledge.
+Pure application contracts expose IDs, effective keys and decisions, not Prisma
+rows or clients. Use separate owned DTO/mapper/repository files and named exports.
+
+System-role audiences and access-group audiences must remain distinguishable by
+stable identity/type. A custom group named admin must not impersonate a system
+role. Wider audience builders belong to content phases; D3.5 must establish the
+non-colliding identity contract now rather than guessing from display names later.
+
+No automatic migration grants from legacy Premium-like names. Require explicit
+mapping of real assignments and GROUP gate references, preserve history, audit
+conversion and test revocation/expiry on the new reader. Do not delete the old
+data as a rollback strategy. Unknown mappings fail closed. Existing disable
+controls remain authoritative; future sanctions cannot be described as delivered.
+
+The closed capability catalog initially contains only the explicit Guardian
+foundation required by Phase 11. Specific review/publish/reject/rollback resource
+workflow semantics still require the Phase 11 brainstorm; no workflow is built
+or authority expanded by this design document.
+
+Implementation approval must cover the additive schema/migration, current-phase
+mutation authority and closed capability catalog. Owner-only staff appointment,
+Command Deck step-up and new moderation tools remain separately scheduled.
 
 ### Migration and authority proposal
 
@@ -123,7 +177,8 @@ overlap, forged display names, denied capability keys, mutation authorization,
 legacy-key migration, audit rollback and current Content Gate compatibility.
 Phase 11 publishes/reviews actual revisions only after its own brainstorm.
 
-- Approve the separation of Premium entitlement from display group membership.
+- Premium non-staff role and audience-before-threshold behavior are approved;
+  freeze its stable identity and membership mapping in the wider schema design.
 - Approve the closed delegation allowlist, and who may manage membership/grants
   under current permissions without pre-implementing future owner restrictions.
 - Approve the concrete schema/contract/migration design before implementation.

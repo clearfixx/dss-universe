@@ -5,6 +5,16 @@ Owner/Command Deck clarification (2026-10-13): see the accepted
 Implement those requirements in their relevant phases, not as an expansion of
 the current pre-Phase-11 debt package.
 
+Premium clarification: separate non-staff access role, no Guardian/moderation/
+administration/Command Deck authority. Resource audience is checked first;
+Premium automatically bypasses numerical Content Gate thresholds only within an
+accessible resource. Categories/sections constrain their children; ordinary
+moderators cannot exclude administrator/platform-owner visibility through their
+content-audience edits. Deleted content still follows owner-only visibility.
+See [ADR-005](../architecture/adr/005-premium-audience-before-thresholds.md) for the
+bounded existing-gate correction; complete resource ACL builders belong to their
+owning phases.
+
 > Recorded: 2026-10-11. Owner requirements take precedence over conflicting
 > historical naming. This document records scope, not implementation acceptance.
 

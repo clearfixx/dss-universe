@@ -6,7 +6,8 @@
  * 📄 File: apps/api/src/modules/content-access/domain/types/content-gate.type.ts
  *
  * 🎯 Purpose:
- * Defines reusable Content Gate policies, viewer facts and evaluation results.
+ * Defines gate audience constraints, numeric thresholds and evaluation results.
+ * GROUP is mandatory audience membership; ALL/ANY applies to numeric thresholds.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
