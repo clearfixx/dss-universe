@@ -48,6 +48,8 @@ import {
 import { AuthorizationModule } from '@api/core/authorization';
 
 import { AUTHENTICATION_FLOWS } from './contracts/authentication-flows.contract';
+import { AUTH_SUBJECT_ELIGIBILITY } from './contracts/subject-eligibility.contract';
+import { PrismaSubjectEligibilityReader } from './infrastructure/repositories/prisma-subject-eligibility.reader';
 
 import { AuthService } from './application/services/auth.service';
 import { PasswordHashService } from './application/services/password-hash.service';
@@ -90,6 +92,10 @@ import { PrismaAccountCredentialsRepository } from './infrastructure/repositorie
   imports: [AuthCoreModule, AuthorizationModule],
   controllers: [AuthController],
   providers: [
+    {
+      provide: AUTH_SUBJECT_ELIGIBILITY,
+      useClass: PrismaSubjectEligibilityReader,
+    },
     JwtStrategy,
     {
       provide: ACCOUNT_CREDENTIALS_REPOSITORY,
@@ -146,6 +152,6 @@ import { PrismaAccountCredentialsRepository } from './infrastructure/repositorie
       useClass: PrismaAuthSessionRepository,
     },
   ],
-  exports: [AUTHENTICATION_FLOWS],
+  exports: [AUTHENTICATION_FLOWS, AUTH_SUBJECT_ELIGIBILITY],
 })
 export class AuthModule {}

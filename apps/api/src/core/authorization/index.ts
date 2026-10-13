@@ -55,6 +55,16 @@ export { PermissionsService } from './services/permissions.service';
 
 export type { UserAccessProfile } from './types/user-access-profile.type';
 export {
+  ACCESS_MEMBERSHIPS_READER,
+  SUBJECT_ELIGIBILITY_READER,
+  type AccessMembershipsReader,
+  type SubjectEligibilityReader,
+} from './contracts/access-memberships-reader.contract';
+export {
+  ACCESS_CAPABILITY_DECISIONS,
+  type AccessCapabilityDecisions,
+} from './contracts/access-capability-decisions.contract';
+export {
   SUBJECT_ACCESS_READER,
   type SubjectAccessReader,
 } from './contracts/subject-access-reader.interface';

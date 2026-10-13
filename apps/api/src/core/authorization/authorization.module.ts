@@ -46,6 +46,8 @@ import { PermissionsGuard } from './guards/permissions.guard';
 import { PermissionsRepository } from './repositories/permissions.repository';
 import { PermissionsService } from './services/permissions.service';
 import { SUBJECT_ACCESS_READER } from './contracts/subject-access-reader.interface';
+import { ACCESS_CAPABILITY_DECISIONS } from './contracts/access-capability-decisions.contract';
+import { AccessCapabilityDecisionsService } from './services/access-capability-decisions.service';
 
 @Module({
   imports: [PrismaModule],
@@ -54,6 +56,11 @@ import { SUBJECT_ACCESS_READER } from './contracts/subject-access-reader.interfa
     PermissionsGuard,
     PermissionsService,
     PermissionsRepository,
+    AccessCapabilityDecisionsService,
+    {
+      provide: ACCESS_CAPABILITY_DECISIONS,
+      useExisting: AccessCapabilityDecisionsService,
+    },
     { provide: SUBJECT_ACCESS_READER, useExisting: PermissionsService },
   ],
   exports: [
@@ -61,6 +68,7 @@ import { SUBJECT_ACCESS_READER } from './contracts/subject-access-reader.interfa
     PermissionsService,
     PermissionsRepository,
     SUBJECT_ACCESS_READER,
+    ACCESS_CAPABILITY_DECISIONS,
   ],
 })
 export class AuthorizationModule {}

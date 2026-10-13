@@ -290,22 +290,25 @@ apply/rollback strategy reviewed; no secret or profile leakage.
 
 Model: `gpt-6.1-sol` xhigh.
 
-### D3.5 — IAM access groups and Premium readiness (scheduled, not authorized)
+### D3.5 — IAM access groups and Premium readiness (authorized; review pending)
 
 Owner approved a bounded Premium/Content Gate correction on 2026-10-13:
 audience first, automatic numeric-threshold bypass second, no staff authority.
 It has its own stacked `debt/d3-5-premium-gate-contract` branch and
 [evidence](../audits/D3_5_PREMIUM_GATE_CONTRACT.md). Wider membership/schema/
-delegation/Guardian implementation remains subject to the separate scope gate.
+delegation/Guardian implementation was subsequently explicitly authorized.
 
-Reserved branch: `debt/d3-5-iam-access-groups`, only after its scope approval.
+Implementation branch: `debt/d3-5-iam-access-groups`, stacked on `04a9d50` / PR #8.
+This is a review dependency, not an accepted baseline or merge waiver.
 
 D1 retains generic groups/Premium in 1.0; D2 establishes ownership in
 [ADR-003](../architecture/adr/003-subject-and-access-ownership.md). The implementation
-is absent and not absorbed into D3 boundary remediation or Knowledge Forge.
-After D3, prepare a separate brainstorm covering IAM-owned membership, grants,
-expiry/revocation, delegation allowlists/audit and Authorization-owned Guardian
-capability/deny precedence. Owner approval is required before implementation.
+is implemented separately from D3 boundary remediation and Knowledge Forge.
+The owner approved the full brainstorm scope, including current
+`permissions.manage` mutation authority and no new owner/Command Deck features.
+See [ADR-006](../architecture/adr/006-isolated-access-groups-and-capabilities.md)
+and [implementation evidence](../audits/D3_5_ACCESS_GROUPS_IMPLEMENTATION.md).
+Review, CI and release-baseline acceptance remain open.
 
 Exit gate before D6/D7 readiness: approved scope, owned implementation and security
 tests for generic groups/Premium/Guardian; no always-allow placeholder or implied

@@ -14,5 +14,9 @@
 
 export * from './content-access.module';
 export * from './application/services/content-gates.service';
+export {
+  CONTENT_AUDIENCE_READER,
+  type ContentAudienceReader,
+} from './domain/ports/content-audience-reader.interface';
 
 /** One public hatch keeps gate internals out of neighboring modules. */
