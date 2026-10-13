@@ -92,6 +92,12 @@ access decisions need a separate D3.4 security increment before acceptance.
 
 ## Verification and known baseline
 
+Final acceptance is explicitly unproven in the
+[D3 acceptance matrix](../audits/D3_ACCEPTANCE_REVIEW.md): real registration
+rollback evidence needs characterization and full repository/CI gates remain red.
+The [D3.5 brainstorm](D3_5_ACCESS_GROUPS_BRAINSTORM.md) is design-only, awaiting
+scope and mutation-authority decisions; it does not start implementation.
+
 2026-10-13: the final static D3 finding (bcrypt namespace import) is removed with
 named hash/compare imports and two real-library tests. API 527, Web 59, Worker 36
 units and 10 HTTP E2E pass; lint, typecheck, Prisma validation, build and architecture
