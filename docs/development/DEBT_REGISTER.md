@@ -59,6 +59,13 @@ active package safe and buildable.
 
 ## Additional D0 verification findings
 
+D4.3b progress for DEBT-003/004/027: News/Wall cross-owner writes now use semantic
+transaction ports; the target writer moves into owned infrastructure and is no
+longer a business-root/Nest export. Four findings removed (103 → 99), no additions.
+Real PostgreSQL verifies every target/content evidence failure rolls back the
+whole unit. A blocking technical-entry guard now scans root composition too.
+Full D4 remains OPEN; [evidence](../audits/D4_3B_ATOMIC_CONTENT_TARGETS.md).
+
 D4.3a progress for DEBT-003/027: Editor and Content Access concrete providers
 are private; News/comments consume owner-specific normalization ports and Editor
 consumes decision-only gate evidence. Fifteen findings removed (118 → 103),
@@ -408,6 +415,24 @@ drift and reconcile by reviewed forward migration/model annotations. In
 particular, do not blindly apply a generated diff dropping indexes or changing
 outbox identifiers. D3.5 does not modify these unrelated tables or waive the gate.
 See [D3.5 evidence](../audits/D3_5_ACCESS_GROUPS_IMPLEMENTATION.md).
+
+### DEBT-050 — Web coverage reports an unhandled React scheduler error (Medium, OPEN, D6)
+
+CI run `38446264899`, job `115465567069`, head `f9784af`, failed on coverage
+before API E2E/generated validation/build. All 25 Web suites / 59 tests passed,
+but Vitest reported one uncaught `ReferenceError: window is not defined` in
+`react-dom-client.development.js:17920`, called by scheduler's
+`Immediate.performWorkUntilDeadline`. Vitest attributed the originating context
+to `apps/web/src/features/editor/editor-ai-dialog.spec.tsx`; this does not prove
+the component itself threw the error. D4 has no frontend source changes.
+
+The current full local Web unit/coverage repeats pass with two workers. Possible
+unsettled scheduler work during environment teardown is an inference, not a
+confirmed root cause or a product-runtime incident. A passing retry does not
+waive the observed CI failure. Proposed owner: frontend test lifecycle / D6
+quality baseline; investigate async cleanup and reproduce under Linux/CI load
+before changing tests or implementation. No frontend correction is included or
+authorized by this finding; coordinate separately with the owner/frontend work.
 
 Every new entry should include evidence, impact, proposed ownership and a clear
 decision before implementation. Discovery is not permission to expand the

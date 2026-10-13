@@ -34,7 +34,13 @@ compliance gate. D4 owns promotion to blocking rules as debt is closed.
 
 ## Scope and rules
 
-Only authored `.ts`/`.tsx` under API `src/modules` and `src/core` are scanned.
+Authored `.ts`/`.tsx` under API `src/modules`, `src/core` and root `src/composition`
+are scanned. D4.3b adds an independently blocking technical-entry rule:
+`infrastructure-entry-business-import`. A named `modules/<owner>/infrastructure`
+entry is for the owner's infrastructure or root infrastructure/assembly only,
+never a feature consumer or application layer. Prisma arguments may exist there
+only as infrastructure composition, not in public business/semantic contracts.
+Historical diagnostics stay report-only; this is not full D4 acceptance.
 Tests and declarations are excluded. Relative imports and the current `@api/`
 alias are normalized with portable paths. Static imports/exports, import types,
 literal dynamic imports/require and import-equals dependencies are inspected;

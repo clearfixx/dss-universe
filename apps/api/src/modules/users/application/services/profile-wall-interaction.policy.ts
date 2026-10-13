@@ -37,7 +37,8 @@ import {
 import { UserBlockService } from './user-block.service';
 import { UserPrivacyService } from './user-privacy.service';
 
-export const PROFILE_WALL_INTERACTION_KIND = 'users.profile-wall-post';
+import { PROFILE_WALL_INTERACTION_KIND } from '../../domain/constants/profile-wall-interaction.constant';
+export { PROFILE_WALL_INTERACTION_KIND } from '../../domain/constants/profile-wall-interaction.constant';
 
 @Injectable()
 export class ProfileWallInteractionPolicy

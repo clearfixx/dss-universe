@@ -23,7 +23,7 @@ import { CommentDraftsService } from './application/services/comment-drafts.serv
 import { CommentInteractionPolicy } from './application/services/comment-interaction.policy';
 import { CommentsService } from './application/services/comments.service';
 import { InteractionPolicyRegistryService } from './application/services/interaction-policy-registry.service';
-import { InteractionTargetWriterService } from './application/services/interaction-target-writer.service';
+import { PrismaInteractionTargetWriter } from './infrastructure/repositories/prisma-interaction-target.writer';
 import { InteractionTargetsService } from './application/services/interaction-targets.service';
 import { ModerationService } from './application/services/moderation.service';
 import { ReactionsService } from './application/services/reactions.service';
@@ -54,7 +54,7 @@ import { ReactionsResolver } from './presentation/graphql/resolvers/reactions.re
   imports: [PrismaModule, AuditModule, EventsModule],
   providers: [
     InteractionPolicyRegistryService,
-    InteractionTargetWriterService,
+    PrismaInteractionTargetWriter,
     InteractionTargetsService,
     InteractionTargetsResolver,
     BookmarksService,
@@ -101,7 +101,6 @@ import { ReactionsResolver } from './presentation/graphql/resolvers/reactions.re
   ],
   exports: [
     InteractionPolicyRegistryService,
-    InteractionTargetWriterService,
     InteractionTargetsService,
     BookmarksService,
     CommentDraftsService,

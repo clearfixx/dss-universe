@@ -2,9 +2,9 @@
 
 Date: 2026-10-13. Status: authorized debt-remediation execution, not Phase 11.
 Branch: `debt/d4-module-boundaries`.
-Implemented increments: D4.1, D4.2 and bounded D4.3a; remaining inventory 103,
+Implemented increments: D4.1, D4.2 and bounded D4.3a/b; remaining inventory 99,
 full D4 and the rest of D4.3 OPEN. See
-[D4.3a evidence](../audits/D4_3A_CONTENT_CONTRACTS.md).
+[D4.3b evidence](../audits/D4_3B_ATOMIC_CONTENT_TARGETS.md).
 Review stack base: `173358d` / draft PR #9. Parent acceptance is still pending;
 no red PR is merged and this branch is not an accepted release baseline.
 Authority: approved pre-Phase-11 D4 plan and ADR-003/004.
@@ -12,7 +12,7 @@ Authority: approved pre-Phase-11 D4 plan and ADR-003/004.
 ## Outcome and invariants
 
 Close the full D4 inventory, not merely rename broad services into facades.
-Starting inventory: 135 findings; latest reviewed inventory: 103. Every reduction needs exact source,
+Starting inventory: 135 findings; latest reviewed inventory: 99. Every reduction needs exact source,
 behavioral and contract evidence; no automatic baseline growth or waiver.
 Keep NestJS, Prisma, PostgreSQL, Outbox/BullMQ and existing transport responses.
 Do not invent frontend design, new scoring formulas, owner policy or Phase 11 flows.
@@ -52,6 +52,29 @@ remain in their owners. Provider contracts expose neither consume commands nor
 repositories to downstream Levels.
 
 ## Verification
+
+### D4.3b transfer contract (atomic content targets)
+
+Keep all target/content/reference/audit/outbox writes in the existing PostgreSQL
+transaction. News and Users receive operation-specific semantic write ports,
+never a Prisma client or generic callback/ambient-transaction framework. Their
+ordinary reads and application policy remain owned. Explicit root infrastructure
+units of work implement News draft create/save and Profile Wall create/tombstone.
+
+The shared target writer is persistence, not an application service: relocate it
+inside Interactions infrastructure and remove its business-root/Nest exports.
+A named infrastructure-only entry publishes that stateless persistence adapter
+solely to root infrastructure/assembly. Its transaction argument stays entirely
+inside infrastructure, is not a public business contract, and is forbidden to
+other feature consumers by an explicit architecture rule. This preserves the
+single owned target/audit/event algorithm without copying it into multiple roots.
+Interactions' own comment repository keeps using its owned private writer.
+
+Preserve event names/categories/payloads, target ownership conflict/idempotency
+behavior, News optimistic revisions and slug conflicts, Wall tombstone redaction
+and reference retirement. Verify rollback on failures at target and content
+audit/outbox stages with real PostgreSQL. Policy registration and remaining
+News/Media/activity transfer are still subsequent D4.3 obligations.
 
 ### D4.3a transfer contract (bounded content increment)
 

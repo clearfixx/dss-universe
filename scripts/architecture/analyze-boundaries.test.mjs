@@ -105,6 +105,11 @@ for (const [moduleName, expected] of [
       "ProfileGroupDisplay",
       "USER_BLOCK_DECISIONS",
       "UserBlockDecisionReader",
+      "PROFILE_WALL_INTERACTION_KIND",
+      "PROFILE_WALL_TRANSACTION",
+      "ProfileWallTransaction",
+      "ProfileWallWriteResult",
+      "CreateUserWallPost",
     ],
   ],
   [
@@ -389,3 +394,41 @@ test("CLI rejects unsupported arguments", () => {
   equal(result.status, 1);
   ok(result.stderr.includes("Unknown argument"));
 });
+
+for (const file of [
+  "apps/api/src/modules/news/application/service.ts",
+  "apps/api/src/modules/news/infrastructure/repository.ts",
+  "apps/api/src/modules/interactions/application/service.ts",
+  "apps/api/src/composition/unsafe/application/service.ts",
+  "apps/api/src/composition/unsafe/application/unsafe.module.ts",
+]) {
+  test(`technical persistence entry is forbidden in ${file}`, () => {
+    ok(
+      analyzeBoundaries([
+        {
+          path: file,
+          source:
+            "import { PrismaInteractionTargetWriter } from '@api/modules/interactions/infrastructure';",
+        },
+      ]).some(({ rule }) => rule === "infrastructure-entry-business-import"),
+    );
+  });
+}
+for (const file of [
+  "apps/api/src/composition/content-targets/infrastructure/unit.ts",
+  "apps/api/src/composition/content-targets/content-target-composition.module.ts",
+  "apps/api/src/modules/interactions/infrastructure/repository.ts",
+]) {
+  test(`technical persistence entry is allowed only for owned/root infrastructure: ${file}`, () => {
+    deepEqual(
+      analyzeBoundaries([
+        {
+          path: file,
+          source:
+            "import { PrismaInteractionTargetWriter } from '@api/modules/interactions/infrastructure';",
+        },
+      ]),
+      [],
+    );
+  });
+}

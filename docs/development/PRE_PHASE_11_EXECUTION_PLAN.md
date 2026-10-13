@@ -321,7 +321,13 @@ Model: `gpt-6.1-sol` xhigh for the separate brainstorm and security design.
 
 Branch: `debt/d4-module-boundaries`.
 
-D4.3a is implemented on the same phase branch/PR #10; inventory is 103 after
+D4.3b is implemented on the same phase branch/PR #10; inventory is 99 after four
+further removals. [Evidence](../audits/D4_3B_ATOMIC_CONTENT_TARGETS.md) records
+atomic cross-owner transaction transfer and 54 relevant passing E2E cases.
+Interaction policy registration and News/Media/activity transfer remain open.
+New CI Web scheduler finding DEBT-050 is recorded for separate D6 investigation.
+
+D4.3a was implemented on the same phase branch/PR #10; inventory reached 103 after
 15 further reviewed removals. [Evidence](../audits/D4_3A_CONTENT_CONTRACTS.md)
 records minimal Editor/Content Access contracts, 37 relevant passing E2E cases
 and the unclosed interaction/News/Media/activity scope. Full D4 remains OPEN.

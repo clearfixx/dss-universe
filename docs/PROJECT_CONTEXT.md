@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-13 — pre-Phase-11 debt closure / bounded D4.3a implemented, full D4 open
+> Updated: 2026-10-13 — pre-Phase-11 debt closure / bounded D4.3b implemented, full D4 open
 
 ## Product and authority
 
@@ -28,6 +28,16 @@ Legacy roadmaps are historical. This snapshot does not override source code,
 approved ADRs or recorded owner decisions.
 
 ## Current position
+
+D4.3b composes atomic News draft and Profile Wall writes behind semantic owned
+ports; the shared Interactions writer is owned infrastructure with a guarded
+technical entry, not a business export. Target/content/reference/audit/outbox
+atomicity, optimistic revisions, event shapes and tombstone redaction are retained.
+Inventory: 99 (four further removals, zero additions). Full scoped units: API 644 /
+Web 59 / Worker 36; relevant E2E: 54. Local verification uses bounded sequential
+workers after parallel runs hit OOM. CI at the preceding head stopped on an
+unhandled Web scheduler error (DEBT-050), not API E2E. No frontend fix or acceptance
+waiver. See [evidence](audits/D4_3B_ATOMIC_CONTENT_TARGETS.md).
 
 D4.3a isolates Editor normalization and Content Access decisions with published
 narrow provider contracts and separate consumer-owned ports/root adapters.

@@ -3,7 +3,7 @@
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
  * 📦 Module: Interaction Platform
- * 📄 File: apps/api/src/modules/interactions/application/services/interaction-target-writer.service.ts
+ * 📄 File: apps/api/src/modules/interactions/infrastructure/repositories/prisma-interaction-target.writer.ts
  *
  * 🎯 Purpose:
  * Registers and transitions interaction targets inside owner transactions.
@@ -12,6 +12,12 @@
  * • creates immutable canonical identities;
  * • permits lifecycle transitions without rewriting ownership;
  * • appends Audit and Outbox evidence beside each state change.
+ *
+ * 🏗️ Architecture:
+ * Owned persistence adapter; root infrastructure may reuse it in explicit units of work.
+ *
+ * ⚠️ Important:
+ * Never export through the business root or pass a transaction to an application port.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -32,7 +38,7 @@ import type {
 const PRODUCER = 'dss.api.interactions';
 
 @Injectable()
-export class InteractionTargetWriterService {
+export class PrismaInteractionTargetWriter {
   constructor(
     private readonly audit: AuditWriterService,
     private readonly outbox: OutboxWriterService,

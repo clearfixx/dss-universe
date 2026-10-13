@@ -31,3 +31,8 @@ export {
   type NewsDocumentNormalizer,
   type NewsDocumentProjection,
 } from './domain/ports/news-document-normalizer.interface';
+export { NEWS_INTERACTION_KIND } from './domain/constants/news-interaction.constant';
+export {
+  NEWS_DRAFT_TRANSACTION,
+  type NewsDraftTransaction,
+} from './domain/ports/news-draft-transaction.interface';

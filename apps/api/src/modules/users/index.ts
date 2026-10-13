@@ -56,3 +56,10 @@ export {
   USER_BLOCK_DECISIONS,
   type UserBlockDecisionReader,
 } from './contracts/block-decision.contract';
+export { PROFILE_WALL_INTERACTION_KIND } from './domain/constants/profile-wall-interaction.constant';
+export {
+  PROFILE_WALL_TRANSACTION,
+  type ProfileWallTransaction,
+  type ProfileWallWriteResult,
+  type CreateUserWallPost,
+} from './domain/ports/profile-wall-transaction.interface';

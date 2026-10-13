@@ -1,6 +1,7 @@
 # ADR-004 — Explicit module integration contracts
 
-Date: 2026-10-10. Status: D2 design for D3/D4 review; no runtime refactor yet.
+Date: 2026-10-10. Status: D2 design applied incrementally in D3/D4;
+D4.3b technical-composition clarification added 2026-10-13. Full acceptance open.
 Builds on [architecture rules](../ARCHITECTURE_RULES.md),
 [subject ownership](003-subject-and-access-ownership.md) and accepted
 [transactional Outbox ADR](../../adr/ADR-0003-events-outbox-jobs.md).
@@ -35,6 +36,18 @@ for user/profile/security business ownership.
   create combined response models in presentation composition.
 
 ### Synchronous versus asynchronous work
+
+#### D4.3b technical transaction composition (2026-10-13)
+
+Existing cross-owner SQL units may use a named infrastructure-only entry to reuse
+an owner's stateless persistence adapter inside one transaction. This is not a
+business API or a feature-to-feature dependency: only root infrastructure/assembly
+and the owner's own infrastructure may import it. Consumer-facing semantic ports
+still contain no ORM objects. No repository aggregate, service locator, generic
+transaction framework or broad facade is introduced. The explicit AST rule blocks
+application and foreign feature consumers of these entries; ordinary public roots
+must not re-export the technical adapter. Retain owned algorithms, audit and
+outbox semantics; verify real rollback across all participating writes.
 
 | Flow                                                      | Contract                                         | Why                                                        |
 | --------------------------------------------------------- | ------------------------------------------------ | ---------------------------------------------------------- |
