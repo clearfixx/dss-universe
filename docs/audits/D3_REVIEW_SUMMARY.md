@@ -33,7 +33,7 @@ subsequent requests; authority failures deny access without token fallback.
 
 ## Validation and review limits
 
-- Full uncached units: API 527 with explicit DB/Redis opt-ins, Web 59, Worker 36.
+- Full uncached units: API 535 with explicit DB/Redis opt-ins, Web 59, Worker 36.
 - Selected real API E2E: IAM permission CRUD/denial/rollback, login lock,
   password recovery and second-factor rollback/retry pass.
 - Changed-file formatting, lint, Prisma validation, typecheck and build pass. Architecture fixtures pass;
@@ -62,6 +62,10 @@ proposal is superseded, not implemented or treated as risk resolution. See
 [accepted decisions](../development/COMMAND_DECK_OWNER_DECISIONS.md).
 
 No schema migrations, dependency changes or frontend redesign are included.
+Registration atomicity now has eight isolated PostgreSQL regressions for real
+post-insert failures, retry and concurrent duplicates. Four existing registration
+E2E also pass. The broad GraphQL scenario timed out twice (DEBT-048); full E2E is
+not claimed green. See [evidence and review correction](D3_REGISTRATION_POSTGRES_ATOMICITY.md).
 D3.5 generic groups/Premium and Phase 11 implementation are outside this PR.
 
 Detailed evidence: [D3 progress](D3_PROFILE_BOUNDARY_PROGRESS_2026-10-11.md),

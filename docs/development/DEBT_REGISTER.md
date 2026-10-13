@@ -339,6 +339,23 @@ must be scheduled in their relevant phases, not implemented now. See
 availability finding requiring explicit disposition at security acceptance;
 deferral of new product functionality is not proof that the risk is resolved.
 
+### DEBT-048 — Broad GraphQL registration test repeatedly exceeds its timeout (Medium, OPEN, D6)
+
+During registration atomicity verification, selecting five tests from
+`app.e2e-spec.ts` twice yielded four passes and one five-second timeout in
+`registers and resolves the authenticated viewer through GraphQL`. The second
+run had no parallel build/unit gate. That single test begins at line 1127 and
+also exercises editor/profile and many subsequent flows before the next test.
+Shutdown emits an Apollo warning about an operation arriving while closing.
+No root cause of the stalled operation is claimed from timeout alone.
+
+The four focused registration/rollback tests pass in a separate terminal run;
+the new eight real-DB tests pass. Do not infer full GraphQL/E2E acceptance from
+those results. D6 should trace and split independently owned flows with proper
+cleanup and diagnose the slow/failing operation; do not raise timeouts blindly.
+See [registration evidence](../audits/D3_REGISTRATION_POSTGRES_ATOMICITY.md).
+No out-of-scope E2E restructuring is implemented by this package.
+
 Every new entry should include evidence, impact, proposed ownership and a clear
 decision before implementation. Discovery is not permission to expand the
 current package silently.

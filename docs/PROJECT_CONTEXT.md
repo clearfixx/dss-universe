@@ -29,6 +29,11 @@ approved ADRs or recorded owner decisions.
 
 ## Current position
 
+Registration atomicity verification: eight new isolated PostgreSQL tests and
+four focused existing E2E pass; no production defect found. Full units now pass
+535 API / 59 Web / 36 Worker. A broad GraphQL E2E times out twice (DEBT-048), so
+full E2E acceptance remains red. See [evidence](audits/D3_REGISTRATION_POSTGRES_ATOMICITY.md).
+
 Administrator-availability acceptance review records DEBT-047: assignment counts
 do not prove eligible recovery-capable administration. Self-deactivation and
 critical permission mutation need a separately agreed cross-owner policy. No

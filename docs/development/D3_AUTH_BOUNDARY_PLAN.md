@@ -94,7 +94,10 @@ access decisions need a separate D3.4 security increment before acceptance.
 
 Final acceptance is explicitly unproven in the
 [D3 acceptance matrix](../audits/D3_ACCEPTANCE_REVIEW.md): real registration
-rollback evidence needs characterization and full repository/CI gates remain red.
+rollback evidence is now characterized by eight isolated PostgreSQL tests plus
+four existing E2E regressions; full repository/CI gates remain red. The earlier
+missing-evidence inference is corrected in the
+[registration report](../audits/D3_REGISTRATION_POSTGRES_ATOMICITY.md).
 The [D3.5 brainstorm](D3_5_ACCESS_GROUPS_BRAINSTORM.md) is design-only, awaiting
 scope and mutation-authority decisions; it does not start implementation.
 

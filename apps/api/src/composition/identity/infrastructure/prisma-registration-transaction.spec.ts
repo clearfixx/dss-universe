@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/composition/identity/infrastructure/prisma-registration-transaction.spec.ts
  *
  * 🎯 Purpose:
- * Verifies the narrow shared-row registration transaction; real rollback is E2E-tested.
+ * Verifies narrow registration calls; companion PostgreSQL integration tests prove rollback.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
