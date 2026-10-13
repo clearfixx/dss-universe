@@ -108,6 +108,51 @@ do not reinterpret it as the new unique owner identity.
 - Existing role/direct permission behavior remains unchanged. Premium and groups
   are not inserted into JWTs as permanent authoritative claims.
 
+### Membership and Guardian contract review
+
+Source review after `5e0aa10`: current Role/RolePermission schema and
+PrismaRoleRepository.create accept arbitrary permission IDs. The bounded gate
+fix therefore cannot prove that every role called Premium is non-staff. This is
+an existing DEBT-008/024 isolation gap, not an anonymously exploitable grant path.
+
+Proposed wider D3.5 contract for approval:
+
+| Boundary             | Contract                                                                                                                                                    |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Access-role identity | AccessGroup ID and immutable canonical key; Premium is a reserved non-staff access role represented by this mechanism, not a second independent entitlement |
+| Membership           | Grant ID, subject/group IDs, validFrom, optional validUntil, revokedAt, attributable grant/revoke audit; intervals use server UTC and expiry is exclusive   |
+| Effective access     | Enabled group plus at least one valid unrevoked membership; overlap is OR, no scheduled cleanup dependency or permanent JWT grant                           |
+| Staff authority      | Access-group membership contributes no generic RolePermission/UserPermission keys; independent existing staff assignments retain their own authority        |
+| Guardian             | Explicit allowlisted Knowledge Forge capability; no Premium implication, no moderation/Command Deck permission, no resource-audience bypass                 |
+| Mutation authority   | Proposed existing permissions.manage gate checked in application and transport, never obtained from membership; audit and write atomic                      |
+| Display              | Allowlisted metadata only; renaming/recoloring a group cannot grant authority or turn it into Premium/Guardian                                              |
+
+IAM owns the grant/history storage and publishes minimal current membership facts.
+Authorization owns the capability decision, while Content Access consumes a narrow
+port wired in root composition. Auth does not acquire group or Guardian knowledge.
+Pure application contracts expose IDs, effective keys and decisions, not Prisma
+rows or clients. Use separate owned DTO/mapper/repository files and named exports.
+
+System-role audiences and access-group audiences must remain distinguishable by
+stable identity/type. A custom group named admin must not impersonate a system
+role. Wider audience builders belong to content phases; D3.5 must establish the
+non-colliding identity contract now rather than guessing from display names later.
+
+No automatic migration grants from legacy Premium-like names. Require explicit
+mapping of real assignments and GROUP gate references, preserve history, audit
+conversion and test revocation/expiry on the new reader. Do not delete the old
+data as a rollback strategy. Unknown mappings fail closed. Existing disable
+controls remain authoritative; future sanctions cannot be described as delivered.
+
+The closed capability catalog initially contains only the explicit Guardian
+foundation required by Phase 11. Specific review/publish/reject/rollback resource
+workflow semantics still require the Phase 11 brainstorm; no workflow is built
+or authority expanded by this design document.
+
+Implementation approval must cover the additive schema/migration, current-phase
+mutation authority and closed capability catalog. Owner-only staff appointment,
+Command Deck step-up and new moderation tools remain separately scheduled.
+
 ### Migration and authority proposal
 
 Additive tables/constraints and new readers come first. No automatic entitlement
