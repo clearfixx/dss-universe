@@ -11,7 +11,7 @@
  * 🧠 Responsibilities:
  * • exports UsersModule;
  * • publishes narrow profile, display and existence contracts;
- * • retains explicitly visible legacy exports until remaining D4 consumers migrate.
+ * • keeps concrete services and persistence contracts private.
  *
  * 🏗️ Architecture:
  * Public module API. Other modules should import Users through this file.
@@ -40,13 +40,7 @@ export {
   PROFILE_DISPLAY_READER,
   type ProfileDisplayReader,
 } from './contracts/profile-display-reader.contract';
-export { UsersService } from './application/services/users.service';
-export { UserBlockService } from './application/services/user-block.service';
-
-export {
-  USERS_REPOSITORY,
-  type UsersRepository,
-} from './domain/repositories/users.repository.interface';
+export { USER_ERRORS } from './domain/constants/user-errors.constant';
 
 /* -----------------------------------------------------------------------------
  * 🚀 Public APIs should be small, boring, and stable.
@@ -58,3 +52,7 @@ export type {
   ProfileGroupDisplayReader,
   ProfileGroupDisplay,
 } from './contracts/profile-group-display.contract';
+export {
+  USER_BLOCK_DECISIONS,
+  type UserBlockDecisionReader,
+} from './contracts/block-decision.contract';

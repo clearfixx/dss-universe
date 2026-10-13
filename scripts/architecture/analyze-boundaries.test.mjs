@@ -39,6 +39,50 @@ const { createSourceFile, ScriptTarget, isExportDeclaration, isNamedExports } =
 
 for (const [moduleName, expected] of [
   [
+    "reputation",
+    [
+      "ReputationModule",
+      "REPUTATION_ACCOUNT_READER",
+      "ReputationAccountReader",
+      "ReputationAccountEvidence",
+      "REPUTATION_BLOCK_READER",
+      "ReputationBlockReader",
+      "REPUTATION_PROFILE_EXISTENCE",
+      "ReputationProfileExistence",
+    ],
+  ],
+  [
+    "media",
+    [
+      "MediaModule",
+      "MEDIA_PROFILE_ASSET_COMMANDS",
+      "MediaProfileAssetCommands",
+      "PROFILE_ASSET_TRANSACTION",
+      "ProfileAssetTransaction",
+      "ProfileAssetAssignment",
+      "ProfileAssetSlot",
+    ],
+  ],
+  [
+    "users",
+    [
+      "UsersModule",
+      "PROFILE_EXISTENCE_READER",
+      "ProfileExistenceReader",
+      "VIEWER_PROFILE_READER",
+      "ViewerProfileReader",
+      "ViewerProfile",
+      "PROFILE_DISPLAY_READER",
+      "ProfileDisplayReader",
+      "USER_ERRORS",
+      "PROFILE_GROUP_DISPLAY",
+      "ProfileGroupDisplayReader",
+      "ProfileGroupDisplay",
+      "USER_BLOCK_DECISIONS",
+      "UserBlockDecisionReader",
+    ],
+  ],
+  [
     "community-points",
     [
       "CommunityPointsModule",
@@ -96,6 +140,9 @@ for (const [moduleName, expected] of [
       "AUTH_ERRORS",
       "AUTH_SUBJECT_ELIGIBILITY",
       "AuthSubjectEligibility",
+      "AUTH_ACCOUNT_EVIDENCE",
+      "AuthAccountEvidenceReader",
+      "AuthAccountEvidence",
     ],
   ],
 ]) {

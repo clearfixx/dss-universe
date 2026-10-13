@@ -321,6 +321,10 @@ Model: `gpt-6.1-sol` xhigh for the separate brainstorm and security design.
 
 Branch: `debt/d4-module-boundaries`.
 
+D4.2 is implemented on the same phase branch/PR #10; inventory is now 118 after
+ten further reviewed removals. [Evidence](../audits/D4_2_REPUTATION_PROFILE_ASSETS.md)
+records unchanged API/security behavior and remaining full D4 obligations.
+
 D4.1 is implemented on the explicit review stack `173358d` / PR #9, with full
 D4 acceptance still open. The [D4 sequence](D4_MODULE_BOUNDARY_PLAN.md) preserves
 the complete scope; [initial evidence](../audits/D4_1_GAMIFICATION_BOUNDARIES.md)

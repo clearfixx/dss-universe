@@ -38,17 +38,17 @@ import { CommunityPointsService } from '../src/modules/community-points/applicat
 import { LevelsService } from '../src/modules/levels/application/services/levels.service';
 import { AchievementsService } from '../src/modules/achievements/application/services/achievements.service';
 import { EDITOR_CODE_HIGHLIGHTER } from '../src/modules/editor/application/contracts/editor-code-highlighter.interface';
-import { createGamificationSchemaFixture } from './helpers/migrated-gamification-schema.fixture';
+import { createIsolatedApiSchemaFixture } from './helpers/migrated-api-schema.fixture';
 
 describe('isolated gamification composition (e2e)', () => {
   let app: INestApplication<App>;
-  let fixture: Awaited<ReturnType<typeof createGamificationSchemaFixture>>;
+  let fixture: Awaited<ReturnType<typeof createIsolatedApiSchemaFixture>>;
   let prisma: PrismaService;
   let points: CommunityPointsService;
   let levels: LevelsService;
   let achievements: AchievementsService;
   beforeAll(async () => {
-    fixture = await createGamificationSchemaFixture();
+    fixture = await createIsolatedApiSchemaFixture();
     prisma = fixture.prisma;
     const module = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)

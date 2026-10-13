@@ -14,6 +14,9 @@
  * • appends compensating reversals without mutating history;
  * • exposes public, explainable reputation history.
  *
+ * 🏗️ Architecture:
+ * Owned reputation policy consumes separate minimal account, block and existence ports.
+ *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
@@ -25,9 +28,18 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { UserStatus } from '@prisma/client';
-
-import { UserBlockService, UsersService } from '@api/modules/users';
+import {
+  REPUTATION_ACCOUNT_READER,
+  type ReputationAccountReader,
+} from '../../contracts/account-evidence.port';
+import {
+  REPUTATION_BLOCK_READER,
+  type ReputationBlockReader,
+} from '../../contracts/block-decision.port';
+import {
+  REPUTATION_PROFILE_EXISTENCE,
+  type ReputationProfileExistence,
+} from '../../contracts/profile-existence.port';
 
 import {
   REPUTATION_REPOSITORY,
@@ -49,8 +61,12 @@ export class ReputationService {
   constructor(
     @Inject(REPUTATION_REPOSITORY)
     private readonly reputation: ReputationRepository,
-    private readonly users: UsersService,
-    private readonly blocks: UserBlockService,
+    @Inject(REPUTATION_ACCOUNT_READER)
+    private readonly accounts: ReputationAccountReader,
+    @Inject(REPUTATION_BLOCK_READER)
+    private readonly blocks: ReputationBlockReader,
+    @Inject(REPUTATION_PROFILE_EXISTENCE)
+    private readonly profiles: ReputationProfileExistence,
   ) {}
 
   getPolicy(): Promise<ReputationPolicy> {
@@ -87,15 +103,15 @@ export class ReputationService {
     }
     const cleanReason = this.reason(reason);
     const [actor, recipient, policy, blocked] = await Promise.all([
-      this.users.findRecordById(actorId),
-      this.users.findRecordById(recipientId),
+      this.accounts.find(actorId),
+      this.accounts.find(recipientId),
       this.reputation.policy(),
       this.blocks.isBlocked(actorId, recipientId),
     ]);
-    if (!actor || actor.status !== UserStatus.ACTIVE) {
+    if (!actor || !actor.active) {
       throw new BadRequestException('The reputation actor is not active.');
     }
-    if (!recipient || recipient.status !== UserStatus.ACTIVE) {
+    if (!recipient || !recipient.active) {
       throw new BadRequestException('The reputation recipient is not active.');
     }
     if (blocked) {
@@ -156,7 +172,7 @@ export class ReputationService {
     page = 1,
     limit = 20,
   ): Promise<ReputationHistory> {
-    if (!(await this.users.exists(recipientId))) {
+    if (!(await this.profiles.exists(recipientId))) {
       throw new NotFoundException('Reputation recipient not found.');
     }
     return this.reputation.history(recipientId, page, limit);

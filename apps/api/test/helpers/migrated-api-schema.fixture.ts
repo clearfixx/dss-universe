@@ -2,8 +2,8 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: Gamification E2E Fixtures
- * 📄 File: apps/api/test/helpers/migrated-gamification-schema.fixture.ts
+ * 📦 Module: API Boundary E2E Fixtures
+ * 📄 File: apps/api/test/helpers/migrated-api-schema.fixture.ts
  *
  * 🎯 Purpose:
  * Applies real migrations to an owned schema, preserving immutable production history.
@@ -27,7 +27,7 @@ import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaService } from '@api/core/database';
 
-export async function createGamificationSchemaFixture() {
+export async function createIsolatedApiSchemaFixture() {
   const url = new URL(process.env.DATABASE_URL ?? '');
   if (
     !['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname) ||
@@ -35,7 +35,7 @@ export async function createGamificationSchemaFixture() {
     url.username !== 'dss_test'
   )
     throw new Error('Expected the disposable loopback dss_test database.');
-  const schema = `gamification_boundary_${randomUUID().replaceAll('-', '')}`;
+  const schema = `api_boundary_${randomUUID().replaceAll('-', '')}`;
   const admin = new Pool({ connectionString: process.env.DATABASE_URL });
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,

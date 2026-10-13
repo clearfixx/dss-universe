@@ -17,7 +17,6 @@ import { Module } from '@nestjs/common';
 import { AuditModule } from '@api/core/audit';
 import { PrismaModule } from '@api/core/database';
 import { EventsModule } from '@api/core/events';
-import { UsersModule } from '@api/modules/users';
 
 import { ReputationService } from './application/services/reputation.service';
 import { REPUTATION_REPOSITORY } from './domain/repositories/reputation.repository.interface';
@@ -25,7 +24,7 @@ import { PrismaReputationRepository } from './infrastructure/repositories/prisma
 import { ReputationResolver } from './presentation/graphql/resolvers/reputation.resolver';
 
 @Module({
-  imports: [PrismaModule, AuditModule, EventsModule, UsersModule],
+  imports: [PrismaModule, AuditModule, EventsModule],
   providers: [
     ReputationService,
     ReputationResolver,
@@ -34,7 +33,7 @@ import { ReputationResolver } from './presentation/graphql/resolvers/reputation.
       useClass: PrismaReputationRepository,
     },
   ],
-  exports: [ReputationService],
+  exports: [],
 })
 export class ReputationModule {}
 

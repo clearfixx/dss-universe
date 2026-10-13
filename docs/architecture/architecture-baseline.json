@@ -1,7 +1,7 @@
 {
   "version": 1,
   "date": "2026-10-13",
-  "sourceBase": "173358d",
+  "sourceBase": "a9697c9",
   "status": "review inventory; not a waiver or compliance certificate",
   "scope": "Authored API modules/core TypeScript; excludes tests/declarations; bounded syntactic analysis",
   "findings": [
@@ -83,27 +83,6 @@
       "package": "D4"
     },
     {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/reputation/index.ts\",\"./application/services/reputation.service: ReputationService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/reputation/index.ts",
-      "detail": "./application/services/reputation.service: ReputationService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/users/index.ts\",\"./application/services/user-block.service: UserBlockService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/users/index.ts",
-      "detail": "./application/services/user-block.service: UserBlockService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/users/index.ts\",\"./application/services/users.service: UsersService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/users/index.ts",
-      "detail": "./application/services/users.service: UsersService",
-      "package": "D4"
-    },
-    {
       "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/editor/application/services/editor-content-delivery.service.ts\",\"../../../content-access/application/services/content-gates.service: ContentGatesService\"]",
       "rule": "foreign-concrete-service",
       "file": "apps/api/src/modules/editor/application/services/editor-content-delivery.service.ts",
@@ -125,20 +104,6 @@
       "package": "D4"
     },
     {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts\",\"../../../../users/application/services/users.service: UsersService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts",
-      "detail": "../../../../users/application/services/users.service: UsersService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts\",\"../../../../users/presentation/graphql/mappers/user-graphql.mapper: UserGraphqlMapper\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts",
-      "detail": "../../../../users/presentation/graphql/mappers/user-graphql.mapper: UserGraphqlMapper",
-      "package": "D4"
-    },
-    {
       "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/news/application/services/news-interaction.policy.ts\",\"../../../interactions: InteractionPolicyRegistryService\"]",
       "rule": "foreign-concrete-service",
       "file": "apps/api/src/modules/news/application/services/news-interaction.policy.ts",
@@ -157,13 +122,6 @@
       "rule": "foreign-concrete-service",
       "file": "apps/api/src/modules/news/infrastructure/repositories/prisma-news.repository.ts",
       "detail": "../../../interactions: InteractionTargetWriterService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/reputation/application/services/reputation.service.ts\",\"@api/modules/users: UserBlockService, UsersService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/reputation/application/services/reputation.service.ts",
-      "detail": "@api/modules/users: UserBlockService, UsersService",
       "package": "D4"
     },
     {
@@ -223,27 +181,6 @@
       "package": "D4"
     },
     {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts\",\"../../../../users/application/services/users.service\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts",
-      "detail": "../../../../users/application/services/users.service",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts\",\"../../../../users/presentation/graphql/mappers/user-graphql.mapper\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts",
-      "detail": "../../../../users/presentation/graphql/mappers/user-graphql.mapper",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts\",\"../../../../users/presentation/graphql/models/viewer.model\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts",
-      "detail": "../../../../users/presentation/graphql/models/viewer.model",
-      "package": "D4"
-    },
-    {
       "id": "[\"foreign-private-import\",\"apps/api/src/modules/news/application/services/news-workflow.service.ts\",\"../../../media/domain/enums/media-status.enum\"]",
       "rule": "foreign-private-import",
       "file": "apps/api/src/modules/news/application/services/news-workflow.service.ts",
@@ -297,13 +234,6 @@
       "rule": "persistence-outside-infrastructure",
       "file": "apps/api/src/modules/interactions/application/services/interaction-target-writer.service.ts",
       "detail": "@api/core/database",
-      "package": "D4"
-    },
-    {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/reputation/application/services/reputation.service.ts\",\"@prisma/client\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/reputation/application/services/reputation.service.ts",
-      "detail": "@prisma/client",
       "package": "D4"
     },
     {

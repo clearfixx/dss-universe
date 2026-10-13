@@ -2,6 +2,8 @@
 
 Date: 2026-10-13. Status: authorized debt-remediation execution, not Phase 11.
 Branch: `debt/d4-module-boundaries`.
+Implemented increments: D4.1 and D4.2; remaining inventory 118, full D4 OPEN.
+See [D4.2 evidence](../audits/D4_2_REPUTATION_PROFILE_ASSETS.md).
 Review stack base: `173358d` / draft PR #9. Parent acceptance is still pending;
 no red PR is merged and this branch is not an accepted release baseline.
 Authority: approved pre-Phase-11 D4 plan and ADR-003/004.
@@ -49,6 +51,27 @@ remain in their owners. Provider contracts expose neither consume commands nor
 repositories to downstream Levels.
 
 ## Verification
+
+### D4.2 transfer contract
+
+Reputation consumes separate account evidence (active flag and subject creation
+time), profile existence and bidirectional block decisions. Auth owns minimal
+account evidence; Users owns existence/blocks. No full UserRecord, credentials
+or Prisma enum crosses those ports. Existing error ordering, rolling cooldown,
+age threshold, public history and immutable reversal semantics are preserved.
+
+The four avatar/cover GraphQL mutations move from Media presentation into root
+presentation composition, consuming published Media commands and the existing
+Users viewer projection. Names, arguments, Viewer schema, fallback avatar and
+timestamp strings remain unchanged. Media candidate validation remains owned.
+
+Current avatar/cover persistence directly writes Users profile fields together
+with Media references/audit. Transfer that cross-owner transaction into a named
+root infrastructure unit of work behind a Media-owned semantic transaction port.
+Keep candidate recheck, reference retirement, profile update and audit in the
+same transaction. No ORM client is passed through application/public contracts;
+do not move a profile write to an asynchronous event or split the transaction.
+No new tables, owner rights, moderation tools or visual design are introduced.
 
 Pure tests cover missing recipients, provider failures, balance and current
 calculation semantics. Real PostgreSQL verifies existence across statuses and the

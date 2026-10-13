@@ -49,6 +49,8 @@ import { AuthorizationModule } from '@api/core/authorization';
 
 import { AUTHENTICATION_FLOWS } from './contracts/authentication-flows.contract';
 import { AUTH_SUBJECT_ELIGIBILITY } from './contracts/subject-eligibility.contract';
+import { AUTH_ACCOUNT_EVIDENCE } from './contracts/account-evidence.contract';
+import { PrismaAccountEvidenceReader } from './infrastructure/repositories/prisma-account-evidence.reader';
 import { PrismaSubjectEligibilityReader } from './infrastructure/repositories/prisma-subject-eligibility.reader';
 
 import { AuthService } from './application/services/auth.service';
@@ -92,6 +94,7 @@ import { PrismaAccountCredentialsRepository } from './infrastructure/repositorie
   imports: [AuthCoreModule, AuthorizationModule],
   controllers: [AuthController],
   providers: [
+    { provide: AUTH_ACCOUNT_EVIDENCE, useClass: PrismaAccountEvidenceReader },
     {
       provide: AUTH_SUBJECT_ELIGIBILITY,
       useClass: PrismaSubjectEligibilityReader,
@@ -152,6 +155,10 @@ import { PrismaAccountCredentialsRepository } from './infrastructure/repositorie
       useClass: PrismaAuthSessionRepository,
     },
   ],
-  exports: [AUTHENTICATION_FLOWS, AUTH_SUBJECT_ELIGIBILITY],
+  exports: [
+    AUTHENTICATION_FLOWS,
+    AUTH_SUBJECT_ELIGIBILITY,
+    AUTH_ACCOUNT_EVIDENCE,
+  ],
 })
 export class AuthModule {}

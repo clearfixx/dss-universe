@@ -25,7 +25,7 @@
 import { Module } from '@nestjs/common';
 
 import { StorageModule } from '@api/core/storage';
-import { UsersModule } from '../users/users.module';
+import { MEDIA_PROFILE_ASSET_COMMANDS } from './contracts/profile-asset-commands.contract';
 
 import { MediaUploadPolicyService } from './application/services/media-upload-policy.service';
 import { MediaUploadSessionService } from './application/services/media-upload-session.service';
@@ -53,8 +53,21 @@ import { COVER_REPOSITORY } from './domain/repositories/cover.repository.interfa
 import { PrismaCoverRepository } from './infrastructure/repositories/prisma-cover.repository';
 
 @Module({
-  imports: [StorageModule, UsersModule],
+  imports: [StorageModule],
   providers: [
+    {
+      provide: MEDIA_PROFILE_ASSET_COMMANDS,
+      inject: [AvatarService, CoverService],
+      useFactory: (avatars: AvatarService, covers: CoverService) =>
+        Object.freeze({
+          assignAvatar: (subjectId: string, mediaId: string) =>
+            avatars.assign(subjectId, mediaId),
+          removeAvatar: (subjectId: string) => avatars.remove(subjectId),
+          assignCover: (subjectId: string, mediaId: string) =>
+            covers.assign(subjectId, mediaId),
+          removeCover: (subjectId: string) => covers.remove(subjectId),
+        }),
+    },
     AvatarService,
     CoverService,
     MediaAccessService,
@@ -88,8 +101,7 @@ import { PrismaCoverRepository } from './infrastructure/repositories/prisma-cove
   ],
   controllers: [MediaUploadController, MediaDeliveryController],
   exports: [
-    AvatarService,
-    CoverService,
+    MEDIA_PROFILE_ASSET_COMMANDS,
     MediaUploadPolicyService,
     MediaUploadSessionService,
     MEDIA_REPOSITORY,

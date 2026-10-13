@@ -28,6 +28,8 @@
  */
 
 import { Module } from '@nestjs/common';
+import { USER_BLOCK_DECISIONS } from './contracts/block-decision.contract';
+import type { UserBlockRepository } from './domain/repositories/user-block.repository.interface';
 import { PROFILE_EXISTENCE_READER } from './contracts/profile-existence.contract';
 import { PrismaProfileExistenceReader } from './infrastructure/repositories/prisma-profile-existence.reader';
 import { ProfileGroupsService } from './application/services/profile-groups.service';
@@ -73,6 +75,15 @@ import { ProfileWallInteractionPolicy } from './application/services/profile-wal
   imports: [PrismaModule, ActivityModule, InteractionsModule],
   controllers: [UsersController],
   providers: [
+    {
+      provide: USER_BLOCK_DECISIONS,
+      inject: [USER_BLOCK_REPOSITORY],
+      useFactory: (repository: UserBlockRepository) =>
+        Object.freeze({
+          isBlocked: (first: string, second: string) =>
+            repository.existsEitherDirection(first, second),
+        }),
+    },
     {
       provide: PROFILE_EXISTENCE_READER,
       useClass: PrismaProfileExistenceReader,
@@ -123,13 +134,10 @@ import { ProfileWallInteractionPolicy } from './application/services/profile-wal
     },
   ],
   exports: [
+    USER_BLOCK_DECISIONS,
     PROFILE_EXISTENCE_READER,
     VIEWER_PROFILE_READER,
     PROFILE_DISPLAY_READER,
-    UsersService,
-    UserPrivacyService,
-    UserBlockService,
-    USERS_REPOSITORY,
   ],
 })
 export class UsersModule {}

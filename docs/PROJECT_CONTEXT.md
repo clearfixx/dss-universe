@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-13 — pre-Phase-11 debt closure / D4.1 implemented, full D4 open
+> Updated: 2026-10-13 — pre-Phase-11 debt closure / D4.2 implemented, full D4 open
 
 ## Product and authority
 
@@ -28,6 +28,14 @@ Legacy roadmaps are historical. This snapshot does not override source code,
 approved ADRs or recorded owner decisions.
 
 ## Current position
+
+D4.2 separates Reputation account/block/existence evidence and moves profile-asset
+GraphQL composition plus atomic cross-owner writes out of Media. Broad Users and
+Reputation providers are private; no scoring, schema or frontend changes.
+Inventory: 118 findings (ten further reviewed removals, zero additions).
+Full opt-in units: API 630 / Web 59 / Worker 36; relevant E2E: 28; coverage,
+lint/typecheck/build pass. Full D4/release acceptance remains open.
+See [D4.2 evidence](audits/D4_2_REPUTATION_PROFILE_ASSETS.md).
 
 D4.1 removes broad Users/Points dependencies from Community Points, Levels and
 Achievements through minimal consumer-owned ports and root adapters. Behavior

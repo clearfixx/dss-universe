@@ -24,10 +24,6 @@ import { MediaUploadSessionService } from '../../../application/services/media-u
 import { InitiateMediaUploadInput } from '../inputs/initiate-media-upload.input';
 import { MediaUploadSessionGraphqlMapper } from '../mappers/media-upload-session-graphql.mapper';
 import { MediaUploadSessionModel } from '../models/media-upload-session.model';
-import { AvatarService } from '../../../application/services/avatar.service';
-import { UsersService } from '../../../../users/application/services/users.service';
-import { UserGraphqlMapper } from '../../../../users/presentation/graphql/mappers/user-graphql.mapper';
-import { ViewerModel } from '../../../../users/presentation/graphql/models/viewer.model';
 import { MediaAccessService } from '../../../application/services/media-access.service';
 import { MediaAccessModel } from '../models/media-access.model';
 import { MediaQuarantineService } from '../../../application/services/media-quarantine.service';
@@ -42,16 +38,12 @@ import {
 } from '../models/media-library.model';
 import { MediaLibraryGraphqlMapper } from '../mappers/media-library-graphql.mapper';
 import { MediaJobService } from '../../../application/services/media-job.service';
-import { CoverService } from '../../../application/services/cover.service';
 
 @Resolver()
 @UseGuards(JwtAuthGuard)
 export class MediaResolver {
   constructor(
     private readonly sessions: MediaUploadSessionService,
-    private readonly avatars: AvatarService,
-    private readonly covers: CoverService,
-    private readonly users: UsersService,
     private readonly access: MediaAccessService,
     private readonly quarantine: MediaQuarantineService,
     private readonly library: MediaLibraryService,
@@ -83,48 +75,6 @@ export class MediaResolver {
   ): Promise<MediaUploadSessionModel> {
     const session = await this.sessions.abort(user.id, id);
     return MediaUploadSessionGraphqlMapper.toModel(session);
-  }
-
-  @Mutation(() => ViewerModel)
-  async setViewerAvatar(
-    @AuthUser() user: AuthenticatedUser,
-    @Args('mediaId', { type: () => ID }) mediaId: string,
-  ): Promise<ViewerModel> {
-    await this.avatars.assign(user.id, mediaId);
-    return UserGraphqlMapper.viewerFromResponse(
-      await this.users.getById(user.id),
-    );
-  }
-
-  @Mutation(() => ViewerModel)
-  async removeViewerAvatar(
-    @AuthUser() user: AuthenticatedUser,
-  ): Promise<ViewerModel> {
-    await this.avatars.remove(user.id);
-    return UserGraphqlMapper.viewerFromResponse(
-      await this.users.getById(user.id),
-    );
-  }
-
-  @Mutation(() => ViewerModel)
-  async setViewerCover(
-    @AuthUser() user: AuthenticatedUser,
-    @Args('mediaId', { type: () => ID }) mediaId: string,
-  ): Promise<ViewerModel> {
-    await this.covers.assign(user.id, mediaId);
-    return UserGraphqlMapper.viewerFromResponse(
-      await this.users.getById(user.id),
-    );
-  }
-
-  @Mutation(() => ViewerModel)
-  async removeViewerCover(
-    @AuthUser() user: AuthenticatedUser,
-  ): Promise<ViewerModel> {
-    await this.covers.remove(user.id);
-    return UserGraphqlMapper.viewerFromResponse(
-      await this.users.getById(user.id),
-    );
   }
 
   @Query(() => MediaAccessModel)

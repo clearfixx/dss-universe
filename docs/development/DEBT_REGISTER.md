@@ -59,6 +59,12 @@ active package safe and buildable.
 
 ## Additional D0 verification findings
 
+D4.2 further progress for DEBT-003/004/027: Reputation uses minimal evidence;
+Media profile mutations and cross-owner writes are composed explicitly; broad
+Users/Reputation providers are private. Ten further findings are removed
+(128 → 118), zero additions. Full D4 is still OPEN; see
+[D4.2 evidence](../audits/D4_2_REPUTATION_PROFILE_ASSETS.md).
+
 D4.1 progress for DEBT-003/027: three gamification consumers now use minimal
 recipient/balance ports; concrete service exports are private. Seven reviewed
 findings are removed (135 → 128), with no additions. Remaining cross-module
