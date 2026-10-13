@@ -30,7 +30,7 @@
 
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 
-import { JwtAuthGuard } from '@api/core/auth';
+import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
 import {
   Permission,
   PermissionsGuard,
@@ -40,13 +40,22 @@ import type { PaginatedResult } from '@api/shared';
 
 import type { UserResponseDto } from '../../application/dto';
 import { UsersService } from '../../application/services/users.service';
+import { ProfileGroupsService } from '../../application/services/profile-groups.service';
 import { ListUsersQueryDto } from '../dto/queries/list-users.query.dto';
 import { ListUsersQueryMapper } from '../mappers/list-users-query.mapper';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly groups: ProfileGroupsService,
+  ) {}
+
+  @Get('me/access-groups')
+  groupDisplay(@AuthUser() actor: AuthenticatedUser) {
+    return this.groups.read(actor.id);
+  }
 
   @Get()
   @RequirePermissions(Permission.UsersRead)

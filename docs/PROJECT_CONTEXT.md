@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-12 — pre-Phase-11 debt closure / D3.4 IAM boundaries in progress
+> Updated: 2026-10-13 — pre-Phase-11 debt closure / D3.5 implemented, review pending
 
 ## Product and authority
 
@@ -29,10 +29,21 @@ approved ADRs or recorded owner decisions.
 
 ## Current position
 
+Full D3.5 is owner-approved and implemented on `debt/d3-5-iam-access-groups`,
+stacked on `04a9d50` / draft PR #8: isolated membership validity/revocation,
+non-staff Premium, explicit Knowledge Forge Guardian, atomic audit, current
+Authorization decisions and safe profile group metadata. No Phase 11 workflow
+or new owner/Command Deck authority is added. Full units: API 604 / Web 59 /
+Worker 36; relevant HTTP E2E: 16; lint/typecheck/build and architecture pass.
+Acceptance remains open: legacy formatting, dependency audit, broad E2E/generated
+output debts and migration/schema drift (DEBT-049). See
+[D3.5 evidence](audits/D3_5_ACCESS_GROUPS_IMPLEMENTATION.md).
+
 Approved Premium gate increment is on `debt/d3-5-premium-gate-contract`, stacked
 on D3 at `5896013`: mandatory GROUP audience before numeric threshold bypass.
-This does not complete generic groups, access-role isolation, Guardian, category
-ACLs or owner policies. See [evidence](audits/D3_5_PREMIUM_GATE_CONTRACT.md).
+That earlier increment alone did not complete generic groups or Guardian;
+the wider D3.5 above supplies their foundation. Category ACLs and owner policies
+remain separately scheduled. See [earlier evidence](audits/D3_5_PREMIUM_GATE_CONTRACT.md).
 
 Registration atomicity verification: eight new isolated PostgreSQL tests and
 four focused existing E2E pass; no production defect found. Full units now pass
@@ -56,8 +67,8 @@ DEBT-043 is implemented pending review. IAM role persistence is now isolated;
 subject assignment persistence is also isolated, preserving protected revocation.
 Reviewed architecture inventory is 135, all allocated to D4; the final D3 bcrypt
 namespace import is replaced by named functions with real-library regressions.
-See [evidence](audits/D3_4_EXPLICIT_BCRYPT_IMPORTS.md). IAM exposes only module assembly and
-registration policy, with no concrete Nest provider exports. Auth assembly uses
+See [evidence](audits/D3_4_EXPLICIT_BCRYPT_IMPORTS.md). IAM now also exposes narrow
+membership/display contracts, never concrete Nest service/repository exports. Auth assembly uses
 its named public root. D3 acceptance remains open.
 See [public contract evidence](audits/D3_4_PUBLIC_INTEGRATION_CONTRACTS.md).
 See [assignment evidence](audits/D3_4_IAM_SUBJECT_ASSIGNMENT_PERSISTENCE.md).
@@ -71,7 +82,7 @@ Phase 11 has not started. Current work is debt closure, not a return to Phase 4.
 | Area             | Current evidence-based status                                                  |
 | ---------------- | ------------------------------------------------------------------------------ |
 | Phases 1–4, 7, 9 | Historically delivered; full current acceptance must be reproduced             |
-| Phase 5          | Partial: Auth/session features exist; access-group scope remains open          |
+| Phase 5          | Access-group/Premium/Guardian foundation implemented; formal acceptance open   |
 | Phase 6          | LOCAL Media implemented; MinIO/S3 operational adapters absent                  |
 | Phase 8          | All packages implemented; formal owner/runtime acceptance pending              |
 | Phase 10         | News packages implemented; shared Search and notification delivery not claimed |
@@ -96,7 +107,7 @@ not supplied as profile data by Auth. Registration failure boundaries are
 characterized against the real disposable database before ownership transfer.
 The owner approved the Auth/subject/profile direction in
 [ADR-003](architecture/adr/003-subject-and-access-ownership.md). D3.5 groups/Premium
-is separately scheduled for scope approval, not silently included in D3/Phase 11.
+was separately approved and implemented, not silently included in D3/Phase 11.
 
 The separately approved [D3.4 factor lifecycle correction](audits/D3_4_TWO_FACTOR_ATOMIC_LIFECYCLE.md)
 implements subject locking and atomic disable proof/mutation, including recovery

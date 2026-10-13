@@ -36,6 +36,10 @@ import type {
   ContentGateViewerFacts,
   CreateContentGate,
 } from '../../domain/types/content-gate.type';
+import {
+  CONTENT_AUDIENCE_READER,
+  type ContentAudienceReader,
+} from '../../domain/ports/content-audience-reader.interface';
 
 const MAX_REQUIREMENTS = 6;
 
@@ -44,6 +48,8 @@ export class ContentGatesService {
   constructor(
     @Inject(CONTENT_GATES_REPOSITORY)
     private readonly gates: ContentGatesRepository,
+    @Inject(CONTENT_AUDIENCE_READER)
+    private readonly audience: ContentAudienceReader,
   ) {}
 
   create(input: CreateContentGate): Promise<ContentGate> {
@@ -67,9 +73,13 @@ export class ContentGatesService {
         notice: 'Sign in to check hidden content requirements.',
       };
     }
-    const facts = await this.gates.viewerFacts(viewerId, now);
-    if (!facts)
+    const [statistics, access] = await Promise.all([
+      this.gates.viewerFacts(viewerId, now),
+      this.audience.read(viewerId, now),
+    ]);
+    if (!statistics || !access)
       throw new NotFoundException('Content Gate viewer was not found.');
+    const facts = { ...statistics, groups: [...access.groups] };
 
     const audience = gate.requirements.filter(({ kind }) => kind === 'GROUP');
     if (audience.some((requirement) => !this.isMet(requirement, facts))) {
@@ -85,10 +95,7 @@ export class ContentGatesService {
     if (thresholds.length > 0 && gate.ownerId === viewerId) {
       return this.bypass(gate, 'Author preview bypass is active.');
     }
-    if (
-      thresholds.length > 0 &&
-      facts.groups.some((group) => group.toLowerCase() === 'premium')
-    ) {
+    if (thresholds.length > 0 && access.premium) {
       return this.bypass(
         gate,
         'Premium bypasses numeric thresholds within the permitted audience.',

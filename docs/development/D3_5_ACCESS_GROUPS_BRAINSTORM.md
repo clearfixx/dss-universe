@@ -1,6 +1,6 @@
 # D3.5 — Generic groups, Premium and Guardian scope proposal
 
-Date: 2026-10-13. Status: BRAINSTORM / implementation approval pending.
+Date: 2026-10-13. Status: OWNER-APPROVED / implemented, review pending.
 Authority: DEC-D1-01 and ADR-003 retain these capabilities in 1.0. This document
 does not approve product-policy details or declare D3 accepted.
 
@@ -8,7 +8,7 @@ Owner-approved refinement: Premium is a non-staff access role. Audience access
 comes first; Premium automatically bypasses numeric thresholds only inside that
 audience. The bounded existing-gate implementation is authorized separately on
 `debt/d3-5-premium-gate-contract`; wider groups/membership/Guardian implementation
-still needs its own approved schema and mutation-authority scope. See
+was subsequently approved explicitly with current `permissions.manage` authority. See
 [ADR-005](../architecture/adr/005-premium-audience-before-thresholds.md).
 
 ## Why before Phase 11
@@ -74,7 +74,7 @@ Use the reserved `debt/d3-5-iam-access-groups` branch only after scope approval.
 Do not fork an implementation from an unaccepted stack without recording its base
 and acceptance dependency. D4 planning can proceed independently.
 
-## Owner decisions still needed
+## Design history (proposal wording retained as historical evidence)
 
 ### Current-code integration evidence (2026-10-13)
 
@@ -183,4 +183,17 @@ Phase 11 publishes/reviews actual revisions only after its own brainstorm.
   under current permissions without pre-implementing future owner restrictions.
 - Approve the concrete schema/contract/migration design before implementation.
 
-This is a design proposal, not approval to start coding D3.5.
+### Owner approval and implementation
+
+The owner answered “Так, реалізуй цей пакет” to the full D3.5 scope:
+separate groups, membership periods/revocation, non-staff Premium, explicit
+Knowledge Forge Guardian, atomic audit and migrations. Group management uses
+existing `permissions.manage`; no new owner/Command Deck rights are added.
+Earlier proposal wording above is historical, not an outstanding approval request.
+
+Implementation is on `debt/d3-5-iam-access-groups`, stacked on `04a9d50`.
+See [ADR-006](../architecture/adr/006-isolated-access-groups-and-capabilities.md)
+and [verification](../audits/D3_5_ACCESS_GROUPS_IMPLEMENTATION.md).
+Display is bounded badge text/color/library icon keys; no uploaded badge assets
+or new storage are introduced. Future assets must use Media ownership.
+Full quality/CI and review remain open; Phase 11 does not start from this approval.

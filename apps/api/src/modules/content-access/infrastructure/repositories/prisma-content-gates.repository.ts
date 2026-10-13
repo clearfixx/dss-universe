@@ -58,7 +58,6 @@ export class PrismaContentGatesRepository implements ContentGatesRepository {
       select: {
         createdAt: true,
         status: true,
-        roles: { select: { role: { select: { name: true } } } },
       },
     });
     if (!user || user.status !== 'ACTIVE') return null;
@@ -80,7 +79,8 @@ export class PrismaContentGatesRepository implements ContentGatesRepository {
       forumPosts: 0,
       publications: 0,
       reputation: reputation._sum.value ?? 0,
-      groups: user.roles.map(({ role }) => role.name),
+      // Audience comes from Authorization, never from display names or this statistics query.
+      groups: [],
     };
   }
 

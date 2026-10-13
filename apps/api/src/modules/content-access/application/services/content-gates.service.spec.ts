@@ -15,8 +15,12 @@
 import { BadRequestException } from '@nestjs/common';
 
 import type { ContentGatesRepository } from '../../domain/repositories/content-gates.repository.interface';
-import type { ContentGate } from '../../domain/types/content-gate.type';
+import type {
+  ContentGate,
+  ContentGateViewerFacts,
+} from '../../domain/types/content-gate.type';
 import { ContentGatesService } from './content-gates.service';
+import type { ContentAudienceReader } from '../../domain/ports/content-audience-reader.interface';
 
 const gate: ContentGate = {
   id: 'b9d2b2c8-91c6-41f1-b0e6-f46410a5445a',
@@ -36,7 +40,21 @@ describe('ContentGatesService', () => {
     findById: jest.fn(),
     viewerFacts: jest.fn(),
   };
-  const service = new ContentGatesService(repository);
+  const audience: jest.Mocked<ContentAudienceReader> = { read: jest.fn() };
+  const service = new ContentGatesService(repository, audience);
+  function setFacts(facts: ContentGateViewerFacts | null) {
+    repository.viewerFacts.mockResolvedValue(facts);
+    audience.read.mockResolvedValue(
+      facts
+        ? {
+            groups: facts.groups,
+            premium: facts.groups.some(
+              (key) => key.toLowerCase() === 'premium',
+            ),
+          }
+        : null,
+    );
+  }
 
   beforeEach(() => jest.resetAllMocks());
 
@@ -56,11 +74,30 @@ describe('ContentGatesService', () => {
     ],
   };
 
+  it('does not infer Premium from obsolete statistics or system role names', async () => {
+    repository.findById.mockResolvedValue(gate);
+    setFacts({ ...baseFacts, groups: ['PREMIUM'] });
+    audience.read.mockResolvedValue({ groups: ['PREMIUM'], premium: false });
+    await expect(service.evaluate(gate.id, 'viewer')).resolves.toMatchObject({
+      allowed: false,
+      bypassed: false,
+    });
+  });
+
+  it('fails closed when current audience evidence is unavailable', async () => {
+    repository.findById.mockResolvedValue(gate);
+    setFacts(baseFacts);
+    audience.read.mockRejectedValue(new Error('Audience unavailable'));
+    await expect(service.evaluate(gate.id, 'viewer')).rejects.toThrow(
+      'Audience unavailable',
+    );
+  });
+
   it.each(['ALL', 'ANY'] as const)(
     'does not let Premium bypass GROUP with %s thresholds',
     async (operator) => {
       repository.findById.mockResolvedValue({ ...audienceGate, operator });
-      repository.viewerFacts.mockResolvedValue({
+      setFacts({
         ...baseFacts,
         groups: ['Premium'],
       });
@@ -76,7 +113,7 @@ describe('ContentGatesService', () => {
 
   it('does not let high reputation or author preview override the audience', async () => {
     repository.findById.mockResolvedValue({ ...audienceGate, operator: 'ANY' });
-    repository.viewerFacts.mockResolvedValue({
+    setFacts({
       ...baseFacts,
       reputation: 1000,
     });
@@ -93,7 +130,7 @@ describe('ContentGatesService', () => {
     'lets eligible Premium members bypass only the %s numeric thresholds',
     async (operator) => {
       repository.findById.mockResolvedValue({ ...audienceGate, operator });
-      repository.viewerFacts.mockResolvedValue({
+      setFacts({
         ...baseFacts,
         groups: ['premium', 'moderators'],
       });
@@ -122,7 +159,7 @@ describe('ContentGatesService', () => {
           { id: 'threshold', kind, threshold: 100, groupKey: null },
         ],
       });
-      repository.viewerFacts.mockResolvedValue({
+      setFacts({
         ...baseFacts,
         groups: ['premium'],
       });
@@ -140,7 +177,7 @@ describe('ContentGatesService', () => {
         operator,
         requirements: [audienceGate.requirements[0]],
       });
-      repository.viewerFacts.mockResolvedValue({
+      setFacts({
         ...baseFacts,
         groups: ['moderators', 'premium'],
       });
@@ -152,7 +189,7 @@ describe('ContentGatesService', () => {
 
   it('retains ANY numeric semantics after audience membership succeeds', async () => {
     repository.findById.mockResolvedValue({ ...audienceGate, operator: 'ANY' });
-    repository.viewerFacts.mockResolvedValue({
+    setFacts({
       ...baseFacts,
       groups: ['moderators'],
     });
@@ -160,7 +197,7 @@ describe('ContentGatesService', () => {
       allowed: false,
       bypassed: false,
     });
-    repository.viewerFacts.mockResolvedValue({
+    setFacts({
       ...baseFacts,
       groups: ['moderators'],
       reputation: 100,
@@ -173,7 +210,7 @@ describe('ContentGatesService', () => {
 
   it('retains author threshold preview only after audience membership succeeds', async () => {
     repository.findById.mockResolvedValue(audienceGate);
-    repository.viewerFacts.mockResolvedValue({
+    setFacts({
       ...baseFacts,
       groups: ['moderators'],
     });
@@ -184,7 +221,7 @@ describe('ContentGatesService', () => {
 
   it('fails closed for missing eligibility facts before author preview', async () => {
     repository.findById.mockResolvedValue(gate);
-    repository.viewerFacts.mockResolvedValue(null);
+    setFacts(null);
     await expect(service.evaluate(gate.id, gate.ownerId)).rejects.toThrow(
       'Content Gate viewer was not found.',
     );
@@ -192,7 +229,7 @@ describe('ContentGatesService', () => {
 
   it('fails closed when an ALL requirement is unmet', async () => {
     repository.findById.mockResolvedValue(gate);
-    repository.viewerFacts.mockResolvedValue({
+    setFacts({
       accountAgeDays: 40,
       comments: 0,
       forumPosts: 0,
@@ -209,7 +246,7 @@ describe('ContentGatesService', () => {
 
   it('always exposes a visible Premium bypass notice', async () => {
     repository.findById.mockResolvedValue(gate);
-    repository.viewerFacts.mockResolvedValue({
+    setFacts({
       accountAgeDays: 0,
       comments: 0,
       forumPosts: 0,

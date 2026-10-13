@@ -73,6 +73,7 @@ import { HealthModule } from '@api/health';
 
 import { AppController } from './app.controller';
 import { IdentityCompositionModule } from './composition/identity/identity-composition.module';
+import { AccessGroupIntegrationModule } from './composition/access-groups/access-group-integration.module';
 import { AchievementsModule } from './modules/achievements';
 import { ActivityModule } from './modules/activity';
 import { AiCoreModule } from './modules/ai-core';
@@ -104,6 +105,7 @@ import { UsersModule } from './modules/users/users.module';
     ActivityModule,
     UsersModule,
     IdentityCompositionModule,
+    AccessGroupIntegrationModule,
     IdentityPresentationModule,
     AuthorizationModule,
     IamModule,

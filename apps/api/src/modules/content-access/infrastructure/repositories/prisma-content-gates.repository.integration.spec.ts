@@ -24,6 +24,15 @@ import { randomUUID } from 'node:crypto';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaService } from '@api/core/database';
+import { AuditWriterService } from '@api/core/audit';
+import { AuditRedactionService } from '@api/core/audit/services/audit-redaction.service';
+import { PermissionsRepository } from '@api/core/authorization/repositories/permissions.repository';
+import { AccessCapabilityDecisionsService } from '@api/core/authorization/services/access-capability-decisions.service';
+import { applyAccessGroupMigration } from '../../../../../test/helpers/access-group-schema.fixture';
+import { PrismaAccessGroupRepository } from '../../../iam/infrastructure/repositories/prisma-access-group.repository';
+import { PrismaSubjectEligibilityReader } from '../../../auth/infrastructure/repositories/prisma-subject-eligibility.reader';
+import { IamMembershipAdapter } from '../../../../composition/access-groups/infrastructure/iam-membership.adapter';
+import { ContentAudienceAdapter } from '../../../../composition/access-groups/infrastructure/content-audience.adapter';
 import { createEmptyEditorDocument } from '@dss/editor';
 import { ContentGatesService } from '../../application/services/content-gates.service';
 import { EditorService } from '../../../editor/application/services/editor.service';
@@ -39,6 +48,10 @@ dbSuite('Content Gate audience PostgreSQL integration', () => {
     'users',
     'roles',
     'user_roles',
+    'permissions',
+    'role_permissions',
+    'user_permissions',
+    'audit_records',
     'comments',
     'reputation_entries',
     'content_gates',
@@ -51,7 +64,26 @@ dbSuite('Content Gate audience PostgreSQL integration', () => {
   });
   const prisma = new PrismaService({ adapter: new PrismaPg(pool, { schema }) });
   const repository = new PrismaContentGatesRepository(prisma);
-  const gates = new ContentGatesService(repository);
+  const memberships = new PrismaAccessGroupRepository(
+    prisma,
+    new AuditWriterService(new AuditRedactionService()),
+  );
+  const permissions = new PermissionsRepository(prisma);
+  const decisions = new AccessCapabilityDecisionsService(
+    new IamMembershipAdapter({
+      readEffective: (id, at) => memberships.effectiveMemberships(id, at),
+    }),
+    new PrismaSubjectEligibilityReader(prisma),
+    {
+      getAccessProfileByUserId: (id) =>
+        permissions.findAccessProfileByUserId(id),
+    },
+  );
+  const gates = new ContentGatesService(
+    repository,
+    new ContentAudienceAdapter(decisions),
+  );
+  let premiumStaffMembershipId: string;
   const editor = new EditorService({
     render: jest.fn(),
   } as unknown as EditorHtmlRenderer);
@@ -65,6 +97,7 @@ dbSuite('Content Gate audience PostgreSQL integration', () => {
         `CREATE TABLE ${table} (LIKE public.${table} INCLUDING ALL)`,
       );
     }
+    await applyAccessGroupMigration(pool);
     await pool.query(
       'ALTER TABLE user_roles ADD FOREIGN KEY ("userId") REFERENCES users(id), ADD FOREIGN KEY ("roleId") REFERENCES roles(id)',
     );
@@ -76,7 +109,9 @@ dbSuite('Content Gate audience PostgreSQL integration', () => {
     );
   });
   beforeEach(async () => {
-    await pool.query(`TRUNCATE ${tables.join(', ')}`);
+    await pool.query(
+      `TRUNCATE access_group_memberships, access_group_capabilities, access_groups, ${tables.join(', ')}`,
+    );
     for (const id of ['author', 'premium-only', 'premium-staff', 'staff']) {
       await pool.query(
         'INSERT INTO users (id,email,username,"passwordHash","updatedAt") VALUES ($1,$2,$1,$3,NOW())',
@@ -89,6 +124,22 @@ dbSuite('Content Gate audience PostgreSQL integration', () => {
     await pool.query(
       "INSERT INTO user_roles (\"userId\",\"roleId\") VALUES ('author','premium'), ('premium-only','premium'), ('premium-staff','premium'), ('premium-staff','staff'), ('staff','staff')",
     );
+    await pool.query(
+      `INSERT INTO access_groups (id,key,"displayName",kind,"createdById","updatedAt") VALUES ('premium','premium','Premium','PREMIUM','author',NOW())`,
+    );
+    for (const subjectId of ['author', 'premium-only', 'premium-staff']) {
+      const membership = await memberships.grant(
+        {
+          groupId: 'premium',
+          subjectId,
+          validFrom: new Date('2020-01-01'),
+          validUntil: null,
+        },
+        'author',
+      );
+      if (subjectId === 'premium-staff')
+        premiumStaffMembershipId = membership!.id;
+    }
     await pool.query(
       'INSERT INTO content_gates (id,"ownerId",operator,"updatedAt") VALUES ($1,$2,$3,NOW())',
       [gateId, 'author', 'ALL'],
@@ -189,9 +240,11 @@ dbSuite('Content Gate audience PostgreSQL integration', () => {
       'INSERT INTO user_roles ("userId","roleId") VALUES ($1,$2)',
       ['premium-staff', 'staff'],
     );
-    await pool.query(
-      'DELETE FROM user_roles WHERE "userId"=$1 AND "roleId"=$2',
-      ['premium-staff', 'premium'],
+    await memberships.revoke(
+      premiumStaffMembershipId,
+      'author',
+      'Fixture revocation',
+      new Date(),
     );
     expect(
       (await delivery.project(documentJson(), 'premium-staff')).gates[0],

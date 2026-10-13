@@ -28,6 +28,7 @@
  */
 
 import { Module } from '@nestjs/common';
+import { ProfileGroupsService } from './application/services/profile-groups.service';
 import { VIEWER_PROFILE_READER } from './contracts/viewer-profile.contract';
 import { PrismaViewerProfileReader } from './infrastructure/repositories/prisma-viewer-profile.reader';
 import { PROFILE_DISPLAY_READER } from './contracts/profile-display-reader.contract';
@@ -73,6 +74,7 @@ import { ProfileWallInteractionPolicy } from './application/services/profile-wal
     { provide: VIEWER_PROFILE_READER, useClass: PrismaViewerProfileReader },
     { provide: PROFILE_DISPLAY_READER, useClass: PrismaProfileDisplayReader },
     UsersService,
+    ProfileGroupsService,
     UsersResolver,
     UserSocialLinksService,
     UserSocialLinksLoader,

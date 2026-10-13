@@ -38,7 +38,20 @@ const { createSourceFile, ScriptTarget, isExportDeclaration, isNamedExports } =
   requireApi("typescript");
 
 for (const [moduleName, expected] of [
-  ["iam", ["IamModule", "REGISTRATION_ROLE_NAME"]],
+  [
+    "iam",
+    [
+      "IamModule",
+      "REGISTRATION_ROLE_NAME",
+      "IAM_ACCESS_MEMBERSHIPS",
+      "IamAccessMembershipReader",
+      "GROUP_MANAGEMENT_AUTHORITY",
+      "GroupManagementAuthority",
+      "IAM_PUBLIC_GROUP_DISPLAY",
+      "IamPublicGroupDisplayReader",
+      "PublicAccessGroup",
+    ],
+  ],
   [
     "auth",
     [
@@ -53,6 +66,8 @@ for (const [moduleName, expected] of [
       "CredentialSubjectStore",
       "AuthClient",
       "AUTH_ERRORS",
+      "AUTH_SUBJECT_ELIGIBILITY",
+      "AuthSubjectEligibility",
     ],
   ],
 ]) {

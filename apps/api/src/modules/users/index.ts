@@ -49,3 +49,8 @@ export {
  * That is a compliment.
  * -----------------------------------------------------------------------------
  */
+export { PROFILE_GROUP_DISPLAY } from './contracts/profile-group-display.contract';
+export type {
+  ProfileGroupDisplayReader,
+  ProfileGroupDisplay,
+} from './contracts/profile-group-display.contract';

@@ -52,6 +52,7 @@ import { PrismaService } from '@api/core/database';
 import { AppModule } from '../src/app.module';
 import { AuthenticationPresentationService } from '../src/composition/identity/application/authentication-presentation.service';
 import { EDITOR_CODE_HIGHLIGHTER } from '../src/modules/editor/application/contracts/editor-code-highlighter.interface';
+import { cleanupAccessGroupFixtures } from './helpers/access-group-cleanup.fixture';
 
 const runId = randomUUID();
 const probePermissionKey = `test.authorization.${runId}`;
@@ -165,6 +166,7 @@ describe('authoritative request access (e2e)', () => {
 
   afterAll(async () => {
     if (prisma) {
+      await cleanupAccessGroupFixtures(prisma, subjects);
       await prisma.contentGate.deleteMany({ where: { id: { in: gateIds } } });
       await prisma.role.deleteMany({ where: { id: { in: roles } } });
       await prisma.permission.deleteMany({
@@ -394,22 +396,19 @@ describe('authoritative request access (e2e)', () => {
 
   it('requires group audience before Premium threshold bypass without granting staff tools', async () => {
     const premium = await register();
-    const existingPremium = await prisma.role.findUnique({
-      where: { name: 'PREMIUM' },
+    const premiumRole = await prisma.accessGroup.findUniqueOrThrow({
+      where: { key: 'premium' },
     });
-    const premiumRole =
-      existingPremium ??
-      (await prisma.role.create({
-        data: { name: 'PREMIUM', label: 'Premium fixture' },
-      }));
-    if (!existingPremium) roles.push(premiumRole.id);
     const audienceName = `${probeRoleName}-audience`;
     const audience = await prisma.role.create({
       data: { name: audienceName, label: 'Audience fixture' },
     });
     roles.push(audience.id);
-    await manage('post', `user-access/${premium.user.id}/roles`)
-      .send({ roleId: premiumRole.id })
+    const membership = await manage(
+      'post',
+      `access-groups/${premiumRole.id}/memberships`,
+    )
+      .send({ subjectId: premium.user.id })
       .expect(201);
     await request(app.getHttpServer())
       .get('/api/iam/permissions')
@@ -459,6 +458,17 @@ describe('authoritative request access (e2e)', () => {
       allowed: true,
       bypassed: true,
       unmet: [],
+    });
+    await manage(
+      'post',
+      `access-groups/memberships/${(membership.body as { id: string }).id}/revoke`,
+    )
+      .send({ reason: 'Remove Premium, keep audience' })
+      .expect(201);
+    expect(await evaluate()).toMatchObject({
+      allowed: false,
+      bypassed: false,
+      unmet: ['REPUTATION'],
     });
     await manage(
       'delete',

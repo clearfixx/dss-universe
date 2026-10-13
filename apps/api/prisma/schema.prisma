@@ -18,6 +18,15 @@ enum UserStatus {
   DELETED
 }
 
+enum AccessGroupKind {
+  CUSTOM
+  PREMIUM
+}
+
+enum AccessGroupCapabilityKey {
+  KNOWLEDGE_FORGE_GUARDIAN
+}
+
 enum ProfileVisibility {
   PUBLIC
   MEMBERS
@@ -241,24 +250,24 @@ enum NewsPinScope {
 }
 
 model User {
-  id            String     @id @default(uuid())
-  email         String     @unique
-  username      String     @unique
-  passwordHash  String
-  displayName   String?
-  bio           String?
-  location      String?
-  website       String?
-  technologies  String[]   @default([])
-  interests     String[]   @default([])
-  avatarUrl     String?
-  avatarMediaId String?    @unique
-  coverUrl      String?
-  coverMediaId  String?    @unique
-  status        UserStatus @default(ACTIVE)
-  deactivatedAt DateTime?
-  authVersion   Int        @default(0)
-  loginFailedAttempts Int   @default(0)
+  id                  String     @id @default(uuid())
+  email               String     @unique
+  username            String     @unique
+  passwordHash        String
+  displayName         String?
+  bio                 String?
+  location            String?
+  website             String?
+  technologies        String[]   @default([])
+  interests           String[]   @default([])
+  avatarUrl           String?
+  avatarMediaId       String?    @unique
+  coverUrl            String?
+  coverMediaId        String?    @unique
+  status              UserStatus @default(ACTIVE)
+  deactivatedAt       DateTime?
+  authVersion         Int        @default(0)
+  loginFailedAttempts Int        @default(0)
   loginLockedUntil    DateTime?
 
   media               Media[]              @relation("MediaOwner")
@@ -268,6 +277,7 @@ model User {
 
   roles                   UserRole[]
   directPermissions       UserPermission[]
+  accessMemberships       AccessGroupMembership[]
   sessions                Session[]
   passwordReset           PasswordReset?
   emailVerification       EmailVerification?
@@ -534,7 +544,7 @@ model NewsPin {
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
 
-  article  NewsArticle  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  article  NewsArticle   @relation(fields: [articleId], references: [id], onDelete: Cascade)
   category NewsCategory? @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   pinnedBy User          @relation("NewsPinActor", fields: [pinnedById], references: [id], onDelete: Restrict)
 
@@ -1116,6 +1126,55 @@ model Role {
   updatedAt DateTime @updatedAt
 
   @@map("roles")
+}
+
+model AccessGroup {
+  id          String          @id @default(uuid())
+  key         String          @unique @db.VarChar(64)
+  displayName String          @db.VarChar(96)
+  kind        AccessGroupKind @default(CUSTOM)
+  enabled     Boolean         @default(true)
+  isPublic    Boolean         @default(true)
+  color       String?         @db.VarChar(7)
+  badgeLabel  String?         @db.VarChar(64)
+  icon        String?         @db.VarChar(64)
+  createdById String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  memberships  AccessGroupMembership[]
+  capabilities AccessGroupCapability[]
+
+  @@map("access_groups")
+}
+
+model AccessGroupMembership {
+  id           String    @id @default(uuid())
+  groupId      String
+  subjectId    String
+  validFrom    DateTime  @default(now())
+  validUntil   DateTime?
+  grantedById  String
+  createdAt    DateTime  @default(now())
+  revokedAt    DateTime?
+  revokedById  String?
+  revokeReason String?   @db.VarChar(500)
+
+  group   AccessGroup @relation(fields: [groupId], references: [id], onDelete: Restrict)
+  subject User        @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+
+  @@index([subjectId, revokedAt, validFrom, validUntil], map: "access_membership_validity_idx")
+  @@index([groupId, subjectId])
+  @@map("access_group_memberships")
+}
+
+model AccessGroupCapability {
+  groupId String
+  key     AccessGroupCapabilityKey
+  group   AccessGroup              @relation(fields: [groupId], references: [id], onDelete: Restrict)
+
+  @@id([groupId, key])
+  @@map("access_group_capabilities")
 }
 
 model Permission {
