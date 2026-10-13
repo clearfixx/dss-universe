@@ -14,7 +14,7 @@
 
 import type { IntegrationEventJob } from '@dss/jobs';
 
-import type { UsersService } from '@api/modules/users';
+import type { PointsRecipientExistence } from '../../contracts/recipient-existence.port';
 
 import type { CommunityPointsRepository } from '../../domain/repositories/community-points.repository.interface';
 import type {
@@ -81,7 +81,7 @@ describe('CommunityPointsService', () => {
   } as unknown as jest.Mocked<CommunityPointsRepository>;
   const users = {
     exists: jest.fn(),
-  } as unknown as jest.Mocked<UsersService>;
+  } satisfies jest.Mocked<PointsRecipientExistence>;
   const service = new CommunityPointsService(repository, users);
 
   beforeEach(() => {

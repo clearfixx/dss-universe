@@ -59,6 +59,12 @@ active package safe and buildable.
 
 ## Additional D0 verification findings
 
+D4.1 progress for DEBT-003/027: three gamification consumers now use minimal
+recipient/balance ports; concrete service exports are private. Seven reviewed
+findings are removed (135 → 128), with no additions. Remaining cross-module
+and public-surface findings stay OPEN; see
+[evidence](../audits/D4_1_GAMIFICATION_BOUNDARIES.md).
+
 ### D3.5 scope evidence (DEBT-008/024)
 
 Current Content Gates derive `groups` from IAM role names and apply Premium

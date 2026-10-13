@@ -39,6 +39,34 @@ const { createSourceFile, ScriptTarget, isExportDeclaration, isNamedExports } =
 
 for (const [moduleName, expected] of [
   [
+    "community-points",
+    [
+      "CommunityPointsModule",
+      "COMMUNITY_POINTS_BALANCE_READER",
+      "CommunityPointsBalanceReader",
+      "POINTS_RECIPIENT_EXISTENCE",
+      "PointsRecipientExistence",
+    ],
+  ],
+  [
+    "levels",
+    [
+      "LevelsModule",
+      "LEVEL_RECIPIENT_EXISTENCE",
+      "LevelRecipientExistence",
+      "LEVEL_POINTS_BALANCE_READER",
+      "LevelPointsBalanceReader",
+    ],
+  ],
+  [
+    "achievements",
+    [
+      "AchievementsModule",
+      "ACHIEVEMENT_RECIPIENT_EXISTENCE",
+      "AchievementRecipientExistence",
+    ],
+  ],
+  [
     "iam",
     [
       "IamModule",

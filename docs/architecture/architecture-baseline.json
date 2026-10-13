@@ -1,24 +1,10 @@
 {
   "version": 1,
-  "date": "2026-10-10",
-  "sourceBase": "c6eb539",
+  "date": "2026-10-13",
+  "sourceBase": "173358d",
   "status": "review inventory; not a waiver or compliance certificate",
   "scope": "Authored API modules/core TypeScript; excludes tests/declarations; bounded syntactic analysis",
   "findings": [
-    {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/achievements/index.ts\",\"./application/services/achievements.service: AchievementsService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/achievements/index.ts",
-      "detail": "./application/services/achievements.service: AchievementsService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/community-points/index.ts\",\"./application/services/community-points.service: CommunityPointsService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/community-points/index.ts",
-      "detail": "./application/services/community-points.service: CommunityPointsService",
-      "package": "D4"
-    },
     {
       "id": "[\"concrete-public-export\",\"apps/api/src/modules/custom-titles/index.ts\",\"./application/services/custom-titles.service: CustomTitlesService\"]",
       "rule": "concrete-public-export",
@@ -97,13 +83,6 @@
       "package": "D4"
     },
     {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/levels/index.ts\",\"./application/services/levels.service: LevelsService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/levels/index.ts",
-      "detail": "./application/services/levels.service: LevelsService",
-      "package": "D4"
-    },
-    {
       "id": "[\"concrete-public-export\",\"apps/api/src/modules/reputation/index.ts\",\"./application/services/reputation.service: ReputationService\"]",
       "rule": "concrete-public-export",
       "file": "apps/api/src/modules/reputation/index.ts",
@@ -125,20 +104,6 @@
       "package": "D4"
     },
     {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/achievements/application/services/achievements.service.ts\",\"@api/modules/users: UsersService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/achievements/application/services/achievements.service.ts",
-      "detail": "@api/modules/users: UsersService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/community-points/application/services/community-points.service.ts\",\"@api/modules/users: UsersService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/community-points/application/services/community-points.service.ts",
-      "detail": "@api/modules/users: UsersService",
-      "package": "D4"
-    },
-    {
       "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/editor/application/services/editor-content-delivery.service.ts\",\"../../../content-access/application/services/content-gates.service: ContentGatesService\"]",
       "rule": "foreign-concrete-service",
       "file": "apps/api/src/modules/editor/application/services/editor-content-delivery.service.ts",
@@ -157,20 +122,6 @@
       "rule": "foreign-concrete-service",
       "file": "apps/api/src/modules/interactions/application/services/comments.service.ts",
       "detail": "../../../editor/application/services/editor.service: EditorService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/levels/application/services/levels.service.ts\",\"@api/modules/community-points: CommunityPointsService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/levels/application/services/levels.service.ts",
-      "detail": "@api/modules/community-points: CommunityPointsService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/levels/application/services/levels.service.ts\",\"@api/modules/users: UsersService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/levels/application/services/levels.service.ts",
-      "detail": "@api/modules/users: UsersService",
       "package": "D4"
     },
     {

@@ -14,6 +14,9 @@
  * • delegates caps and idempotency to the transactional repository;
  * • appends compensating reversals without rewriting history.
  *
+ * 🏗️ Architecture:
+ * Owned points policy; recipient existence is a consumer port, not a Users service.
+ *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
@@ -27,7 +30,10 @@ import {
 } from '@nestjs/common';
 import type { IntegrationEventJob } from '@dss/jobs';
 
-import { UsersService } from '@api/modules/users';
+import {
+  POINTS_RECIPIENT_EXISTENCE,
+  type PointsRecipientExistence,
+} from '../../contracts/recipient-existence.port';
 
 import {
   COMMUNITY_POINTS_REPOSITORY,
@@ -49,7 +55,8 @@ export class CommunityPointsService {
   constructor(
     @Inject(COMMUNITY_POINTS_REPOSITORY)
     private readonly points: CommunityPointsRepository,
-    private readonly users: UsersService,
+    @Inject(POINTS_RECIPIENT_EXISTENCE)
+    private readonly users: PointsRecipientExistence,
   ) {}
 
   balance(userId: string): Promise<number> {

@@ -13,7 +13,14 @@
  */
 
 export { LevelsModule } from './levels.module';
-export { LevelsService } from './application/services/levels.service';
+export {
+  LEVEL_RECIPIENT_EXISTENCE,
+  type LevelRecipientExistence,
+} from './contracts/recipient-existence.port';
+export {
+  LEVEL_POINTS_BALANCE_READER,
+  type LevelPointsBalanceReader,
+} from './contracts/points-balance.port';
 
 /**
  * Keep the public airlock smaller than the level ladder.

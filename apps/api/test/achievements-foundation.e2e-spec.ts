@@ -20,7 +20,7 @@ import type { App } from 'supertest/types';
 
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/core/database';
-import { AchievementsService } from './../src/modules/achievements';
+import { AchievementsService } from './../src/modules/achievements/application/services/achievements.service';
 
 type RegisteredUser = {
   id: string;

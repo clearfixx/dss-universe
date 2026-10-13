@@ -321,6 +321,11 @@ Model: `gpt-6.1-sol` xhigh for the separate brainstorm and security design.
 
 Branch: `debt/d4-module-boundaries`.
 
+D4.1 is implemented on the explicit review stack `173358d` / PR #9, with full
+D4 acceptance still open. The [D4 sequence](D4_MODULE_BOUNDARY_PLAN.md) preserves
+the complete scope; [initial evidence](../audits/D4_1_GAMIFICATION_BOUNDARIES.md)
+records seven reviewed removals and the remaining 128 findings.
+
 Scope:
 
 - replace broad Users and Community Points service injection;

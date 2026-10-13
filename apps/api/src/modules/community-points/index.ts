@@ -13,7 +13,14 @@
  */
 
 export { CommunityPointsModule } from './community-points.module';
-export { CommunityPointsService } from './application/services/community-points.service';
+export {
+  COMMUNITY_POINTS_BALANCE_READER,
+  type CommunityPointsBalanceReader,
+} from './contracts/balance-reader.contract';
+export {
+  POINTS_RECIPIENT_EXISTENCE,
+  type PointsRecipientExistence,
+} from './contracts/recipient-existence.port';
 
 /**
  * Keep this airlock narrow: implementation details stay inside the module.

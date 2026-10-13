@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-13 — pre-Phase-11 debt closure / D3.5 implemented, review pending
+> Updated: 2026-10-13 — pre-Phase-11 debt closure / D4.1 implemented, full D4 open
 
 ## Product and authority
 
@@ -28,6 +28,14 @@ Legacy roadmaps are historical. This snapshot does not override source code,
 approved ADRs or recorded owner decisions.
 
 ## Current position
+
+D4.1 removes broad Users/Points dependencies from Community Points, Levels and
+Achievements through minimal consumer-owned ports and root adapters. Behavior
+is preserved; no new scoring rules or frontend design. Architecture inventory
+is now 128 (seven reviewed removals, zero additions). Full opt-in units: API 609 /
+Web 59 / Worker 36; relevant E2E: 20; lint/typecheck/build pass. Full D4 remains
+open. See [evidence](audits/D4_1_GAMIFICATION_BOUNDARIES.md) and the
+[remaining sequence](development/D4_MODULE_BOUNDARY_PLAN.md).
 
 Full D3.5 is owner-approved and implemented on `debt/d3-5-iam-access-groups`,
 stacked on `04a9d50` / draft PR #8: isolated membership validity/revocation,

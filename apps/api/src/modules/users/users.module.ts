@@ -28,6 +28,8 @@
  */
 
 import { Module } from '@nestjs/common';
+import { PROFILE_EXISTENCE_READER } from './contracts/profile-existence.contract';
+import { PrismaProfileExistenceReader } from './infrastructure/repositories/prisma-profile-existence.reader';
 import { ProfileGroupsService } from './application/services/profile-groups.service';
 import { VIEWER_PROFILE_READER } from './contracts/viewer-profile.contract';
 import { PrismaViewerProfileReader } from './infrastructure/repositories/prisma-viewer-profile.reader';
@@ -71,6 +73,10 @@ import { ProfileWallInteractionPolicy } from './application/services/profile-wal
   imports: [PrismaModule, ActivityModule, InteractionsModule],
   controllers: [UsersController],
   providers: [
+    {
+      provide: PROFILE_EXISTENCE_READER,
+      useClass: PrismaProfileExistenceReader,
+    },
     { provide: VIEWER_PROFILE_READER, useClass: PrismaViewerProfileReader },
     { provide: PROFILE_DISPLAY_READER, useClass: PrismaProfileDisplayReader },
     UsersService,
@@ -117,6 +123,7 @@ import { ProfileWallInteractionPolicy } from './application/services/profile-wal
     },
   ],
   exports: [
+    PROFILE_EXISTENCE_READER,
     VIEWER_PROFILE_READER,
     PROFILE_DISPLAY_READER,
     UsersService,

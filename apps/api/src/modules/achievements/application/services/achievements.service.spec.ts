@@ -14,7 +14,7 @@
 
 import type { IntegrationEventJob } from '@dss/jobs';
 
-import type { UsersService } from '@api/modules/users';
+import type { AchievementRecipientExistence } from '../../contracts/recipient-existence.port';
 
 import type { AchievementsRepository } from '../../domain/repositories/achievements.repository.interface';
 import type {
@@ -104,7 +104,7 @@ describe('AchievementsService', () => {
   } as unknown as jest.Mocked<AchievementsRepository>;
   const users = {
     exists: jest.fn(),
-  } as unknown as jest.Mocked<UsersService>;
+  } satisfies jest.Mocked<AchievementRecipientExistence>;
   const service = new AchievementsService(repository, users);
 
   beforeEach(() => {

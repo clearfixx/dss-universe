@@ -10,8 +10,8 @@
  *
  * 🧠 Responsibilities:
  * • exports UsersModule;
- * • exports UsersService;
- * • exports the repository token and contract used by Auth.
+ * • publishes narrow profile, display and existence contracts;
+ * • retains explicitly visible legacy exports until remaining D4 consumers migrate.
  *
  * 🏗️ Architecture:
  * Public module API. Other modules should import Users through this file.
@@ -27,6 +27,10 @@
  */
 
 export { UsersModule } from './users.module';
+export {
+  PROFILE_EXISTENCE_READER,
+  type ProfileExistenceReader,
+} from './contracts/profile-existence.contract';
 export {
   VIEWER_PROFILE_READER,
   type ViewerProfileReader,
