@@ -8,6 +8,11 @@
 
 ## Objective
 
+Owner vision and corrected product names are recorded in
+[Product Vision 1.0](PRODUCT_VISION_1_0.md). Reconcile historical module naming and
+scope before Phase 11; this does not authorize unrelated implementation in D3.
+The staged [D3 Auth boundary plan](D3_AUTH_BOUNDARY_PLAN.md) tracks current work.
+
 Establish one reproducible, secure and architecturally approved baseline from
 which Phase 11 — Knowledge Forge can begin without knowingly forcing a later
 rewrite.

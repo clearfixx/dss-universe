@@ -262,6 +262,10 @@ input CommunityPointsPageInput {
   page: Int! = 1
 }
 
+input ConfirmTwoFactorInput {
+  code: String!
+}
+
 type ContentGateEvaluationModel {
   allowed: Boolean!
   bypassed: Boolean!
@@ -412,6 +416,11 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 scalar DateTime
 
 input DeactivateAccountInput {
+  password: String!
+}
+
+input DisableTwoFactorInput {
+  code: String!
   password: String!
 }
 
@@ -639,29 +648,6 @@ type LogoutResultModel {
   success: Boolean!
 }
 
-input ConfirmTwoFactorInput {
-  code: String!
-}
-
-input DisableTwoFactorInput {
-  code: String!
-  password: String!
-}
-
-type TwoFactorConfirmationModel {
-  recoveryCodes: [String!]!
-}
-
-type TwoFactorSetupModel {
-  otpauthUri: String!
-  secret: String!
-}
-
-type TwoFactorStatusModel {
-  enabled: Boolean!
-  recoveryCodesRemaining: Int!
-}
-
 type ManagedNewsPin {
   articleId: ID!
   categoryId: ID
@@ -851,13 +837,13 @@ type Mutation {
   abortMediaUpload(id: String!): MediaUploadSession!
   approveNews(input: NewsDecisionInput!): NewsEditorialTransition!
   awardAchievement(input: ManualAchievementAwardInput!): AchievementAward!
-  blockUser(userId: ID!): UserBlockResult!
   beginViewerTwoFactorSetup: TwoFactorSetupModel!
+  blockUser(userId: ID!): UserBlockResult!
   cancelNewsSchedule(input: NewsDecisionInput!): NewsEditorialTransition!
   changeViewerEmail(input: ChangeEmailInput!): LogoutResultModel!
   changeViewerPassword(input: ChangePasswordInput!): LogoutResultModel!
-  confirmViewerTwoFactorSetup(input: ConfirmTwoFactorInput!): TwoFactorConfirmationModel!
   clearReaction(interactionTargetId: ID!): ReactionSummary!
+  confirmViewerTwoFactorSetup(input: ConfirmTwoFactorInput!): TwoFactorConfirmationModel!
   createComment(input: CreateCommentInput!): Comment!
   createContentGate(input: CreateContentGateInput!): ContentGateModel!
   createCustomTitle(input: CreateCustomTitleInput!): CustomTitle!
@@ -1635,6 +1621,20 @@ type ShortNews {
   tags: [NewsTagSummary!]!
   title: String!
   visibility: NewsVisibility!
+}
+
+type TwoFactorConfirmationModel {
+  recoveryCodes: [String!]!
+}
+
+type TwoFactorSetupModel {
+  otpauthUri: String!
+  secret: String!
+}
+
+type TwoFactorStatusModel {
+  enabled: Boolean!
+  recoveryCodesRemaining: Int!
 }
 
 input UpdateCommunityPointRuleInput {

@@ -1,32 +1,38 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Authentication
+ * 📄 File: apps/api/src/modules/auth/application/services/security-alert.service.spec.ts
+ *
+ * 🎯 Purpose:
+ * Verifies minimal notification requests and unchanged best-effort failure policy.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { SecurityAlertService } from './security-alert.service';
 import type { SecurityEmailAlertJob } from '@dss/jobs';
 
 describe('SecurityAlertService', () => {
-  const add = jest.fn<
-    Promise<unknown>,
-    [string, SecurityEmailAlertJob, Record<string, unknown>]
-  >();
+  const add = jest.fn<Promise<void>, [Readonly<SecurityEmailAlertJob>]>();
   const service = new SecurityAlertService({
-    securityEmailAlerts: { add },
-  } as never);
+    enqueue: add,
+  });
 
   beforeEach(() => {
     jest.clearAllMocks();
-    add.mockResolvedValue({});
+    add.mockResolvedValue(undefined);
   });
 
   it('queues only the minimum security event payload', async () => {
     await service.notify('PASSWORD_CHANGED', ' Dev@Example.Test ');
     const call = add.mock.calls[0];
-    expect(call?.[0]).toBe('security-email-alert.v1');
-    expect(call?.[1].kind).toBe('PASSWORD_CHANGED');
-    expect(call?.[1].email).toBe('dev@example.test');
-    expect(call?.[1].eventId).toEqual(expect.any(String));
-    expect(call?.[1].occurredAt).toEqual(expect.any(String));
-    expect(call?.[2]).toEqual(
-      expect.objectContaining({ attempts: 5, removeOnComplete: true }),
-    );
-    expect(Object.keys(call?.[1] ?? {}).sort()).toEqual([
+    expect(call?.[0].kind).toBe('PASSWORD_CHANGED');
+    expect(call?.[0].email).toBe('dev@example.test');
+    expect(call?.[0].eventId).toEqual(expect.any(String));
+    expect(call?.[0].occurredAt).toEqual(expect.any(String));
+    expect(Object.keys(call?.[0] ?? {}).sort()).toEqual([
       'email',
       'eventId',
       'kind',

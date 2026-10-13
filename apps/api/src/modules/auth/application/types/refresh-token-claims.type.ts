@@ -3,18 +3,16 @@
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
  * 📦 Module: Authentication
- * 📄 File: apps/api/src/modules/auth/application/types/token-user.type.ts
+ * 📄 File: apps/api/src/modules/auth/application/types/refresh-token-claims.type.ts
  *
  * 🎯 Purpose:
- * Defines the minimal authenticated user shape required for token issuing.
+ * Defines only subject, session and version facts carried by refresh tokens.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-
-export type TokenUser = {
-  id: string;
-  email: string;
-  username: string;
-  authVersion: number;
-};
+export type RefreshTokenClaims = Readonly<{
+  sub: string;
+  sid: string;
+  ver: number;
+}>;

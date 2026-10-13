@@ -2,8 +2,8 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: Authentication
- * 📄 File: apps/api/src/modules/auth/presentation/graphql/inputs/register.input.ts
+ * 📦 Module: Identity Composition
+ * 📄 File: apps/api/src/composition/identity/presentation/graphql/inputs/register.input.ts
  *
  * 🎯 Purpose:
  * Defines validated GraphQL registration input.

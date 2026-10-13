@@ -3,7 +3,7 @@
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
  * 🛡️ Module: Authorization
- * 📄 File: authorization.module.ts
+ * 📄 File: apps/api/src/core/authorization/authorization.module.ts
  *
  * 🎯 Purpose:
  * Assembles the permission-based authorization infrastructure.
@@ -12,6 +12,7 @@
  * • registers PermissionsGuard;
  * • registers PermissionsService;
  * • registers PermissionsRepository;
+ * • publishes current subject access through a narrow read capability;
  * • exposes AuthorizationTestController for development verification.
  *
  * 🏗️ Architecture:
@@ -44,11 +45,22 @@ import { AuthorizationTestController } from './authorization-test.controller';
 import { PermissionsGuard } from './guards/permissions.guard';
 import { PermissionsRepository } from './repositories/permissions.repository';
 import { PermissionsService } from './services/permissions.service';
+import { SUBJECT_ACCESS_READER } from './contracts/subject-access-reader.interface';
 
 @Module({
   imports: [PrismaModule],
   controllers: [AuthorizationTestController],
-  providers: [PermissionsGuard, PermissionsService, PermissionsRepository],
-  exports: [PermissionsGuard, PermissionsService, PermissionsRepository],
+  providers: [
+    PermissionsGuard,
+    PermissionsService,
+    PermissionsRepository,
+    { provide: SUBJECT_ACCESS_READER, useExisting: PermissionsService },
+  ],
+  exports: [
+    PermissionsGuard,
+    PermissionsService,
+    PermissionsRepository,
+    SUBJECT_ACCESS_READER,
+  ],
 })
 export class AuthorizationModule {}

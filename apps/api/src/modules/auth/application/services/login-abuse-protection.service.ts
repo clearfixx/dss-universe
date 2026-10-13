@@ -1,20 +1,41 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Authentication
+ * 📄 File: apps/api/src/modules/auth/application/services/login-abuse-protection.service.ts
+ *
+ * 🎯 Purpose:
+ * Coordinates identity/IP throttling and durable login-attempt transitions.
+ *
+ * 🧠 Responsibilities:
+ * • applies configured identity/IP login limits through a private capability;
+ * • delegates durable counters and audit to an Auth-owned repository;
+ * • sends lock alerts only after a committed transition.
+ *
+ * 🏗️ Architecture:
+ * Auth application orchestration without ORM access or profile dependencies.
+ *
+ * ⚠️ Important:
+ * Missing security infrastructure must not silently permit authentication.
+ * Redis counters and SQL writes are not one distributed transaction.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createHmac } from 'node:crypto';
-import type IORedis from 'ioredis';
-import { REDIS_CONNECTION } from '@api/core/cache';
-import { PrismaService } from '@api/core/database';
-import { AuditWriterService } from '@api/core/audit';
+import {
+  LOGIN_ABUSE_COUNTER,
+  type LoginAbuseCounter,
+} from '../../domain/contracts/login-abuse-counter.interface';
+import {
+  LOGIN_ABUSE_REPOSITORY,
+  type LoginAbuseRepository,
+} from '../../domain/repositories/login-abuse.repository.interface';
 import type { AuthClient } from '../types/auth-client.type';
 import { LoginRateLimitedException } from '../../domain/exceptions/login-rate-limited.exception';
 import { SecurityAlertService } from './security-alert.service';
-
-const RECORD_FAILURE = `
-local failures = redis.call('INCR', KEYS[1])
-if failures == 1 then redis.call('PEXPIRE', KEYS[1], ARGV[1]) end
-if failures >= tonumber(ARGV[2]) then redis.call('SET', KEYS[2], '1', 'PX', ARGV[3]) end
-return failures
-`;
 
 type LoginAccount = {
   id: string;
@@ -25,10 +46,10 @@ type LoginAccount = {
 @Injectable()
 export class LoginAbuseProtectionService {
   constructor(
-    @Inject(REDIS_CONNECTION) private readonly redis: IORedis,
+    @Inject(LOGIN_ABUSE_COUNTER) private readonly counters: LoginAbuseCounter,
     private readonly config: ConfigService,
-    private readonly prisma: PrismaService,
-    private readonly audit: AuditWriterService,
+    @Inject(LOGIN_ABUSE_REPOSITORY)
+    private readonly attempts: LoginAbuseRepository,
     private readonly securityAlerts: SecurityAlertService,
   ) {}
 
@@ -38,12 +59,12 @@ export class LoginAbuseProtectionService {
     account?: LoginAccount | null,
   ): Promise<void> {
     const [identityBlocked, ipBlocked] = await Promise.all([
-      this.redis.exists(this.blockedKey('identity', email)),
-      this.redis.exists(this.blockedKey('ip', ipAddress ?? 'unknown')),
+      this.counters.isBlocked('identity', email),
+      this.counters.isBlocked('ip', ipAddress ?? 'unknown'),
     ]);
     if (
-      identityBlocked === 1 ||
-      ipBlocked === 1 ||
+      identityBlocked ||
+      ipBlocked ||
       (account?.loginLockedUntil?.getTime() ?? 0) > Date.now()
     ) {
       throw new LoginRateLimitedException();
@@ -59,61 +80,29 @@ export class LoginAbuseProtectionService {
     const windowMs = this.number('AUTH_LOGIN_WINDOW_MINUTES', 15) * 60_000;
     const lockMs = this.number('AUTH_LOGIN_LOCK_MINUTES', 15) * 60_000;
     await Promise.all([
-      this.increment(
-        'identity',
-        email,
-        this.number('AUTH_LOGIN_FAILURE_LIMIT', 5),
+      this.counters.recordFailure('identity', email, {
+        failureLimit: this.number('AUTH_LOGIN_FAILURE_LIMIT', 5),
         windowMs,
         lockMs,
-      ),
-      this.increment(
-        'ip',
-        ipAddress ?? 'unknown',
-        this.number('AUTH_LOGIN_IP_FAILURE_LIMIT', 30),
+      }),
+      this.counters.recordFailure('ip', ipAddress ?? 'unknown', {
+        failureLimit: this.number('AUTH_LOGIN_IP_FAILURE_LIMIT', 30),
         windowMs,
         lockMs,
-      ),
+      }),
     ]);
     if (!account) return;
 
-    let lockedEmail: string | undefined;
-    await this.prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT id FROM users WHERE id = ${account.id} FOR UPDATE`;
-      const current = await tx.user.findUnique({
-        where: { id: account.id },
-        select: {
-          email: true,
-          loginFailedAttempts: true,
-          loginLockedUntil: true,
-        },
-      });
-      if (!current) return;
-      const attempts = current.loginFailedAttempts + 1;
-      const shouldLock = attempts >= this.number('AUTH_LOGIN_FAILURE_LIMIT', 5);
-      const lockedUntil = shouldLock
-        ? new Date(Date.now() + lockMs)
-        : current.loginLockedUntil;
-      await tx.user.update({
-        where: { id: account.id },
-        data: { loginFailedAttempts: attempts, loginLockedUntil: lockedUntil },
-      });
-      if (shouldLock && !current.loginLockedUntil) {
-        await this.audit.append(tx, {
-          action: 'auth.login.locked',
-          actorType: 'SYSTEM',
-          targetType: 'User',
-          targetId: account.id,
-          result: 'DENIED',
-          reason: 'Repeated invalid login credentials',
-          ipAddress: client.ipAddress,
-          userAgent: client.userAgent,
-          metadata: { attempts, lockMinutes: lockMs / 60_000 },
-        });
-        lockedEmail = current.email;
-      }
-    });
-    if (lockedEmail) {
-      await this.securityAlerts.notify('ACCOUNT_LOCKED', lockedEmail);
+    const locked = await this.attempts.recordFailure(
+      account.id,
+      {
+        failureLimit: this.number('AUTH_LOGIN_FAILURE_LIMIT', 5),
+        lockMs,
+      },
+      { ipAddress: client.ipAddress, userAgent: client.userAgent },
+    );
+    if (locked) {
+      await this.securityAlerts.notify('ACCOUNT_LOCKED', locked.email);
     }
   }
 
@@ -122,60 +111,11 @@ export class LoginAbuseProtectionService {
     account: LoginAccount,
     client: AuthClient,
   ): Promise<void> {
-    await Promise.all([
-      this.redis.del(this.failureKey('identity', email)),
-      this.redis.del(this.blockedKey('identity', email)),
-    ]);
-    await this.prisma.$transaction(async (tx) => {
-      await tx.user.update({
-        where: { id: account.id },
-        data: { loginFailedAttempts: 0, loginLockedUntil: null },
-      });
-      await this.audit.append(tx, {
-        action: 'auth.login.succeeded',
-        actorType: 'USER',
-        actorId: account.id,
-        targetType: 'User',
-        targetId: account.id,
-        ipAddress: client.ipAddress,
-        userAgent: client.userAgent,
-      });
+    await this.counters.clearIdentity(email);
+    await this.attempts.recordSuccess(account.id, {
+      ipAddress: client.ipAddress,
+      userAgent: client.userAgent,
     });
-  }
-
-  private increment(
-    scope: 'identity' | 'ip',
-    value: string,
-    limit: number,
-    windowMs: number,
-    lockMs: number,
-  ) {
-    return this.redis.eval(
-      RECORD_FAILURE,
-      2,
-      this.failureKey(scope, value),
-      this.blockedKey(scope, value),
-      windowMs,
-      limit,
-      lockMs,
-    );
-  }
-
-  private failureKey(scope: string, value: string): string {
-    return `dss:auth:login:${scope}:failures:${this.digest(scope, value)}`;
-  }
-
-  private blockedKey(scope: string, value: string): string {
-    return `dss:auth:login:${scope}:blocked:${this.digest(scope, value)}`;
-  }
-
-  private digest(scope: string, value: string): string {
-    return createHmac(
-      'sha256',
-      this.config.getOrThrow<string>('JWT_REFRESH_SECRET'),
-    )
-      .update(`login:${scope}:${value}`)
-      .digest('hex');
   }
 
   private number(key: string, fallback: number): number {

@@ -12,6 +12,7 @@
  * • registers the UsersController;
  * • registers UsersService;
  * • binds the UsersRepository contract to PrismaUsersRepository.
+ * • publishes the username-only display projection through its contract token.
  *
  * 🏗️ Architecture:
  * NestJS feature module. Owns the Users module dependency graph.
@@ -27,6 +28,10 @@
  */
 
 import { Module } from '@nestjs/common';
+import { VIEWER_PROFILE_READER } from './contracts/viewer-profile.contract';
+import { PrismaViewerProfileReader } from './infrastructure/repositories/prisma-viewer-profile.reader';
+import { PROFILE_DISPLAY_READER } from './contracts/profile-display-reader.contract';
+import { PrismaProfileDisplayReader } from './infrastructure/repositories/prisma-profile-display.reader';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 
 import { PrismaModule } from '@api/core/database';
@@ -65,6 +70,8 @@ import { ProfileWallInteractionPolicy } from './application/services/profile-wal
   imports: [PrismaModule, ActivityModule, InteractionsModule],
   controllers: [UsersController],
   providers: [
+    { provide: VIEWER_PROFILE_READER, useClass: PrismaViewerProfileReader },
+    { provide: PROFILE_DISPLAY_READER, useClass: PrismaProfileDisplayReader },
     UsersService,
     UsersResolver,
     UserSocialLinksService,
@@ -108,6 +115,8 @@ import { ProfileWallInteractionPolicy } from './application/services/profile-wal
     },
   ],
   exports: [
+    VIEWER_PROFILE_READER,
+    PROFILE_DISPLAY_READER,
     UsersService,
     UserPrivacyService,
     UserBlockService,

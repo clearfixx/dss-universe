@@ -6,12 +6,14 @@
  * 📄 File: apps/api/src/modules/auth/application/services/auth.service.ts
  *
  * 🎯 Purpose:
- * Coordinates authentication use cases such as registration, login,
+ * Coordinates credential enrollment, login,
  * token refresh, and logout.
  *
  * 🧠 Responsibilities:
  * • validates user credentials;
- * • creates user accounts through the Users repository boundary;
+ * • reads credentials and eligibility through the Auth-owned repository;
+ * • delegates credential/account-state writes to the same owned boundary;
+ * • enrolls credentials through a trusted write-only storage contract;
  * • issues access and refresh tokens through TokenService;
  * • stores refresh token hashes;
  * • clears refresh token hashes during logout.
@@ -19,11 +21,12 @@
  * 🏗️ Architecture:
  * Application service.
  * Owns authentication use cases and delegates hashing, token handling,
- * and user persistence to dedicated services or repositories.
+ * and credential persistence to dedicated services or repositories.
  *
  * ⚠️ Important:
  * Never store raw passwords or raw refresh tokens.
  * AuthService must not know JWT secrets or sign/verify tokens directly.
+ * No profile data or Users dependency belongs in this service.
  *
  * 💡 Notes:
  * Authentication opens the airlock.
@@ -34,17 +37,15 @@
  */
 
 import { Inject, Injectable } from '@nestjs/common';
-import { UserStatus } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 
-import { UserMapper } from '../../../users/domain/mappers/user.mapper';
-import {
-  USERS_REPOSITORY,
-  type UsersRepository,
-} from '../../../users/domain/repositories/users.repository.interface';
 import type { LoginDto } from '../dto/login.dto';
 import type { RefreshTokenDto } from '../dto/refresh-token.dto';
-import type { RegisterDto } from '../dto/register.dto';
+import type { CredentialSubjectStore } from '../../contracts/credential-subject-store.contract';
+import type {
+  AuthenticationFlows,
+  AuthenticationResult,
+} from '../../contracts/authentication-flows.contract';
 import { EmailAlreadyExistsException } from '../../domain/exceptions/email-already-exists.exception';
 import { InvalidCredentialsException } from '../../domain/exceptions/invalid-credentials.exception';
 import { PasswordHashService } from './password-hash.service';
@@ -55,15 +56,17 @@ import { EmailVerificationService } from './email-verification.service';
 import { LoginAbuseProtectionService } from './login-abuse-protection.service';
 import { SecurityAlertService } from './security-alert.service';
 import { TwoFactorService } from './two-factor.service';
+import {
+  ACCOUNT_CREDENTIALS_REPOSITORY,
+  type AccountCredentialsRepository,
+} from '../../domain/repositories/account-credentials.repository.interface';
 
 const DUMMY_PASSWORD_HASH =
   '$2b$12$C6UzMDM.H6dfI/f/IKcEe.4vA0Z8F7z7G1V1K2N1g1qjQm7u8Yw6K';
 
 @Injectable()
-export class AuthService {
+export class AuthService implements AuthenticationFlows {
   constructor(
-    @Inject(USERS_REPOSITORY)
-    private readonly usersRepository: UsersRepository,
     private readonly passwordHashService: PasswordHashService,
     private readonly tokenService: TokenService,
     private readonly sessions: AuthSessionService,
@@ -71,40 +74,51 @@ export class AuthService {
     private readonly loginProtection: LoginAbuseProtectionService,
     private readonly securityAlerts: SecurityAlertService,
     private readonly twoFactor: TwoFactorService,
+    @Inject(ACCOUNT_CREDENTIALS_REPOSITORY)
+    private readonly accountCredentials: AccountCredentialsRepository,
   ) {}
 
-  async register(dto: RegisterDto, client: AuthClient = {}) {
-    const email = this.normalizeEmail(dto.email);
-    const existingUser = await this.usersRepository.findByEmail(email);
+  async enroll(
+    emailInput: string,
+    password: string,
+    store: CredentialSubjectStore,
+  ): Promise<string> {
+    const email = this.normalizeEmail(emailInput);
+    const existingUser = await this.accountCredentials.findByEmail(email);
 
     if (existingUser) {
       throw new EmailAlreadyExistsException();
     }
 
-    const passwordHash = await this.passwordHashService.hash(dto.password);
+    const passwordHash = await this.passwordHashService.hash(password);
+    return store.create({ email, passwordHash });
+  }
 
-    const user = await this.usersRepository.create({
-      email,
-      username: dto.username,
-      displayName: dto.displayName,
-      passwordHash,
-    });
-
-    const response = await this.issueAuthResponse(user.id, client);
-    await this.emailVerification.requestAfterRegistration(user.id, user.email);
+  async completeRegistration(
+    subjectId: string,
+    client: AuthClient = {},
+  ): Promise<AuthenticationResult> {
+    const user = await this.accountCredentials.findById(subjectId);
+    if (!user || user.status !== 'ACTIVE')
+      throw new InvalidCredentialsException();
+    const response = await this.issueAuthResponse(subjectId, client);
+    await this.emailVerification.requestAfterRegistration(
+      subjectId,
+      user.email,
+    );
     return response;
   }
 
   async login(dto: LoginDto, client: AuthClient = {}) {
     const email = this.normalizeEmail(dto.email);
     await this.loginProtection.assertAllowed(email, client.ipAddress);
-    const user = await this.usersRepository.findByEmail(email);
+    const user = await this.accountCredentials.findByEmail(email);
     await this.loginProtection.assertAllowed(email, client.ipAddress, user);
     const isPasswordValid = await this.passwordHashService.compare(
       dto.password,
       user?.passwordHash ?? DUMMY_PASSWORD_HASH,
     );
-    if (!user || user.status !== UserStatus.ACTIVE || !isPasswordValid) {
+    if (!user || user.status !== 'ACTIVE' || !isPasswordValid) {
       await this.loginProtection.recordFailure(
         email,
         client.ipAddress,
@@ -137,13 +151,13 @@ export class AuthService {
       );
 
       const [user, session] = await Promise.all([
-        this.usersRepository.findById(payload.sub),
+        this.accountCredentials.findById(payload.sub),
         this.sessions.findActive(payload.sid, payload.sub),
       ]);
 
       if (
         !user ||
-        user.status !== UserStatus.ACTIVE ||
+        user.status !== 'ACTIVE' ||
         user.authVersion !== payload.ver ||
         !session
       ) {
@@ -159,13 +173,20 @@ export class AuthService {
         throw new InvalidCredentialsException();
       }
 
-      const tokens = await this.tokenService.generateTokens(user, session.id);
+      const tokens = await this.tokenService.generateTokens(
+        {
+          id: user.id,
+          email: user.email,
+          authVersion: user.authVersion,
+        },
+        session.id,
+      );
       const tokenHash = await this.passwordHashService.hash(
         tokens.refreshToken,
       );
       await this.sessions.rotate(session.id, user.id, tokenHash);
       return {
-        user: UserMapper.toSafeUser(user),
+        subjectId: user.id,
         tokens,
       };
     } catch {
@@ -179,28 +200,28 @@ export class AuthService {
   }
 
   async deactivateAccount(userId: string, password: string) {
-    const user = await this.usersRepository.findById(userId);
+    const user = await this.accountCredentials.findById(userId);
     if (
       !user ||
-      user.status !== UserStatus.ACTIVE ||
+      user.status !== 'ACTIVE' ||
       !(await this.passwordHashService.compare(password, user.passwordHash))
     ) {
       throw new InvalidCredentialsException();
     }
-    await this.usersRepository.deactivateAccount(userId);
+    await this.accountCredentials.deactivateAccount(userId);
     return { success: true };
   }
 
   async reactivateAccount(dto: LoginDto, client: AuthClient = {}) {
     const email = this.normalizeEmail(dto.email);
     await this.loginProtection.assertAllowed(email, client.ipAddress);
-    const user = await this.usersRepository.findByEmail(email);
+    const user = await this.accountCredentials.findByEmail(email);
     await this.loginProtection.assertAllowed(email, client.ipAddress, user);
     const passwordValid = await this.passwordHashService.compare(
       dto.password,
       user?.passwordHash ?? DUMMY_PASSWORD_HASH,
     );
-    if (!user || user.status !== UserStatus.DEACTIVATED || !passwordValid) {
+    if (!user || user.status !== 'DEACTIVATED' || !passwordValid) {
       await this.loginProtection.recordFailure(
         email,
         client.ipAddress,
@@ -223,7 +244,7 @@ export class AuthService {
       throw error;
     }
     await this.loginProtection.recordSuccess(email, user, client);
-    await this.usersRepository.reactivateAccount(user.id);
+    await this.accountCredentials.reactivateAccount(user.id);
     return this.issueAuthResponse(user.id, client);
   }
 
@@ -236,11 +257,11 @@ export class AuthService {
     if (normalizedEmail === user.email.toLowerCase()) {
       return { success: true };
     }
-    const existing = await this.usersRepository.findByEmail(normalizedEmail);
+    const existing = await this.accountCredentials.findByEmail(normalizedEmail);
     if (existing) {
       throw new EmailAlreadyExistsException();
     }
-    await this.usersRepository.changeEmail(userId, normalizedEmail);
+    await this.accountCredentials.changeEmail(userId, normalizedEmail);
     await this.securityAlerts.notify('EMAIL_CHANGED', user.email);
     return { success: true };
   }
@@ -255,7 +276,7 @@ export class AuthService {
       currentPassword,
     );
     const passwordHash = await this.passwordHashService.hash(newPassword);
-    await this.usersRepository.changePasswordHash(userId, passwordHash);
+    await this.accountCredentials.changePasswordHash(userId, passwordHash);
     await this.securityAlerts.notify('PASSWORD_CHANGED', user.email);
     return { success: true };
   }
@@ -277,22 +298,32 @@ export class AuthService {
     return { success: true, revokedCount };
   }
 
-  private async issueAuthResponse(userId: string, client: AuthClient) {
-    const user = await this.usersRepository.findById(userId);
+  private async issueAuthResponse(
+    userId: string,
+    client: AuthClient,
+  ): Promise<AuthenticationResult> {
+    const user = await this.accountCredentials.findById(userId);
 
-    if (!user || user.status !== UserStatus.ACTIVE) {
+    if (!user || user.status !== 'ACTIVE') {
       throw new InvalidCredentialsException();
     }
 
     const sessionId = randomUUID();
-    const tokens = await this.tokenService.generateTokens(user, sessionId);
+    const tokens = await this.tokenService.generateTokens(
+      {
+        id: user.id,
+        email: user.email,
+        authVersion: user.authVersion,
+      },
+      sessionId,
+    );
     const refreshTokenHash = await this.passwordHashService.hash(
       tokens.refreshToken,
     );
     await this.sessions.create(sessionId, user.id, refreshTokenHash, client);
 
     return {
-      user: UserMapper.toSafeUser(user),
+      subjectId: user.id,
       tokens,
     };
   }
@@ -301,10 +332,10 @@ export class AuthService {
     userId: string,
     password: string,
   ) {
-    const user = await this.usersRepository.findById(userId);
+    const user = await this.accountCredentials.findById(userId);
     if (
       !user ||
-      user.status !== UserStatus.ACTIVE ||
+      user.status !== 'ACTIVE' ||
       !(await this.passwordHashService.compare(password, user.passwordHash))
     ) {
       throw new InvalidCredentialsException();

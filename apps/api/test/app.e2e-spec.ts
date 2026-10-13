@@ -6,7 +6,9 @@
  * 📄 File: apps/api/test/app.e2e-spec.ts
  *
  * 🎯 Purpose:
- * Verifies REST compatibility and the GraphQL Auth/Users vertical slice.
+ * Verifies REST compatibility and the GraphQL Auth/Users vertical slice,
+ * including registration failure boundaries, credential transaction rollback
+ * and authoritative state guards.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -14,8 +16,11 @@
 
 import { ValidationPipe, type INestApplication } from '@nestjs/common';
 import { GraphQLSchemaHost } from '@nestjs/graphql';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { printSchema } from 'graphql';
+import { createHash, randomBytes } from 'node:crypto';
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Pool } from 'pg';
@@ -26,6 +31,17 @@ import type { App } from 'supertest/types';
 
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/core/database';
+import { AuditWriterService } from './../src/core/audit';
+import { AuthenticationPresentationService } from './../src/composition/identity/application/authentication-presentation.service';
+import { AuthSessionService } from './../src/modules/auth/application/services/auth-session.service';
+import { TokenService } from './../src/modules/auth/application/services/token.service';
+import { SecurityAlertService } from './../src/modules/auth/application/services/security-alert.service';
+import { TotpService } from './../src/modules/auth/application/services/totp.service';
+import { PrismaRegistrationTransaction } from './../src/composition/identity/infrastructure/prisma-registration-transaction';
+import {
+  ACCOUNT_CREDENTIALS_REPOSITORY,
+  type AccountCredentialsRepository,
+} from './../src/modules/auth/domain/repositories/account-credentials.repository.interface';
 import { QueueRegistryService } from './../src/core/queue';
 import { StorageService } from './../src/core/storage';
 import { EDITOR_CODE_HIGHLIGHTER } from './../src/modules/editor/application/contracts/editor-code-highlighter.interface';
@@ -122,11 +138,883 @@ describe('DSS API (e2e)', () => {
     processingPool = new Pool({ connectionString: process.env.DATABASE_URL });
   });
 
+  it('manages IAM permissions through the owned repository and rolls back failed audit', async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const email = `iam-${suffix}@dss.test`;
+    const password = 'iam-test-password-123';
+    const presentation = app.get(AuthenticationPresentationService);
+    const identity = await presentation.register({
+      email,
+      password,
+      username: `iam-${suffix}`,
+      displayName: 'IAM Pilot',
+    });
+    const prisma = app.get(PrismaService);
+    const key = `test.iam.${suffix}`;
+    const deniedKey = `${key}.denied`;
+    const rollbackKey = `${key}.rollback`;
+    try {
+      await request(app.getHttpServer())
+        .get('/api/iam/permissions')
+        .expect(401);
+      await request(app.getHttpServer())
+        .post('/api/iam/permissions')
+        .set('Authorization', `Bearer ${identity.tokens.accessToken}`)
+        .send({ key: deniedKey, label: 'Denied' })
+        .expect(403);
+      expect(await prisma.permission.count({ where: { key: deniedKey } })).toBe(
+        0,
+      );
+      for (const permissionKey of ['permissions.read', 'permissions.manage']) {
+        const permission = await prisma.permission.upsert({
+          where: { key: permissionKey },
+          update: {},
+          create: { key: permissionKey, label: permissionKey },
+        });
+        await prisma.userPermission.create({
+          data: { userId: identity.user.id, permissionId: permission.id },
+        });
+      }
+      const manager = await presentation.login({ email, password });
+      const bearer = `Bearer ${manager.tokens.accessToken}`;
+      const created = await request(app.getHttpServer())
+        .post('/api/iam/permissions')
+        .set('Authorization', bearer)
+        .send({ key, label: 'Created', ignored: 'not persisted' })
+        .expect(201);
+      const record = created.body as {
+        id: string;
+        key: string;
+        label: string;
+        description: string | null;
+        createdAt: string;
+        updatedAt: string;
+      };
+      expect(Object.keys(record).sort()).toEqual(
+        ['id', 'key', 'label', 'description', 'createdAt', 'updatedAt'].sort(),
+      );
+      expect(
+        await prisma.auditRecord.count({
+          where: {
+            targetId: record.id,
+            actorId: identity.user.id,
+            action: 'iam.permission.created',
+          },
+        }),
+      ).toBe(1);
+      await request(app.getHttpServer())
+        .post('/api/iam/permissions')
+        .set('Authorization', bearer)
+        .send({ key, label: 'Duplicate' })
+        .expect(409);
+      const listed = await request(app.getHttpServer())
+        .get('/api/iam/permissions')
+        .set('Authorization', bearer)
+        .expect(200);
+      expect(listed.body).toEqual(expect.arrayContaining([record]));
+      const updated = await request(app.getHttpServer())
+        .patch(`/api/iam/permissions/${record.id}`)
+        .set('Authorization', bearer)
+        .send({ label: 'Updated' })
+        .expect(200);
+      expect((updated.body as { label: string }).label).toBe('Updated');
+      const append = jest
+        .spyOn(app.get(AuditWriterService), 'append')
+        .mockRejectedValueOnce(
+          new Error('Synthetic IAM permission audit failure'),
+        );
+      try {
+        await request(app.getHttpServer())
+          .post('/api/iam/permissions')
+          .set('Authorization', bearer)
+          .send({ key: rollbackKey, label: 'Rollback' })
+          .expect(500);
+        expect(
+          await prisma.permission.count({ where: { key: rollbackKey } }),
+        ).toBe(0);
+      } finally {
+        append.mockRestore();
+      }
+      const removed = await request(app.getHttpServer())
+        .delete(`/api/iam/permissions/${record.id}`)
+        .set('Authorization', bearer)
+        .expect(200);
+      expect(removed.body).toEqual({
+        deleted: true,
+        permission: updated.body as typeof record,
+      });
+      await request(app.getHttpServer())
+        .get(`/api/iam/permissions/${record.id}`)
+        .set('Authorization', bearer)
+        .expect(404);
+    } finally {
+      await prisma.permission.deleteMany({
+        where: { key: { startsWith: key } },
+      });
+      await prisma.auditRecord.deleteMany({
+        where: { actorId: identity.user.id },
+      });
+      await prisma.user.delete({ where: { id: identity.user.id } });
+    }
+  });
+
+  it('persists a failed-login lock with audit and denies a valid password while locked', async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const email = `login-lock-${suffix}@dss.test`;
+    const identity = await app.get(AuthenticationPresentationService).register({
+      email,
+      username: `login-lock-${suffix}`,
+      displayName: 'Lock Pilot',
+      password: 'correct-password-123',
+    });
+    const prisma = app.get(PrismaService);
+    await prisma.user.update({
+      where: { id: identity.user.id },
+      data: { loginFailedAttempts: 4 },
+    });
+    const notify = jest
+      .spyOn(app.get(SecurityAlertService), 'notify')
+      .mockResolvedValue(undefined);
+    try {
+      await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({ email, password: 'wrong-password-123' })
+        .expect(401);
+      const account = await prisma.user.findUniqueOrThrow({
+        where: { id: identity.user.id },
+        select: { loginFailedAttempts: true, loginLockedUntil: true },
+      });
+      expect(account.loginFailedAttempts).toBe(5);
+      expect(account.loginLockedUntil?.getTime()).toBeGreaterThan(Date.now());
+      expect(notify).toHaveBeenCalledWith('ACCOUNT_LOCKED', email);
+      expect(
+        await prisma.auditRecord.count({
+          where: { targetId: identity.user.id, action: 'auth.login.locked' },
+        }),
+      ).toBe(1);
+      await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({ email, password: 'correct-password-123' })
+        .expect(429);
+      await prisma.user.update({
+        where: { id: identity.user.id },
+        data: { loginLockedUntil: null },
+      });
+      await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({ email, password: 'correct-password-123' })
+        .expect(201);
+      expect(
+        (
+          await prisma.user.findUniqueOrThrow({
+            where: { id: identity.user.id },
+            select: { loginFailedAttempts: true },
+          })
+        ).loginFailedAttempts,
+      ).toBe(0);
+      expect(notify).toHaveBeenCalledTimes(1);
+    } finally {
+      notify.mockRestore();
+    }
+  });
+
+  it('consumes password recovery through GraphQL and immediately revokes prior sessions', async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const email = `recovery-${suffix}@dss.test`;
+    const identity = await app.get(AuthenticationPresentationService).register({
+      email,
+      username: `recovery-${suffix}`,
+      displayName: 'Recovery Pilot',
+      password: 'old-password-123',
+    });
+    const prisma = app.get(PrismaService);
+    const token = randomBytes(32).toString('hex');
+    await prisma.passwordReset.create({
+      data: {
+        userId: identity.user.id,
+        tokenHash: createHash('sha256').update(token).digest('hex'),
+        authVersion: 0,
+        expiresAt: new Date(Date.now() + 60_000),
+      },
+    });
+    const notify = jest
+      .spyOn(app.get(SecurityAlertService), 'notify')
+      .mockResolvedValue(undefined);
+    try {
+      const response = await request(app.getHttpServer())
+        .post('/api/graphql')
+        .send({
+          query:
+            'mutation($input: ResetPasswordInput!) { resetPassword(input: $input) { success } }',
+          variables: { input: { token, password: 'new-password-123' } },
+        })
+        .expect(200);
+      expect(response.body).toEqual({
+        data: { resetPassword: { success: true } },
+      });
+      expect(notify).toHaveBeenCalledWith('PASSWORD_RECOVERED', email);
+      await request(app.getHttpServer())
+        .get('/api/auth/me')
+        .set('Authorization', `Bearer ${identity.tokens.accessToken}`)
+        .expect(401);
+      await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({ email, password: 'new-password-123' })
+        .expect(201);
+      const replay = await request(app.getHttpServer())
+        .post('/api/graphql')
+        .send({
+          query:
+            'mutation($input: ResetPasswordInput!) { resetPassword(input: $input) { success } }',
+          variables: { input: { token, password: 'replay-password-123' } },
+        })
+        .expect(200);
+      expect((replay.body as GraphqlErrorResponse).errors).toHaveLength(1);
+      expect(notify).toHaveBeenCalledTimes(1);
+      expect(
+        await prisma.passwordReset.findUnique({
+          where: { userId: identity.user.id },
+        }),
+      ).toBeNull();
+    } finally {
+      notify.mockRestore();
+    }
+  });
+
   it('preserves the REST application status endpoint', async () => {
     await request(app.getHttpServer())
       .get('/api')
       .expect(200)
       .expect({ app: 'DSS Universe API', status: 'ok' });
+  });
+
+  it('allowlists REST authentication profiles across registration, login and refresh', async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const credentials = {
+      email: `profile-boundary-${suffix}@dss.test`,
+      username: `profile-boundary-${suffix}`,
+      displayName: 'Boundary Explorer',
+      password: 'Boundary-password-123!',
+    };
+    const expectedKeys = [
+      'id',
+      'email',
+      'username',
+      'displayName',
+      'bio',
+      'location',
+      'website',
+      'technologies',
+      'interests',
+      'avatarUrl',
+      'coverUrl',
+      'status',
+      'emailVerifiedAt',
+      'lastSeenAt',
+      'createdAt',
+      'updatedAt',
+    ].sort();
+    const assertProfile = (body: {
+      user: Record<string, unknown>;
+      tokens: { accessToken: string; refreshToken: string };
+    }) => {
+      expect(Object.keys(body.user).sort()).toEqual(expectedKeys);
+      expect(body.user).toMatchObject({
+        email: credentials.email,
+        username: credentials.username,
+        displayName: credentials.displayName,
+      });
+      expect(body.tokens.accessToken).toEqual(expect.any(String));
+      expect(body.tokens.refreshToken).toEqual(expect.any(String));
+      const jwt = app.get(JwtService);
+      const access = jwt.decode<Record<string, unknown>>(
+        body.tokens.accessToken,
+      );
+      const refresh = jwt.decode<Record<string, unknown>>(
+        body.tokens.refreshToken,
+      );
+      expect(Object.keys(access).sort()).toEqual(
+        [
+          'sub',
+          'email',
+          'ver',
+          'sid',
+          'username',
+          'roles',
+          'permissions',
+          'iat',
+          'exp',
+        ].sort(),
+      );
+      expect(access).toMatchObject({
+        sub: body.user.id,
+        email: credentials.email,
+        username: credentials.username,
+        ver: 0,
+        sid: expect.any(String) as string,
+        roles: ['user'],
+        permissions: expect.any(Array) as string[],
+      });
+      expect(Number(access.exp) - Number(access.iat)).toBe(15 * 60);
+      expect(Object.keys(refresh).sort()).toEqual(
+        ['sub', 'ver', 'sid', 'iat', 'exp'].sort(),
+      );
+      expect(refresh).toMatchObject({
+        sub: access.sub,
+        ver: access.ver,
+        sid: access.sid,
+      });
+      expect(Number(refresh.exp) - Number(refresh.iat)).toBe(7 * 24 * 60 * 60);
+    };
+
+    const registered = await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send(credentials)
+      .expect(201);
+    assertProfile(registered.body as Parameters<typeof assertProfile>[0]);
+    const loggedIn = await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email: credentials.email, password: credentials.password })
+      .expect(201);
+    const loginBody = loggedIn.body as Parameters<typeof assertProfile>[0];
+    assertProfile(loginBody);
+    const refreshed = await request(app.getHttpServer())
+      .post('/api/auth/refresh')
+      .send({ refreshToken: loginBody.tokens.refreshToken })
+      .expect(201);
+    assertProfile(refreshed.body as Parameters<typeof assertProfile>[0]);
+  });
+
+  it('leaves no new account or session when registration conflicts on username', async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const input = {
+      email: `registration-owner-${suffix}@dss.test`,
+      username: `registration-owner-${suffix}`,
+      displayName: 'Registration Explorer',
+      password: 'Registration-password-123!',
+    };
+    const auth = app.get(AuthenticationPresentationService);
+    const owner = await auth.register(input);
+    const conflictingEmail = `registration-conflict-${suffix}@dss.test`;
+    await expect(
+      auth.register({ ...input, email: conflictingEmail }),
+    ).rejects.toMatchObject({ code: 'P2002' });
+    const prisma = app.get(PrismaService);
+    expect(
+      await prisma.user.findUnique({ where: { email: conflictingEmail } }),
+    ).toBeNull();
+    const retained = await prisma.user.findUniqueOrThrow({
+      where: { id: owner.user.id },
+      select: {
+        roles: { select: { role: { select: { name: true } } } },
+        sessions: { select: { id: true } },
+      },
+    });
+    expect(retained.roles).toEqual([{ role: { name: 'user' } }]);
+    expect(retained.sessions).toHaveLength(1);
+  });
+
+  it('rolls back registration when default role assignment fails after its database write', async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const email = `registration-atomic-${suffix}@dss.test`;
+    const prisma = app.get(PrismaService);
+    const failure = new Error('injected failure after role assignment write');
+    let assignedSubjectId: string | undefined;
+    // This client extension retains the real interactive transaction. Unlike
+    // a transaction mock, throwing after the SQL insert proves database rollback.
+    const failingClient = prisma.$extends({
+      query: {
+        userRole: {
+          async create({ args, query }) {
+            const assignment = await query(args);
+            assignedSubjectId = assignment.userId;
+            throw failure;
+          },
+        },
+      },
+    });
+    const registration = new PrismaRegistrationTransaction(
+      failingClient as unknown as PrismaService,
+    );
+    await expect(
+      registration
+        .forProfile({ username: `registration-atomic-${suffix}` })
+        .create({
+          email,
+          passwordHash: 'synthetic-hash-never-committed',
+        }),
+    ).rejects.toBe(failure);
+    expect(assignedSubjectId).toEqual(expect.any(String));
+    expect(await prisma.user.findUnique({ where: { email } })).toBeNull();
+    expect(
+      await prisma.userRole.count({ where: { userId: assignedSubjectId! } }),
+    ).toBe(0);
+    expect(
+      await prisma.session.count({ where: { userId: assignedSubjectId! } }),
+    ).toBe(0);
+  });
+
+  it('retains the committed registration but denies minted tokens when session persistence fails', async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const input = {
+      email: `registration-session-${suffix}@dss.test`,
+      username: `registration-session-${suffix}`,
+      displayName: 'Registration Explorer',
+      password: 'Registration-password-123!',
+    };
+    const failure = new Error('injected session persistence failure');
+    const sessionSpy = jest
+      .spyOn(app.get(AuthSessionService), 'create')
+      .mockRejectedValueOnce(failure);
+    const tokenSpy = jest.spyOn(app.get(TokenService), 'generateTokens');
+    let mintedAccessToken: string;
+    try {
+      await expect(
+        app.get(AuthenticationPresentationService).register(input),
+      ).rejects.toBe(failure);
+      expect(tokenSpy.mock.results).toHaveLength(1);
+      const minted = (await tokenSpy.mock.results[0].value) as Awaited<
+        ReturnType<TokenService['generateTokens']>
+      >;
+      mintedAccessToken = minted.accessToken;
+    } finally {
+      sessionSpy.mockRestore();
+      tokenSpy.mockRestore();
+    }
+    const committed = await app.get(PrismaService).user.findUniqueOrThrow({
+      where: { email: input.email },
+      select: {
+        id: true,
+        roles: { select: { role: { select: { name: true } } } },
+        sessions: { select: { id: true } },
+      },
+    });
+    expect(committed.roles).toEqual([{ role: { name: 'user' } }]);
+    expect(committed.sessions).toHaveLength(0);
+    await request(app.getHttpServer())
+      .get('/api/auth/me')
+      .set('Authorization', `Bearer ${mintedAccessToken}`)
+      .expect(401);
+    const recovered = await app.get(AuthenticationPresentationService).login({
+      email: input.email,
+      password: input.password,
+    });
+    expect(recovered.user.id).toBe(committed.id);
+    await request(app.getHttpServer())
+      .get('/api/auth/me')
+      .set('Authorization', `Bearer ${recovered.tokens.accessToken}`)
+      .expect(200);
+  });
+
+  it('enables second factor through GraphQL and revokes sessions on disabling', async () => {
+    const suffix = randomBytes(8).toString('hex');
+    const input = {
+      email: `factor-${suffix}@dss.test`,
+      username: `factor-${suffix}`,
+      password: 'Factor-password-123!',
+    };
+    const identity = await app
+      .get(AuthenticationPresentationService)
+      .register(input);
+    const token = identity.tokens.accessToken;
+    const setup = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        query: 'mutation { beginViewerTwoFactorSetup { secret otpauthUri } }',
+      })
+      .expect(200);
+    const setupBody = setup.body as {
+      data: { beginViewerTwoFactorSetup: { secret: string } };
+    };
+    const totp = app.get(TotpService);
+    const secret = setupBody.data.beginViewerTwoFactorSetup.secret;
+    const code = () => totp.code(secret, Math.floor(Date.now() / 30_000));
+    const confirmed = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        query:
+          'mutation Confirm($input: ConfirmTwoFactorInput!) { confirmViewerTwoFactorSetup(input: $input) { recoveryCodes } }',
+        variables: { input: { code: code() } },
+      })
+      .expect(200);
+    const confirmationBody = confirmed.body as {
+      data: { confirmViewerTwoFactorSetup: { recoveryCodes: string[] } };
+    };
+    const recoveryCodes =
+      confirmationBody.data.confirmViewerTwoFactorSetup.recoveryCodes;
+    expect(recoveryCodes).toHaveLength(10);
+    const prisma = app.get(PrismaService);
+    const stored = await prisma.userTwoFactor.findUniqueOrThrow({
+      where: { userId: identity.user.id },
+    });
+    expect(stored.encryptedSecret).not.toContain(secret);
+    expect(stored.recoveryCodeHashes).toEqual(
+      recoveryCodes.map((value) => totp.recoveryHash(value)),
+    );
+    await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email: input.email, password: input.password })
+      .expect(401);
+    await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({
+        email: input.email,
+        password: input.password,
+        twoFactorCode: recoveryCodes[0],
+      })
+      .expect(201);
+    await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({
+        email: input.email,
+        password: input.password,
+        twoFactorCode: recoveryCodes[0],
+      })
+      .expect(401);
+    const audit = app.get<AuditWriterService>(AuditWriterService);
+    const originalAppend = audit.append.bind(
+      audit,
+    ) as AuditWriterService['append'];
+    const auditFailure = jest
+      .spyOn(audit, 'append')
+      .mockImplementation((tx, input) => {
+        if (input.action === 'auth.two-factor.disabled')
+          return Promise.reject(new Error('Synthetic disable audit failure'));
+        return originalAppend(tx, input);
+      });
+    try {
+      const rejected = await request(app.getHttpServer())
+        .post('/api/graphql')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          query:
+            'mutation Disable($input: DisableTwoFactorInput!) { disableViewerTwoFactor(input: $input) { success } }',
+          variables: {
+            input: { password: input.password, code: recoveryCodes[1] },
+          },
+        })
+        .expect(200);
+      expect((rejected.body as GraphqlErrorResponse).errors).toHaveLength(1);
+      expect(
+        (
+          await prisma.userTwoFactor.findUniqueOrThrow({
+            where: { userId: identity.user.id },
+          })
+        ).recoveryCodeHashes,
+      ).toContain(totp.recoveryHash(recoveryCodes[1]));
+      await request(app.getHttpServer())
+        .get('/api/auth/me')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+    } finally {
+      auditFailure.mockRestore();
+    }
+    const disabled = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        query:
+          'mutation Disable($input: DisableTwoFactorInput!) { disableViewerTwoFactor(input: $input) { success } }',
+        variables: {
+          input: { password: input.password, code: recoveryCodes[1] },
+        },
+      })
+      .expect(200);
+    expect(disabled.body).toEqual({
+      data: { disableViewerTwoFactor: { success: true } },
+    });
+    await request(app.getHttpServer())
+      .get('/api/auth/me')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(401);
+    expect(
+      await prisma.userTwoFactor.count({ where: { userId: identity.user.id } }),
+    ).toBe(0);
+    for (const action of [
+      'auth.two-factor.enabled',
+      'auth.two-factor.recovery-code-used',
+      'auth.two-factor.disabled',
+    ]) {
+      expect(
+        await prisma.auditRecord.count({
+          where: { targetId: identity.user.id, action },
+        }),
+      ).toBe(action === 'auth.two-factor.recovery-code-used' ? 2 : 1);
+    }
+  });
+
+  it('verifies email through GraphQL once with persisted state and audit', async () => {
+    const suffix = randomBytes(8).toString('hex');
+    const registered = await app
+      .get(AuthenticationPresentationService)
+      .register({
+        email: `verification-${suffix}@dss.test`,
+        username: `verification-${suffix}`,
+        password: 'Verification-password-123!',
+      });
+    const prisma = app.get(PrismaService);
+    const token = randomBytes(32).toString('hex');
+    await prisma.emailVerification.create({
+      data: {
+        userId: registered.user.id,
+        tokenHash: createHash('sha256').update(token).digest('hex'),
+        expiresAt: new Date(Date.now() + 60_000),
+      },
+    });
+    const verify = () =>
+      request(app.getHttpServer())
+        .post('/api/graphql')
+        .send({
+          query:
+            'mutation Verify($input: VerifyEmailInput!) { verifyEmail(input: $input) { success } }',
+          variables: { input: { token } },
+        });
+    const first = await verify().expect(200);
+    expect(first.body).toEqual({ data: { verifyEmail: { success: true } } });
+    expect(
+      (
+        await prisma.user.findUniqueOrThrow({
+          where: { id: registered.user.id },
+          select: { emailVerifiedAt: true },
+        })
+      ).emailVerifiedAt,
+    ).toBeInstanceOf(Date);
+    expect(
+      await prisma.emailVerification.count({
+        where: { userId: registered.user.id },
+      }),
+    ).toBe(0);
+    expect(
+      await prisma.auditRecord.count({
+        where: { action: 'auth.email.verified', targetId: registered.user.id },
+      }),
+    ).toBe(1);
+    const replay = await verify().expect(200);
+    expect(replay.body).toMatchObject({
+      errors: [
+        expect.objectContaining({
+          message: 'Invalid or expired verification link.',
+        }),
+      ],
+    });
+  });
+
+  it('persists credential-free recovery and verification delivery jobs through real BullMQ', async () => {
+    const suffix = randomBytes(8).toString('hex');
+    const email = `delivery-${suffix}@dss.test`;
+    const unknown = `unknown-${suffix}@dss.test`;
+    const queues = app.get<QueueRegistryService>(QueueRegistryService);
+    const config = app.get<ConfigService>(ConfigService);
+    const originalGet = config.get.bind(config) as (key: string) => unknown;
+    const configSpy = jest
+      .spyOn(config, 'get')
+      .mockImplementation((key: string) => {
+        const settings: Record<string, string> = {
+          MAIL_HOST: 'localhost',
+          MAIL_FROM: 'no-reply@example.com',
+          EMAIL_VERIFICATION_WEB_URL: 'http://localhost/verify-email',
+          PASSWORD_RESET_WEB_URL: 'http://localhost/reset-password',
+        };
+        return settings[key] ?? originalGet(key);
+      });
+    try {
+      await request(app.getHttpServer())
+        .post('/api/auth/register')
+        .send({
+          email,
+          username: `delivery-${suffix}`,
+          password: 'Delivery-password-123!',
+        })
+        .expect(201);
+      const recovered = await request(app.getHttpServer())
+        .post('/api/graphql')
+        .send({
+          query:
+            'mutation Request($input: RequestPasswordRecoveryInput!) { requestPasswordRecovery(input: $input) { success } }',
+          variables: { input: { email: unknown.toUpperCase() } },
+        })
+        .expect(200);
+      expect(recovered.body).toEqual({
+        data: { requestPasswordRecovery: { success: true } },
+      });
+      const recovery = (
+        await queues.passwordRecovery.getJobs(['wait', 'delayed'], 0, -1)
+      ).find((job) => job.data.email === unknown);
+      const verification = (
+        await queues.emailVerification.getJobs(['wait', 'delayed'], 0, -1)
+      ).find((job) => job.data.email === email);
+      expect(recovery).toBeDefined();
+      expect(verification).toBeDefined();
+      expect(recovery?.name).toBe('password-recovery.v1');
+      expect(verification?.name).toBe('email-verification.v1');
+      expect(Object.keys(recovery!.data).sort()).toEqual([
+        'email',
+        'requestedAt',
+      ]);
+      expect(Object.keys(verification!.data).sort()).toEqual([
+        'email',
+        'requestedAt',
+        'userId',
+      ]);
+      for (const job of [recovery!, verification!]) {
+        expect(job.opts).toMatchObject({
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 5000 },
+          removeOnComplete: true,
+          removeOnFail: true,
+        });
+      }
+    } finally {
+      configSpy.mockRestore();
+      for (const job of await queues.passwordRecovery.getJobs(
+        ['wait', 'delayed'],
+        0,
+        -1,
+      )) {
+        if (job.data.email === unknown) await job.remove();
+      }
+      for (const job of await queues.emailVerification.getJobs(
+        ['wait', 'delayed'],
+        0,
+        -1,
+      )) {
+        if (job.data.email === email) await job.remove();
+      }
+    }
+  });
+
+  it('keeps registration successful when verification email enqueue fails', async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const config = app.get(ConfigService);
+    const originalGet = config.get.bind(config) as (key: string) => unknown;
+    const configSpy = jest
+      .spyOn(config, 'get')
+      .mockImplementation((key: string) => {
+        if (key === 'MAIL_HOST') return 'localhost';
+        if (key === 'MAIL_FROM') return 'test@dss.test';
+        if (key === 'EMAIL_VERIFICATION_WEB_URL')
+          return 'http://localhost/verify-email';
+        return originalGet(key);
+      });
+    const enqueueSpy = jest
+      .spyOn(app.get(QueueRegistryService).emailVerification, 'add')
+      .mockRejectedValueOnce(new Error('injected mail queue failure'));
+    try {
+      const registered = await request(app.getHttpServer())
+        .post('/api/auth/register')
+        .send({
+          email: `registration-mail-${suffix}@dss.test`,
+          username: `registration-mail-${suffix}`,
+          password: 'Registration-password-123!',
+        })
+        .expect(201);
+      expect(enqueueSpy.mock.calls).toHaveLength(1);
+      const body = registered.body as {
+        user: { id: string };
+        tokens: { accessToken: string };
+      };
+      const committed = await app.get(PrismaService).user.findUniqueOrThrow({
+        where: { id: body.user.id },
+        select: { emailVerifiedAt: true, sessions: { select: { id: true } } },
+      });
+      expect(committed.emailVerifiedAt).toBeNull();
+      expect(committed.sessions).toHaveLength(1);
+      await request(app.getHttpServer())
+        .get('/api/auth/me')
+        .set('Authorization', `Bearer ${body.tokens.accessToken}`)
+        .expect(200);
+    } finally {
+      enqueueSpy.mockRestore();
+      configSpy.mockRestore();
+    }
+  });
+
+  it('rolls back credential changes and session revocation when audit fails', async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const registered = await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send({
+        email: `rollback-${suffix}@dss.test`,
+        username: `rollback-${suffix}`,
+        displayName: 'Rollback Explorer',
+        password: 'Rollback-password-123!',
+      })
+      .expect(201);
+    const body = registered.body as {
+      user: { id: string };
+      tokens: { accessToken: string };
+    };
+    const prisma = app.get(PrismaService);
+    const snapshot = () =>
+      prisma.user.findUniqueOrThrow({
+        where: { id: body.user.id },
+        select: {
+          passwordHash: true,
+          authVersion: true,
+          sessions: {
+            select: { id: true, revokedAt: true },
+            orderBy: { id: 'asc' },
+          },
+        },
+      });
+    const before = await snapshot();
+    expect(before.sessions).toHaveLength(1);
+    const auditFailure = new Error('injected audit failure');
+    const auditSpy = jest
+      .spyOn(app.get(AuditWriterService), 'append')
+      .mockRejectedValueOnce(auditFailure);
+    try {
+      await expect(
+        app
+          .get<AccountCredentialsRepository>(ACCOUNT_CREDENTIALS_REPOSITORY)
+          .changePasswordHash(body.user.id, 'never-committed-test-hash'),
+      ).rejects.toBe(auditFailure);
+    } finally {
+      auditSpy.mockRestore();
+    }
+    expect(await snapshot()).toEqual(before);
+    await request(app.getHttpServer())
+      .get('/api/auth/me')
+      .set('authorization', `Bearer ${body.tokens.accessToken}`)
+      .expect(200);
+  });
+
+  it('rejects stale self-deactivation after the account becomes blocked', async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const registered = await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send({
+        email: `state-guard-${suffix}@dss.test`,
+        username: `state-guard-${suffix}`,
+        displayName: 'State Explorer',
+        password: 'State-password-123!',
+      })
+      .expect(201);
+    const body = registered.body as {
+      user: { id: string };
+      tokens: { accessToken: string };
+    };
+    const prisma = app.get(PrismaService);
+    await prisma.user.update({
+      where: { id: body.user.id },
+      data: { status: 'BANNED' },
+    });
+    await expect(
+      app
+        .get<AccountCredentialsRepository>(ACCOUNT_CREDENTIALS_REPOSITORY)
+        .deactivateAccount(body.user.id),
+    ).rejects.toMatchObject({ code: 'P2025' });
+    const account = await prisma.user.findUniqueOrThrow({
+      where: { id: body.user.id },
+      select: { status: true, deactivatedAt: true },
+    });
+    expect(account).toEqual({ status: 'BANNED', deactivatedAt: null });
+    await request(app.getHttpServer())
+      .get('/api/auth/me')
+      .set('authorization', `Bearer ${body.tokens.accessToken}`)
+      .expect(401);
   });
 
   it('exposes separate liveness and dependency readiness with request IDs', async () => {

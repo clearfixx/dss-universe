@@ -11,11 +11,13 @@
  * 🧠 Responsibilities:
  * • registers the AuthController;
  * • registers authentication application services;
- * • imports Users, Core Auth, and Authorization dependencies.
+ * • imports Core Auth and Authorization dependencies, never Users;
+ * • binds the Core JWT strategy to the Auth-owned session validation capability.
  *
  * 🏗️ Architecture:
  * NestJS feature module.
- * Authentication handles login, registration, refresh, and logout.
+ * Authentication handles credentials, sessions and opaque authentication flows.
+ * Combined profile-bearing transport is wired in IdentityPresentationModule.
  * Authorization remains a separate concern.
  *
  * ⚠️ Important:
@@ -33,12 +35,19 @@
 import { Module } from '@nestjs/common';
 import { PasswordRecoveryService } from './application/services/password-recovery.service';
 import { PrismaPasswordResetRepository } from './infrastructure/repositories/prisma-password-reset.repository';
+import { PASSWORD_RESET_REPOSITORY } from './domain/repositories/password-reset.repository.interface';
+import { LOGIN_ABUSE_REPOSITORY } from './domain/repositories/login-abuse.repository.interface';
+import { PrismaLoginAbuseRepository } from './infrastructure/repositories/prisma-login-abuse.repository';
 import { PasswordRecoveryResolver } from './presentation/graphql/resolvers/password-recovery.resolver';
 
-import { AuthCoreModule } from '@api/core/auth';
+import {
+  ACCESS_SESSION_VALIDATOR,
+  AuthCoreModule,
+  JwtStrategy,
+} from '@api/core/auth';
 import { AuthorizationModule } from '@api/core/authorization';
 
-import { UsersModule } from '../users/users.module';
+import { AUTHENTICATION_FLOWS } from './contracts/authentication-flows.contract';
 
 import { AuthService } from './application/services/auth.service';
 import { PasswordHashService } from './application/services/password-hash.service';
@@ -50,29 +59,84 @@ import { AUTH_SESSION_REPOSITORY } from './domain/repositories/auth-session.repo
 import { PrismaAuthSessionRepository } from './infrastructure/repositories/prisma-auth-session.repository';
 import { EmailVerificationService } from './application/services/email-verification.service';
 import { PrismaEmailVerificationRepository } from './infrastructure/repositories/prisma-email-verification.repository';
+import { EMAIL_VERIFICATION_REPOSITORY } from './domain/repositories/email-verification.repository.interface';
 import { EmailVerificationResolver } from './presentation/graphql/resolvers/email-verification.resolver';
 import { LoginAbuseProtectionService } from './application/services/login-abuse-protection.service';
 import { SecurityAlertService } from './application/services/security-alert.service';
+import { SECURITY_ALERT_DELIVERY } from './domain/contracts/security-alert-delivery.interface';
+import { BullmqSecurityAlertDelivery } from './infrastructure/delivery/bullmq-security-alert-delivery';
+import { PASSWORD_RECOVERY_DELIVERY } from './domain/contracts/password-recovery-delivery.interface';
+import { EMAIL_VERIFICATION_DELIVERY } from './domain/contracts/email-verification-delivery.interface';
+import { BullmqPasswordRecoveryDelivery } from './infrastructure/delivery/bullmq-password-recovery-delivery';
+import { BullmqEmailVerificationDelivery } from './infrastructure/delivery/bullmq-email-verification-delivery';
+import { RECOVERY_RATE_LIMIT } from './domain/contracts/recovery-rate-limit.interface';
+import { VERIFICATION_RATE_LIMIT } from './domain/contracts/verification-rate-limit.interface';
+import { RedisRecoveryRateLimit } from './infrastructure/rate-limits/redis-recovery-rate-limit';
+import { RedisVerificationRateLimit } from './infrastructure/rate-limits/redis-verification-rate-limit';
+import { LOGIN_ABUSE_COUNTER } from './domain/contracts/login-abuse-counter.interface';
+import { RedisLoginAbuseCounter } from './infrastructure/rate-limits/redis-login-abuse-counter';
 import { TotpService } from './application/services/totp.service';
 import { TwoFactorService } from './application/services/two-factor.service';
+import { TWO_FACTOR_REPOSITORY } from './domain/repositories/two-factor.repository.interface';
+import { PrismaTwoFactorRepository } from './infrastructure/repositories/prisma-two-factor.repository';
 import { TwoFactorResolver } from './presentation/graphql/resolvers/two-factor.resolver';
+import { AccessSessionValidationService } from './application/services/access-session-validation.service';
+import { ACCESS_SESSION_REPOSITORY } from './domain/repositories/access-session.repository.interface';
+import { PrismaAccessSessionRepository } from './infrastructure/repositories/prisma-access-session.repository';
+import { ACCOUNT_CREDENTIALS_REPOSITORY } from './domain/repositories/account-credentials.repository.interface';
+import { PrismaAccountCredentialsRepository } from './infrastructure/repositories/prisma-account-credentials.repository';
 
 @Module({
-  imports: [UsersModule, AuthCoreModule, AuthorizationModule],
+  imports: [AuthCoreModule, AuthorizationModule],
   controllers: [AuthController],
   providers: [
+    JwtStrategy,
+    {
+      provide: ACCOUNT_CREDENTIALS_REPOSITORY,
+      useClass: PrismaAccountCredentialsRepository,
+    },
+    AccessSessionValidationService,
+    {
+      provide: ACCESS_SESSION_VALIDATOR,
+      useExisting: AccessSessionValidationService,
+    },
+    {
+      provide: ACCESS_SESSION_REPOSITORY,
+      useClass: PrismaAccessSessionRepository,
+    },
     PasswordRecoveryService,
-    PrismaPasswordResetRepository,
+    { provide: RECOVERY_RATE_LIMIT, useClass: RedisRecoveryRateLimit },
+    {
+      provide: PASSWORD_RECOVERY_DELIVERY,
+      useClass: BullmqPasswordRecoveryDelivery,
+    },
+    {
+      provide: PASSWORD_RESET_REPOSITORY,
+      useClass: PrismaPasswordResetRepository,
+    },
     PasswordRecoveryResolver,
     EmailVerificationService,
-    PrismaEmailVerificationRepository,
+    { provide: VERIFICATION_RATE_LIMIT, useClass: RedisVerificationRateLimit },
+    {
+      provide: EMAIL_VERIFICATION_DELIVERY,
+      useClass: BullmqEmailVerificationDelivery,
+    },
+    {
+      provide: EMAIL_VERIFICATION_REPOSITORY,
+      useClass: PrismaEmailVerificationRepository,
+    },
     EmailVerificationResolver,
     LoginAbuseProtectionService,
+    { provide: LOGIN_ABUSE_COUNTER, useClass: RedisLoginAbuseCounter },
+    { provide: LOGIN_ABUSE_REPOSITORY, useClass: PrismaLoginAbuseRepository },
     SecurityAlertService,
+    { provide: SECURITY_ALERT_DELIVERY, useClass: BullmqSecurityAlertDelivery },
     TotpService,
     TwoFactorService,
+    { provide: TWO_FACTOR_REPOSITORY, useClass: PrismaTwoFactorRepository },
     TwoFactorResolver,
     AuthService,
+    { provide: AUTHENTICATION_FLOWS, useExisting: AuthService },
     PasswordHashService,
     TokenService,
     AuthSessionService,
@@ -82,6 +146,6 @@ import { TwoFactorResolver } from './presentation/graphql/resolvers/two-factor.r
       useClass: PrismaAuthSessionRepository,
     },
   ],
-  exports: [AuthService],
+  exports: [AUTHENTICATION_FLOWS],
 })
 export class AuthModule {}

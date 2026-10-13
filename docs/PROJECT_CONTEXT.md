@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-10 — pre-Phase-11 debt closure / D2
+> Updated: 2026-10-12 — pre-Phase-11 debt closure / D3.4 IAM boundaries in progress
 
 ## Product and authority
 
@@ -12,7 +12,9 @@ Build. Share. Learn. Grow. Together.
 News, Knowledge Forge, Research Lab, Community Hub, Academy and Downloads are
 separate products. Shared Media, Editor, interactions, authorization, events
 and gamification support them without owning their content lifecycles.
-Mission Control is administration; Command Deck is the user's dashboard.
+Mission Control is the user's dashboard; Command Deck is administration.
+The [owner's product vision](development/PRODUCT_VISION_1_0.md) corrects historical
+naming and records 1.0 scope; roadmap/module naming reconciliation remains open.
 
 Read these sources before selecting work:
 
@@ -26,6 +28,37 @@ Legacy roadmaps are historical. This snapshot does not override source code,
 approved ADRs or recorded owner decisions.
 
 ## Current position
+
+Registration atomicity verification: eight new isolated PostgreSQL tests and
+four focused existing E2E pass; no production defect found. Full units now pass
+535 API / 59 Web / 36 Worker. A broad GraphQL E2E times out twice (DEBT-048), so
+full E2E acceptance remains red. See [evidence](audits/D3_REGISTRATION_POSTGRES_ATOMICITY.md).
+
+Administrator-availability acceptance review records DEBT-047: assignment counts
+do not prove eligible recovery-capable administration. Self-deactivation and
+critical permission mutation need a separately agreed cross-owner policy. No
+runtime correction is included. See [review](audits/D3_4_ADMINISTRATOR_AVAILABILITY_REVIEW.md).
+
+DEBT-046's approved correction now protects the last `admin`/`super_admin`
+assignment during IAM revocation using a role-locked transaction and existing
+application safety policy. Deterministic DB concurrency and HTTP tests pass;
+review and broader usable-administrator lifecycle acceptance remain open.
+See [review](audits/D3_4_LAST_ADMIN_REVOCATION_REVIEW.md).
+
+D3.4 now refreshes current request roles/permissions after session validation;
+same-token REST/GraphQL revocation and fail-closed authority errors are covered.
+DEBT-043 is implemented pending review. IAM role persistence is now isolated;
+subject assignment persistence is also isolated, preserving protected revocation.
+Reviewed architecture inventory is 135, all allocated to D4; the final D3 bcrypt
+namespace import is replaced by named functions with real-library regressions.
+See [evidence](audits/D3_4_EXPLICIT_BCRYPT_IMPORTS.md). IAM exposes only module assembly and
+registration policy, with no concrete Nest provider exports. Auth assembly uses
+its named public root. D3 acceptance remains open.
+See [public contract evidence](audits/D3_4_PUBLIC_INTEGRATION_CONTRACTS.md).
+See [assignment evidence](audits/D3_4_IAM_SUBJECT_ASSIGNMENT_PERSISTENCE.md).
+See [role boundary evidence](audits/D3_4_IAM_ROLE_PERSISTENCE.md).
+Full API E2E is not green: fixture contamination and News cleanup/assertion drift
+are DEBT-045. See [access evidence](audits/D3_4_AUTHORITATIVE_REQUEST_ACCESS.md).
 
 Product implementation has progressed through Phase 10 and the Auth UX bridge.
 Phase 11 has not started. Current work is debt closure, not a return to Phase 4.
@@ -43,12 +76,32 @@ Phase 11 has not started. Current work is debt closure, not a return to Phase 4.
 | D0.6             | Portable storage checks; focused Windows/Linux CI passes; review pending       |
 | D1               | Canonical documentation implemented; owner PR review pending                   |
 | D2               | Contracts and report-only inventory implemented; verification/review pending   |
+| D3               | Auth profile/registration separation transferred; D3.3/D3.4 acceptance open    |
 
-Branches/PRs are stacked review artifacts, not accepted releases. D2 starts from
-`debt/d1-canonical-documentation`; no red PR is merged to establish a false baseline.
+Branches/PRs are stacked review artifacts, not accepted releases. D3 starts from
+`debt/d2-architecture-contracts`; no red PR is merged to establish a false baseline.
+The [D3 package plan](development/D3_AUTH_BOUNDARY_PLAN.md) stages the Auth boundary
+refactor. D3.1 addresses access-session validation only; D3 remains incomplete.
+The initial D3.2 safe-profile allowlist and field/operation inventory are recorded
+in [D3 progress](audits/D3_PROFILE_BOUNDARY_PROGRESS_2026-10-11.md). Registration
+and profile-response composition have since migrated; no full Auth isolation is claimed.
+Credential reads/writes are now Auth-owned. Legacy access-token display/access
+claims are assembled in [identity composition](audits/D3_TOKEN_CLAIMS_COMPOSITION_2026-10-11.md),
+not supplied as profile data by Auth. Registration failure boundaries are
+characterized against the real disposable database before ownership transfer.
 The owner approved the Auth/subject/profile direction in
 [ADR-003](architecture/adr/003-subject-and-access-ownership.md). D3.5 groups/Premium
 is separately scheduled for scope approval, not silently included in D3/Phase 11.
+
+The separately approved [D3.4 factor lifecycle correction](audits/D3_4_TWO_FACTOR_ATOMIC_LIFECYCLE.md)
+implements subject locking and atomic disable proof/mutation, including recovery
+rollback. Broader D3.3/D3.4 acceptance and full release gates remain open.
+
+Auth auxiliary Redis/queue capabilities are isolated. IAM permission persistence
+now uses an owned adapter with atomic audit; roles/access remediation remains.
+DEBT-043 records stale JWT-derived permissions after assignment revocation, which
+must be resolved before authoritative access acceptance. Current review evidence
+is summarized in [D3 review](audits/D3_REVIEW_SUMMARY.md).
 
 ## Repository map
 
@@ -95,7 +148,7 @@ read `apps/web/AGENTS.md` and installed Next.js documentation.
 - Preserve existing conventions and ownership; DTOs remain DTOs.
 - No foreign infrastructure imports or broad service coupling. Use explicit
   capabilities, contracts, projections or versioned events.
-- Auth owns authentication, not public profiles; known violations await D2/D3.
+- Auth owns authentication, not public profiles; root composition assembles profiles.
 - Prisma stays behind owned adapters; known leaks are debt, not precedent.
 - Explicit named imports/exports; no wildcard barrel exports in new work.
 - Domain models are not transport/Prisma representations; resolvers stay thin.

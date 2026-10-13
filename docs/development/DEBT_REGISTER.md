@@ -59,6 +59,15 @@ active package safe and buildable.
 
 ## Additional D0 verification findings
 
+### D3.5 scope evidence (DEBT-008/024)
+
+Current Content Gates derive `groups` from IAM role names and apply Premium
+bypass from a case-insensitive `premium` name. This does not implement generic
+group membership, expiry/revocation or a distinct Premium entitlement. D3.5's
+[scope proposal](D3_5_ACCESS_GROUPS_BRAINSTORM.md) now records the concrete reader,
+data, authority and legacy-key migration boundary. No automatic name-based
+conversion or runtime implementation is approved by this evidence.
+
 ### D2 architecture contracts and inventory
 
 [ADR-003](../architecture/adr/003-subject-and-access-ownership.md) records the explicit
@@ -133,6 +142,11 @@ machine's concurrent workload. Retry with stopped dev processes and
 `vitest run --maxWorkers=2`; evaluate a documented resource-aware test policy
 in D6. This is not evidence of an assertion failure or a passing full gate.
 
+D3.2 also reproduced resource exhaustion with the default parallel API coverage
+command while other gates ran: one Jest worker crashed and a read-only Git diff
+allocation failed. Retry API coverage sequentially with `--runInBand`; keep this
+separate from a functional assertion failure or justification to lower thresholds.
+
 ## Entry policy
 
 ### D0.6 containment remediation progress
@@ -152,6 +166,204 @@ application-controlled. There is no established remote exploit under this assump
 Decide whether hostile local writers are in scope; if so, design OS-specific physical
 containment and TOCTOU defenses. Do not silently expand this package or describe
 lexical checks as sandbox isolation.
+
+### DEBT-038 — API E2E exceeds CI job limit (High, OPEN, D6)
+
+D2 Quality Gate run `38083005484` started API E2E at 20:17:17 UTC on 2026-10-10
+and cancelled it at 02:15:22 UTC on 2026-10-11 after the six-hour job limit.
+GraphQL contract verification and build were skipped. This is not a passing E2E
+gate. Diagnose test/process lifecycle and infrastructure in D6; do not hide the
+failure with force-exit or skipped assertions. D3.1's six selected real API E2E
+tests pass locally in 40.952 seconds, but do not reproduce the complete CI suite.
+
+### DEBT-039 — Owner vision and historical product naming (Medium, OPEN, D1 follow-up)
+
+The owner explicitly names Mission Control as the user dashboard and Command Deck
+as administration. Historical documents and the existing dashboard route disagree.
+The owner's wiki-style Research Lab also needs reconciliation with Knowledge Forge
+and the separately planned Research Lab. See `PRODUCT_VISION_1_0.md` for full 1.0
+requirements and pending details. Perform a product gap/naming review before the
+Phase 11 brainstorm, coordinated with the frontend documentation workstream;
+do not silently rename routes, collapse modules or implement unrelated features
+inside D3.
+
+### DEBT-040 — REST authentication DTO runtime metadata (High, OPEN, D6 / API validation review)
+
+The original AuthController imports RegisterDto, LoginDto and RefreshTokenDto as
+type-only symbols. Nest's reflected body parameter metadata therefore does not
+reference the DTO constructors (read-only reflection prints `Function` for all
+three body parameters); class-validator decorators cannot enforce those
+DTOs through the global ValidationPipe. The relocated composition controller
+preserves this existing behavior, not a newly accepted validation policy.
+GraphQL uses runtime input classes and is a separate path. Existing successful
+REST registration tests omit displayName although RegisterDto declares it required.
+Review required/optional fields and invalid-input compatibility, then switch to
+runtime DTO imports with explicit regression tests. Do not silently turn this
+boundary refactor into an API validation behavior change; no exemption is granted.
+
+### DEBT-041 — Nondeterministic TOTP envelope tamper assertion (Medium, OPEN, D6 / Auth test owner)
+
+A sequential D3.2 coverage run fails the unchanged TotpService test at line 23:
+`decrypt(first.slice(0, -1) + 'x')` does not throw. The ciphertext is random and
+the last base64url character can already be `x`, leaving the original bytes
+unchanged. This is evidence of a flawed corruption test, not evidence of an
+AES-GCM authentication bypass. Replace it in a separately reviewed test fix with
+deterministic byte corruption and unchanged-envelope control. Keep the assertion
+and security behavior; do not skip it, weaken encryption or claim rerun success
+resolves the nondeterminism. No TOTP production/test edit is included in D3.2.
+
+### DEBT-042 — Second-factor lifecycle concurrency review (High, IMPLEMENTED / review pending, D3.4)
+
+Code inspection of the pre-refactor TwoFactorService shows that disable validates
+the password and second factor before starting its delete/revoke/version/audit
+transaction. Recovery consumption therefore commits separately: a failed disable
+can leave its recovery code consumed. Concurrent credential replacement also
+needs review between proof and mutation. Begin locks the second-factor row, not
+the subject row; first setup has no existing row to lock. The D3.3 adapter preserves
+these existing boundaries; passing tests do not prove those lifecycle races safe.
+This is a code-ordering risk assessment, not a reproduced exploit. Auth acceptance
+must decide locking/proof revalidation and API behavior, then add deterministic
+concurrent begin/confirm/disable tests. Do not silently redesign the protocol in
+the persistence transfer. The owner approved a separate D3.4 corrective package:
+atomic proof/mutation under a subject lock, deterministic concurrency tests and
+unchanged public API. Approval does not mean the defect is fixed.
+
+The approved correction now locks the subject for all factor mutations and
+verifies disable proof in the same transaction as recovery-use audit, deletion,
+revocation and version increment. Deterministic DB barriers and a real API rollback
+case verify the corrected ordering. See [D3.4 evidence](../audits/D3_4_TWO_FACTOR_ATOMIC_LIFECYCLE.md).
+Implementation is not full D3 acceptance or permission to merge a red PR.
+
+### DEBT-043 — Stale JWT permission grants after IAM revocation (High, IMPLEMENTED / review pending, D3.4)
+
+Current JwtStrategy validates authoritative session/account eligibility, then copies
+`payload.roles` and `payload.permissions` into the request principal. PermissionsGuard
+checks that copied set. IAM role/direct-permission revocation does not increment
+authVersion or revoke sessions. Code inspection therefore shows no authoritative
+permission refresh on this guarded path: a previously issued token can retain a
+revoked grant until expiry or another session-invalidating change. This is a
+code-path assessment; no production incident or runtime exploit is claimed.
+
+ADR-003 requires synchronous authoritative access decisions and immediate denial.
+Resolve through an Authorization-owned capability/composition boundary, with real
+tests using the same token before and after revocation, removal and grant changes,
+plus fail-closed storage errors. Do not couple Auth to IAM assignments or silently
+invalidate every authentication session as a substitute for access ownership.
+This is a separate D3.4 security increment; the permission persistence transfer
+does not fix it or claim complete access acceptance.
+
+The correction now reads current roles and permissions after session validation,
+through consumer-owned Core Auth and Authorization ports joined in root
+composition. Old JWT grants are not an authority. A real same-token REST test
+first reproduced revoked access returning 200 instead of 403; four corrective
+E2E tests now pass, including GraphQL and fail-closed authority errors.
+See [request access evidence](../audits/D3_4_AUTHORITATIVE_REQUEST_ACCESS.md).
+This is a per-request snapshot, not cancellation of already running commands.
+
+### DEBT-044 — GraphQL generator barrel drift (Medium, OPEN, D6)
+
+On the D3.4 IAM persistence tree, `pnpm graphql:check` successfully parses the
+unchanged API schema and Web operations, then exits 1 on its generated diff:
+`apps/web/src/gql/index.ts` gains `/* eslint-disable */` above its existing export.
+No schema or operation changes are involved. The verification side effect was
+restored to the previously clean tracked version, with no hand-edited generated
+implementation. Reconcile the checked-in output and configured generator in D6,
+coordinated with the Web workstream, then prove clean regeneration. Do not waive
+the consistency gate or claim it passes from successful generation alone.
+
+### DEBT-045 — API E2E shared fixtures and News cleanup drift (Medium, OPEN, D6)
+
+The full D3.4 API E2E run finished in 114.253 seconds with 44 passed and two
+failed tests. Leaderboards assumes its own 10-point subject ranks first, but an
+earlier Community Points fixture also has 10 points and an earlier creation
+timestamp. A read-only DB query confirmed the winning `points-user-*` subject
+preceded `leader-oldest-*` by about 20 seconds. The leaderboard test closes the
+app without removing its fixtures. Global rank assertions are therefore not
+isolated from other suites or previous runs.
+
+The News foundation test first timed out at five seconds. A focused rerun instead
+failed because it expected `viewCount: null` and received `0`; cleanup then tried
+to delete an interaction target, rejected by the DB rule requiring retirement.
+Jest subsequently reported open handles. News and leaderboard source/tests were
+not changed by the request-access increment. D6 must establish owned fixtures,
+correct cleanup and explicit view-count contract acceptance before correcting
+assertions. Do not weaken DB protections, extend timeouts blindly, or call the
+full E2E gate green. No out-of-scope implementation is included here.
+
+### DEBT-046 — Last privileged role-holder removal is unguarded (High, IMPLEMENTED / review pending, D3.4)
+
+At `a9c5596`, UserAccessService.revokeRole does not invoke the existing
+last-administrator safety helper or count other holders. Two isolated service
+probes expecting denial for a sole `admin` or `super_admin` assignment instead
+resolved with an empty access summary. This is controlled service-level runtime
+evidence, not a production incident or real DB/API reproduction. The endpoint
+requires `roles.update`; an authorized destructive action can remove the last
+protected assignment. No claim of anonymous access or unavoidable total lockout
+is made.
+
+The owner approved a separate corrective D3.4 package: atomic current role and
+assignment validation/count/removal under a role lock, deterministic concurrent
+revocation tests and HTTP regressions, preserving successful response shapes.
+Keep the safety rule in application policy and transactions in IAM infrastructure.
+Do not add a racy count-before-delete check. Broader usable-administrator paths
+remain an explicit acceptance concern, not automatically fixed by role counts.
+See [review and approved scope](../audits/D3_4_LAST_ADMIN_REVOCATION_REVIEW.md).
+The correction is now implemented through a private IAM capability: role lock,
+current-state validation/count, synchronous application policy and deletion in
+one READ COMMITTED transaction. Seventeen service/real DB tests and seven real
+HTTP/GraphQL regressions pass, including observed concurrent lock barriers for
+both privileged roles. See the report's implementation section for exact gates.
+This protects IAM role revocation, not every path to administrator ineligibility;
+broader acceptance and required CI remain open.
+
+### DEBT-047 — Assignment protection does not ensure administrator availability (High, OPEN / scope approval required, D3.4)
+
+Source review at `c9659e0` found that protected-role revocation counts inactive
+holders, while Auth self-deactivation changes eligibility without consulting an
+availability policy. IAM critical permission rename/delete and role-permission
+revocation also lack such a policy. PermissionsGuard requires actual permission
+keys, so protected role names do not prove recoverable administration. This is
+static call-path evidence, not a reproduced total lockout or irreversible loss;
+self-reactivation exists. UsersService.changeStatus is a latent ownership leak
+with no production caller found, not a demonstrated public bypass.
+
+Proposed ownership: root composition coordinates Auth eligibility and IAM
+assignment commands through narrow contracts; Authorization defines/evaluates
+the agreed recovery capability set. Do not add IAM reads to Auth. Agree that set,
+single-subject versus distributed coverage and shared concurrency boundary
+before implementing. Require deterministic cross-owner DB concurrency, rollback
+and HTTP tests. See [acceptance review](../audits/D3_4_ADMINISTRATOR_AVAILABILITY_REVIEW.md).
+No corrective implementation is authorized by this discovery. DEBT-046 remains
+implemented for its assignment-only scope; D3 acceptance remains open.
+
+On 2026-10-13 the owner authorized policy design. The
+[six-key recovery proposal](DEBT_047_POLICY_PROPOSAL.md) is ready for review;
+its predicate, shared serialization and bootstrap behavior are not yet approved
+for implementation. No runtime correction is claimed.
+
+Subsequent owner clarification supersedes that six-key policy proposal: platform
+owner is unique and non-transferable. New owner rights and Command Deck features
+must be scheduled in their relevant phases, not implemented now. See
+[accepted decisions](COMMAND_DECK_OWNER_DECISIONS.md). DEBT-047 remains an open
+availability finding requiring explicit disposition at security acceptance;
+deferral of new product functionality is not proof that the risk is resolved.
+
+### DEBT-048 — Broad GraphQL registration test repeatedly exceeds its timeout (Medium, OPEN, D6)
+
+During registration atomicity verification, selecting five tests from
+`app.e2e-spec.ts` twice yielded four passes and one five-second timeout in
+`registers and resolves the authenticated viewer through GraphQL`. The second
+run had no parallel build/unit gate. That single test begins at line 1127 and
+also exercises editor/profile and many subsequent flows before the next test.
+Shutdown emits an Apollo warning about an operation arriving while closing.
+No root cause of the stalled operation is claimed from timeout alone.
+
+The four focused registration/rollback tests pass in a separate terminal run;
+the new eight real-DB tests pass. Do not infer full GraphQL/E2E acceptance from
+those results. D6 should trace and split independently owned flows with proper
+cleanup and diagnose the slow/failing operation; do not raise timeouts blindly.
+See [registration evidence](../audits/D3_REGISTRATION_POSTGRES_ATOMICITY.md).
+No out-of-scope E2E restructuring is implemented by this package.
 
 Every new entry should include evidence, impact, proposed ownership and a clear
 decision before implementation. Discovery is not permission to expand the

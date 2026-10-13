@@ -9,78 +9,71 @@
  * Issues and verifies JWT tokens for authentication flows.
  *
  * 🧠 Responsibilities:
- * • builds access-token payloads from authorization access profiles;
- * • signs access and refresh tokens;
+ * • delegates access-token composition through an opaque issuance capability;
+ * • coordinates the pair and signs refresh tokens;
  * • verifies refresh tokens;
  * • keeps JWT and configuration details out of AuthService.
  *
  * 🏗️ Architecture:
  * Application service.
  *
- * TokenService
- *   ↓
- * PermissionsService
- *   ↓
- * PermissionsRepository
- *   ↓
- * Prisma
+ * Auth owns refresh signing and delegates legacy access claims to composition.
  *
  * ⚠️ Important:
  * TokenService must not access Prisma directly.
- * Effective roles and permissions belong to Authorization Core.
+ * Profile and effective permissions are composed outside Auth.
  *
  * 💡 Notes:
- * The token does not guess.
- * The token asks Authorization. 🛰️
+ * Auth supplies identity facts; composition asks the other owners. 🛰️
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { JwtSignOptions } from '@nestjs/jwt';
 import { JwtService } from '@nestjs/jwt';
 
-import type { JwtPayload } from '@api/core/auth';
-import { PermissionsService } from '@api/core/authorization';
+import {
+  ACCESS_TOKEN_ISSUER,
+  type AccessTokenIssuer,
+} from '../../contracts/access-token-issuer.contract';
 
 import type { TokenPair } from '../types/token-pair.type';
-import type { TokenUser } from '../types/token-user.type';
+import type { RefreshTokenClaims } from '../types/refresh-token-claims.type';
+import type { TokenSubject } from '../../contracts/token-subject.type';
 
 @Injectable()
 export class TokenService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly permissionsService: PermissionsService,
+    @Inject(ACCESS_TOKEN_ISSUER)
+    private readonly accessTokenIssuer: AccessTokenIssuer,
   ) {}
 
-  async generateTokens(user: TokenUser, sessionId: string): Promise<TokenPair> {
+  async generateTokens(
+    user: TokenSubject,
+    sessionId: string,
+  ): Promise<TokenPair> {
     return this.signTokenPair(user, sessionId);
   }
 
-  async signAccessToken(user: TokenUser, sessionId: string): Promise<string> {
-    const accessProfile =
-      await this.permissionsService.getAccessProfileByUserId(user.id);
-
-    const payload: JwtPayload = {
-      sub: user.id,
-      ver: user.authVersion,
-      sid: sessionId,
-      email: user.email,
-      username: user.username,
-      roles: accessProfile.roles,
-      permissions: accessProfile.permissions,
-    };
-
-    return this.jwtService.signAsync(payload, {
-      secret: this.getJwtAccessSecret(),
-      expiresIn: this.getJwtAccessExpiresIn(),
-    });
+  async signAccessToken(
+    user: TokenSubject,
+    sessionId: string,
+  ): Promise<string> {
+    return this.accessTokenIssuer.issue(
+      { id: user.id, email: user.email, authVersion: user.authVersion },
+      sessionId,
+    );
   }
 
-  async signRefreshToken(user: TokenUser, sessionId: string): Promise<string> {
+  async signRefreshToken(
+    user: TokenSubject,
+    sessionId: string,
+  ): Promise<string> {
     return this.jwtService.signAsync(
       {
         sub: user.id,
@@ -94,13 +87,20 @@ export class TokenService {
     );
   }
 
-  async verifyRefreshToken(refreshToken: string): Promise<JwtPayload> {
-    return this.jwtService.verifyAsync<JwtPayload>(refreshToken, {
-      secret: this.getJwtRefreshSecret(),
-    });
+  async verifyRefreshToken(refreshToken: string): Promise<RefreshTokenClaims> {
+    const claims = await this.jwtService.verifyAsync<RefreshTokenClaims>(
+      refreshToken,
+      {
+        secret: this.getJwtRefreshSecret(),
+      },
+    );
+    return { sub: claims.sub, sid: claims.sid, ver: claims.ver };
   }
 
-  async signTokenPair(user: TokenUser, sessionId: string): Promise<TokenPair> {
+  async signTokenPair(
+    user: TokenSubject,
+    sessionId: string,
+  ): Promise<TokenPair> {
     const [accessToken, refreshToken] = await Promise.all([
       this.signAccessToken(user, sessionId),
       this.signRefreshToken(user, sessionId),
@@ -112,16 +112,6 @@ export class TokenService {
     };
   }
 
-  private getJwtAccessSecret(): string {
-    const secret = this.configService.get<string>('JWT_ACCESS_SECRET');
-
-    if (!secret) {
-      throw new Error('JWT_ACCESS_SECRET is not configured.');
-    }
-
-    return secret;
-  }
-
   private getJwtRefreshSecret(): string {
     const secret = this.configService.get<string>('JWT_REFRESH_SECRET');
 
@@ -130,10 +120,6 @@ export class TokenService {
     }
 
     return secret;
-  }
-
-  private getJwtAccessExpiresIn(): JwtSignOptions['expiresIn'] {
-    return '15m';
   }
 
   private getJwtRefreshExpiresIn(): JwtSignOptions['expiresIn'] {

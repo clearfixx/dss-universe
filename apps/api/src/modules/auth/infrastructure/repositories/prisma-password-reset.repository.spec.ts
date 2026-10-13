@@ -1,3 +1,16 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Authentication
+ * 📄 File: apps/api/src/modules/auth/infrastructure/repositories/prisma-password-reset.repository.spec.ts
+ *
+ * 🎯 Purpose:
+ * Verifies real isolated PostgreSQL reset concurrency, rollback and safe results.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
@@ -53,7 +66,8 @@ dbSuite('password reset PostgreSQL transaction', () => {
       repository.consume('digest', 'new-a'),
       repository.consume('digest', 'new-b'),
     ]);
-    expect(results.sort()).toEqual([false, true]);
+    expect(results.filter(Boolean)).toEqual([{ email: 'dev@example.test' }]);
+    expect(results.filter((value) => value === null)).toHaveLength(1);
     const user = await pool.query<{
       authVersion: number;
       passwordHash: string;
@@ -67,17 +81,17 @@ dbSuite('password reset PostgreSQL transaction', () => {
         )
       ).rows[0].revokedAt,
     ).not.toBeNull();
-    expect(await repository.consume('digest', 'replay')).toBe(false);
+    expect(await repository.consume('digest', 'replay')).toBeNull();
   });
   it('rejects expired and version-invalidated tokens without changing the password', async () => {
     await pool.query(
       `UPDATE password_resets SET "expiresAt"=NOW()-INTERVAL '1 second'`,
     );
-    expect(await repository.consume('digest', 'bad')).toBe(false);
+    expect(await repository.consume('digest', 'bad')).toBeNull();
     await pool.query(
       `UPDATE password_resets SET "expiresAt"=NOW()+INTERVAL '1 day', "authVersion"=9`,
     );
-    expect(await repository.consume('digest', 'bad')).toBe(false);
+    expect(await repository.consume('digest', 'bad')).toBeNull();
     expect(
       (
         await pool.query<{ passwordHash: string }>(
@@ -105,6 +119,46 @@ dbSuite('password reset PostgreSQL transaction', () => {
         )
       ).rows[0].revokedAt,
     ).toBeNull();
-    expect(await repository.consume('digest', 'retry')).toBe(true);
+    expect(await repository.consume('digest', 'retry')).toEqual({
+      email: 'dev@example.test',
+    });
+  });
+
+  it.each(['BANNED', 'DEACTIVATED', 'DELETED'])(
+    'does not consume a reset for a %s account',
+    async (status) => {
+      await pool.query('UPDATE users SET status=$1', [status]);
+      expect(await repository.consume('digest', 'bad')).toBeNull();
+      expect(
+        (
+          await pool.query<{ passwordHash: string }>(
+            'SELECT "passwordHash" FROM users',
+          )
+        ).rows[0].passwordHash,
+      ).toBe('old');
+      expect((await pool.query('SELECT * FROM password_resets')).rowCount).toBe(
+        1,
+      );
+      expect(append).not.toHaveBeenCalled();
+    },
+  );
+
+  it('returns only the current notification address from the locked account', async () => {
+    await pool.query('UPDATE users SET email=$1', ['current@example.test']);
+    expect(await repository.consume('digest', 'new')).toEqual({
+      email: 'current@example.test',
+    });
+  });
+
+  it('denies an unknown token without writing audit or credentials', async () => {
+    expect(await repository.consume('missing', 'bad')).toBeNull();
+    expect(append).not.toHaveBeenCalled();
+    expect(
+      (
+        await pool.query<{ passwordHash: string }>(
+          'SELECT "passwordHash" FROM users',
+        )
+      ).rows[0].passwordHash,
+    ).toBe('old');
   });
 });

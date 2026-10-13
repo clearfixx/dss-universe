@@ -132,20 +132,6 @@
       "package": "D4"
     },
     {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/auth/application/services/auth.service.ts\",\"../../../users/domain/mappers/user.mapper: UserMapper\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/auth/application/services/auth.service.ts",
-      "detail": "../../../users/domain/mappers/user.mapper: UserMapper",
-      "package": "D3"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/auth/presentation/graphql/resolvers/auth.resolver.ts\",\"../../../../users/presentation/graphql/mappers/user-graphql.mapper: UserGraphqlMapper\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/auth/presentation/graphql/resolvers/auth.resolver.ts",
-      "detail": "../../../../users/presentation/graphql/mappers/user-graphql.mapper: UserGraphqlMapper",
-      "package": "D3"
-    },
-    {
       "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/community-points/application/services/community-points.service.ts\",\"@api/modules/users: UsersService\"]",
       "rule": "foreign-concrete-service",
       "file": "apps/api/src/modules/community-points/application/services/community-points.service.ts",
@@ -251,34 +237,6 @@
       "package": "D4"
     },
     {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/auth/application/services/auth.service.ts\",\"../../../users/domain/mappers/user.mapper\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/auth/application/services/auth.service.ts",
-      "detail": "../../../users/domain/mappers/user.mapper",
-      "package": "D3"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/auth/application/services/auth.service.ts\",\"../../../users/domain/repositories/users.repository.interface\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/auth/application/services/auth.service.ts",
-      "detail": "../../../users/domain/repositories/users.repository.interface",
-      "package": "D3"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/auth/presentation/graphql/models/auth-payload.model.ts\",\"../../../../users/presentation/graphql/models/viewer.model\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/auth/presentation/graphql/models/auth-payload.model.ts",
-      "detail": "../../../../users/presentation/graphql/models/viewer.model",
-      "package": "D3"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/auth/presentation/graphql/resolvers/auth.resolver.ts\",\"../../../../users/presentation/graphql/mappers/user-graphql.mapper\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/auth/presentation/graphql/resolvers/auth.resolver.ts",
-      "detail": "../../../../users/presentation/graphql/mappers/user-graphql.mapper",
-      "package": "D3"
-    },
-    {
       "id": "[\"foreign-private-import\",\"apps/api/src/modules/editor/application/services/editor-content-delivery.service.ts\",\"../../../content-access/application/services/content-gates.service\"]",
       "rule": "foreign-private-import",
       "file": "apps/api/src/modules/editor/application/services/editor-content-delivery.service.ts",
@@ -370,48 +328,6 @@
       "package": "D4"
     },
     {
-      "id": "[\"namespace-import\",\"apps/api/src/modules/auth/application/services/password-hash.service.ts\",\"bcrypt\"]",
-      "rule": "namespace-import",
-      "file": "apps/api/src/modules/auth/application/services/password-hash.service.ts",
-      "detail": "bcrypt",
-      "package": "D3"
-    },
-    {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/auth/application/services/auth.service.ts\",\"@prisma/client\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/auth/application/services/auth.service.ts",
-      "detail": "@prisma/client",
-      "package": "D3"
-    },
-    {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/auth/application/services/email-verification.service.ts\",\"@api/core/database\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/auth/application/services/email-verification.service.ts",
-      "detail": "@api/core/database",
-      "package": "D3"
-    },
-    {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/auth/application/services/login-abuse-protection.service.ts\",\"@api/core/database\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/auth/application/services/login-abuse-protection.service.ts",
-      "detail": "@api/core/database",
-      "package": "D3"
-    },
-    {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/auth/application/services/password-recovery.service.ts\",\"@api/core/database\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/auth/application/services/password-recovery.service.ts",
-      "detail": "@api/core/database",
-      "package": "D3"
-    },
-    {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/auth/application/services/two-factor.service.ts\",\"@api/core/database\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/auth/application/services/two-factor.service.ts",
-      "detail": "@api/core/database",
-      "package": "D3"
-    },
-    {
       "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/content-access/presentation/graphql/content-gates.graphql.ts\",\"@prisma/client\"]",
       "rule": "persistence-outside-infrastructure",
       "file": "apps/api/src/modules/content-access/presentation/graphql/content-gates.graphql.ts",
@@ -424,34 +340,6 @@
       "file": "apps/api/src/modules/editor/presentation/graphql/editor.model.ts",
       "detail": "@prisma/client",
       "package": "D4"
-    },
-    {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/iam/permissions/permissions.service.ts\",\"@api/core/database\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/iam/permissions/permissions.service.ts",
-      "detail": "@api/core/database",
-      "package": "D3"
-    },
-    {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/iam/roles/roles.service.ts\",\"@api/core/database\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/iam/roles/roles.service.ts",
-      "detail": "@api/core/database",
-      "package": "D3"
-    },
-    {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/iam/roles/roles.service.ts\",\"@prisma/client\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/iam/roles/roles.service.ts",
-      "detail": "@prisma/client",
-      "package": "D3"
-    },
-    {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/iam/user-access/user-access.service.ts\",\"@api/core/database\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/iam/user-access/user-access.service.ts",
-      "detail": "@api/core/database",
-      "package": "D3"
     },
     {
       "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/interactions/application/services/interaction-target-writer.service.ts\",\"@api/core/database\"]",
@@ -485,13 +373,6 @@
       "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/users/domain/options/list-users.options.ts\",\"@prisma/client\"]",
       "rule": "persistence-outside-infrastructure",
       "file": "apps/api/src/modules/users/domain/options/list-users.options.ts",
-      "detail": "@prisma/client",
-      "package": "D4"
-    },
-    {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/users/domain/types/safe-user.type.ts\",\"@prisma/client\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/users/domain/types/safe-user.type.ts",
       "detail": "@prisma/client",
       "package": "D4"
     },
@@ -844,34 +725,6 @@
       "file": "apps/api/src/modules/editor/index.ts",
       "detail": "./editor.module",
       "package": "D4"
-    },
-    {
-      "id": "[\"wildcard-export\",\"apps/api/src/modules/iam/index.ts\",\"./permissions\"]",
-      "rule": "wildcard-export",
-      "file": "apps/api/src/modules/iam/index.ts",
-      "detail": "./permissions",
-      "package": "D3"
-    },
-    {
-      "id": "[\"wildcard-export\",\"apps/api/src/modules/iam/index.ts\",\"./roles\"]",
-      "rule": "wildcard-export",
-      "file": "apps/api/src/modules/iam/index.ts",
-      "detail": "./roles",
-      "package": "D3"
-    },
-    {
-      "id": "[\"wildcard-export\",\"apps/api/src/modules/iam/index.ts\",\"./safety\"]",
-      "rule": "wildcard-export",
-      "file": "apps/api/src/modules/iam/index.ts",
-      "detail": "./safety",
-      "package": "D3"
-    },
-    {
-      "id": "[\"wildcard-export\",\"apps/api/src/modules/iam/index.ts\",\"./user-access\"]",
-      "rule": "wildcard-export",
-      "file": "apps/api/src/modules/iam/index.ts",
-      "detail": "./user-access",
-      "package": "D3"
     },
     {
       "id": "[\"wildcard-export\",\"apps/api/src/modules/media/domain/index.ts\",\"./entities/media.entity\"]",

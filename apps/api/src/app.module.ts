@@ -72,10 +72,11 @@ import { ObservabilityModule } from '@api/core/observability';
 import { HealthModule } from '@api/health';
 
 import { AppController } from './app.controller';
+import { IdentityCompositionModule } from './composition/identity/identity-composition.module';
 import { AchievementsModule } from './modules/achievements';
 import { ActivityModule } from './modules/activity';
 import { AiCoreModule } from './modules/ai-core';
-import { AuthModule } from './modules/auth/auth.module';
+import { IdentityPresentationModule } from './composition/identity/identity-presentation.module';
 import { CommunityPointsModule } from './modules/community-points';
 import { ContentAccessModule } from './modules/content-access';
 import { CustomTitlesModule } from './modules/custom-titles';
@@ -102,7 +103,8 @@ import { UsersModule } from './modules/users/users.module';
     HealthModule,
     ActivityModule,
     UsersModule,
-    AuthModule,
+    IdentityCompositionModule,
+    IdentityPresentationModule,
     AuthorizationModule,
     IamModule,
     InteractionsModule,

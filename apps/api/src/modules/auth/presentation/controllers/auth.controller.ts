@@ -10,8 +10,9 @@
  *
  * 🧠 Responsibilities:
  * • receives authentication requests;
- * • delegates login, registration, refresh, and logout to AuthService;
- * • exposes current authenticated user data.
+ * • delegates logout to AuthService;
+ * • exposes the authenticated request context, never a Users profile.
+ * Combined registration/login/refresh routes belong to identity composition.
  *
  * 🏗️ Architecture:
  * Thin controller.
@@ -24,14 +25,13 @@
  * ===============================================================
  */
 
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, UseGuards } from '@nestjs/common';
 
 import {
   Authenticated,
   AuthUser,
   JwtAuthGuard,
   type AuthenticatedUser,
-  type AuthenticatedRequest,
 } from '@api/core/auth';
 import {
   Permission,
@@ -39,29 +39,11 @@ import {
   RequirePermissions,
 } from '@api/core/authorization';
 
-import type { LoginDto } from '../../application/dto/login.dto';
-import type { RefreshTokenDto } from '../../application/dto/refresh-token.dto';
-import type { RegisterDto } from '../../application/dto/register.dto';
 import { AuthService } from '../../application/services/auth.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-
-  @Post('register')
-  register(@Body() dto: RegisterDto, @Req() request: AuthenticatedRequest) {
-    return this.authService.register(dto, this.client(request));
-  }
-
-  @Post('login')
-  login(@Body() dto: LoginDto, @Req() request: AuthenticatedRequest) {
-    return this.authService.login(dto, this.client(request));
-  }
-
-  @Post('refresh')
-  refresh(@Body() dto: RefreshTokenDto) {
-    return this.authService.refresh(dto);
-  }
 
   @Post('logout')
   @Authenticated()
@@ -82,13 +64,6 @@ export class AuthController {
     return {
       status: 'ok',
       message: 'Admin permissions work',
-    };
-  }
-
-  private client(request: AuthenticatedRequest) {
-    return {
-      userAgent: request.get('user-agent'),
-      ipAddress: request.ip,
     };
   }
 }

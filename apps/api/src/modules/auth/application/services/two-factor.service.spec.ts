@@ -1,149 +1,165 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Authentication
+ * 📄 File: apps/api/src/modules/auth/application/services/two-factor.service.spec.ts
+ *
+ * 🎯 Purpose:
+ * Verifies second-factor orchestration through its private persistence contract.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { BadRequestException } from '@nestjs/common';
-
 import { TwoFactorRequiredException } from '../../domain/exceptions/two-factor-required.exception';
 import type { PasswordHashService } from './password-hash.service';
 import type { TotpService } from './totp.service';
 import { TwoFactorService } from './two-factor.service';
 
 describe('TwoFactorService', () => {
-  const findUnique = jest.fn();
-  const upsert = jest.fn();
-  const update = jest.fn();
-  const remove = jest.fn();
-  const updateMany = jest.fn();
-  const userUpdate = jest.fn();
-  const queryRaw = jest.fn();
-  const append = jest.fn();
-  const compare = jest.fn();
-  const createSecret = jest.fn(() => 'BASE32SECRET');
-  const encrypt = jest.fn(() => 'encrypted-secret');
-  const decrypt = jest.fn(() => 'BASE32SECRET');
-  const verify = jest.fn();
-  const recoveryCode = jest.fn();
-  const recoveryHash = jest.fn((code: string) => `hash:${code.toLowerCase()}`);
-  const tx = {
-    $queryRaw: queryRaw,
-    userTwoFactor: { findUnique, upsert, update, delete: remove },
-    session: { updateMany },
-    user: { update: userUpdate },
+  const credentials = {
+    status: jest.fn(),
+    begin: jest.fn(),
+    confirm: jest.fn(),
+    findEnabledSecret: jest.fn(),
+    consumeRecovery: jest.fn(),
+    findPasswordHash: jest.fn(),
+    disable: jest.fn(),
   };
-  const prisma = {
-    userTwoFactor: { findUnique, upsert },
-    user: { findUnique },
-    $transaction: jest.fn((run: (client: typeof tx) => unknown) =>
-      Promise.resolve(run(tx)),
-    ),
+  const compare = jest.fn();
+  const totp = {
+    createSecret: jest.fn(() => 'BASE32SECRET'),
+    encrypt: jest.fn(() => 'encrypted'),
+    decrypt: jest.fn(() => 'BASE32SECRET'),
+    verify: jest.fn(),
+    recoveryCode: jest.fn(() => 'recovery'),
+    recoveryHash: jest.fn((code: string) => `hash:${code.toLowerCase()}`),
   };
   const service = new TwoFactorService(
-    prisma as never,
-    { append } as never,
+    credentials,
     { compare } as unknown as PasswordHashService,
-    {
-      createSecret,
-      encrypt,
-      decrypt,
-      verify,
-      recoveryCode,
-      recoveryHash,
-    } as unknown as TotpService,
+    totp as unknown as TotpService,
   );
-
   beforeEach(() => {
     jest.clearAllMocks();
-    recoveryCode.mockImplementation(
-      () => `code-${recoveryCode.mock.calls.length}`,
-    );
+    credentials.begin.mockResolvedValue(true);
+    credentials.confirm.mockResolvedValue('confirmed');
+    credentials.findEnabledSecret.mockResolvedValue('encrypted');
+    credentials.consumeRecovery.mockResolvedValue(true);
+    credentials.findPasswordHash.mockResolvedValue('password-hash');
+    totp.verify.mockReturnValue(true);
+    compare.mockResolvedValue(true);
+    credentials.disable.mockResolvedValue('disabled');
   });
-
-  it('creates pending setup but refuses to replace enabled credentials', async () => {
-    findUnique.mockResolvedValueOnce(null);
-    const setup = await service.begin('user-1', 'dev@example.test');
+  it('delegates safe status without credential reads', async () => {
+    credentials.status.mockResolvedValue({
+      enabled: true,
+      recoveryCodesRemaining: 2,
+    });
+    expect(await service.status('u')).toEqual({
+      enabled: true,
+      recoveryCodesRemaining: 2,
+    });
+    expect(credentials.findEnabledSecret).not.toHaveBeenCalled();
+  });
+  it('creates encrypted pending setup with the existing URI', async () => {
+    const setup = await service.begin('u', 'dev@example.test');
     expect(setup.secret).toBe('BASE32SECRET');
     expect(setup.otpauthUri).toContain('DSS%20Universe%3Adev%40example.test');
-    expect(JSON.stringify(upsert.mock.calls)).toContain(
-      '"encryptedSecret":"encrypted-secret"',
+    expect(credentials.begin).toHaveBeenCalledWith('u', 'encrypted');
+    credentials.begin.mockResolvedValueOnce(false);
+    await expect(service.begin('u', 'dev@example.test')).rejects.toBeInstanceOf(
+      BadRequestException,
     );
-
-    findUnique.mockResolvedValueOnce({ enabledAt: new Date() });
-    await expect(
-      service.begin('user-1', 'dev@example.test'),
-    ).rejects.toBeInstanceOf(BadRequestException);
   });
-
-  it('confirms setup under a row lock and stores only recovery hashes', async () => {
-    findUnique.mockResolvedValue({
-      userId: 'user-1',
-      encryptedSecret: 'encrypted-secret',
-      enabledAt: null,
-      recoveryCodeHashes: [],
-    });
-    verify.mockReturnValue(true);
-
-    const result = await service.confirm('user-1', '123456');
-
-    expect(queryRaw).toHaveBeenCalled();
+  it('passes a pure locked verifier and only recovery hashes to persistence', async () => {
+    const result = await service.confirm('u', '123456');
     expect(result.recoveryCodes).toHaveLength(10);
-    for (const code of result.recoveryCodes) {
-      expect(JSON.stringify(update.mock.calls)).toContain(`hash:${code}`);
-    }
-    expect(JSON.stringify(update.mock.calls)).not.toContain('BASE32SECRET');
+    const args = credentials.confirm.mock.calls[0] as [
+      string,
+      (encrypted: string) => boolean,
+      string[],
+    ];
+    expect(args[0]).toBe('u');
+    expect(args[1]('encrypted')).toBe(true);
+    expect(totp.verify).toHaveBeenCalledWith('BASE32SECRET', '123456');
+    expect(args[2]).toEqual(Array<string>(10).fill('hash:recovery'));
   });
-
-  it('requires a second factor when enabled and accepts a valid TOTP', async () => {
-    findUnique.mockResolvedValue({
-      encryptedSecret: 'encrypted-secret',
-      enabledAt: new Date(),
-      recoveryCodeHashes: [],
-    });
-    await expect(service.assertLogin('user-1')).rejects.toBeInstanceOf(
+  it.each(['missing', 'invalid'])(
+    'does not return recovery plaintext for %s confirmation',
+    async (outcome) => {
+      credentials.confirm.mockResolvedValueOnce(outcome);
+      await expect(service.confirm('u', '123456')).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+    },
+  );
+  it('requires a code when enabled and avoids recovery consumption for valid TOTP', async () => {
+    await expect(service.assertLogin('u')).rejects.toBeInstanceOf(
       TwoFactorRequiredException,
     );
-    verify.mockReturnValue(true);
-    await expect(
-      service.assertLogin('user-1', '123456'),
-    ).resolves.toBeUndefined();
+    await expect(service.assertLogin('u', '123456')).resolves.toBeUndefined();
+    expect(credentials.consumeRecovery).not.toHaveBeenCalled();
   });
-
-  it('consumes a recovery code once while holding a row lock', async () => {
-    findUnique.mockResolvedValue({
-      encryptedSecret: 'encrypted-secret',
-      enabledAt: new Date(),
-      recoveryCodeHashes: ['hash:abcdef-123456'],
+  it('delegates one-use recovery proof and denies rejected consumption', async () => {
+    totp.verify.mockReturnValue(false);
+    await service.assertLogin('u', 'RECOVERY');
+    expect(credentials.consumeRecovery).toHaveBeenCalledWith(
+      'u',
+      'hash:recovery',
+    );
+    credentials.consumeRecovery.mockResolvedValueOnce(false);
+    await expect(service.assertLogin('u', 'RECOVERY')).rejects.toBeInstanceOf(
+      TwoFactorRequiredException,
+    );
+  });
+  it('does not require proof for absent enabled state but fails closed on storage error', async () => {
+    credentials.findEnabledSecret.mockResolvedValueOnce(null);
+    await expect(service.assertLogin('u')).resolves.toBeUndefined();
+    credentials.findEnabledSecret.mockRejectedValueOnce(
+      new Error('database unavailable'),
+    );
+    await expect(service.assertLogin('u', '123456')).rejects.toThrow(
+      'database unavailable',
+    );
+  });
+  it('requires password and second factor before delegating atomic disable', async () => {
+    credentials.disable.mockResolvedValueOnce('invalid-password');
+    await expect(
+      service.disable('u', 'wrong', '123456'),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    await expect(service.disable('u', 'correct', '123456')).resolves.toEqual({
+      success: true,
     });
-    verify.mockReturnValue(false);
-
-    await expect(
-      service.assertLogin('user-1', 'ABCDEF-123456'),
-    ).resolves.toBeUndefined();
-    expect(update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { recoveryCodeHashes: [] } }),
+    const args = credentials.disable.mock.calls[1] as [
+      string,
+      (hash: string) => Promise<boolean>,
+      (secret: string) => boolean,
+      string,
+    ];
+    expect(args[0]).toBe('u');
+    expect(await args[1]('password-hash')).toBe(true);
+    expect(args[2]('encrypted')).toBe(true);
+    expect(args[3]).toBe('hash:123456');
+    expect(credentials.findPasswordHash).not.toHaveBeenCalled();
+    expect(credentials.findEnabledSecret).not.toHaveBeenCalled();
+    expect(compare).toHaveBeenLastCalledWith('correct', 'password-hash');
+  });
+  it('denies invalid factor and propagates transactional failures', async () => {
+    credentials.disable.mockResolvedValueOnce('invalid-factor');
+    await expect(service.disable('u', 'correct', 'bad')).rejects.toBeInstanceOf(
+      TwoFactorRequiredException,
     );
-    expect(append).toHaveBeenCalledWith(
-      tx,
-      expect.objectContaining({ action: 'auth.two-factor.recovery-code-used' }),
+    credentials.disable.mockRejectedValueOnce(new Error('audit failed'));
+    await expect(service.disable('u', 'correct', '123456')).rejects.toThrow(
+      'audit failed',
     );
   });
-
-  it('requires password and second factor before disabling and revokes sessions', async () => {
-    findUnique
-      .mockResolvedValueOnce({ id: 'user-1', passwordHash: 'password-hash' })
-      .mockResolvedValue({
-        encryptedSecret: 'encrypted-secret',
-        enabledAt: new Date(),
-        recoveryCodeHashes: [],
-      });
-    compare.mockResolvedValue(true);
-    verify.mockReturnValue(true);
-
-    await expect(
-      service.disable('user-1', 'correct-password', '123456'),
-    ).resolves.toEqual({ success: true });
-    expect(remove).toHaveBeenCalledWith({ where: { userId: 'user-1' } });
-    expect(updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { userId: 'user-1', revokedAt: null } }),
-    );
-    expect(userUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { authVersion: { increment: 1 } } }),
+  it('does not return recovery plaintext after transaction failure', async () => {
+    credentials.confirm.mockRejectedValueOnce(new Error('audit failed'));
+    await expect(service.confirm('u', '123456')).rejects.toThrow(
+      'audit failed',
     );
   });
 });

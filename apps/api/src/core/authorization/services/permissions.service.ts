@@ -40,9 +40,10 @@ import { Injectable } from '@nestjs/common';
 import type { PermissionKey } from '../enums/permission.registry';
 import { PermissionsRepository } from '../repositories/permissions.repository';
 import type { UserAccessProfile } from '../types/user-access-profile.type';
+import type { SubjectAccessReader } from '../contracts/subject-access-reader.interface';
 
 @Injectable()
-export class PermissionsService {
+export class PermissionsService implements SubjectAccessReader {
   constructor(private readonly permissionsRepository: PermissionsRepository) {}
 
   async getPermissionsByRoleNames(roleNames: string[]): Promise<string[]> {

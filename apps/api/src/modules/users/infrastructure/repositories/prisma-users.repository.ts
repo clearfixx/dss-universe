@@ -11,9 +11,10 @@
  * 🧠 Responsibilities:
  * • loads users by id, email, and username;
  * • checks whether user email or username already exists;
- * • creates and updates user records;
- * • updates refresh token hashes for authentication sessions;
+ * • updates profile records;
  * • deletes user records when explicitly requested.
+ * Credential changes and account-state transitions are owned by Auth infrastructure.
+ * Initial shared-row creation belongs to the registration composition transaction.
  *
  * 🏗️ Architecture:
  * Infrastructure repository.
@@ -34,9 +35,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '@api/core/database';
-import { AuditWriterService } from '@api/core/audit';
 
-import type { CreateUserContract } from '../../domain/contracts/create-user.contract';
 import type { UpdateUserContract } from '../../domain/contracts/update-user.contract';
 import type { UsersRepository } from '../../domain/repositories/users.repository.interface';
 import type { UpdateUserData } from '../../domain/types/update-user-data.type';
@@ -47,10 +46,7 @@ import type { Prisma } from '@prisma/client';
 
 @Injectable()
 export class PrismaUsersRepository implements UsersRepository {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly audit: AuditWriterService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   findById(id: string): Promise<UserRecord | null> {
     return this.prisma.user.findUnique({
@@ -140,111 +136,11 @@ export class PrismaUsersRepository implements UsersRepository {
     return count > 0;
   }
 
-  create(data: CreateUserContract): Promise<UserRecord> {
-    return this.prisma.$transaction(async (transaction) => {
-      const defaultRole = await transaction.role.findUniqueOrThrow({
-        where: { name: 'user' },
-        select: { id: true },
-      });
-      const user = await transaction.user.create({ data });
-      await transaction.userRole.create({
-        data: {
-          userId: user.id,
-          roleId: defaultRole.id,
-        },
-      });
-      return user;
-    });
-  }
-
   update(id: string, data: UpdateUserContract): Promise<UserRecord> {
     return this.prisma.user.update({
       where: { id },
       data,
     });
-  }
-
-  updateRefreshTokenHash(
-    userId: string,
-    refreshTokenHash: string | null,
-  ): Promise<UserRecord> {
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: { refreshTokenHash },
-    });
-  }
-
-  async deactivateAccount(userId: string): Promise<UserRecord> {
-    return this.prisma.$transaction(async (transaction) => {
-      const now = new Date();
-      const user = await transaction.user.update({
-        where: { id: userId },
-        data: {
-          status: 'DEACTIVATED',
-          deactivatedAt: now,
-          refreshTokenHash: null,
-        },
-      });
-      await transaction.session.updateMany({
-        where: { userId, revokedAt: null },
-        data: { revokedAt: now },
-      });
-      await this.audit.append(transaction, {
-        action: 'user.account.deactivated',
-        actorType: 'USER',
-        actorId: userId,
-        targetType: 'User',
-        targetId: userId,
-      });
-      return user;
-    });
-  }
-
-  async reactivateAccount(userId: string): Promise<UserRecord> {
-    return this.prisma.$transaction(async (transaction) => {
-      const user = await transaction.user.update({
-        where: { id: userId, status: 'DEACTIVATED' },
-        data: {
-          status: 'ACTIVE',
-          deactivatedAt: null,
-          refreshTokenHash: null,
-        },
-      });
-      await this.audit.append(transaction, {
-        action: 'user.account.reactivated',
-        actorType: 'USER',
-        actorId: userId,
-        targetType: 'User',
-        targetId: userId,
-      });
-      return user;
-    });
-  }
-
-  async changeEmail(userId: string, email: string): Promise<UserRecord> {
-    return this.changeCredentials(
-      userId,
-      {
-        email,
-        emailVerifiedAt: null,
-        authVersion: { increment: 1 },
-      },
-      'user.account.email_changed',
-    );
-  }
-
-  async changePasswordHash(
-    userId: string,
-    passwordHash: string,
-  ): Promise<UserRecord> {
-    return this.changeCredentials(
-      userId,
-      {
-        passwordHash,
-        authVersion: { increment: 1 },
-      },
-      'user.account.password_changed',
-    );
   }
 
   async findMany(
@@ -313,32 +209,6 @@ export class PrismaUsersRepository implements UsersRepository {
       default:
         return [{ createdAt: 'desc' }, { id: 'asc' }];
     }
-  }
-
-  private async changeCredentials(
-    userId: string,
-    data: Prisma.UserUpdateInput,
-    action: string,
-  ): Promise<UserRecord> {
-    return this.prisma.$transaction(async (transaction) => {
-      const now = new Date();
-      const user = await transaction.user.update({
-        where: { id: userId, status: 'ACTIVE' },
-        data: { ...data, refreshTokenHash: null },
-      });
-      await transaction.session.updateMany({
-        where: { userId, revokedAt: null },
-        data: { revokedAt: now },
-      });
-      await this.audit.append(transaction, {
-        action,
-        actorType: 'USER',
-        actorId: userId,
-        targetType: 'User',
-        targetId: userId,
-      });
-      return user;
-    });
   }
 
   async delete(id: string): Promise<void> {
