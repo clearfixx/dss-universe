@@ -328,13 +328,6 @@
       "package": "D4"
     },
     {
-      "id": "[\"namespace-import\",\"apps/api/src/modules/auth/application/services/password-hash.service.ts\",\"bcrypt\"]",
-      "rule": "namespace-import",
-      "file": "apps/api/src/modules/auth/application/services/password-hash.service.ts",
-      "detail": "bcrypt",
-      "package": "D3"
-    },
-    {
       "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/content-access/presentation/graphql/content-gates.graphql.ts\",\"@prisma/client\"]",
       "rule": "persistence-outside-infrastructure",
       "file": "apps/api/src/modules/content-access/presentation/graphql/content-gates.graphql.ts",

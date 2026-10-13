@@ -92,6 +92,15 @@ access decisions need a separate D3.4 security increment before acceptance.
 
 ## Verification and known baseline
 
+2026-10-13: the final static D3 finding (bcrypt namespace import) is removed with
+named hash/compare imports and two real-library tests. API 527, Web 59, Worker 36
+units and 10 HTTP E2E pass; lint, typecheck, Prisma validation, build and architecture
+checks pass. Inventory is 135, entirely D4. Full quality/CI and security acceptance
+remain open. See [evidence](../audits/D3_4_EXPLICIT_BCRYPT_IMPORTS.md).
+New owner/Command Deck features stay in their relevant phases under the latest
+[owner direction](COMMAND_DECK_OWNER_DECISIONS.md); do not implement the superseded
+six-key DEBT-047 proposal.
+
 Administrator-availability review at `c9659e0` identifies DEBT-047: protected
 assignment count does not ensure eligible recovery-capable administration.
 Self-deactivation and critical permission changes need a separately agreed

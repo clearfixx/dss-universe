@@ -33,11 +33,11 @@ subsequent requests; authority failures deny access without token fallback.
 
 ## Validation and review limits
 
-- Full uncached units: API 525 with explicit DB/Redis opt-ins, Web 59, Worker 36.
+- Full uncached units: API 527 with explicit DB/Redis opt-ins, Web 59, Worker 36.
 - Selected real API E2E: IAM permission CRUD/denial/rollback, login lock,
   password recovery and second-factor rollback/retry pass.
 - Changed-file formatting, lint, Prisma validation, typecheck and build pass. Architecture fixtures pass;
-  reviewed inventory decreased from 156 at D2 to 136 known findings.
+  reviewed inventory decreased from 156 at D2 to 135 known findings, all D4.
 - Source headers follow File Passport 3.1; exports added here are named.
 - Root formatting, dependency audit, full API/Web E2E and final CI acceptance
   remain unresolved baseline gates. This PR stays draft and must not be merged
@@ -52,6 +52,14 @@ subsequent requests; authority failures deny access without token fallback.
 IAM publishes only assembly and registration policy, with no concrete Nest
 provider exports. Auth assembly uses its named public root. Surface regressions
 and 10 selected Authorization/Audit HTTP E2E tests pass.
+The final D3 namespace import is replaced with named bcrypt functions; two
+real-library regressions preserve cost and comparison behavior. See
+[evidence](D3_4_EXPLICIT_BCRYPT_IMPORTS.md).
+
+Owner clarified unique, non-transferable ownership and deferred new administrative
+rights/features to their relevant phases. The six-key DEBT-047 product-policy
+proposal is superseded, not implemented or treated as risk resolution. See
+[accepted decisions](../development/COMMAND_DECK_OWNER_DECISIONS.md).
 
 No schema migrations, dependency changes or frontend redesign are included.
 D3.5 generic groups/Premium and Phase 11 implementation are outside this PR.
