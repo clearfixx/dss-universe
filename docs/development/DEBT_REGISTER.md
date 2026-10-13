@@ -59,6 +59,15 @@ active package safe and buildable.
 
 ## Additional D0 verification findings
 
+### D3.5 scope evidence (DEBT-008/024)
+
+Current Content Gates derive `groups` from IAM role names and apply Premium
+bypass from a case-insensitive `premium` name. This does not implement generic
+group membership, expiry/revocation or a distinct Premium entitlement. D3.5's
+[scope proposal](D3_5_ACCESS_GROUPS_BRAINSTORM.md) now records the concrete reader,
+data, authority and legacy-key migration boundary. No automatic name-based
+conversion or runtime implementation is approved by this evidence.
+
 ### D2 architecture contracts and inventory
 
 [ADR-003](../architecture/adr/003-subject-and-access-ownership.md) records the explicit

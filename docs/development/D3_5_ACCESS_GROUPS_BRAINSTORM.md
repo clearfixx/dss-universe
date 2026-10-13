@@ -67,6 +67,62 @@ and acceptance dependency. D4 planning can proceed independently.
 
 ## Owner decisions still needed
 
+### Current-code integration evidence (2026-10-13)
+
+`PrismaContentGatesRepository.viewerFacts` currently maps role names into `groups`;
+`ContentGatesService.evaluate` grants ordinary-gate bypass when one equals
+`premium` case-insensitively. Generic group membership, entitlement expiry and
+Guardian capabilities are not represented by these facts. This is part of
+DEBT-008/024, not evidence that an anonymous caller can assign privileged roles.
+The existing `ContentGate.ownerId` means content author, not platform owner;
+do not reinterpret it as the new unique owner identity.
+
+### Concrete data/contract proposal
+
+- `AccessGroup`: opaque ID, immutable unique key, editable display metadata and
+  enabled state. Badges reference Media rather than introducing a file store.
+- `GroupMembership`: own grant ID, opaque subject/group IDs, validity interval,
+  revocation and attributable audit. Preserve revoked history. Regrant is a new
+  auditable grant, not clearing the old revocation. Effective membership exists
+  when at least one unrevoked interval is valid and the group is enabled.
+- `GroupCapability`: only entries from a closed reviewed capability allowlist,
+  never arbitrary permission keys. IAM owns assignments; Authorization owns the
+  decision and validates each requested operation against the registry.
+- `PremiumGrant`: separate opaque grant ID, subject, validity, revocation and
+  attribution; overlapping valid grants form an OR, and revocation of one does
+  not silently cancel another. No payment/Points processing is introduced.
+- Authorization reads only effective stable group keys, effective entitlement
+  and approved capabilities. Display visibility never changes authority.
+- Content Access consumes narrow membership/entitlement facts through root
+  composition, not IAM persistence. Keep comments/reputation fact ownership
+  separate; this package is not permission to move all statistics into IAM.
+- Existing role/direct permission behavior remains unchanged. Premium and groups
+  are not inserted into JWTs as permanent authoritative claims.
+
+### Migration and authority proposal
+
+Additive tables/constraints and new readers come first. No automatic entitlement
+or group grant conversion based on a role's name. Inventory persisted GROUP gate
+keys and existing Premium-like roles before switching readers. Require an
+explicit reviewed mapping for legacy keys; unresolved references deny access
+with operator visibility, rather than guessing or preserving name-based bypass.
+Preview affected records and migration effects in a disposable copy before apply.
+Do not drop existing gate/role columns or grant records. Rollback must not
+re-enable name-based Premium bypass after newly revoked/expired grants.
+
+Recommend temporarily protecting IAM group/Premium mutations with the existing
+`permissions.manage` authority, with server-side checks and atomic audit; this
+already controls direct/role permissions. Do not auto-grant a new authority to
+all admins, and do not let membership itself confer management rights. This is
+a proposed current-phase delegation policy, not implementation of the later
+owner-only staff-appointment/Command Deck contract. Approve it explicitly before
+API/schema work. Final unique-owner integration remains separately scheduled.
+
+Acceptance must prove immediate group disable/removal, grant expiry/revocation,
+overlap, forged display names, denied capability keys, mutation authorization,
+legacy-key migration, audit rollback and current Content Gate compatibility.
+Phase 11 publishes/reviews actual revisions only after its own brainstorm.
+
 - Approve the separation of Premium entitlement from display group membership.
 - Approve the closed delegation allowlist, and who may manage membership/grants
   under current permissions without pre-implementing future owner restrictions.
