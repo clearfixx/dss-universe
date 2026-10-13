@@ -68,6 +68,12 @@ group membership, expiry/revocation or a distinct Premium entitlement. D3.5's
 data, authority and legacy-key migration boundary. No automatic name-based
 conversion or runtime implementation is approved by this evidence.
 
+Subsequent owner approval authorizes a bounded gate correction: mandatory GROUP
+audience before automatic Premium numeric bypass, without staff authority. See
+[increment evidence](../audits/D3_5_PREMIUM_GATE_CONTRACT.md). Wider generic groups,
+membership validity, role-type isolation and Guardian remain open; no full
+DEBT-008/024 closure is claimed.
+
 ### D2 architecture contracts and inventory
 
 [ADR-003](../architecture/adr/003-subject-and-access-ownership.md) records the explicit

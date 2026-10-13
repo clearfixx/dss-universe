@@ -29,6 +29,11 @@ approved ADRs or recorded owner decisions.
 
 ## Current position
 
+Approved Premium gate increment is on `debt/d3-5-premium-gate-contract`, stacked
+on D3 at `5896013`: mandatory GROUP audience before numeric threshold bypass.
+This does not complete generic groups, access-role isolation, Guardian, category
+ACLs or owner policies. See [evidence](audits/D3_5_PREMIUM_GATE_CONTRACT.md).
+
 Registration atomicity verification: eight new isolated PostgreSQL tests and
 four focused existing E2E pass; no production defect found. Full units now pass
 535 API / 59 Web / 36 Worker. A broad GraphQL E2E times out twice (DEBT-048), so

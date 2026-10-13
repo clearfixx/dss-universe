@@ -38,7 +38,157 @@ describe('ContentGatesService', () => {
   };
   const service = new ContentGatesService(repository);
 
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => jest.resetAllMocks());
+
+  const baseFacts = {
+    accountAgeDays: 0,
+    comments: 0,
+    forumPosts: 0,
+    publications: 0,
+    reputation: 0,
+    groups: [] as string[],
+  };
+  const audienceGate: ContentGate = {
+    ...gate,
+    requirements: [
+      { id: 'staff', kind: 'GROUP', threshold: null, groupKey: 'moderators' },
+      ...gate.requirements,
+    ],
+  };
+
+  it.each(['ALL', 'ANY'] as const)(
+    'does not let Premium bypass GROUP with %s thresholds',
+    async (operator) => {
+      repository.findById.mockResolvedValue({ ...audienceGate, operator });
+      repository.viewerFacts.mockResolvedValue({
+        ...baseFacts,
+        groups: ['Premium'],
+      });
+      await expect(
+        service.evaluate(gate.id, 'premium-viewer'),
+      ).resolves.toMatchObject({
+        allowed: false,
+        bypassed: false,
+        unmet: ['GROUP'],
+      });
+    },
+  );
+
+  it('does not let high reputation or author preview override the audience', async () => {
+    repository.findById.mockResolvedValue({ ...audienceGate, operator: 'ANY' });
+    repository.viewerFacts.mockResolvedValue({
+      ...baseFacts,
+      reputation: 1000,
+    });
+    for (const viewer of ['ordinary-viewer', gate.ownerId]) {
+      await expect(service.evaluate(gate.id, viewer)).resolves.toMatchObject({
+        allowed: false,
+        bypassed: false,
+        unmet: ['GROUP'],
+      });
+    }
+  });
+
+  it.each(['ALL', 'ANY'] as const)(
+    'lets eligible Premium members bypass only the %s numeric thresholds',
+    async (operator) => {
+      repository.findById.mockResolvedValue({ ...audienceGate, operator });
+      repository.viewerFacts.mockResolvedValue({
+        ...baseFacts,
+        groups: ['premium', 'moderators'],
+      });
+      await expect(
+        service.evaluate(gate.id, 'premium-viewer'),
+      ).resolves.toMatchObject({
+        allowed: true,
+        bypassed: true,
+        unmet: [],
+      });
+    },
+  );
+
+  it.each([
+    'ACCOUNT_AGE_DAYS',
+    'COMMENTS',
+    'FORUM_POSTS',
+    'PUBLICATIONS',
+    'REPUTATION',
+  ] as const)(
+    'automatically bypasses the %s threshold for Premium',
+    async (kind) => {
+      repository.findById.mockResolvedValue({
+        ...gate,
+        requirements: [
+          { id: 'threshold', kind, threshold: 100, groupKey: null },
+        ],
+      });
+      repository.viewerFacts.mockResolvedValue({
+        ...baseFacts,
+        groups: ['premium'],
+      });
+      await expect(
+        service.evaluate(gate.id, 'premium-viewer'),
+      ).resolves.toMatchObject({ allowed: true, bypassed: true });
+    },
+  );
+
+  it.each(['ALL', 'ANY'] as const)(
+    'allows a matching GROUP-only policy without claiming a %s numeric bypass',
+    async (operator) => {
+      repository.findById.mockResolvedValue({
+        ...audienceGate,
+        operator,
+        requirements: [audienceGate.requirements[0]],
+      });
+      repository.viewerFacts.mockResolvedValue({
+        ...baseFacts,
+        groups: ['moderators', 'premium'],
+      });
+      await expect(
+        service.evaluate(gate.id, 'premium-viewer'),
+      ).resolves.toMatchObject({ allowed: true, bypassed: false });
+    },
+  );
+
+  it('retains ANY numeric semantics after audience membership succeeds', async () => {
+    repository.findById.mockResolvedValue({ ...audienceGate, operator: 'ANY' });
+    repository.viewerFacts.mockResolvedValue({
+      ...baseFacts,
+      groups: ['moderators'],
+    });
+    await expect(service.evaluate(gate.id, 'viewer')).resolves.toMatchObject({
+      allowed: false,
+      bypassed: false,
+    });
+    repository.viewerFacts.mockResolvedValue({
+      ...baseFacts,
+      groups: ['moderators'],
+      reputation: 100,
+    });
+    await expect(service.evaluate(gate.id, 'viewer')).resolves.toMatchObject({
+      allowed: true,
+      bypassed: false,
+    });
+  });
+
+  it('retains author threshold preview only after audience membership succeeds', async () => {
+    repository.findById.mockResolvedValue(audienceGate);
+    repository.viewerFacts.mockResolvedValue({
+      ...baseFacts,
+      groups: ['moderators'],
+    });
+    await expect(
+      service.evaluate(gate.id, gate.ownerId),
+    ).resolves.toMatchObject({ allowed: true, bypassed: true });
+  });
+
+  it('fails closed for missing eligibility facts before author preview', async () => {
+    repository.findById.mockResolvedValue(gate);
+    repository.viewerFacts.mockResolvedValue(null);
+    await expect(service.evaluate(gate.id, gate.ownerId)).rejects.toThrow(
+      'Content Gate viewer was not found.',
+    );
+  });
 
   it('fails closed when an ALL requirement is unmet', async () => {
     repository.findById.mockResolvedValue(gate);

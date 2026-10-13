@@ -1073,7 +1073,9 @@ Delivered Reports and Moderation Annotations foundation:
 - global counters: account age, comments, forum posts, publications and reputation;
 - group/entitlement rules;
 - standard and extended limits;
-- Premium always bypasses ordinary gates and sees an unlocked Premium notice;
+- resource/group audience is mandatory before threshold evaluation;
+- Premium automatically bypasses numeric thresholds only in accessible content,
+  with a visible notice; it grants no staff or Command Deck authority;
 - read-only/ban overrides Premium;
 - API never returns unauthorized hidden content;
 - visually explicit locked/unlocked states.
@@ -1083,7 +1085,7 @@ Delivered Content Gates foundation:
 - persisted reusable `ALL`/`ANY` policies with bounded unique requirements;
 - account-age, comments, reputation and group facts, with explicit zero-value
   adapters for domain ledgers that arrive in later phases;
-- author and Premium bypass with visible notices;
+- author and Premium threshold bypass with visible notices, after GROUP audience checks;
 - server-side recursive redaction that never serializes denied payloads;
 - custom DSS Editor policy builder and viewer-safe delivery decisions;
 - fail-closed guest, missing-viewer and unavailable-policy behavior;
