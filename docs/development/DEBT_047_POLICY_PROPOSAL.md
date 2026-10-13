@@ -1,5 +1,11 @@
 # DEBT-047 — Recoverable administration policy proposal
 
+> Superseded for product-policy approval on 2026-10-13: the owner clarified a
+> unique non-transferable platform owner and instructed implementation of new
+> administrative rights/features only in their relevant phases. Do not implement
+> this six-key proposal as the owner model. See [decisions](COMMAND_DECK_OWNER_DECISIONS.md).
+> The underlying availability finding is not claimed resolved.
+
 Date: 2026-10-13. Status: DESIGN PROPOSAL; owner authorized design, not policy acceptance.
 Evidence: [availability review](../audits/D3_4_ADMINISTRATOR_AVAILABILITY_REVIEW.md).
 

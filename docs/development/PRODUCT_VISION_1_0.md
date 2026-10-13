@@ -1,5 +1,10 @@
 # DSS Universe — Owner Product Vision 1.0
 
+Owner/Command Deck clarification (2026-10-13): see the accepted
+[owner and administrative operation decisions](COMMAND_DECK_OWNER_DECISIONS.md).
+Implement those requirements in their relevant phases, not as an expansion of
+the current pre-Phase-11 debt package.
+
 > Recorded: 2026-10-11. Owner requirements take precedence over conflicting
 > historical naming. This document records scope, not implementation acceptance.
 

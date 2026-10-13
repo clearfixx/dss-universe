@@ -332,6 +332,13 @@ On 2026-10-13 the owner authorized policy design. The
 its predicate, shared serialization and bootstrap behavior are not yet approved
 for implementation. No runtime correction is claimed.
 
+Subsequent owner clarification supersedes that six-key policy proposal: platform
+owner is unique and non-transferable. New owner rights and Command Deck features
+must be scheduled in their relevant phases, not implemented now. See
+[accepted decisions](COMMAND_DECK_OWNER_DECISIONS.md). DEBT-047 remains an open
+availability finding requiring explicit disposition at security acceptance;
+deferral of new product functionality is not proof that the risk is resolved.
+
 Every new entry should include evidence, impact, proposed ownership and a clear
 decision before implementation. Discovery is not permission to expand the
 current package silently.
