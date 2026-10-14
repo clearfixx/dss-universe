@@ -696,3 +696,41 @@ runtime entry without breaking other compiled paths, and verify actual process
 readiness. The current evidence proves the local start failure, not its complete
 root cause or behavior in every deployment. No entry/compiler/runtime fix is
 silently included in DEBT-053; owner notification accompanies this finding.
+
+### DEBT-056 — Guest News secondary reads bypass MEMBERS audience (Critical, ACCEPTED / priority correction pending)
+
+On 2026-10-14, real migrated AppModule/GraphQL characterization publishes a
+synthetic MEMBERS article, then creates a comment/reaction through actual owned
+use cases. An anonymous request receives `fullNews: null` for its address but
+`newsComments` returns total 1 plus the synthetic restricted comment body and
+canonical JSON. `newsRatingVotes` likewise returns the voter identity/total.
+A PUBLIC guest control remains readable. No real private content was accessed.
+
+Source: secondary repository pre-reads check status/allowComments or allowRating,
+not article visibility/publishedAt; rating presentation does not forward viewer
+identity at all. Full News redaction/related/search corrections do not guard these
+separate projections. This is confirmed restricted comment disclosure, not merely
+an inferred identifier oracle. Passing characterization is not security acceptance.
+
+Proposed correction: apply current News article eligibility before secondary
+queries, preserve missing/disabled empty-page behavior and correct totals/pages,
+and forward authenticated viewer identity for ratings without changing GraphQL
+shape. No generic group ACL, staff bypass, frontend or owner-role feature.
+The owner explicitly approved a separate priority DEBT-056 package before D4
+runtime ownership transfer. It is not silently repaired by characterization.
+See [D4 read-boundary foundation](D4_3D3_NEWS_DELIVERY_BOUNDARIES.md).
+
+### DEBT-057 — Valid comment tombstones break News GraphQL non-null body (Medium, OPEN, separate correction required)
+
+On 2026-10-14, an author tombstones a synthetic PUBLIC News comment through
+CommentsService.remove. Stored body/document become null with deletedAt set,
+as the Interactions/domain contract permits. Guest newsComments then reports
+`Cannot return null for non-nullable field NewsComment.body` instead of a valid
+tombstone page. The old body is not present in the response; no deleted-content
+disclosure is claimed. Its immutable history/DB protections were not disabled.
+
+Source: NewsCommentItem permits nullable body/documentJson, but News GraphQL
+declares required body. Reconcile the public tombstone contract and generated
+client compatibility in a separate reviewed package; do not insert a fabricated
+body or silently change schema during SQL ownership migration. Owner was notified.
+No correction is authorized by the D4 snapshot or DEBT-056 approval.
