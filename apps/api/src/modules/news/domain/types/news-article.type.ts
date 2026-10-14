@@ -1,4 +1,16 @@
-/** Canonical Phase 10 News domain types, independent from Prisma. */
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: News
+ * 📄 File: apps/api/src/modules/news/domain/types/news-article.type.ts
+ *
+ * 🎯 Purpose:
+ * Defines canonical News state and draft commands independently of persistence and transport.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import type { EditorDocument } from '@dss/editor';
 
 export const NEWS_ARTICLE_STATUSES = [
@@ -69,6 +81,8 @@ export type CreateNewsDraft = {
   templateData: unknown;
   plainText: string;
   searchText: string;
+  publicSearchText: string;
+  hasContentGates: boolean;
   coverMediaId: string | null;
   attachmentMediaIds: string[];
 };
@@ -78,6 +92,8 @@ export type CreateNewsDraftRequest = Omit<
   | 'document'
   | 'plainText'
   | 'searchText'
+  | 'publicSearchText'
+  | 'hasContentGates'
   | 'templateData'
   | 'attachmentMediaIds'
 > & { documentJson: string; templateData?: unknown };
@@ -93,6 +109,8 @@ export type SaveNewsDraftRequest = Omit<
   | 'document'
   | 'plainText'
   | 'searchText'
+  | 'publicSearchText'
+  | 'hasContentGates'
   | 'authorId'
   | 'templateData'
   | 'attachmentMediaIds'

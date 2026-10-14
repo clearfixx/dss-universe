@@ -27,15 +27,34 @@ import type {
   ContentGateDecision,
 } from '../../contracts/content-gate-decisions.contract';
 import { ContentGatesService } from './content-gates.service';
+import type {
+  ContentGateDecisionScopes,
+  ContentGateDecisionScope,
+} from '../../contracts/content-gate-decision-scopes.contract';
+import type { ContentGateEvaluation } from '../../domain/types/content-gate.type';
 
 @Injectable()
-export class ContentGateDecisionsService implements ContentGateDecisions {
+export class ContentGateDecisionsService
+  implements ContentGateDecisions, ContentGateDecisionScopes
+{
   constructor(private readonly gates: ContentGatesService) {}
   async evaluate(
     gateId: string,
     viewerId: string | null,
   ): Promise<ContentGateDecision> {
     const evaluation = await this.gates.evaluate(gateId, viewerId);
+    return this.present(evaluation);
+  }
+
+  open(viewerId: string): ContentGateDecisionScope {
+    const scope = this.gates.openViewerScope(viewerId);
+    return {
+      evaluate: async (gateId) => this.present(await scope.evaluate(gateId)),
+      close: () => scope.close(),
+    };
+  }
+
+  private present(evaluation: ContentGateEvaluation): ContentGateDecision {
     return {
       gateId: evaluation.gate.id,
       allowed: evaluation.allowed,

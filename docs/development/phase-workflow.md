@@ -5,7 +5,10 @@
 Follow the [canonical roadmap](../roadmap/DSS_UNIVERSE_1.0_ROADMAP.md),
 [current context](../PROJECT_CONTEXT.md) and
 [pre-Phase-11 plan](PRE_PHASE_11_EXECUTION_PLAN.md). Phase 11 is not authorized
-until D7 acceptance and a separate approved brainstorm.
+until D7 acceptance, the subsequently required
+[stack audit](../audits/STACK_AUDIT_PLAN.md) and its owner acceptance, and a
+separate approved brainstorm. The stack audit follows preparation; it is not
+permission to replace technologies or expand the active debt package.
 
 Before each phase, brainstorm what will be built, how, why, ownership, alternatives,
 threat model, data lifecycle, dependencies and acceptance tests. A fresh phase

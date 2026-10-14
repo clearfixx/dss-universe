@@ -99,6 +99,8 @@ describe('Content target atomic composition (e2e)', () => {
       templateData: {},
       plainText: 'Fixture',
       searchText: 'fixture',
+      publicSearchText: 'fixture',
+      hasContentGates: false,
       coverMediaId: null,
       attachmentMediaIds: [mediaId],
     };
@@ -107,6 +109,7 @@ describe('Content target atomic composition (e2e)', () => {
     return Promise.all([
       prisma.newsArticle.count(),
       prisma.newsRevision.count(),
+      prisma.newsSearchProjection.count(),
       prisma.userWallPost.count(),
       prisma.interactionTarget.count(),
       prisma.mediaReference.count(),
@@ -285,6 +288,9 @@ describe('Content target atomic composition (e2e)', () => {
       const input = draft();
       const article = await news.createDraft(input);
       const before = await snapshot();
+      const searchBefore = await prisma.newsSearchProjection.findUniqueOrThrow({
+        where: { articleId: article.id },
+      });
       await withInsertFailure(table, field, value, async () => {
         await expect(
           news.saveDraft({
@@ -298,6 +304,11 @@ describe('Content target atomic composition (e2e)', () => {
         ).rejects.toThrow('synthetic transaction evidence rejection');
       });
       expect(await snapshot()).toEqual(before);
+      expect(
+        await prisma.newsSearchProjection.findUniqueOrThrow({
+          where: { articleId: article.id },
+        }),
+      ).toEqual(searchBefore);
       expect(
         await prisma.newsArticle.findUniqueOrThrow({
           where: { id: article.id },
@@ -326,6 +337,15 @@ describe('Content target atomic composition (e2e)', () => {
     );
     expect(results.filter(Boolean)).toHaveLength(1);
     expect(results.filter((result) => result === null)).toHaveLength(1);
+    expect(
+      await prisma.newsSearchProjection.findUniqueOrThrow({
+        where: { articleId: article.id },
+      }),
+    ).toMatchObject({
+      sourceVersion: 2,
+      publicSearchText: 'fixture',
+      hasContentGates: false,
+    });
     expect(
       await prisma.newsRevision.count({ where: { articleId: article.id } }),
     ).toBe(2);

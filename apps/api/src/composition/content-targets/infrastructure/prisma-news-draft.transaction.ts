@@ -10,6 +10,7 @@
  *
  * 🧠 Responsibilities:
  * • persists draft/revision/reference changes with canonical target identity;
+ * • replaces versioned public search evidence atomically with the authored revision;
  * • appends owner and target audit/outbox in the same transaction.
  *
  * 🏗️ Architecture:
@@ -31,6 +32,7 @@ import { createEventEnvelope, OutboxWriterService } from '@api/core/events';
 import { PrismaInteractionTargetWriter } from '@api/modules/interactions/infrastructure';
 import {
   NEWS_INTERACTION_KIND,
+  NEWS_SEARCH_PROJECTION_VERSION,
   type NewsDraftTransaction,
   type CreateNewsDraft,
   type NewsArticle,
@@ -78,6 +80,14 @@ export class PrismaNewsDraftTransaction implements NewsDraftTransaction {
             plainText: input.plainText,
             searchText: input.searchText,
             coverMediaId: input.coverMediaId,
+            searchProjection: {
+              create: {
+                sourceVersion: 1,
+                projectionVersion: NEWS_SEARCH_PROJECTION_VERSION,
+                publicSearchText: input.publicSearchText,
+                hasContentGates: input.hasContentGates,
+              },
+            },
           },
         });
         await this.syncAttachments(
@@ -176,6 +186,17 @@ export class PrismaNewsDraftTransaction implements NewsDraftTransaction {
           },
         });
         if (changed.count !== 1) return null;
+        const searchProjection = {
+          sourceVersion: nextVersion,
+          projectionVersion: NEWS_SEARCH_PROJECTION_VERSION,
+          publicSearchText: input.publicSearchText,
+          hasContentGates: input.hasContentGates,
+        };
+        await transaction.newsSearchProjection.upsert({
+          where: { articleId: input.articleId },
+          create: { articleId: input.articleId, ...searchProjection },
+          update: searchProjection,
+        });
         await this.syncAttachments(
           transaction,
           input.articleId,

@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-14 — DEBT-052 implemented locally; full security acceptance open
+> Updated: 2026-10-14 — DEBT-053 approved batch optimization; acceptance still open
 
 ## Product and authority
 
@@ -39,7 +39,7 @@ corrections: DEBT-052 first, then DEBT-051. See the
 Passing characterization does not resolve them. DEBT-052 blocks release/Phase 11
 readiness. See [debt register](development/DEBT_REGISTER.md).
 
-On the active separate `debt/debt-052-full-news-redaction` branch, the correction
+On the separate `debt/debt-052-full-news-redaction` parent branch, the correction
 now composes safe JSON through named Editor/News contracts. Twenty new migrated
 E2E cases pass, including explicit DEBT-053/054 disclosure characterizations.
 Full opt-in API units: 800 PASS; focused E2E: 45 PASS; coverage/build/lint/types
@@ -49,6 +49,47 @@ See [corrective evidence](audits/DEBT_052_FULL_NEWS_REDACTION.md).
 On 2026-10-14 the owner approved separate DEBT-053 search and DEBT-054 related
 audience corrections, in that order after DEBT-052; neither is implemented here.
 DEBT-051 follows the priority security work. No Phase 11 readiness is claimed.
+
+The active branch is now `debt/debt-053-news-viewer-search`, based on published
+DEBT-052 `0ecdbb1` / draft PR #11. The owner approved a public-only search index
+plus live, batched authenticated gated-document projection with performance
+tests and no hidden result limit. Shared Editor projection/contracts are the
+first increment: full opt-in API units 819 PASS, nine new migrated root-boundary
+E2E PASS, lint/types/build PASS; architecture inventory remains 89 known findings.
+Global formatting remains RED on 41 legacy files. At the foundation/storage
+checkpoint the shared branch's `3fb28c4` was another task's preserved localization
+document commit, not a DEBT-053 implementation commit. Runtime work is now prepared
+for draft publication; full workflow and performance acceptance remain open. See the
+[DEBT-053 plan](development/DEBT_053_NEWS_VIEWER_SEARCH_PLAN.md).
+
+DEBT-053 is published at `1406b90` in draft PR #12, stacked on PR #11. The owner
+subsequently approved private ContentAccess evidence reuse per batch of at most
+64 documents, explicitly closed after Editor projection, without cross-request
+caching. The follow-up passes 890 opt-in API units/coverage, production build,
+lint/types/Prisma and 52 architecture fixtures (inventory unchanged at 89).
+Five isolated performance E2E pass with 1,000 distinct documents/600 distinct
+gates: facts/audience reads fall from 600 to 10 per request; local member p95
+is 1.022 seconds versus the strengthened 3.079-second baseline. Concurrent
+member/author searches and second-batch outage/recovery pass without changing
+timeouts, result limits or API. This does not establish production capacity.
+Final full API E2E on a fresh migrated target: 244 PASS/2 FAIL (News foundation
+and leaderboard, DEBT-045); all 72 directly relevant E2E PASS. Global format
+still fails on 41 legacy files, audit on one high/ten moderate. Full-suite and
+baseline-gate acceptance remain open; DEBT-054 then DEBT-051 are
+still separate approved packages. No Phase 11 work or stack replacement.
+
+The local storage increment now adds the 54th forward migration, versioned public
+search evidence in atomic draft writes, source-change invalidation and source-
+locked canonical backfill. Fifty-six focused migrated E2E pass. CLI readiness and
+backfill verified the one existing synthetic disposable News row without changing
+its authored fingerprint. The local runtime increment now computes viewer-safe
+matches before pins/totals/pages within a repeatable-read snapshot. Eleven live
+query E2E plus twenty Full News E2E pass. Isolated performance with 1,000 articles
+(600 gated) passes and finds all matches beyond 500; the pre-optimization member
+p95 was 3.657 seconds.
+Concurrent DB gates exceeded the unchanged five-second transaction budget, and
+broader full-suite verification is red/pending disposition. No accepted capacity,
+release completion or Phase 11 readiness is claimed; no query fallback/result cap.
 
 D4.3d3a moves the independent public attachment metadata query to Media ownership
 and composes labels/order/display kinds in News application through narrow root
@@ -299,9 +340,14 @@ Never promote unit-only or focused CI to full E2E/release acceptance.
 
 ## Next work and autonomy
 
-Finish D1 decisions, then D2 contracts, D3 Auth boundaries, D4 module boundaries,
-D5 Passports, D6 full quality and D7 owner/release gate. Only then brainstorm
-Phase 11; implementation needs separate approval and a phase branch.
+Finish the agreed D0–D7 preparation/debt closure, including remaining D4 module
+boundaries, D5 Passports, D6 full quality and D7 owner/release acceptance.
+On 2026-10-14 the owner added a separate post-preparation
+[stack audit](audits/STACK_AUDIT_PLAN.md). Conduct it against the accepted baseline,
+confirm its scope and obtain decisions/verification/final acceptance before the
+Phase 11 brainstorm. The audit is scheduled, not started; technology replacement
+or behavioral changes need specific approval. Phase 11 implementation still
+needs a separately approved brainstorm and its own phase branch.
 
 One package per branch/PR. Commit/push/PR authorized; do not merge red checks.
 Preserve unrelated edits. Record out-of-scope defects and notify the owner.

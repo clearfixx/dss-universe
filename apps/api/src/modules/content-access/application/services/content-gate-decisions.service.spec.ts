@@ -65,4 +65,26 @@ describe('ContentGateDecisionsService', () => {
       'Unavailable',
     );
   });
+
+  it('keeps scoped definitions private and forwards explicit closure', async () => {
+    const evaluate = jest
+      .fn<Promise<ContentGateEvaluation>, [string]>()
+      .mockResolvedValue(evaluation);
+    const close = jest.fn<void, []>();
+    const openViewerScope = jest.fn().mockReturnValue({ evaluate, close });
+    const service = new ContentGateDecisionsService({
+      openViewerScope,
+    } as unknown as ContentGatesService);
+    const scope = service.open('viewer');
+    expect(await scope.evaluate('gate')).toEqual({
+      gateId: 'gate',
+      allowed: false,
+      bypassed: false,
+      unmet: ['REPUTATION'],
+      notice: 'Denied',
+    });
+    expect(openViewerScope).toHaveBeenCalledWith('viewer');
+    scope.close();
+    expect(close).toHaveBeenCalledTimes(1);
+  });
 });

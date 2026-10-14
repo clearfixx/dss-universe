@@ -13,6 +13,7 @@
  * • evaluates every referenced Content Gate for the current viewer;
  * • recursively removes denied protected payloads on the server;
  * • returns explicit gate decisions for safe placeholder rendering.
+ * • drains started sibling redactions before an operation-scoped provider is closed.
  *
  * 🏗️ Architecture:
  * Editor-owned redaction consumes a minimal decision port wired at the root.
@@ -25,7 +26,7 @@
  */
 
 import { Inject, Injectable } from '@nestjs/common';
-import type { EditorDocument, EditorNode } from '@dss/editor';
+import type { EditorDocument, EditorNode, EditorProfile } from '@dss/editor';
 
 import {
   EDITOR_GATE_DECISIONS,
@@ -49,13 +50,19 @@ export class EditorContentDeliveryService {
   async project(
     documentJson: string,
     viewerId: string | null,
+    expectedProfile?: EditorProfile,
+    decisions: EditorGateDecisions = this.contentGates,
   ): Promise<EditorDeliveryProjection> {
-    const canonical = this.editor.normalize(documentJson).document;
+    const canonical = this.editor.normalize(
+      documentJson,
+      expectedProfile,
+    ).document;
     const evaluations = new Map<string, Promise<EditorGateDecision>>();
     const content = (await this.redactNode(
       canonical.content,
       viewerId,
       evaluations,
+      decisions,
     )) as EditorDocument['content'];
     const document: EditorDocument = { ...canonical, content };
 
@@ -72,26 +79,39 @@ export class EditorContentDeliveryService {
     node: EditorNode,
     viewerId: string | null,
     evaluations: Map<string, Promise<EditorGateDecision>>,
+    decisions: EditorGateDecisions,
   ): Promise<EditorNode> {
     if (node.type === 'contentGate') {
       const gateId = node.attrs?.gateId;
       if (typeof gateId !== 'string') {
         return node;
       }
-      const evaluation = await this.evaluateOnce(gateId, viewerId, evaluations);
+      const evaluation = await this.evaluateOnce(
+        gateId,
+        viewerId,
+        evaluations,
+        decisions,
+      );
       if (!evaluation.allowed) {
         return { type: 'contentGate', attrs: { gateId } };
       }
     }
 
     if (!node.content) return node;
+    const children = await Promise.allSettled(
+      node.content.map((child) =>
+        this.redactNode(child, viewerId, evaluations, decisions),
+      ),
+    );
     return {
       ...node,
-      content: await Promise.all(
-        node.content.map((child) =>
-          this.redactNode(child, viewerId, evaluations),
-        ),
-      ),
+      content: children.map((child) => {
+        if (child.status === 'rejected') {
+          const failure: unknown = child.reason;
+          throw failure;
+        }
+        return child.value;
+      }),
     };
   }
 
@@ -99,10 +119,11 @@ export class EditorContentDeliveryService {
     gateId: string,
     viewerId: string | null,
     evaluations: Map<string, Promise<EditorGateDecision>>,
+    decisions: EditorGateDecisions,
   ): Promise<EditorGateDecision> {
     const cached = evaluations.get(gateId);
     if (cached) return cached;
-    const evaluation = this.contentGates.evaluate(gateId, viewerId);
+    const evaluation = decisions.evaluate(gateId, viewerId);
     evaluations.set(gateId, evaluation);
     return evaluation;
   }

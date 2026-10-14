@@ -25,6 +25,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma, ReactionKind } from '@prisma/client';
 
 import { PrismaService } from '@api/core/database';
+import { PrismaNewsSearchSession } from './prisma-news-search.session';
 import type { NewsDeliveryRepository } from '../../domain/repositories/news-delivery.repository.interface';
 import type { NewsFullRecord } from '../../domain/types/news-full-record.type';
 import type {
@@ -58,9 +59,37 @@ type SharedQuery = Omit<ShortNewsQuery, 'first' | 'cursor'>;
 
 @Injectable()
 export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly search: PrismaNewsSearchSession,
+  ) {}
 
   async browseShort(input: ShortNewsQuery): Promise<ShortNewsPage> {
+    if (input.search) {
+      return this.search.run(input, async (transaction, selection) => ({
+        items: this.toItems(
+          await this.rows(
+            input,
+            0,
+            input.first,
+            undefined,
+            { id: { in: selection.itemIds } },
+            transaction,
+          ),
+        ),
+        pinnedItems: this.toItems(
+          await this.rows(
+            input,
+            0,
+            20,
+            undefined,
+            { id: { in: selection.pinnedIds } },
+            transaction,
+          ),
+        ),
+        hasNextPage: selection.hasNextPage,
+      }));
+    }
     const pinnedRows = await this.pinnedRows(input);
     const pinnedIds = pinnedRows.map(({ id }) => id);
     const rows = await this.rows(input, 0, input.first + 1, input.cursor, {
@@ -76,6 +105,34 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
   async browseShortNumbered(
     input: ShortNewsNumberedQuery,
   ): Promise<ShortNewsNumberedPage> {
+    if (input.search) {
+      return this.search.run(input, async (transaction, selection) => ({
+        items: this.toItems(
+          await this.rows(
+            input,
+            0,
+            input.pageSize,
+            undefined,
+            { id: { in: selection.itemIds } },
+            transaction,
+          ),
+        ),
+        pinnedItems: this.toItems(
+          await this.rows(
+            input,
+            0,
+            20,
+            undefined,
+            { id: { in: selection.pinnedIds } },
+            transaction,
+          ),
+        ),
+        total: selection.total,
+        page: input.page,
+        pageSize: input.pageSize,
+        totalPages: Math.ceil(selection.total / input.pageSize),
+      }));
+    }
     const pinnedRows = await this.pinnedRows(input);
     const pinnedIds = pinnedRows.map(({ id }) => id);
     const unpinnedWhere = { ...this.where(input), id: { notIn: pinnedIds } };
@@ -433,32 +490,6 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
         ? { tags: { some: { tag: { slug: input.tagSlug } } } }
         : {}),
       AND: [
-        ...(input.search
-          ? [
-              {
-                OR: [
-                  {
-                    title: {
-                      contains: input.search,
-                      mode: 'insensitive' as const,
-                    },
-                  },
-                  {
-                    shortText: {
-                      contains: input.search,
-                      mode: 'insensitive' as const,
-                    },
-                  },
-                  {
-                    searchText: {
-                      contains: input.search,
-                      mode: 'insensitive' as const,
-                    },
-                  },
-                ],
-              },
-            ]
-          : []),
         ...(cursor
           ? [
               {
@@ -479,8 +510,9 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
     take: number,
     cursor?: ShortNewsQuery['cursor'],
     extraWhere?: Prisma.NewsArticleWhereInput,
+    client?: Prisma.TransactionClient,
   ) {
-    return this.prisma.newsArticle.findMany({
+    return (client?.newsArticle ?? this.prisma.newsArticle).findMany({
       where: { ...this.where(input, cursor), ...extraWhere },
       orderBy: [{ publishedAt: 'desc' }, { id: 'desc' }],
       skip,

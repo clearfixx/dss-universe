@@ -22,6 +22,11 @@
  * ===============================================================
  */
 import { Module } from '@nestjs/common';
+import { NewsSearchBackfillService } from './application/services/news-search-backfill.service';
+import { NEWS_SEARCH_INDEX_MAINTENANCE } from './contracts/news-search-index-maintenance.contract';
+import { NEWS_SEARCH_PROJECTION_REPOSITORY } from './domain/repositories/news-search-projection.repository.interface';
+import { PrismaNewsSearchProjectionRepository } from './infrastructure/repositories/prisma-news-search-projection.repository';
+import { PrismaNewsSearchSession } from './infrastructure/repositories/prisma-news-search.session';
 
 import { AuditModule } from '@api/core/audit';
 import { AuthorizationModule } from '@api/core/authorization';
@@ -65,6 +70,16 @@ import { NewsPinsResolver } from './presentation/graphql/news-pins.graphql';
 @Module({
   imports: [PrismaModule, AuditModule, AuthorizationModule, EventsModule],
   providers: [
+    PrismaNewsSearchSession,
+    NewsSearchBackfillService,
+    {
+      provide: NEWS_SEARCH_INDEX_MAINTENANCE,
+      useExisting: NewsSearchBackfillService,
+    },
+    {
+      provide: NEWS_SEARCH_PROJECTION_REPOSITORY,
+      useClass: PrismaNewsSearchProjectionRepository,
+    },
     NewsDeliveryResolver,
     OptionalNewsJwtGuard,
     NewsSettingsResolver,
@@ -103,6 +118,7 @@ import { NewsPinsResolver } from './presentation/graphql/news-pins.graphql';
     { provide: NEWS_PINS_REPOSITORY, useClass: PrismaNewsPinsRepository },
   ],
   exports: [
+    NEWS_SEARCH_INDEX_MAINTENANCE,
     NEWS_INTERACTION_DECISIONS,
     NewsService,
     NewsDeliveryService,

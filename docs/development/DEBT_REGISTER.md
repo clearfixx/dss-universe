@@ -354,6 +354,26 @@ after that explicit final summary; no forceExit/test skip/trigger change was use
 Its production repository and fixture source are unchanged by DEBT-052. This
 confirms the existing D6 blocker, not green full E2E acceptance.
 
+DEBT-053 verification repeats the broader fixture problem: News now also reports
+hasNextPage true where its global fixture expects false; leaderboards observes
+another 10-point subject/currentLevel; achievements receives two AWARDED and two
+DUPLICATE results where it expects one pair. Its event test reads all enabled
+matching rules in a shared database. These are observed assertion/source facts,
+not a new product root-cause claim. Twelve tests fail in the complete 244-test
+attempt, including the existing registration timeout and profile-assets hook
+timeouts. All seventy relevant isolated-schema News/composition E2E pass inside
+that same attempt. D6 must disposition the global fixture failures independently;
+no unrelated test/production behavior is changed by DEBT-053.
+
+Approved DEBT-053 batch follow-up, final frozen-source fresh-DB run: 244 PASS /
+2 FAIL across 29 suites/246 tests, zero skipped; all 72 directly relevant E2E
+pass. News repeats viewCount null-versus-zero and prohibited target-deletion
+cleanup. Leaderboards repeats a 10-point tie with an earlier `points-user-*`;
+read-only synthetic-DB inspection confirms it precedes `leader-oldest-*` by
+about eight seconds. The previous clean attempt had 245/1, but that does not
+establish fixture isolation. Final JSON completes before open-handle cleanup;
+only the verified owned Jest runner was stopped. D6 remains open, not waived.
+
 ### DEBT-046 — Last privileged role-holder removal is unguarded (High, IMPLEMENTED / review pending, D3.4)
 
 At `a9c5596`, UserAccessService.revokeRole does not invoke the existing
@@ -548,7 +568,40 @@ search evidence, preserving correct total/pins/pagination and allowed content
 search; reconcile already stored projections through reviewed backfill/migration
 if needed. Do not remove full-text search, filter after paging, or introduce the
 deferred shared Search Platform as a shortcut. On 2026-10-14 the owner approved
-this as a separate package after DEBT-052. Implementation has not started.
+this as a separate package after DEBT-052. The owner subsequently approved the
+hybrid public index/authenticated gated-document projection architecture with
+performance tests and no hidden result cap. Implementation has started on
+`debt/debt-053-news-viewer-search`; the first increment adds Editor-owned public
+projection/search contracts, not a live News query correction. See the
+[implementation plan](DEBT_053_NEWS_VIEWER_SEARCH_PLAN.md). Storage/backfill,
+query composition and actual response/performance acceptance remain OPEN.
+The next local increment adds versioned News-owned projection storage, atomic
+draft writes, invalidation, source-locked canonical backfill and a published
+maintenance port/CLI. Fifty-six focused migrated E2E pass; real disposable-data
+backfill/readiness passes without authored-document changes.
+The local runtime increment now replaces raw body matching with public evidence
+and bounded viewer projections in a repeatable-read snapshot. Eleven new live
+query E2E and the corrected twenty-case Full News suite pass; hidden-only guest
+matches no longer enter items/pins/totals. An isolated 1,000-article corpus with
+600 gated articles passes complete numbered/cursor pagination, but its member
+p95 is 3.657 seconds against the unchanged five-second transaction budget.
+A concurrent DB-gate run exceeded that budget; storage fixture timeouts and
+broader full-suite failures also require disposition. This is not accepted
+capacity or a green full package. No timeout increase, result cap or raw fallback.
+See the plan for current verification and residual performance risk.
+The owner-approved follow-up reuses private viewer evidence only inside an
+explicitly closed batch of at most 64 documents. Frozen-source API coverage:
+890 PASS/137 suites, all DB/Redis opt-ins and eight thresholds enforced;
+lint/types/Prisma/build and 52 architecture fixtures PASS (inventory 89).
+Distinct-document/gate performance plus concurrent-viewer/outage E2E: five PASS.
+At 1,000 articles/600 gates, each request reads facts/audience 10 times rather
+than 600; local member p95 1.022 seconds versus strengthened baseline 3.079.
+No cross-request cache, timeout increase, cap or public API change. This is not
+production capacity acceptance; full-suite/baseline gates and review remain open.
+Final fresh full E2E: 244 PASS/2 FAIL (DEBT-045); all 72 relevant E2E PASS.
+Global format/audit remain red, and generated/Web evidence is the prior checkpoint.
+Draft PR #12 contains the implementation and the batch follow-up; no merge or
+debt-closure claim. Independent review and operational acceptance remain open.
 DEBT-052 remains a separate Full News correction; no search policy
 or historical projection is silently changed by that package. Release/Phase 11
 security acceptance must disposition this confirmed channel explicitly.
@@ -580,3 +633,18 @@ DEBT-052 documents this adjacent finding but does not silently alter unrelated
 delivery queries. On 2026-10-14 the owner approved a separate correction after
 DEBT-053; implementation has not started. The finding remains unresolved for
 release/Phase 11 security acceptance.
+
+### DEBT-055 — API production start points at a missing local build entry (High, OPEN, D6)
+
+On 2026-10-14, inspecting the existing build output before a fresh build of the
+current storage increment found `apps/api/dist/src/main.js` but no
+`apps/api/dist/main.js`. The existing `start:prod` command is `node dist/main`;
+executing that exact command from apps/api exits immediately with MODULE_NOT_FOUND,
+before loading application code or connecting to any service. A successful
+compiler/build gate is therefore not evidence that this production start works.
+
+D6 must reproduce the output layout from a clean build, reconcile the intended
+runtime entry without breaking other compiled paths, and verify actual process
+readiness. The current evidence proves the local start failure, not its complete
+root cause or behavior in every deployment. No entry/compiler/runtime fix is
+silently included in DEBT-053; owner notification accompanies this finding.

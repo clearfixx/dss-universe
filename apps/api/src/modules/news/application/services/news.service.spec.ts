@@ -39,6 +39,8 @@ describe('NewsService', () => {
       canonicalJson: JSON.stringify(document),
       plainText: 'Full news text',
       searchText: 'full news text',
+      publicSearchText: 'public news text',
+      hasContentGates: true,
     });
     findMediaById = jest.fn();
     repository = {
@@ -83,6 +85,8 @@ describe('NewsService', () => {
         shortText: 'A concise station update.',
         document,
         plainText: 'Full news text',
+        publicSearchText: 'public news text',
+        hasContentGates: true,
         templateData: {},
       }),
     );
@@ -124,6 +128,8 @@ describe('NewsService', () => {
       document: documentWithAttachment,
       plainText: 'Full news text',
       searchText: 'full news text',
+      publicSearchText: 'public news text',
+      hasContentGates: true,
     });
     findMediaById.mockResolvedValue({ ownerId: 'author-1', isPublic: false });
     createDraft.mockResolvedValue({ id: 'article-1' });
@@ -198,6 +204,8 @@ describe('NewsService', () => {
         baseVersion: 1,
         document,
         templateData: {},
+        publicSearchText: 'public news text',
+        hasContentGates: true,
       }),
     );
   });

@@ -16,6 +16,8 @@ export type NewsDocumentProjection = {
   document: EditorDocument;
   plainText: string;
   searchText: string;
+  publicSearchText: string;
+  hasContentGates: boolean;
 };
 export interface NewsDocumentNormalizer {
   normalize(documentJson: string): NewsDocumentProjection;

@@ -13,9 +13,13 @@
  */
 
 import { Module } from '@nestjs/common';
+import { EDITOR_SEARCH_BATCH_PROJECTOR } from './contracts/editor-search-batch-projector.contract';
+import { EditorSearchBatchProjectorService } from './application/services/editor-search-batch-projector.service';
 
 import { EDITOR_DOCUMENT_NORMALIZER } from './contracts/editor-document-normalizer.contract';
 import { EDITOR_VIEWER_DOCUMENT_PROJECTOR } from './contracts/editor-viewer-document-projector.contract';
+import { EDITOR_SEARCH_PROJECTOR } from './contracts/editor-search-projector.contract';
+import { EditorSearchProjectorService } from './application/services/editor-search-projector.service';
 import { EditorViewerDocumentProjectorService } from './application/services/editor-viewer-document-projector.service';
 import { EDITOR_CODE_HIGHLIGHTER } from './application/contracts/editor-code-highlighter.interface';
 import { EditorContentDeliveryService } from './application/services/editor-content-delivery.service';
@@ -27,6 +31,11 @@ import { EditorResolver } from './presentation/graphql/editor.resolver';
 
 @Module({
   providers: [
+    EditorSearchBatchProjectorService,
+    {
+      provide: EDITOR_SEARCH_BATCH_PROJECTOR,
+      useExisting: EditorSearchBatchProjectorService,
+    },
     EditorService,
     EditorDocumentNormalizerService,
     {
@@ -34,6 +43,11 @@ import { EditorResolver } from './presentation/graphql/editor.resolver';
       useExisting: EditorDocumentNormalizerService,
     },
     EditorContentDeliveryService,
+    EditorSearchProjectorService,
+    {
+      provide: EDITOR_SEARCH_PROJECTOR,
+      useExisting: EditorSearchProjectorService,
+    },
     EditorViewerDocumentProjectorService,
     {
       provide: EDITOR_VIEWER_DOCUMENT_PROJECTOR,
@@ -47,7 +61,12 @@ import { EditorResolver } from './presentation/graphql/editor.resolver';
     },
     EditorResolver,
   ],
-  exports: [EDITOR_DOCUMENT_NORMALIZER, EDITOR_VIEWER_DOCUMENT_PROJECTOR],
+  exports: [
+    EDITOR_SEARCH_BATCH_PROJECTOR,
+    EDITOR_DOCUMENT_NORMALIZER,
+    EDITOR_VIEWER_DOCUMENT_PROJECTOR,
+    EDITOR_SEARCH_PROJECTOR,
+  ],
 })
 export class EditorModule {}
 

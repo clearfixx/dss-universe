@@ -11,6 +11,20 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+export { NEWS_SEARCH_PROJECTION_VERSION } from './domain/constants/news-search-projection.constant';
+export {
+  NEWS_SEARCH_BATCH_PROJECTOR,
+  type NewsSearchBatchProjector,
+} from './domain/ports/news-search-batch-projector.interface';
+export {
+  NEWS_SEARCH_INDEX_MAINTENANCE,
+  type NewsSearchIndexMaintenance,
+} from './contracts/news-search-index-maintenance.contract';
+export { NewsSearchInvalidSourceError } from './domain/errors/news-search-invalid-source.error';
+export {
+  NEWS_SEARCH_PROJECTOR,
+  type NewsSearchProjector,
+} from './domain/ports/news-search-projector.interface';
 export {
   NEWS_VIEWER_DOCUMENT_READER,
   type NewsViewerDocumentReader,

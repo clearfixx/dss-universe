@@ -13,6 +13,7 @@
  * • evaluates global account facts without receiving protected content;
  * • applies author/Premium threshold bypass without overriding audience;
  * • fails closed for missing viewers or unmet policy evidence.
+ * • shares private viewer evidence only inside an explicitly closed batch scope.
  *
  * 🏗️ Architecture:
  * Content Access policy; viewer statistics enter through its own fact-composition service.
@@ -50,6 +51,10 @@ import {
 import { ContentGateViewerFactsService } from './content-gate-viewer-facts.service';
 
 const MAX_REQUIREMENTS = 6;
+type ViewerEvidence = readonly [
+  Awaited<ReturnType<ContentGateViewerFactsService['read']>>,
+  Awaited<ReturnType<ContentAudienceReader['read']>>,
+];
 
 @Injectable()
 export class ContentGatesService {
@@ -71,6 +76,62 @@ export class ContentGatesService {
     viewerId: string | null,
     now = new Date(),
   ): Promise<ContentGateEvaluation> {
+    return this.evaluateUsing(gateId, viewerId, () =>
+      this.readEvidence(viewerId!, now),
+    );
+  }
+
+  openViewerScope(viewerId: string) {
+    if (!viewerId.trim())
+      throw new BadRequestException('Content Gate scope requires a viewer.');
+    const at = new Date();
+    let closed = false;
+    let evidence: Promise<ViewerEvidence> | undefined;
+    const read = () => {
+      if (closed)
+        return Promise.reject<ViewerEvidence>(
+          new Error('Content Gate evaluation scope is closed.'),
+        );
+      return (evidence ??= this.readEvidence(viewerId, at));
+    };
+    return {
+      evaluate: async (gateId: string): Promise<ContentGateEvaluation> => {
+        if (closed) throw new Error('Content Gate evaluation scope is closed.');
+        const result = await this.evaluateUsing(gateId, viewerId, read);
+        if (closed) throw new Error('Content Gate evaluation scope is closed.');
+        return result;
+      },
+      close: () => {
+        closed = true;
+        evidence = undefined;
+      },
+    };
+  }
+
+  private async readEvidence(
+    viewerId: string,
+    at: Date,
+  ): Promise<ViewerEvidence> {
+    const [statistics, access] = await Promise.allSettled([
+      Promise.resolve().then(() => this.viewerFacts.read(viewerId, at)),
+      Promise.resolve().then(() => this.audience.read(viewerId, at)),
+    ]);
+    if (statistics.status === 'rejected') {
+      const failure: unknown = statistics.reason;
+      throw failure;
+    }
+    if (access.status === 'rejected') {
+      const failure: unknown = access.reason;
+      throw failure;
+    }
+    return [statistics.value, access.value];
+  }
+
+  private async evaluateUsing(
+    gateId: string,
+    viewerId: string | null,
+    readEvidence: () => Promise<ViewerEvidence>,
+  ): Promise<ContentGateEvaluation> {
     const gate = await this.gates.findById(gateId);
     if (!gate) throw new NotFoundException('Content Gate was not found.');
     if (!viewerId) {
@@ -82,10 +143,7 @@ export class ContentGatesService {
         notice: 'Sign in to check hidden content requirements.',
       };
     }
-    const [statistics, access] = await Promise.all([
-      this.viewerFacts.read(viewerId, now),
-      this.audience.read(viewerId, now),
-    ]);
+    const [statistics, access] = await readEvidence();
     if (!statistics || !access)
       throw new NotFoundException('Content Gate viewer was not found.');
     const facts = { ...statistics, groups: [...access.groups] };

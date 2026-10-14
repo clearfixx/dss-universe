@@ -43,6 +43,8 @@ describe('Content target semantic boundaries', () => {
     templateData: {},
     plainText: '',
     searchText: '',
+    publicSearchText: '',
+    hasContentGates: false,
     coverMediaId: null,
     attachmentMediaIds: [],
   };

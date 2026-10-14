@@ -20,6 +20,12 @@ rewrite.
 This plan does not authorize Phase 11 implementation. The Phase 11 brainstorm,
 scope approval and dedicated branch are separate gates.
 
+Owner update (2026-10-14): after D0–D7 preparation, conduct the separate
+[stack audit](../audits/STACK_AUDIT_PLAN.md) before the Phase 11 brainstorm.
+Scheduling this audit does not approve its unresolved target decisions or
+authorize technology replacements. The existing debt-closure sequence continues
+first; the stack audit uses the resulting accepted baseline.
+
 ## Operating rules
 
 1. Each package uses its own branch, review and PR.
@@ -123,6 +129,9 @@ D0 Environment ───────────────┐
                                       |
                                       v
                          D7 Review / PR / CI gate
+                                      |
+                                      v
+                         Stack audit / owner acceptance
                                       |
                                       v
                          Phase 11 brainstorm only
@@ -451,11 +460,49 @@ Critical/High debt required before Phase 11.
 
 Model: `gpt-6.1-sol` high for final review; `gpt-6-luna` for mechanics.
 
+## Post-preparation stack audit
+
+The owner requires this separate checkpoint after D7 and before the Phase 11
+brainstorm. Follow [STACK_AUDIT_PLAN.md](../audits/STACK_AUDIT_PLAN.md), preserving
+its evidence requirements, approval points and distinction between installed,
+configured and actually used technologies. The actual source path is
+`docs/audits/STACK_AUDIT_PLAN.md`; do not create a duplicate under `docs/audit/`.
+
+Owner clarification (2026-10-14): retain the selected technology stack. The audit
+focuses on responsibility, execution, state and trust boundaries between existing
+technologies, not evaluating replacements. Any exceptional replacement proposal
+would require separate explicit approval and is not an audit deliverable.
+
+Use a separate `audit/` branch after the prepared baseline is accepted. Start by
+confirming scope/critical scenarios, Git revision and available environments,
+then inventory actual usage, trace execution/data/trust boundaries and confirm
+findings. Review frontend/server/client/state ownership without expanding into
+unapproved UI design. Keep current and proposed responsibility matrices separate.
+Existing ADRs remain effective until an explicit replacement decision is approved.
+
+Results belong in `docs/audits/stack/`, created at their respective stages:
+`BASELINE.md`, `INVENTORY.md`, `RESPONSIBILITIES.md`, `FINDINGS.md`,
+`CHANGE_PLAN.md` and `VERIFICATION.md`. Do not pre-create these as completion
+evidence. Confirm source/document links and the actual quality/CI command matrix
+when establishing the audit baseline.
+
+The audit does not authorize replacing dependencies, migrating data, changing
+public behavior or modifying remote/production systems. Target rules and
+implementation tasks require owner approval; approved changes receive their own
+bounded packages and verification. Findings that are deferred link to the
+existing debt register and require explicit acceptance of residual risk.
+
+Exit gate: agreed coverage completed, findings dispositioned, approved changes
+verified, final report/limitations/residual risks accepted by the owner. Only
+then proceed to the separate Phase 11 brainstorm. This checkpoint is scheduled,
+not started or completed, and is not silently bundled into DEBT-053 or D7.
+
 ## Phase 11 transition
 
 ### Brainstorm branch
 
-Create `phase/11-knowledge-forge-brainstorm` only after D7. It contains product
+Create `phase/11-knowledge-forge-brainstorm` only after D7 and stack-audit
+acceptance. It contains product
 decisions, architecture, threat model, data lifecycle, package breakdown and
 acceptance matrix—no feature implementation.
 

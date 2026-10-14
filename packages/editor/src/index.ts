@@ -16,7 +16,12 @@ export * from "./capabilities";
 export * from "./autosave";
 export * from "./document";
 export * from "./profiles";
-export * from "./projections";
+export {
+  projectEditorPlainText,
+  projectEditorSearchText,
+  projectEditorPublicSearch,
+} from "./projections";
+export type { EditorPublicSearchProjection } from "./projections";
 export * from "./validation";
 
 /** Canonical documents travel between modules; implementation details stay home. */
