@@ -531,7 +531,7 @@ describe('Full News server-side viewer redaction (e2e)', () => {
       expect(JSON.stringify(page)).not.toContain(secret);
     },
   );
-  it('characterizes related metadata from a MEMBERS article despite guest denial of its full response', async () => {
+  it('does not expose related metadata from a MEMBERS article denied to the guest after DEBT-054', async () => {
     const permission = await prisma.permission.create({
       data: {
         key: Permission.NewsLinksManage,
@@ -556,9 +556,8 @@ describe('Full News server-side viewer redaction (e2e)', () => {
     expect((await full(hidden.slug)).data.fullNews).toBeNull();
     const response = await full(source.slug);
     expect(response.errors).toBeUndefined();
-    // Separate disclosure characterization, not security acceptance.
-    expect(JSON.stringify(response)).toContain(hidden.title);
-    expect(JSON.stringify(response)).toContain(hidden.slug);
+    expect(JSON.stringify(response)).not.toContain(hidden.title);
+    expect(JSON.stringify(response)).not.toContain(hidden.slug);
   });
   it('does not disclose hidden-only matches through guest News search after DEBT-053', async () => {
     const { post } = await restricted();

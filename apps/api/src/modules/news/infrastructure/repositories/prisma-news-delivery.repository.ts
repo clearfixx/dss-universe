@@ -10,6 +10,7 @@
  *
  * 🧠 Responsibilities:
  * • retains News filtering, pinned/cursor/numbered reads and full article data;
+ * • applies the same current article eligibility to related target metadata;
  * • preserves existing rating/comment transactional projections pending their transfer.
  *
  * 🏗️ Architecture:
@@ -231,7 +232,7 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
         allowSharing: true,
         allowIndexing: true,
         outgoingLinks: {
-          where: { targetArticle: { status: 'PUBLISHED' } },
+          where: { targetArticle: this.where({ viewerId }) },
           orderBy: [{ position: 'asc' }, { createdAt: 'asc' }],
           select: {
             id: true,

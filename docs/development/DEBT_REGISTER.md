@@ -374,6 +374,13 @@ about eight seconds. The previous clean attempt had 245/1, but that does not
 establish fixture isolation. Final JSON completes before open-handle cleanup;
 only the verified owned Jest runner was stopped. D6 remains open, not waived.
 
+DEBT-054 repeats on a fresh migrated target: full E2E 256 PASS/2 FAIL, 258 tests,
+zero skipped. News has the same viewCount/cleanup failure; this time the second
+failure is registration/GraphQL viewer exceeding five seconds, not leaderboard.
+An isolated repeat of the entire Auth E2E suite passes all 26 tests with zero
+skips and normal exit. This does not waive the full-run timeout or establish its
+cause. No timeout, auth behavior, shared fixture or DB trigger was changed.
+
 ### DEBT-046 — Last privileged role-holder removal is unguarded (High, IMPLEMENTED / review pending, D3.4)
 
 At `a9c5596`, UserAccessService.revokeRole does not invoke the existing
@@ -610,7 +617,7 @@ Every new entry should include evidence, impact, proposed ownership and a clear
 decision before implementation. Discovery is not permission to expand the
 current package silently.
 
-### DEBT-054 — Full News related summaries expose MEMBERS-only article metadata (High, ACCEPTED / separate security package)
+### DEBT-054 — Full News related summaries expose MEMBERS-only article metadata (High, ACCEPTED / implemented, review pending)
 
 On 2026-10-14, the migrated `news-viewer-redaction.e2e-spec.ts` creates canonical
 PUBLIC and MEMBERS-only News articles, grants its synthetic actor the existing
@@ -631,8 +638,22 @@ and link semantics and test guest/member plus current target publication state.
 No new generic ACL product feature, staff/owner authority or frontend design.
 DEBT-052 documents this adjacent finding but does not silently alter unrelated
 delivery queries. On 2026-10-14 the owner approved a separate correction after
-DEBT-053; implementation has not started. The finding remains unresolved for
-release/Phase 11 security acceptance.
+DEBT-053. Implementation is now on the separate
+`debt/debt-054-related-audience` review branch, based on published DEBT-053
+`086aae3` / draft PR #12; no parent acceptance or merge is implied.
+The outgoing target relation reuses News's existing article eligibility
+predicate before selecting summaries. Twelve new migrated GraphQL regressions
+first report 8 PASS/4 FAIL on the unchanged repository; after correction all
+12 pass, with all 73 focused E2E and 890 opt-in API coverage tests passing.
+Ordering, three link kinds, cross-language targets, current status/visibility
+and publication-date fallback are covered. No generic group ACL, migration,
+frontend or new staff authority is added. Full gates/review/CI remain open;
+see [the implementation plan](DEBT_054_RELATED_AUDIENCE_PLAN.md).
+Final local gates: lint/types/Prisma/build/architecture PASS; fresh other workspace
+units PASS. Full API E2E 256 PASS/2 FAIL (DEBT-045); isolated Auth suite 26 PASS.
+Global format/audit/generated and Web smoke remain red with current evidence;
+no skip, timeout increase, trigger weakening or frontend fix. The finding is
+not yet accepted as closed for release/Phase 11 readiness.
 
 ### DEBT-055 — API production start points at a missing local build entry (High, OPEN, D6)
 
