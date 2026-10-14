@@ -6,17 +6,17 @@
  * 📄 File: apps/api/test/news-attachment-contracts.e2e-spec.ts
  *
  * 🎯 Purpose:
- * Verifies public attachment owner metadata and characterizes inherited canonical/gate delivery defects.
+ * Verifies attachment owner metadata, canonical manifest debt and corrected Full News redaction.
  *
  * 🧠 Responsibilities:
  * • exercises actual News/Media root bindings and all real migrations;
- * • distinguishes legacy doc-node fixtures from canonical creation and protected delivery.
+ * • tests legacy node traversal directly without bypassing canonical Full News validation.
  *
  * 🏗️ Architecture:
  * AppModule E2E in an owned disposable schema; no production policy is stubbed into success.
  *
  * ⚠️ Important:
- * Characterization of inherited defects is not security acceptance or permission to fix them.
+ * Canonical attachment omission remains DEBT-051; component metadata checks do not prove binary access.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -26,7 +26,7 @@ import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import type { App } from 'supertest/types';
 import { randomUUID } from 'node:crypto';
-import { Prisma, type MediaStatus, type MediaVisibility } from '@prisma/client';
+import type { MediaStatus, MediaVisibility } from '@prisma/client';
 import { createEmptyEditorDocument, type EditorNode } from '@dss/editor';
 import { PrismaService } from '@api/core/database';
 import {
@@ -41,6 +41,7 @@ import { AppModule } from '../src/app.module';
 import { AuthenticationPresentationService } from '../src/composition/identity/application/authentication-presentation.service';
 import { NewsService } from '../src/modules/news/application/services/news.service';
 import { NewsDeliveryService } from '../src/modules/news/application/services/news-delivery.service';
+import { NewsAttachmentDeliveryService } from '../src/modules/news/application/services/news-attachment-delivery.service';
 import { ContentGatesService } from '../src/modules/content-access/application/services/content-gates.service';
 import { EditorContentDeliveryService } from '../src/modules/editor/application/services/editor-content-delivery.service';
 import { UserPresenceService } from '../src/modules/users/application/services/user-presence.service';
@@ -163,12 +164,24 @@ describe('News public attachment metadata owner contracts (e2e)', () => {
       data: {
         status: 'PUBLISHED',
         publishedAt: new Date(),
-        ...(options.legacyNode
-          ? { document: document.content as unknown as Prisma.InputJsonValue }
-          : {}),
       },
     });
-    return { ...draft, document };
+    return {
+      ...draft,
+      document,
+      // Legacy node fixtures exercise only the inherited attachment component.
+      // Storage and public Full News always use the canonical authored document.
+      attachmentDocumentJson: JSON.stringify(
+        options.legacyNode ? document.content : document,
+      ),
+    };
+  }
+  async function attachmentProjection(
+    post: Awaited<ReturnType<typeof article>>,
+  ) {
+    return app
+      .get(NewsAttachmentDeliveryService)
+      .project(post.id, post.attachmentDocumentJson);
   }
   async function full(slug: string, token?: string) {
     const call = request(app.getHttpServer()).post('/api/graphql');
@@ -267,7 +280,7 @@ describe('News public attachment metadata owner contracts (e2e)', () => {
     expect(response.data.fullNews?.attachments).toEqual([]);
     expect(read).not.toHaveBeenCalled();
   });
-  it('preserves legacy doc-node attachment transport, labels, checksums and provider-field isolation', async () => {
+  it('preserves legacy node component metadata, labels, checksums and provider-field isolation', async () => {
     const first = await media();
     const second = await media();
     const post = await article(
@@ -278,18 +291,12 @@ describe('News public attachment metadata owner contracts (e2e)', () => {
       ],
       { legacyNode: true },
     );
-    const response = await full(post.slug);
-    expect(response.errors).toBeUndefined();
-    expect(
-      response.data.fullNews?.attachments.map((item) => [
-        item.mediaId,
-        item.label,
-      ]),
-    ).toEqual([
+    const projected = await attachmentProjection(post);
+    expect(projected.map((item) => [item.mediaId, item.label])).toEqual([
       [first.id, 'Last label'],
       [second.id, 'Second'],
     ]);
-    expect(response.data.fullNews?.attachments[0]).toMatchObject({
+    expect(projected[0]).toMatchObject({
       filename: 'manual.pdf',
       kind: 'PDF document',
       checksumSha256: first.checksum,
@@ -303,7 +310,7 @@ describe('News public attachment metadata owner contracts (e2e)', () => {
       'metadata',
       'not-for-readers',
     ])
-      expect(JSON.stringify(response)).not.toContain(marker);
+      expect(JSON.stringify(projected)).not.toContain(marker);
   });
   it.each([
     'PENDING',
@@ -321,9 +328,7 @@ describe('News public attachment metadata owner contracts (e2e)', () => {
       const post = await article([attachment(asset.id, 'File')], {
         legacyNode: true,
       });
-      expect((await delivery.fullBySlug('uk', post.slug))?.attachments).toEqual(
-        [],
-      );
+      expect(await attachmentProjection(post)).toEqual([]);
       expect(
         await prisma.mediaReference.count({
           where: { targetId: post.id, mediaId: asset.id, removedAt: null },
@@ -338,10 +343,7 @@ describe('News public attachment metadata owner contracts (e2e)', () => {
       const post = await article([attachment(asset.id, 'File')], {
         legacyNode: true,
       });
-      expect(
-        (await delivery.fullBySlug('uk', post.slug, owner.user.id))
-          ?.attachments,
-      ).toEqual([]);
+      expect(await attachmentProjection(post)).toEqual([]);
       expect(
         (await full(post.slug, owner.tokens.accessToken)).data.fullNews
           ?.attachments,
@@ -377,9 +379,7 @@ describe('News public attachment metadata owner contracts (e2e)', () => {
                   ? { purpose: 'other' }
                   : { targetType: 'Other' },
         });
-      expect((await delivery.fullBySlug('uk', post.slug))?.attachments).toEqual(
-        [],
-      );
+      expect(await attachmentProjection(post)).toEqual([]);
     },
   );
   it('skips metadata behind a contentGate while keeping ordinary legacy-node attachments', async () => {
@@ -406,9 +406,7 @@ describe('News public attachment metadata owner contracts (e2e)', () => {
       'read',
     );
     expect(
-      (await delivery.fullBySlug('uk', post.slug))?.attachments.map(
-        (item) => item.mediaId,
-      ),
+      (await attachmentProjection(post)).map((item) => item.mediaId),
     ).toEqual([visible.id]);
     expect(read.mock.calls).toEqual([[post.id, [visible.id]]]);
   });
@@ -425,8 +423,10 @@ describe('News public attachment metadata owner contracts (e2e)', () => {
     expect(await delivery.fullBySlug('uk', post.slug)).toBeNull();
     expect(read).not.toHaveBeenCalled();
     expect(
-      (await delivery.fullBySlug('uk', post.slug, owner.user.id))?.attachments,
-    ).toHaveLength(1);
+      await delivery.fullBySlug('uk', post.slug, owner.user.id),
+    ).not.toBeNull();
+    // Canonical attachment manifest remains DEBT-051, not silently repaired here.
+    expect(await attachmentProjection(post)).toHaveLength(1);
   });
   it('does not invoke Media for missing articles or documents without attachments', async () => {
     const post = await article([]);
@@ -442,7 +442,7 @@ describe('News public attachment metadata owner contracts (e2e)', () => {
     );
     expect(read).not.toHaveBeenCalled();
   });
-  it('propagates provider errors rather than returning a partial successful full article', async () => {
+  it('propagates real metadata provider errors from the attachment component', async () => {
     const asset = await media();
     const post = await article([attachment(asset.id, 'File')], {
       legacyNode: true,
@@ -453,14 +453,11 @@ describe('News public attachment metadata owner contracts (e2e)', () => {
         'read',
       )
       .mockRejectedValue(new Error('Synthetic metadata provider failure'));
-    await expect(delivery.fullBySlug('uk', post.slug)).rejects.toThrow(
+    await expect(attachmentProjection(post)).rejects.toThrow(
       'Synthetic metadata provider failure',
     );
-    const response = await full(post.slug);
-    expect(response.errors?.length).toBeGreaterThan(0);
-    expect(response.data.fullNews).toBeNull();
   });
-  it('characterizes inherited public Full News gate leakage against the functioning Editor redaction boundary', async () => {
+  it('removes denied protected text at the public Full News boundary', async () => {
     const gate = await app.get(ContentGatesService).create({
       ownerId: owner.user.id,
       operator: 'ALL',
@@ -482,7 +479,9 @@ describe('News public attachment metadata owner contracts (e2e)', () => {
     expect(safe.documentJson).not.toContain(secret);
     const response = await full(post.slug);
     expect(response.errors).toBeUndefined();
-    // Characterization only: release acceptance is blocked until the separately approved correction.
-    expect(response.data.fullNews?.documentJson).toContain(secret);
+    expect(response.data.fullNews?.documentJson).not.toContain(secret);
+    expect(
+      JSON.parse(response.data.fullNews?.documentJson ?? 'null') as unknown,
+    ).toEqual(JSON.parse(safe.documentJson) as unknown);
   });
 });

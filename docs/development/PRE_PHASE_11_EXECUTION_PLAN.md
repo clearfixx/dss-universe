@@ -333,6 +333,14 @@ DEBT-052 blocks release/Phase 11 readiness. No passing
 characterization, import count or local gate waives it. Users/Interactions delivery
 joins and transactional pages remain D4.3d3 work; D4.4/D4.5 and D5–D7 remain required.
 
+Priority correction queue authorized on 2026-10-14: DEBT-052 Full News document
+redaction, then DEBT-053 viewer-safe News-local search, then DEBT-054 related
+summaries for current article audience. DEBT-051 canonical attachment manifest
+is separately approved and follows this security work. Each uses its own package
+branch/commit/PR and full verification; no implicit shared Search Platform or
+Command Deck scope. DEBT-052 currently passes 45 focused E2E and 800 full API
+opt-in unit/integration tests; release/full gate acceptance remains OPEN.
+
 D4.3d2 isolates Users interests/follows/blocks for Activity through three minimal
 arrays, moving unchanged ranking to Activity application and keeping owned SQL in
 its repository. See [evidence](../audits/D4_3D2_ACTIVITY_VIEWER_CONTEXT.md).

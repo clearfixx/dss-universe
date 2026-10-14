@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-14 — pre-Phase-11 debt closure / D4.3d3a implemented; Critical DEBT-052 open
+> Updated: 2026-10-14 — DEBT-052 implemented locally; full security acceptance open
 
 ## Product and authority
 
@@ -29,7 +29,7 @@ approved ADRs or recorded owner decisions.
 
 ## Current position
 
-Critical DEBT-052: a real guest Full News response contains denied Content Gate
+At the package base, Critical DEBT-052: a real guest Full News response contains denied Content Gate
 payload in documentJson because the published response path omits server-side
 Editor redaction. DEBT-051 also confirms canonical document wrappers skip the
 attachment manifest despite stored files/references. Both were reproduced with
@@ -38,6 +38,17 @@ corrections: DEBT-052 first, then DEBT-051. See the
 [security implementation plan](development/DEBT_052_FULL_NEWS_REDACTION_PLAN.md).
 Passing characterization does not resolve them. DEBT-052 blocks release/Phase 11
 readiness. See [debt register](development/DEBT_REGISTER.md).
+
+On the active separate `debt/debt-052-full-news-redaction` branch, the correction
+now composes safe JSON through named Editor/News contracts. Twenty new migrated
+E2E cases pass, including explicit DEBT-053/054 disclosure characterizations.
+Full opt-in API units: 800 PASS; focused E2E: 45 PASS; coverage/build/lint/types
+pass. Full API E2E: 210 PASS / 1 FAIL (known DEBT-045); Web smoke: 10 PASS / 3 FAIL
+(DEBT-034). Format/audit/generated baseline and CI/review remain unaccepted.
+See [corrective evidence](audits/DEBT_052_FULL_NEWS_REDACTION.md).
+On 2026-10-14 the owner approved separate DEBT-053 search and DEBT-054 related
+audience corrections, in that order after DEBT-052; neither is implemented here.
+DEBT-051 follows the priority security work. No Phase 11 readiness is claimed.
 
 D4.3d3a moves the independent public attachment metadata query to Media ownership
 and composes labels/order/display kinds in News application through narrow root
@@ -48,11 +59,10 @@ including explicit defect characterizations. Coverage/build pass; import invento
 stays 89, not full SQL ownership acceptance. Full D4/gates/review and DEBT-052 remain OPEN.
 See [evidence](audits/D4_3D3A_NEWS_ATTACHMENT_METADATA.md).
 
-D4.3d3a is still an uncommitted local increment at HEAD `5bff17f`: the last
-commit/push request was not executed because automatic approval review hit its
-usage limit. No publication or new-head CI result is claimed. Resolve that
-external approval-system failure before retrying Git writes or opening the
-separate correction branch; do not bypass it through another execution route.
+D4.3d3a is committed/pushed as `5851381`, draft PR #10. Its initial publication
+attempt failed before execution on an approval-review usage limit; a subsequent
+account check and the same escalated approval route succeeded without a bypass.
+The separate DEBT-052 branch is based on that exact head. No merge/CI-green claim.
 
 D4.3d2 removes Activity's direct Users reads. Users publishes only interests,
 following IDs and blocked IDs; root composition binds the Activity-owned input.

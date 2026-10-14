@@ -1,6 +1,6 @@
 # DEBT-052 — Full News viewer-safe document delivery
 
-Date: 2026-10-14. Status: owner-approved scope; implementation NOT STARTED.
+Date: 2026-10-14. Status: implementation in place; local verification/review acceptance OPEN.
 Priority: Critical; release and Phase 11 blocker until verified correction.
 
 ## Authority and package order
@@ -9,18 +9,21 @@ The owner approved a separate priority security package covering server-side
 Full News redaction through narrow contracts, guest/GROUP/Premium/author/provider
 failure cases and related projection regressions. The separately approved
 DEBT-051 canonical attachment correction follows it; do not bundle that behavior
-change into this package. No new owner/Command Deck rights or frontend work.
+change into this package. Subsequently the owner approved separate DEBT-053
+search and DEBT-054 related-audience security packages, in that order after
+DEBT-052. DEBT-051 remains separate after the priority security corrections.
+No new owner/Command Deck rights or frontend work.
 
 Preserve the reviewed D4.3d3a ownership increment in its own commit and PR #10
 before opening `debt/debt-052-full-news-redaction` from that exact published head.
 Use a separate stacked draft PR with `debt/d4-module-boundaries` as its base;
 neither parent PR #10 nor its parent PR #9 is accepted. No red merge.
 
-The last Git write request was not executed because automatic approval review
-hit its usage limit. Read-only inspection confirms HEAD `5bff17f`, empty staging
-and local D4.3d3a changes. Resolve that review failure before retrying Git writes;
-do not downgrade permissions or change execution route to evade approval. This
-design/approval record changes no application behavior and does not close debt.
+An initial Git write request did not execute because automatic approval review
+hit its usage limit. A subsequent account check allowed ordinary work; the same
+escalated approval route then succeeded without a bypass. D4.3d3a is committed
+and pushed as `5851381` in PR #10; the separate correction branch is now active.
+This design does not itself close debt; runtime verification is recorded below.
 
 ## Evidence and boundaries
 
@@ -33,7 +36,7 @@ passes unchanged through `NewsDeliveryService.fullProjection` to GraphQL.
 `EditorContentDeliveryService.project` already validates the canonical document,
 evaluates gates through an Editor-owned port, deduplicates decisions within one
 request and removes denied payloads recursively. Provider errors propagate.
-It is currently private: EditorModule exports only its normalization token.
+At the package base it was private: EditorModule exported only normalization.
 Do not expose that concrete service or copy its redaction algorithm into News.
 
 ## Planned dependency and response flow
@@ -125,3 +128,51 @@ After DEBT-052, implement DEBT-051 separately with canonical wrapper traversal,
 contentGate subtree exclusion, original order/deduplication and unchanged
 READY/PUBLIC/active-reference rules. Then resume remaining D4 ownership work,
 D5–D7 and the mandatory pre-Phase-11 brainstorm.
+
+## Implementation checkpoint
+
+The named `EDITOR_VIEWER_DOCUMENT_PROJECTOR` returns only safe document JSON
+through a private Editor adapter. `NEWS_VIEWER_DOCUMENT_READER` is bound at root
+Content composition, with field selection and error propagation. Full News
+replaces the raw stored JSON after eligibility and before attachment projection;
+the existing ContentAccess policy remains the only decision source. No schema,
+migration, dependency or frontend behavior is changed.
+
+Pure tests pass (21 across three focused suites); twenty new migrated E2E cases
+pass (eighteen security/compatibility and two explicit adjacent disclosure
+characterizations). Real GROUP fixtures use `group:<key>`; an initial fixture using
+bare custom-group keys correctly denied access and was corrected, not the policy.
+Root lint/types, full 800 API opt-in units, scoped coverage and production build
+pass. All 45 focused E2E pass. Full API E2E remains RED on the known DEBT-045,
+and Web smoke remains RED on DEBT-034; no baseline waiver. See the
+[corrective evidence report](../audits/DEBT_052_FULL_NEWS_REDACTION.md).
+A combined attachment regression run initially exposed a JSON object-key ordering
+assertion; compare parsed
+documents, since PostgreSQL JSONB does not preserve authored property order.
+
+Legacy doc-node attachment fixtures now exercise the owned attachment component
+directly, never malformed documents stored for public Full News. Their metadata,
+eligibility and failure checks remain; canonical API manifest omission stays
+DEBT-051, and public denied-text expectations now require redaction. This does
+not claim Full News metadata transport is repaired before that separate package.
+
+Adjacent review confirms DEBT-053: guest News search matches denied gate text and
+returns article/count, though the corrected Full News no longer returns the text.
+The owner approved its separate security package after DEBT-052 on 2026-10-14;
+implementation has not started and it is not silently fixed here.
+Adjacent related-summary review also confirms DEBT-054: a guest cannot read a
+MEMBERS-only article, but its synthetic headline/slug appear in the related block
+of a PUBLIC source linked through the existing authorized NewsLinksService.
+The owner approved a separate correction after DEBT-053; not implemented here.
+COMMENT/NEWS gate documents are rejected on the supported CommentsService write
+path before persistence, while an ordinary comment succeeds and is read through
+News delivery. This does not certify arbitrary legacy/tampered stored comments.
+
+The positive disclosure characterizations are not acceptance. Full package/CI/review
+remain OPEN; no claim that the whole platform is safe.
+
+Docker Desktop was stopped at the start of runtime verification. It was started
+without reset/reinstallation; existing dev services remained healthy. Separate
+`dss-universe-test` PostgreSQL/Redis were started on loopback 5434/6380. Initial
+sandbox EACCES and pre-start ECONNREFUSED did not execute policy assertions; the
+subsequent migrated E2E run used actual healthy services. No dev/production writes.

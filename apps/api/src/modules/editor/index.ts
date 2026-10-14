@@ -14,6 +14,10 @@
 
 export { EditorModule } from './editor.module';
 export {
+  EDITOR_VIEWER_DOCUMENT_PROJECTOR,
+  type EditorViewerDocumentProjector,
+} from './contracts/editor-viewer-document-projector.contract';
+export {
   EDITOR_DOCUMENT_NORMALIZER,
   type EditorDocumentNormalizer,
   type ValidatedEditorDocument,

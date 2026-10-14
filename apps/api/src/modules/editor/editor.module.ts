@@ -15,6 +15,8 @@
 import { Module } from '@nestjs/common';
 
 import { EDITOR_DOCUMENT_NORMALIZER } from './contracts/editor-document-normalizer.contract';
+import { EDITOR_VIEWER_DOCUMENT_PROJECTOR } from './contracts/editor-viewer-document-projector.contract';
+import { EditorViewerDocumentProjectorService } from './application/services/editor-viewer-document-projector.service';
 import { EDITOR_CODE_HIGHLIGHTER } from './application/contracts/editor-code-highlighter.interface';
 import { EditorContentDeliveryService } from './application/services/editor-content-delivery.service';
 import { EditorService } from './application/services/editor.service';
@@ -32,6 +34,11 @@ import { EditorResolver } from './presentation/graphql/editor.resolver';
       useExisting: EditorDocumentNormalizerService,
     },
     EditorContentDeliveryService,
+    EditorViewerDocumentProjectorService,
+    {
+      provide: EDITOR_VIEWER_DOCUMENT_PROJECTOR,
+      useExisting: EditorViewerDocumentProjectorService,
+    },
     EditorHtmlRenderer,
     ShikiEditorCodeHighlighter,
     {
@@ -40,7 +47,7 @@ import { EditorResolver } from './presentation/graphql/editor.resolver';
     },
     EditorResolver,
   ],
-  exports: [EDITOR_DOCUMENT_NORMALIZER],
+  exports: [EDITOR_DOCUMENT_NORMALIZER, EDITOR_VIEWER_DOCUMENT_PROJECTOR],
 })
 export class EditorModule {}
 

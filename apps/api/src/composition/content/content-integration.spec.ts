@@ -21,16 +21,20 @@ import {
 import {
   EditorModule,
   EDITOR_DOCUMENT_NORMALIZER,
+  EDITOR_VIEWER_DOCUMENT_PROJECTOR,
+  type EditorViewerDocumentProjector,
   type EditorDocumentNormalizer,
 } from '@api/modules/editor';
 import { NewsDocumentAdapter } from './infrastructure/news-document.adapter';
 import { CommentDocumentAdapter } from './infrastructure/comment-document.adapter';
 import { EditorGateDecisionAdapter } from './infrastructure/editor-gate-decision.adapter';
+import { NewsViewerDocumentAdapter } from './infrastructure/news-viewer-document.adapter';
 
 describe('Content integration boundaries', () => {
   it('keeps concrete Editor and Content Access services private', () => {
     expect(Reflect.getMetadata(MODULE_METADATA.EXPORTS, EditorModule)).toEqual([
       EDITOR_DOCUMENT_NORMALIZER,
+      EDITOR_VIEWER_DOCUMENT_PROJECTOR,
     ]);
     expect(
       Reflect.getMetadata(MODULE_METADATA.EXPORTS, ContentAccessModule),
@@ -38,6 +42,34 @@ describe('Content integration boundaries', () => {
     expect(
       Reflect.getMetadata(MODULE_METADATA.IMPORTS, EditorModule) ?? [],
     ).toEqual([]);
+  });
+  it('forwards viewer context and strips every field except safe document JSON', async () => {
+    const supplied = {
+      documentJson: 'safe',
+      document: 'must not escape',
+      gates: ['must not escape'],
+    };
+    const project = jest
+      .fn<
+        ReturnType<EditorViewerDocumentProjector['project']>,
+        Parameters<EditorViewerDocumentProjector['project']>
+      >()
+      .mockResolvedValue(supplied);
+    const adapter = new NewsViewerDocumentAdapter({ project });
+    expect(await adapter.project('raw', null)).toEqual({
+      documentJson: 'safe',
+    });
+    expect(await adapter.project('raw', 'viewer')).toEqual({
+      documentJson: 'safe',
+    });
+    expect(project.mock.calls).toEqual([
+      ['raw', null],
+      ['raw', 'viewer'],
+    ]);
+    project.mockRejectedValue(new Error('Unavailable'));
+    await expect(adapter.project('raw', 'viewer')).rejects.toThrow(
+      'Unavailable',
+    );
   });
   it('routes News and comments through different pinned provider operations and strips unused fields', () => {
     const document = createEmptyEditorDocument('NEWS');
