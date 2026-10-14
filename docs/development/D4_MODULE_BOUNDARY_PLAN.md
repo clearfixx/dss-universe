@@ -2,8 +2,9 @@
 
 Date: 2026-10-14. Status: authorized debt-remediation execution, not Phase 11.
 Branch: `debt/d4-module-boundaries`.
-Implemented increments: D4.1, D4.2 and bounded D4.3a/b/c/d1; remaining import inventory 89,
+Implemented increments: D4.1, D4.2 and bounded D4.3a/b/c/d1/d2; remaining import inventory 89,
 full D4 and the rest of D4.3 OPEN. See
+[D4.3d2 evidence](../audits/D4_3D2_ACTIVITY_VIEWER_CONTEXT.md),
 [D4.3d1 evidence](../audits/D4_3D_GATE_WALL_OWNER_EVIDENCE.md) and
 [D4.3c evidence](../audits/D4_3C_POLICY_MEDIA_ACTIVITY_CONTRACTS.md).
 Review stack base: `173358d` / draft PR #9. Parent acceptance is still pending;
@@ -81,13 +82,29 @@ All existing visibility values remain eligible under that rule. The read stays
 before the unchanged atomic Wall transaction; no new race protection is claimed.
 See [D4.3d1 evidence](../audits/D4_3D_GATE_WALL_OWNER_EVIDENCE.md).
 
-### Remaining SQL ownership work (D4.3d2 onward)
+### D4.3d2 — Activity viewer context
+
+Users now publishes only interests/followingIds/blockedIds through a minimal
+reader; the Activity-owned input port is bound by a root adapter copying all
+three arrays. No profile, credentials, role/status or raw relationship row
+crosses this boundary. Preserve missing-profile behavior (empty interests, still
+read relationship facts), no invented account-status/privacy filter, profile
+read before parallel follow/block reads, non-retired edges and both block directions.
+This internal reader is not authentication; the existing viewer GraphQL guard remains.
+
+Activity application now orders its own visit-state, Users context and candidate
+reads. Guests skip state/context entirely. Its repository reads only Activity
+entries/state, filters active PUBLIC/MEMBERS candidates as before and selects
+the most recent 500 before ranking. Ranking moves unchanged to a private Activity
+application service; score weights/age rounding, reason precedence, timestamp/ID
+ties, normalization, post-ranking pagination, total unread and explicit visit writes
+are retained. No cache or new snapshot transaction; provider errors propagate.
+See [D4.3d2 evidence](../audits/D4_3D2_ACTIVITY_VIEWER_CONTEXT.md).
+
+### Remaining SQL ownership work (D4.3d3 onward)
 
 This is not full SQL ownership acceptance. Source inspection finds:
 
-- Activity `prisma-activity.repository.ts:findFeed` reads Users interests,
-  follows and bidirectional blocks. Next: Users-owned feed-context evidence,
-  Activity-owned ranking/filtering, unchanged pagination/unread behavior.
 - News `prisma-news-delivery.repository.ts` joins Users author presentation and
   Interactions reaction/bookmark/comment/view facts; direct share/reaction/comment
   queries and Media reference/full-record joins remain. Split published read

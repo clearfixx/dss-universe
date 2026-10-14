@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/composition/content-reads/content-read-integration.module.ts
  *
  * 🎯 Purpose:
- * Binds minimal owner evidence for News, Profile Wall and Content Access.
+ * Binds minimal owner evidence for News, Profile Wall, Content Access and Activity.
  *
  * 🧠 Responsibilities:
  * • exposes only the operation-specific data required by its consumer;
@@ -23,12 +23,14 @@
  */
 import { Global, Module } from '@nestjs/common';
 import { MediaModule } from '@api/modules/media';
-import { ActivityModule } from '@api/modules/activity';
+import { ActivityModule, ACTIVITY_VIEWER_CONTEXT } from '@api/modules/activity';
 import { NEWS_MEDIA_EVIDENCE } from '@api/modules/news';
 import {
   PROFILE_ACTIVITY_READER,
   WALL_IMAGE_ELIGIBILITY,
+  UsersModule,
 } from '@api/modules/users';
+import { ActivityViewerContextAdapter } from './infrastructure/activity-viewer-context.adapter';
 import { AuthModule } from '@api/modules/auth';
 import { InteractionsModule } from '@api/modules/interactions';
 import { ReputationModule } from '@api/modules/reputation';
@@ -49,11 +51,16 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
   imports: [
     MediaModule,
     ActivityModule,
+    UsersModule,
     AuthModule,
     InteractionsModule,
     ReputationModule,
   ],
   providers: [
+    {
+      provide: ACTIVITY_VIEWER_CONTEXT,
+      useClass: ActivityViewerContextAdapter,
+    },
     { provide: GATE_ACCOUNT_EVIDENCE, useClass: GateAccountEvidenceAdapter },
     { provide: GATE_COMMENT_COUNT, useClass: GateCommentCountAdapter },
     { provide: GATE_REPUTATION_TOTAL, useClass: GateReputationTotalAdapter },
@@ -62,6 +69,7 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
     { provide: PROFILE_ACTIVITY_READER, useClass: ProfileActivityAdapter },
   ],
   exports: [
+    ACTIVITY_VIEWER_CONTEXT,
     NEWS_MEDIA_EVIDENCE,
     PROFILE_ACTIVITY_READER,
     GATE_ACCOUNT_EVIDENCE,

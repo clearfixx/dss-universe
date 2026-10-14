@@ -16,7 +16,6 @@ import type { PaginatedResult } from '@api/shared';
 
 import type {
   ActivityEntry,
-  ActivityFeedPage,
   ActivityFeedQuery,
 } from '../types/activity-entry.type';
 
@@ -28,7 +27,11 @@ export interface ActivityRepository {
     page: number,
     limit: number,
   ): Promise<PaginatedResult<ActivityEntry>>;
-  findFeed(query: ActivityFeedQuery): Promise<ActivityFeedPage>;
+  lastVisitedAt(viewerId: string): Promise<Date | null>;
+  findFeedCandidates(
+    query: ActivityFeedQuery,
+    blockedActorIds: readonly string[],
+  ): Promise<ActivityEntry[]>;
   markVisited(viewerId: string, visitedAt: Date): Promise<Date>;
 }
 

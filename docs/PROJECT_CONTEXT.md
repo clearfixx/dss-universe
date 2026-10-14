@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-14 — pre-Phase-11 debt closure / bounded D4.3d1 implemented, full D4 open
+> Updated: 2026-10-14 — pre-Phase-11 debt closure / bounded D4.3d2 implemented, full D4 open
 
 ## Product and authority
 
@@ -28,6 +28,17 @@ Legacy roadmaps are historical. This snapshot does not override source code,
 approved ADRs or recorded owner decisions.
 
 ## Current position
+
+D4.3d2 removes Activity's direct Users reads. Users publishes only interests,
+following IDs and blocked IDs; root composition binds the Activity-owned input.
+Activity application owns unchanged ranking; persistence reads only Activity
+entries/state. Six algorithm AST comparisons match. Full opt-in units: API 755 /
+Web 59 / Worker 36; 128 relevant E2E pass (17 new); coverage and production build pass.
+Import inventory stays 89, not a full SQL ownership certificate. Full gate/CI/review
+acceptance is OPEN; News delivery,
+atomic mentions and shared-row/role joins remain D4.3/D4.4 work. No frontend,
+schema, migration or Command Deck change. See
+[evidence](audits/D4_3D2_ACTIVITY_VIEWER_CONTEXT.md).
 
 D4.3d1 transfers gate statistics and Wall image checks to minimal owner evidence:
 Auth retains account facts, Interactions counts comments, Reputation sums its ledger,

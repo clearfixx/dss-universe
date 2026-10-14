@@ -321,6 +321,12 @@ Model: `gpt-6.1-sol` xhigh for the separate brainstorm and security design.
 
 Branch: `debt/d4-module-boundaries`.
 
+D4.3d2 isolates Users interests/follows/blocks for Activity through three minimal
+arrays, moving unchanged ranking to Activity application and keeping owned SQL in
+its repository. See [evidence](../audits/D4_3D2_ACTIVITY_VIEWER_CONTEXT.md).
+Import inventory stays 89; News delivery, atomic mentions and shared-row/role joins
+remain D4.3/D4.4 work. Full D4, D5–D7 and Phase 11 brainstorm gates stay required.
+
 D4.3d1 moves Content Gate account/comment/Reputation facts and Wall image eligibility
 to owner contracts, preserving policy and the existing pre-write/transaction split.
 Import inventory remains 89; it does not count cross-owner SQL. See

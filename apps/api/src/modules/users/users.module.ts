@@ -28,6 +28,8 @@
  */
 
 import { Module } from '@nestjs/common';
+import { USER_ACTIVITY_CONTEXT_READER } from './contracts/activity-context-reader.contract';
+import { PrismaUserActivityContextReader } from './infrastructure/repositories/prisma-user-activity-context.reader';
 import { USER_BLOCK_DECISIONS } from './contracts/block-decision.contract';
 import type { UserBlockRepository } from './domain/repositories/user-block.repository.interface';
 import { PROFILE_EXISTENCE_READER } from './contracts/profile-existence.contract';
@@ -74,6 +76,10 @@ import { ProfileWallInteractionPolicy } from './application/services/profile-wal
   imports: [PrismaModule],
   controllers: [UsersController],
   providers: [
+    {
+      provide: USER_ACTIVITY_CONTEXT_READER,
+      useClass: PrismaUserActivityContextReader,
+    },
     {
       provide: USER_BLOCK_DECISIONS,
       inject: [USER_BLOCK_REPOSITORY],
@@ -137,6 +143,7 @@ import { ProfileWallInteractionPolicy } from './application/services/profile-wal
     },
   ],
   exports: [
+    USER_ACTIVITY_CONTEXT_READER,
     PROFILE_WALL_INTERACTION_DECISIONS,
     USER_BLOCK_DECISIONS,
     PROFILE_EXISTENCE_READER,

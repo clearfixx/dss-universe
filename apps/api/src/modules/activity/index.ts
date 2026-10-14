@@ -14,6 +14,11 @@
 
 export { ActivityModule } from './activity.module';
 export {
+  ACTIVITY_VIEWER_CONTEXT,
+  type ActivityViewerContextReader,
+  type ActivityViewerContext,
+} from './domain/ports/activity-viewer-context.interface';
+export {
   ACTOR_ACTIVITY_READER,
   type ActorActivityReader,
   type ActorActivitySummary,

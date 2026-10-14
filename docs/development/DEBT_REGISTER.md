@@ -59,6 +59,14 @@ active package safe and buildable.
 
 ## Additional D0 verification findings
 
+D4.3d2 progress for DEBT-003/004/027: Activity no longer reads Users tables;
+Users publishes three minimal context arrays and root composition binds the
+Activity-owned port. Ranking is owned by Activity application rather than its
+repository; six algorithm AST comparisons match. Import inventory stays 89,
+not full SQL isolation. News delivery/mentions/shared-row obligations remain;
+full D4 and release acceptance stay OPEN. See
+[evidence](../audits/D4_3D2_ACTIVITY_VIEWER_CONTEXT.md).
+
 D4.3d1 progress for DEBT-003/004/027: Content Gates reads only its own definitions;
 its application composes minimal account/count/total ports through root adapters.
 Media owns the Wall image query and publishes only a Boolean. No API/migration or

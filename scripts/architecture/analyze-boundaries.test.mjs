@@ -92,6 +92,10 @@ for (const [file, expected] of [
     "modules/users/infrastructure/repositories/prisma-user-wall.repository.ts",
     ["$transaction", "userWallPost"],
   ],
+  [
+    "modules/activity/infrastructure/repositories/prisma-activity.repository.ts",
+    ["$transaction", "activityEntry", "activityFeedState"],
+  ],
 ]) {
   test(
     "migrated repository keeps only owned direct Prisma delegates: " + file,
@@ -110,6 +114,9 @@ for (const [moduleName, expected] of [
     "activity",
     [
       "ActivityModule",
+      "ACTIVITY_VIEWER_CONTEXT",
+      "ActivityViewerContextReader",
+      "ActivityViewerContext",
       "ACTOR_ACTIVITY_READER",
       "ActorActivityReader",
       "ActorActivitySummary",
@@ -183,6 +190,9 @@ for (const [moduleName, expected] of [
     "users",
     [
       "UsersModule",
+      "USER_ACTIVITY_CONTEXT_READER",
+      "UserActivityContextReader",
+      "UserActivityContext",
       "WALL_IMAGE_ELIGIBILITY",
       "WallImageEligibility",
       "PROFILE_EXISTENCE_READER",

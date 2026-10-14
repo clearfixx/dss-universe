@@ -28,6 +28,11 @@
 
 export { UsersModule } from './users.module';
 export {
+  USER_ACTIVITY_CONTEXT_READER,
+  type UserActivityContextReader,
+  type UserActivityContext,
+} from './contracts/activity-context-reader.contract';
+export {
   WALL_IMAGE_ELIGIBILITY,
   type WallImageEligibility,
 } from './domain/ports/wall-image-eligibility.interface';
