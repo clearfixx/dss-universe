@@ -1,3 +1,28 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: News Presentation
+ * 📄 File: apps/api/src/modules/news/presentation/graphql/news-delivery.graphql.ts
+ *
+ * 🎯 Purpose:
+ * Maps existing News delivery contracts to GraphQL with optional authenticated viewer context.
+ *
+ * 🧠 Responsibilities:
+ * • defines the existing delivery models, inputs and query mappings;
+ * • forwards verified viewer identity to audience-aware delivery operations;
+ * • preserves guest fallback without granting membership for invalid credentials.
+ *
+ * 🏗️ Architecture:
+ * Transitional presentation file; business policy and persistence remain outside GraphQL.
+ *
+ * ⚠️ Important:
+ * Article eligibility is authoritative in News. Transport context is not a staff bypass.
+ * The legacy non-null tombstone body mismatch remains separately tracked as DEBT-057.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { ExecutionContext, Injectable, UseGuards } from '@nestjs/common';
 import {
   Args,
@@ -365,11 +390,17 @@ export class NewsDeliveryResolver {
 
   @Query(() => NewsRatingVotePageModel)
   newsRatingVotes(
+    @Context() context: { req: { user?: AuthenticatedUser } },
     @Args('articleId', { type: () => ID }) articleId: string,
     @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
     @Args('pageSize', { type: () => Int, defaultValue: 20 }) pageSize: number,
   ): ReturnType<NewsDeliveryService['ratingVotes']> {
-    return this.delivery.ratingVotes(articleId, page, pageSize);
+    return this.delivery.ratingVotes(
+      articleId,
+      page,
+      pageSize,
+      context.req.user?.id,
+    );
   }
 
   @Query(() => NewsCommentsPageModel)

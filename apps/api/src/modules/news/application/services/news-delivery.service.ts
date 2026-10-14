@@ -12,6 +12,7 @@
  * • preserves filter/cursor/page/address validation and transport projections;
  * • composes attachments only after an eligible full article is read.
  * • replaces authored document JSON with the server-side viewer projection before delivery.
+ * • forwards viewer identity for article eligibility on comment and vote pages.
  *
  * 🏗️ Architecture:
  * News application; persistence and Media metadata are separately owned boundaries.
@@ -147,6 +148,7 @@ export class NewsDeliveryService {
     articleId: string,
     page = 1,
     pageSize = 20,
+    viewerId?: string,
   ): Promise<{
     items: NewsRatingVote[];
     total: number;
@@ -165,7 +167,7 @@ export class NewsDeliveryService {
         'Rating page size must be between 1 and 100.',
       );
     }
-    return this.delivery.ratingVotes(articleId, page, pageSize);
+    return this.delivery.ratingVotes(articleId, page, pageSize, viewerId);
   }
 
   comments(

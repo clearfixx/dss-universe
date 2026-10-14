@@ -4,6 +4,7 @@ Date: 2026-10-14. Status: authorized debt-remediation execution, not Phase 11.
 Branch: `debt/d4-module-boundaries`.
 Implemented increments: D4.1, D4.2 and bounded D4.3a/b/c/d1/d2/d3a; remaining import inventory 89,
 full D4 and the rest of D4.3 OPEN. See
+[approved read-boundary foundation](D4_3D3_NEWS_DELIVERY_BOUNDARIES.md),
 [D4.3d3a evidence](../audits/D4_3D3A_NEWS_ATTACHMENT_METADATA.md),
 [D4.3d2 evidence](../audits/D4_3D2_ACTIVITY_VIEWER_CONTEXT.md),
 [D4.3d1 evidence](../audits/D4_3D_GATE_WALL_OWNER_EVIDENCE.md) and
@@ -143,7 +144,8 @@ This is not full SQL ownership acceptance. Source inspection finds:
 
 - News `prisma-news-delivery.repository.ts` joins Users author presentation and
   Interactions reaction/bookmark/comment/view facts; direct share/reaction/comment
-  queries and Media reference/full-record joins remain. Split published read
+  queries remain. Independent attachment metadata is already Media-owned; the
+  canonical manifest is corrected separately by DEBT-051. Split published read
   contracts/root presentation composition while preserving query ordering,
   pagination, audience/redaction and binary access policy.
 - Interactions `prisma-comments.repository.ts:syncMentions` resolves ACTIVE Users
@@ -159,6 +161,14 @@ This is not full SQL ownership acceptance. Source inspection finds:
 The import inventory does not detect table ownership and must not waive these
 items. This is a reviewed starting inventory, not exhaustive proof of all joins;
 complete delegate/relation/raw-SQL/Worker projection review before D4.5 acceptance.
+
+Owner-approved follow-up (2026-10-14): use a scoped root-infrastructure read UoW
+and owner persistence adapters with Repeatable Read for composed News responses,
+not global isolation changes or ORM business contracts. Six migrated foundation
+characterizations pass, including deterministic isolation probes. Runtime transfer
+has not started. Newly confirmed Critical DEBT-056 secondary audience disclosure
+is separately approved for priority correction first; DEBT-057 tombstone transport
+is only recorded, not silently included. See the foundation for exact scope.
 Preserve transaction and failure semantics when migrating each fact. Full D4.3,
 D4.4/D4.5 and D5–D7 remain OPEN.
 
