@@ -36,3 +36,15 @@ export {
   NEWS_DRAFT_TRANSACTION,
   type NewsDraftTransaction,
 } from './domain/ports/news-draft-transaction.interface';
+export {
+  NEWS_INTERACTION_DECISIONS,
+  type NewsInteractionDecisions,
+  type NewsInteractionRequest,
+  type NewsInteractionDecision,
+  type NewsInteractionCapability,
+} from './contracts/news-interaction-decisions.contract';
+export {
+  NEWS_MEDIA_EVIDENCE,
+  type NewsMediaEvidenceReader,
+  type NewsMediaEvidence,
+} from './domain/ports/news-media-evidence.interface';

@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "date": "2026-10-13",
-  "sourceBase": "f9784af",
+  "date": "2026-10-14",
+  "sourceBase": "8281815",
   "status": "review inventory; not a waiver or compliance certificate",
   "scope": "Authored API modules/core/composition TypeScript; excludes tests/declarations; bounded syntactic analysis",
   "findings": [
@@ -41,13 +41,6 @@
       "package": "D4"
     },
     {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/interactions/index.ts\",\"./application/services/interaction-policy-registry.service: InteractionPolicyRegistryService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/interactions/index.ts",
-      "detail": "./application/services/interaction-policy-registry.service: InteractionPolicyRegistryService",
-      "package": "D4"
-    },
-    {
       "id": "[\"concrete-public-export\",\"apps/api/src/modules/interactions/index.ts\",\"./application/services/interaction-targets.service: InteractionTargetsService\"]",
       "rule": "concrete-public-export",
       "file": "apps/api/src/modules/interactions/index.ts",
@@ -73,55 +66,6 @@
       "rule": "concrete-public-export",
       "file": "apps/api/src/modules/leaderboards/index.ts",
       "detail": "./application/services/leaderboards.service: LeaderboardsService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/news/application/services/news-interaction.policy.ts\",\"../../../interactions: InteractionPolicyRegistryService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/news/application/services/news-interaction.policy.ts",
-      "detail": "../../../interactions: InteractionPolicyRegistryService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/users/application/services/profile-wall-interaction.policy.ts\",\"../../../interactions: InteractionPolicyRegistryService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/users/application/services/profile-wall-interaction.policy.ts",
-      "detail": "../../../interactions: InteractionPolicyRegistryService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/users/application/services/user-activity-feed.service.ts\",\"../../../activity: ActivityFeedService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/users/application/services/user-activity-feed.service.ts",
-      "detail": "../../../activity: ActivityFeedService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/news/application/services/news-workflow.service.ts\",\"../../../media/domain/enums/media-status.enum\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/news/application/services/news-workflow.service.ts",
-      "detail": "../../../media/domain/enums/media-status.enum",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/news/application/services/news-workflow.service.ts\",\"../../../media/domain/enums/media-visibility.enum\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/news/application/services/news-workflow.service.ts",
-      "detail": "../../../media/domain/enums/media-visibility.enum",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/news/application/services/news-workflow.service.ts\",\"../../../media/domain/repositories/media.repository.interface\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/news/application/services/news-workflow.service.ts",
-      "detail": "../../../media/domain/repositories/media.repository.interface",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/news/application/services/news.service.ts\",\"../../../media/domain/repositories/media.repository.interface\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/news/application/services/news.service.ts",
-      "detail": "../../../media/domain/repositories/media.repository.interface",
       "package": "D4"
     },
     {
@@ -437,20 +381,6 @@
       "rule": "wildcard-export",
       "file": "apps/api/src/core/queue/index.ts",
       "detail": "./services/queue-registry.service",
-      "package": "D4"
-    },
-    {
-      "id": "[\"wildcard-export\",\"apps/api/src/modules/activity/index.ts\",\"./activity.module\"]",
-      "rule": "wildcard-export",
-      "file": "apps/api/src/modules/activity/index.ts",
-      "detail": "./activity.module",
-      "package": "D4"
-    },
-    {
-      "id": "[\"wildcard-export\",\"apps/api/src/modules/activity/index.ts\",\"./application/services/activity-feed.service\"]",
-      "rule": "wildcard-export",
-      "file": "apps/api/src/modules/activity/index.ts",
-      "detail": "./application/services/activity-feed.service",
       "package": "D4"
     },
     {

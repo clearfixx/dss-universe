@@ -17,6 +17,8 @@ import { Module } from '@nestjs/common';
 import { PrismaModule } from '@api/core/database';
 
 import { ActivityFeedService } from './application/services/activity-feed.service';
+import { ActorActivityReaderService } from './application/services/actor-activity-reader.service';
+import { ACTOR_ACTIVITY_READER } from './contracts/actor-activity-reader.contract';
 import { ACTIVITY_REPOSITORY } from './domain/repositories/activity.repository.interface';
 import { PrismaActivityRepository } from './infrastructure/repositories/prisma-activity.repository';
 import { ActivityFeedResolver } from './presentation/graphql/resolvers/activity-feed.resolver';
@@ -25,13 +27,15 @@ import { ActivityFeedResolver } from './presentation/graphql/resolvers/activity-
   imports: [PrismaModule],
   providers: [
     ActivityFeedService,
+    ActorActivityReaderService,
+    { provide: ACTOR_ACTIVITY_READER, useExisting: ActorActivityReaderService },
     ActivityFeedResolver,
     {
       provide: ACTIVITY_REPOSITORY,
       useClass: PrismaActivityRepository,
     },
   ],
-  exports: [ActivityFeedService],
+  exports: [ACTOR_ACTIVITY_READER],
 })
 export class ActivityModule {}
 

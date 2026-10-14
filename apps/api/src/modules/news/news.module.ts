@@ -13,7 +13,7 @@
  * • receives canonical document normalization through root composition.
  *
  * 🏗️ Architecture:
- * Nest module assembly; existing Media/Interaction dependencies remain D4.3 work.
+ * Nest assembly; root composition supplies Editor/Media reads and policy registration.
  *
  * ⚠️ Important:
  * This increment does not declare the entire News integration surface isolated.
@@ -27,10 +27,9 @@ import { AuditModule } from '@api/core/audit';
 import { AuthorizationModule } from '@api/core/authorization';
 import { PrismaModule } from '@api/core/database';
 import { EventsModule } from '@api/core/events';
-import { InteractionsModule } from '../interactions';
-import { MediaModule } from '../media/media.module';
 
 import { NewsInteractionPolicy } from './application/services/news-interaction.policy';
+import { NEWS_INTERACTION_DECISIONS } from './contracts/news-interaction-decisions.contract';
 import { NewsDeliveryService } from './application/services/news-delivery.service';
 import { NewsPostTemplateService } from './application/services/news-post-template.service';
 import { NewsLinksService } from './application/services/news-links.service';
@@ -63,14 +62,7 @@ import {
 import { NewsPinsResolver } from './presentation/graphql/news-pins.graphql';
 
 @Module({
-  imports: [
-    PrismaModule,
-    AuditModule,
-    AuthorizationModule,
-    EventsModule,
-    InteractionsModule,
-    MediaModule,
-  ],
+  imports: [PrismaModule, AuditModule, AuthorizationModule, EventsModule],
   providers: [
     NewsDeliveryResolver,
     OptionalNewsJwtGuard,
@@ -87,6 +79,7 @@ import { NewsPinsResolver } from './presentation/graphql/news-pins.graphql';
     NewsPinsService,
     NewsPostTemplateService,
     NewsInteractionPolicy,
+    { provide: NEWS_INTERACTION_DECISIONS, useExisting: NewsInteractionPolicy },
     { provide: NEWS_REPOSITORY, useClass: PrismaNewsRepository },
     {
       provide: NEWS_DELIVERY_REPOSITORY,
@@ -108,6 +101,7 @@ import { NewsPinsResolver } from './presentation/graphql/news-pins.graphql';
     { provide: NEWS_PINS_REPOSITORY, useClass: PrismaNewsPinsRepository },
   ],
   exports: [
+    NEWS_INTERACTION_DECISIONS,
     NewsService,
     NewsDeliveryService,
     NewsLinksService,

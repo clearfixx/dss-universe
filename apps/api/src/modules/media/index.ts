@@ -22,3 +22,8 @@ export {
   type ProfileAssetAssignment,
   type ProfileAssetSlot,
 } from './contracts/profile-asset-transaction.port';
+export {
+  MEDIA_PUBLICATION_EVIDENCE,
+  type MediaPublicationEvidenceReader,
+  type MediaPublicationEvidence,
+} from './contracts/media-publication-evidence.contract';

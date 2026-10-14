@@ -321,7 +321,13 @@ Model: `gpt-6.1-sol` xhigh for the separate brainstorm and security design.
 
 Branch: `debt/d4-module-boundaries`.
 
-D4.3b is implemented on the same phase branch/PR #10; inventory is 99 after four
+D4.3c is implemented on the same phase branch/PR #10; inventory is 89 after ten
+further removals. [Evidence](../audits/D4_3C_POLICY_MEDIA_ACTIVITY_CONTRACTS.md)
+records owner policy registration and Media/Activity read contracts, with 84
+relevant passing E2E. D4.3d must still remediate direct cross-owner SQL evidence;
+D4.4/D4.5 and all remaining gates stay required, not waived by the import count.
+
+D4.3b was implemented on the same phase branch/PR #10; inventory reached 99 after four
 further removals. [Evidence](../audits/D4_3B_ATOMIC_CONTENT_TARGETS.md) records
 atomic cross-owner transaction transfer and 54 relevant passing E2E cases.
 Interaction policy registration and News/Media/activity transfer remain open.

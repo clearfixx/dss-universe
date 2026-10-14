@@ -66,13 +66,12 @@ import { UserWallService } from './application/services/user-wall.service';
 import { USER_WALL_REPOSITORY } from './domain/repositories/user-wall.repository.interface';
 import { PrismaUserWallRepository } from './infrastructure/repositories/prisma-user-wall.repository';
 import { ProfileCompletionService } from './application/services/profile-completion.service';
-import { ActivityModule } from '../activity';
 import { UserActivityFeedService } from './application/services/user-activity-feed.service';
-import { InteractionsModule } from '../interactions';
+import { PROFILE_WALL_INTERACTION_DECISIONS } from './contracts/profile-wall-interaction-decisions.contract';
 import { ProfileWallInteractionPolicy } from './application/services/profile-wall-interaction.policy';
 
 @Module({
-  imports: [PrismaModule, ActivityModule, InteractionsModule],
+  imports: [PrismaModule],
   controllers: [UsersController],
   providers: [
     {
@@ -105,6 +104,10 @@ import { ProfileWallInteractionPolicy } from './application/services/profile-wal
     UserActivityFeedService,
     ProfileWallInteractionPolicy,
     {
+      provide: PROFILE_WALL_INTERACTION_DECISIONS,
+      useExisting: ProfileWallInteractionPolicy,
+    },
+    {
       provide: APP_INTERCEPTOR,
       useClass: UserPresenceInterceptor,
     },
@@ -134,6 +137,7 @@ import { ProfileWallInteractionPolicy } from './application/services/profile-wal
     },
   ],
   exports: [
+    PROFILE_WALL_INTERACTION_DECISIONS,
     USER_BLOCK_DECISIONS,
     PROFILE_EXISTENCE_READER,
     VIEWER_PROFILE_READER,

@@ -79,6 +79,8 @@ import { ReputationIntegrationModule } from './composition/reputation/reputation
 import { ProfileAssetCompositionModule } from './composition/profile-assets/profile-asset-composition.module';
 import { ContentIntegrationModule } from './composition/content/content-integration.module';
 import { ContentTargetCompositionModule } from './composition/content-targets/content-target-composition.module';
+import { InteractionPolicyCompositionModule } from './composition/interaction-policies/interaction-policy-composition.module';
+import { ContentReadIntegrationModule } from './composition/content-reads/content-read-integration.module';
 import { AchievementsModule } from './modules/achievements';
 import { ActivityModule } from './modules/activity';
 import { AiCoreModule } from './modules/ai-core';
@@ -116,6 +118,8 @@ import { UsersModule } from './modules/users/users.module';
     ProfileAssetCompositionModule,
     ContentIntegrationModule,
     ContentTargetCompositionModule,
+    InteractionPolicyCompositionModule,
+    ContentReadIntegrationModule,
     IdentityPresentationModule,
     AuthorizationModule,
     IamModule,

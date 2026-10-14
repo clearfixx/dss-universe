@@ -9,27 +9,27 @@
  * Authorizes shared interactions against Profile Wall ownership rules.
  *
  * 🧠 Responsibilities:
- * • registers Profile Wall target ownership;
+ * • evaluates minimal Profile Wall owner coordinates;
  * • enforces block and profile-visibility policy;
  * • verifies that target coordinates resolve to the owning post.
+ *
+ * 🏗️ Architecture:
+ * Private Users policy implementing only its published decision contract.
+ *
+ * ⚠️ Important:
+ * Missing coordinates, blocks and private profiles fail closed before interaction access.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 
-import {
-  Inject,
-  Injectable,
-  type OnModuleDestroy,
-  type OnModuleInit,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 
-import {
-  InteractionPolicyRegistryService,
-  type InteractionCapability,
-  type InteractionTarget,
-  type InteractionTargetPolicy,
-} from '../../../interactions';
+import type {
+  ProfileWallInteractionDecisions,
+  ProfileWallInteractionRequest,
+  ProfileWallInteractionDecision,
+} from '../../contracts/profile-wall-interaction-decisions.contract';
 import {
   USER_WALL_REPOSITORY,
   type UserWallRepository,
@@ -37,39 +37,22 @@ import {
 import { UserBlockService } from './user-block.service';
 import { UserPrivacyService } from './user-privacy.service';
 
-import { PROFILE_WALL_INTERACTION_KIND } from '../../domain/constants/profile-wall-interaction.constant';
-export { PROFILE_WALL_INTERACTION_KIND } from '../../domain/constants/profile-wall-interaction.constant';
-
 @Injectable()
-export class ProfileWallInteractionPolicy
-  implements InteractionTargetPolicy, OnModuleInit, OnModuleDestroy
-{
-  readonly kind = PROFILE_WALL_INTERACTION_KIND;
-
+export class ProfileWallInteractionPolicy implements ProfileWallInteractionDecisions {
   constructor(
-    private readonly policies: InteractionPolicyRegistryService,
     @Inject(USER_WALL_REPOSITORY)
     private readonly wall: UserWallRepository,
     private readonly privacy: UserPrivacyService,
     private readonly blocks: UserBlockService,
   ) {}
 
-  onModuleInit(): void {
-    this.policies.register(this);
-  }
-
-  onModuleDestroy(): void {
-    this.policies.unregister(this);
-  }
-
-  async authorize(
-    target: InteractionTarget,
-    actorId: string,
-    capability: InteractionCapability,
-  ): Promise<{ allowed: boolean; reason?: string }> {
-    void capability;
-    const post = await this.wall.findById(target.ownerId);
-    if (!post || post.interactionTargetId !== target.id) {
+  async authorize({
+    postId,
+    interactionTargetId,
+    viewerId: actorId,
+  }: ProfileWallInteractionRequest): Promise<ProfileWallInteractionDecision> {
+    const post = await this.wall.findById(postId);
+    if (!post || post.interactionTargetId !== interactionTargetId) {
       return { allowed: false, reason: 'OWNER_RECORD_UNAVAILABLE' };
     }
     if (await this.blocks.isBlocked(actorId, post.profileOwnerId)) {

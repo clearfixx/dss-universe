@@ -6,14 +6,14 @@
  * 📄 File: apps/api/src/modules/news/application/services/news-interaction.policy.ts
  *
  * 🎯 Purpose:
- * Retains owner-side News capability decisions during transaction boundary remediation.
+ * Evaluates owner-side News capabilities without knowing the interaction registry.
  *
  * 🧠 Responsibilities:
  * • retains publication and interaction-flag decisions in News;
- * • registers the owner policy through the current legacy registry boundary.
+ * • verifies minimal article/target coordinates before allowing a capability.
  *
  * 🏗️ Architecture:
- * News-owned policy; registry coupling is still a subsequent D4.3 remediation.
+ * Private News policy implementing its own published decision contract.
  *
  * ⚠️ Important:
  * Missing owner records or unpublished articles must not grant interaction access.
@@ -21,54 +21,29 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import {
-  Inject,
-  Injectable,
-  type OnModuleDestroy,
-  type OnModuleInit,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 
-import {
-  InteractionPolicyRegistryService,
-  type InteractionCapability,
-  type InteractionTarget,
-  type InteractionTargetPolicy,
-} from '../../../interactions';
+import type {
+  NewsInteractionDecisions,
+  NewsInteractionRequest,
+  NewsInteractionDecision,
+} from '../../contracts/news-interaction-decisions.contract';
 import {
   NEWS_REPOSITORY,
   type NewsRepository,
 } from '../../domain/repositories/news.repository.interface';
 
-import { NEWS_INTERACTION_KIND } from '../../domain/constants/news-interaction.constant';
-export { NEWS_INTERACTION_KIND } from '../../domain/constants/news-interaction.constant';
-
 @Injectable()
-export class NewsInteractionPolicy
-  implements InteractionTargetPolicy, OnModuleInit, OnModuleDestroy
-{
-  readonly kind = NEWS_INTERACTION_KIND;
+export class NewsInteractionPolicy implements NewsInteractionDecisions {
+  constructor(@Inject(NEWS_REPOSITORY) private readonly news: NewsRepository) {}
 
-  constructor(
-    private readonly policies: InteractionPolicyRegistryService,
-    @Inject(NEWS_REPOSITORY) private readonly news: NewsRepository,
-  ) {}
-
-  onModuleInit(): void {
-    this.policies.register(this);
-  }
-
-  onModuleDestroy(): void {
-    this.policies.unregister(this);
-  }
-
-  async authorize(
-    target: InteractionTarget,
-    actorId: string,
-    capability: InteractionCapability,
-  ): Promise<{ allowed: boolean; reason?: string }> {
-    void actorId;
-    const article = await this.news.findById(target.ownerId);
-    if (!article || article.interactionTargetId !== target.id) {
+  async authorize({
+    articleId,
+    interactionTargetId,
+    capability,
+  }: NewsInteractionRequest): Promise<NewsInteractionDecision> {
+    const article = await this.news.findById(articleId);
+    if (!article || article.interactionTargetId !== interactionTargetId) {
       return { allowed: false, reason: 'OWNER_RECORD_UNAVAILABLE' };
     }
     if (article.status !== 'PUBLISHED') {

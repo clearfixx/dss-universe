@@ -39,6 +39,15 @@ const { createSourceFile, ScriptTarget, isExportDeclaration, isNamedExports } =
 
 for (const [moduleName, expected] of [
   [
+    "activity",
+    [
+      "ActivityModule",
+      "ACTOR_ACTIVITY_READER",
+      "ActorActivityReader",
+      "ActorActivitySummary",
+    ],
+  ],
+  [
     "editor",
     [
       "EditorModule",
@@ -86,6 +95,9 @@ for (const [moduleName, expected] of [
       "ProfileAssetTransaction",
       "ProfileAssetAssignment",
       "ProfileAssetSlot",
+      "MEDIA_PUBLICATION_EVIDENCE",
+      "MediaPublicationEvidenceReader",
+      "MediaPublicationEvidence",
     ],
   ],
   [
@@ -110,6 +122,13 @@ for (const [moduleName, expected] of [
       "ProfileWallTransaction",
       "ProfileWallWriteResult",
       "CreateUserWallPost",
+      "PROFILE_WALL_INTERACTION_DECISIONS",
+      "ProfileWallInteractionDecisions",
+      "ProfileWallInteractionRequest",
+      "ProfileWallInteractionDecision",
+      "PROFILE_ACTIVITY_READER",
+      "ProfileActivityReader",
+      "ProfileActivityItem",
     ],
   ],
   [

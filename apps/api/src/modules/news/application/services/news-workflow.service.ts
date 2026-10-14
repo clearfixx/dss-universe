@@ -1,3 +1,26 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: News
+ * 📄 File: apps/api/src/modules/news/application/services/news-workflow.service.ts
+ *
+ * 🎯 Purpose:
+ * Coordinates editorial transitions with owned permissions and minimal attachment readiness evidence.
+ *
+ * 🧠 Responsibilities:
+ * • preserves permissions, approval versions and bounded editorial transitions;
+ * • requires ready/public attachment facts before review or publication.
+ *
+ * 🏗️ Architecture:
+ * News-owned workflow; attachment evidence enters through a News-owned port.
+ *
+ * ⚠️ Important:
+ * Do not conflate draft attachment access with stricter editorial readiness.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import {
   BadRequestException,
   ConflictException,
@@ -23,11 +46,9 @@ import {
 import type { NewsEditorialTransitionResult } from '../../domain/types/news-editorial.type';
 import type { NewsArticle } from '../../domain/types/news-article.type';
 import {
-  MEDIA_REPOSITORY,
-  type MediaRepository,
-} from '../../../media/domain/repositories/media.repository.interface';
-import { MediaStatus } from '../../../media/domain/enums/media-status.enum';
-import { MediaVisibility } from '../../../media/domain/enums/media-visibility.enum';
+  NEWS_MEDIA_EVIDENCE,
+  type NewsMediaEvidenceReader,
+} from '../../domain/ports/news-media-evidence.interface';
 import type { EditorNode } from '@dss/editor';
 import { NewsPostTemplateService } from './news-post-template.service';
 
@@ -39,7 +60,8 @@ export class NewsWorkflowService {
     private readonly workflow: NewsWorkflowRepository,
     private readonly templates: NewsPostTemplateService,
     private readonly permissions: PermissionsService,
-    @Inject(MEDIA_REPOSITORY) private readonly media: MediaRepository,
+    @Inject(NEWS_MEDIA_EVIDENCE)
+    private readonly media: NewsMediaEvidenceReader,
   ) {}
 
   async submit(
@@ -245,8 +267,7 @@ export class NewsWorkflowService {
     await Promise.all(
       [...ids].map(async (id) => {
         const media = await this.media.findById(id);
-        const visible = media?.visibility === MediaVisibility.PUBLIC;
-        if (!media || media.status !== MediaStatus.READY || !visible) {
+        if (!media || !media.isReady || !media.isPublic) {
           throw new BadRequestException(
             'Every News attachment must be ready and match article visibility before review or publication.',
           );

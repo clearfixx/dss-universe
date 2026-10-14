@@ -13,17 +13,27 @@
  * • enforces profile and block visibility;
  * • delegates projection reads to the shared Activity module.
  *
+ * 🏗️ Architecture:
+ * Users privacy checks precede its own minimal projection-read port, bound at the root.
+ *
+ * ⚠️ Important:
+ * Projection fields must not bypass privacy/block decisions or include raw metadata.
+ *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 
 import {
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 
-import { ActivityFeedService } from '../../../activity';
+import {
+  PROFILE_ACTIVITY_READER,
+  type ProfileActivityReader,
+} from '../../domain/ports/profile-activity-reader.interface';
 
 import { UserBlockService } from './user-block.service';
 import { UserPrivacyService } from './user-privacy.service';
@@ -32,7 +42,8 @@ import { UsersService } from './users.service';
 @Injectable()
 export class UserActivityFeedService {
   constructor(
-    private readonly activity: ActivityFeedService,
+    @Inject(PROFILE_ACTIVITY_READER)
+    private readonly activity: ProfileActivityReader,
     private readonly users: UsersService,
     private readonly privacy: UserPrivacyService,
     private readonly blocks: UserBlockService,

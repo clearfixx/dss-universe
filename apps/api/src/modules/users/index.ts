@@ -63,3 +63,14 @@ export {
   type ProfileWallWriteResult,
   type CreateUserWallPost,
 } from './domain/ports/profile-wall-transaction.interface';
+export {
+  PROFILE_WALL_INTERACTION_DECISIONS,
+  type ProfileWallInteractionDecisions,
+  type ProfileWallInteractionRequest,
+  type ProfileWallInteractionDecision,
+} from './contracts/profile-wall-interaction-decisions.contract';
+export {
+  PROFILE_ACTIVITY_READER,
+  type ProfileActivityReader,
+  type ProfileActivityItem,
+} from './domain/ports/profile-activity-reader.interface';

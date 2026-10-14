@@ -16,7 +16,7 @@
  * News application use case; Editor normalization enters through a News-owned port.
  *
  * ⚠️ Important:
- * Remaining Media repository coupling is recorded D4.3 debt, not a public contract.
+ * Draft attachment access stays News-owned; readiness is required only by workflow.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -35,9 +35,9 @@ import {
   type NewsDocumentNormalizer,
 } from '../../domain/ports/news-document-normalizer.interface';
 import {
-  MEDIA_REPOSITORY,
-  type MediaRepository,
-} from '../../../media/domain/repositories/media.repository.interface';
+  NEWS_MEDIA_EVIDENCE,
+  type NewsMediaEvidenceReader,
+} from '../../domain/ports/news-media-evidence.interface';
 import {
   NEWS_REPOSITORY,
   type NewsRepository,
@@ -61,7 +61,8 @@ export class NewsService {
     @Inject(NEWS_DOCUMENT_NORMALIZER)
     private readonly editor: NewsDocumentNormalizer,
     private readonly templates: NewsPostTemplateService,
-    @Inject(MEDIA_REPOSITORY) private readonly media: MediaRepository,
+    @Inject(NEWS_MEDIA_EVIDENCE)
+    private readonly media: NewsMediaEvidenceReader,
   ) {}
 
   async createDraft(input: CreateNewsDraftRequest): Promise<NewsArticle> {

@@ -14,7 +14,7 @@
 
 import { ForbiddenException } from '@nestjs/common';
 
-import type { ActivityFeedService } from '../../../activity';
+import type { ProfileActivityReader } from '../../domain/ports/profile-activity-reader.interface';
 
 import type { UserBlockService } from './user-block.service';
 import type { UserPrivacyService } from './user-privacy.service';
@@ -24,7 +24,7 @@ import type { UsersService } from './users.service';
 describe('UserActivityFeedService', () => {
   const activity = {
     byActor: jest.fn(),
-  } as unknown as jest.Mocked<ActivityFeedService>;
+  } satisfies jest.Mocked<ProfileActivityReader>;
   const users = {
     exists: jest.fn(),
   } as unknown as jest.Mocked<UsersService>;

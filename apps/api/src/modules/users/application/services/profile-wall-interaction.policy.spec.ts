@@ -12,25 +12,16 @@
  * ===============================================================
  */
 
-import { InteractionPolicyRegistryService } from '../../../interactions';
 import type { UserWallRepository } from '../../domain/repositories/user-wall.repository.interface';
 import type { UserBlockService } from './user-block.service';
-import {
-  ProfileWallInteractionPolicy,
-  PROFILE_WALL_INTERACTION_KIND,
-} from './profile-wall-interaction.policy';
+import { ProfileWallInteractionPolicy } from './profile-wall-interaction.policy';
 import type { UserPrivacyService } from './user-privacy.service';
 
 describe('ProfileWallInteractionPolicy', () => {
   const target = {
-    id: 'target-1',
-    kind: PROFILE_WALL_INTERACTION_KIND,
-    ownerModule: 'users',
-    ownerType: 'UserWallPost',
-    ownerId: 'post-1',
-    status: 'ACTIVE' as const,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    interactionTargetId: 'target-1',
+    postId: 'post-1',
+    viewerId: 'viewer-1',
   };
   const post = {
     id: 'post-1',
@@ -45,8 +36,7 @@ describe('ProfileWallInteractionPolicy', () => {
     updatedAt: new Date(),
   };
 
-  it('registers ownership and allows a visible, unblocked profile', async () => {
-    const registry = new InteractionPolicyRegistryService();
+  it('allows a visible, unblocked profile using minimal owner coordinates', async () => {
     const wall = {
       findById: jest.fn().mockResolvedValue(post),
     } as unknown as jest.Mocked<UserWallRepository>;
@@ -58,25 +48,11 @@ describe('ProfileWallInteractionPolicy', () => {
     const blocks = {
       isBlocked: jest.fn().mockResolvedValue(false),
     } as unknown as jest.Mocked<UserBlockService>;
-    const policy = new ProfileWallInteractionPolicy(
-      registry,
-      wall,
-      privacy,
-      blocks,
-    );
-    policy.onModuleInit();
-
-    await expect(
-      registry.authorize(target, 'viewer-1', 'COMMENT'),
-    ).resolves.toEqual({ allowed: true });
-    policy.onModuleDestroy();
-    await expect(
-      registry.authorize(target, 'viewer-1', 'COMMENT'),
-    ).resolves.toMatchObject({ allowed: false });
+    const policy = new ProfileWallInteractionPolicy(wall, privacy, blocks);
+    await expect(policy.authorize(target)).resolves.toEqual({ allowed: true });
   });
 
   it('denies blocked, private, or mismatched owner coordinates', async () => {
-    const registry = new InteractionPolicyRegistryService();
     const wall = {
       findById: jest.fn().mockResolvedValue(post),
     } as unknown as jest.Mocked<UserWallRepository>;
@@ -88,27 +64,22 @@ describe('ProfileWallInteractionPolicy', () => {
     const blocks = {
       isBlocked: jest.fn().mockResolvedValue(false),
     } as unknown as jest.Mocked<UserBlockService>;
-    const policy = new ProfileWallInteractionPolicy(
-      registry,
-      wall,
-      privacy,
-      blocks,
-    );
+    const policy = new ProfileWallInteractionPolicy(wall, privacy, blocks);
 
-    await expect(
-      policy.authorize(target, 'viewer-1', 'READ'),
-    ).resolves.toMatchObject({ allowed: false, reason: 'PROFILE_PRIVATE' });
+    await expect(policy.authorize(target)).resolves.toMatchObject({
+      allowed: false,
+      reason: 'PROFILE_PRIVATE',
+    });
     blocks.isBlocked.mockResolvedValue(true);
-    await expect(
-      policy.authorize(target, 'viewer-1', 'READ'),
-    ).resolves.toMatchObject({ allowed: false, reason: 'PROFILE_BLOCKED' });
+    await expect(policy.authorize(target)).resolves.toMatchObject({
+      allowed: false,
+      reason: 'PROFILE_BLOCKED',
+    });
     wall.findById.mockResolvedValue({
       ...post,
       interactionTargetId: 'another-target',
     });
-    await expect(
-      policy.authorize(target, 'viewer-1', 'READ'),
-    ).resolves.toMatchObject({
+    await expect(policy.authorize(target)).resolves.toMatchObject({
       allowed: false,
       reason: 'OWNER_RECORD_UNAVAILABLE',
     });

@@ -1,3 +1,16 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Activity Feed E2E
+ * 📄 File: apps/api/test/activity-feed.e2e-spec.ts
+ *
+ * 🎯 Purpose:
+ * Retains existing full-feed transport regressions while consuming the owned private service in tests.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { randomUUID } from 'node:crypto';
 
 import { Test, type TestingModule } from '@nestjs/testing';
@@ -7,7 +20,7 @@ import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/core/database';
-import { ActivityFeedService } from '../src/modules/activity';
+import { ActivityFeedService } from '../src/modules/activity/application/services/activity-feed.service';
 
 describe('Activity Feed (e2e)', () => {
   let module: TestingModule;

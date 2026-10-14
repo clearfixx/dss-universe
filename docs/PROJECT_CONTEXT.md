@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-13 — pre-Phase-11 debt closure / bounded D4.3b implemented, full D4 open
+> Updated: 2026-10-14 — pre-Phase-11 debt closure / bounded D4.3c implemented, full D4 open
 
 ## Product and authority
 
@@ -28,6 +28,16 @@ Legacy roadmaps are historical. This snapshot does not override source code,
 approved ADRs or recorded owner decisions.
 
 ## Current position
+
+D4.3c removes concrete registry coupling from News/Users: root composition binds
+minimal owner-decision contracts while Interactions keeps its registry private.
+News consumes only Media owner/public/readiness facts; Users consumes only actor
+activity summaries after its own privacy/block checks. No API, migration, frontend
+or permission changes. Inventory: 89 (ten further removals, zero additions).
+Full units: API 685 / Web 59 / Worker 36; relevant E2E: 84. Remaining direct
+cross-owner SQL (including Content Gates facts) is explicit D4.3d work, not covered
+by the import inventory; full D4 and release acceptance remain OPEN. See
+[evidence](audits/D4_3C_POLICY_MEDIA_ACTIVITY_CONTRACTS.md).
 
 D4.3b composes atomic News draft and Profile Wall writes behind semantic owned
 ports; the shared Interactions writer is owned infrastructure with a guarded

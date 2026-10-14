@@ -1,3 +1,16 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: News Tests
+ * 📄 File: apps/api/src/modules/news/application/services/news-workflow.service.spec.ts
+ *
+ * 🎯 Purpose:
+ * Verifies unchanged editorial transitions, permissions, schedule bounds and readiness failures.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import {
   BadRequestException,
   ConflictException,
@@ -9,7 +22,7 @@ import type { NewsRepository } from '../../domain/repositories/news.repository.i
 import type { NewsWorkflowRepository } from '../../domain/repositories/news-workflow.repository.interface';
 import type { NewsEditorialTransition } from '../../domain/types/news-editorial.type';
 import type { NewsArticle } from '../../domain/types/news-article.type';
-import type { MediaRepository } from '../../../media/domain/repositories/media.repository.interface';
+import type { NewsMediaEvidenceReader } from '../../domain/ports/news-media-evidence.interface';
 import { createEmptyEditorDocument } from '@dss/editor';
 import { NewsPostTemplateService } from './news-post-template.service';
 import { NewsWorkflowService } from './news-workflow.service';
@@ -68,7 +81,7 @@ describe('NewsWorkflowService', () => {
       workflow,
       new NewsPostTemplateService(),
       permissions as PermissionsService,
-      { findById: findMediaById } as unknown as MediaRepository,
+      { findById: findMediaById } satisfies NewsMediaEvidenceReader,
     );
   });
 
@@ -104,8 +117,9 @@ describe('NewsWorkflowService', () => {
       },
     });
     findMediaById.mockResolvedValue({
-      status: 'PROCESSING',
-      visibility: 'PRIVATE',
+      ownerId: 'author-1',
+      isReady: false,
+      isPublic: false,
     });
 
     await expect(service.submit('author-1', draft.id)).rejects.toBeInstanceOf(

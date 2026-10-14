@@ -1,10 +1,10 @@
 # D4 — Cross-module boundary remediation
 
-Date: 2026-10-13. Status: authorized debt-remediation execution, not Phase 11.
+Date: 2026-10-14. Status: authorized debt-remediation execution, not Phase 11.
 Branch: `debt/d4-module-boundaries`.
-Implemented increments: D4.1, D4.2 and bounded D4.3a/b; remaining inventory 99,
+Implemented increments: D4.1, D4.2 and bounded D4.3a/b/c; remaining inventory 89,
 full D4 and the rest of D4.3 OPEN. See
-[D4.3b evidence](../audits/D4_3B_ATOMIC_CONTENT_TARGETS.md).
+[D4.3c evidence](../audits/D4_3C_POLICY_MEDIA_ACTIVITY_CONTRACTS.md).
 Review stack base: `173358d` / draft PR #9. Parent acceptance is still pending;
 no red PR is merged and this branch is not an accepted release baseline.
 Authority: approved pre-Phase-11 D4 plan and ADR-003/004.
@@ -12,7 +12,7 @@ Authority: approved pre-Phase-11 D4 plan and ADR-003/004.
 ## Outcome and invariants
 
 Close the full D4 inventory, not merely rename broad services into facades.
-Starting inventory: 135 findings; latest reviewed inventory: 99. Every reduction needs exact source,
+Starting inventory: 135 findings; latest reviewed inventory: 89. Every reduction needs exact source,
 behavioral and contract evidence; no automatic baseline growth or waiver.
 Keep NestJS, Prisma, PostgreSQL, Outbox/BullMQ and existing transport responses.
 Do not invent frontend design, new scoring formulas, owner policy or Phase 11 flows.
@@ -52,6 +52,40 @@ remain in their owners. Provider contracts expose neither consume commands nor
 repositories to downstream Levels.
 
 ## Verification
+
+The D4.3c execution also closes remaining Media/Activity reads: Media publishes
+only owner/public/ready evidence (no paths/keys/metadata); News owns draft/readiness
+policy through its own port. Preserve draft attachment access even for non-ready
+media when the existing owner/public rule permits it; only review/publication
+requires ready and public. Do not invent cover validation or new audience rules.
+Activity publishes actor summaries without visibility/metadata/body fields; Users
+owns profile/block authorization before its projection-read port. Preserve existing
+pagination, active PUBLIC/MEMBERS filtering and retraction semantics.
+
+This is not full SQL ownership acceptance: the Content Gate repository still
+reads Auth account eligibility/age, Interactions counts and Reputation totals
+directly (`prisma-content-gates.repository.ts:56–72`); Profile Wall still checks
+Media attachability via a direct query (`prisma-user-wall.repository.ts`). These
+remain D4.3d owner-evidence work. Audit other cross-owner SQL/projection joins
+before D4.5 acceptance; the syntactic import inventory does not detect table
+ownership and must not be used to waive it. Preserve the existing transaction
+and failure semantics when migrating these facts.
+
+### D4.3c transfer contract (owner policy registration)
+
+Interactions publishes registration/unregistration only, not its mutable concrete
+registry or authorization router. Callback requests carry target/owner/viewer IDs
+and capability, not target timestamps, persistence rows or content. Wrapper
+identity is stable across duplicate registration and stale unregistration.
+
+News and Users publish separate decision-only contracts for their own objects.
+They do not import Interactions, own registry lifecycle or receive foreign target
+records. Root composition binds the two fixed target kinds and translates only
+the owner-required fields. Comment policy stays private to Interactions. Keep
+missing owner, unpublished/disabled News flags, block/privacy decisions, target
+lifecycle precedence and parent-comment authorization unchanged. Missing policies
+and provider errors fail closed; startup registration failure cleans up partial
+root bindings. No new ACL, moderation rights, SQL or transport schema is included.
 
 ### D4.3b transfer contract (atomic content targets)
 

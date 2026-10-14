@@ -15,17 +15,14 @@
 export { InteractionsModule } from './interactions.module';
 export { BookmarksService } from './application/services/bookmarks.service';
 export { CommentDraftsService } from './application/services/comment-drafts.service';
-export { InteractionPolicyRegistryService } from './application/services/interaction-policy-registry.service';
 export { InteractionTargetsService } from './application/services/interaction-targets.service';
 export { CommentsService } from './application/services/comments.service';
-export { CommentInteractionPolicy } from './application/services/comment-interaction.policy';
 export { ReactionsService } from './application/services/reactions.service';
 export { AudienceEngagementService } from './application/services/audience-engagement.service';
 export { ModerationService } from './application/services/moderation.service';
 export type {
   InteractionCapability,
   InteractionTarget,
-  InteractionTargetPolicy,
 } from './domain/types/interaction-target.type';
 export type {
   AudienceEngagementResult,
@@ -41,3 +38,11 @@ export {
   type CommentDocumentNormalizer,
   type CommentDocumentProjection,
 } from './domain/ports/comment-document-normalizer.interface';
+export {
+  INTERACTION_POLICY_REGISTRATIONS,
+  type InteractionPolicyRegistrations,
+  type RegisteredInteractionPolicy,
+  type InteractionPolicyRequest,
+  type InteractionPolicyVerdict,
+  type InteractionPolicyCapability,
+} from './contracts/interaction-policy-registrations.contract';

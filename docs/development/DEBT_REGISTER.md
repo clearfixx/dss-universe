@@ -59,6 +59,13 @@ active package safe and buildable.
 
 ## Additional D0 verification findings
 
+D4.3c progress for DEBT-003/027: owner-policy registration lives at the root,
+Interactions registry and Media/Activity broad providers are private. News/Users
+consume minimal evidence/projection ports. Ten further findings removed (99 → 89),
+zero additions. Remaining cross-owner SQL is named D4.3d work and is not detectable
+from import diagnostics alone. Full D4 remains OPEN; see
+[evidence](../audits/D4_3C_POLICY_MEDIA_ACTIVITY_CONTRACTS.md).
+
 D4.3b progress for DEBT-003/004/027: News/Wall cross-owner writes now use semantic
 transaction ports; the target writer moves into owned infrastructure and is no
 longer a business-root/Nest export. Four findings removed (103 → 99), no additions.

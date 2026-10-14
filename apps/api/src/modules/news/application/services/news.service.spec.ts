@@ -15,7 +15,7 @@ import { BadRequestException, ConflictException } from '@nestjs/common';
 import { createEmptyEditorDocument } from '@dss/editor';
 
 import type { NewsDocumentNormalizer } from '../../domain/ports/news-document-normalizer.interface';
-import type { MediaRepository } from '../../../media/domain/repositories/media.repository.interface';
+import type { NewsMediaEvidenceReader } from '../../domain/ports/news-media-evidence.interface';
 import type { NewsRepository } from '../../domain/repositories/news.repository.interface';
 import type { NewsArticle } from '../../domain/types/news-article.type';
 import { NewsPostTemplateService } from './news-post-template.service';
@@ -55,7 +55,7 @@ describe('NewsService', () => {
       repository,
       editor,
       new NewsPostTemplateService(),
-      { findById: findMediaById } as unknown as MediaRepository,
+      { findById: findMediaById } satisfies NewsMediaEvidenceReader,
     );
   });
   it('normalizes a NEWS document and creates the canonical draft', async () => {
