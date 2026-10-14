@@ -1,0 +1,127 @@
+# DEBT-052 — Full News viewer-safe document delivery
+
+Date: 2026-10-14. Status: owner-approved scope; implementation NOT STARTED.
+Priority: Critical; release and Phase 11 blocker until verified correction.
+
+## Authority and package order
+
+The owner approved a separate priority security package covering server-side
+Full News redaction through narrow contracts, guest/GROUP/Premium/author/provider
+failure cases and related projection regressions. The separately approved
+DEBT-051 canonical attachment correction follows it; do not bundle that behavior
+change into this package. No new owner/Command Deck rights or frontend work.
+
+Preserve the reviewed D4.3d3a ownership increment in its own commit and PR #10
+before opening `debt/debt-052-full-news-redaction` from that exact published head.
+Use a separate stacked draft PR with `debt/d4-module-boundaries` as its base;
+neither parent PR #10 nor its parent PR #9 is accepted. No red merge.
+
+The last Git write request was not executed because automatic approval review
+hit its usage limit. Read-only inspection confirms HEAD `5bff17f`, empty staging
+and local D4.3d3a changes. Resolve that review failure before retrying Git writes;
+do not downgrade permissions or change execution route to evade approval. This
+design/approval record changes no application behavior and does not close debt.
+
+## Evidence and boundaries
+
+The migrated AppModule test in `news-attachment-contracts.e2e-spec.ts` creates
+a PUBLIC canonical News article with a real COMMENTS=100 gate and synthetic text.
+Guest Editor delivery removes that text; public Full News returns it. The raw
+`documentJson` originates in `PrismaNewsDeliveryRepository.findFullBySlug` and
+passes unchanged through `NewsDeliveryService.fullProjection` to GraphQL.
+
+`EditorContentDeliveryService.project` already validates the canonical document,
+evaluates gates through an Editor-owned port, deduplicates decisions within one
+request and removes denied payloads recursively. Provider errors propagate.
+It is currently private: EditorModule exports only its normalization token.
+Do not expose that concrete service or copy its redaction algorithm into News.
+
+## Planned dependency and response flow
+
+1. Editor publishes a named viewer-safe projection token/interface in `contracts/`.
+   Input: canonical document JSON and opaque viewer ID or null. Output: only
+   viewer-safe document JSON needed by this consumer, not a gate aggregate,
+   credentials, profile, Prisma row or transaction. Bind to an Editor-owned
+   adapter over the existing redaction service; keep concrete services private.
+2. News defines its own narrow document-delivery port. Root Content composition
+   maps it to the published Editor contract, using explicit imports/exports and
+   field selection. Existing ContentAccess decision composition remains the
+   only policy source; no News dependency on IAM/Auth/ContentAccess internals.
+3. News application first reads the eligible article. Null short-circuits all
+   document/attachment providers. Then project its document for this request's
+   viewer; only that safe JSON may become the response's `documentJson` or input
+   to attachment projection. Never retain the raw value through a final spread.
+4. Preserve synchronous invalid-address validation, unchanged GraphQL fields,
+   existing visibility filtering and independent metadata-read ordering. A
+   denied gate produces the existing safe placeholder shape; a projection or
+   decision-provider failure fails the full response, never raw-content fallback.
+
+No process-global viewer cache. No database read transaction is split or new
+snapshot guarantee invented. Stored authored documents remain intact. Invalid
+stored documents fail closed; legacy doc-node test fixtures must not motivate
+raw JSON fallback or bypassing canonical validation. Real public/create/read
+security fixtures use canonical NEWS documents.
+
+## Policy regression matrix
+
+| Case                                      | Required evidence                                                          |
+| ----------------------------------------- | -------------------------------------------------------------------------- |
+| Guest, unmet numeric gate                 | Protected text, labels and media IDs absent from actual Full News response |
+| Ordinary member, unmet/met threshold      | Denial/allow matches current ContentAccess decision                        |
+| GROUP mismatch, including Premium/author  | Mandatory group constraint is not bypassed                                 |
+| GROUP match plus numeric gate             | Numeric condition still applies to ordinary members                        |
+| Premium in allowed audience               | Numeric bypass preserved without staff privileges                          |
+| Author                                    | Existing author bypass only where the current decision contract permits    |
+| Membership/Premium revoked or expired     | Subsequent request observes current eligibility; no cross-viewer reuse     |
+| Nested/repeated gates                     | Recursive pruning and request-local decision deduplication preserved       |
+| Missing article/wrong audience            | No document or metadata provider invocation                                |
+| Editor/decision/metadata provider failure | Rejected service call and GraphQL error/null, no partial/raw success       |
+| Public ordinary document                  | Content, metadata and response shape retained; no accidental denial        |
+
+Use real migrated AppModule, root bindings, authenticated sessions and disposable
+DB/Redis for policy cases. Pure typed tests separately pin mapping, ordering and
+error propagation. A private Editor test alone cannot prove public integration.
+Flip the vulnerable-baseline characterization to require protected-text absence;
+passing the old disclosure expectation is not correction acceptance.
+
+## Adjacent-channel review required before acceptance
+
+Source inspection confirms these paths exist, not that all are exploitable:
+
+- NewsService stores `projection.searchText`; Editor's generic text projection
+  descends into contentGate children. Public News filtering includes that stored
+  field. Reproduce hidden-marker search with real responses, counts, pins and
+  pagination; distinguish a search-match oracle from returning hidden text.
+- Full News also serializes templateData and maps related article summaries.
+  Template normalization allowlists post-specific fields, but this alone is not
+  proof of gate/audience safety for media URLs or linked article metadata.
+- News comment responses serialize stored comment documents/body. Validate the
+  COMMENT profile's gate prohibition and supported write paths before asserting
+  no gated payload can reach them.
+- Review public Media reference/delivery and Editor preview callers separately:
+  a safe attachment manifest is not proof that direct binary URLs are authorized.
+
+Record current behavior and focused regression evidence for each channel. Any
+new defect needs a debt entry and owner notification; expand implementation only
+within the approved package or after explicit scope approval. Do not declare
+the whole platform secure from correcting Full News alone.
+
+## Verification and completion
+
+Follow the full workflow matrix: changed/global format, Passports, architecture
+and dependency licenses, Prisma validation/client/migration status, lint, types,
+full opt-in units and coverage, relevant and full API/Web E2E, generated GraphQL,
+production build, security audit/patch regressions, CI and review. Run heavyweight
+gates serially or with bounded workers; record cache hits and every known red gate.
+No schema or migration is expected for this correction.
+
+Report actual commands/results and source coverage, not just test counts. Debt
+status remains OPEN until the approved response paths and policy matrix have
+direct evidence. Existing unrelated red checks remain visible; no waiver, silent
+skip, widened architecture baseline or disabled lint rule. Publish a separate
+commit/push/attached draft PR; do not merge red checks or start Phase 11.
+
+After DEBT-052, implement DEBT-051 separately with canonical wrapper traversal,
+contentGate subtree exclusion, original order/deduplication and unchanged
+READY/PUBLIC/active-reference rules. Then resume remaining D4 ownership work,
+D5–D7 and the mandatory pre-Phase-11 brainstorm.

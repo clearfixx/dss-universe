@@ -1,13 +1,35 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: News
+ * 📄 File: apps/api/src/modules/news/infrastructure/repositories/prisma-news.repository.ts
+ *
+ * 🎯 Purpose:
+ * Reads owned News state and delegates cross-owner writes through a semantic transaction port.
+ *
+ * 🧠 Responsibilities:
+ * • reads and maps owned News rows and editorial pages;
+ * • delegates atomic cross-owner writes through the News-owned semantic port.
+ *
+ * 🏗️ Architecture:
+ * News persistence adapter; transaction composition lives explicitly at the root.
+ *
+ * ⚠️ Important:
+ * This repository must not receive a foreign target writer or expose its Prisma client.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
+import { Inject, Injectable } from '@nestjs/common';
 import { Prisma, type NewsArticle as NewsArticleRow } from '@prisma/client';
 import type { EditorDocument } from '@dss/editor';
-import { randomUUID } from 'node:crypto';
 
-import { AuditWriterService } from '@api/core/audit';
 import { PrismaService } from '@api/core/database';
-import { createEventEnvelope, OutboxWriterService } from '@api/core/events';
-import { InteractionTargetWriterService } from '../../../interactions';
-import { NEWS_INTERACTION_KIND } from '../../application/services/news-interaction.policy';
+import {
+  NEWS_DRAFT_TRANSACTION,
+  type NewsDraftTransaction,
+} from '../../domain/ports/news-draft-transaction.interface';
 import type { NewsRepository } from '../../domain/repositories/news.repository.interface';
 import type {
   CreateNewsDraft,
@@ -17,117 +39,16 @@ import type {
   SaveNewsDraft,
 } from '../../domain/types/news-article.type';
 
-const PRODUCER = 'dss.api.news';
-const OWNER_TYPE = 'NewsArticle';
-const ATTACHMENT_PURPOSE = 'news.attachment';
-
 @Injectable()
 export class PrismaNewsRepository implements NewsRepository {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly audit: AuditWriterService,
-    private readonly outbox: OutboxWriterService,
-    private readonly interactionTargets: InteractionTargetWriterService,
+    @Inject(NEWS_DRAFT_TRANSACTION)
+    private readonly writes: NewsDraftTransaction,
   ) {}
 
-  async createDraft(input: CreateNewsDraft): Promise<NewsArticle> {
-    try {
-      return await this.prisma.$transaction(async (transaction) => {
-        const articleId = randomUUID();
-        const interactionTargetId = randomUUID();
-        await this.interactionTargets.register(transaction, {
-          id: interactionTargetId,
-          kind: NEWS_INTERACTION_KIND,
-          ownerModule: 'news',
-          ownerType: OWNER_TYPE,
-          ownerId: articleId,
-          actorId: input.authorId,
-        });
-        const article = await transaction.newsArticle.create({
-          data: {
-            id: articleId,
-            interactionTargetId,
-            authorId: input.authorId,
-            postType: input.postType,
-            visibility: input.visibility,
-            language: input.language,
-            slug: input.slug,
-            title: input.title,
-            shortText: input.shortText,
-            document: input.document as unknown as Prisma.InputJsonValue,
-            templateData: input.templateData as Prisma.InputJsonValue,
-            plainText: input.plainText,
-            searchText: input.searchText,
-            coverMediaId: input.coverMediaId,
-          },
-        });
-        await this.syncAttachments(
-          transaction,
-          articleId,
-          input.authorId,
-          input.attachmentMediaIds,
-        );
-        const revision = await transaction.newsRevision.create({
-          data: {
-            articleId,
-            version: 1,
-            editorId: input.authorId,
-            postType: input.postType,
-            language: input.language,
-            slug: input.slug,
-            title: input.title,
-            shortText: input.shortText,
-            document: input.document as unknown as Prisma.InputJsonValue,
-            templateData: input.templateData as Prisma.InputJsonValue,
-            plainText: input.plainText,
-            searchText: input.searchText,
-            coverMediaId: input.coverMediaId,
-            changeSummary: 'Initial draft',
-          },
-        });
-        const payload = {
-          articleId,
-          authorId: input.authorId,
-          revisionId: revision.id,
-          version: 1,
-          postType: input.postType,
-          language: input.language,
-          slug: input.slug,
-          status: article.status,
-        };
-        await this.audit.append(transaction, {
-          action: 'news.article.created',
-          actorType: 'USER',
-          actorId: input.authorId,
-          targetType: OWNER_TYPE,
-          targetId: articleId,
-          metadata: payload,
-        });
-        await this.outbox.append(
-          transaction,
-          createEventEnvelope({
-            name: 'news.article.created.v1',
-            version: 1,
-            category: 'domain',
-            producer: PRODUCER,
-            actorId: input.authorId,
-            aggregate: { type: OWNER_TYPE, id: articleId },
-            payload,
-          }),
-        );
-        return this.toDomain(article);
-      });
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
-        throw new ConflictException(
-          'News slug already exists for this language.',
-        );
-      }
-      throw error;
-    }
+  createDraft(input: CreateNewsDraft): Promise<NewsArticle> {
+    return this.writes.createDraft(input);
   }
 
   async findById(id: string): Promise<NewsArticle | null> {
@@ -170,101 +91,8 @@ export class PrismaNewsRepository implements NewsRepository {
     };
   }
 
-  async saveDraft(input: SaveNewsDraft): Promise<NewsArticle | null> {
-    try {
-      return await this.prisma.$transaction(async (transaction) => {
-        const nextVersion = input.baseVersion + 1;
-        const changed = await transaction.newsArticle.updateMany({
-          where: {
-            id: input.articleId,
-            authorId: input.authorId,
-            currentVersion: input.baseVersion,
-            status: { in: ['DRAFT', 'CHANGES_REQUESTED'] },
-          },
-          data: {
-            postType: input.postType,
-            visibility: input.visibility,
-            language: input.language,
-            slug: input.slug,
-            title: input.title,
-            shortText: input.shortText,
-            document: input.document as unknown as Prisma.InputJsonValue,
-            templateData: input.templateData as Prisma.InputJsonValue,
-            plainText: input.plainText,
-            searchText: input.searchText,
-            coverMediaId: input.coverMediaId,
-            currentVersion: nextVersion,
-          },
-        });
-        if (changed.count !== 1) return null;
-        await this.syncAttachments(
-          transaction,
-          input.articleId,
-          input.authorId,
-          input.attachmentMediaIds,
-        );
-        const revision = await transaction.newsRevision.create({
-          data: {
-            articleId: input.articleId,
-            version: nextVersion,
-            editorId: input.authorId,
-            postType: input.postType,
-            language: input.language,
-            slug: input.slug,
-            title: input.title,
-            shortText: input.shortText,
-            document: input.document as unknown as Prisma.InputJsonValue,
-            templateData: input.templateData as Prisma.InputJsonValue,
-            plainText: input.plainText,
-            searchText: input.searchText,
-            coverMediaId: input.coverMediaId,
-            changeSummary: input.changeSummary,
-          },
-        });
-        const article = await transaction.newsArticle.findUniqueOrThrow({
-          where: { id: input.articleId },
-        });
-        const payload = {
-          articleId: article.id,
-          authorId: input.authorId,
-          revisionId: revision.id,
-          version: nextVersion,
-          previousVersion: input.baseVersion,
-          status: article.status,
-        };
-        await this.audit.append(transaction, {
-          action: 'news.article.draft_saved',
-          actorType: 'USER',
-          actorId: input.authorId,
-          targetType: OWNER_TYPE,
-          targetId: article.id,
-          metadata: payload,
-        });
-        await this.outbox.append(
-          transaction,
-          createEventEnvelope({
-            name: 'news.article.draft-saved.v1',
-            version: 1,
-            category: 'domain',
-            producer: PRODUCER,
-            actorId: input.authorId,
-            aggregate: { type: OWNER_TYPE, id: article.id },
-            payload,
-          }),
-        );
-        return this.toDomain(article);
-      });
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
-        throw new ConflictException(
-          'News slug already exists for this language.',
-        );
-      }
-      throw error;
-    }
+  saveDraft(input: SaveNewsDraft): Promise<NewsArticle | null> {
+    return this.writes.saveDraft(input);
   }
 
   private toDomain(article: NewsArticleRow): NewsArticle {
@@ -272,52 +100,5 @@ export class PrismaNewsRepository implements NewsRepository {
       ...article,
       document: article.document as unknown as EditorDocument,
     };
-  }
-
-  private async syncAttachments(
-    transaction: Prisma.TransactionClient,
-    articleId: string,
-    actorId: string,
-    mediaIds: string[],
-  ): Promise<void> {
-    await transaction.mediaReference.updateMany({
-      where: {
-        targetType: OWNER_TYPE,
-        targetId: articleId,
-        purpose: ATTACHMENT_PURPOSE,
-        removedAt: null,
-        ...(mediaIds.length ? { mediaId: { notIn: mediaIds } } : {}),
-      },
-      data: { removedAt: new Date() },
-    });
-    for (const mediaId of mediaIds) {
-      const existing = await transaction.mediaReference.findFirst({
-        where: {
-          mediaId,
-          targetType: OWNER_TYPE,
-          targetId: articleId,
-          purpose: ATTACHMENT_PURPOSE,
-        },
-        orderBy: { createdAt: 'desc' },
-      });
-      if (existing) {
-        if (existing.removedAt) {
-          await transaction.mediaReference.update({
-            where: { id: existing.id },
-            data: { removedAt: null, createdBy: actorId },
-          });
-        }
-      } else {
-        await transaction.mediaReference.create({
-          data: {
-            mediaId,
-            targetType: OWNER_TYPE,
-            targetId: articleId,
-            purpose: ATTACHMENT_PURPOSE,
-            createdBy: actorId,
-          },
-        });
-      }
-    }
   }
 }

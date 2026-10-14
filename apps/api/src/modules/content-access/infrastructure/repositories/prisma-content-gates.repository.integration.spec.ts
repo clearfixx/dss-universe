@@ -35,10 +35,19 @@ import { IamMembershipAdapter } from '../../../../composition/access-groups/infr
 import { ContentAudienceAdapter } from '../../../../composition/access-groups/infrastructure/content-audience.adapter';
 import { createEmptyEditorDocument } from '@dss/editor';
 import { ContentGatesService } from '../../application/services/content-gates.service';
+import { ContentGateDecisionsService } from '../../application/services/content-gate-decisions.service';
+import { EditorGateDecisionAdapter } from '../../../../composition/content/infrastructure/editor-gate-decision.adapter';
 import { EditorService } from '../../../editor/application/services/editor.service';
 import { EditorContentDeliveryService } from '../../../editor/application/services/editor-content-delivery.service';
 import type { EditorHtmlRenderer } from '../../../editor/infrastructure/rendering/editor-html.renderer';
 import { PrismaContentGatesRepository } from './prisma-content-gates.repository';
+import { ContentGateViewerFactsService } from '../../application/services/content-gate-viewer-facts.service';
+import { GateAccountEvidenceAdapter } from '../../../../composition/content-reads/infrastructure/gate-account-evidence.adapter';
+import { GateCommentCountAdapter } from '../../../../composition/content-reads/infrastructure/gate-comment-count.adapter';
+import { GateReputationTotalAdapter } from '../../../../composition/content-reads/infrastructure/gate-reputation-total.adapter';
+import { PrismaAccountEvidenceReader } from '../../../auth/infrastructure/repositories/prisma-account-evidence.reader';
+import { PrismaCommentCountReader } from '../../../interactions/infrastructure/repositories/prisma-comment-count.reader';
+import { PrismaReputationTotalReader } from '../../../reputation/infrastructure/repositories/prisma-reputation-total.reader';
 
 const dbSuite =
   process.env.RUN_AUTH_DB_TESTS === '1' ? describe : describe.skip;
@@ -79,15 +88,24 @@ dbSuite('Content Gate audience PostgreSQL integration', () => {
         permissions.findAccessProfileByUserId(id),
     },
   );
+  const statistics = new ContentGateViewerFactsService(
+    new GateAccountEvidenceAdapter(new PrismaAccountEvidenceReader(prisma)),
+    new GateCommentCountAdapter(new PrismaCommentCountReader(prisma)),
+    new GateReputationTotalAdapter(new PrismaReputationTotalReader(prisma)),
+  );
   const gates = new ContentGatesService(
     repository,
     new ContentAudienceAdapter(decisions),
+    statistics,
   );
   let premiumStaffMembershipId: string;
   const editor = new EditorService({
     render: jest.fn(),
   } as unknown as EditorHtmlRenderer);
-  const delivery = new EditorContentDeliveryService(editor, gates);
+  const delivery = new EditorContentDeliveryService(
+    editor,
+    new EditorGateDecisionAdapter(new ContentGateDecisionsService(gates)),
+  );
   const gateId = randomUUID();
 
   beforeAll(async () => {
@@ -216,7 +234,7 @@ dbSuite('Content Gate audience PostgreSQL integration', () => {
         'premium-staff',
       ]);
       await expect(
-        repository.viewerFacts('premium-staff', new Date()),
+        statistics.read('premium-staff', new Date()),
       ).resolves.toBeNull();
       await expect(
         delivery.project(documentJson(), 'premium-staff'),
@@ -252,9 +270,7 @@ dbSuite('Content Gate audience PostgreSQL integration', () => {
   });
 
   it('denies missing viewers and redacts guest payloads', async () => {
-    await expect(
-      repository.viewerFacts('missing', new Date()),
-    ).resolves.toBeNull();
+    await expect(statistics.read('missing', new Date())).resolves.toBeNull();
     expect(
       (await delivery.project(documentJson(), null)).documentJson,
     ).not.toContain('Restricted staff payload');

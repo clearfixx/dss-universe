@@ -21,6 +21,7 @@ import type {
 } from '../../domain/types/content-gate.type';
 import { ContentGatesService } from './content-gates.service';
 import type { ContentAudienceReader } from '../../domain/ports/content-audience-reader.interface';
+import type { ContentGateViewerFactsService } from './content-gate-viewer-facts.service';
 
 const gate: ContentGate = {
   id: 'b9d2b2c8-91c6-41f1-b0e6-f46410a5445a',
@@ -38,12 +39,14 @@ describe('ContentGatesService', () => {
   const repository: jest.Mocked<ContentGatesRepository> = {
     create: jest.fn(),
     findById: jest.fn(),
-    viewerFacts: jest.fn(),
   };
   const audience: jest.Mocked<ContentAudienceReader> = { read: jest.fn() };
-  const service = new ContentGatesService(repository, audience);
+  const statistics = {
+    read: jest.fn(),
+  } as unknown as jest.Mocked<ContentGateViewerFactsService>;
+  const service = new ContentGatesService(repository, audience, statistics);
   function setFacts(facts: ContentGateViewerFacts | null) {
-    repository.viewerFacts.mockResolvedValue(facts);
+    statistics.read.mockResolvedValue(facts);
     audience.read.mockResolvedValue(
       facts
         ? {
@@ -271,7 +274,7 @@ describe('ContentGatesService', () => {
       unmet: ['ACCOUNT_AGE_DAYS', 'REPUTATION'],
       notice: 'Sign in to check hidden content requirements.',
     });
-    expect(repository.viewerFacts.mock.calls).toHaveLength(0);
+    expect(statistics.read.mock.calls).toHaveLength(0);
   });
 
   it('rejects malformed group requirements', () => {

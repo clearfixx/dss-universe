@@ -1,3 +1,21 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: News
+ * 📄 File: apps/api/src/modules/news/index.ts
+ *
+ * 🎯 Purpose:
+ * Publishes existing News integration surfaces and the consumer-owned normalization port.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
+export {
+  NEWS_ATTACHMENT_READER,
+  type NewsAttachmentReader,
+  type NewsAttachmentFile,
+} from './domain/ports/news-attachment-reader.interface';
 export * from './application/services/news.service';
 export * from './application/services/news-delivery.service';
 export * from './application/services/news-links.service';
@@ -13,3 +31,25 @@ export * from './domain/types/short-news.type';
 export * from './domain/types/news-taxonomy.type';
 export * from './domain/types/news-article.type';
 export * from './news.module';
+export {
+  NEWS_DOCUMENT_NORMALIZER,
+  type NewsDocumentNormalizer,
+  type NewsDocumentProjection,
+} from './domain/ports/news-document-normalizer.interface';
+export { NEWS_INTERACTION_KIND } from './domain/constants/news-interaction.constant';
+export {
+  NEWS_DRAFT_TRANSACTION,
+  type NewsDraftTransaction,
+} from './domain/ports/news-draft-transaction.interface';
+export {
+  NEWS_INTERACTION_DECISIONS,
+  type NewsInteractionDecisions,
+  type NewsInteractionRequest,
+  type NewsInteractionDecision,
+  type NewsInteractionCapability,
+} from './contracts/news-interaction-decisions.contract';
+export {
+  NEWS_MEDIA_EVIDENCE,
+  type NewsMediaEvidenceReader,
+  type NewsMediaEvidence,
+} from './domain/ports/news-media-evidence.interface';

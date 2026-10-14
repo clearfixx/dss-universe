@@ -14,8 +14,8 @@
 
 import type { IntegrationEventJob } from '@dss/jobs';
 
-import type { CommunityPointsService } from '@api/modules/community-points';
-import type { UsersService } from '@api/modules/users';
+import type { LevelPointsBalanceReader } from '../../contracts/points-balance.port';
+import type { LevelRecipientExistence } from '../../contracts/recipient-existence.port';
 
 import type { LevelsRepository } from '../../domain/repositories/levels.repository.interface';
 import type { LevelDefinition } from '../../domain/types/levels.type';
@@ -66,10 +66,10 @@ describe('LevelsService', () => {
   } as unknown as jest.Mocked<LevelsRepository>;
   const points = {
     balance: jest.fn(),
-  } as unknown as jest.Mocked<CommunityPointsService>;
+  } satisfies jest.Mocked<LevelPointsBalanceReader>;
   const users = {
     exists: jest.fn(),
-  } as unknown as jest.Mocked<UsersService>;
+  } satisfies jest.Mocked<LevelRecipientExistence>;
   const service = new LevelsService(repository, points, users);
 
   beforeEach(() => {

@@ -12,17 +12,12 @@
  * ===============================================================
  */
 
-import type { EditorDocument } from '@dss/editor';
+import type { ValidatedEditorDocument } from '../../contracts/editor-document-normalizer.contract';
 
 export type EditorPreview = {
   html: string;
 } & EditorProjection;
 
-export type EditorProjection = {
-  document: EditorDocument;
-  canonicalJson: string;
-  plainText: string;
-  searchText: string;
-};
+export type EditorProjection = ValidatedEditorDocument;
 
 /** Canonical JSON is stored; every other field can be rebuilt. */

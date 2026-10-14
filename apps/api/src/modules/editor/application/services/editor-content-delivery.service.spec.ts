@@ -14,8 +14,10 @@
 
 import { createEmptyEditorDocument } from '@dss/editor';
 
-import type { ContentGatesService } from '../../../content-access/application/services/content-gates.service';
-import type { ContentGateEvaluation } from '../../../content-access/domain/types/content-gate.type';
+import type {
+  EditorGateDecisions,
+  EditorGateDecision,
+} from '../../domain/ports/editor-gate-decisions.interface';
 import type { EditorService } from './editor.service';
 import { EditorContentDeliveryService } from './editor-content-delivery.service';
 
@@ -44,7 +46,7 @@ describe('EditorContentDeliveryService', () => {
   } as unknown as jest.Mocked<EditorService>;
   const contentGates = {
     evaluate: jest.fn(),
-  } as unknown as jest.Mocked<ContentGatesService>;
+  } satisfies jest.Mocked<EditorGateDecisions>;
   const service = new EditorContentDeliveryService(editor, contentGates);
 
   beforeEach(() => jest.clearAllMocks());
@@ -93,26 +95,9 @@ describe('EditorContentDeliveryService', () => {
     );
   });
 
-  function evaluation(
-    allowed: boolean,
-    bypassed = false,
-  ): ContentGateEvaluation {
+  function evaluation(allowed: boolean, bypassed = false): EditorGateDecision {
     return {
-      gate: {
-        id: gateId,
-        ownerId: 'owner-id',
-        operator: 'ALL',
-        requirements: [
-          {
-            id: 'requirement-id',
-            kind: 'REPUTATION',
-            threshold: 100,
-            groupKey: null,
-          },
-        ],
-        createdAt: new Date('2026-09-13T00:00:00.000Z'),
-        updatedAt: new Date('2026-09-13T00:00:00.000Z'),
-      },
+      gateId,
       allowed,
       bypassed,
       unmet: allowed ? [] : ['REPUTATION'],

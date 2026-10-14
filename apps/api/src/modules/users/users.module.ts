@@ -28,6 +28,12 @@
  */
 
 import { Module } from '@nestjs/common';
+import { USER_ACTIVITY_CONTEXT_READER } from './contracts/activity-context-reader.contract';
+import { PrismaUserActivityContextReader } from './infrastructure/repositories/prisma-user-activity-context.reader';
+import { USER_BLOCK_DECISIONS } from './contracts/block-decision.contract';
+import type { UserBlockRepository } from './domain/repositories/user-block.repository.interface';
+import { PROFILE_EXISTENCE_READER } from './contracts/profile-existence.contract';
+import { PrismaProfileExistenceReader } from './infrastructure/repositories/prisma-profile-existence.reader';
 import { ProfileGroupsService } from './application/services/profile-groups.service';
 import { VIEWER_PROFILE_READER } from './contracts/viewer-profile.contract';
 import { PrismaViewerProfileReader } from './infrastructure/repositories/prisma-viewer-profile.reader';
@@ -62,15 +68,31 @@ import { UserWallService } from './application/services/user-wall.service';
 import { USER_WALL_REPOSITORY } from './domain/repositories/user-wall.repository.interface';
 import { PrismaUserWallRepository } from './infrastructure/repositories/prisma-user-wall.repository';
 import { ProfileCompletionService } from './application/services/profile-completion.service';
-import { ActivityModule } from '../activity';
 import { UserActivityFeedService } from './application/services/user-activity-feed.service';
-import { InteractionsModule } from '../interactions';
+import { PROFILE_WALL_INTERACTION_DECISIONS } from './contracts/profile-wall-interaction-decisions.contract';
 import { ProfileWallInteractionPolicy } from './application/services/profile-wall-interaction.policy';
 
 @Module({
-  imports: [PrismaModule, ActivityModule, InteractionsModule],
+  imports: [PrismaModule],
   controllers: [UsersController],
   providers: [
+    {
+      provide: USER_ACTIVITY_CONTEXT_READER,
+      useClass: PrismaUserActivityContextReader,
+    },
+    {
+      provide: USER_BLOCK_DECISIONS,
+      inject: [USER_BLOCK_REPOSITORY],
+      useFactory: (repository: UserBlockRepository) =>
+        Object.freeze({
+          isBlocked: (first: string, second: string) =>
+            repository.existsEitherDirection(first, second),
+        }),
+    },
+    {
+      provide: PROFILE_EXISTENCE_READER,
+      useClass: PrismaProfileExistenceReader,
+    },
     { provide: VIEWER_PROFILE_READER, useClass: PrismaViewerProfileReader },
     { provide: PROFILE_DISPLAY_READER, useClass: PrismaProfileDisplayReader },
     UsersService,
@@ -87,6 +109,10 @@ import { ProfileWallInteractionPolicy } from './application/services/profile-wal
     ProfileCompletionService,
     UserActivityFeedService,
     ProfileWallInteractionPolicy,
+    {
+      provide: PROFILE_WALL_INTERACTION_DECISIONS,
+      useExisting: ProfileWallInteractionPolicy,
+    },
     {
       provide: APP_INTERCEPTOR,
       useClass: UserPresenceInterceptor,
@@ -117,12 +143,12 @@ import { ProfileWallInteractionPolicy } from './application/services/profile-wal
     },
   ],
   exports: [
+    USER_ACTIVITY_CONTEXT_READER,
+    PROFILE_WALL_INTERACTION_DECISIONS,
+    USER_BLOCK_DECISIONS,
+    PROFILE_EXISTENCE_READER,
     VIEWER_PROFILE_READER,
     PROFILE_DISPLAY_READER,
-    UsersService,
-    UserPrivacyService,
-    UserBlockService,
-    USERS_REPOSITORY,
   ],
 })
 export class UsersModule {}

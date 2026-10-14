@@ -34,7 +34,7 @@ import type {
   CreateComment,
   EditCommentContent,
 } from '../../domain/types/comment.type';
-import { InteractionTargetWriterService } from '../../application/services/interaction-target-writer.service';
+import { PrismaInteractionTargetWriter } from './prisma-interaction-target.writer';
 
 const PRODUCER = 'dss.api.comments';
 
@@ -44,7 +44,7 @@ export class PrismaCommentsRepository implements CommentsRepository {
     private readonly prisma: PrismaService,
     private readonly audit: AuditWriterService,
     private readonly outbox: OutboxWriterService,
-    private readonly targets: InteractionTargetWriterService,
+    private readonly targets: PrismaInteractionTargetWriter,
   ) {}
 
   async create(input: CreateComment): Promise<Comment> {

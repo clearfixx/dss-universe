@@ -1,3 +1,26 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: News
+ * 📄 File: apps/api/src/modules/news/application/services/news.service.ts
+ *
+ * 🎯 Purpose:
+ * Coordinates News draft validation, attachment availability and optimistic persistence.
+ *
+ * 🧠 Responsibilities:
+ * • validates metadata and canonical NEWS documents before writes;
+ * • checks author attachment availability and optimistic draft versions.
+ *
+ * 🏗️ Architecture:
+ * News application use case; Editor normalization enters through a News-owned port.
+ *
+ * ⚠️ Important:
+ * Draft attachment access stays News-owned; readiness is required only by workflow.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import {
   BadRequestException,
   ConflictException,
@@ -7,11 +30,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { EditorService } from '../../../editor';
 import {
-  MEDIA_REPOSITORY,
-  type MediaRepository,
-} from '../../../media/domain/repositories/media.repository.interface';
+  NEWS_DOCUMENT_NORMALIZER,
+  type NewsDocumentNormalizer,
+} from '../../domain/ports/news-document-normalizer.interface';
+import {
+  NEWS_MEDIA_EVIDENCE,
+  type NewsMediaEvidenceReader,
+} from '../../domain/ports/news-media-evidence.interface';
 import {
   NEWS_REPOSITORY,
   type NewsRepository,
@@ -32,9 +58,11 @@ const LANGUAGE_PATTERN = /^[a-z]{2}(?:-[A-Z]{2})?$/;
 export class NewsService {
   constructor(
     @Inject(NEWS_REPOSITORY) private readonly news: NewsRepository,
-    private readonly editor: EditorService,
+    @Inject(NEWS_DOCUMENT_NORMALIZER)
+    private readonly editor: NewsDocumentNormalizer,
     private readonly templates: NewsPostTemplateService,
-    @Inject(MEDIA_REPOSITORY) private readonly media: MediaRepository,
+    @Inject(NEWS_MEDIA_EVIDENCE)
+    private readonly media: NewsMediaEvidenceReader,
   ) {}
 
   async createDraft(input: CreateNewsDraftRequest): Promise<NewsArticle> {
@@ -64,7 +92,7 @@ export class NewsService {
       );
     }
 
-    const projection = this.editor.normalize(input.documentJson, 'NEWS');
+    const projection = this.editor.normalize(input.documentJson);
     const attachmentMediaIds = await this.validateMediaReferences(
       projection.document,
       input.authorId,
@@ -128,7 +156,7 @@ export class NewsService {
         'News slug already exists for this language.',
       );
     }
-    const projection = this.editor.normalize(input.documentJson, 'NEWS');
+    const projection = this.editor.normalize(input.documentJson);
     const attachmentMediaIds = await this.validateMediaReferences(
       projection.document,
       actorId,

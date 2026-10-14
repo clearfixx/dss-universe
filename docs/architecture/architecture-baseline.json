@@ -1,24 +1,10 @@
 {
   "version": 1,
-  "date": "2026-10-10",
-  "sourceBase": "c6eb539",
+  "date": "2026-10-14",
+  "sourceBase": "8281815",
   "status": "review inventory; not a waiver or compliance certificate",
-  "scope": "Authored API modules/core TypeScript; excludes tests/declarations; bounded syntactic analysis",
+  "scope": "Authored API modules/core/composition TypeScript; excludes tests/declarations; bounded syntactic analysis",
   "findings": [
-    {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/achievements/index.ts\",\"./application/services/achievements.service: AchievementsService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/achievements/index.ts",
-      "detail": "./application/services/achievements.service: AchievementsService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/community-points/index.ts\",\"./application/services/community-points.service: CommunityPointsService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/community-points/index.ts",
-      "detail": "./application/services/community-points.service: CommunityPointsService",
-      "package": "D4"
-    },
     {
       "id": "[\"concrete-public-export\",\"apps/api/src/modules/custom-titles/index.ts\",\"./application/services/custom-titles.service: CustomTitlesService\"]",
       "rule": "concrete-public-export",
@@ -55,20 +41,6 @@
       "package": "D4"
     },
     {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/interactions/index.ts\",\"./application/services/interaction-policy-registry.service: InteractionPolicyRegistryService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/interactions/index.ts",
-      "detail": "./application/services/interaction-policy-registry.service: InteractionPolicyRegistryService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/interactions/index.ts\",\"./application/services/interaction-target-writer.service: InteractionTargetWriterService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/interactions/index.ts",
-      "detail": "./application/services/interaction-target-writer.service: InteractionTargetWriterService",
-      "package": "D4"
-    },
-    {
       "id": "[\"concrete-public-export\",\"apps/api/src/modules/interactions/index.ts\",\"./application/services/interaction-targets.service: InteractionTargetsService\"]",
       "rule": "concrete-public-export",
       "file": "apps/api/src/modules/interactions/index.ts",
@@ -97,230 +69,6 @@
       "package": "D4"
     },
     {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/levels/index.ts\",\"./application/services/levels.service: LevelsService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/levels/index.ts",
-      "detail": "./application/services/levels.service: LevelsService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/reputation/index.ts\",\"./application/services/reputation.service: ReputationService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/reputation/index.ts",
-      "detail": "./application/services/reputation.service: ReputationService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/users/index.ts\",\"./application/services/user-block.service: UserBlockService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/users/index.ts",
-      "detail": "./application/services/user-block.service: UserBlockService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/users/index.ts\",\"./application/services/users.service: UsersService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/users/index.ts",
-      "detail": "./application/services/users.service: UsersService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/achievements/application/services/achievements.service.ts\",\"@api/modules/users: UsersService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/achievements/application/services/achievements.service.ts",
-      "detail": "@api/modules/users: UsersService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/community-points/application/services/community-points.service.ts\",\"@api/modules/users: UsersService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/community-points/application/services/community-points.service.ts",
-      "detail": "@api/modules/users: UsersService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/editor/application/services/editor-content-delivery.service.ts\",\"../../../content-access/application/services/content-gates.service: ContentGatesService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/editor/application/services/editor-content-delivery.service.ts",
-      "detail": "../../../content-access/application/services/content-gates.service: ContentGatesService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/interactions/application/services/comment-drafts.service.ts\",\"../../../editor/application/services/editor.service: EditorService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/interactions/application/services/comment-drafts.service.ts",
-      "detail": "../../../editor/application/services/editor.service: EditorService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/interactions/application/services/comments.service.ts\",\"../../../editor/application/services/editor.service: EditorService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/interactions/application/services/comments.service.ts",
-      "detail": "../../../editor/application/services/editor.service: EditorService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/levels/application/services/levels.service.ts\",\"@api/modules/community-points: CommunityPointsService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/levels/application/services/levels.service.ts",
-      "detail": "@api/modules/community-points: CommunityPointsService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/levels/application/services/levels.service.ts\",\"@api/modules/users: UsersService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/levels/application/services/levels.service.ts",
-      "detail": "@api/modules/users: UsersService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts\",\"../../../../users/application/services/users.service: UsersService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts",
-      "detail": "../../../../users/application/services/users.service: UsersService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts\",\"../../../../users/presentation/graphql/mappers/user-graphql.mapper: UserGraphqlMapper\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts",
-      "detail": "../../../../users/presentation/graphql/mappers/user-graphql.mapper: UserGraphqlMapper",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/news/application/services/news-interaction.policy.ts\",\"../../../interactions: InteractionPolicyRegistryService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/news/application/services/news-interaction.policy.ts",
-      "detail": "../../../interactions: InteractionPolicyRegistryService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/news/application/services/news.service.ts\",\"../../../editor: EditorService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/news/application/services/news.service.ts",
-      "detail": "../../../editor: EditorService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/news/infrastructure/repositories/prisma-news.repository.ts\",\"../../../interactions: InteractionTargetWriterService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/news/infrastructure/repositories/prisma-news.repository.ts",
-      "detail": "../../../interactions: InteractionTargetWriterService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/reputation/application/services/reputation.service.ts\",\"@api/modules/users: UserBlockService, UsersService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/reputation/application/services/reputation.service.ts",
-      "detail": "@api/modules/users: UserBlockService, UsersService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/users/application/services/profile-wall-interaction.policy.ts\",\"../../../interactions: InteractionPolicyRegistryService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/users/application/services/profile-wall-interaction.policy.ts",
-      "detail": "../../../interactions: InteractionPolicyRegistryService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/users/application/services/user-activity-feed.service.ts\",\"../../../activity: ActivityFeedService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/users/application/services/user-activity-feed.service.ts",
-      "detail": "../../../activity: ActivityFeedService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-concrete-service\",\"apps/api/src/modules/users/infrastructure/repositories/prisma-user-wall.repository.ts\",\"../../../interactions: InteractionTargetWriterService\"]",
-      "rule": "foreign-concrete-service",
-      "file": "apps/api/src/modules/users/infrastructure/repositories/prisma-user-wall.repository.ts",
-      "detail": "../../../interactions: InteractionTargetWriterService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/editor/application/services/editor-content-delivery.service.ts\",\"../../../content-access/application/services/content-gates.service\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/editor/application/services/editor-content-delivery.service.ts",
-      "detail": "../../../content-access/application/services/content-gates.service",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/editor/application/services/editor-content-delivery.service.ts\",\"../../../content-access/domain/types/content-gate.type\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/editor/application/services/editor-content-delivery.service.ts",
-      "detail": "../../../content-access/domain/types/content-gate.type",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/editor/application/types/editor-delivery.type.ts\",\"../../../content-access/domain/types/content-gate.type\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/editor/application/types/editor-delivery.type.ts",
-      "detail": "../../../content-access/domain/types/content-gate.type",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/interactions/application/services/comment-drafts.service.ts\",\"../../../editor/application/services/editor.service\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/interactions/application/services/comment-drafts.service.ts",
-      "detail": "../../../editor/application/services/editor.service",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/interactions/application/services/comments.service.ts\",\"../../../editor/application/services/editor.service\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/interactions/application/services/comments.service.ts",
-      "detail": "../../../editor/application/services/editor.service",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts\",\"../../../../users/application/services/users.service\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts",
-      "detail": "../../../../users/application/services/users.service",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts\",\"../../../../users/presentation/graphql/mappers/user-graphql.mapper\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts",
-      "detail": "../../../../users/presentation/graphql/mappers/user-graphql.mapper",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts\",\"../../../../users/presentation/graphql/models/viewer.model\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/media/presentation/graphql/resolvers/media.resolver.ts",
-      "detail": "../../../../users/presentation/graphql/models/viewer.model",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/news/application/services/news-workflow.service.ts\",\"../../../media/domain/enums/media-status.enum\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/news/application/services/news-workflow.service.ts",
-      "detail": "../../../media/domain/enums/media-status.enum",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/news/application/services/news-workflow.service.ts\",\"../../../media/domain/enums/media-visibility.enum\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/news/application/services/news-workflow.service.ts",
-      "detail": "../../../media/domain/enums/media-visibility.enum",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/news/application/services/news-workflow.service.ts\",\"../../../media/domain/repositories/media.repository.interface\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/news/application/services/news-workflow.service.ts",
-      "detail": "../../../media/domain/repositories/media.repository.interface",
-      "package": "D4"
-    },
-    {
-      "id": "[\"foreign-private-import\",\"apps/api/src/modules/news/application/services/news.service.ts\",\"../../../media/domain/repositories/media.repository.interface\"]",
-      "rule": "foreign-private-import",
-      "file": "apps/api/src/modules/news/application/services/news.service.ts",
-      "detail": "../../../media/domain/repositories/media.repository.interface",
-      "package": "D4"
-    },
-    {
       "id": "[\"namespace-import\",\"apps/api/src/core/config/validation.schema.ts\",\"joi\"]",
       "rule": "namespace-import",
       "file": "apps/api/src/core/config/validation.schema.ts",
@@ -338,20 +86,6 @@
       "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/editor/presentation/graphql/editor.model.ts\",\"@prisma/client\"]",
       "rule": "persistence-outside-infrastructure",
       "file": "apps/api/src/modules/editor/presentation/graphql/editor.model.ts",
-      "detail": "@prisma/client",
-      "package": "D4"
-    },
-    {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/interactions/application/services/interaction-target-writer.service.ts\",\"@api/core/database\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/interactions/application/services/interaction-target-writer.service.ts",
-      "detail": "@api/core/database",
-      "package": "D4"
-    },
-    {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/reputation/application/services/reputation.service.ts\",\"@prisma/client\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/reputation/application/services/reputation.service.ts",
       "detail": "@prisma/client",
       "package": "D4"
     },
@@ -650,20 +384,6 @@
       "package": "D4"
     },
     {
-      "id": "[\"wildcard-export\",\"apps/api/src/modules/activity/index.ts\",\"./activity.module\"]",
-      "rule": "wildcard-export",
-      "file": "apps/api/src/modules/activity/index.ts",
-      "detail": "./activity.module",
-      "package": "D4"
-    },
-    {
-      "id": "[\"wildcard-export\",\"apps/api/src/modules/activity/index.ts\",\"./application/services/activity-feed.service\"]",
-      "rule": "wildcard-export",
-      "file": "apps/api/src/modules/activity/index.ts",
-      "detail": "./application/services/activity-feed.service",
-      "package": "D4"
-    },
-    {
       "id": "[\"wildcard-export\",\"apps/api/src/modules/ai-core/index.ts\",\"./ai-core.module\"]",
       "rule": "wildcard-export",
       "file": "apps/api/src/modules/ai-core/index.ts",
@@ -682,48 +402,6 @@
       "rule": "wildcard-export",
       "file": "apps/api/src/modules/ai-core/index.ts",
       "detail": "./domain/types/editor-ai-command.type",
-      "package": "D4"
-    },
-    {
-      "id": "[\"wildcard-export\",\"apps/api/src/modules/content-access/index.ts\",\"./application/services/content-gates.service\"]",
-      "rule": "wildcard-export",
-      "file": "apps/api/src/modules/content-access/index.ts",
-      "detail": "./application/services/content-gates.service",
-      "package": "D4"
-    },
-    {
-      "id": "[\"wildcard-export\",\"apps/api/src/modules/content-access/index.ts\",\"./content-access.module\"]",
-      "rule": "wildcard-export",
-      "file": "apps/api/src/modules/content-access/index.ts",
-      "detail": "./content-access.module",
-      "package": "D4"
-    },
-    {
-      "id": "[\"wildcard-export\",\"apps/api/src/modules/editor/index.ts\",\"./application/services/editor-content-delivery.service\"]",
-      "rule": "wildcard-export",
-      "file": "apps/api/src/modules/editor/index.ts",
-      "detail": "./application/services/editor-content-delivery.service",
-      "package": "D4"
-    },
-    {
-      "id": "[\"wildcard-export\",\"apps/api/src/modules/editor/index.ts\",\"./application/services/editor.service\"]",
-      "rule": "wildcard-export",
-      "file": "apps/api/src/modules/editor/index.ts",
-      "detail": "./application/services/editor.service",
-      "package": "D4"
-    },
-    {
-      "id": "[\"wildcard-export\",\"apps/api/src/modules/editor/index.ts\",\"./application/types/editor-delivery.type\"]",
-      "rule": "wildcard-export",
-      "file": "apps/api/src/modules/editor/index.ts",
-      "detail": "./application/types/editor-delivery.type",
-      "package": "D4"
-    },
-    {
-      "id": "[\"wildcard-export\",\"apps/api/src/modules/editor/index.ts\",\"./editor.module\"]",
-      "rule": "wildcard-export",
-      "file": "apps/api/src/modules/editor/index.ts",
-      "detail": "./editor.module",
       "package": "D4"
     },
     {

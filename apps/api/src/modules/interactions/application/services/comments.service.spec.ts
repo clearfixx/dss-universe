@@ -15,6 +15,8 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 
 import { EditorService } from '../../../editor/application/services/editor.service';
+import { EditorDocumentNormalizerService } from '../../../editor/application/services/editor-document-normalizer.service';
+import { CommentDocumentAdapter } from '../../../../composition/content/infrastructure/comment-document.adapter';
 import type { EditorHtmlRenderer } from '../../../editor/infrastructure/rendering/editor-html.renderer';
 
 import type { CommentsRepository } from '../../domain/repositories/comments.repository.interface';
@@ -72,7 +74,11 @@ describe('CommentsService', () => {
     service = new CommentsService(
       repository,
       targets,
-      new EditorService({} as EditorHtmlRenderer),
+      new CommentDocumentAdapter(
+        new EditorDocumentNormalizerService(
+          new EditorService({} as EditorHtmlRenderer),
+        ),
+      ),
     );
   });
 

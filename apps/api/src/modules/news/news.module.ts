@@ -1,15 +1,37 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: News
+ * 📄 File: apps/api/src/modules/news/news.module.ts
+ *
+ * 🎯 Purpose:
+ * Composes News use cases and persistence without importing Editor implementations.
+ *
+ * 🧠 Responsibilities:
+ * • registers News presentation, application and repository providers;
+ * • receives canonical document normalization through root composition.
+ *
+ * 🏗️ Architecture:
+ * Nest assembly; root composition supplies Editor/Media reads and policy registration.
+ *
+ * ⚠️ Important:
+ * This increment does not declare the entire News integration surface isolated.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { Module } from '@nestjs/common';
 
 import { AuditModule } from '@api/core/audit';
 import { AuthorizationModule } from '@api/core/authorization';
 import { PrismaModule } from '@api/core/database';
 import { EventsModule } from '@api/core/events';
-import { EditorModule } from '../editor';
-import { InteractionsModule } from '../interactions';
-import { MediaModule } from '../media/media.module';
 
 import { NewsInteractionPolicy } from './application/services/news-interaction.policy';
+import { NEWS_INTERACTION_DECISIONS } from './contracts/news-interaction-decisions.contract';
 import { NewsDeliveryService } from './application/services/news-delivery.service';
+import { NewsAttachmentDeliveryService } from './application/services/news-attachment-delivery.service';
 import { NewsPostTemplateService } from './application/services/news-post-template.service';
 import { NewsLinksService } from './application/services/news-links.service';
 import { NewsSchedulerService } from './application/services/news-scheduler.service';
@@ -41,15 +63,7 @@ import {
 import { NewsPinsResolver } from './presentation/graphql/news-pins.graphql';
 
 @Module({
-  imports: [
-    PrismaModule,
-    AuditModule,
-    AuthorizationModule,
-    EventsModule,
-    EditorModule,
-    InteractionsModule,
-    MediaModule,
-  ],
+  imports: [PrismaModule, AuditModule, AuthorizationModule, EventsModule],
   providers: [
     NewsDeliveryResolver,
     OptionalNewsJwtGuard,
@@ -58,6 +72,7 @@ import { NewsPinsResolver } from './presentation/graphql/news-pins.graphql';
     NewsPinsResolver,
     NewsService,
     NewsDeliveryService,
+    NewsAttachmentDeliveryService,
     NewsLinksService,
     NewsSchedulerService,
     NewsSettingsService,
@@ -66,6 +81,7 @@ import { NewsPinsResolver } from './presentation/graphql/news-pins.graphql';
     NewsPinsService,
     NewsPostTemplateService,
     NewsInteractionPolicy,
+    { provide: NEWS_INTERACTION_DECISIONS, useExisting: NewsInteractionPolicy },
     { provide: NEWS_REPOSITORY, useClass: PrismaNewsRepository },
     {
       provide: NEWS_DELIVERY_REPOSITORY,
@@ -87,6 +103,7 @@ import { NewsPinsResolver } from './presentation/graphql/news-pins.graphql';
     { provide: NEWS_PINS_REPOSITORY, useClass: PrismaNewsPinsRepository },
   ],
   exports: [
+    NEWS_INTERACTION_DECISIONS,
     NewsService,
     NewsDeliveryService,
     NewsLinksService,

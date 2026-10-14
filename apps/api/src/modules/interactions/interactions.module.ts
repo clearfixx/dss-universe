@@ -18,14 +18,16 @@ import { AuditModule } from '@api/core/audit';
 import { PrismaModule } from '@api/core/database';
 import { EventsModule } from '@api/core/events';
 
-import { EditorModule } from '../editor';
-
 import { BookmarksService } from './application/services/bookmarks.service';
 import { CommentDraftsService } from './application/services/comment-drafts.service';
 import { CommentInteractionPolicy } from './application/services/comment-interaction.policy';
 import { CommentsService } from './application/services/comments.service';
 import { InteractionPolicyRegistryService } from './application/services/interaction-policy-registry.service';
-import { InteractionTargetWriterService } from './application/services/interaction-target-writer.service';
+import { InteractionPolicyRegistrationsService } from './application/services/interaction-policy-registrations.service';
+import { INTERACTION_POLICY_REGISTRATIONS } from './contracts/interaction-policy-registrations.contract';
+import { COMMENT_COUNT_READER } from './contracts/comment-count-reader.contract';
+import { PrismaCommentCountReader } from './infrastructure/repositories/prisma-comment-count.reader';
+import { PrismaInteractionTargetWriter } from './infrastructure/repositories/prisma-interaction-target.writer';
 import { InteractionTargetsService } from './application/services/interaction-targets.service';
 import { ModerationService } from './application/services/moderation.service';
 import { ReactionsService } from './application/services/reactions.service';
@@ -53,10 +55,16 @@ import { ModerationResolver } from './presentation/graphql/resolvers/moderation.
 import { ReactionsResolver } from './presentation/graphql/resolvers/reactions.resolver';
 
 @Module({
-  imports: [PrismaModule, AuditModule, EventsModule, EditorModule],
+  imports: [PrismaModule, AuditModule, EventsModule],
   providers: [
+    { provide: COMMENT_COUNT_READER, useClass: PrismaCommentCountReader },
     InteractionPolicyRegistryService,
-    InteractionTargetWriterService,
+    InteractionPolicyRegistrationsService,
+    {
+      provide: INTERACTION_POLICY_REGISTRATIONS,
+      useExisting: InteractionPolicyRegistrationsService,
+    },
+    PrismaInteractionTargetWriter,
     InteractionTargetsService,
     InteractionTargetsResolver,
     BookmarksService,
@@ -102,8 +110,8 @@ import { ReactionsResolver } from './presentation/graphql/resolvers/reactions.re
     },
   ],
   exports: [
-    InteractionPolicyRegistryService,
-    InteractionTargetWriterService,
+    COMMENT_COUNT_READER,
+    INTERACTION_POLICY_REGISTRATIONS,
     InteractionTargetsService,
     BookmarksService,
     CommentDraftsService,

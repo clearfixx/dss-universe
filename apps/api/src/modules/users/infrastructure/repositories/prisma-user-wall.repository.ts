@@ -6,28 +6,29 @@
  * 📄 File: apps/api/src/modules/users/infrastructure/repositories/prisma-user-wall.repository.ts
  *
  * 🎯 Purpose:
- * Persists Profile Wall posts, Media references, tombstones and audit records.
+ * Owns Profile Wall reads and redaction while composing writes through its semantic transaction port.
  *
  * 🧠 Responsibilities:
- * • validates attachable READY image ownership;
- * • creates posts and active Media references atomically;
- * • returns stable paginated wall history;
- * • tombstones posts without destroying public-content history.
+ * • reads/paginates posts and applies owned tombstone redaction;
+ * • delegates atomic writes without sharing an ORM transaction.
+ *
+ * 🏗️ Architecture:
+ * Users persistence adapter; image eligibility enters the application through an owned port.
+ *
+ * ⚠️ Important:
+ * Retained deleted bodies/images must not escape the Users response projection.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+import { Inject, Injectable } from '@nestjs/common';
 
-import { Injectable } from '@nestjs/common';
-import { MediaKind, MediaStatus } from '@prisma/client';
-import { randomUUID } from 'node:crypto';
-
-import { AuditWriterService } from '@api/core/audit';
 import { PrismaService } from '@api/core/database';
-import { createEventEnvelope, OutboxWriterService } from '@api/core/events';
 import type { PaginatedResult } from '@api/shared';
-import { InteractionTargetWriterService } from '../../../interactions';
-import { PROFILE_WALL_INTERACTION_KIND } from '../../application/services/profile-wall-interaction.policy';
+import {
+  PROFILE_WALL_TRANSACTION,
+  type ProfileWallTransaction,
+} from '../../domain/ports/profile-wall-transaction.interface';
 
 import type { UserWallRepository } from '../../domain/repositories/user-wall.repository.interface';
 import type {
@@ -35,71 +36,16 @@ import type {
   UserWallPost,
 } from '../../domain/types/user-wall-post.type';
 
-const MEDIA_TARGET_TYPE = 'UserWallPost';
-const MEDIA_PURPOSE = 'wall-image';
-const WALL_POST_CREATED_EVENT = 'users.profile-wall.post-created.v1';
-const WALL_POST_RETRACTED_EVENT = 'users.profile-wall.post-retracted.v1';
-
 @Injectable()
 export class PrismaUserWallRepository implements UserWallRepository {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly audit: AuditWriterService,
-    private readonly outbox: OutboxWriterService,
-    private readonly interactionTargets: InteractionTargetWriterService,
+    @Inject(PROFILE_WALL_TRANSACTION)
+    private readonly writes: ProfileWallTransaction,
   ) {}
 
   async create(input: CreateUserWallPost): Promise<UserWallPost> {
-    return this.prisma.$transaction(async (transaction) => {
-      const postId = randomUUID();
-      const interactionTargetId = randomUUID();
-      await this.interactionTargets.register(transaction, {
-        id: interactionTargetId,
-        kind: PROFILE_WALL_INTERACTION_KIND,
-        ownerModule: 'users',
-        ownerType: MEDIA_TARGET_TYPE,
-        ownerId: postId,
-        actorId: input.authorId,
-      });
-      const post = await transaction.userWallPost.create({
-        data: { ...input, id: postId, interactionTargetId },
-      });
-      if (input.imageMediaId) {
-        await transaction.mediaReference.create({
-          data: {
-            mediaId: input.imageMediaId,
-            targetType: MEDIA_TARGET_TYPE,
-            targetId: post.id,
-            purpose: MEDIA_PURPOSE,
-            createdBy: input.authorId,
-          },
-        });
-      }
-      await this.audit.append(transaction, {
-        action: 'user.wall.post_created',
-        actorType: 'USER',
-        actorId: input.authorId,
-        targetType: MEDIA_TARGET_TYPE,
-        targetId: post.id,
-        metadata: { profileOwnerId: input.profileOwnerId },
-      });
-      await this.outbox.append(
-        transaction,
-        createEventEnvelope({
-          name: WALL_POST_CREATED_EVENT,
-          version: 1,
-          category: 'integration',
-          producer: 'dss.api.users',
-          actorId: input.authorId,
-          aggregate: { type: MEDIA_TARGET_TYPE, id: post.id },
-          payload: {
-            profileOwnerId: input.profileOwnerId,
-            hasImage: input.imageMediaId !== null,
-          },
-        }),
-      );
-      return this.toDomain(post);
-    });
+    return this.toDomain(await this.writes.create(input));
   }
 
   async findById(id: string): Promise<UserWallPost | null> {
@@ -131,72 +77,14 @@ export class PrismaUserWallRepository implements UserWallRepository {
     };
   }
 
-  async isAttachableImage(mediaId: string, ownerId: string): Promise<boolean> {
-    const count = await this.prisma.media.count({
-      where: {
-        id: mediaId,
-        ownerId,
-        kind: MediaKind.IMAGE,
-        status: MediaStatus.READY,
-        deletedAt: null,
-      },
-    });
-    return count === 1;
-  }
-
   async tombstone(
     postId: string,
     deletedById: string,
     reason: string | null,
   ): Promise<UserWallPost> {
-    return this.prisma.$transaction(async (transaction) => {
-      const post = await transaction.userWallPost.update({
-        where: { id: postId },
-        data: {
-          deletedAt: new Date(),
-          deletedById,
-          deleteReason: reason,
-        },
-      });
-      await this.interactionTargets.setStatus(
-        transaction,
-        post.interactionTargetId,
-        'LOCKED',
-        deletedById,
-        reason ?? 'Profile Wall post tombstoned.',
-      );
-      await transaction.mediaReference.updateMany({
-        where: {
-          targetType: MEDIA_TARGET_TYPE,
-          targetId: postId,
-          purpose: MEDIA_PURPOSE,
-          removedAt: null,
-        },
-        data: { removedAt: new Date() },
-      });
-      await this.audit.append(transaction, {
-        action: 'user.wall.post_deleted',
-        actorType: 'USER',
-        actorId: deletedById,
-        targetType: MEDIA_TARGET_TYPE,
-        targetId: postId,
-        reason: reason ?? undefined,
-        metadata: { profileOwnerId: post.profileOwnerId },
-      });
-      await this.outbox.append(
-        transaction,
-        createEventEnvelope({
-          name: WALL_POST_RETRACTED_EVENT,
-          version: 1,
-          category: 'integration',
-          producer: 'dss.api.users',
-          actorId: deletedById,
-          aggregate: { type: MEDIA_TARGET_TYPE, id: post.id },
-          payload: { profileOwnerId: post.profileOwnerId },
-        }),
-      );
-      return this.toDomain(post);
-    });
+    return this.toDomain(
+      await this.writes.tombstone(postId, deletedById, reason),
+    );
   }
 
   private toDomain(post: {

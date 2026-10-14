@@ -21,8 +21,8 @@ import type { App } from 'supertest/types';
 
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/core/database';
-import { CommunityPointsService } from './../src/modules/community-points';
-import { LevelsService } from './../src/modules/levels';
+import { CommunityPointsService } from './../src/modules/community-points/application/services/community-points.service';
+import { LevelsService } from './../src/modules/levels/application/services/levels.service';
 
 type RegisteredUser = {
   id: string;

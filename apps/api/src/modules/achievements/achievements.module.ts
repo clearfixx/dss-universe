@@ -17,7 +17,6 @@ import { Module } from '@nestjs/common';
 import { AuditModule } from '@api/core/audit';
 import { PrismaModule } from '@api/core/database';
 import { EventsModule } from '@api/core/events';
-import { UsersModule } from '@api/modules/users';
 
 import { AchievementsService } from './application/services/achievements.service';
 import { ACHIEVEMENTS_REPOSITORY } from './domain/repositories/achievements.repository.interface';
@@ -25,7 +24,7 @@ import { PrismaAchievementsRepository } from './infrastructure/repositories/pris
 import { AchievementsResolver } from './presentation/graphql/resolvers/achievements.resolver';
 
 @Module({
-  imports: [PrismaModule, AuditModule, EventsModule, UsersModule],
+  imports: [PrismaModule, AuditModule, EventsModule],
   providers: [
     AchievementsService,
     AchievementsResolver,
@@ -34,7 +33,7 @@ import { AchievementsResolver } from './presentation/graphql/resolvers/achieveme
       useClass: PrismaAchievementsRepository,
     },
   ],
-  exports: [AchievementsService],
+  exports: [],
 })
 export class AchievementsModule {}
 

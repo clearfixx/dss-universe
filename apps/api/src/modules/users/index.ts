@@ -10,8 +10,8 @@
  *
  * 🧠 Responsibilities:
  * • exports UsersModule;
- * • exports UsersService;
- * • exports the repository token and contract used by Auth.
+ * • publishes narrow profile, display and existence contracts;
+ * • keeps concrete services and persistence contracts private.
  *
  * 🏗️ Architecture:
  * Public module API. Other modules should import Users through this file.
@@ -28,6 +28,19 @@
 
 export { UsersModule } from './users.module';
 export {
+  USER_ACTIVITY_CONTEXT_READER,
+  type UserActivityContextReader,
+  type UserActivityContext,
+} from './contracts/activity-context-reader.contract';
+export {
+  WALL_IMAGE_ELIGIBILITY,
+  type WallImageEligibility,
+} from './domain/ports/wall-image-eligibility.interface';
+export {
+  PROFILE_EXISTENCE_READER,
+  type ProfileExistenceReader,
+} from './contracts/profile-existence.contract';
+export {
   VIEWER_PROFILE_READER,
   type ViewerProfileReader,
   type ViewerProfile,
@@ -36,13 +49,7 @@ export {
   PROFILE_DISPLAY_READER,
   type ProfileDisplayReader,
 } from './contracts/profile-display-reader.contract';
-export { UsersService } from './application/services/users.service';
-export { UserBlockService } from './application/services/user-block.service';
-
-export {
-  USERS_REPOSITORY,
-  type UsersRepository,
-} from './domain/repositories/users.repository.interface';
+export { USER_ERRORS } from './domain/constants/user-errors.constant';
 
 /* -----------------------------------------------------------------------------
  * 🚀 Public APIs should be small, boring, and stable.
@@ -54,3 +61,25 @@ export type {
   ProfileGroupDisplayReader,
   ProfileGroupDisplay,
 } from './contracts/profile-group-display.contract';
+export {
+  USER_BLOCK_DECISIONS,
+  type UserBlockDecisionReader,
+} from './contracts/block-decision.contract';
+export { PROFILE_WALL_INTERACTION_KIND } from './domain/constants/profile-wall-interaction.constant';
+export {
+  PROFILE_WALL_TRANSACTION,
+  type ProfileWallTransaction,
+  type ProfileWallWriteResult,
+  type CreateUserWallPost,
+} from './domain/ports/profile-wall-transaction.interface';
+export {
+  PROFILE_WALL_INTERACTION_DECISIONS,
+  type ProfileWallInteractionDecisions,
+  type ProfileWallInteractionRequest,
+  type ProfileWallInteractionDecision,
+} from './contracts/profile-wall-interaction-decisions.contract';
+export {
+  PROFILE_ACTIVITY_READER,
+  type ProfileActivityReader,
+  type ProfileActivityItem,
+} from './domain/ports/profile-activity-reader.interface';

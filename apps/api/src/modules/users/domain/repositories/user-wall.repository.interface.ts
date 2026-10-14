@@ -29,7 +29,6 @@ export interface UserWallRepository {
     page: number,
     limit: number,
   ): Promise<PaginatedResult<UserWallPost>>;
-  isAttachableImage(mediaId: string, ownerId: string): Promise<boolean>;
   tombstone(
     postId: string,
     deletedById: string,

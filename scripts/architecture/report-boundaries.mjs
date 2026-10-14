@@ -49,8 +49,17 @@ async function walk(directory) {
 const files = [
   ...(await walk(join(root, "apps/api/src/modules"))),
   ...(await walk(join(root, "apps/api/src/core"))),
+  ...(await walk(join(root, "apps/api/src/composition"))),
 ];
 const findings = analyzeBoundaries(files);
+// New technical entries are blocking even while the historical inventory remains report-only.
+if (
+  findings.some(
+    (entry) => entry.rule === "infrastructure-entry-business-import",
+  )
+) {
+  process.exitCode = 1;
+}
 if (args.has("--json")) {
   console.log(
     JSON.stringify({ version: 1, mode: "report-only", findings }, null, 2),

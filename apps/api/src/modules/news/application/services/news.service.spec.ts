@@ -1,8 +1,21 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: News Tests
+ * 📄 File: apps/api/src/modules/news/application/services/news.service.spec.ts
+ *
+ * 🎯 Purpose:
+ * Verifies canonical draft inputs, attachment checks and optimistic conflict behavior.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { createEmptyEditorDocument } from '@dss/editor';
 
-import type { EditorService } from '../../../editor';
-import type { MediaRepository } from '../../../media/domain/repositories/media.repository.interface';
+import type { NewsDocumentNormalizer } from '../../domain/ports/news-document-normalizer.interface';
+import type { NewsMediaEvidenceReader } from '../../domain/ports/news-media-evidence.interface';
 import type { NewsRepository } from '../../domain/repositories/news.repository.interface';
 import type { NewsArticle } from '../../domain/types/news-article.type';
 import { NewsPostTemplateService } from './news-post-template.service';
@@ -11,7 +24,7 @@ import { NewsService } from './news.service';
 describe('NewsService', () => {
   const document = createEmptyEditorDocument('NEWS');
   let repository: jest.Mocked<NewsRepository>;
-  let editor: Pick<EditorService, 'normalize'>;
+  let editor: NewsDocumentNormalizer;
   let service: NewsService;
   let createDraft: jest.Mock;
   let saveDraft: jest.Mock;
@@ -40,9 +53,9 @@ describe('NewsService', () => {
     };
     service = new NewsService(
       repository,
-      editor as EditorService,
+      editor,
       new NewsPostTemplateService(),
-      { findById: findMediaById } as unknown as MediaRepository,
+      { findById: findMediaById } satisfies NewsMediaEvidenceReader,
     );
   });
   it('normalizes a NEWS document and creates the canonical draft', async () => {
@@ -63,7 +76,7 @@ describe('NewsService', () => {
       }),
     ).resolves.toBe(created);
 
-    expect(normalize).toHaveBeenCalledWith(JSON.stringify(document), 'NEWS');
+    expect(normalize).toHaveBeenCalledWith(JSON.stringify(document));
     expect(createDraft).toHaveBeenCalledWith(
       expect.objectContaining({
         title: 'Station update',

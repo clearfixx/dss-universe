@@ -12,9 +12,17 @@
  * ===============================================================
  */
 
-export * from './activity.module';
-export * from './application/services/activity-feed.service';
-export type { ActivityEntry } from './domain/types/activity-entry.type';
+export { ActivityModule } from './activity.module';
+export {
+  ACTIVITY_VIEWER_CONTEXT,
+  type ActivityViewerContextReader,
+  type ActivityViewerContext,
+} from './domain/ports/activity-viewer-context.interface';
+export {
+  ACTOR_ACTIVITY_READER,
+  type ActorActivityReader,
+  type ActorActivitySummary,
+} from './contracts/actor-activity-reader.contract';
 
 /**
  * Keep the public barrel smaller than the feed it serves.

@@ -19,13 +19,13 @@ import type { UserBlockService } from './user-block.service';
 import type { UserPrivacyService } from './user-privacy.service';
 import { UserWallService } from './user-wall.service';
 import type { UsersService } from './users.service';
+import type { WallImageEligibility } from '../../domain/ports/wall-image-eligibility.interface';
 
 describe('UserWallService', () => {
   const wall = {
     create: jest.fn(),
     findById: jest.fn(),
     list: jest.fn(),
-    isAttachableImage: jest.fn(),
     tombstone: jest.fn(),
   } as jest.Mocked<UserWallRepository>;
   const users = {
@@ -37,7 +37,10 @@ describe('UserWallService', () => {
   const blocks = {
     isBlocked: jest.fn(),
   } as unknown as jest.Mocked<UserBlockService>;
-  const service = new UserWallService(wall, users, privacy, blocks);
+  const images: jest.Mocked<WallImageEligibility> = {
+    isAttachableImage: jest.fn(),
+  };
+  const service = new UserWallService(wall, users, privacy, blocks, images);
 
   const publicSettings = {
     userId: 'owner',
@@ -54,6 +57,7 @@ describe('UserWallService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    images.isAttachableImage.mockResolvedValue(true);
     users.exists.mockResolvedValue(true);
     blocks.isBlocked.mockResolvedValue(false);
     privacy.visibilityFor.mockResolvedValue(publicSettings);
@@ -77,15 +81,15 @@ describe('UserWallService', () => {
   });
 
   it('accepts only a READY image owned by the author', async () => {
-    wall.isAttachableImage.mockResolvedValue(false);
+    images.isAttachableImage.mockResolvedValue(false);
 
     await expect(
       service.create('author', 'owner', null, 'media-id'),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it('creates an image post after the repository validates Media ownership', async () => {
-    wall.isAttachableImage.mockResolvedValue(true);
+  it('creates an image post after the owned port validates Media ownership', async () => {
+    images.isAttachableImage.mockResolvedValue(true);
     wall.create.mockResolvedValue({
       id: 'post-image',
       interactionTargetId: 'target-image',
@@ -145,6 +149,35 @@ describe('UserWallService', () => {
       'owner',
       'Off topic',
     ]);
+  });
+
+  it('does not query image evidence when posting is private', async () => {
+    privacy.visibilityFor.mockResolvedValue({
+      ...publicSettings,
+      allowWallPosts: false,
+    });
+    await expect(
+      service.create('author', 'owner', null, 'media'),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(images.isAttachableImage.mock.calls).toHaveLength(0);
+    expect(wall.create.mock.calls).toHaveLength(0);
+  });
+
+  it('does not query image evidence for blocked users', async () => {
+    blocks.isBlocked.mockResolvedValue(true);
+    await expect(
+      service.create('author', 'owner', null, 'media'),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(images.isAttachableImage.mock.calls).toHaveLength(0);
+    expect(wall.create.mock.calls).toHaveLength(0);
+  });
+
+  it('propagates image provider errors before any post write', async () => {
+    images.isAttachableImage.mockRejectedValue(new Error('Media unavailable'));
+    await expect(
+      service.create('author', 'owner', null, 'media'),
+    ).rejects.toThrow('Media unavailable');
+    expect(wall.create.mock.calls).toHaveLength(0);
   });
 });
 

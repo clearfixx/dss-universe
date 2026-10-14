@@ -14,6 +14,9 @@
  * • supports manual awards and source-aware moderation rollback;
  * • keeps achievements separate from authorization and custom titles.
  *
+ * 🏗️ Architecture:
+ * Owned achievement policy; external profile existence arrives through a narrow port.
+ *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
@@ -27,7 +30,10 @@ import {
 } from '@nestjs/common';
 import type { IntegrationEventJob } from '@dss/jobs';
 
-import { UsersService } from '@api/modules/users';
+import {
+  ACHIEVEMENT_RECIPIENT_EXISTENCE,
+  type AchievementRecipientExistence,
+} from '../../contracts/recipient-existence.port';
 
 import {
   ACHIEVEMENTS_REPOSITORY,
@@ -73,7 +79,8 @@ export class AchievementsService {
   constructor(
     @Inject(ACHIEVEMENTS_REPOSITORY)
     private readonly achievements: AchievementsRepository,
-    private readonly users: UsersService,
+    @Inject(ACHIEVEMENT_RECIPIENT_EXISTENCE)
+    private readonly users: AchievementRecipientExistence,
   ) {}
 
   definitions(includeInactive = false): Promise<AchievementDefinition[]> {

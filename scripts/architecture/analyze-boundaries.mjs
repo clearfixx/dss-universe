@@ -126,6 +126,20 @@ export function analyzeBoundaries(files) {
     function dependency(specifier, names = []) {
       const target = targetPath(file, specifier);
       const foreign = target && moduleOwner(target);
+      const infrastructureEntry =
+        foreign &&
+        /^apps\/api\/src\/modules\/[^/]+\/infrastructure(?:\.ts|\.js)?$/.test(
+          target,
+        );
+      const infrastructureConsumer =
+        (owner === foreign && file.includes("/infrastructure/")) ||
+        (file.startsWith("apps/api/src/composition/") &&
+          (file.includes("/infrastructure/") ||
+            (composition &&
+              !/\/(application|presentation|domain)\//.test(file))));
+      if (infrastructureEntry && !infrastructureConsumer) {
+        add("infrastructure-entry-business-import", file, specifier);
+      }
       if (
         businessLayer &&
         (specifier.startsWith("@prisma/") ||

@@ -14,6 +14,12 @@
  * • rechecks target and reply policy before save or restoration;
  * • exposes optimistic conflicts instead of silently overwriting content.
  *
+ * 🏗️ Architecture:
+ * Interactions owns draft persistence and consumes its own document normalization port.
+ *
+ * ⚠️ Important:
+ * The root adapter pins COMMENT; no preview or foreign service is injected here.
+ *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
@@ -27,7 +33,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { EditorService } from '../../../editor/application/services/editor.service';
+import {
+  COMMENT_DOCUMENT_NORMALIZER,
+  type CommentDocumentNormalizer,
+} from '../../domain/ports/comment-document-normalizer.interface';
 import {
   COMMENT_DRAFTS_REPOSITORY,
   type CommentDraftsRepository,
@@ -49,7 +58,8 @@ export class CommentDraftsService {
     @Inject(COMMENTS_REPOSITORY)
     private readonly comments: CommentsRepository,
     private readonly targets: InteractionTargetsService,
-    private readonly editor: EditorService,
+    @Inject(COMMENT_DOCUMENT_NORMALIZER)
+    private readonly editor: CommentDocumentNormalizer,
   ) {}
 
   async save(
@@ -64,7 +74,7 @@ export class CommentDraftsService {
     const parentId = input.parentId ?? null;
     await this.assertTargetAccess(input.interactionTargetId, actorId);
     await this.assertParent(input.interactionTargetId, parentId);
-    const projection = this.editor.normalize(input.documentJson, 'COMMENT');
+    const projection = this.editor.normalize(input.documentJson);
     const saved = await this.drafts.save({
       authorId: actorId,
       interactionTargetId: input.interactionTargetId,

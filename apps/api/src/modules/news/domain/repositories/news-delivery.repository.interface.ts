@@ -1,7 +1,20 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: News
+ * 📄 File: apps/api/src/modules/news/domain/repositories/news-delivery.repository.interface.ts
+ *
+ * 🎯 Purpose:
+ * Defines News persistence projections before application-owned attachment delivery composition.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import type { NewsChronologicalNavigation } from '../types/news-links.type';
+import type { NewsFullRecord } from '../types/news-full-record.type';
 import type { NewsCommentsPage } from '../types/news-comment.type';
 import type {
-  FullNewsItem,
   NewsRatingVote,
   ShortNewsNumberedPage,
   ShortNewsNumberedQuery,
@@ -23,7 +36,7 @@ export interface NewsDeliveryRepository {
     language: string,
     slug: string,
     viewerId?: string,
-  ): Promise<FullNewsItem | null>;
+  ): Promise<NewsFullRecord | null>;
   ratingVotes(
     articleId: string,
     page: number,

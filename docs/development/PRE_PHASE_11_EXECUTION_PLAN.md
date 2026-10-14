@@ -321,6 +321,58 @@ Model: `gpt-6.1-sol` xhigh for the separate brainstorm and security design.
 
 Branch: `debt/d4-module-boundaries`.
 
+D4.3d3a transfers independent News attachment metadata to Media-owned projections
+and News application composition. Full units: API 794 / Web 59 / Worker 36; 25 new
+E2E pass, including explicit defect characterizations. See
+[evidence](../audits/D4_3D3A_NEWS_ATTACHMENT_METADATA.md).
+New DEBT-051 confirms the canonical wrapper omission; Critical DEBT-052 confirms
+guest Full News bypasses server Content Gate redaction. On 2026-10-14 the owner
+approved both as separate corrections: DEBT-052 first, then DEBT-051. See the
+[security implementation plan](DEBT_052_FULL_NEWS_REDACTION_PLAN.md).
+DEBT-052 blocks release/Phase 11 readiness. No passing
+characterization, import count or local gate waives it. Users/Interactions delivery
+joins and transactional pages remain D4.3d3 work; D4.4/D4.5 and D5–D7 remain required.
+
+D4.3d2 isolates Users interests/follows/blocks for Activity through three minimal
+arrays, moving unchanged ranking to Activity application and keeping owned SQL in
+its repository. See [evidence](../audits/D4_3D2_ACTIVITY_VIEWER_CONTEXT.md).
+Import inventory stays 89; News delivery, atomic mentions and shared-row/role joins
+remain D4.3/D4.4 work. Full D4, D5–D7 and Phase 11 brainstorm gates stay required.
+
+D4.3d1 moves Content Gate account/comment/Reputation facts and Wall image eligibility
+to owner contracts, preserving policy and the existing pre-write/transaction split.
+Import inventory remains 89; it does not count cross-owner SQL. See
+[evidence](../audits/D4_3D_GATE_WALL_OWNER_EVIDENCE.md) and the
+[remaining SQL sequence](D4_MODULE_BOUNDARY_PLAN.md). Activity feed context,
+News projections, transactional mention resolution and shared-row/role joins remain
+D4.3/D4.4 work; this increment does not complete D4.3d or waive D5–D7.
+
+D4.3c is implemented on the same phase branch/PR #10; inventory is 89 after ten
+further removals. [Evidence](../audits/D4_3C_POLICY_MEDIA_ACTIVITY_CONTRACTS.md)
+records owner policy registration and Media/Activity read contracts, with 84
+relevant passing E2E. D4.3d must still remediate direct cross-owner SQL evidence;
+D4.4/D4.5 and all remaining gates stay required, not waived by the import count.
+
+D4.3b was implemented on the same phase branch/PR #10; inventory reached 99 after four
+further removals. [Evidence](../audits/D4_3B_ATOMIC_CONTENT_TARGETS.md) records
+atomic cross-owner transaction transfer and 54 relevant passing E2E cases.
+Interaction policy registration and News/Media/activity transfer remain open.
+New CI Web scheduler finding DEBT-050 is recorded for separate D6 investigation.
+
+D4.3a was implemented on the same phase branch/PR #10; inventory reached 103 after
+15 further reviewed removals. [Evidence](../audits/D4_3A_CONTENT_CONTRACTS.md)
+records minimal Editor/Content Access contracts, 37 relevant passing E2E cases
+and the unclosed interaction/News/Media/activity scope. Full D4 remains OPEN.
+
+D4.2 was implemented on the same phase branch/PR #10; inventory reached 118 after
+ten further reviewed removals. [Evidence](../audits/D4_2_REPUTATION_PROFILE_ASSETS.md)
+records unchanged API/security behavior and remaining full D4 obligations.
+
+D4.1 is implemented on the explicit review stack `173358d` / PR #9, with full
+D4 acceptance still open. The [D4 sequence](D4_MODULE_BOUNDARY_PLAN.md) preserves
+the complete scope; [initial evidence](../audits/D4_1_GAMIFICATION_BOUNDARIES.md)
+records seven reviewed removals and the remaining 128 findings.
+
 Scope:
 
 - replace broad Users and Community Points service injection;

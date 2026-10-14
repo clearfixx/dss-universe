@@ -6,14 +6,32 @@
  * 📄 File: apps/api/src/modules/content-access/index.ts
  *
  * 🎯 Purpose:
- * Exposes the public Content Access module and evaluation service boundary.
+ * Exposes minimal gate verdicts and owner-specific audience inputs by name.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 
-export * from './content-access.module';
-export * from './application/services/content-gates.service';
+export { ContentAccessModule } from './content-access.module';
+export {
+  GATE_ACCOUNT_EVIDENCE,
+  type GateAccountEvidenceReader,
+  type GateAccountEvidence,
+} from './domain/ports/gate-account-evidence.interface';
+export {
+  GATE_COMMENT_COUNT,
+  type GateCommentCountReader,
+} from './domain/ports/gate-comment-count.interface';
+export {
+  GATE_REPUTATION_TOTAL,
+  type GateReputationTotalReader,
+} from './domain/ports/gate-reputation-total.interface';
+export {
+  CONTENT_GATE_DECISIONS,
+  type ContentGateDecisions,
+  type ContentGateDecision,
+  type ContentGateRequirementKind,
+} from './contracts/content-gate-decisions.contract';
 export {
   CONTENT_AUDIENCE_READER,
   type ContentAudienceReader,

@@ -2,7 +2,7 @@
 
 > Status: Active
 >
-> Updated: 2026-10-10
+> Updated: 2026-10-14
 
 ## Purpose
 
@@ -58,6 +58,55 @@ active package safe and buildable.
 | DEBT-033 | Medium   | ACCEPTED | Observability         | Explicit telemetry startup and optional collector verified; no persistent monitoring backend claimed.          | D0                     |
 
 ## Additional D0 verification findings
+
+D4.3d2 progress for DEBT-003/004/027: Activity no longer reads Users tables;
+Users publishes three minimal context arrays and root composition binds the
+Activity-owned port. Ranking is owned by Activity application rather than its
+repository; six algorithm AST comparisons match. Import inventory stays 89,
+not full SQL isolation. News delivery/mentions/shared-row obligations remain;
+full D4 and release acceptance stay OPEN. See
+[evidence](../audits/D4_3D2_ACTIVITY_VIEWER_CONTEXT.md).
+
+D4.3d1 progress for DEBT-003/004/027: Content Gates reads only its own definitions;
+its application composes minimal account/count/total ports through root adapters.
+Media owns the Wall image query and publishes only a Boolean. No API/migration or
+policy change; import inventory stays 89 (SQL ownership was not counted there).
+Source-reviewed Activity/News/mentions/profile joins remain explicitly scheduled;
+full D4 and release acceptance stay OPEN. See
+[evidence](../audits/D4_3D_GATE_WALL_OWNER_EVIDENCE.md).
+
+D4.3c progress for DEBT-003/027: owner-policy registration lives at the root,
+Interactions registry and Media/Activity broad providers are private. News/Users
+consume minimal evidence/projection ports. Ten further findings removed (99 → 89),
+zero additions. Remaining cross-owner SQL is named D4.3d work and is not detectable
+from import diagnostics alone. Full D4 remains OPEN; see
+[evidence](../audits/D4_3C_POLICY_MEDIA_ACTIVITY_CONTRACTS.md).
+
+D4.3b progress for DEBT-003/004/027: News/Wall cross-owner writes now use semantic
+transaction ports; the target writer moves into owned infrastructure and is no
+longer a business-root/Nest export. Four findings removed (103 → 99), no additions.
+Real PostgreSQL verifies every target/content evidence failure rolls back the
+whole unit. A blocking technical-entry guard now scans root composition too.
+Full D4 remains OPEN; [evidence](../audits/D4_3B_ATOMIC_CONTENT_TARGETS.md).
+
+D4.3a progress for DEBT-003/027: Editor and Content Access concrete providers
+are private; News/comments consume owner-specific normalization ports and Editor
+consumes decision-only gate evidence. Fifteen findings removed (118 → 103),
+zero additions. Redaction/Premium/current revocation and persistence are verified;
+remaining interaction lifecycle, News/Media/activity, ORM and explicit-surface
+work stay OPEN. See [D4.3a evidence](../audits/D4_3A_CONTENT_CONTRACTS.md).
+
+D4.2 further progress for DEBT-003/004/027: Reputation uses minimal evidence;
+Media profile mutations and cross-owner writes are composed explicitly; broad
+Users/Reputation providers are private. Ten further findings are removed
+(128 → 118), zero additions. Full D4 is still OPEN; see
+[D4.2 evidence](../audits/D4_2_REPUTATION_PROFILE_ASSETS.md).
+
+D4.1 progress for DEBT-003/027: three gamification consumers now use minimal
+recipient/balance ports; concrete service exports are private. Seven reviewed
+findings are removed (135 → 128), with no additions. Remaining cross-module
+and public-surface findings stay OPEN; see
+[evidence](../audits/D4_1_GAMIFICATION_BOUNDARIES.md).
 
 ### D3.5 scope evidence (DEBT-008/024)
 
@@ -389,6 +438,73 @@ drift and reconcile by reviewed forward migration/model annotations. In
 particular, do not blindly apply a generated diff dropping indexes or changing
 outbox identifiers. D3.5 does not modify these unrelated tables or waive the gate.
 See [D3.5 evidence](../audits/D3_5_ACCESS_GROUPS_IMPLEMENTATION.md).
+
+### DEBT-050 — Web coverage reports an unhandled React scheduler error (Medium, OPEN, D6)
+
+CI run `38446264899`, job `115465567069`, head `f9784af`, failed on coverage
+before API E2E/generated validation/build. All 25 Web suites / 59 tests passed,
+but Vitest reported one uncaught `ReferenceError: window is not defined` in
+`react-dom-client.development.js:17920`, called by scheduler's
+`Immediate.performWorkUntilDeadline`. Vitest attributed the originating context
+to `apps/web/src/features/editor/editor-ai-dialog.spec.tsx`; this does not prove
+the component itself threw the error. D4 has no frontend source changes.
+
+The current full local Web unit/coverage repeats pass with two workers. Possible
+unsettled scheduler work during environment teardown is an inference, not a
+confirmed root cause or a product-runtime incident. A passing retry does not
+waive the observed CI failure. Proposed owner: frontend test lifecycle / D6
+quality baseline; investigate async cleanup and reproduce under Linux/CI load
+before changing tests or implementation. No frontend correction is included or
+authorized by this finding; coordinate separately with the owner/frontend work.
+
+Repeated evidence on 2026-10-14: CI `38496166012`, head `5bff17f`, is authoritatively
+completed/failed at Unit tests with coverage, with Web `ReferenceError: window is
+not defined` again attributed to editor-ai-dialog.spec.tsx. API E2E/generated/build
+did not execute on that run. This is repeated DEBT-050 evidence, not a new backend
+regression or permission to change frontend. No manual retry was performed.
+
+### DEBT-051 — Full News skips attachments in canonical EditorDocument (High, OPEN, D6)
+
+On 2026-10-14, the unchanged increment-base `PrismaNewsDeliveryRepository.attachmentLabels`
+was executed against the actual EditorDocument shape: `{profile:'NEWS', content:
+{type:'doc', content:[attachment]}}` returns no labels, while the inner doc node
+returns the expected media ID/label. The visitor descends only array-valued content.
+Real migrated AppModule E2E creates a canonical News draft through NewsService,
+confirms its active Media reference and eligible metadata, then observes an empty
+attachments array in fullBySlug and public GraphQL Full News. Files/reference data
+remain stored; this is a missing delivery manifest, not evidence of data loss.
+
+D4.3d3a transfers the exact old traversal semantics and records a characterization
+test, not a functional fix. Its legacy doc-node metadata fixtures must not be used
+to claim canonical attachment publication works. Proposed separate correction:
+unwrap/traverse the canonical document, preserve contentGate subtree exclusion,
+first-position/last-label semantics and current READY/PUBLIC/active-reference rules,
+then add canonical create/read regressions. The owner approved this separate
+correction on 2026-10-14, after priority DEBT-052. No behavior correction is
+included in D4.3d3a; implementation and acceptance remain OPEN.
+
+### DEBT-052 — Full News bypasses server-side Content Gate redaction (Critical, OPEN, D6)
+
+On 2026-10-14, an isolated all-migrations AppModule E2E published a PUBLIC News
+article containing a synthetic contentGate payload and a real COMMENTS=100 gate.
+EditorContentDeliveryService.project for the guest removes the synthetic text,
+but an unauthenticated fullNews GraphQL response still contains it in documentJson.
+The delivery repository serializes the raw canonical document and the full News
+application/resolver path does not invoke viewer-safe Editor delivery. This is
+confirmed response-boundary disclosure, not merely a suspected frontend issue.
+Only synthetic fixture text was used; no real private content was queried.
+
+This blocks release/Phase 11 readiness. Passing characterization tests explicitly
+document the vulnerable baseline and are not security acceptance. Proposed separate
+priority security package: publish a minimal viewer-safe Editor projection contract,
+consume it through a News-owned port/root adapter, enforce server redaction before
+the full response, and test guest, GROUP/Premium/author/current state and provider
+failure paths. Review related public document/search/metadata projections; do not
+claim those channels safe solely from fixing this one path. The owner approved
+this separate priority security package on 2026-10-14. See the
+[implementation and acceptance plan](DEBT_052_FULL_NEWS_REDACTION_PLAN.md).
+D4.3d3a does not silently change audience/redaction policy or waive the finding;
+the correction is not implemented and the Critical finding remains OPEN.
 
 Every new entry should include evidence, impact, proposed ownership and a clear
 decision before implementation. Discovery is not permission to expand the

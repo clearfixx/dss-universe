@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-13 — pre-Phase-11 debt closure / D3.5 implemented, review pending
+> Updated: 2026-10-14 — pre-Phase-11 debt closure / D4.3d3a implemented; Critical DEBT-052 open
 
 ## Product and authority
 
@@ -28,6 +28,96 @@ Legacy roadmaps are historical. This snapshot does not override source code,
 approved ADRs or recorded owner decisions.
 
 ## Current position
+
+Critical DEBT-052: a real guest Full News response contains denied Content Gate
+payload in documentJson because the published response path omits server-side
+Editor redaction. DEBT-051 also confirms canonical document wrappers skip the
+attachment manifest despite stored files/references. Both were reproduced with
+synthetic data, documented and reported. On 2026-10-14 the owner approved separate
+corrections: DEBT-052 first, then DEBT-051. See the
+[security implementation plan](development/DEBT_052_FULL_NEWS_REDACTION_PLAN.md).
+Passing characterization does not resolve them. DEBT-052 blocks release/Phase 11
+readiness. See [debt register](development/DEBT_REGISTER.md).
+
+D4.3d3a moves the independent public attachment metadata query to Media ownership
+and composes labels/order/display kinds in News application through narrow root
+contracts. Existing behavior is retained, including the two newly recorded defects;
+Users/Interactions projections and transactional pages are not yet transferred.
+Full opt-in units: API 794 / Web 59 / Worker 36; 153 relevant E2E pass (25 new),
+including explicit defect characterizations. Coverage/build pass; import inventory
+stays 89, not full SQL ownership acceptance. Full D4/gates/review and DEBT-052 remain OPEN.
+See [evidence](audits/D4_3D3A_NEWS_ATTACHMENT_METADATA.md).
+
+D4.3d3a is still an uncommitted local increment at HEAD `5bff17f`: the last
+commit/push request was not executed because automatic approval review hit its
+usage limit. No publication or new-head CI result is claimed. Resolve that
+external approval-system failure before retrying Git writes or opening the
+separate correction branch; do not bypass it through another execution route.
+
+D4.3d2 removes Activity's direct Users reads. Users publishes only interests,
+following IDs and blocked IDs; root composition binds the Activity-owned input.
+Activity application owns unchanged ranking; persistence reads only Activity
+entries/state. Six algorithm AST comparisons match. Full opt-in units: API 755 /
+Web 59 / Worker 36; 128 relevant E2E pass (17 new); coverage and production build pass.
+Import inventory stays 89, not a full SQL ownership certificate. Full gate/CI/review
+acceptance is OPEN; News delivery,
+atomic mentions and shared-row/role joins remain D4.3/D4.4 work. No frontend,
+schema, migration or Command Deck change. See
+[evidence](audits/D4_3D2_ACTIVITY_VIEWER_CONTEXT.md).
+
+D4.3d1 transfers gate statistics and Wall image checks to minimal owner evidence:
+Auth retains account facts, Interactions counts comments, Reputation sums its ledger,
+Media decides image eligibility. Content Access retains age/threshold policy and
+Users retains privacy/block checks. Full opt-in units: API 716 / Web 59 / Worker 36;
+111 relevant E2E pass (24 new); coverage and production build pass. Import inventory
+remains 89, not proof of SQL isolation. Activity,
+News delivery, transactional mentions and profile/role joins remain scheduled in
+D4.3/D4.4. No frontend, schema, migration or Command Deck change. Full gate/CI/review
+acceptance remains OPEN; see [evidence](audits/D4_3D_GATE_WALL_OWNER_EVIDENCE.md).
+
+D4.3c removes concrete registry coupling from News/Users: root composition binds
+minimal owner-decision contracts while Interactions keeps its registry private.
+News consumes only Media owner/public/readiness facts; Users consumes only actor
+activity summaries after its own privacy/block checks. No API, migration, frontend
+or permission changes. Inventory: 89 (ten further removals, zero additions).
+Full units: API 685 / Web 59 / Worker 36; relevant E2E: 84. Remaining direct
+cross-owner SQL (including Content Gates facts) is explicit D4.3d work, not covered
+by the import inventory; full D4 and release acceptance remain OPEN. See
+[evidence](audits/D4_3C_POLICY_MEDIA_ACTIVITY_CONTRACTS.md).
+
+D4.3b composes atomic News draft and Profile Wall writes behind semantic owned
+ports; the shared Interactions writer is owned infrastructure with a guarded
+technical entry, not a business export. Target/content/reference/audit/outbox
+atomicity, optimistic revisions, event shapes and tombstone redaction are retained.
+Inventory: 99 (four further removals, zero additions). Full scoped units: API 644 /
+Web 59 / Worker 36; relevant E2E: 54. Local verification uses bounded sequential
+workers after parallel runs hit OOM. CI at the preceding head stopped on an
+unhandled Web scheduler error (DEBT-050), not API E2E. No frontend fix or acceptance
+waiver. See [evidence](audits/D4_3B_ATOMIC_CONTENT_TARGETS.md).
+
+D4.3a isolates Editor normalization and Content Access decisions with published
+narrow provider contracts and separate consumer-owned ports/root adapters.
+Editor no longer receives a gate aggregate; News/comments no longer inject an
+Editor service. API/DB schema, policy and frontend are unchanged. Inventory:
+103 (15 reviewed removals, zero additions). Full opt-in units: API 639 / Web 59 /
+Worker 36; relevant E2E: 37; coverage/lint/types/build pass. Full D4.3/D4 and
+release acceptance remain open. See [evidence](audits/D4_3A_CONTENT_CONTRACTS.md).
+
+D4.2 separates Reputation account/block/existence evidence and moves profile-asset
+GraphQL composition plus atomic cross-owner writes out of Media. Broad Users and
+Reputation providers are private; no scoring, schema or frontend changes.
+Inventory: 118 findings (ten further reviewed removals, zero additions).
+Full opt-in units: API 630 / Web 59 / Worker 36; relevant E2E: 28; coverage,
+lint/typecheck/build pass. Full D4/release acceptance remains open.
+See [D4.2 evidence](audits/D4_2_REPUTATION_PROFILE_ASSETS.md).
+
+D4.1 removes broad Users/Points dependencies from Community Points, Levels and
+Achievements through minimal consumer-owned ports and root adapters. Behavior
+is preserved; no new scoring rules or frontend design. Architecture inventory
+reached 128 in that increment (seven reviewed removals, zero additions). Full opt-in units: API 609 /
+Web 59 / Worker 36; relevant E2E: 20; lint/typecheck/build pass. Full D4 remains
+open. See [evidence](audits/D4_1_GAMIFICATION_BOUNDARIES.md) and the
+[remaining sequence](development/D4_MODULE_BOUNDARY_PLAN.md).
 
 Full D3.5 is owner-approved and implemented on `debt/d3-5-iam-access-groups`,
 stacked on `04a9d50` / draft PR #8: isolated membership validity/revocation,

@@ -14,6 +14,9 @@
  * • consumes Community Points events idempotently;
  * • records upward and downward transitions without storing duplicate XP.
  *
+ * 🏗️ Architecture:
+ * Owned level policy; scalar balance and recipient ports are composed externally.
+ *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
@@ -27,8 +30,14 @@ import {
 } from '@nestjs/common';
 import type { IntegrationEventJob } from '@dss/jobs';
 
-import { CommunityPointsService } from '@api/modules/community-points';
-import { UsersService } from '@api/modules/users';
+import {
+  LEVEL_POINTS_BALANCE_READER,
+  type LevelPointsBalanceReader,
+} from '../../contracts/points-balance.port';
+import {
+  LEVEL_RECIPIENT_EXISTENCE,
+  type LevelRecipientExistence,
+} from '../../contracts/recipient-existence.port';
 
 import {
   LEVELS_REPOSITORY,
@@ -52,8 +61,10 @@ export class LevelsService {
   constructor(
     @Inject(LEVELS_REPOSITORY)
     private readonly levels: LevelsRepository,
-    private readonly points: CommunityPointsService,
-    private readonly users: UsersService,
+    @Inject(LEVEL_POINTS_BALANCE_READER)
+    private readonly points: LevelPointsBalanceReader,
+    @Inject(LEVEL_RECIPIENT_EXISTENCE)
+    private readonly users: LevelRecipientExistence,
   ) {}
 
   definitions(): Promise<LevelDefinition[]> {

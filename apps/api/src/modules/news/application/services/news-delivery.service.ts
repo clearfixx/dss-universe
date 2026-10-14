@@ -1,4 +1,28 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: News
+ * 📄 File: apps/api/src/modules/news/application/services/news-delivery.service.ts
+ *
+ * 🎯 Purpose:
+ * Validates requests and composes full News attachment projections through owned application services.
+ *
+ * 🧠 Responsibilities:
+ * • preserves filter/cursor/page/address validation and transport projections;
+ * • composes attachments only after an eligible full article is read.
+ *
+ * 🏗️ Architecture:
+ * News application; persistence and Media metadata are separately owned boundaries.
+ *
+ * ⚠️ Important:
+ * Invalid addresses retain synchronous errors; missing articles must not trigger metadata reads.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { NewsAttachmentDeliveryService } from './news-attachment-delivery.service';
 
 import {
   NEWS_DELIVERY_REPOSITORY,
@@ -48,6 +72,7 @@ export class NewsDeliveryService {
   constructor(
     @Inject(NEWS_DELIVERY_REPOSITORY)
     private readonly delivery: NewsDeliveryRepository,
+    private readonly attachments: NewsAttachmentDeliveryService,
   ) {}
 
   async browseShort(
@@ -108,11 +133,7 @@ export class NewsDeliveryService {
     if (!LANGUAGE_PATTERN.test(normalizedLanguage) || !normalizedSlug) {
       throw new BadRequestException('News address is invalid.');
     }
-    return this.delivery.findFullBySlug(
-      normalizedLanguage,
-      normalizedSlug,
-      viewerId,
-    );
+    return this.fullProjection(normalizedLanguage, normalizedSlug, viewerId);
   }
 
   ratingVotes(
@@ -160,6 +181,24 @@ export class NewsDeliveryService {
       );
     }
     return this.delivery.comments(articleId, page, pageSize, viewerId);
+  }
+
+  private async fullProjection(
+    language: string,
+    slug: string,
+    viewerId?: string,
+  ): Promise<FullNewsItem | null> {
+    const article = await this.delivery.findFullBySlug(
+      language,
+      slug,
+      viewerId,
+    );
+    if (!article) return null;
+    const attachments = await this.attachments.project(
+      article.id,
+      article.documentJson,
+    );
+    return { ...article, attachments };
   }
 
   private slug(value: string | undefined, label: string): string | undefined {

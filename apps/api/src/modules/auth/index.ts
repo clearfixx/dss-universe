@@ -30,3 +30,8 @@ export {
   AUTH_SUBJECT_ELIGIBILITY,
   type AuthSubjectEligibility,
 } from './contracts/subject-eligibility.contract';
+export {
+  AUTH_ACCOUNT_EVIDENCE,
+  type AuthAccountEvidenceReader,
+  type AuthAccountEvidence,
+} from './contracts/account-evidence.contract';

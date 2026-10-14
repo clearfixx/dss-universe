@@ -14,19 +14,23 @@
 
 import { Module } from '@nestjs/common';
 
-import { ContentAccessModule } from '../content-access/content-access.module';
-
+import { EDITOR_DOCUMENT_NORMALIZER } from './contracts/editor-document-normalizer.contract';
 import { EDITOR_CODE_HIGHLIGHTER } from './application/contracts/editor-code-highlighter.interface';
 import { EditorContentDeliveryService } from './application/services/editor-content-delivery.service';
 import { EditorService } from './application/services/editor.service';
+import { EditorDocumentNormalizerService } from './application/services/editor-document-normalizer.service';
 import { EditorHtmlRenderer } from './infrastructure/rendering/editor-html.renderer';
 import { ShikiEditorCodeHighlighter } from './infrastructure/rendering/shiki-editor-code-highlighter';
 import { EditorResolver } from './presentation/graphql/editor.resolver';
 
 @Module({
-  imports: [ContentAccessModule],
   providers: [
     EditorService,
+    EditorDocumentNormalizerService,
+    {
+      provide: EDITOR_DOCUMENT_NORMALIZER,
+      useExisting: EditorDocumentNormalizerService,
+    },
     EditorContentDeliveryService,
     EditorHtmlRenderer,
     ShikiEditorCodeHighlighter,
@@ -36,7 +40,7 @@ import { EditorResolver } from './presentation/graphql/editor.resolver';
     },
     EditorResolver,
   ],
-  exports: [EditorService, EditorContentDeliveryService],
+  exports: [EDITOR_DOCUMENT_NORMALIZER],
 })
 export class EditorModule {}
 

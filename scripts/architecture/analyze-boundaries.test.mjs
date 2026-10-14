@@ -34,10 +34,230 @@ const path = "apps/api/src/modules/auth/application/login.ts";
 const requireApi = createRequire(
   new URL("../../apps/api/package.json", import.meta.url),
 );
-const { createSourceFile, ScriptTarget, isExportDeclaration, isNamedExports } =
-  requireApi("typescript");
+const {
+  createSourceFile,
+  ScriptTarget,
+  isExportDeclaration,
+  isNamedExports,
+  forEachChild,
+  isPropertyAccessExpression,
+  isElementAccessExpression,
+} = requireApi("typescript");
+
+function directPrismaSurface(source) {
+  const tree = createSourceFile(
+    "repository.ts",
+    source,
+    ScriptTarget.Latest,
+    true,
+  );
+  const surface = new Set();
+  function visit(node) {
+    if (
+      (isPropertyAccessExpression(node) || isElementAccessExpression(node)) &&
+      node.expression.getText(tree) === "this.prisma"
+    ) {
+      surface.add(
+        isPropertyAccessExpression(node)
+          ? node.name.text
+          : node.argumentExpression.getText(tree),
+      );
+    }
+    if (
+      isPropertyAccessExpression(node) &&
+      node.getText(tree) === "this.prisma" &&
+      node.parent.expression !== node
+    )
+      surface.add("<escaped client>");
+    forEachChild(node, visit);
+  }
+  visit(tree);
+  return [...surface].sort();
+}
+
+test("bounded owned-storage characterization sees direct, computed and escaped Prisma access", () => {
+  deepEqual(
+    directPrismaSurface(
+      "this.prisma.user.findUnique({}); this.prisma[model].count(); const alias = this.prisma;",
+    ),
+    ["<escaped client>", "model", "user"],
+  );
+});
+for (const [file, expected] of [
+  [
+    "modules/content-access/infrastructure/repositories/prisma-content-gates.repository.ts",
+    ["contentGate"],
+  ],
+  [
+    "modules/users/infrastructure/repositories/prisma-user-wall.repository.ts",
+    ["$transaction", "userWallPost"],
+  ],
+  [
+    "modules/activity/infrastructure/repositories/prisma-activity.repository.ts",
+    ["$transaction", "activityEntry", "activityFeedState"],
+  ],
+  [
+    "modules/news/infrastructure/repositories/prisma-news-delivery.repository.ts",
+    ["$transaction", "comment", "interactionShare", "newsArticle", "reaction"],
+  ],
+]) {
+  test(
+    "migrated repository keeps only owned direct Prisma delegates: " + file,
+    () => {
+      const source = readFileSync(
+        new URL("../../apps/api/src/" + file, import.meta.url),
+        "utf8",
+      );
+      deepEqual(directPrismaSurface(source), expected);
+    },
+  );
+}
 
 for (const [moduleName, expected] of [
+  [
+    "activity",
+    [
+      "ActivityModule",
+      "ACTIVITY_VIEWER_CONTEXT",
+      "ActivityViewerContextReader",
+      "ActivityViewerContext",
+      "ACTOR_ACTIVITY_READER",
+      "ActorActivityReader",
+      "ActorActivitySummary",
+    ],
+  ],
+  [
+    "editor",
+    [
+      "EditorModule",
+      "EDITOR_DOCUMENT_NORMALIZER",
+      "EditorDocumentNormalizer",
+      "ValidatedEditorDocument",
+      "EDITOR_GATE_DECISIONS",
+      "EditorGateDecisions",
+      "EditorGateDecision",
+      "EditorGateRequirement",
+    ],
+  ],
+  [
+    "content-access",
+    [
+      "ContentAccessModule",
+      "CONTENT_GATE_DECISIONS",
+      "ContentGateDecisions",
+      "ContentGateDecision",
+      "ContentGateRequirementKind",
+      "CONTENT_AUDIENCE_READER",
+      "ContentAudienceReader",
+      "GATE_ACCOUNT_EVIDENCE",
+      "GateAccountEvidenceReader",
+      "GateAccountEvidence",
+      "GATE_COMMENT_COUNT",
+      "GateCommentCountReader",
+      "GATE_REPUTATION_TOTAL",
+      "GateReputationTotalReader",
+    ],
+  ],
+  [
+    "reputation",
+    [
+      "ReputationModule",
+      "REPUTATION_TOTAL_READER",
+      "ReputationTotalReader",
+      "REPUTATION_ACCOUNT_READER",
+      "ReputationAccountReader",
+      "ReputationAccountEvidence",
+      "REPUTATION_BLOCK_READER",
+      "ReputationBlockReader",
+      "REPUTATION_PROFILE_EXISTENCE",
+      "ReputationProfileExistence",
+    ],
+  ],
+  [
+    "media",
+    [
+      "MediaModule",
+      "MEDIA_PUBLIC_ATTACHMENT_READER",
+      "MediaPublicAttachmentReader",
+      "MediaPublicAttachment",
+      "MediaPublicAttachmentQuery",
+      "MEDIA_IMAGE_ELIGIBILITY",
+      "MediaImageEligibility",
+      "MEDIA_PROFILE_ASSET_COMMANDS",
+      "MediaProfileAssetCommands",
+      "PROFILE_ASSET_TRANSACTION",
+      "ProfileAssetTransaction",
+      "ProfileAssetAssignment",
+      "ProfileAssetSlot",
+      "MEDIA_PUBLICATION_EVIDENCE",
+      "MediaPublicationEvidenceReader",
+      "MediaPublicationEvidence",
+    ],
+  ],
+  [
+    "users",
+    [
+      "UsersModule",
+      "USER_ACTIVITY_CONTEXT_READER",
+      "UserActivityContextReader",
+      "UserActivityContext",
+      "WALL_IMAGE_ELIGIBILITY",
+      "WallImageEligibility",
+      "PROFILE_EXISTENCE_READER",
+      "ProfileExistenceReader",
+      "VIEWER_PROFILE_READER",
+      "ViewerProfileReader",
+      "ViewerProfile",
+      "PROFILE_DISPLAY_READER",
+      "ProfileDisplayReader",
+      "USER_ERRORS",
+      "PROFILE_GROUP_DISPLAY",
+      "ProfileGroupDisplayReader",
+      "ProfileGroupDisplay",
+      "USER_BLOCK_DECISIONS",
+      "UserBlockDecisionReader",
+      "PROFILE_WALL_INTERACTION_KIND",
+      "PROFILE_WALL_TRANSACTION",
+      "ProfileWallTransaction",
+      "ProfileWallWriteResult",
+      "CreateUserWallPost",
+      "PROFILE_WALL_INTERACTION_DECISIONS",
+      "ProfileWallInteractionDecisions",
+      "ProfileWallInteractionRequest",
+      "ProfileWallInteractionDecision",
+      "PROFILE_ACTIVITY_READER",
+      "ProfileActivityReader",
+      "ProfileActivityItem",
+    ],
+  ],
+  [
+    "community-points",
+    [
+      "CommunityPointsModule",
+      "COMMUNITY_POINTS_BALANCE_READER",
+      "CommunityPointsBalanceReader",
+      "POINTS_RECIPIENT_EXISTENCE",
+      "PointsRecipientExistence",
+    ],
+  ],
+  [
+    "levels",
+    [
+      "LevelsModule",
+      "LEVEL_RECIPIENT_EXISTENCE",
+      "LevelRecipientExistence",
+      "LEVEL_POINTS_BALANCE_READER",
+      "LevelPointsBalanceReader",
+    ],
+  ],
+  [
+    "achievements",
+    [
+      "AchievementsModule",
+      "ACHIEVEMENT_RECIPIENT_EXISTENCE",
+      "AchievementRecipientExistence",
+    ],
+  ],
   [
     "iam",
     [
@@ -68,6 +288,9 @@ for (const [moduleName, expected] of [
       "AUTH_ERRORS",
       "AUTH_SUBJECT_ELIGIBILITY",
       "AuthSubjectEligibility",
+      "AUTH_ACCOUNT_EVIDENCE",
+      "AuthAccountEvidenceReader",
+      "AuthAccountEvidence",
     ],
   ],
 ]) {
@@ -289,3 +512,41 @@ test("CLI rejects unsupported arguments", () => {
   equal(result.status, 1);
   ok(result.stderr.includes("Unknown argument"));
 });
+
+for (const file of [
+  "apps/api/src/modules/news/application/service.ts",
+  "apps/api/src/modules/news/infrastructure/repository.ts",
+  "apps/api/src/modules/interactions/application/service.ts",
+  "apps/api/src/composition/unsafe/application/service.ts",
+  "apps/api/src/composition/unsafe/application/unsafe.module.ts",
+]) {
+  test(`technical persistence entry is forbidden in ${file}`, () => {
+    ok(
+      analyzeBoundaries([
+        {
+          path: file,
+          source:
+            "import { PrismaInteractionTargetWriter } from '@api/modules/interactions/infrastructure';",
+        },
+      ]).some(({ rule }) => rule === "infrastructure-entry-business-import"),
+    );
+  });
+}
+for (const file of [
+  "apps/api/src/composition/content-targets/infrastructure/unit.ts",
+  "apps/api/src/composition/content-targets/content-target-composition.module.ts",
+  "apps/api/src/modules/interactions/infrastructure/repository.ts",
+]) {
+  test(`technical persistence entry is allowed only for owned/root infrastructure: ${file}`, () => {
+    deepEqual(
+      analyzeBoundaries([
+        {
+          path: file,
+          source:
+            "import { PrismaInteractionTargetWriter } from '@api/modules/interactions/infrastructure';",
+        },
+      ]),
+      [],
+    );
+  });
+}

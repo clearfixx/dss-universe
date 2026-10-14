@@ -14,15 +14,24 @@
  * • recursively removes denied protected payloads on the server;
  * • returns explicit gate decisions for safe placeholder rendering.
  *
+ * 🏗️ Architecture:
+ * Editor-owned redaction consumes a minimal decision port wired at the root.
+ *
+ * ⚠️ Important:
+ * Provider failures propagate; no gate aggregate or default-allow decision enters Editor.
+ *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import type { EditorDocument, EditorNode } from '@dss/editor';
 
-import { ContentGatesService } from '../../../content-access/application/services/content-gates.service';
-import type { ContentGateEvaluation } from '../../../content-access/domain/types/content-gate.type';
+import {
+  EDITOR_GATE_DECISIONS,
+  type EditorGateDecisions,
+  type EditorGateDecision,
+} from '../../domain/ports/editor-gate-decisions.interface';
 import type {
   EditorContentGateDecision,
   EditorDeliveryProjection,
@@ -33,7 +42,8 @@ import { EditorService } from './editor.service';
 export class EditorContentDeliveryService {
   constructor(
     private readonly editor: EditorService,
-    private readonly contentGates: ContentGatesService,
+    @Inject(EDITOR_GATE_DECISIONS)
+    private readonly contentGates: EditorGateDecisions,
   ) {}
 
   async project(
@@ -41,7 +51,7 @@ export class EditorContentDeliveryService {
     viewerId: string | null,
   ): Promise<EditorDeliveryProjection> {
     const canonical = this.editor.normalize(documentJson).document;
-    const evaluations = new Map<string, Promise<ContentGateEvaluation>>();
+    const evaluations = new Map<string, Promise<EditorGateDecision>>();
     const content = (await this.redactNode(
       canonical.content,
       viewerId,
@@ -61,7 +71,7 @@ export class EditorContentDeliveryService {
   private async redactNode(
     node: EditorNode,
     viewerId: string | null,
-    evaluations: Map<string, Promise<ContentGateEvaluation>>,
+    evaluations: Map<string, Promise<EditorGateDecision>>,
   ): Promise<EditorNode> {
     if (node.type === 'contentGate') {
       const gateId = node.attrs?.gateId;
@@ -88,8 +98,8 @@ export class EditorContentDeliveryService {
   private async evaluateOnce(
     gateId: string,
     viewerId: string | null,
-    evaluations: Map<string, Promise<ContentGateEvaluation>>,
-  ): Promise<ContentGateEvaluation> {
+    evaluations: Map<string, Promise<EditorGateDecision>>,
+  ): Promise<EditorGateDecision> {
     const cached = evaluations.get(gateId);
     if (cached) return cached;
     const evaluation = this.contentGates.evaluate(gateId, viewerId);
@@ -98,10 +108,10 @@ export class EditorContentDeliveryService {
   }
 
   private toDecision(
-    evaluation: ContentGateEvaluation,
+    evaluation: EditorGateDecision,
   ): EditorContentGateDecision {
     return {
-      gateId: evaluation.gate.id,
+      gateId: evaluation.gateId,
       allowed: evaluation.allowed,
       bypassed: evaluation.bypassed,
       unmet: evaluation.unmet,

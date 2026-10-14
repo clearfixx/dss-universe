@@ -16,6 +16,8 @@ import { ConflictException, ForbiddenException } from '@nestjs/common';
 import { createEmptyEditorDocument } from '@dss/editor';
 
 import { EditorService } from '../../../editor/application/services/editor.service';
+import { EditorDocumentNormalizerService } from '../../../editor/application/services/editor-document-normalizer.service';
+import { CommentDocumentAdapter } from '../../../../composition/content/infrastructure/comment-document.adapter';
 import type { EditorHtmlRenderer } from '../../../editor/infrastructure/rendering/editor-html.renderer';
 import type { CommentDraftsRepository } from '../../domain/repositories/comment-drafts.repository.interface';
 import type { CommentsRepository } from '../../domain/repositories/comments.repository.interface';
@@ -64,7 +66,11 @@ describe('CommentDraftsService', () => {
       drafts,
       comments,
       targets,
-      new EditorService({} as EditorHtmlRenderer),
+      new CommentDocumentAdapter(
+        new EditorDocumentNormalizerService(
+          new EditorService({} as EditorHtmlRenderer),
+        ),
+      ),
     );
   });
 

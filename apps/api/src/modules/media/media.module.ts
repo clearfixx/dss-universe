@@ -23,9 +23,15 @@
  */
 
 import { Module } from '@nestjs/common';
+import { MEDIA_PUBLIC_ATTACHMENT_READER } from './contracts/public-attachment-reader.contract';
+import { PrismaPublicAttachmentReader } from './infrastructure/repositories/prisma-public-attachment.reader';
+import { MEDIA_IMAGE_ELIGIBILITY } from './contracts/media-image-eligibility.contract';
+import { PrismaMediaImageEligibilityReader } from './infrastructure/repositories/prisma-media-image-eligibility.reader';
+import { MEDIA_PUBLICATION_EVIDENCE } from './contracts/media-publication-evidence.contract';
+import { PrismaMediaPublicationEvidenceReader } from './infrastructure/repositories/prisma-media-publication-evidence.reader';
 
 import { StorageModule } from '@api/core/storage';
-import { UsersModule } from '../users/users.module';
+import { MEDIA_PROFILE_ASSET_COMMANDS } from './contracts/profile-asset-commands.contract';
 
 import { MediaUploadPolicyService } from './application/services/media-upload-policy.service';
 import { MediaUploadSessionService } from './application/services/media-upload-session.service';
@@ -53,8 +59,33 @@ import { COVER_REPOSITORY } from './domain/repositories/cover.repository.interfa
 import { PrismaCoverRepository } from './infrastructure/repositories/prisma-cover.repository';
 
 @Module({
-  imports: [StorageModule, UsersModule],
+  imports: [StorageModule],
   providers: [
+    {
+      provide: MEDIA_PUBLIC_ATTACHMENT_READER,
+      useClass: PrismaPublicAttachmentReader,
+    },
+    {
+      provide: MEDIA_IMAGE_ELIGIBILITY,
+      useClass: PrismaMediaImageEligibilityReader,
+    },
+    {
+      provide: MEDIA_PUBLICATION_EVIDENCE,
+      useClass: PrismaMediaPublicationEvidenceReader,
+    },
+    {
+      provide: MEDIA_PROFILE_ASSET_COMMANDS,
+      inject: [AvatarService, CoverService],
+      useFactory: (avatars: AvatarService, covers: CoverService) =>
+        Object.freeze({
+          assignAvatar: (subjectId: string, mediaId: string) =>
+            avatars.assign(subjectId, mediaId),
+          removeAvatar: (subjectId: string) => avatars.remove(subjectId),
+          assignCover: (subjectId: string, mediaId: string) =>
+            covers.assign(subjectId, mediaId),
+          removeCover: (subjectId: string) => covers.remove(subjectId),
+        }),
+    },
     AvatarService,
     CoverService,
     MediaAccessService,
@@ -88,12 +119,10 @@ import { PrismaCoverRepository } from './infrastructure/repositories/prisma-cove
   ],
   controllers: [MediaUploadController, MediaDeliveryController],
   exports: [
-    AvatarService,
-    CoverService,
-    MediaUploadPolicyService,
-    MediaUploadSessionService,
-    MEDIA_REPOSITORY,
-    MEDIA_UPLOAD_SESSION_REPOSITORY,
+    MEDIA_PUBLIC_ATTACHMENT_READER,
+    MEDIA_PROFILE_ASSET_COMMANDS,
+    MEDIA_PUBLICATION_EVIDENCE,
+    MEDIA_IMAGE_ELIGIBILITY,
   ],
 })
 export class MediaModule {}

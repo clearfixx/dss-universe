@@ -14,15 +14,9 @@
 
 import type { EditorDocument } from '@dss/editor';
 
-import type { ContentGateRequirementKind } from '../../../content-access/domain/types/content-gate.type';
+import type { EditorGateDecision } from '../../domain/ports/editor-gate-decisions.interface';
 
-export type EditorContentGateDecision = {
-  gateId: string;
-  allowed: boolean;
-  bypassed: boolean;
-  unmet: ContentGateRequirementKind[];
-  notice: string;
-};
+export type EditorContentGateDecision = EditorGateDecision;
 
 export type EditorDeliveryProjection = {
   document: EditorDocument;

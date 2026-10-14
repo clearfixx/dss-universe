@@ -14,6 +14,12 @@
  * • applies author/Premium threshold bypass without overriding audience;
  * • fails closed for missing viewers or unmet policy evidence.
  *
+ * 🏗️ Architecture:
+ * Content Access policy; viewer statistics enter through its own fact-composition service.
+ *
+ * ⚠️ Important:
+ * Audience checks precede numeric bypass; foreign storage is never accessed here.
+ *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
@@ -41,6 +47,8 @@ import {
   type ContentAudienceReader,
 } from '../../domain/ports/content-audience-reader.interface';
 
+import { ContentGateViewerFactsService } from './content-gate-viewer-facts.service';
+
 const MAX_REQUIREMENTS = 6;
 
 @Injectable()
@@ -50,6 +58,7 @@ export class ContentGatesService {
     private readonly gates: ContentGatesRepository,
     @Inject(CONTENT_AUDIENCE_READER)
     private readonly audience: ContentAudienceReader,
+    private readonly viewerFacts: ContentGateViewerFactsService,
   ) {}
 
   create(input: CreateContentGate): Promise<ContentGate> {
@@ -74,7 +83,7 @@ export class ContentGatesService {
       };
     }
     const [statistics, access] = await Promise.all([
-      this.gates.viewerFacts(viewerId, now),
+      this.viewerFacts.read(viewerId, now),
       this.audience.read(viewerId, now),
     ]);
     if (!statistics || !access)

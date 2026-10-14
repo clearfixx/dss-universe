@@ -74,6 +74,13 @@ import { HealthModule } from '@api/health';
 import { AppController } from './app.controller';
 import { IdentityCompositionModule } from './composition/identity/identity-composition.module';
 import { AccessGroupIntegrationModule } from './composition/access-groups/access-group-integration.module';
+import { GamificationIntegrationModule } from './composition/gamification/gamification-integration.module';
+import { ReputationIntegrationModule } from './composition/reputation/reputation-integration.module';
+import { ProfileAssetCompositionModule } from './composition/profile-assets/profile-asset-composition.module';
+import { ContentIntegrationModule } from './composition/content/content-integration.module';
+import { ContentTargetCompositionModule } from './composition/content-targets/content-target-composition.module';
+import { InteractionPolicyCompositionModule } from './composition/interaction-policies/interaction-policy-composition.module';
+import { ContentReadIntegrationModule } from './composition/content-reads/content-read-integration.module';
 import { AchievementsModule } from './modules/achievements';
 import { ActivityModule } from './modules/activity';
 import { AiCoreModule } from './modules/ai-core';
@@ -106,6 +113,13 @@ import { UsersModule } from './modules/users/users.module';
     UsersModule,
     IdentityCompositionModule,
     AccessGroupIntegrationModule,
+    GamificationIntegrationModule,
+    ReputationIntegrationModule,
+    ProfileAssetCompositionModule,
+    ContentIntegrationModule,
+    ContentTargetCompositionModule,
+    InteractionPolicyCompositionModule,
+    ContentReadIntegrationModule,
     IdentityPresentationModule,
     AuthorizationModule,
     IamModule,
