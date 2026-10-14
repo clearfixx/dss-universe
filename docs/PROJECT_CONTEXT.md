@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-14 — DEBT-053 approved batch optimization; acceptance still open
+> Updated: 2026-10-14 — DEBT-054 related-audience correction; acceptance still open
 
 ## Product and authority
 
@@ -29,6 +29,18 @@ approved ADRs or recorded owner decisions.
 
 ## Current position
 
+Active package: `debt/debt-054-related-audience`, explicitly stacked on DEBT-053
+`086aae3` / draft PR #12, not an accepted baseline. Related targets now use the
+same News publication/audience predicate as direct Full News, before metadata
+selection. Twelve new real GraphQL cases first reproduced four failures, then
+all passed after correction; focused E2E 73 PASS, opt-in API coverage 890 PASS.
+Lint/types/Prisma/build/architecture PASS; fresh workspace units PASS. Full API
+E2E 256 PASS/2 FAIL (DEBT-045); isolated Auth suite 26 PASS. Global format/audit/
+generated/Web gates remain red. No frontend, public schema, migrations or new
+group/staff policy. Review and CI acceptance remain open. See the
+[DEBT-054 plan](development/DEBT_054_RELATED_AUDIENCE_PLAN.md). Next approved
+correction is DEBT-051, then remaining D4/D5–D7, stack audit and Phase 11 brainstorm.
+
 At the package base, Critical DEBT-052: a real guest Full News response contains denied Content Gate
 payload in documentJson because the published response path omits server-side
 Editor redaction. DEBT-051 also confirms canonical document wrappers skip the
@@ -47,10 +59,11 @@ pass. Full API E2E: 210 PASS / 1 FAIL (known DEBT-045); Web smoke: 10 PASS / 3 F
 (DEBT-034). Format/audit/generated baseline and CI/review remain unaccepted.
 See [corrective evidence](audits/DEBT_052_FULL_NEWS_REDACTION.md).
 On 2026-10-14 the owner approved separate DEBT-053 search and DEBT-054 related
-audience corrections, in that order after DEBT-052; neither is implemented here.
+audience corrections, in that order after DEBT-052; their separate implementation
+and acceptance states are recorded in this snapshot and the debt register.
 DEBT-051 follows the priority security work. No Phase 11 readiness is claimed.
 
-The active branch is now `debt/debt-053-news-viewer-search`, based on published
+The DEBT-053 parent branch is `debt/debt-053-news-viewer-search`, based on published
 DEBT-052 `0ecdbb1` / draft PR #11. The owner approved a public-only search index
 plus live, batched authenticated gated-document projection with performance
 tests and no hidden result limit. Shared Editor projection/contracts are the
