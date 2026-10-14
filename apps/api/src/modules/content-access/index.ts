@@ -14,6 +14,19 @@
 
 export { ContentAccessModule } from './content-access.module';
 export {
+  GATE_ACCOUNT_EVIDENCE,
+  type GateAccountEvidenceReader,
+  type GateAccountEvidence,
+} from './domain/ports/gate-account-evidence.interface';
+export {
+  GATE_COMMENT_COUNT,
+  type GateCommentCountReader,
+} from './domain/ports/gate-comment-count.interface';
+export {
+  GATE_REPUTATION_TOTAL,
+  type GateReputationTotalReader,
+} from './domain/ports/gate-reputation-total.interface';
+export {
   CONTENT_GATE_DECISIONS,
   type ContentGateDecisions,
   type ContentGateDecision,

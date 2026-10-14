@@ -23,6 +23,8 @@
  */
 
 import { Module } from '@nestjs/common';
+import { MEDIA_IMAGE_ELIGIBILITY } from './contracts/media-image-eligibility.contract';
+import { PrismaMediaImageEligibilityReader } from './infrastructure/repositories/prisma-media-image-eligibility.reader';
 import { MEDIA_PUBLICATION_EVIDENCE } from './contracts/media-publication-evidence.contract';
 import { PrismaMediaPublicationEvidenceReader } from './infrastructure/repositories/prisma-media-publication-evidence.reader';
 
@@ -57,6 +59,10 @@ import { PrismaCoverRepository } from './infrastructure/repositories/prisma-cove
 @Module({
   imports: [StorageModule],
   providers: [
+    {
+      provide: MEDIA_IMAGE_ELIGIBILITY,
+      useClass: PrismaMediaImageEligibilityReader,
+    },
     {
       provide: MEDIA_PUBLICATION_EVIDENCE,
       useClass: PrismaMediaPublicationEvidenceReader,
@@ -106,7 +112,11 @@ import { PrismaCoverRepository } from './infrastructure/repositories/prisma-cove
     },
   ],
   controllers: [MediaUploadController, MediaDeliveryController],
-  exports: [MEDIA_PROFILE_ASSET_COMMANDS, MEDIA_PUBLICATION_EVIDENCE],
+  exports: [
+    MEDIA_PROFILE_ASSET_COMMANDS,
+    MEDIA_PUBLICATION_EVIDENCE,
+    MEDIA_IMAGE_ELIGIBILITY,
+  ],
 })
 export class MediaModule {}
 

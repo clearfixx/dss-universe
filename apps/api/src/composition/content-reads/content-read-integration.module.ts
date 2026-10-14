@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/composition/content-reads/content-read-integration.module.ts
  *
  * 🎯 Purpose:
- * Binds separate Media and Activity read contracts without moving feature policy.
+ * Binds minimal owner evidence for News, Profile Wall and Content Access.
  *
  * 🧠 Responsibilities:
  * • exposes only the operation-specific data required by its consumer;
@@ -25,17 +25,49 @@ import { Global, Module } from '@nestjs/common';
 import { MediaModule } from '@api/modules/media';
 import { ActivityModule } from '@api/modules/activity';
 import { NEWS_MEDIA_EVIDENCE } from '@api/modules/news';
-import { PROFILE_ACTIVITY_READER } from '@api/modules/users';
+import {
+  PROFILE_ACTIVITY_READER,
+  WALL_IMAGE_ELIGIBILITY,
+} from '@api/modules/users';
+import { AuthModule } from '@api/modules/auth';
+import { InteractionsModule } from '@api/modules/interactions';
+import { ReputationModule } from '@api/modules/reputation';
+import {
+  GATE_ACCOUNT_EVIDENCE,
+  GATE_COMMENT_COUNT,
+  GATE_REPUTATION_TOTAL,
+} from '@api/modules/content-access';
+import { GateAccountEvidenceAdapter } from './infrastructure/gate-account-evidence.adapter';
+import { GateCommentCountAdapter } from './infrastructure/gate-comment-count.adapter';
+import { GateReputationTotalAdapter } from './infrastructure/gate-reputation-total.adapter';
+import { WallImageEligibilityAdapter } from './infrastructure/wall-image-eligibility.adapter';
 import { NewsMediaEvidenceAdapter } from './infrastructure/news-media-evidence.adapter';
 import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapter';
 
 @Global()
 @Module({
-  imports: [MediaModule, ActivityModule],
+  imports: [
+    MediaModule,
+    ActivityModule,
+    AuthModule,
+    InteractionsModule,
+    ReputationModule,
+  ],
   providers: [
+    { provide: GATE_ACCOUNT_EVIDENCE, useClass: GateAccountEvidenceAdapter },
+    { provide: GATE_COMMENT_COUNT, useClass: GateCommentCountAdapter },
+    { provide: GATE_REPUTATION_TOTAL, useClass: GateReputationTotalAdapter },
+    { provide: WALL_IMAGE_ELIGIBILITY, useClass: WallImageEligibilityAdapter },
     { provide: NEWS_MEDIA_EVIDENCE, useClass: NewsMediaEvidenceAdapter },
     { provide: PROFILE_ACTIVITY_READER, useClass: ProfileActivityAdapter },
   ],
-  exports: [NEWS_MEDIA_EVIDENCE, PROFILE_ACTIVITY_READER],
+  exports: [
+    NEWS_MEDIA_EVIDENCE,
+    PROFILE_ACTIVITY_READER,
+    GATE_ACCOUNT_EVIDENCE,
+    GATE_COMMENT_COUNT,
+    GATE_REPUTATION_TOTAL,
+    WALL_IMAGE_ELIGIBILITY,
+  ],
 })
 export class ContentReadIntegrationModule {}

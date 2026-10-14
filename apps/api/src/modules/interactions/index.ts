@@ -13,6 +13,10 @@
  */
 
 export { InteractionsModule } from './interactions.module';
+export {
+  COMMENT_COUNT_READER,
+  type CommentCountReader,
+} from './contracts/comment-count-reader.contract';
 export { BookmarksService } from './application/services/bookmarks.service';
 export { CommentDraftsService } from './application/services/comment-drafts.service';
 export { InteractionTargetsService } from './application/services/interaction-targets.service';

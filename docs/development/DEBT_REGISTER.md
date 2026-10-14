@@ -2,7 +2,7 @@
 
 > Status: Active
 >
-> Updated: 2026-10-10
+> Updated: 2026-10-14
 
 ## Purpose
 
@@ -58,6 +58,14 @@ active package safe and buildable.
 | DEBT-033 | Medium   | ACCEPTED | Observability         | Explicit telemetry startup and optional collector verified; no persistent monitoring backend claimed.          | D0                     |
 
 ## Additional D0 verification findings
+
+D4.3d1 progress for DEBT-003/004/027: Content Gates reads only its own definitions;
+its application composes minimal account/count/total ports through root adapters.
+Media owns the Wall image query and publishes only a Boolean. No API/migration or
+policy change; import inventory stays 89 (SQL ownership was not counted there).
+Source-reviewed Activity/News/mentions/profile joins remain explicitly scheduled;
+full D4 and release acceptance stay OPEN. See
+[evidence](../audits/D4_3D_GATE_WALL_OWNER_EVIDENCE.md).
 
 D4.3c progress for DEBT-003/027: owner-policy registration lives at the root,
 Interactions registry and Media/Activity broad providers are private. News/Users

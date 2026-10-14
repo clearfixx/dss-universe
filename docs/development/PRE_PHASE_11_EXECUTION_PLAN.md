@@ -321,6 +321,14 @@ Model: `gpt-6.1-sol` xhigh for the separate brainstorm and security design.
 
 Branch: `debt/d4-module-boundaries`.
 
+D4.3d1 moves Content Gate account/comment/Reputation facts and Wall image eligibility
+to owner contracts, preserving policy and the existing pre-write/transaction split.
+Import inventory remains 89; it does not count cross-owner SQL. See
+[evidence](../audits/D4_3D_GATE_WALL_OWNER_EVIDENCE.md) and the
+[remaining SQL sequence](D4_MODULE_BOUNDARY_PLAN.md). Activity feed context,
+News projections, transactional mention resolution and shared-row/role joins remain
+D4.3/D4.4 work; this increment does not complete D4.3d or waive D5–D7.
+
 D4.3c is implemented on the same phase branch/PR #10; inventory is 89 after ten
 further removals. [Evidence](../audits/D4_3C_POLICY_MEDIA_ACTIVITY_CONTRACTS.md)
 records owner policy registration and Media/Activity read contracts, with 84

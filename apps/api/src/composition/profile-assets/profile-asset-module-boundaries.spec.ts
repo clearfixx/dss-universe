@@ -21,7 +21,10 @@ import {
   PROFILE_DISPLAY_READER,
   PROFILE_WALL_INTERACTION_DECISIONS,
 } from '@api/modules/users';
-import { ReputationModule } from '@api/modules/reputation';
+import {
+  ReputationModule,
+  REPUTATION_TOTAL_READER,
+} from '@api/modules/reputation';
 import { MediaModule, MEDIA_PROFILE_ASSET_COMMANDS } from '@api/modules/media';
 describe('D4.2 provider visibility', () => {
   it('does not export Users/Reputation services or broad avatar/cover implementations', () => {
@@ -34,7 +37,7 @@ describe('D4.2 provider visibility', () => {
     ]);
     expect(
       Reflect.getMetadata(MODULE_METADATA.EXPORTS, ReputationModule),
-    ).toEqual([]);
+    ).toEqual([REPUTATION_TOTAL_READER]);
     const media = Reflect.getMetadata(
       MODULE_METADATA.EXPORTS,
       MediaModule,

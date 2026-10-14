@@ -14,6 +14,10 @@
 
 export { ReputationModule } from './reputation.module';
 export {
+  REPUTATION_TOTAL_READER,
+  type ReputationTotalReader,
+} from './contracts/reputation-total-reader.contract';
+export {
   REPUTATION_ACCOUNT_READER,
   type ReputationAccountReader,
   type ReputationAccountEvidence,

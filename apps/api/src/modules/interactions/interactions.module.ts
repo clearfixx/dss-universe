@@ -25,6 +25,8 @@ import { CommentsService } from './application/services/comments.service';
 import { InteractionPolicyRegistryService } from './application/services/interaction-policy-registry.service';
 import { InteractionPolicyRegistrationsService } from './application/services/interaction-policy-registrations.service';
 import { INTERACTION_POLICY_REGISTRATIONS } from './contracts/interaction-policy-registrations.contract';
+import { COMMENT_COUNT_READER } from './contracts/comment-count-reader.contract';
+import { PrismaCommentCountReader } from './infrastructure/repositories/prisma-comment-count.reader';
 import { PrismaInteractionTargetWriter } from './infrastructure/repositories/prisma-interaction-target.writer';
 import { InteractionTargetsService } from './application/services/interaction-targets.service';
 import { ModerationService } from './application/services/moderation.service';
@@ -55,6 +57,7 @@ import { ReactionsResolver } from './presentation/graphql/resolvers/reactions.re
 @Module({
   imports: [PrismaModule, AuditModule, EventsModule],
   providers: [
+    { provide: COMMENT_COUNT_READER, useClass: PrismaCommentCountReader },
     InteractionPolicyRegistryService,
     InteractionPolicyRegistrationsService,
     {
@@ -107,6 +110,7 @@ import { ReactionsResolver } from './presentation/graphql/resolvers/reactions.re
     },
   ],
   exports: [
+    COMMENT_COUNT_READER,
     INTERACTION_POLICY_REGISTRATIONS,
     InteractionTargetsService,
     BookmarksService,

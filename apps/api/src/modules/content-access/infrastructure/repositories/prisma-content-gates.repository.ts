@@ -6,7 +6,17 @@
  * 📄 File: apps/api/src/modules/content-access/infrastructure/repositories/prisma-content-gates.repository.ts
  *
  * 🎯 Purpose:
- * Persists Content Gates and projects facts only for active viewers.
+ * Persists owned Content Gate definitions without reading foreign account or ledger tables.
+ *
+ * 🧠 Responsibilities:
+ * • creates and reads gate definitions with their requirements;
+ * • maps owned persistence records to domain types.
+ *
+ * 🏗️ Architecture:
+ * Content Access persistence; viewer evidence is composed in its application layer.
+ *
+ * ⚠️ Important:
+ * Do not query Auth, Interactions or Reputation tables from this repository.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -52,38 +62,6 @@ export class PrismaContentGatesRepository implements ContentGatesRepository {
     return record ? this.toDomain(record) : null;
   }
 
-  async viewerFacts(userId: string, now: Date) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        createdAt: true,
-        status: true,
-      },
-    });
-    if (!user || user.status !== 'ACTIVE') return null;
-    const [comments, reputation] = await Promise.all([
-      this.prisma.comment.count({
-        where: { authorId: userId, deletedAt: null },
-      }),
-      this.prisma.reputationEntry.aggregate({
-        where: { recipientId: userId },
-        _sum: { value: true },
-      }),
-    ]);
-    return {
-      accountAgeDays: Math.max(
-        0,
-        Math.floor((now.getTime() - user.createdAt.getTime()) / 86_400_000),
-      ),
-      comments,
-      forumPosts: 0,
-      publications: 0,
-      reputation: reputation._sum.value ?? 0,
-      // Audience comes from Authorization, never from display names or this statistics query.
-      groups: [],
-    };
-  }
-
   private toDomain(record: GateRecord): ContentGate {
     return {
       id: record.id,
@@ -100,5 +78,3 @@ export class PrismaContentGatesRepository implements ContentGatesRepository {
     };
   }
 }
-
-/** Zero placeholders are explicit until Forum and publishing ledgers dock here. */

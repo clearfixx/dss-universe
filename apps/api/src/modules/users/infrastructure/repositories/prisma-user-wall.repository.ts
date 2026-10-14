@@ -13,7 +13,7 @@
  * • delegates atomic writes without sharing an ORM transaction.
  *
  * 🏗️ Architecture:
- * Users persistence adapter; legacy Media attachability reads remain separately visible.
+ * Users persistence adapter; image eligibility enters the application through an owned port.
  *
  * ⚠️ Important:
  * Retained deleted bodies/images must not escape the Users response projection.
@@ -22,7 +22,6 @@
  * ===============================================================
  */
 import { Inject, Injectable } from '@nestjs/common';
-import { MediaKind, MediaStatus } from '@prisma/client';
 
 import { PrismaService } from '@api/core/database';
 import type { PaginatedResult } from '@api/shared';
@@ -76,19 +75,6 @@ export class PrismaUserWallRepository implements UserWallRepository {
       limit,
       totalPages: Math.ceil(total / limit),
     };
-  }
-
-  async isAttachableImage(mediaId: string, ownerId: string): Promise<boolean> {
-    const count = await this.prisma.media.count({
-      where: {
-        id: mediaId,
-        ownerId,
-        kind: MediaKind.IMAGE,
-        status: MediaStatus.READY,
-        deletedAt: null,
-      },
-    });
-    return count === 1;
   }
 
   async tombstone(

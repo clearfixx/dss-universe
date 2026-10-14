@@ -2,8 +2,9 @@
 
 Date: 2026-10-14. Status: authorized debt-remediation execution, not Phase 11.
 Branch: `debt/d4-module-boundaries`.
-Implemented increments: D4.1, D4.2 and bounded D4.3a/b/c; remaining inventory 89,
+Implemented increments: D4.1, D4.2 and bounded D4.3a/b/c/d1; remaining import inventory 89,
 full D4 and the rest of D4.3 OPEN. See
+[D4.3d1 evidence](../audits/D4_3D_GATE_WALL_OWNER_EVIDENCE.md) and
 [D4.3c evidence](../audits/D4_3C_POLICY_MEDIA_ACTIVITY_CONTRACTS.md).
 Review stack base: `173358d` / draft PR #9. Parent acceptance is still pending;
 no red PR is merged and this branch is not an accepted release baseline.
@@ -62,14 +63,51 @@ Activity publishes actor summaries without visibility/metadata/body fields; User
 owns profile/block authorization before its projection-read port. Preserve existing
 pagination, active PUBLIC/MEMBERS filtering and retraction semantics.
 
-This is not full SQL ownership acceptance: the Content Gate repository still
-reads Auth account eligibility/age, Interactions counts and Reputation totals
-directly (`prisma-content-gates.repository.ts:56–72`); Profile Wall still checks
-Media attachability via a direct query (`prisma-user-wall.repository.ts`). These
-remain D4.3d owner-evidence work. Audit other cross-owner SQL/projection joins
-before D4.5 acceptance; the syntactic import inventory does not detect table
-ownership and must not be used to waive it. Preserve the existing transaction
-and failure semantics when migrating these facts.
+### D4.3d1 — Gate and Wall owner evidence
+
+Content Gate persistence now reads only gate definitions. Its private application
+fact service consumes three separate owned ports: account eligibility/createdAt,
+comment count and signed Reputation total. Root adapters bind published Auth,
+Interactions and Reputation readers. Missing/inactive accounts short-circuit both
+counts; exact floor/clamp age math, non-deleted global comment counts and all-entry
+reputation sums are preserved. Groups/Premium remain Authorization-only; Forum and
+publication counters retain the existing explicit zero placeholders, not a claim
+of completed ledgers. Counts and audience still use independent parallel reads,
+not a new snapshot transaction or cache.
+
+Profile Wall consumes its own image-eligibility port after privacy/block checks;
+Media owns the exact owner/IMAGE/READY/non-deleted query and publishes only Boolean.
+All existing visibility values remain eligible under that rule. The read stays
+before the unchanged atomic Wall transaction; no new race protection is claimed.
+See [D4.3d1 evidence](../audits/D4_3D_GATE_WALL_OWNER_EVIDENCE.md).
+
+### Remaining SQL ownership work (D4.3d2 onward)
+
+This is not full SQL ownership acceptance. Source inspection finds:
+
+- Activity `prisma-activity.repository.ts:findFeed` reads Users interests,
+  follows and bidirectional blocks. Next: Users-owned feed-context evidence,
+  Activity-owned ranking/filtering, unchanged pagination/unread behavior.
+- News `prisma-news-delivery.repository.ts` joins Users author presentation and
+  Interactions reaction/bookmark/comment/view facts; direct share/reaction/comment
+  queries and Media reference/full-record joins remain. Split published read
+  contracts/root presentation composition while preserving query ordering,
+  pagination, audience/redaction and binary access policy.
+- Interactions `prisma-comments.repository.ts:syncMentions` resolves ACTIVE Users
+  handles inside the comment/revision/mention/audit/outbox transaction. Preserve
+  transaction-local resolution and all-or-nothing evidence; do not replace it
+  with a race-prone pre-read or a shared ambient transaction in business ports.
+- Reputation history still joins Users display fields. Users repository still
+  reads IAM role assignments and whole transitional shared rows. Achievements,
+  Custom Titles and IAM perform transaction-local subject existence/eligibility
+  checks. These require explicit ownership disposition in D4.3/D4.4, not blanket
+  approval as harmless joins.
+
+The import inventory does not detect table ownership and must not waive these
+items. This is a reviewed starting inventory, not exhaustive proof of all joins;
+complete delegate/relation/raw-SQL/Worker projection review before D4.5 acceptance.
+Preserve transaction and failure semantics when migrating each fact. Full D4.3,
+D4.4/D4.5 and D5–D7 remain OPEN.
 
 ### D4.3c transfer contract (owner policy registration)
 

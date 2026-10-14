@@ -13,6 +13,10 @@
  */
 export { MediaModule } from './media.module';
 export {
+  MEDIA_IMAGE_ELIGIBILITY,
+  type MediaImageEligibility,
+} from './contracts/media-image-eligibility.contract';
+export {
   MEDIA_PROFILE_ASSET_COMMANDS,
   type MediaProfileAssetCommands,
 } from './contracts/profile-asset-commands.contract';

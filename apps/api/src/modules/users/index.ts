@@ -28,6 +28,10 @@
 
 export { UsersModule } from './users.module';
 export {
+  WALL_IMAGE_ELIGIBILITY,
+  type WallImageEligibility,
+} from './domain/ports/wall-image-eligibility.interface';
+export {
   PROFILE_EXISTENCE_READER,
   type ProfileExistenceReader,
 } from './contracts/profile-existence.contract';

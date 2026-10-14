@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-14 — pre-Phase-11 debt closure / bounded D4.3c implemented, full D4 open
+> Updated: 2026-10-14 — pre-Phase-11 debt closure / bounded D4.3d1 implemented, full D4 open
 
 ## Product and authority
 
@@ -28,6 +28,16 @@ Legacy roadmaps are historical. This snapshot does not override source code,
 approved ADRs or recorded owner decisions.
 
 ## Current position
+
+D4.3d1 transfers gate statistics and Wall image checks to minimal owner evidence:
+Auth retains account facts, Interactions counts comments, Reputation sums its ledger,
+Media decides image eligibility. Content Access retains age/threshold policy and
+Users retains privacy/block checks. Full opt-in units: API 716 / Web 59 / Worker 36;
+111 relevant E2E pass (24 new); coverage and production build pass. Import inventory
+remains 89, not proof of SQL isolation. Activity,
+News delivery, transactional mentions and profile/role joins remain scheduled in
+D4.3/D4.4. No frontend, schema, migration or Command Deck change. Full gate/CI/review
+acceptance remains OPEN; see [evidence](audits/D4_3D_GATE_WALL_OWNER_EVIDENCE.md).
 
 D4.3c removes concrete registry coupling from News/Users: root composition binds
 minimal owner-decision contracts while Interactions keeps its registry private.

@@ -14,6 +14,12 @@
  * • permits deletion by the author or profile owner;
  * • keeps comments and reactions outside the Profile Wall boundary.
  *
+ * 🏗️ Architecture:
+ * Users posting policy; file eligibility is a decision from its own input port.
+ *
+ * ⚠️ Important:
+ * Privacy/block checks precede image validation and atomic post persistence.
+ *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
@@ -34,6 +40,10 @@ import type { UserWallPost } from '../../domain/types/user-wall-post.type';
 import { UserBlockService } from './user-block.service';
 import { UserPrivacyService } from './user-privacy.service';
 import { UsersService } from './users.service';
+import {
+  WALL_IMAGE_ELIGIBILITY,
+  type WallImageEligibility,
+} from '../../domain/ports/wall-image-eligibility.interface';
 
 @Injectable()
 export class UserWallService {
@@ -43,6 +53,8 @@ export class UserWallService {
     private readonly users: UsersService,
     private readonly privacy: UserPrivacyService,
     private readonly blocks: UserBlockService,
+    @Inject(WALL_IMAGE_ELIGIBILITY)
+    private readonly images: WallImageEligibility,
   ) {}
 
   async create(
@@ -57,7 +69,7 @@ export class UserWallService {
       throw new BadRequestException('A wall post requires text or an image.');
     }
     await this.assertCanAccess(authorId, profileOwnerId, true);
-    if (imageId && !(await this.wall.isAttachableImage(imageId, authorId))) {
+    if (imageId && !(await this.images.isAttachableImage(imageId, authorId))) {
       throw new BadRequestException(
         'The wall image must be a READY image owned by the author.',
       );

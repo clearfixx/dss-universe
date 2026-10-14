@@ -34,8 +34,76 @@ const path = "apps/api/src/modules/auth/application/login.ts";
 const requireApi = createRequire(
   new URL("../../apps/api/package.json", import.meta.url),
 );
-const { createSourceFile, ScriptTarget, isExportDeclaration, isNamedExports } =
-  requireApi("typescript");
+const {
+  createSourceFile,
+  ScriptTarget,
+  isExportDeclaration,
+  isNamedExports,
+  forEachChild,
+  isPropertyAccessExpression,
+  isElementAccessExpression,
+} = requireApi("typescript");
+
+function directPrismaSurface(source) {
+  const tree = createSourceFile(
+    "repository.ts",
+    source,
+    ScriptTarget.Latest,
+    true,
+  );
+  const surface = new Set();
+  function visit(node) {
+    if (
+      (isPropertyAccessExpression(node) || isElementAccessExpression(node)) &&
+      node.expression.getText(tree) === "this.prisma"
+    ) {
+      surface.add(
+        isPropertyAccessExpression(node)
+          ? node.name.text
+          : node.argumentExpression.getText(tree),
+      );
+    }
+    if (
+      isPropertyAccessExpression(node) &&
+      node.getText(tree) === "this.prisma" &&
+      node.parent.expression !== node
+    )
+      surface.add("<escaped client>");
+    forEachChild(node, visit);
+  }
+  visit(tree);
+  return [...surface].sort();
+}
+
+test("bounded owned-storage characterization sees direct, computed and escaped Prisma access", () => {
+  deepEqual(
+    directPrismaSurface(
+      "this.prisma.user.findUnique({}); this.prisma[model].count(); const alias = this.prisma;",
+    ),
+    ["<escaped client>", "model", "user"],
+  );
+});
+for (const [file, expected] of [
+  [
+    "modules/content-access/infrastructure/repositories/prisma-content-gates.repository.ts",
+    ["contentGate"],
+  ],
+  [
+    "modules/users/infrastructure/repositories/prisma-user-wall.repository.ts",
+    ["$transaction", "userWallPost"],
+  ],
+]) {
+  test(
+    "migrated repository keeps only owned direct Prisma delegates: " + file,
+    () => {
+      const source = readFileSync(
+        new URL("../../apps/api/src/" + file, import.meta.url),
+        "utf8",
+      );
+      deepEqual(directPrismaSurface(source), expected);
+    },
+  );
+}
 
 for (const [moduleName, expected] of [
   [
@@ -70,12 +138,21 @@ for (const [moduleName, expected] of [
       "ContentGateRequirementKind",
       "CONTENT_AUDIENCE_READER",
       "ContentAudienceReader",
+      "GATE_ACCOUNT_EVIDENCE",
+      "GateAccountEvidenceReader",
+      "GateAccountEvidence",
+      "GATE_COMMENT_COUNT",
+      "GateCommentCountReader",
+      "GATE_REPUTATION_TOTAL",
+      "GateReputationTotalReader",
     ],
   ],
   [
     "reputation",
     [
       "ReputationModule",
+      "REPUTATION_TOTAL_READER",
+      "ReputationTotalReader",
       "REPUTATION_ACCOUNT_READER",
       "ReputationAccountReader",
       "ReputationAccountEvidence",
@@ -89,6 +166,8 @@ for (const [moduleName, expected] of [
     "media",
     [
       "MediaModule",
+      "MEDIA_IMAGE_ELIGIBILITY",
+      "MediaImageEligibility",
       "MEDIA_PROFILE_ASSET_COMMANDS",
       "MediaProfileAssetCommands",
       "PROFILE_ASSET_TRANSACTION",
@@ -104,6 +183,8 @@ for (const [moduleName, expected] of [
     "users",
     [
       "UsersModule",
+      "WALL_IMAGE_ELIGIBILITY",
+      "WallImageEligibility",
       "PROFILE_EXISTENCE_READER",
       "ProfileExistenceReader",
       "VIEWER_PROFILE_READER",

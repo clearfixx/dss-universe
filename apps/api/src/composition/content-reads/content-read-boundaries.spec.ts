@@ -16,6 +16,7 @@ import {
   MediaModule,
   MEDIA_PUBLICATION_EVIDENCE,
   MEDIA_PROFILE_ASSET_COMMANDS,
+  MEDIA_IMAGE_ELIGIBILITY,
   type MediaPublicationEvidenceReader,
 } from '@api/modules/media';
 import {
@@ -45,6 +46,7 @@ describe('Content read boundaries', () => {
     expect(Reflect.getMetadata(MODULE_METADATA.EXPORTS, MediaModule)).toEqual([
       MEDIA_PROFILE_ASSET_COMMANDS,
       MEDIA_PUBLICATION_EVIDENCE,
+      MEDIA_IMAGE_ELIGIBILITY,
     ]);
     expect(
       Reflect.getMetadata(MODULE_METADATA.EXPORTS, ActivityModule),
