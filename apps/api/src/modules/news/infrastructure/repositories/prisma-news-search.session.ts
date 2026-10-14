@@ -29,9 +29,9 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '@api/core/database';
 import { NEWS_SEARCH_PROJECTION_VERSION } from '../../domain/constants/news-search-projection.constant';
 import {
-  NEWS_SEARCH_PROJECTOR,
-  type NewsSearchProjector,
-} from '../../domain/ports/news-search-projector.interface';
+  NEWS_SEARCH_BATCH_PROJECTOR,
+  type NewsSearchBatchProjector,
+} from '../../domain/ports/news-search-batch-projector.interface';
 import type {
   ShortNewsNumberedQuery,
   ShortNewsQuery,
@@ -49,14 +49,13 @@ type SearchSelection = {
   hasNextPage: boolean;
 };
 const BATCH_SIZE = 64;
-const CONCURRENCY = 4;
 
 @Injectable()
 export class PrismaNewsSearchSession {
   constructor(
     private readonly prisma: PrismaService,
-    @Inject(NEWS_SEARCH_PROJECTOR)
-    private readonly projector: NewsSearchProjector,
+    @Inject(NEWS_SEARCH_BATCH_PROJECTOR)
+    private readonly projector: NewsSearchBatchProjector,
   ) {}
 
   run<T>(
@@ -173,28 +172,21 @@ export class PrismaNewsSearchSession {
         ORDER BY a."id" ASC LIMIT ${BATCH_SIZE}
       `);
       if (!batch.length) return;
-      const evidence: Prisma.Sql[] = [];
-      for (let offset = 0; offset < batch.length; offset += CONCURRENCY) {
-        const chunk = await Promise.allSettled(
-          batch.slice(offset, offset + CONCURRENCY).map(async (source) => {
-            try {
-              const projected = await this.projector.projectForViewer(
-                source.documentJson,
-                viewerId,
-              );
-              return Prisma.sql`(${source.id}::text, ${projected.searchText}::text)`;
-            } catch {
-              throw new Error('News search projection is unavailable.');
-            }
-          }),
+      let projected: Awaited<ReturnType<NewsSearchBatchProjector['project']>>;
+      try {
+        projected = await this.projector.project(
+          batch.map(({ documentJson }) => documentJson),
+          viewerId,
         );
-        if (chunk.some((result) => result.status === 'rejected')) {
-          throw new Error('News search projection is unavailable.');
-        }
-        for (const result of chunk) {
-          if (result.status === 'fulfilled') evidence.push(result.value);
-        }
+        if (projected.length !== batch.length)
+          throw new Error('Incomplete batch.');
+      } catch {
+        throw new Error('News search projection is unavailable.');
       }
+      const evidence = batch.map(
+        (source, index) =>
+          Prisma.sql`(${source.id}::text, ${projected[index].searchText}::text)`,
+      );
       await transaction.$executeRaw(Prisma.sql`
         INSERT INTO pg_temp."dss_news_search_matches" ("id", "publishedAt")
         SELECT a."id", a."publishedAt" FROM (VALUES ${Prisma.join(evidence)}) AS v("id", "text")

@@ -14,6 +14,15 @@
 
 export { EditorModule } from './editor.module';
 export {
+  EDITOR_SEARCH_BATCH_PROJECTOR,
+  type EditorSearchBatchProjector,
+} from './contracts/editor-search-batch-projector.contract';
+export {
+  EDITOR_GATE_DECISION_SCOPES,
+  type EditorGateDecisionScope,
+  type EditorGateDecisionScopes,
+} from './domain/ports/editor-gate-decision-scopes.interface';
+export {
   EDITOR_SEARCH_PROJECTOR,
   type EditorSearchProjector,
 } from './contracts/editor-search-projector.contract';

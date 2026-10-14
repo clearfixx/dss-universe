@@ -31,13 +31,17 @@ import request from 'supertest';
 import type { App } from 'supertest/types';
 import { PrismaService } from '@api/core/database';
 import {
-  CONTENT_GATE_DECISIONS,
-  type ContentGateDecisions,
+  CONTENT_GATE_DECISION_SCOPES,
+  type ContentGateDecisionScopes,
 } from '@api/modules/content-access';
 import {
-  NEWS_SEARCH_PROJECTOR,
-  type NewsSearchProjector,
+  NEWS_SEARCH_BATCH_PROJECTOR,
+  type NewsSearchBatchProjector,
 } from '@api/modules/news';
+import {
+  CONTENT_AUDIENCE_READER,
+  type ContentAudienceReader,
+} from '../src/modules/content-access/domain/ports/content-audience-reader.interface';
 import { AppModule } from '../src/app.module';
 import { AuthenticationPresentationService } from '../src/composition/identity/application/authentication-presentation.service';
 import { NewsService } from '../src/modules/news/application/services/news.service';
@@ -233,8 +237,8 @@ describe('Viewer-safe live News search (e2e)', () => {
       data: { articleId: post.id, scope: 'GLOBAL', pinnedById: author.user.id },
     });
     const decisions = jest.spyOn(
-      app.get<ContentGateDecisions>(CONTENT_GATE_DECISIONS),
-      'evaluate',
+      app.get<ContentGateDecisionScopes>(CONTENT_GATE_DECISION_SCOPES),
+      'open',
     );
     expect(result(await search(secret))).toMatchObject({
       total: 0,
@@ -326,11 +330,11 @@ describe('Viewer-safe live News search (e2e)', () => {
   it('accepts public metadata matches without reading gated documents or calling unavailable policy', async () => {
     const post = await article([await gate()], 'definitive-metadata-marker');
     const project = jest.spyOn(
-      app.get<NewsSearchProjector>(NEWS_SEARCH_PROJECTOR),
-      'projectForViewer',
+      app.get<NewsSearchBatchProjector>(NEWS_SEARCH_BATCH_PROJECTOR),
+      'project',
     );
     jest
-      .spyOn(app.get<ContentGateDecisions>(CONTENT_GATE_DECISIONS), 'evaluate')
+      .spyOn(app.get<ContentAudienceReader>(CONTENT_AUDIENCE_READER), 'read')
       .mockRejectedValue(new Error(secret));
     expect(
       result(
@@ -344,7 +348,7 @@ describe('Viewer-safe live News search (e2e)', () => {
     await article([paragraph('alpha'), await gate()]);
     await article([paragraph('alpha')]);
     const outage = jest
-      .spyOn(app.get<ContentGateDecisions>(CONTENT_GATE_DECISIONS), 'evaluate')
+      .spyOn(app.get<ContentAudienceReader>(CONTENT_AUDIENCE_READER), 'read')
       .mockRejectedValue(new Error(secret));
     const response = await search('alpha', viewer.tokens.accessToken);
     expect(response.errors?.[0].message).toBe(
@@ -484,10 +488,12 @@ describe('Viewer-safe live News search (e2e)', () => {
     await prisma.newsPin.create({
       data: { articleId: post.id, scope: 'GLOBAL', pinnedById: author.user.id },
     });
-    const projector = app.get<NewsSearchProjector>(NEWS_SEARCH_PROJECTOR);
-    const project = projector.projectForViewer.bind(
+    const projector = app.get<NewsSearchBatchProjector>(
+      NEWS_SEARCH_BATCH_PROJECTOR,
+    );
+    const project = projector.project.bind(
       projector,
-    ) as NewsSearchProjector['projectForViewer'];
+    ) as NewsSearchBatchProjector['project'];
     let reached!: () => void;
     let release!: () => void;
     const observed = new Promise<void>((resolve) => {
@@ -496,13 +502,11 @@ describe('Viewer-safe live News search (e2e)', () => {
     const resume = new Promise<void>((resolve) => {
       release = resolve;
     });
-    jest
-      .spyOn(projector, 'projectForViewer')
-      .mockImplementation(async (...args) => {
-        reached();
-        await resume;
-        return project(...args);
-      });
+    jest.spyOn(projector, 'project').mockImplementation(async (...args) => {
+      reached();
+      await resume;
+      return project(...args);
+    });
     const searching = app
       .get(NewsDeliveryService)
       .browseNumbered(

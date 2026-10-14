@@ -130,6 +130,11 @@ for (const [moduleName, expected] of [
     "editor",
     [
       "EditorModule",
+      "EDITOR_SEARCH_BATCH_PROJECTOR",
+      "EditorSearchBatchProjector",
+      "EDITOR_GATE_DECISION_SCOPES",
+      "EditorGateDecisionScope",
+      "EditorGateDecisionScopes",
       "EDITOR_SEARCH_PROJECTOR",
       "EditorSearchProjector",
       "EDITOR_VIEWER_DOCUMENT_PROJECTOR",
@@ -147,6 +152,9 @@ for (const [moduleName, expected] of [
     "content-access",
     [
       "ContentAccessModule",
+      "CONTENT_GATE_DECISION_SCOPES",
+      "ContentGateDecisionScope",
+      "ContentGateDecisionScopes",
       "CONTENT_GATE_DECISIONS",
       "ContentGateDecisions",
       "ContentGateDecision",

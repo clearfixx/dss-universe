@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-14 — DEBT-053 approved hybrid search implementation in progress
+> Updated: 2026-10-14 — DEBT-053 approved batch optimization; acceptance still open
 
 ## Product and authority
 
@@ -62,6 +62,22 @@ document commit, not a DEBT-053 implementation commit. Runtime work is now prepa
 for draft publication; full workflow and performance acceptance remain open. See the
 [DEBT-053 plan](development/DEBT_053_NEWS_VIEWER_SEARCH_PLAN.md).
 
+DEBT-053 is published at `1406b90` in draft PR #12, stacked on PR #11. The owner
+subsequently approved private ContentAccess evidence reuse per batch of at most
+64 documents, explicitly closed after Editor projection, without cross-request
+caching. The follow-up passes 890 opt-in API units/coverage, production build,
+lint/types/Prisma and 52 architecture fixtures (inventory unchanged at 89).
+Five isolated performance E2E pass with 1,000 distinct documents/600 distinct
+gates: facts/audience reads fall from 600 to 10 per request; local member p95
+is 1.022 seconds versus the strengthened 3.079-second baseline. Concurrent
+member/author searches and second-batch outage/recovery pass without changing
+timeouts, result limits or API. This does not establish production capacity.
+Final full API E2E on a fresh migrated target: 244 PASS/2 FAIL (News foundation
+and leaderboard, DEBT-045); all 72 directly relevant E2E PASS. Global format
+still fails on 41 legacy files, audit on one high/ten moderate. Full-suite and
+baseline-gate acceptance remain open; DEBT-054 then DEBT-051 are
+still separate approved packages. No Phase 11 work or stack replacement.
+
 The local storage increment now adds the 54th forward migration, versioned public
 search evidence in atomic draft writes, source-change invalidation and source-
 locked canonical backfill. Fifty-six focused migrated E2E pass. CLI readiness and
@@ -69,7 +85,8 @@ backfill verified the one existing synthetic disposable News row without changin
 its authored fingerprint. The local runtime increment now computes viewer-safe
 matches before pins/totals/pages within a repeatable-read snapshot. Eleven live
 query E2E plus twenty Full News E2E pass. Isolated performance with 1,000 articles
-(600 gated) passes and finds all matches beyond 500; member p95 is 3.657 seconds.
+(600 gated) passes and finds all matches beyond 500; the pre-optimization member
+p95 was 3.657 seconds.
 Concurrent DB gates exceeded the unchanged five-second transaction budget, and
 broader full-suite verification is red/pending disposition. No accepted capacity,
 release completion or Phase 11 readiness is claimed; no query fallback/result cap.

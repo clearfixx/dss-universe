@@ -337,3 +337,122 @@ Publish only as a draft, with exact red-gate evidence; do not merge or close the
 Next: review/disposition performance and full-suite failures before acceptance.
 DEBT-054/051 remain separate;
 no Phase 11 implementation or stack replacement is authorized by this increment.
+
+### Owner-approved batch evidence optimization
+
+After draft PR [#12](https://github.com/clearfixx/dss-universe/pull/12) at
+`1406b90`, the owner explicitly approved one ContentAccess viewer-evidence context
+per batch of at most 64 canonical documents, with no cross-request cache, public
+API change, timeout increase or result cap. A new request must reread revocation
+and expiry. The context samples its audience/expiry timestamp at batch opening;
+changes after that point are read by the next batch/request. This is not a claim
+of an ACID authorization snapshot across independent module-owned evidence ports.
+
+The strengthened baseline fixture uses 1,000 distinct documents and 600 distinct
+gate definitions rather than repeating one definition/document. Before optimization,
+five member searches performed 3,000 gate reads, 3,000 viewer-statistics reads and
+3,000 audience reads. Guest calls to all three were zero. Local member p50/p95
+was 2,926/3,079 ms, guest 83/101 ms; timing differences from the earlier baseline
+are runtime/fixture observations, not optimization evidence by themselves.
+
+ContentAccess now owns a lazy, viewer-bound, explicitly closable verdict scope;
+only minimal verdicts cross its published contract. Its existing single evaluation
+and the scope use the same policy function: GROUP first, then author/Premium numeric
+bypass, then ALL/ANY thresholds. Evidence IO is deduplicated inside the scope,
+including failures. A closed scope rejects both new evaluation and a late in-flight
+result. Private statistics and group membership never enter Editor or News.
+
+Editor owns the batch operation, validates the 64-document/viewer bound, snapshots
+its input list, processes at most four documents concurrently, preserves order,
+and closes the scope in finally. Recursive redaction still reaches an inner gate
+only after its outer gate allows traversal. No ahead-of-time hidden-descendant
+lookup or second policy parser. Started sibling redactions and both top-level
+evidence reads are drained on error, including synchronous provider exceptions;
+this does not rewrite the existing internals of every evidence provider.
+
+Root composition binds named published/consumer-owned contracts. News gets only
+ordered permitted search text, rejects partial results, and retains its existing
+snapshot/matching/count/pin/page algorithm. HTTP/GraphQL contracts and migrations
+are unchanged; internal named module contracts are intentionally extended. No
+foreign concrete service or ORM callback enters the new business contracts;
+private authorization evidence is not added to scope/search responses.
+Public-surface fixtures add only the approved contract symbols;
+the 89-finding inventory is not widened or waived.
+
+The first optimized checkpoint passes 72 migrated E2E, adding simultaneous
+member/author search over the same 1,000-row corpus and a second-batch evidence
+outage/recovery test. Each 600-gate request now performs **10** statistics and
+audience reads, while still reading/evaluating every distinct gate. Five samples
+verify 50 evidence reads instead of 3,000, with zero guest calls. This deterministic
+operation-count reduction is distinct from local latency/GC measurements.
+
+A separate PostgreSQL tmpfs project on loopback 5435 was created from the committed
+test Compose file (only postgres-test; existing disposable Redis 6380). Before
+migrations it had zero public tables. All 54 migrations applied, without seed or
+changes to the older 5434 DB. The full API E2E attempt on this clean target reports
+**245 PASS / 1 FAIL**, 29 suites, zero skipped: only the known News viewCount-null
+versus zero assertion and protected-target cleanup/open-handles problem remains.
+The broader registration/profile/achievement/leaderboard failures did not recur
+in this run; that does not independently repair their shared-fixture/lifecycle debt.
+No DB protections or assertions were changed. Zero owned api_boundary schemas and
+no active queries remained; only the exact owned Jest runner was stopped after its
+complete JSON summary. The synthetic DB was retained for controlled verification.
+
+Coverage strengthening initially found that all 876 units passed but the new
+100%-statement ContentAccess gate did not: inherited create/validation branches
+had no tests. Explicit valid six-kind creation and invalid cardinality/duplicate/
+GROUP/numeric requirement cases were added, not a threshold reduction.
+
+Final frozen-production-source verification on 2026-10-14:
+
+- API coverage: **890 PASS**, 137 suites, zero skipped, all four DB/Redis opt-ins
+  and all eight file/service thresholds enforced. The two new thresholds require
+  100% statements/functions/lines; inherited thresholds are unchanged.
+- Root production build: six tasks PASS, fresh API and five unchanged cached
+  outputs. Root lint/typecheck, Prisma validation, 52 architecture fixtures and
+  frozen baseline PASS; inventory remains 89 known findings, not full compliance.
+- Isolated performance: **5 PASS**, including two concurrent member/author
+  searches and a second-batch provider outage followed by successful recovery.
+  Five samples per lane: 250 articles/150 distinct gates guest p50/p95 72/96 ms,
+  member 268/358 ms; 1,000 articles/600 distinct gates guest 76/88 ms, member
+  1,014/1,022 ms. Guest evidence reads remain zero; member facts/audience reads
+  are 3 and 10 per request respectively. At 1,000 articles the deterministic
+  reduction is **600 to 10 reads per evidence provider/request**; the local p95
+  improvement from 3,079 to 1,022 ms is not a production capacity guarantee.
+- The larger member sample's heap/RSS deltas are 61,813,704/43,241,472 bytes across
+  five requests. These are runtime/GC observations, not a proven memory leak,
+  peak bound or production budget. No timeout or result limit was raised.
+
+Local ignored JSON evidence: `dss-debt-053-batch-verified-unit.json` and
+`dss-debt-053-batch-verified-performance.json` in `node_modules/.cache`.
+The earlier 245/1 full E2E run overlapped the last synchronous-provider draining
+hardening; it is not exact-final-source certification. A final full E2E run uses
+the frozen code and a recreated, verified owned 5435 tmpfs target, again starting
+with zero public tables and all 54 migrations without seed. Only this package's
+synthetic test data was replaced; the 5434 and dev databases were not reset.
+Global format/audit/generated/Web blockers and independent review remain open;
+the debt is not closed and PR #12 remains draft.
+
+The final frozen-source full E2E report is **244 PASS / 2 FAIL**, 27/29 suites
+passing, 246 tests, zero skipped, 206.999 seconds. All **72 directly relevant
+E2E PASS**: storage 10, projection 9, query 11, performance 5, Full News 20 and
+atomic composition 17. Failures are the repeated News viewCount null-versus-zero
+assertion/retirement cleanup and leaderboard global-fixture collision (DEBT-045).
+Read-only inspection confirms the winning synthetic `points-user-*` was created
+about eight seconds before `leader-oldest-*`; the latter therefore ranks second
+at the tied 10-point score. A fresh database does not isolate suites within a run.
+Neither fixture, assertion nor production behavior was altered to hide this.
+The runner wrote its complete failing JSON, then retained open handles; after
+zero owned schemas/active DB queries and exact command verification, only that
+owned Jest PID was stopped. This is not a successful full-E2E process exit.
+
+Final full-suite JSON: `node_modules/.cache/dss-debt-053-final-fresh-e2e.json`.
+Changed-file formatting and `git diff --check` PASS. The initial scoped formatter
+invocation failed because the Windows pnpm shim joined path arguments; the direct
+Node/Prettier rerun checks each path and passes, without changing source files.
+Global format still fails on 41 legacy files; current dependency audit reports
+one high/ten moderate; all 14 dependency-patch regressions pass. Generated/Web
+evidence remains the earlier checkpoint, not freshly rerun browser verification.
+Canonical GraphQL schema, authored Web, Prisma schema and lockfile are unchanged
+by this follow-up. The draft remains unaccepted; next security package is DEBT-054,
+then DEBT-051, with full baseline-gate correction scheduled separately.

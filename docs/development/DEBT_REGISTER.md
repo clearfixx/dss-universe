@@ -365,6 +365,15 @@ timeouts. All seventy relevant isolated-schema News/composition E2E pass inside
 that same attempt. D6 must disposition the global fixture failures independently;
 no unrelated test/production behavior is changed by DEBT-053.
 
+Approved DEBT-053 batch follow-up, final frozen-source fresh-DB run: 244 PASS /
+2 FAIL across 29 suites/246 tests, zero skipped; all 72 directly relevant E2E
+pass. News repeats viewCount null-versus-zero and prohibited target-deletion
+cleanup. Leaderboards repeats a 10-point tie with an earlier `points-user-*`;
+read-only synthetic-DB inspection confirms it precedes `leader-oldest-*` by
+about eight seconds. The previous clean attempt had 245/1, but that does not
+establish fixture isolation. Final JSON completes before open-handle cleanup;
+only the verified owned Jest runner was stopped. D6 remains open, not waived.
+
 ### DEBT-046 — Last privileged role-holder removal is unguarded (High, IMPLEMENTED / review pending, D3.4)
 
 At `a9c5596`, UserAccessService.revokeRole does not invoke the existing
@@ -580,6 +589,19 @@ A concurrent DB-gate run exceeded that budget; storage fixture timeouts and
 broader full-suite failures also require disposition. This is not accepted
 capacity or a green full package. No timeout increase, result cap or raw fallback.
 See the plan for current verification and residual performance risk.
+The owner-approved follow-up reuses private viewer evidence only inside an
+explicitly closed batch of at most 64 documents. Frozen-source API coverage:
+890 PASS/137 suites, all DB/Redis opt-ins and eight thresholds enforced;
+lint/types/Prisma/build and 52 architecture fixtures PASS (inventory 89).
+Distinct-document/gate performance plus concurrent-viewer/outage E2E: five PASS.
+At 1,000 articles/600 gates, each request reads facts/audience 10 times rather
+than 600; local member p95 1.022 seconds versus strengthened baseline 3.079.
+No cross-request cache, timeout increase, cap or public API change. This is not
+production capacity acceptance; full-suite/baseline gates and review remain open.
+Final fresh full E2E: 244 PASS/2 FAIL (DEBT-045); all 72 relevant E2E PASS.
+Global format/audit remain red, and generated/Web evidence is the prior checkpoint.
+Draft PR #12 contains the implementation and the batch follow-up; no merge or
+debt-closure claim. Independent review and operational acceptance remain open.
 DEBT-052 remains a separate Full News correction; no search policy
 or historical projection is silently changed by that package. Release/Phase 11
 security acceptance must disposition this confirmed channel explicitly.

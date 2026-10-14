@@ -13,6 +13,8 @@
  */
 
 import { Module } from '@nestjs/common';
+import { EDITOR_SEARCH_BATCH_PROJECTOR } from './contracts/editor-search-batch-projector.contract';
+import { EditorSearchBatchProjectorService } from './application/services/editor-search-batch-projector.service';
 
 import { EDITOR_DOCUMENT_NORMALIZER } from './contracts/editor-document-normalizer.contract';
 import { EDITOR_VIEWER_DOCUMENT_PROJECTOR } from './contracts/editor-viewer-document-projector.contract';
@@ -29,6 +31,11 @@ import { EditorResolver } from './presentation/graphql/editor.resolver';
 
 @Module({
   providers: [
+    EditorSearchBatchProjectorService,
+    {
+      provide: EDITOR_SEARCH_BATCH_PROJECTOR,
+      useExisting: EditorSearchBatchProjectorService,
+    },
     EditorService,
     EditorDocumentNormalizerService,
     {
@@ -55,6 +62,7 @@ import { EditorResolver } from './presentation/graphql/editor.resolver';
     EditorResolver,
   ],
   exports: [
+    EDITOR_SEARCH_BATCH_PROJECTOR,
     EDITOR_DOCUMENT_NORMALIZER,
     EDITOR_VIEWER_DOCUMENT_PROJECTOR,
     EDITOR_SEARCH_PROJECTOR,

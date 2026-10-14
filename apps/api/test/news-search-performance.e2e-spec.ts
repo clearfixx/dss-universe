@@ -11,7 +11,7 @@
  * 🧠 Responsibilities:
  * • prepares canonical mixed corpora in a migrated disposable schema;
  * • verifies exact public/viewer projection call counts and bounded concurrency;
- * • records local latency/memory and public-query plans without timing-only assertions.
+ * • records latency/memory, owner-evidence reads and public-query plans without timing-only assertions.
  *
  * 🏗️ Architecture:
  * Real AppModule and Editor/ContentAccess policy; bulk writes are synthetic test fixtures only.
@@ -41,7 +41,16 @@ import {
 import { AppModule } from '../src/app.module';
 import { AuthenticationPresentationService } from '../src/composition/identity/application/authentication-presentation.service';
 import { NewsDeliveryService } from '../src/modules/news/application/services/news-delivery.service';
-import { ContentGatesService } from '../src/modules/content-access/application/services/content-gates.service';
+import { EditorContentDeliveryService } from '../src/modules/editor/application/services/editor-content-delivery.service';
+import { ContentGateViewerFactsService } from '../src/modules/content-access/application/services/content-gate-viewer-facts.service';
+import {
+  CONTENT_AUDIENCE_READER,
+  type ContentAudienceReader,
+} from '../src/modules/content-access/domain/ports/content-audience-reader.interface';
+import {
+  CONTENT_GATES_REPOSITORY,
+  type ContentGatesRepository,
+} from '../src/modules/content-access/domain/repositories/content-gates.repository.interface';
 import { EDITOR_CODE_HIGHLIGHTER } from '../src/modules/editor/application/contracts/editor-code-highlighter.interface';
 import {
   newsSearchEligibility,
@@ -55,10 +64,15 @@ describe('Hybrid News search bounded work and pagination (e2e)', () => {
   let prisma: PrismaService;
   let authorId: string;
   let viewerId: string;
-  let gateId: string;
   const corpora = new Map<
     number,
-    { slug: string; ids: string[]; pinnedIds: string[] }
+    {
+      slug: string;
+      ids: string[];
+      pinnedIds: string[];
+      authorIds: string[];
+      authorPinnedIds: string[];
+    }
   >();
 
   beforeAll(async () => {
@@ -74,13 +88,6 @@ describe('Hybrid News search bounded work and pagination (e2e)', () => {
     await app.init();
     authorId = await register();
     viewerId = await register();
-    gateId = (
-      await app.get(ContentGatesService).create({
-        ownerId: authorId,
-        operator: 'ALL',
-        requirements: [{ kind: 'COMMENTS', threshold: 100, groupKey: null }],
-      })
-    ).id;
     for (const size of [250, 1000]) corpora.set(size, await seed(size));
   }, 60000);
   afterEach(() => jest.restoreAllMocks());
@@ -104,36 +111,64 @@ describe('Hybrid News search bounded work and pagination (e2e)', () => {
     const category = await prisma.newsCategory.create({
       data: { name: 'Synthetic mixed corpus', slug: 'perf-' + randomUUID() },
     });
-    const document = createEmptyEditorDocument('NEWS');
-    const gated = createEmptyEditorDocument('NEWS');
-    document.content.content = [
-      { type: 'paragraph', content: [{ type: 'text', text: 'alpha gamma' }] },
-    ];
-    gated.content.content = [
-      { type: 'paragraph', content: [{ type: 'text', text: 'alpha' }] },
-      {
-        type: 'contentGate',
-        attrs: { gateId },
-        content: [
-          {
-            type: 'paragraph',
-            content: [
-              { type: 'text', text: 'synthetic private performance payload' },
-            ],
-          },
-        ],
-      },
-      { type: 'paragraph', content: [{ type: 'text', text: 'gamma' }] },
-    ];
+    function sourceFor(articleId: string, gateId: string | null) {
+      const document = createEmptyEditorDocument('NEWS');
+      document.content.content = gateId
+        ? [
+            { type: 'paragraph', content: [{ type: 'text', text: 'alpha' }] },
+            {
+              type: 'contentGate',
+              attrs: { gateId },
+              content: [
+                {
+                  type: 'paragraph',
+                  content: [
+                    {
+                      type: 'text',
+                      text:
+                        'synthetic private performance payload ' + articleId,
+                    },
+                  ],
+                },
+              ],
+            },
+            { type: 'paragraph', content: [{ type: 'text', text: 'gamma' }] },
+            { type: 'paragraph', content: [{ type: 'text', text: articleId }] },
+          ]
+        : [
+            {
+              type: 'paragraph',
+              content: [{ type: 'text', text: 'alpha gamma' }],
+            },
+            { type: 'paragraph', content: [{ type: 'text', text: articleId }] },
+          ];
+      return document;
+    }
     const projector = app.get<NewsSearchProjector>(NEWS_SEARCH_PROJECTOR);
     const ids = Array.from({ length: size }, () => randomUUID());
     for (let offset = 0; offset < size; offset += 100) {
-      const entries = ids.slice(offset, offset + 100).map((id, index) => ({
-        id,
-        index: offset + index,
-        targetId: randomUUID(),
-      }));
+      const entries = ids.slice(offset, offset + 100).map((id, index) => {
+        const gateId = (offset + index) % 5 < 3 ? randomUUID() : null;
+        return {
+          id,
+          index: offset + index,
+          targetId: randomUUID(),
+          gateId,
+          source: sourceFor(id, gateId),
+        };
+      });
       await prisma.$transaction(async (tx) => {
+        const gated = entries.flatMap(({ gateId }) => (gateId ? [gateId] : []));
+        await tx.contentGate.createMany({
+          data: gated.map((id) => ({ id, ownerId: authorId, operator: 'ALL' })),
+        });
+        await tx.contentGateRequirement.createMany({
+          data: gated.map((gateId) => ({
+            gateId,
+            kind: 'COMMENTS',
+            threshold: 100,
+          })),
+        });
         await tx.interactionTarget.createMany({
           data: entries.map(({ id, targetId }) => ({
             id: targetId,
@@ -144,8 +179,7 @@ describe('Hybrid News search bounded work and pagination (e2e)', () => {
           })),
         });
         await tx.newsArticle.createMany({
-          data: entries.map(({ id, index, targetId }) => {
-            const source = index % 5 < 3 ? gated : document;
+          data: entries.map(({ id, index, targetId, source }) => {
             return {
               id,
               interactionTargetId: targetId,
@@ -169,10 +203,8 @@ describe('Hybrid News search bounded work and pagination (e2e)', () => {
           })),
         });
         await tx.newsSearchProjection.createMany({
-          data: entries.map(({ id, index }) => {
-            const evidence = projector.projectPublic(
-              JSON.stringify(index % 5 < 3 ? gated : document),
-            );
+          data: entries.map(({ id, source }) => {
+            const evidence = projector.projectPublic(JSON.stringify(source));
             return {
               articleId: id,
               sourceVersion: 1,
@@ -217,10 +249,19 @@ describe('Hybrid News search bounded work and pagination (e2e)', () => {
         },
       ],
     });
+    const ungated = new Set(ids.filter((_id, index) => index % 5 >= 3));
+    const authorPinnedIds = descending
+      .slice(0, 22)
+      .filter((id) => ungated.has(id));
+    const authorIds = descending.filter(
+      (id) => ungated.has(id) && !authorPinnedIds.includes(id),
+    );
     return {
       slug: category.slug,
       ids: descending.slice(20),
       pinnedIds: descending.slice(0, 20),
+      authorIds,
+      authorPinnedIds,
     };
   }
 
@@ -228,14 +269,14 @@ describe('Hybrid News search bounded work and pagination (e2e)', () => {
     'measures %s mixed articles with zero guest projections and exact bounded viewer work',
     async (size) => {
       const corpus = corpora.get(size)!;
-      const projector = app.get<NewsSearchProjector>(NEWS_SEARCH_PROJECTOR);
-      const real = projector.projectForViewer.bind(
+      const projector = app.get(EditorContentDeliveryService);
+      const real = projector.project.bind(
         projector,
-      ) as NewsSearchProjector['projectForViewer'];
+      ) as EditorContentDeliveryService['project'];
       let active = 0;
       let maximum = 0;
       const project = jest
-        .spyOn(projector, 'projectForViewer')
+        .spyOn(projector, 'project')
         .mockImplementation(async (...args) => {
           active++;
           maximum = Math.max(maximum, active);
@@ -246,6 +287,18 @@ describe('Hybrid News search bounded work and pagination (e2e)', () => {
           }
         });
       const service = app.get(NewsDeliveryService);
+      const factsRead = jest.spyOn(
+        app.get(ContentGateViewerFactsService),
+        'read',
+      );
+      const audienceRead = jest.spyOn(
+        app.get<ContentAudienceReader>(CONTENT_AUDIENCE_READER),
+        'read',
+      );
+      const definitionRead = jest.spyOn(
+        app.get<ContentGatesRepository>(CONTENT_GATES_REPOSITORY),
+        'findById',
+      );
       const samples: {
         lane: string;
         p50Ms: number;
@@ -254,9 +307,15 @@ describe('Hybrid News search bounded work and pagination (e2e)', () => {
         rssDeltaBytes: number;
         projectionCalls: number;
         maximumConcurrency: number;
+        viewerFactsReads: number;
+        audienceReads: number;
+        gateDefinitionReads: number;
       }[] = [];
       for (const lane of ['guest', 'member']) {
         project.mockClear();
+        factsRead.mockClear();
+        audienceRead.mockClear();
+        definitionRead.mockClear();
         maximum = 0;
         const before = process.memoryUsage();
         const timings: number[] = [];
@@ -278,6 +337,13 @@ describe('Hybrid News search bounded work and pagination (e2e)', () => {
         expect(project).toHaveBeenCalledTimes(lane === 'guest' ? 0 : size * 3);
         expect(maximum).toBeLessThanOrEqual(4);
         expect(active).toBe(0);
+        const batches =
+          lane === 'guest' ? 0 : Math.ceil((size * 3) / 5 / 64) * 5;
+        expect(factsRead.mock.calls.length).toBe(batches);
+        expect(audienceRead.mock.calls.length).toBe(batches);
+        expect(definitionRead.mock.calls.length).toBe(
+          lane === 'guest' ? 0 : size * 3,
+        );
         const after = process.memoryUsage();
         timings.sort((a, b) => a - b);
         samples.push({
@@ -288,6 +354,9 @@ describe('Hybrid News search bounded work and pagination (e2e)', () => {
           rssDeltaBytes: after.rss - before.rss,
           projectionCalls: project.mock.calls.length,
           maximumConcurrency: maximum,
+          viewerFactsReads: factsRead.mock.calls.length,
+          audienceReads: audienceRead.mock.calls.length,
+          gateDefinitionReads: definitionRead.mock.calls.length,
         });
       }
       console.info(
@@ -370,4 +439,52 @@ describe('Hybrid News search bounded work and pagination (e2e)', () => {
       corpus.ids.slice(0, 2),
     );
   }, 30000);
+
+  it('keeps two concurrent viewer snapshots and batch scopes separate without raising transaction timeouts', async () => {
+    const corpus = corpora.get(1000)!;
+    const service = app.get(NewsDeliveryService);
+    const filters = {
+      categorySlug: corpus.slug,
+      search: 'alpha gamma',
+      pageSize: 100,
+    };
+    const [member, author] = await Promise.all([
+      service.browseNumbered(filters, viewerId),
+      service.browseNumbered(filters, authorId),
+    ]);
+    expect(member.total).toBe(980);
+    expect(member.items.map(({ id }) => id)).toEqual(corpus.ids.slice(0, 100));
+    expect(member.pinnedItems.map(({ id }) => id)).toEqual(corpus.pinnedIds);
+    expect(author.total).toBe(corpus.authorIds.length);
+    expect(author.items.map(({ id }) => id)).toEqual(
+      corpus.authorIds.slice(0, 100),
+    );
+    expect(author.pinnedItems.map(({ id }) => id)).toEqual(
+      corpus.authorPinnedIds,
+    );
+  }, 15000);
+
+  it('fails the whole result if a later gated batch loses access evidence and recovers on the next request', async () => {
+    const corpus = corpora.get(1000)!;
+    const audience = app.get<ContentAudienceReader>(CONTENT_AUDIENCE_READER);
+    const real = audience.read.bind(audience) as ContentAudienceReader['read'];
+    const read = jest
+      .spyOn(audience, 'read')
+      .mockImplementationOnce(real)
+      .mockRejectedValueOnce(
+        new Error('Synthetic private provider diagnostic'),
+      );
+    const service = app.get(NewsDeliveryService);
+    const filters = {
+      categorySlug: corpus.slug,
+      search: 'alpha gamma',
+      pageSize: 100,
+    };
+    await expect(service.browseNumbered(filters, viewerId)).rejects.toEqual(
+      new Error('News search projection is unavailable.'),
+    );
+    expect(read).toHaveBeenCalledTimes(2);
+    read.mockRestore();
+    expect((await service.browseNumbered(filters, viewerId)).total).toBe(980);
+  }, 15000);
 });

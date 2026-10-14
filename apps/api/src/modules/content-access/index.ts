@@ -14,6 +14,11 @@
 
 export { ContentAccessModule } from './content-access.module';
 export {
+  CONTENT_GATE_DECISION_SCOPES,
+  type ContentGateDecisionScope,
+  type ContentGateDecisionScopes,
+} from './contracts/content-gate-decision-scopes.contract';
+export {
   GATE_ACCOUNT_EVIDENCE,
   type GateAccountEvidenceReader,
   type GateAccountEvidence,

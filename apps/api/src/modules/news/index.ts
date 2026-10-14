@@ -13,6 +13,10 @@
  */
 export { NEWS_SEARCH_PROJECTION_VERSION } from './domain/constants/news-search-projection.constant';
 export {
+  NEWS_SEARCH_BATCH_PROJECTOR,
+  type NewsSearchBatchProjector,
+} from './domain/ports/news-search-batch-projector.interface';
+export {
   NEWS_SEARCH_INDEX_MAINTENANCE,
   type NewsSearchIndexMaintenance,
 } from './contracts/news-search-index-maintenance.contract';

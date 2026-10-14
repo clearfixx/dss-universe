@@ -20,6 +20,7 @@ import { ContentGatesService } from './application/services/content-gates.servic
 import { ContentGateViewerFactsService } from './application/services/content-gate-viewer-facts.service';
 import { ContentGateDecisionsService } from './application/services/content-gate-decisions.service';
 import { CONTENT_GATE_DECISIONS } from './contracts/content-gate-decisions.contract';
+import { CONTENT_GATE_DECISION_SCOPES } from './contracts/content-gate-decision-scopes.contract';
 import { CONTENT_GATES_REPOSITORY } from './domain/repositories/content-gates.repository.interface';
 import { PrismaContentGatesRepository } from './infrastructure/repositories/prisma-content-gates.repository';
 import { ContentGatesResolver } from './presentation/graphql/content-gates.graphql';
@@ -31,6 +32,10 @@ import { ContentGatesResolver } from './presentation/graphql/content-gates.graph
     ContentGateViewerFactsService,
     ContentGateDecisionsService,
     {
+      provide: CONTENT_GATE_DECISION_SCOPES,
+      useExisting: ContentGateDecisionsService,
+    },
+    {
       provide: CONTENT_GATE_DECISIONS,
       useExisting: ContentGateDecisionsService,
     },
@@ -40,7 +45,7 @@ import { ContentGatesResolver } from './presentation/graphql/content-gates.graph
       useClass: PrismaContentGatesRepository,
     },
   ],
-  exports: [CONTENT_GATE_DECISIONS],
+  exports: [CONTENT_GATE_DECISIONS, CONTENT_GATE_DECISION_SCOPES],
 })
 export class ContentAccessModule {}
 

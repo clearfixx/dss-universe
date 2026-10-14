@@ -23,7 +23,7 @@
  */
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@api/core/database';
-import type { NewsSearchProjector } from '../../domain/ports/news-search-projector.interface';
+import type { NewsSearchBatchProjector } from '../../domain/ports/news-search-batch-projector.interface';
 import { PrismaNewsSearchSession } from './prisma-news-search.session';
 
 function harness() {
@@ -60,13 +60,12 @@ function harness() {
   const prisma = { $transaction: transaction } as unknown as PrismaService;
   const project = jest
     .fn<
-      ReturnType<NewsSearchProjector['projectForViewer']>,
-      Parameters<NewsSearchProjector['projectForViewer']>
+      ReturnType<NewsSearchBatchProjector['project']>,
+      Parameters<NewsSearchBatchProjector['project']>
     >()
-    .mockResolvedValue({ searchText: 'visible body' });
-  const projector: NewsSearchProjector = {
-    projectPublic: () => ({ searchText: '', hasContentGates: false }),
-    projectForViewer: project,
+    .mockResolvedValue([]);
+  const projector: NewsSearchBatchProjector = {
+    project,
   };
   const session = new PrismaNewsSearchSession(prisma, projector);
   return { session, state, query, execute, transaction, project, client };
@@ -153,29 +152,24 @@ describe('PrismaNewsSearchSession', () => {
     ]);
   });
 
-  it('traverses all gated batches with four concurrent calls and at most 64 evidence rows per insertion', async () => {
+  it('traverses complete gated batches of at most 64 without a corpus cap', async () => {
     const h = harness();
     const sources = Array.from({ length: 65 }, (_, index) => ({
       id: 'source-' + index,
       documentJson: 'canonical-' + index,
     }));
     h.state.batches = [sources.slice(0, 64), sources.slice(64)];
-    let active = 0;
-    let maximum = 0;
-    h.project.mockImplementation(async () => {
-      active++;
-      maximum = Math.max(maximum, active);
-      await Promise.resolve();
-      active--;
-      return { searchText: 'viewer body' };
-    });
+    h.project.mockImplementation((documents) =>
+      Promise.resolve(documents.map(() => ({ searchText: 'viewer body' }))),
+    );
     await h.session.run({ first: 2, search: 'body', viewerId: 'viewer' }, () =>
       Promise.resolve(null),
     );
-    expect(h.project).toHaveBeenCalledTimes(65);
-    expect(maximum).toBe(4);
-    expect(active).toBe(0);
-    expect(h.project).toHaveBeenLastCalledWith('canonical-64', 'viewer');
+    expect(h.project).toHaveBeenCalledTimes(2);
+    expect(h.project.mock.calls.map(([documents]) => documents.length)).toEqual(
+      [64, 1],
+    );
+    expect(h.project).toHaveBeenLastCalledWith(['canonical-64'], 'viewer');
     const inserts = h.execute.mock.calls
       .map(([sql]) => sql)
       .filter((sql) => sql.text.includes('FROM (VALUES'));
@@ -188,45 +182,27 @@ describe('PrismaNewsSearchSession', () => {
     expect(scans[1].values).toContain('source-63');
   });
 
-  it('drains an in-flight failed chunk, hides provider diagnostics and never invokes the reader', async () => {
-    const h = harness();
-    h.state.batches = [
-      [
-        { id: 'one', documentJson: 'one' },
-        { id: 'two', documentJson: 'two' },
-      ],
-    ];
-    let release!: () => void;
-    let reached!: () => void;
-    const waiting = new Promise<{ searchText: string }>((resolve) => {
-      release = () => resolve({ searchText: 'safe' });
-    });
-    const observed = new Promise<void>((resolve) => {
-      reached = resolve;
-    });
-    h.project.mockImplementation((source) => {
-      if (source === 'one')
-        return Promise.reject(new Error('synthetic-private-diagnostic'));
-      reached();
-      return waiting;
-    });
-    let settled = false;
-    const read = jest.fn<Promise<null>, []>().mockResolvedValue(null);
-    const running = h.session
-      .run({ first: 10, search: 'body', viewerId: 'viewer' }, read)
-      .catch((error: unknown) => {
-        settled = true;
-        return error;
-      });
-    await observed;
-    expect(settled).toBe(false);
-    release();
-    expect(await running).toEqual(
-      new Error('News search projection is unavailable.'),
-    );
-    expect(read).not.toHaveBeenCalled();
-    expect(h.execute).toHaveBeenCalledTimes(2);
-  });
+  it.each(['failure', 'partial'])(
+    'rejects %s batch evidence without private diagnostics or partial reader output',
+    async (kind) => {
+      const h = harness();
+      h.state.batches = [
+        [
+          { id: 'one', documentJson: 'one' },
+          { id: 'two', documentJson: 'two' },
+        ],
+      ];
+      if (kind === 'failure')
+        h.project.mockRejectedValue(new Error('synthetic-private-diagnostic'));
+      else h.project.mockResolvedValue([{ searchText: 'only one' }]);
+      const read = jest.fn<Promise<null>, []>().mockResolvedValue(null);
+      await expect(
+        h.session.run({ first: 10, search: 'body', viewerId: 'viewer' }, read),
+      ).rejects.toEqual(new Error('News search projection is unavailable.'));
+      expect(read).not.toHaveBeenCalled();
+      expect(h.execute).toHaveBeenCalledTimes(2);
+    },
+  );
 
   it('propagates persistence failures rather than returning a partially counted page', async () => {
     const h = harness();

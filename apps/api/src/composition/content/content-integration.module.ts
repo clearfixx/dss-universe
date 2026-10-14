@@ -23,12 +23,19 @@
  */
 import { Global, Module } from '@nestjs/common';
 import { ContentAccessModule } from '@api/modules/content-access';
-import { EditorModule, EDITOR_GATE_DECISIONS } from '@api/modules/editor';
+import {
+  EditorModule,
+  EDITOR_GATE_DECISIONS,
+  EDITOR_GATE_DECISION_SCOPES,
+} from '@api/modules/editor';
+import { EditorGateDecisionScopesAdapter } from './infrastructure/editor-gate-decision-scopes.adapter';
+import { NewsSearchBatchProjectorAdapter } from './infrastructure/news-search-batch-projector.adapter';
 import { COMMENT_DOCUMENT_NORMALIZER } from '@api/modules/interactions';
 import {
   NEWS_DOCUMENT_NORMALIZER,
   NEWS_VIEWER_DOCUMENT_READER,
   NEWS_SEARCH_PROJECTOR,
+  NEWS_SEARCH_BATCH_PROJECTOR,
 } from '@api/modules/news';
 import { NewsSearchProjectorAdapter } from './infrastructure/news-search-projector.adapter';
 import { NewsViewerDocumentAdapter } from './infrastructure/news-viewer-document.adapter';
@@ -40,6 +47,14 @@ import { NewsDocumentAdapter } from './infrastructure/news-document.adapter';
 @Module({
   imports: [ContentAccessModule, EditorModule],
   providers: [
+    {
+      provide: EDITOR_GATE_DECISION_SCOPES,
+      useClass: EditorGateDecisionScopesAdapter,
+    },
+    {
+      provide: NEWS_SEARCH_BATCH_PROJECTOR,
+      useClass: NewsSearchBatchProjectorAdapter,
+    },
     { provide: NEWS_SEARCH_PROJECTOR, useClass: NewsSearchProjectorAdapter },
     {
       provide: NEWS_VIEWER_DOCUMENT_READER,
@@ -50,6 +65,8 @@ import { NewsDocumentAdapter } from './infrastructure/news-document.adapter';
     { provide: NEWS_DOCUMENT_NORMALIZER, useClass: NewsDocumentAdapter },
   ],
   exports: [
+    EDITOR_GATE_DECISION_SCOPES,
+    NEWS_SEARCH_BATCH_PROJECTOR,
     NEWS_SEARCH_PROJECTOR,
     NEWS_VIEWER_DOCUMENT_READER,
     EDITOR_GATE_DECISIONS,
