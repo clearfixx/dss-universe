@@ -82,8 +82,9 @@ mock authorization, timeout extension or production isolation change.
 These probes establish database behavior, not a completed runtime migration.
 See [PostgreSQL 17 isolation documentation](https://www.postgresql.org/docs/17/transaction-iso.html).
 
-Three additional characterizations confirm DEBT-056 guest MEMBERS comments/votes
+At foundation commit `6cdfbd4`, three additional characterizations confirm DEBT-056 guest MEMBERS comments/votes
 and DEBT-057 valid-tombstone GraphQL failure; a PUBLIC guest control passes.
 Positive disclosure/error assertions are diagnostic evidence, never acceptance.
-The DEBT-056 correction must reverse its disclosure assertions; DEBT-057 remains
+The separate [DEBT-056 correction](DEBT_056_NEWS_SECONDARY_AUDIENCE_PLAN.md) reverses
+its two disclosure assertions and adds audience regressions. DEBT-057 remains
 explicitly open until separately approved. Only synthetic data is inspected.

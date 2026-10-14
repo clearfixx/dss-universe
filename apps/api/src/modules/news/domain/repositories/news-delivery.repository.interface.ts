@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/modules/news/domain/repositories/news-delivery.repository.interface.ts
  *
  * 🎯 Purpose:
- * Defines News persistence projections before application-owned attachment delivery composition.
+ * Defines viewer-aware News persistence projections before owned document/attachment composition.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -41,6 +41,7 @@ export interface NewsDeliveryRepository {
     articleId: string,
     page: number,
     pageSize: number,
+    viewerId?: string,
   ): Promise<{
     items: NewsRatingVote[];
     total: number;

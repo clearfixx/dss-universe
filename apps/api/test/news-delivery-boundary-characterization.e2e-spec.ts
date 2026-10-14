@@ -9,7 +9,7 @@
  * Establishes current News secondary-read behavior and database snapshot facts before ownership transfer.
  *
  * 🧠 Responsibilities:
- * • characterizes actual guest comments/votes and valid tombstone transport;
+ * • guards guest MEMBERS comments/votes and characterizes valid tombstone transport;
  * • contrasts sequential Read Committed and Repeatable Read using a committed external writer;
  * • preserves synthetic-only data and real root authorization/normalization.
  *
@@ -17,7 +17,7 @@
  * Test-only AppModule over an owned migrated schema; no production implementation change.
  *
  * ⚠️ Important:
- * Disclosure/error expectations document defects, never security acceptance or desired behavior.
+ * The remaining tombstone error expectation documents DEBT-057, not desired behavior.
  * Isolation probes establish DB behavior, not a migrated production read contract.
  *
  * 🚀 Build. Share. Grow.
@@ -150,25 +150,20 @@ describe('News delivery pre-transfer characterization (e2e)', () => {
   const commentsQuery =
     'query($id:ID!,$slug:String!){fullNews(language:"uk",slug:$slug){id} newsComments(articleId:$id){total items{id body documentJson isDeleted}}}';
 
-  it('characterizes guest MEMBERS comment disclosure despite direct Full News denial', async () => {
+  it('denies guest MEMBERS comments consistently with direct Full News', async () => {
     const post = await article('MEMBERS');
     const marker = 'D4-SYNTHETIC-MEMBERS-COMMENT-' + randomUUID();
-    const comment = await app
+    await app
       .get(CommentsService)
       .create(author.user.id, post.interactionTargetId, { body: marker });
     const response = await guest(commentsQuery, post);
     expect(response.errors).toBeUndefined();
     expect(response.data?.fullNews).toBeNull();
-    // Defect characterization only; the corrective package must reverse these expectations.
-    expect(response.data?.newsComments?.total).toBe(1);
-    expect(response.data?.newsComments?.items).toEqual([
-      expect.objectContaining({ id: comment.id, body: marker }),
-    ]);
-    expect(response.data?.newsComments?.items[0].documentJson).toContain(
-      marker,
-    );
+    expect(response.data?.newsComments?.total).toBe(0);
+    expect(response.data?.newsComments?.items).toEqual([]);
+    expect(JSON.stringify(response)).not.toContain(marker);
   });
-  it('characterizes guest MEMBERS voting metadata despite direct Full News denial', async () => {
+  it('denies guest MEMBERS voting metadata consistently with direct Full News', async () => {
     const post = await article('MEMBERS');
     await app
       .get(ReactionsService)
@@ -179,10 +174,9 @@ describe('News delivery pre-transfer characterization (e2e)', () => {
     );
     expect(response.errors).toBeUndefined();
     expect(response.data?.fullNews).toBeNull();
-    expect(response.data?.newsRatingVotes?.total).toBe(1);
-    expect(response.data?.newsRatingVotes?.items[0].actor.id).toBe(
-      voter.user.id,
-    );
+    expect(response.data?.newsRatingVotes?.total).toBe(0);
+    expect(response.data?.newsRatingVotes?.items).toEqual([]);
+    expect(JSON.stringify(response)).not.toContain(voter.user.id);
   });
   it('retains the ordinary PUBLIC guest comments control', async () => {
     const post = await article();

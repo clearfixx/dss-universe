@@ -697,7 +697,7 @@ readiness. The current evidence proves the local start failure, not its complete
 root cause or behavior in every deployment. No entry/compiler/runtime fix is
 silently included in DEBT-053; owner notification accompanies this finding.
 
-### DEBT-056 — Guest News secondary reads bypass MEMBERS audience (Critical, ACCEPTED / priority correction pending)
+### DEBT-056 — Guest News secondary reads bypass MEMBERS audience (Critical, IMPLEMENTED / acceptance open)
 
 On 2026-10-14, real migrated AppModule/GraphQL characterization publishes a
 synthetic MEMBERS article, then creates a comment/reaction through actual owned
@@ -719,6 +719,16 @@ shape. No generic group ACL, staff bypass, frontend or owner-role feature.
 The owner explicitly approved a separate priority DEBT-056 package before D4
 runtime ownership transfer. It is not silently repaired by characterization.
 See [D4 read-boundary foundation](D4_3D3_NEWS_DELIVERY_BOUNDARIES.md).
+
+The separately approved correction now reuses existing article eligibility for
+both pre-reads and forwards verified optional viewer identity for rating pages.
+Corrected red baseline: 19 PASS / 8 FAIL; focused post-fix: 39 PASS, zero skipped,
+normal exits. This closes the reproduced path locally, not full release
+acceptance. API coverage 899 PASS; root lint/types/Prisma/build/architecture PASS.
+Full E2E 287 PASS / 2 FAIL (DEBT-045); isolated Auth 25 PASS / 1 FAIL on the same
+five-second registration deadline. Global format/audit/generated consistency and
+the bounded guest Web entry check remain red. Full gates/review/CI remain open; see
+[the bounded correction plan](DEBT_056_NEWS_SECONDARY_AUDIENCE_PLAN.md).
 
 ### DEBT-057 — Valid comment tombstones break News GraphQL non-null body (Medium, OPEN, separate correction required)
 

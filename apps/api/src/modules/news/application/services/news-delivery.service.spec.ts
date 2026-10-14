@@ -151,13 +151,18 @@ describe('NewsDeliveryService', () => {
 
   it('bounds public rating statistics', async () => {
     await service.ratingVotes('article-1', 2, 25);
-    expect(ratingVotes).toHaveBeenCalledWith('article-1', 2, 25);
+    expect(ratingVotes).toHaveBeenCalledWith('article-1', 2, 25, undefined);
     expect(() => service.ratingVotes('article-1', 0, 25)).toThrow(
       BadRequestException,
     );
     expect(() => service.ratingVotes('article-1', 1, 101)).toThrow(
       BadRequestException,
     );
+  });
+
+  it('forwards authenticated viewer identity for rating eligibility', async () => {
+    await service.ratingVotes('article-1', 2, 25, 'viewer-1');
+    expect(ratingVotes).toHaveBeenCalledWith('article-1', 2, 25, 'viewer-1');
   });
 
   it('bounds comment pages and preserves viewer context', async () => {

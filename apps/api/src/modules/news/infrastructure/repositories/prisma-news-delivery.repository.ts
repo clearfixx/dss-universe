@@ -10,7 +10,7 @@
  *
  * 🧠 Responsibilities:
  * • retains News filtering, pinned/cursor/numbered reads and full article data;
- * • applies the same current article eligibility to related target metadata;
+ * • applies current article eligibility to related metadata, comments and votes;
  * • preserves existing rating/comment transactional projections pending their transfer.
  *
  * 🏗️ Architecture:
@@ -307,6 +307,7 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
     articleId: string,
     page: number,
     pageSize: number,
+    viewerId?: string,
   ): Promise<{
     items: NewsRatingVote[];
     total: number;
@@ -315,7 +316,7 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
     totalPages: number;
   }> {
     const article = await this.prisma.newsArticle.findFirst({
-      where: { id: articleId, status: 'PUBLISHED', allowRating: true },
+      where: { ...this.where({ viewerId }), id: articleId, allowRating: true },
       select: { interactionTargetId: true },
     });
     if (!article) return { items: [], total: 0, page, pageSize, totalPages: 0 };
@@ -361,7 +362,11 @@ export class PrismaNewsDeliveryRepository implements NewsDeliveryRepository {
     viewerId?: string,
   ): Promise<NewsCommentsPage> {
     const article = await this.prisma.newsArticle.findFirst({
-      where: { id: articleId, status: 'PUBLISHED', allowComments: true },
+      where: {
+        ...this.where({ viewerId }),
+        id: articleId,
+        allowComments: true,
+      },
       select: { interactionTargetId: true },
     });
     if (!article) return { items: [], total: 0, page, pageSize, totalPages: 0 };
