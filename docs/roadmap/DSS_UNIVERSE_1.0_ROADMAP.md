@@ -1957,10 +1957,15 @@ Current work:
 
 Next product phase:
   Phase 11 — Knowledge Forge, not started
-  Only after D7 acceptance and an approved Phase 11 brainstorm
+  Only after D7 acceptance, the post-preparation stack audit and its acceptance,
+  and an approved Phase 11 brainstorm
 ```
 
 Execution authority: [pre-Phase-11 plan](../development/PRE_PHASE_11_EXECUTION_PLAN.md).
+Owner update (2026-10-14): the separate
+[stack audit](../audits/STACK_AUDIT_PLAN.md) follows preparation and must be
+accepted before the Phase 11 brainstorm. It does not pre-approve technology
+replacements, migrations or other implementation changes.
 Scope decisions are tracked in [D1 decisions](../development/D1_SCOPE_DECISIONS.md)
 and [Auth ownership ADR-003](../architecture/adr/003-subject-and-access-ownership.md).
 D3.5 IAM groups/Premium is scheduled for separate scope approval, not silently

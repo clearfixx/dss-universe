@@ -113,6 +113,8 @@ export class NewsService {
       templateData,
       plainText: projection.plainText,
       searchText: projection.searchText,
+      publicSearchText: projection.publicSearchText,
+      hasContentGates: projection.hasContentGates,
       coverMediaId,
       attachmentMediaIds,
     });
@@ -180,6 +182,8 @@ export class NewsService {
       templateData,
       plainText: projection.plainText,
       searchText: projection.searchText,
+      publicSearchText: projection.publicSearchText,
+      hasContentGates: projection.hasContentGates,
       coverMediaId,
       attachmentMediaIds,
     });

@@ -6,13 +6,17 @@
  * 📄 File: apps/api/src/modules/editor/index.ts
  *
  * 🎯 Purpose:
- * Exposes named normalization and redaction contracts, never concrete services.
+ * Exposes named normalization, redaction and search contracts, never concrete services.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 
 export { EditorModule } from './editor.module';
+export {
+  EDITOR_SEARCH_PROJECTOR,
+  type EditorSearchProjector,
+} from './contracts/editor-search-projector.contract';
 export {
   EDITOR_VIEWER_DOCUMENT_PROJECTOR,
   type EditorViewerDocumentProjector,

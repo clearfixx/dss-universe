@@ -28,7 +28,9 @@ import { COMMENT_DOCUMENT_NORMALIZER } from '@api/modules/interactions';
 import {
   NEWS_DOCUMENT_NORMALIZER,
   NEWS_VIEWER_DOCUMENT_READER,
+  NEWS_SEARCH_PROJECTOR,
 } from '@api/modules/news';
+import { NewsSearchProjectorAdapter } from './infrastructure/news-search-projector.adapter';
 import { NewsViewerDocumentAdapter } from './infrastructure/news-viewer-document.adapter';
 import { EditorGateDecisionAdapter } from './infrastructure/editor-gate-decision.adapter';
 import { CommentDocumentAdapter } from './infrastructure/comment-document.adapter';
@@ -38,6 +40,7 @@ import { NewsDocumentAdapter } from './infrastructure/news-document.adapter';
 @Module({
   imports: [ContentAccessModule, EditorModule],
   providers: [
+    { provide: NEWS_SEARCH_PROJECTOR, useClass: NewsSearchProjectorAdapter },
     {
       provide: NEWS_VIEWER_DOCUMENT_READER,
       useClass: NewsViewerDocumentAdapter,
@@ -47,6 +50,7 @@ import { NewsDocumentAdapter } from './infrastructure/news-document.adapter';
     { provide: NEWS_DOCUMENT_NORMALIZER, useClass: NewsDocumentAdapter },
   ],
   exports: [
+    NEWS_SEARCH_PROJECTOR,
     NEWS_VIEWER_DOCUMENT_READER,
     EDITOR_GATE_DECISIONS,
     COMMENT_DOCUMENT_NORMALIZER,

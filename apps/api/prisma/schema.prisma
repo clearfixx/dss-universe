@@ -525,6 +525,7 @@ model NewsArticle {
   outgoingLinks     NewsInternalLink[]      @relation("NewsOutgoingLinks")
   incomingLinks     NewsInternalLink[]      @relation("NewsIncomingLinks")
   pin               NewsPin?
+  searchProjection  NewsSearchProjection?
 
   @@unique([language, slug])
   @@index([status, publishedAt, id])
@@ -532,6 +533,20 @@ model NewsArticle {
   @@index([authorId, status, updatedAt])
   @@index([postType, status, publishedAt])
   @@map("news_articles")
+}
+
+/// News-owned public text index; viewer decisions are never persisted here.
+model NewsSearchProjection {
+  articleId         String  @id
+  sourceVersion     Int
+  projectionVersion Int
+  publicSearchText  String
+  hasContentGates   Boolean
+
+  article NewsArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([projectionVersion, hasContentGates, articleId], map: "news_search_projection_gate_scan_idx")
+  @@map("news_search_projections")
 }
 
 model NewsPin {

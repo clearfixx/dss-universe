@@ -25,7 +25,7 @@
  */
 
 import { Inject, Injectable } from '@nestjs/common';
-import type { EditorDocument, EditorNode } from '@dss/editor';
+import type { EditorDocument, EditorNode, EditorProfile } from '@dss/editor';
 
 import {
   EDITOR_GATE_DECISIONS,
@@ -49,8 +49,12 @@ export class EditorContentDeliveryService {
   async project(
     documentJson: string,
     viewerId: string | null,
+    expectedProfile?: EditorProfile,
   ): Promise<EditorDeliveryProjection> {
-    const canonical = this.editor.normalize(documentJson).document;
+    const canonical = this.editor.normalize(
+      documentJson,
+      expectedProfile,
+    ).document;
     const evaluations = new Map<string, Promise<EditorGateDecision>>();
     const content = (await this.redactNode(
       canonical.content,

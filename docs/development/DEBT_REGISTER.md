@@ -354,6 +354,17 @@ after that explicit final summary; no forceExit/test skip/trigger change was use
 Its production repository and fixture source are unchanged by DEBT-052. This
 confirms the existing D6 blocker, not green full E2E acceptance.
 
+DEBT-053 verification repeats the broader fixture problem: News now also reports
+hasNextPage true where its global fixture expects false; leaderboards observes
+another 10-point subject/currentLevel; achievements receives two AWARDED and two
+DUPLICATE results where it expects one pair. Its event test reads all enabled
+matching rules in a shared database. These are observed assertion/source facts,
+not a new product root-cause claim. Twelve tests fail in the complete 244-test
+attempt, including the existing registration timeout and profile-assets hook
+timeouts. All seventy relevant isolated-schema News/composition E2E pass inside
+that same attempt. D6 must disposition the global fixture failures independently;
+no unrelated test/production behavior is changed by DEBT-053.
+
 ### DEBT-046 — Last privileged role-holder removal is unguarded (High, IMPLEMENTED / review pending, D3.4)
 
 At `a9c5596`, UserAccessService.revokeRole does not invoke the existing
@@ -548,7 +559,27 @@ search evidence, preserving correct total/pins/pagination and allowed content
 search; reconcile already stored projections through reviewed backfill/migration
 if needed. Do not remove full-text search, filter after paging, or introduce the
 deferred shared Search Platform as a shortcut. On 2026-10-14 the owner approved
-this as a separate package after DEBT-052. Implementation has not started.
+this as a separate package after DEBT-052. The owner subsequently approved the
+hybrid public index/authenticated gated-document projection architecture with
+performance tests and no hidden result cap. Implementation has started on
+`debt/debt-053-news-viewer-search`; the first increment adds Editor-owned public
+projection/search contracts, not a live News query correction. See the
+[implementation plan](DEBT_053_NEWS_VIEWER_SEARCH_PLAN.md). Storage/backfill,
+query composition and actual response/performance acceptance remain OPEN.
+The next local increment adds versioned News-owned projection storage, atomic
+draft writes, invalidation, source-locked canonical backfill and a published
+maintenance port/CLI. Fifty-six focused migrated E2E pass; real disposable-data
+backfill/readiness passes without authored-document changes.
+The local runtime increment now replaces raw body matching with public evidence
+and bounded viewer projections in a repeatable-read snapshot. Eleven new live
+query E2E and the corrected twenty-case Full News suite pass; hidden-only guest
+matches no longer enter items/pins/totals. An isolated 1,000-article corpus with
+600 gated articles passes complete numbered/cursor pagination, but its member
+p95 is 3.657 seconds against the unchanged five-second transaction budget.
+A concurrent DB-gate run exceeded that budget; storage fixture timeouts and
+broader full-suite failures also require disposition. This is not accepted
+capacity or a green full package. No timeout increase, result cap or raw fallback.
+See the plan for current verification and residual performance risk.
 DEBT-052 remains a separate Full News correction; no search policy
 or historical projection is silently changed by that package. Release/Phase 11
 security acceptance must disposition this confirmed channel explicitly.
@@ -580,3 +611,18 @@ DEBT-052 documents this adjacent finding but does not silently alter unrelated
 delivery queries. On 2026-10-14 the owner approved a separate correction after
 DEBT-053; implementation has not started. The finding remains unresolved for
 release/Phase 11 security acceptance.
+
+### DEBT-055 — API production start points at a missing local build entry (High, OPEN, D6)
+
+On 2026-10-14, inspecting the existing build output before a fresh build of the
+current storage increment found `apps/api/dist/src/main.js` but no
+`apps/api/dist/main.js`. The existing `start:prod` command is `node dist/main`;
+executing that exact command from apps/api exits immediately with MODULE_NOT_FOUND,
+before loading application code or connecting to any service. A successful
+compiler/build gate is therefore not evidence that this production start works.
+
+D6 must reproduce the output layout from a clean build, reconcile the intended
+runtime entry without breaking other compiled paths, and verify actual process
+readiness. The current evidence proves the local start failure, not its complete
+root cause or behavior in every deployment. No entry/compiler/runtime fix is
+silently included in DEBT-053; owner notification accompanies this finding.

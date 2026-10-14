@@ -27,6 +27,7 @@ import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import type { App } from 'supertest/types';
 import { randomUUID } from 'node:crypto';
+import type { Prisma } from '@prisma/client';
 import { createEmptyEditorDocument, type EditorNode } from '@dss/editor';
 import { PrismaService } from '@api/core/database';
 import { Permission } from '@api/core/authorization';
@@ -45,6 +46,7 @@ import {
 import { AppModule } from '../src/app.module';
 import { AuthenticationPresentationService } from '../src/composition/identity/application/authentication-presentation.service';
 import { NewsService } from '../src/modules/news/application/services/news.service';
+import { NewsSearchBackfillService } from '../src/modules/news/application/services/news-search-backfill.service';
 import { NewsDeliveryService } from '../src/modules/news/application/services/news-delivery.service';
 import { NewsLinksService } from '../src/modules/news/application/services/news-links.service';
 import { CommentsService } from '../src/modules/interactions/application/services/comments.service';
@@ -390,10 +392,19 @@ describe('Full News server-side viewer redaction (e2e)', () => {
         },
       },
     });
-    const response = await full(post.slug);
-    expect(response.errors?.length).toBeGreaterThan(0);
-    expect(response.data.fullNews).toBeNull();
-    expect(JSON.stringify(response)).not.toContain(secret);
+    try {
+      const response = await full(post.slug);
+      expect(response.errors?.length).toBeGreaterThan(0);
+      expect(response.data.fullNews).toBeNull();
+      expect(JSON.stringify(response)).not.toContain(secret);
+    } finally {
+      // Restore only this deliberately corrupted synthetic fixture for later search readiness.
+      await prisma.newsArticle.update({
+        where: { id: post.id },
+        data: { document: post.document as unknown as Prisma.InputJsonValue },
+      });
+      await app.get(NewsSearchBackfillService).run();
+    }
   });
   it('retains an ordinary canonical document and public summary/template response shape', async () => {
     const post = await article([]);
@@ -549,7 +560,7 @@ describe('Full News server-side viewer redaction (e2e)', () => {
     expect(JSON.stringify(response)).toContain(hidden.title);
     expect(JSON.stringify(response)).toContain(hidden.slug);
   });
-  it('characterizes the separate hidden-text search-match channel without claiming it fixed', async () => {
+  it('does not disclose hidden-only matches through guest News search after DEBT-053', async () => {
     const { post } = await restricted();
     await expectProtected(post.slug, undefined, false);
     async function search(text: string) {
@@ -570,8 +581,8 @@ describe('Full News server-side viewer redaction (e2e)', () => {
     }
     const matching = await search(secret);
     expect(matching.errors).toBeUndefined();
-    expect(matching.data.news.items.map(({ id }) => id)).toContain(post.id);
-    expect(matching.data.news.total).toBeGreaterThan(0);
+    expect(matching.data.news.items.map(({ id }) => id)).not.toContain(post.id);
+    expect(matching.data.news.total).toBe(0);
     expect(JSON.stringify(matching)).not.toContain(secret);
     expect((await search('DSS-ABSENT-' + randomUUID())).data.news.total).toBe(
       0,

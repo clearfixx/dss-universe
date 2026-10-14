@@ -22,6 +22,7 @@ import {
   EditorModule,
   EDITOR_DOCUMENT_NORMALIZER,
   EDITOR_VIEWER_DOCUMENT_PROJECTOR,
+  EDITOR_SEARCH_PROJECTOR,
   type EditorViewerDocumentProjector,
   type EditorDocumentNormalizer,
 } from '@api/modules/editor';
@@ -35,6 +36,7 @@ describe('Content integration boundaries', () => {
     expect(Reflect.getMetadata(MODULE_METADATA.EXPORTS, EditorModule)).toEqual([
       EDITOR_DOCUMENT_NORMALIZER,
       EDITOR_VIEWER_DOCUMENT_PROJECTOR,
+      EDITOR_SEARCH_PROJECTOR,
     ]);
     expect(
       Reflect.getMetadata(MODULE_METADATA.EXPORTS, ContentAccessModule),
@@ -84,10 +86,20 @@ describe('Content integration boundaries', () => {
       normalizeNews: jest.fn().mockReturnValue(projection),
       normalizeComment: jest.fn().mockReturnValue(projection),
     } satisfies jest.Mocked<EditorDocumentNormalizer>;
-    expect(new NewsDocumentAdapter(editor).normalize('news')).toEqual({
+    const search = {
+      projectPublic: jest.fn(() => ({
+        searchText: 'public text',
+        hasContentGates: true,
+        privateField: 'must not escape',
+      })),
+      projectForViewer: jest.fn(),
+    };
+    expect(new NewsDocumentAdapter(editor, search).normalize('news')).toEqual({
       document,
       plainText: 'Text',
       searchText: 'text',
+      publicSearchText: 'public text',
+      hasContentGates: true,
     });
     expect(new CommentDocumentAdapter(editor).normalize('comment')).toEqual({
       document,
@@ -96,6 +108,7 @@ describe('Content integration boundaries', () => {
       searchText: 'text',
     });
     expect(editor.normalizeNews.mock.calls).toEqual([['news']]);
+    expect(search.projectPublic.mock.calls).toEqual([['{}']]);
     expect(editor.normalizeComment.mock.calls).toEqual([['comment']]);
   });
   it('translates every supported verdict kind and drops extra provider fields', async () => {
@@ -138,9 +151,11 @@ describe('Content integration boundaries', () => {
         throw failure;
       }),
     } satisfies jest.Mocked<EditorDocumentNormalizer>;
-    expect(() => new NewsDocumentAdapter(editor).normalize('news')).toThrow(
-      failure,
-    );
+    const search = { projectPublic: jest.fn(), projectForViewer: jest.fn() };
+    expect(() =>
+      new NewsDocumentAdapter(editor, search).normalize('news'),
+    ).toThrow(failure);
+    expect(search.projectPublic).not.toHaveBeenCalled();
     expect(() =>
       new CommentDocumentAdapter(editor).normalize('comment'),
     ).toThrow(failure);
