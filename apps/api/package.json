@@ -126,6 +126,12 @@
     ],
     "coverageDirectory": "../coverage",
     "coverageThreshold": {
+      "src/modules/news/application/services/news-attachment-delivery.service.ts": {
+        "branches": 80,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
       "src/modules/content-access/application/services/content-gates.service.ts": {
         "branches": 80,
         "functions": 100,

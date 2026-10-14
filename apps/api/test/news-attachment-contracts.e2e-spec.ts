@@ -6,17 +6,17 @@
  * 📄 File: apps/api/test/news-attachment-contracts.e2e-spec.ts
  *
  * 🎯 Purpose:
- * Verifies attachment owner metadata, canonical manifest debt and corrected Full News redaction.
+ * Verifies canonical attachment manifests, owner metadata eligibility and Full News redaction.
  *
  * 🧠 Responsibilities:
  * • exercises actual News/Media root bindings and all real migrations;
- * • tests legacy node traversal directly without bypassing canonical Full News validation.
+ * • tests canonical public delivery and legacy component compatibility separately.
  *
  * 🏗️ Architecture:
  * AppModule E2E in an owned disposable schema; no production policy is stubbed into success.
  *
  * ⚠️ Important:
- * Canonical attachment omission remains DEBT-051; component metadata checks do not prove binary access.
+ * Metadata checks do not prove binary access; no storage keys or provider internals may leak.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -255,7 +255,7 @@ describe('News public attachment metadata owner contracts (e2e)', () => {
       },
     ]);
   });
-  it('characterizes inherited canonical-wrapper omission without claiming DEBT-051 fixed', async () => {
+  it('publishes eligible canonical attachments through application and GraphQL after DEBT-051', async () => {
     const asset = await media();
     const post = await article([attachment(asset.id, 'Canonical manual')]);
     expect(
@@ -272,13 +272,18 @@ describe('News public attachment metadata owner contracts (e2e)', () => {
       app.get<NewsAttachmentReader>(NEWS_ATTACHMENT_READER),
       'read',
     );
-    expect((await delivery.fullBySlug('uk', post.slug))?.attachments).toEqual(
-      [],
-    );
+    expect((await delivery.fullBySlug('uk', post.slug))?.attachments).toEqual([
+      expect.objectContaining({ mediaId: asset.id, label: 'Canonical manual' }),
+    ]);
     const response = await full(post.slug);
     expect(response.errors).toBeUndefined();
-    expect(response.data.fullNews?.attachments).toEqual([]);
-    expect(read).not.toHaveBeenCalled();
+    expect(response.data.fullNews?.attachments).toEqual([
+      expect.objectContaining({ mediaId: asset.id, label: 'Canonical manual' }),
+    ]);
+    expect(read.mock.calls).toEqual([
+      [post.id, [asset.id]],
+      [post.id, [asset.id]],
+    ]);
   });
   it('preserves legacy node component metadata, labels, checksums and provider-field isolation', async () => {
     const first = await media();
@@ -325,10 +330,11 @@ describe('News public attachment metadata owner contracts (e2e)', () => {
     'omits %s files without altering publication workflow or reference data',
     async (status) => {
       const asset = await media(status);
-      const post = await article([attachment(asset.id, 'File')], {
-        legacyNode: true,
-      });
+      const post = await article([attachment(asset.id, 'File')]);
       expect(await attachmentProjection(post)).toEqual([]);
+      const response = await full(post.slug);
+      expect(response.errors).toBeUndefined();
+      expect(response.data.fullNews?.attachments).toEqual([]);
       expect(
         await prisma.mediaReference.count({
           where: { targetId: post.id, mediaId: asset.id, removedAt: null },
@@ -340,9 +346,7 @@ describe('News public attachment metadata owner contracts (e2e)', () => {
     'does not expose %s attachment metadata even to a logged-in author',
     async (visibility) => {
       const asset = await media('READY', visibility);
-      const post = await article([attachment(asset.id, 'File')], {
-        legacyNode: true,
-      });
+      const post = await article([attachment(asset.id, 'File')]);
       expect(await attachmentProjection(post)).toEqual([]);
       expect(
         (await full(post.slug, owner.tokens.accessToken)).data.fullNews
@@ -354,9 +358,7 @@ describe('News public attachment metadata owner contracts (e2e)', () => {
     'preserves exclusion for %s reference/file evidence',
     async (kind) => {
       const asset = await media();
-      const post = await article([attachment(asset.id, 'File')], {
-        legacyNode: true,
-      });
+      const post = await article([attachment(asset.id, 'File')]);
       const reference = await prisma.mediaReference.findFirstOrThrow({
         where: { targetId: post.id, mediaId: asset.id },
       });
@@ -380,6 +382,9 @@ describe('News public attachment metadata owner contracts (e2e)', () => {
                   : { targetType: 'Other' },
         });
       expect(await attachmentProjection(post)).toEqual([]);
+      const response = await full(post.slug);
+      expect(response.errors).toBeUndefined();
+      expect(response.data.fullNews?.attachments).toEqual([]);
     },
   );
   it('skips metadata behind a contentGate while keeping ordinary legacy-node attachments', async () => {
@@ -425,7 +430,10 @@ describe('News public attachment metadata owner contracts (e2e)', () => {
     expect(
       await delivery.fullBySlug('uk', post.slug, owner.user.id),
     ).not.toBeNull();
-    // Canonical attachment manifest remains DEBT-051, not silently repaired here.
+    expect(
+      (await full(post.slug, owner.tokens.accessToken)).data.fullNews
+        ?.attachments,
+    ).toEqual([expect.objectContaining({ mediaId: asset.id })]);
     expect(await attachmentProjection(post)).toHaveLength(1);
   });
   it('does not invoke Media for missing articles or documents without attachments', async () => {
@@ -456,6 +464,146 @@ describe('News public attachment metadata owner contracts (e2e)', () => {
     await expect(attachmentProjection(post)).rejects.toThrow(
       'Synthetic metadata provider failure',
     );
+  });
+  it('delivers canonical duplicate/nested attachments in first-position/last-label order without changing stored evidence', async () => {
+    const first = await media();
+    const second = await media();
+    const post = await article([
+      attachment(first.id, 'First label'),
+      { type: 'blockquote', content: [attachment(second.id, 'Second label')] },
+      attachment(first.id, 'Last label'),
+    ]);
+    const before = await prisma.newsArticle.findUniqueOrThrow({
+      where: { id: post.id },
+    });
+    const references = await prisma.mediaReference.findMany({
+      where: { targetId: post.id },
+      orderBy: { id: 'asc' },
+    });
+    const revisions = await prisma.newsRevision.count({
+      where: { articleId: post.id },
+    });
+    const response = await full(post.slug);
+    expect(response.errors).toBeUndefined();
+    expect(
+      response.data.fullNews?.attachments.map(({ mediaId, label }) => [
+        mediaId,
+        label,
+      ]),
+    ).toEqual([
+      [first.id, 'Last label'],
+      [second.id, 'Second label'],
+    ]);
+    for (const value of [
+      'storageKey',
+      'synthetic-private-bucket',
+      'not-for-readers',
+    ])
+      expect(JSON.stringify(response.data.fullNews?.attachments)).not.toContain(
+        value,
+      );
+    expect(
+      await prisma.newsArticle.findUniqueOrThrow({ where: { id: post.id } }),
+    ).toEqual(before);
+    expect(
+      await prisma.mediaReference.findMany({
+        where: { targetId: post.id },
+        orderBy: { id: 'asc' },
+      }),
+    ).toEqual(references);
+    expect(
+      await prisma.newsRevision.count({ where: { articleId: post.id } }),
+    ).toBe(revisions);
+  });
+  it('excludes canonical gated attachments for both guest and author without allowing hidden labels to overwrite visible ones', async () => {
+    const visible = await media();
+    const hidden = await media();
+    const gate = await app.get(ContentGatesService).create({
+      ownerId: owner.user.id,
+      operator: 'ALL',
+      requirements: [{ kind: 'COMMENTS', threshold: 100, groupKey: null }],
+    });
+    const post = await article([
+      attachment(visible.id, 'Visible label'),
+      {
+        type: 'contentGate',
+        attrs: { gateId: gate.id },
+        content: [
+          attachment(hidden.id, 'Synthetic hidden label'),
+          attachment(visible.id, 'Synthetic hidden overwrite'),
+        ],
+      },
+    ]);
+    const read = jest.spyOn(
+      app.get<NewsAttachmentReader>(NEWS_ATTACHMENT_READER),
+      'read',
+    );
+    for (const token of [undefined, owner.tokens.accessToken]) {
+      const response = await full(post.slug, token);
+      expect(response.errors).toBeUndefined();
+      expect(response.data.fullNews?.attachments).toEqual([
+        expect.objectContaining({
+          mediaId: visible.id,
+          label: 'Visible label',
+        }),
+      ]);
+      expect(response.data.fullNews?.documentJson.includes(hidden.id)).toBe(
+        Boolean(token),
+      );
+    }
+    expect(read.mock.calls).toEqual([
+      [post.id, [visible.id]],
+      [post.id, [visible.id]],
+    ]);
+  });
+  it('rechecks canonical media and reference eligibility on subsequent requests with the same JWT', async () => {
+    const asset = await media();
+    const post = await article([attachment(asset.id, 'Current file')]);
+    const reference = await prisma.mediaReference.findFirstOrThrow({
+      where: { targetId: post.id, mediaId: asset.id },
+    });
+    async function expectCount(count: number) {
+      const response = await full(post.slug, owner.tokens.accessToken);
+      expect(response.errors).toBeUndefined();
+      expect(response.data.fullNews?.attachments).toHaveLength(count);
+    }
+    await expectCount(1);
+    await prisma.media.update({
+      where: { id: asset.id },
+      data: { status: 'QUARANTINED' },
+    });
+    await expectCount(0);
+    await prisma.media.update({
+      where: { id: asset.id },
+      data: { status: 'READY', visibility: 'PRIVATE' },
+    });
+    await expectCount(0);
+    await prisma.media.update({
+      where: { id: asset.id },
+      data: { visibility: 'PUBLIC' },
+    });
+    await expectCount(1);
+    await prisma.mediaReference.update({
+      where: { id: reference.id },
+      data: { removedAt: new Date() },
+    });
+    await expectCount(0);
+  });
+  it('fails canonical public delivery closed when the real Media metadata provider is unavailable', async () => {
+    const asset = await media();
+    const post = await article([attachment(asset.id, 'Current file')]);
+    jest
+      .spyOn(
+        app.get<MediaPublicAttachmentReader>(MEDIA_PUBLIC_ATTACHMENT_READER),
+        'read',
+      )
+      .mockRejectedValue(new Error('Synthetic canonical metadata outage'));
+    await expect(delivery.fullBySlug('uk', post.slug)).rejects.toThrow(
+      'Synthetic canonical metadata outage',
+    );
+    const response = await full(post.slug);
+    expect(response.errors?.length).toBeGreaterThan(0);
+    expect(response.data.fullNews).toBeNull();
   });
   it('removes denied protected text at the public Full News boundary', async () => {
     const gate = await app.get(ContentGatesService).create({

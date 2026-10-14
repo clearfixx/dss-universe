@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-14 — DEBT-054 related-audience correction; acceptance still open
+> Updated: 2026-10-14 — DEBT-051 canonical attachment correction; acceptance still open
 
 ## Product and authority
 
@@ -29,7 +29,22 @@ approved ADRs or recorded owner decisions.
 
 ## Current position
 
-Active package: `debt/debt-054-related-audience`, explicitly stacked on DEBT-053
+Active package: `debt/debt-051-canonical-attachments`, explicitly stacked on
+DEBT-054 `b4e3d62` / draft PR #13, not an accepted baseline. Canonical NEWS doc
+roots now reach the attachment manifest; all contentGate subtrees remain excluded.
+Media still owns READY/PUBLIC/non-deleted/active-reference eligibility and binary
+delivery. Projection units 36 PASS; focused E2E 72 PASS (29 attachment cases);
+full API coverage 898 PASS with nine explicit thresholds and zero skipped.
+No frontend, API/schema/migration/dependency change. Full gates/review/CI remain
+open. Full API E2E: 259 PASS/3 FAIL (News foundation, registration deadline,
+leaderboard fixtures, DEBT-045); isolated Auth: 26 PASS. All 113 directly relevant
+News/composition E2E pass. Fresh other workspace units pass; Web smoke 10 PASS/
+3 FAIL, and global format/audit/generated gates remain red. See
+[DEBT-051 plan](development/DEBT_051_CANONICAL_ATTACHMENTS_PLAN.md).
+Next is remaining D4 SQL/public boundaries, then D5–D7, stack audit/acceptance
+and mandatory Phase 11 brainstorm.
+
+The DEBT-054 parent package is `debt/debt-054-related-audience`, stacked on DEBT-053
 `086aae3` / draft PR #12, not an accepted baseline. Related targets now use the
 same News publication/audience predicate as direct Full News, before metadata
 selection. Twelve new real GraphQL cases first reproduced four failures, then
@@ -39,7 +54,7 @@ E2E 256 PASS/2 FAIL (DEBT-045); isolated Auth suite 26 PASS. Global format/audit
 generated/Web gates remain red. No frontend, public schema, migrations or new
 group/staff policy. Review and CI acceptance remain open. See the
 [DEBT-054 plan](development/DEBT_054_RELATED_AUDIENCE_PLAN.md). Next approved
-correction is DEBT-051, then remaining D4/D5–D7, stack audit and Phase 11 brainstorm.
+correction was DEBT-051, now tracked above; full D4/D5–D7 acceptance remains open.
 
 At the package base, Critical DEBT-052: a real guest Full News response contains denied Content Gate
 payload in documentJson because the published response path omits server-side

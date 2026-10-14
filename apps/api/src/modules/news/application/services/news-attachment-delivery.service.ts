@@ -9,14 +9,15 @@
  * Composes full News attachment labels/order from minimal published file metadata.
  *
  * 🧠 Responsibilities:
- * • extracts document attachments while skipping contentGate subtrees;
+ * • unwraps the canonical NEWS doc root and skips every contentGate subtree;
  * • preserves first position/last label, duplicate reference resolution and display kind.
  *
  * 🏗️ Architecture:
  * Private News application projection; Media eligibility and binary delivery stay owned.
  *
  * ⚠️ Important:
- * Only eligible referenced files appear; provider or document failures must not become empty success.
+ * Only eligible referenced files appear; Editor validates public documents before this projection.
+ * Provider/JSON failures must not become empty success; legacy component shapes remain compatible.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -89,7 +90,21 @@ export class NewsAttachmentDeliveryService {
       if (Array.isArray(node.content))
         node.content.forEach((child: unknown) => visit(child));
     };
-    visit(document);
+    if (
+      document &&
+      typeof document === 'object' &&
+      'profile' in document &&
+      document.profile === 'NEWS' &&
+      'content' in document &&
+      document.content &&
+      typeof document.content === 'object' &&
+      'type' in document.content &&
+      document.content.type === 'doc'
+    ) {
+      visit(document.content);
+    } else {
+      visit(document);
+    }
     return attachments;
   }
 
