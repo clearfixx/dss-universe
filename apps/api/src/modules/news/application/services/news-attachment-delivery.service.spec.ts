@@ -6,12 +6,13 @@
  * 📄 File: apps/api/src/modules/news/application/services/news-attachment-delivery.service.spec.ts
  *
  * 🎯 Purpose:
- * Pins attachment traversal, hidden-container exclusion, order/deduplication and display-kind transfer.
+ * Pins canonical-root/legacy traversal, hidden-container exclusion, ordering and safe file fields.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 import { NewsAttachmentDeliveryService } from './news-attachment-delivery.service';
+import { createEmptyEditorDocument } from '@dss/editor';
 import type {
   NewsAttachmentFile,
   NewsAttachmentReader,
@@ -55,6 +56,63 @@ describe('NewsAttachmentDeliveryService', () => {
     ).toEqual([{ ...file, label: 'Guide', kind: 'PDF document' }]);
     expect(read.mock.calls).toEqual([['article', ['file']]]);
   });
+  it('unwraps the actual canonical NEWS doc root without changing the document', async () => {
+    const canonical = createEmptyEditorDocument('NEWS');
+    canonical.content.content = [attachment('file', 'Canonical')];
+    const raw = JSON.stringify(canonical);
+    expect(await service.project('article', raw)).toEqual([
+      { ...file, label: 'Canonical', kind: 'PDF document' },
+    ]);
+    expect(JSON.stringify(canonical)).toBe(raw);
+    expect(read.mock.calls).toEqual([['article', ['file']]]);
+  });
+  it('preserves canonical nested order/last labels and excludes every gate before asking Media', async () => {
+    const canonical = createEmptyEditorDocument('NEWS');
+    canonical.content.content = [
+      attachment('file', 'First'),
+      { type: 'blockquote', content: [attachment('second', 'Second')] },
+      { type: 'contentGate', content: [attachment('hidden', 'Secret')] },
+      attachment('file', 'Last'),
+    ];
+    read.mockResolvedValue([
+      { ...file, mediaId: 'second', id: 'second-ref' },
+      file,
+    ]);
+    const result = await service.project('article', JSON.stringify(canonical));
+    expect(result.map(({ mediaId, label }) => [mediaId, label])).toEqual([
+      ['file', 'Last'],
+      ['second', 'Second'],
+    ]);
+    expect(read.mock.calls).toEqual([['article', ['file', 'second']]]);
+  });
+  it.each([
+    {
+      profile: 'COMMENT',
+      content: { type: 'doc', content: [attachment('file', 'No')] },
+    },
+    {
+      profile: 'NEWS',
+      content: { type: 'paragraph', content: [attachment('file', 'No')] },
+    },
+    { profile: 'NEWS', content: null },
+    { profile: 'NEWS', content: 42 },
+    {
+      profile: 'NEWS',
+      ignored: { type: 'doc', content: [attachment('file', 'No')] },
+    },
+    {
+      type: 'container',
+      content: { type: 'doc', content: [attachment('file', 'No')] },
+    },
+  ])(
+    'does not unwrap arbitrary or non-NEWS object-valued content: %p',
+    async (value) => {
+      expect(await service.project('article', JSON.stringify(value))).toEqual(
+        [],
+      );
+      expect(read).not.toHaveBeenCalled();
+    },
+  );
   it('keeps first position and last label for duplicate document attachments, independent of provider order', async () => {
     const second = { ...file, id: 'second-ref', mediaId: 'second' };
     read.mockResolvedValue([second, file]);

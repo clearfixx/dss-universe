@@ -381,6 +381,15 @@ An isolated repeat of the entire Auth E2E suite passes all 26 tests with zero
 skips and normal exit. This does not waive the full-run timeout or establish its
 cause. No timeout, auth behavior, shared fixture or DB trigger was changed.
 
+DEBT-051's frozen-source full E2E is 259 PASS/3 FAIL, 262 tests, zero skipped:
+News viewCount/retirement cleanup, registration deadline and leaderboard tie.
+All 113 directly related News/composition cases pass. Read-only inspection
+confirms the winning synthetic points fixture precedes the leaderboard fixture
+by about 45 seconds. The full run stays red; no assertion, timeout, cleanup
+protection or unrelated product behavior is changed to suppress it.
+The isolated entire Auth E2E repeat passes all 26 tests, zero skips, normal exit;
+this does not prove why the full-run registration deadline was exceeded.
+
 ### DEBT-046 — Last privileged role-holder removal is unguarded (High, IMPLEMENTED / review pending, D3.4)
 
 At `a9c5596`, UserAccessService.revokeRole does not invoke the existing
@@ -499,7 +508,7 @@ not defined` again attributed to editor-ai-dialog.spec.tsx. API E2E/generated/bu
 did not execute on that run. This is repeated DEBT-050 evidence, not a new backend
 regression or permission to change frontend. No manual retry was performed.
 
-### DEBT-051 — Full News skips attachments in canonical EditorDocument (High, OPEN, D6)
+### DEBT-051 — Full News skips attachments in canonical EditorDocument (High, ACCEPTED / implemented, review pending)
 
 On 2026-10-14, the unchanged increment-base `PrismaNewsDeliveryRepository.attachmentLabels`
 was executed against the actual EditorDocument shape: `{profile:'NEWS', content:
@@ -518,6 +527,24 @@ first-position/last-label semantics and current READY/PUBLIC/active-reference ru
 then add canonical create/read regressions. The owner approved this separate
 correction on 2026-10-14, after priority DEBT-052. No behavior correction is
 included in D4.3d3a; implementation and acceptance remain OPEN.
+
+The separate `debt/debt-051-canonical-attachments` package now unwraps the NEWS
+envelope's doc root only at entry, retaining legacy traversal and every gate
+subtree exclusion. Media policy and binary delivery are unchanged. New positive
+regressions first fail on the unchanged service (units 34 PASS/2 FAIL; E2E
+24 PASS/1 FAIL), then pass after correction. Current projection units 36 PASS,
+focused real E2E 72 PASS (29 attachment cases), full opt-in coverage 898 PASS,
+zero skipped; new attachment threshold does not lower any existing threshold.
+Canonical negative cases use actual GraphQL for media/reference eligibility,
+not only legacy component shapes. Stored documents/revisions/references remain
+unchanged by reads; current eligibility and provider failures are covered.
+Full gates/review/CI remain OPEN. See
+[the corrective plan](DEBT_051_CANONICAL_ATTACHMENTS_PLAN.md). Metadata acceptance
+does not certify binary access or close the release blocker before review.
+Final local lint/types/Prisma/build/architecture PASS; fresh workspace units PASS.
+Full API E2E is 259 PASS/3 FAIL (DEBT-045); isolated Auth 26 PASS. Global format/
+audit/generated and Web smoke remain red with current logs. No frontend change,
+skip, timeout increase, relaxed assertion or database-protection bypass.
 
 ### DEBT-052 — Full News bypasses server-side Content Gate redaction (Critical, ACCEPTED / implemented, review pending)
 
