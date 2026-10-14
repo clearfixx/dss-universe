@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-14 — pre-Phase-11 debt closure / bounded D4.3d2 implemented, full D4 open
+> Updated: 2026-10-14 — pre-Phase-11 debt closure / D4.3d3a implemented; Critical DEBT-052 open
 
 ## Product and authority
 
@@ -28,6 +28,31 @@ Legacy roadmaps are historical. This snapshot does not override source code,
 approved ADRs or recorded owner decisions.
 
 ## Current position
+
+Critical DEBT-052: a real guest Full News response contains denied Content Gate
+payload in documentJson because the published response path omits server-side
+Editor redaction. DEBT-051 also confirms canonical document wrappers skip the
+attachment manifest despite stored files/references. Both were reproduced with
+synthetic data, documented and reported. On 2026-10-14 the owner approved separate
+corrections: DEBT-052 first, then DEBT-051. See the
+[security implementation plan](development/DEBT_052_FULL_NEWS_REDACTION_PLAN.md).
+Passing characterization does not resolve them. DEBT-052 blocks release/Phase 11
+readiness. See [debt register](development/DEBT_REGISTER.md).
+
+D4.3d3a moves the independent public attachment metadata query to Media ownership
+and composes labels/order/display kinds in News application through narrow root
+contracts. Existing behavior is retained, including the two newly recorded defects;
+Users/Interactions projections and transactional pages are not yet transferred.
+Full opt-in units: API 794 / Web 59 / Worker 36; 153 relevant E2E pass (25 new),
+including explicit defect characterizations. Coverage/build pass; import inventory
+stays 89, not full SQL ownership acceptance. Full D4/gates/review and DEBT-052 remain OPEN.
+See [evidence](audits/D4_3D3A_NEWS_ATTACHMENT_METADATA.md).
+
+D4.3d3a is still an uncommitted local increment at HEAD `5bff17f`: the last
+commit/push request was not executed because automatic approval review hit its
+usage limit. No publication or new-head CI result is claimed. Resolve that
+external approval-system failure before retrying Git writes or opening the
+separate correction branch; do not bypass it through another execution route.
 
 D4.3d2 removes Activity's direct Users reads. Users publishes only interests,
 following IDs and blocked IDs; root composition binds the Activity-owned input.

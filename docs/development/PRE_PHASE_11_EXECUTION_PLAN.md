@@ -321,6 +321,18 @@ Model: `gpt-6.1-sol` xhigh for the separate brainstorm and security design.
 
 Branch: `debt/d4-module-boundaries`.
 
+D4.3d3a transfers independent News attachment metadata to Media-owned projections
+and News application composition. Full units: API 794 / Web 59 / Worker 36; 25 new
+E2E pass, including explicit defect characterizations. See
+[evidence](../audits/D4_3D3A_NEWS_ATTACHMENT_METADATA.md).
+New DEBT-051 confirms the canonical wrapper omission; Critical DEBT-052 confirms
+guest Full News bypasses server Content Gate redaction. On 2026-10-14 the owner
+approved both as separate corrections: DEBT-052 first, then DEBT-051. See the
+[security implementation plan](DEBT_052_FULL_NEWS_REDACTION_PLAN.md).
+DEBT-052 blocks release/Phase 11 readiness. No passing
+characterization, import count or local gate waives it. Users/Interactions delivery
+joins and transactional pages remain D4.3d3 work; D4.4/D4.5 and D5–D7 remain required.
+
 D4.3d2 isolates Users interests/follows/blocks for Activity through three minimal
 arrays, moving unchanged ranking to Activity application and keeping owned SQL in
 its repository. See [evidence](../audits/D4_3D2_ACTIVITY_VIEWER_CONTEXT.md).

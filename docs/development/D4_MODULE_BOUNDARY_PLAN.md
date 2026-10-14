@@ -2,8 +2,9 @@
 
 Date: 2026-10-14. Status: authorized debt-remediation execution, not Phase 11.
 Branch: `debt/d4-module-boundaries`.
-Implemented increments: D4.1, D4.2 and bounded D4.3a/b/c/d1/d2; remaining import inventory 89,
+Implemented increments: D4.1, D4.2 and bounded D4.3a/b/c/d1/d2/d3a; remaining import inventory 89,
 full D4 and the rest of D4.3 OPEN. See
+[D4.3d3a evidence](../audits/D4_3D3A_NEWS_ATTACHMENT_METADATA.md),
 [D4.3d2 evidence](../audits/D4_3D2_ACTIVITY_VIEWER_CONTEXT.md),
 [D4.3d1 evidence](../audits/D4_3D_GATE_WALL_OWNER_EVIDENCE.md) and
 [D4.3c evidence](../audits/D4_3C_POLICY_MEDIA_ACTIVITY_CONTRACTS.md).
@@ -102,6 +103,32 @@ are retained. No cache or new snapshot transaction; provider errors propagate.
 See [D4.3d2 evidence](../audits/D4_3D2_ACTIVITY_VIEWER_CONTEXT.md).
 
 ### Remaining SQL ownership work (D4.3d3 onward)
+
+#### D4.3d3 execution boundaries
+
+Preserve the existing distinction between independent reads and transactional
+pages. D4.3d3a first moves the separately queried public attachment metadata to
+Media ownership, through a News-owned input port/root adapter. News application
+owns document label extraction, contentGate exclusion, order/deduplication and
+display kind; its full delivery projection composes the result without querying
+Media from the News repository. Media selects only the already exposed fields,
+active references and READY/PUBLIC/non-deleted files. No storage keys/paths,
+credentials or generic Prisma object crosses the business boundary.
+
+This is not full News delivery isolation: Users author projections and Interactions
+joins/read pages remain. Subsequent D4.3d3 work must retain numbered-page and
+rating/comment read transaction semantics, comment root/tree ordering and error
+behavior. Do not split those transactions into unprotected calls merely to remove
+imports. Record/preserve each owned query and provider projection before transfer.
+
+New characterization finds DEBT-051 (canonical document wrapper skips attachments)
+and Critical DEBT-052 (Full News returns gated document payload without invoking
+Editor viewer redaction). Both are recorded in the debt register and reported to
+the owner. On 2026-10-14 the owner approved both separate correction packages:
+DEBT-052 first, then DEBT-051. See the
+[security implementation plan](DEBT_052_FULL_NEWS_REDACTION_PLAN.md). D4.3d3a
+does not silently repair them or treat passing characterization as acceptance.
+DEBT-052 blocks release/Phase 11 readiness regardless of import-count progress.
 
 This is not full SQL ownership acceptance. Source inspection finds:
 

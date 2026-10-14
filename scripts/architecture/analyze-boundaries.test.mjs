@@ -96,6 +96,10 @@ for (const [file, expected] of [
     "modules/activity/infrastructure/repositories/prisma-activity.repository.ts",
     ["$transaction", "activityEntry", "activityFeedState"],
   ],
+  [
+    "modules/news/infrastructure/repositories/prisma-news-delivery.repository.ts",
+    ["$transaction", "comment", "interactionShare", "newsArticle", "reaction"],
+  ],
 ]) {
   test(
     "migrated repository keeps only owned direct Prisma delegates: " + file,
@@ -173,6 +177,10 @@ for (const [moduleName, expected] of [
     "media",
     [
       "MediaModule",
+      "MEDIA_PUBLIC_ATTACHMENT_READER",
+      "MediaPublicAttachmentReader",
+      "MediaPublicAttachment",
+      "MediaPublicAttachmentQuery",
       "MEDIA_IMAGE_ELIGIBILITY",
       "MediaImageEligibility",
       "MEDIA_PROFILE_ASSET_COMMANDS",

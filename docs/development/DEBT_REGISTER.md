@@ -457,6 +457,55 @@ quality baseline; investigate async cleanup and reproduce under Linux/CI load
 before changing tests or implementation. No frontend correction is included or
 authorized by this finding; coordinate separately with the owner/frontend work.
 
+Repeated evidence on 2026-10-14: CI `38496166012`, head `5bff17f`, is authoritatively
+completed/failed at Unit tests with coverage, with Web `ReferenceError: window is
+not defined` again attributed to editor-ai-dialog.spec.tsx. API E2E/generated/build
+did not execute on that run. This is repeated DEBT-050 evidence, not a new backend
+regression or permission to change frontend. No manual retry was performed.
+
+### DEBT-051 — Full News skips attachments in canonical EditorDocument (High, OPEN, D6)
+
+On 2026-10-14, the unchanged increment-base `PrismaNewsDeliveryRepository.attachmentLabels`
+was executed against the actual EditorDocument shape: `{profile:'NEWS', content:
+{type:'doc', content:[attachment]}}` returns no labels, while the inner doc node
+returns the expected media ID/label. The visitor descends only array-valued content.
+Real migrated AppModule E2E creates a canonical News draft through NewsService,
+confirms its active Media reference and eligible metadata, then observes an empty
+attachments array in fullBySlug and public GraphQL Full News. Files/reference data
+remain stored; this is a missing delivery manifest, not evidence of data loss.
+
+D4.3d3a transfers the exact old traversal semantics and records a characterization
+test, not a functional fix. Its legacy doc-node metadata fixtures must not be used
+to claim canonical attachment publication works. Proposed separate correction:
+unwrap/traverse the canonical document, preserve contentGate subtree exclusion,
+first-position/last-label semantics and current READY/PUBLIC/active-reference rules,
+then add canonical create/read regressions. The owner approved this separate
+correction on 2026-10-14, after priority DEBT-052. No behavior correction is
+included in D4.3d3a; implementation and acceptance remain OPEN.
+
+### DEBT-052 — Full News bypasses server-side Content Gate redaction (Critical, OPEN, D6)
+
+On 2026-10-14, an isolated all-migrations AppModule E2E published a PUBLIC News
+article containing a synthetic contentGate payload and a real COMMENTS=100 gate.
+EditorContentDeliveryService.project for the guest removes the synthetic text,
+but an unauthenticated fullNews GraphQL response still contains it in documentJson.
+The delivery repository serializes the raw canonical document and the full News
+application/resolver path does not invoke viewer-safe Editor delivery. This is
+confirmed response-boundary disclosure, not merely a suspected frontend issue.
+Only synthetic fixture text was used; no real private content was queried.
+
+This blocks release/Phase 11 readiness. Passing characterization tests explicitly
+document the vulnerable baseline and are not security acceptance. Proposed separate
+priority security package: publish a minimal viewer-safe Editor projection contract,
+consume it through a News-owned port/root adapter, enforce server redaction before
+the full response, and test guest, GROUP/Premium/author/current state and provider
+failure paths. Review related public document/search/metadata projections; do not
+claim those channels safe solely from fixing this one path. The owner approved
+this separate priority security package on 2026-10-14. See the
+[implementation and acceptance plan](DEBT_052_FULL_NEWS_REDACTION_PLAN.md).
+D4.3d3a does not silently change audience/redaction policy or waive the finding;
+the correction is not implemented and the Critical finding remains OPEN.
+
 Every new entry should include evidence, impact, proposed ownership and a clear
 decision before implementation. Discovery is not permission to expand the
 current package silently.

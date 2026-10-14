@@ -17,6 +17,7 @@ import {
   MEDIA_PUBLICATION_EVIDENCE,
   MEDIA_PROFILE_ASSET_COMMANDS,
   MEDIA_IMAGE_ELIGIBILITY,
+  MEDIA_PUBLIC_ATTACHMENT_READER,
   type MediaPublicationEvidenceReader,
 } from '@api/modules/media';
 import {
@@ -44,6 +45,7 @@ describe('Content read boundaries', () => {
   };
   it('keeps Media repositories/upload services and full Activity service private', () => {
     expect(Reflect.getMetadata(MODULE_METADATA.EXPORTS, MediaModule)).toEqual([
+      MEDIA_PUBLIC_ATTACHMENT_READER,
       MEDIA_PROFILE_ASSET_COMMANDS,
       MEDIA_PUBLICATION_EVIDENCE,
       MEDIA_IMAGE_ELIGIBILITY,

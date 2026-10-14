@@ -24,7 +24,8 @@
 import { Global, Module } from '@nestjs/common';
 import { MediaModule } from '@api/modules/media';
 import { ActivityModule, ACTIVITY_VIEWER_CONTEXT } from '@api/modules/activity';
-import { NEWS_MEDIA_EVIDENCE } from '@api/modules/news';
+import { NEWS_MEDIA_EVIDENCE, NEWS_ATTACHMENT_READER } from '@api/modules/news';
+import { NewsAttachmentAdapter } from './infrastructure/news-attachment.adapter';
 import {
   PROFILE_ACTIVITY_READER,
   WALL_IMAGE_ELIGIBILITY,
@@ -57,6 +58,7 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
     ReputationModule,
   ],
   providers: [
+    { provide: NEWS_ATTACHMENT_READER, useClass: NewsAttachmentAdapter },
     {
       provide: ACTIVITY_VIEWER_CONTEXT,
       useClass: ActivityViewerContextAdapter,
@@ -69,6 +71,7 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
     { provide: PROFILE_ACTIVITY_READER, useClass: ProfileActivityAdapter },
   ],
   exports: [
+    NEWS_ATTACHMENT_READER,
     ACTIVITY_VIEWER_CONTEXT,
     NEWS_MEDIA_EVIDENCE,
     PROFILE_ACTIVITY_READER,

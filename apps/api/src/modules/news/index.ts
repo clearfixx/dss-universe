@@ -11,6 +11,11 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+export {
+  NEWS_ATTACHMENT_READER,
+  type NewsAttachmentReader,
+  type NewsAttachmentFile,
+} from './domain/ports/news-attachment-reader.interface';
 export * from './application/services/news.service';
 export * from './application/services/news-delivery.service';
 export * from './application/services/news-links.service';

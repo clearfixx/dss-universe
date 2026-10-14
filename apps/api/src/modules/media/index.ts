@@ -6,12 +6,18 @@
  * 📄 File: apps/api/src/modules/media/index.ts
  *
  * 🎯 Purpose:
- * Publishes module assembly and semantic profile-asset contracts only.
+ * Publishes module assembly and narrow owned asset, eligibility and public metadata contracts.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 export { MediaModule } from './media.module';
+export {
+  MEDIA_PUBLIC_ATTACHMENT_READER,
+  type MediaPublicAttachmentReader,
+  type MediaPublicAttachment,
+  type MediaPublicAttachmentQuery,
+} from './contracts/public-attachment-reader.contract';
 export {
   MEDIA_IMAGE_ELIGIBILITY,
   type MediaImageEligibility,

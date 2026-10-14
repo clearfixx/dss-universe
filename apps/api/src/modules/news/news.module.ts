@@ -31,6 +31,7 @@ import { EventsModule } from '@api/core/events';
 import { NewsInteractionPolicy } from './application/services/news-interaction.policy';
 import { NEWS_INTERACTION_DECISIONS } from './contracts/news-interaction-decisions.contract';
 import { NewsDeliveryService } from './application/services/news-delivery.service';
+import { NewsAttachmentDeliveryService } from './application/services/news-attachment-delivery.service';
 import { NewsPostTemplateService } from './application/services/news-post-template.service';
 import { NewsLinksService } from './application/services/news-links.service';
 import { NewsSchedulerService } from './application/services/news-scheduler.service';
@@ -71,6 +72,7 @@ import { NewsPinsResolver } from './presentation/graphql/news-pins.graphql';
     NewsPinsResolver,
     NewsService,
     NewsDeliveryService,
+    NewsAttachmentDeliveryService,
     NewsLinksService,
     NewsSchedulerService,
     NewsSettingsService,

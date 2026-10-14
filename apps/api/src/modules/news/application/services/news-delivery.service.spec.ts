@@ -1,8 +1,23 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: News
+ * 📄 File: apps/api/src/modules/news/application/services/news-delivery.service.spec.ts
+ *
+ * 🎯 Purpose:
+ * Pins delivery validation, unchanged paging and application-owned attachment composition.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { BadRequestException } from '@nestjs/common';
 
 import type { NewsDeliveryRepository } from '../../domain/repositories/news-delivery.repository.interface';
 import type { ShortNewsItem } from '../../domain/types/short-news.type';
 import { NewsDeliveryService } from './news-delivery.service';
+import { NewsAttachmentDeliveryService } from './news-attachment-delivery.service';
+import type { NewsAttachmentReader } from '../../domain/ports/news-attachment-reader.interface';
 
 describe('NewsDeliveryService', () => {
   let repository: jest.Mocked<NewsDeliveryRepository>;
@@ -12,6 +27,10 @@ describe('NewsDeliveryService', () => {
   let ratingVotes: jest.Mock;
   let comments: jest.Mock;
   let service: NewsDeliveryService;
+  let readAttachments: jest.Mock<
+    ReturnType<NewsAttachmentReader['read']>,
+    Parameters<NewsAttachmentReader['read']>
+  >;
   const item = {
     id: 'article-1',
     publishedAt: new Date('2026-09-21T12:00:00.000Z'),
@@ -52,7 +71,16 @@ describe('NewsDeliveryService', () => {
       ratingVotes,
       comments,
     };
-    service = new NewsDeliveryService(repository);
+    readAttachments = jest
+      .fn<
+        ReturnType<NewsAttachmentReader['read']>,
+        Parameters<NewsAttachmentReader['read']>
+      >()
+      .mockResolvedValue([]);
+    service = new NewsDeliveryService(
+      repository,
+      new NewsAttachmentDeliveryService({ read: readAttachments }),
+    );
   });
 
   it('supports numbered pages for page selectors and manual input', async () => {
@@ -129,5 +157,84 @@ describe('NewsDeliveryService', () => {
     expect(() => service.comments('article-1', 1, 101)).toThrow(
       BadRequestException,
     );
+  });
+
+  it('does not query attachment metadata for missing articles', async () => {
+    expect(await service.fullBySlug('uk', 'missing')).toBeNull();
+    expect(readAttachments.mock.calls).toHaveLength(0);
+  });
+
+  it('composes metadata after the full article read and preserves document fields', async () => {
+    const documentJson = JSON.stringify({
+      content: [
+        { type: 'attachment', attrs: { mediaId: 'file', label: 'Manual' } },
+      ],
+    });
+    const order: string[] = [];
+    findFullBySlug.mockImplementation(() => {
+      order.push('article');
+      return Promise.resolve({
+        ...item,
+        documentJson,
+        related: [],
+        sharing: { total: 0, channels: [] },
+      });
+    });
+    readAttachments.mockImplementation(() => {
+      order.push('metadata');
+      return Promise.resolve([
+        {
+          id: 'reference',
+          mediaId: 'file',
+          filename: 'manual.txt',
+          mimeType: 'text/plain',
+          extension: 'txt',
+          size: 12,
+          checksumSha256: 'sha',
+          checksumSha1: null,
+          checksumMd5: null,
+          downloadUrl: '/api/media/public/file/original',
+        },
+      ]);
+    });
+    const result = await service.fullBySlug('uk', 'news-signal');
+    expect(order).toEqual(['article', 'metadata']);
+    expect(result).toMatchObject({
+      id: item.id,
+      documentJson,
+      related: [],
+      sharing: { total: 0, channels: [] },
+      attachments: [{ id: 'reference', label: 'Manual', kind: 'TXT file' }],
+    });
+    expect(readAttachments.mock.calls).toEqual([[item.id, ['file']]]);
+  });
+
+  it('propagates article and metadata failures without returning partial full News', async () => {
+    findFullBySlug.mockRejectedValue(new Error('Article unavailable'));
+    await expect(service.fullBySlug('uk', 'news-signal')).rejects.toThrow(
+      'Article unavailable',
+    );
+    expect(readAttachments.mock.calls).toHaveLength(0);
+    findFullBySlug.mockResolvedValue({
+      ...item,
+      documentJson: JSON.stringify([
+        { type: 'attachment', attrs: { mediaId: 'file', label: 'File' } },
+      ]),
+    });
+    readAttachments.mockRejectedValue(new Error('Media unavailable'));
+    await expect(service.fullBySlug('uk', 'news-signal')).rejects.toThrow(
+      'Media unavailable',
+    );
+  });
+
+  it('retains synchronous address validation before any read', () => {
+    expect(() => service.fullBySlug('UKRAINIAN', 'news-signal')).toThrow(
+      BadRequestException,
+    );
+    expect(() => service.fullBySlug('uk', 'bad slug')).toThrow(
+      BadRequestException,
+    );
+    expect(findFullBySlug.mock.calls).toHaveLength(0);
+    expect(readAttachments.mock.calls).toHaveLength(0);
   });
 });
