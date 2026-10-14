@@ -130,6 +130,15 @@ DEBT-052 first, then DEBT-051. See the
 does not silently repair them or treat passing characterization as acceptance.
 DEBT-052 blocks release/Phase 11 readiness regardless of import-count progress.
 
+Separate correction progress (base `5851381`): DEBT-052 now composes viewer-safe
+JSON through Editor/News owned contracts without changing D4.3d3a metadata
+ownership. Forty-five focused E2E pass, including explicit adjacent disclosure
+characterizations. The owner subsequently approved DEBT-053 News search and
+DEBT-054 related-summary audience corrections, in that order after DEBT-052;
+DEBT-051 remains a separate functional package after the priority security work.
+Full D4 ownership and D5–D7 are not replaced by these corrections. Full API E2E
+executes 211 tests, with 210 passing and the existing DEBT-045 failure/open handles.
+
 This is not full SQL ownership acceptance. Source inspection finds:
 
 - News `prisma-news-delivery.repository.ts` joins Users author presentation and

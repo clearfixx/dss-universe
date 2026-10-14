@@ -6,11 +6,12 @@
  * 📄 File: apps/api/src/modules/news/application/services/news-delivery.service.ts
  *
  * 🎯 Purpose:
- * Validates requests and composes full News attachment projections through owned application services.
+ * Validates requests and composes viewer-safe Full News through owned projections.
  *
  * 🧠 Responsibilities:
  * • preserves filter/cursor/page/address validation and transport projections;
  * • composes attachments only after an eligible full article is read.
+ * • replaces authored document JSON with the server-side viewer projection before delivery.
  *
  * 🏗️ Architecture:
  * News application; persistence and Media metadata are separately owned boundaries.
@@ -23,6 +24,10 @@
  */
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { NewsAttachmentDeliveryService } from './news-attachment-delivery.service';
+import {
+  NEWS_VIEWER_DOCUMENT_READER,
+  type NewsViewerDocumentReader,
+} from '../../domain/ports/news-viewer-document-reader.interface';
 
 import {
   NEWS_DELIVERY_REPOSITORY,
@@ -73,6 +78,8 @@ export class NewsDeliveryService {
     @Inject(NEWS_DELIVERY_REPOSITORY)
     private readonly delivery: NewsDeliveryRepository,
     private readonly attachments: NewsAttachmentDeliveryService,
+    @Inject(NEWS_VIEWER_DOCUMENT_READER)
+    private readonly documents: NewsViewerDocumentReader,
   ) {}
 
   async browseShort(
@@ -194,11 +201,15 @@ export class NewsDeliveryService {
       viewerId,
     );
     if (!article) return null;
+    const { documentJson } = await this.documents.project(
+      article.documentJson,
+      viewerId ?? null,
+    );
     const attachments = await this.attachments.project(
       article.id,
-      article.documentJson,
+      documentJson,
     );
-    return { ...article, attachments };
+    return { ...article, documentJson, attachments };
   }
 
   private slug(value: string | undefined, label: string): string | undefined {

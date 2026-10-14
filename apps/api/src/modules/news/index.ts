@@ -6,11 +6,15 @@
  * 📄 File: apps/api/src/modules/news/index.ts
  *
  * 🎯 Purpose:
- * Publishes existing News integration surfaces and the consumer-owned normalization port.
+ * Publishes existing News integration surfaces and consumer-owned normalization/read ports.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+export {
+  NEWS_VIEWER_DOCUMENT_READER,
+  type NewsViewerDocumentReader,
+} from './domain/ports/news-viewer-document-reader.interface';
 export {
   NEWS_ATTACHMENT_READER,
   type NewsAttachmentReader,

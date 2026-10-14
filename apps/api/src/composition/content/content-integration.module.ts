@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/composition/content/content-integration.module.ts
  *
  * 🎯 Purpose:
- * Binds operation-specific normalization and gate-decision ports outside feature modules.
+ * Binds normalization, viewer delivery and gate-decision ports outside feature modules.
  *
  * 🧠 Responsibilities:
  * • exposes only the operation-specific data required by its consumer;
@@ -25,7 +25,11 @@ import { Global, Module } from '@nestjs/common';
 import { ContentAccessModule } from '@api/modules/content-access';
 import { EditorModule, EDITOR_GATE_DECISIONS } from '@api/modules/editor';
 import { COMMENT_DOCUMENT_NORMALIZER } from '@api/modules/interactions';
-import { NEWS_DOCUMENT_NORMALIZER } from '@api/modules/news';
+import {
+  NEWS_DOCUMENT_NORMALIZER,
+  NEWS_VIEWER_DOCUMENT_READER,
+} from '@api/modules/news';
+import { NewsViewerDocumentAdapter } from './infrastructure/news-viewer-document.adapter';
 import { EditorGateDecisionAdapter } from './infrastructure/editor-gate-decision.adapter';
 import { CommentDocumentAdapter } from './infrastructure/comment-document.adapter';
 import { NewsDocumentAdapter } from './infrastructure/news-document.adapter';
@@ -34,11 +38,16 @@ import { NewsDocumentAdapter } from './infrastructure/news-document.adapter';
 @Module({
   imports: [ContentAccessModule, EditorModule],
   providers: [
+    {
+      provide: NEWS_VIEWER_DOCUMENT_READER,
+      useClass: NewsViewerDocumentAdapter,
+    },
     { provide: EDITOR_GATE_DECISIONS, useClass: EditorGateDecisionAdapter },
     { provide: COMMENT_DOCUMENT_NORMALIZER, useClass: CommentDocumentAdapter },
     { provide: NEWS_DOCUMENT_NORMALIZER, useClass: NewsDocumentAdapter },
   ],
   exports: [
+    NEWS_VIEWER_DOCUMENT_READER,
     EDITOR_GATE_DECISIONS,
     COMMENT_DOCUMENT_NORMALIZER,
     NEWS_DOCUMENT_NORMALIZER,

@@ -130,6 +130,8 @@ for (const [moduleName, expected] of [
     "editor",
     [
       "EditorModule",
+      "EDITOR_VIEWER_DOCUMENT_PROJECTOR",
+      "EditorViewerDocumentProjector",
       "EDITOR_DOCUMENT_NORMALIZER",
       "EditorDocumentNormalizer",
       "ValidatedEditorDocument",

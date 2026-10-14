@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/modules/news/application/services/news-delivery.service.spec.ts
  *
  * 🎯 Purpose:
- * Pins delivery validation, unchanged paging and application-owned attachment composition.
+ * Pins delivery validation, paging and safe document/attachment composition.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -18,6 +18,7 @@ import type { ShortNewsItem } from '../../domain/types/short-news.type';
 import { NewsDeliveryService } from './news-delivery.service';
 import { NewsAttachmentDeliveryService } from './news-attachment-delivery.service';
 import type { NewsAttachmentReader } from '../../domain/ports/news-attachment-reader.interface';
+import type { NewsViewerDocumentReader } from '../../domain/ports/news-viewer-document-reader.interface';
 
 describe('NewsDeliveryService', () => {
   let repository: jest.Mocked<NewsDeliveryRepository>;
@@ -27,6 +28,10 @@ describe('NewsDeliveryService', () => {
   let ratingVotes: jest.Mock;
   let comments: jest.Mock;
   let service: NewsDeliveryService;
+  let projectDocument: jest.Mock<
+    ReturnType<NewsViewerDocumentReader['project']>,
+    Parameters<NewsViewerDocumentReader['project']>
+  >;
   let readAttachments: jest.Mock<
     ReturnType<NewsAttachmentReader['read']>,
     Parameters<NewsAttachmentReader['read']>
@@ -77,9 +82,16 @@ describe('NewsDeliveryService', () => {
         Parameters<NewsAttachmentReader['read']>
       >()
       .mockResolvedValue([]);
+    projectDocument = jest
+      .fn<
+        ReturnType<NewsViewerDocumentReader['project']>,
+        Parameters<NewsViewerDocumentReader['project']>
+      >()
+      .mockImplementation((documentJson) => Promise.resolve({ documentJson }));
     service = new NewsDeliveryService(
       repository,
       new NewsAttachmentDeliveryService({ read: readAttachments }),
+      { project: projectDocument },
     );
   });
 
@@ -162,6 +174,34 @@ describe('NewsDeliveryService', () => {
   it('does not query attachment metadata for missing articles', async () => {
     expect(await service.fullBySlug('uk', 'missing')).toBeNull();
     expect(readAttachments.mock.calls).toHaveLength(0);
+    expect(projectDocument.mock.calls).toHaveLength(0);
+  });
+
+  it('replaces raw JSON and uses only the safe projection for metadata extraction', async () => {
+    const raw = JSON.stringify([
+      {
+        type: 'attachment',
+        attrs: { mediaId: 'secret-file', label: 'Secret' },
+      },
+    ]);
+    const safe = JSON.stringify([]);
+    findFullBySlug.mockResolvedValue({ ...item, documentJson: raw });
+    projectDocument.mockResolvedValue({ documentJson: safe });
+    expect(
+      await service.fullBySlug('uk', 'news-signal', 'viewer'),
+    ).toMatchObject({ documentJson: safe, attachments: [] });
+    expect(projectDocument.mock.calls).toEqual([[raw, 'viewer']]);
+    expect(readAttachments).not.toHaveBeenCalled();
+  });
+
+  it('propagates document errors before metadata without exposing the raw article', async () => {
+    findFullBySlug.mockResolvedValue({ ...item, documentJson: 'raw' });
+    projectDocument.mockRejectedValue(new Error('Projection unavailable'));
+    await expect(service.fullBySlug('uk', 'news-signal')).rejects.toThrow(
+      'Projection unavailable',
+    );
+    expect(projectDocument.mock.calls).toEqual([['raw', null]]);
+    expect(readAttachments).not.toHaveBeenCalled();
   });
 
   it('composes metadata after the full article read and preserves document fields', async () => {

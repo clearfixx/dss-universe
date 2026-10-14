@@ -119,9 +119,10 @@ Stop before Phase 11 for mandatory brainstorm; no readiness claim while DEBT-052
 
 ## Publication checkpoint
 
-The attempted commit/push did not execute: automatic approval review failed on
-its usage limit, not a safety determination. Read-only revalidation confirms
-HEAD `5bff17f`, empty staging and the local uncommitted D4.3d3a changes. PR #10
-does not yet contain this increment. Do not bypass the approval system. Local
-approval records and the following package's design are prepared without changing
-runtime behavior; publication and correction branching await review availability.
+The first attempted commit/push did not execute: automatic approval review failed
+on its usage limit, not a safety determination. A subsequent read-only account
+check allowed ordinary work; the same escalated approval route then succeeded
+without a bypass. D4.3d3a is committed/pushed as `5851381` in draft PR #10.
+The separate `debt/debt-052-full-news-redaction` branch starts from that exact
+published head. This report describes the ownership increment's baseline,
+not acceptance of the subsequent security correction or its adjacent findings.

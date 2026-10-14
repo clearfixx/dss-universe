@@ -345,6 +345,15 @@ correct cleanup and explicit view-count contract acceptance before correcting
 assertions. Do not weaken DB protections, extend timeouts blindly, or call the
 full E2E gate green. No out-of-scope implementation is included here.
 
+Repeated during DEBT-052 verification on 2026-10-14: full API E2E executes all
+25 suites / 211 tests, with 24 suites and 210 tests passing. The sole failed
+News-foundation test again expects viewCount null but receives zero; afterAll
+again violates the interaction-target retirement trigger. Jest reports completed
+assertions followed by open handles. The owned local run was interrupted only
+after that explicit final summary; no forceExit/test skip/trigger change was used.
+Its production repository and fixture source are unchanged by DEBT-052. This
+confirms the existing D6 blocker, not green full E2E acceptance.
+
 ### DEBT-046 — Last privileged role-holder removal is unguarded (High, IMPLEMENTED / review pending, D3.4)
 
 At `a9c5596`, UserAccessService.revokeRole does not invoke the existing
@@ -483,7 +492,7 @@ then add canonical create/read regressions. The owner approved this separate
 correction on 2026-10-14, after priority DEBT-052. No behavior correction is
 included in D4.3d3a; implementation and acceptance remain OPEN.
 
-### DEBT-052 — Full News bypasses server-side Content Gate redaction (Critical, OPEN, D6)
+### DEBT-052 — Full News bypasses server-side Content Gate redaction (Critical, ACCEPTED / implemented, review pending)
 
 On 2026-10-14, an isolated all-migrations AppModule E2E published a PUBLIC News
 article containing a synthetic contentGate payload and a real COMMENTS=100 gate.
@@ -504,8 +513,70 @@ claim those channels safe solely from fixing this one path. The owner approved
 this separate priority security package on 2026-10-14. See the
 [implementation and acceptance plan](DEBT_052_FULL_NEWS_REDACTION_PLAN.md).
 D4.3d3a does not silently change audience/redaction policy or waive the finding;
-the correction is not implemented and the Critical finding remains OPEN.
+the correction was not implemented in that increment. The Critical finding
+remains OPEN pending the separate correction's full verification and review.
+
+Implementation checkpoint on branch `debt/debt-052-full-news-redaction`, based
+on published `5851381`: named Editor viewer-document contract, private projection
+adapter, News-owned input/root composition and response replacement are in place.
+Twenty new migrated E2E cases pass, including eighteen security/compatibility
+cases and two explicit adjacent disclosure characterizations. Full opt-in API
+units: 800 PASS; focused E2E: 45 PASS. Coverage/build/lint/types pass; full E2E
+and baseline format/audit/generated/Web gates remain RED, with CI/review pending.
+See the [corrective evidence report](../audits/DEBT_052_FULL_NEWS_REDACTION.md). The original
+disclosure expectation is changed to require absence of denied text. This is
+progress, not full release acceptance or resolution of DEBT-051/053.
+
+### DEBT-053 — Public News search matches denied Content Gate text (High, ACCEPTED / separate security package)
+
+On 2026-10-14, `news-viewer-redaction.e2e-spec.ts` creates a real canonical PUBLIC
+News article with a COMMENTS=100 gate and synthetic text absent from its title,
+summary and ordinary body. After the DEBT-052 correction, guest Full News removes
+the text, but an unauthenticated `news(input:{search: marker})` returns the article
+and a non-zero total; a unique absent-marker control returns zero. The response
+does not directly return the hidden text. This demonstrates a search-match/count
+oracle over protected content, not a confirmed arbitrary-content dump or real
+private-data access.
+
+Source path: News writes the generic Editor `searchText` projection, which includes
+gate subtrees; News delivery filters that stored projection before pagination.
+Changing Full News response JSON does not repair search eligibility. The positive
+search characterization is explicitly not security acceptance.
+
+Proposed separate News-local security package: design and enforce viewer-safe
+search evidence, preserving correct total/pins/pagination and allowed content
+search; reconcile already stored projections through reviewed backfill/migration
+if needed. Do not remove full-text search, filter after paging, or introduce the
+deferred shared Search Platform as a shortcut. On 2026-10-14 the owner approved
+this as a separate package after DEBT-052. Implementation has not started.
+DEBT-052 remains a separate Full News correction; no search policy
+or historical projection is silently changed by that package. Release/Phase 11
+security acceptance must disposition this confirmed channel explicitly.
 
 Every new entry should include evidence, impact, proposed ownership and a clear
 decision before implementation. Discovery is not permission to expand the
 current package silently.
+
+### DEBT-054 — Full News related summaries expose MEMBERS-only article metadata (High, ACCEPTED / separate security package)
+
+On 2026-10-14, the migrated `news-viewer-redaction.e2e-spec.ts` creates canonical
+PUBLIC and MEMBERS-only News articles, grants its synthetic actor the existing
+`news.links.manage` permission and creates a RELATED link through NewsLinksService.
+The guest Full News request for the member article returns null, but the guest
+Full News request for the public source returns the member article's synthetic
+headline and slug in related summaries. Only synthetic test data was used.
+
+Source: the outgoingLinks projection filters targets by PUBLISHED status, not
+the viewer's article audience. No hidden full document is returned in this
+reproduction; the leak is metadata from an otherwise inaccessible article.
+Chronological neighbor queries separately restrict candidate visibility to PUBLIC;
+that source observation is not exhaustive platform audience acceptance.
+
+Proposed separate News delivery security correction: apply the same eligible
+target-article audience rules to related summaries, preserve eligible ordering
+and link semantics and test guest/member plus current target publication state.
+No new generic ACL product feature, staff/owner authority or frontend design.
+DEBT-052 documents this adjacent finding but does not silently alter unrelated
+delivery queries. On 2026-10-14 the owner approved a separate correction after
+DEBT-053; implementation has not started. The finding remains unresolved for
+release/Phase 11 security acceptance.
