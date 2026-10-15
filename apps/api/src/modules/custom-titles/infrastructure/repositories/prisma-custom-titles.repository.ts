@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/modules/custom-titles/infrastructure/repositories/prisma-custom-titles.repository.ts
  *
  * 🎯 Purpose:
- * Persists title definitions, historical grants, selection, and cooldown policy.
+ * Persists owned title lifecycle/selection and delegates composed title grants.
  *
  * 🧠 Responsibilities:
  * • serializes title lifecycle and per-user selection changes;
@@ -18,16 +18,12 @@
  * ===============================================================
  */
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { AuditWriterService } from '@api/core/audit';
 import { PrismaService, type TransactionClient } from '@api/core/database';
-import {
-  createEventEnvelope,
-  type JsonValue,
-  OutboxWriterService,
-} from '@api/core/events';
+import { OutboxWriterService } from '@api/core/events';
 
 import type { CustomTitlesRepository } from '../../domain/repositories/custom-titles.repository.interface';
 import type {
@@ -42,25 +38,26 @@ import type {
   UserTitleGrant,
 } from '../../domain/types/custom-titles.type';
 
-const PRODUCER = 'dss.api.custom-titles';
+import {
+  TITLE_GRANT_TRANSACTION,
+  type TitleGrantTransaction,
+} from '../../contracts/title-grant-transaction.port';
+import { grantInclude, toTitleGrant } from './title-grant.shape';
+import { TitleEvidenceWriter } from './title-evidence.writer';
 const SETTINGS_ID = 'global';
-
-const grantInclude = {
-  title: true,
-  selection: { select: { userId: true } },
-} as const;
-
-type GrantRow = Prisma.UserTitleGrantGetPayload<{
-  include: typeof grantInclude;
-}>;
 
 @Injectable()
 export class PrismaCustomTitlesRepository implements CustomTitlesRepository {
+  private readonly evidence: TitleEvidenceWriter;
   constructor(
     private readonly prisma: PrismaService,
-    private readonly audit: AuditWriterService,
-    private readonly outbox: OutboxWriterService,
-  ) {}
+    audit: AuditWriterService,
+    outbox: OutboxWriterService,
+    @Inject(TITLE_GRANT_TRANSACTION)
+    private readonly titleGrants: TitleGrantTransaction,
+  ) {
+    this.evidence = new TitleEvidenceWriter(audit, outbox);
+  }
 
   definitions(includeInactive: boolean): Promise<CustomTitle[]> {
     return this.prisma.customTitle.findMany({
@@ -86,7 +83,7 @@ export class PrismaCustomTitlesRepository implements CustomTitlesRepository {
             updatedById: input.actorId,
           },
         });
-        await this.record(
+        await this.evidence.record(
           transaction,
           'created',
           input.actorId,
@@ -133,7 +130,7 @@ export class PrismaCustomTitlesRepository implements CustomTitlesRepository {
             updatedById: input.actorId,
           },
         });
-        await this.record(
+        await this.evidence.record(
           transaction,
           'updated',
           input.actorId,
@@ -163,54 +160,16 @@ export class PrismaCustomTitlesRepository implements CustomTitlesRepository {
       include: grantInclude,
       orderBy: [{ grantedAt: 'desc' }, { id: 'desc' }],
     });
-    return records.map((record) => this.toGrant(record));
+    return records.map((record) => toTitleGrant(record));
   }
 
-  async grant(
+  grant(
     userId: string,
     titleId: string,
     reason: string,
     actorId: string,
   ): Promise<TitleGrantResult> {
-    return this.prisma.$transaction(async (transaction) => {
-      await this.lock(transaction, `custom-titles:grant:${userId}:${titleId}`);
-      const [user, title, existing] = await Promise.all([
-        transaction.user.findUnique({
-          where: { id: userId },
-          select: { id: true },
-        }),
-        transaction.customTitle.findFirst({
-          where: { id: titleId, isActive: true },
-          select: { id: true },
-        }),
-        transaction.userTitleGrant.findFirst({
-          where: { userId, titleId, revokedAt: null },
-          select: { id: true },
-        }),
-      ]);
-      if (!user) return { status: 'USER_NOT_FOUND', grant: null };
-      if (!title) return { status: 'TITLE_NOT_FOUND', grant: null };
-      if (existing) return { status: 'CONFLICT', grant: null };
-      const grant = await transaction.userTitleGrant.create({
-        data: {
-          userId,
-          titleId,
-          grantedById: actorId,
-          grantReason: reason,
-        },
-        include: grantInclude,
-      });
-      const payload = { userId, titleId, grantId: grant.id, reason };
-      await this.record(
-        transaction,
-        'granted',
-        actorId,
-        'UserTitleGrant',
-        grant.id,
-        payload,
-      );
-      return { status: 'OK', grant: this.toGrant(grant) };
-    });
+    return this.titleGrants.grant({ userId, titleId, reason, actorId });
   }
 
   async revoke(
@@ -248,7 +207,7 @@ export class PrismaCustomTitlesRepository implements CustomTitlesRepository {
         grantId,
         reason,
       };
-      await this.record(
+      await this.evidence.record(
         transaction,
         'revoked',
         actorId,
@@ -256,7 +215,7 @@ export class PrismaCustomTitlesRepository implements CustomTitlesRepository {
         grantId,
         payload,
       );
-      return { status: 'OK', grant: this.toGrant(grant) };
+      return { status: 'OK', grant: toTitleGrant(grant) };
     });
   }
 
@@ -282,7 +241,7 @@ export class PrismaCustomTitlesRepository implements CustomTitlesRepository {
       if (current?.grantId === grantId) {
         return {
           status: 'UNCHANGED',
-          grant: this.toGrant({ ...grant, selection: { userId } }),
+          grant: toTitleGrant({ ...grant, selection: { userId } }),
           retryAt: null,
         };
       }
@@ -302,7 +261,7 @@ export class PrismaCustomTitlesRepository implements CustomTitlesRepository {
         create: { userId, grantId, selectedAt },
       });
       const payload = { userId, titleId: grant.titleId, grantId };
-      await this.record(
+      await this.evidence.record(
         transaction,
         'selected',
         userId,
@@ -312,7 +271,7 @@ export class PrismaCustomTitlesRepository implements CustomTitlesRepository {
       );
       return {
         status: 'OK',
-        grant: this.toGrant({ ...grant, selection: { userId } }),
+        grant: toTitleGrant({ ...grant, selection: { userId } }),
         retryAt: null,
       };
     });
@@ -337,7 +296,7 @@ export class PrismaCustomTitlesRepository implements CustomTitlesRepository {
           updatedById: actorId,
         },
       });
-      await this.record(
+      await this.evidence.record(
         transaction,
         'settings.updated',
         actorId,
@@ -358,37 +317,6 @@ export class PrismaCustomTitlesRepository implements CustomTitlesRepository {
     return this.toSettings(settings);
   }
 
-  private async record(
-    transaction: TransactionClient,
-    action: string,
-    actorId: string,
-    targetType: string,
-    targetId: string,
-    payload: Record<string, unknown>,
-  ): Promise<void> {
-    const jsonPayload = payload as JsonValue;
-    await this.audit.append(transaction, {
-      action: `custom-titles.${action}`,
-      actorType: 'USER',
-      actorId,
-      targetType,
-      targetId,
-      metadata: jsonPayload,
-    });
-    await this.outbox.append(
-      transaction,
-      createEventEnvelope({
-        name: `custom-titles.${action}.v1`,
-        version: 1,
-        category: 'integration',
-        producer: PRODUCER,
-        aggregate: { type: targetType, id: targetId },
-        actorId,
-        payload: jsonPayload,
-      }),
-    );
-  }
-
   private titlePayload(title: CustomTitle): Record<string, unknown> {
     return {
       titleId: title.id,
@@ -397,22 +325,6 @@ export class PrismaCustomTitlesRepository implements CustomTitlesRepository {
       color: title.color,
       badge: title.badge,
       isActive: title.isActive,
-    };
-  }
-
-  private toGrant(record: GrantRow): UserTitleGrant {
-    return {
-      id: record.id,
-      userId: record.userId,
-      titleId: record.titleId,
-      grantedById: record.grantedById,
-      grantReason: record.grantReason,
-      grantedAt: record.grantedAt,
-      revokedAt: record.revokedAt,
-      revokedById: record.revokedById,
-      revokeReason: record.revokeReason,
-      title: record.title,
-      selected: Boolean(record.selection),
     };
   }
 

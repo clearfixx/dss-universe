@@ -379,6 +379,9 @@ for (const [moduleName, expected] of [
       "AchievementsModule",
       "ACHIEVEMENT_RECIPIENT_EXISTENCE",
       "AchievementRecipientExistence",
+      "MANUAL_AWARD_TRANSACTION",
+      "ManualAwardTransaction",
+      "ManualAchievementAward",
     ],
   ],
   [
@@ -488,6 +491,7 @@ test("Reputation and Users publish only the intended guarded technical read symb
       "users",
       [
         "PrismaPublicProfileReader",
+        "PrismaTransactionalProfileExistenceReader",
         "usersProfileSelect",
         "profileById",
         "profileByUsername",
@@ -512,6 +516,8 @@ test("Reputation and Users publish only the intended guarded technical read symb
       ],
     ],
     ["iam", ["profileDirectoryRole"]],
+    ["achievements", ["PrismaManualAwardWriter"]],
+    ["custom-titles", ["PrismaTitleGrantWriter"]],
     [
       "interactions",
       [
@@ -545,6 +551,90 @@ test("Reputation and Users publish only the intended guarded technical read symb
       );
     }
     deepEqual(names.sort(), [...expected].sort());
+  }
+});
+
+for (const [owner, writer, rootFile] of [
+  [
+    "achievements",
+    "PrismaManualAwardWriter",
+    "prisma-manual-award.transaction.ts",
+  ],
+  [
+    "custom-titles",
+    "PrismaTitleGrantWriter",
+    "prisma-title-grant.transaction.ts",
+  ],
+]) {
+  test(`${owner} recipient composition has only default transaction lifetime and no foreign owner SQL`, () => {
+    const source = readFileSync(
+      new URL(
+        `../../apps/api/src/composition/gamification/infrastructure/${rootFile}`,
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    deepEqual(directPrismaSurface(source), ["$transaction"]);
+    deepEqual(directPrismaSurface(source, "transaction", false), []);
+    const root = readFileSync(
+      new URL(`../../apps/api/src/modules/${owner}/index.ts`, import.meta.url),
+      "utf8",
+    );
+    ok(!root.includes(writer));
+    ok(!root.includes("./infrastructure"));
+    for (const file of [
+      `apps/api/src/modules/${owner}/index.ts`,
+      `apps/api/src/modules/${owner}/application/command.ts`,
+      "apps/api/src/modules/news/infrastructure/consumer.ts",
+    ]) {
+      ok(
+        analyzeBoundaries([
+          {
+            path: file,
+            source: `import { ${writer} } from '@api/modules/${owner}/infrastructure';`,
+          },
+        ]).some(({ rule }) => rule === "infrastructure-entry-business-import"),
+      );
+    }
+  });
+}
+for (const [owner, file, expected] of [
+  [
+    "achievements",
+    "prisma-manual-award.writer.ts",
+    ["$executeRaw", "achievementAward", "achievementDefinition"],
+  ],
+  [
+    "custom-titles",
+    "prisma-title-grant.writer.ts",
+    ["$executeRaw", "customTitle", "userTitleGrant"],
+  ],
+  ["users", "prisma-transactional-profile-existence.reader.ts", ["user"]],
+]) {
+  test(`${file} accesses only its owner delegates without owning transactions`, () => {
+    const source = readFileSync(
+      new URL(
+        `../../apps/api/src/modules/${owner}/infrastructure/repositories/${file}`,
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    deepEqual(directPrismaSurface(source), []);
+    deepEqual(directPrismaSurface(source, "transaction", false), expected);
+  });
+}
+test("Gamification recipient repositories no longer read Users in either client scope", () => {
+  for (const owner of ["achievements", "custom-titles"]) {
+    const source = readFileSync(
+      new URL(
+        `../../apps/api/src/modules/${owner}/infrastructure/repositories/prisma-${owner}.repository.ts`,
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    ok(!directPrismaSurface(source).includes("user"));
+    ok(!directPrismaSurface(source, "transaction", false).includes("user"));
+    ok(!source.includes("createEventEnvelope"));
   }
 });
 

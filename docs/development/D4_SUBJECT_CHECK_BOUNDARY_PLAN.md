@@ -1,7 +1,8 @@
 # D4 — Transactional subject checks and IAM anchor
 
-Date: 2026-10-15. Status: pre-transfer characterization implemented; owner
-semantics explicitly approved, runtime not implemented. Branch
+Date: 2026-10-16. Status: pre-transfer characterization implemented; owner
+semantics explicitly approved, gamification runtime follow-up linked below;
+IAM runtime transfer open. Foundation branch
 `debt/d4-subject-check-characterization`, based on `3493925` / draft PR #22.
 The parent review stack is unaccepted, not a release baseline.
 
@@ -35,6 +36,8 @@ release acceptance.
 1. **Gamification transactional recipient transfer:** semantic operation ports,
    scoped root units of work, Users-owned stateless ID reader, owned manual-award/
    title-grant writers. Preserve the existing parallel stage and result precedence.
+   Runtime implementation/evidence: [gamification transfer](../audits/D4_GAMIFICATION_RECIPIENT_TRANSACTIONS.md).
+   This bounded increment does not implement the remaining IAM packages below.
 2. **IAM transactional subject transfer:** separate membership-grant and protected
    role-revocation semantics, Auth-owned stateless ID reader, scoped root transaction
    lifetime and owned IAM writers. Keep membership audit atomic, and retain role
@@ -94,7 +97,8 @@ terminal status; inherited DEBT-045/open handles and other known red gates remai
 unaccepted, not waived. Foundation results do not certify runtime ownership.
 
 Evidence follows in [the foundation audit](../audits/D4_SUBJECT_CHECK_CHARACTERIZATION.md).
-Production remains unchanged in this branch. Remaining full SQL/Worker review,
+The characterization branch leaves production unchanged; its gamification runtime
+follow-up is linked above. Remaining IAM transfer, full SQL/Worker review,
 D4.4/D4.5, D5–D7, requested stack audit and owner acceptance remain required.
 DEBT-057 stays separate. Stop before Phase 11 for its mandatory brainstorm.
 The owner-authored untracked stack audit plan is not edited or staged.

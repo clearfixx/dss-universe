@@ -168,10 +168,12 @@ This is not full SQL ownership acceptance. Source inspection finds:
   guarded fragments/root composition, with safe records and no unused Auth
   commands in Users; see [runtime evidence](../audits/D4_USERS_OWNED_PROFILE_COMPOSITION.md).
   Five reviewed Prisma imports are removed (89 → 84); full quality/CI/acceptance
-  remain open. Achievements,
-  Custom Titles and IAM perform transaction-local subject existence/eligibility
-  checks. These require explicit ownership disposition in D4.3/D4.4, not blanket
-  approval as harmless joins.
+  remain open. Achievements and Custom Titles transaction-local recipient checks
+  now use Users-owned ID-only reads through root units and owner writers; see
+  [runtime evidence](../audits/D4_GAMIFICATION_RECIPIENT_TRANSACTIONS.md).
+  IAM transaction-local and independent subject anchors still require the
+  approved Auth-owned transfer. These are all-state existence checks, not ACTIVE
+  eligibility; no blanket approval of remaining joins or full D4 closure.
 
 The shared-row/role increment has a separate
 [operation inventory and proposed owner-fragment design](D4_USERS_SHARED_ROW_BOUNDARY_PLAN.md).
@@ -183,7 +185,8 @@ Next subject/recipient increment: [complete operation plan](D4_SUBJECT_CHECK_BOU
 and [pre-transfer evidence](../audits/D4_SUBJECT_CHECK_CHARACTERIZATION.md).
 Nineteen real migrated tests pin four transaction-local checks plus two independent
 IAM anchor/existence paths. ID-only existence accepts all existing states; it is
-not ACTIVE eligibility. Runtime ownership is not yet transferred.
+not ACTIVE eligibility. The [gamification runtime follow-up](../audits/D4_GAMIFICATION_RECIPIENT_TRANSACTIONS.md)
+transfers awards/title grants; IAM transactional/independent anchors remain open.
 
 The import inventory does not detect table ownership and must not waive these
 items. This is a reviewed starting inventory, not exhaustive proof of all joins;

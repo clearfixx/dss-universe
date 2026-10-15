@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/modules/achievements/infrastructure/repositories/prisma-achievements.repository.ts
  *
  * 🎯 Purpose:
- * Persists achievement policy and immutable, reversible award history.
+ * Persists owned achievement policy/history and delegates composed manual awards.
  *
  * 🧠 Responsibilities:
  * • serializes definitions, rules, and per-user awards;
@@ -18,16 +18,12 @@
  * ===============================================================
  */
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { AuditWriterService } from '@api/core/audit';
 import { PrismaService, type TransactionClient } from '@api/core/database';
-import {
-  createEventEnvelope,
-  type JsonValue,
-  OutboxWriterService,
-} from '@api/core/events';
+import { OutboxWriterService } from '@api/core/events';
 
 import type {
   AchievementDefinitionWrite,
@@ -45,28 +41,34 @@ import type {
   AchievementWriteResult,
 } from '../../domain/types/achievements.type';
 
-const PRODUCER = 'dss.api.achievements';
+import {
+  MANUAL_AWARD_TRANSACTION,
+  type ManualAwardTransaction,
+} from '../../contracts/manual-award-transaction.port';
+import { awardInclude, type AwardRow } from './achievement-award.shape';
+import {
+  ACHIEVEMENTS_PRODUCER,
+  AchievementEvidenceWriter,
+} from './achievement-evidence.writer';
 
 const ruleInclude = { achievement: true } as const;
-const awardInclude = {
-  achievement: true,
-  revocation: true,
-} as const;
 
 type RuleRow = Prisma.AchievementRuleGetPayload<{
   include: typeof ruleInclude;
 }>;
-type AwardRow = Prisma.AchievementAwardGetPayload<{
-  include: typeof awardInclude;
-}>;
 
 @Injectable()
 export class PrismaAchievementsRepository implements AchievementsRepository {
+  private readonly evidence: AchievementEvidenceWriter;
   constructor(
     private readonly prisma: PrismaService,
-    private readonly audit: AuditWriterService,
-    private readonly outbox: OutboxWriterService,
-  ) {}
+    audit: AuditWriterService,
+    outbox: OutboxWriterService,
+    @Inject(MANUAL_AWARD_TRANSACTION)
+    private readonly manualAwards: ManualAwardTransaction,
+  ) {
+    this.evidence = new AchievementEvidenceWriter(audit, outbox);
+  }
 
   definitions(includeInactive: boolean): Promise<AchievementDefinition[]> {
     return this.prisma.achievementDefinition.findMany({
@@ -115,7 +117,7 @@ export class PrismaAchievementsRepository implements AchievementsRepository {
                 updatedById: input.actorId,
               },
             });
-        await this.record(
+        await this.evidence.record(
           transaction,
           input.id ? 'definition.updated' : 'definition.created',
           input.actorId,
@@ -197,7 +199,7 @@ export class PrismaAchievementsRepository implements AchievementsRepository {
               },
               include: ruleInclude,
             });
-        await this.record(
+        await this.evidence.record(
           transaction,
           input.id ? 'rule.updated' : 'rule.created',
           input.actorId,
@@ -239,7 +241,7 @@ export class PrismaAchievementsRepository implements AchievementsRepository {
     userId: string,
   ): Promise<AchievementConsumption> {
     return this.prisma.$transaction(async (transaction) => {
-      const consumerName = `${PRODUCER}:${rule.id}`;
+      const consumerName = `${ACHIEVEMENTS_PRODUCER}:${rule.id}`;
       await this.lock(
         transaction,
         `achievements:award:${userId}:${rule.achievementId}`,
@@ -305,7 +307,7 @@ export class PrismaAchievementsRepository implements AchievementsRepository {
         include: awardInclude,
       });
       await this.markProcessed(transaction, event, consumerName);
-      await this.recordAward(transaction, 'awarded', null, award);
+      await this.evidence.recordAward(transaction, 'awarded', null, award);
       return {
         ruleId: rule.id,
         status: 'AWARDED',
@@ -314,49 +316,13 @@ export class PrismaAchievementsRepository implements AchievementsRepository {
     });
   }
 
-  async manualAward(
+  manualAward(
     userId: string,
     achievementId: string,
     reason: string,
     actorId: string,
   ): Promise<AchievementAwardResult> {
-    return this.prisma.$transaction(async (transaction) => {
-      await this.lock(
-        transaction,
-        `achievements:award:${userId}:${achievementId}`,
-      );
-      const [user, achievement, existing] = await Promise.all([
-        transaction.user.findUnique({
-          where: { id: userId },
-          select: { id: true },
-        }),
-        transaction.achievementDefinition.findFirst({
-          where: { id: achievementId, isActive: true },
-          select: { id: true },
-        }),
-        transaction.achievementAward.findFirst({
-          where: { userId, achievementId, revocation: null },
-          select: { id: true },
-        }),
-      ]);
-      if (!user) return { status: 'USER_NOT_FOUND', award: null };
-      if (!achievement) {
-        return { status: 'ACHIEVEMENT_NOT_FOUND', award: null };
-      }
-      if (existing) return { status: 'CONFLICT', award: null };
-      const award = await transaction.achievementAward.create({
-        data: {
-          userId,
-          achievementId,
-          kind: 'MANUAL',
-          reason,
-          awardedById: actorId,
-        },
-        include: awardInclude,
-      });
-      await this.recordAward(transaction, 'awarded', actorId, award);
-      return { status: 'OK', award: this.toAward(award) };
-    });
+    return this.manualAwards.award({ userId, achievementId, reason, actorId });
   }
 
   async revoke(
@@ -378,7 +344,7 @@ export class PrismaAchievementsRepository implements AchievementsRepository {
         data: { awardId, reason, revokedById: actorId },
       });
       const revoked = { ...award, revocation };
-      await this.recordAward(transaction, 'revoked', actorId, revoked);
+      await this.evidence.recordAward(transaction, 'revoked', actorId, revoked);
       return { status: 'OK', award: this.toAward(revoked) };
     });
   }
@@ -405,7 +371,12 @@ export class PrismaAchievementsRepository implements AchievementsRepository {
           data: { awardId: award.id, reason, revokedById: actorId },
         });
         const record = { ...award, revocation };
-        await this.recordAward(transaction, 'revoked', actorId, record);
+        await this.evidence.recordAward(
+          transaction,
+          'revoked',
+          actorId,
+          record,
+        );
         revoked.push(this.toAward(record));
       }
       return revoked;
@@ -464,60 +435,6 @@ export class PrismaAchievementsRepository implements AchievementsRepository {
         eventVersion: event.eventVersion,
       },
     });
-  }
-
-  private recordAward(
-    transaction: TransactionClient,
-    action: 'awarded' | 'revoked',
-    actorId: string | null,
-    award: AwardRow,
-  ): Promise<void> {
-    return this.record(
-      transaction,
-      `award.${action}`,
-      actorId,
-      'AchievementAward',
-      award.id,
-      {
-        awardId: award.id,
-        userId: award.userId,
-        achievementId: award.achievementId,
-        kind: award.kind,
-        sourceType: award.sourceType,
-        sourceId: award.sourceId,
-      },
-    );
-  }
-
-  private async record(
-    transaction: TransactionClient,
-    action: string,
-    actorId: string | null,
-    targetType: string,
-    targetId: string,
-    payload: Record<string, unknown>,
-  ): Promise<void> {
-    const jsonPayload = payload as JsonValue;
-    await this.audit.append(transaction, {
-      action: `achievements.${action}`,
-      actorType: actorId ? 'USER' : 'SYSTEM',
-      ...(actorId ? { actorId } : {}),
-      targetType,
-      targetId,
-      metadata: jsonPayload,
-    });
-    await this.outbox.append(
-      transaction,
-      createEventEnvelope({
-        name: `achievements.${action}.v1`,
-        version: 1,
-        category: 'integration',
-        producer: PRODUCER,
-        aggregate: { type: targetType, id: targetId },
-        ...(actorId ? { actorId } : {}),
-        payload: jsonPayload,
-      }),
-    );
   }
 
   private toRule(row: RuleRow): AchievementRule {

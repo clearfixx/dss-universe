@@ -14,6 +14,11 @@
 
 export { CustomTitlesService } from './application/services/custom-titles.service';
 export { CustomTitlesModule } from './custom-titles.module';
+export {
+  TITLE_GRANT_TRANSACTION,
+  type TitleGrantTransaction,
+  type GrantCustomTitle,
+} from './contracts/title-grant-transaction.port';
 export type {
   CustomTitle,
   CustomTitleSettings,
