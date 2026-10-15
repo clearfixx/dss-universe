@@ -14,6 +14,11 @@
 
 export { ReputationModule } from './reputation.module';
 export {
+  REPUTATION_WRITE_TRANSACTION,
+  type ReputationWriteTransaction,
+} from './contracts/reputation-write-transaction.port';
+export type { CreateReputationEntry } from './domain/types/reputation.type';
+export {
   REPUTATION_ENTRY_READER,
   type ReputationEntryReader,
 } from './contracts/reputation-entry-reader.port';

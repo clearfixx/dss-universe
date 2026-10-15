@@ -106,6 +106,10 @@ for (const [file, expected] of [
     "modules/interactions/infrastructure/repositories/prisma-comments.repository.ts",
     ["$transaction", "comment", "commentRevision"],
   ],
+  [
+    "modules/reputation/infrastructure/repositories/prisma-reputation.repository.ts",
+    ["$transaction", "reputationPolicy"],
+  ],
 ]) {
   test(
     "migrated repository keeps only owned direct Prisma delegates: " + file,
@@ -139,6 +143,16 @@ for (const [file, expected, forbiddenRelations] of [
     "modules/users/infrastructure/repositories/prisma-reputation-actor.reader.ts",
     ["user"],
     ["roles", "permissions", "reputationEntries"],
+  ],
+  [
+    "modules/users/infrastructure/repositories/prisma-reputation-write-actor.reader.ts",
+    ["user"],
+    ["roles", "permissions", "status"],
+  ],
+  [
+    "modules/reputation/infrastructure/repositories/prisma-reputation.writer.ts",
+    ["$executeRaw", "reputationEntry"],
+    ["actor", "recipient", "user", "reversal"],
   ],
   [
     "modules/interactions/infrastructure/repositories/prisma-comment.writer.ts",
@@ -248,6 +262,9 @@ for (const [moduleName, expected] of [
     "reputation",
     [
       "ReputationModule",
+      "REPUTATION_WRITE_TRANSACTION",
+      "ReputationWriteTransaction",
+      "CreateReputationEntry",
       "REPUTATION_TOTAL_READER",
       "REPUTATION_ENTRY_READER",
       "ReputationEntryReader",
@@ -445,6 +462,8 @@ test("Reputation and Users publish only the intended guarded technical read symb
         "PrismaReputationEntryReader",
         "ReputationEntryFact",
         "ReputationReversalFact",
+        "PrismaReputationWriter",
+        "ReputationEntryProjection",
       ],
     ],
     [
@@ -452,6 +471,7 @@ test("Reputation and Users publish only the intended guarded technical read symb
       [
         "PrismaPublicProfileReader",
         "PrismaReputationActorReader",
+        "PrismaReputationWriteActorReader",
         "PrismaMentionProfileSelector",
         "MentionRecipientMatcher",
         "MentionProfileCandidate",
@@ -503,6 +523,32 @@ test("Comment write composition owns transaction lifetime, never owner-table SQL
   );
   deepEqual(directPrismaSurface(source), ["$transaction"]);
   deepEqual(directPrismaSurface(source, "transaction", false), []);
+});
+
+test("Reputation write composition binds adapters without copying owner SQL or exporting a business callback", () => {
+  const file =
+    "apps/api/src/composition/reputation/infrastructure/prisma-reputation-write.transaction.ts";
+  const source = readFileSync(
+    new URL(`../../${file}`, import.meta.url),
+    "utf8",
+  );
+  deepEqual(directPrismaSurface(source), ["$transaction"]);
+  deepEqual(directPrismaSurface(source, "transaction", false), []);
+  const root = readFileSync(
+    new URL("../../apps/api/src/modules/reputation/index.ts", import.meta.url),
+    "utf8",
+  );
+  ok(!root.includes("PrismaReputationWriter"));
+  ok(!root.includes("ReputationEntryProjection"));
+  const port =
+    "apps/api/src/modules/reputation/contracts/reputation-write-transaction.port.ts";
+  const contract = readFileSync(
+    new URL(`../../${port}`, import.meta.url),
+    "utf8",
+  );
+  deepEqual(analyzeBoundaries([{ path: port, source: contract }]), []);
+  const tree = createSourceFile(port, contract, ScriptTarget.Latest, true);
+  ok(!tree.statements.some((node) => node.getText(tree).includes("Prisma")));
 });
 
 test("Mention SQL composition imports only guarded selectors and performs no owner delegate reads", () => {

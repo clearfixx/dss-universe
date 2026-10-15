@@ -28,13 +28,13 @@ import { PrismaService } from '@api/core/database';
 import type {
   ReputationEntryReader,
   ReputationEntry,
-  ReputationActor,
 } from '@api/modules/reputation';
 import {
   PrismaReputationEntryReader,
   type ReputationEntryFact,
 } from '@api/modules/reputation/infrastructure';
 import { PrismaReputationActorReader } from '@api/modules/users/infrastructure';
+import { composeReputationEntry } from './reputation-entry.mapper';
 
 @Injectable()
 export class PrismaReputationReadUnit implements ReputationEntryReader {
@@ -94,35 +94,14 @@ export class PrismaReputationReadUnit implements ReputationEntryReader {
     const byOriginal = new Map(
       reversals.map((row) => [row.reversesEntryId, row]),
     );
-    const actor = (
-      profiles: Map<string, ReputationActor>,
-      id: string,
-    ): ReputationActor => {
-      const found = profiles.get(id);
-      if (!found) throw new Error('Reputation actor evidence is incomplete.');
-      return {
-        id: found.id,
-        username: found.username,
-        displayName: found.displayName,
-        avatarUrl: found.avatarUrl,
-      };
-    };
-    return entries.map(({ actorId, ...entry }) => {
-      const reversed = byOriginal.get(entry.id);
-      return {
-        ...entry,
-        value: entry.value as -1 | 1,
-        actor: actor(actors, actorId),
-        reversal: reversed
-          ? {
-              id: reversed.id,
-              reason: reversed.reason,
-              createdAt: reversed.createdAt,
-              actor: actor(reversalActors, reversed.actorId),
-            }
-          : null,
-      };
-    });
+    return entries.map((entry) =>
+      composeReputationEntry(
+        entry,
+        actors,
+        byOriginal.get(entry.id),
+        reversalActors,
+      ),
+    );
   }
 }
 

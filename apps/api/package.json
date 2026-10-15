@@ -126,6 +126,36 @@
     ],
     "coverageDirectory": "../coverage",
     "coverageThreshold": {
+      "src/composition/reputation/infrastructure/prisma-reputation-write.transaction.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/reputation/infrastructure/reputation-entry.mapper.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/reputation/infrastructure/repositories/prisma-reputation.writer.ts": {
+        "branches": 85,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/reputation/infrastructure/repositories/prisma-reputation.repository.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/users/infrastructure/repositories/prisma-reputation-write-actor.reader.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
       "src/composition/comment-writes/infrastructure/prisma-comment-write.transaction.ts": {
         "branches": 75,
         "functions": 100,

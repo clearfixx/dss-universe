@@ -27,25 +27,48 @@ import { Global, Module } from '@nestjs/common';
 import { AuthModule } from '@api/modules/auth';
 import { UsersModule } from '@api/modules/users';
 import { PrismaModule } from '@api/core/database';
-import { PrismaReputationActorReader } from '@api/modules/users/infrastructure';
-import { PrismaReputationEntryReader } from '@api/modules/reputation/infrastructure';
+import { AuditModule } from '@api/core/audit';
+import { EventsModule } from '@api/core/events';
+import {
+  PrismaReputationActorReader,
+  PrismaReputationWriteActorReader,
+} from '@api/modules/users/infrastructure';
+import {
+  PrismaReputationEntryReader,
+  PrismaReputationWriter,
+} from '@api/modules/reputation/infrastructure';
 import {
   ReputationModule,
   REPUTATION_ACCOUNT_READER,
   REPUTATION_BLOCK_READER,
   REPUTATION_PROFILE_EXISTENCE,
   REPUTATION_ENTRY_READER,
+  REPUTATION_WRITE_TRANSACTION,
 } from '@api/modules/reputation';
 import { ReputationAccountAdapter } from './infrastructure/reputation-account.adapter';
 import { ReputationBlockAdapter } from './infrastructure/reputation-block.adapter';
 import { ReputationProfileAdapter } from './infrastructure/reputation-profile.adapter';
 import { PrismaReputationReadUnit } from './infrastructure/prisma-reputation.read-unit';
+import { PrismaReputationWriteTransaction } from './infrastructure/prisma-reputation-write.transaction';
 @Global()
 @Module({
-  imports: [PrismaModule, AuthModule, UsersModule, ReputationModule],
+  imports: [
+    PrismaModule,
+    AuditModule,
+    EventsModule,
+    AuthModule,
+    UsersModule,
+    ReputationModule,
+  ],
   providers: [
     PrismaReputationEntryReader,
     PrismaReputationActorReader,
+    PrismaReputationWriteActorReader,
+    PrismaReputationWriter,
+    {
+      provide: REPUTATION_WRITE_TRANSACTION,
+      useClass: PrismaReputationWriteTransaction,
+    },
     { provide: REPUTATION_ENTRY_READER, useClass: PrismaReputationReadUnit },
     { provide: REPUTATION_ACCOUNT_READER, useClass: ReputationAccountAdapter },
     { provide: REPUTATION_BLOCK_READER, useClass: ReputationBlockAdapter },
@@ -55,6 +78,7 @@ import { PrismaReputationReadUnit } from './infrastructure/prisma-reputation.rea
     },
   ],
   exports: [
+    REPUTATION_WRITE_TRANSACTION,
     REPUTATION_ENTRY_READER,
     REPUTATION_ACCOUNT_READER,
     REPUTATION_BLOCK_READER,

@@ -159,8 +159,11 @@ This is not full SQL ownership acceptance. Source inspection finds:
 - Reputation history/original reads now locally use owned ledger/profile adapters
   and a semantic root read unit, preserving their Read Committed/independent-read
   distinction and statement order; see [read evidence](../audits/D4_REPUTATION_READ_OWNERSHIP.md).
-  Write-response actor joins in createDirect/reverse remain open and must preserve
-  their existing atomic audit/outbox semantics. Users repository still
+  Write-response actor joins in createDirect/reverse are now locally transferred
+  through a semantic root write unit and owned ledger/Users adapters, preserving
+  default isolation, both actor-read stages and atomic audit/outbox semantics;
+  see [write evidence](../audits/D4_REPUTATION_WRITE_OWNERSHIP.md). Full quality,
+  CI and acceptance remain open. Users repository still
   reads IAM role assignments and whole transitional shared rows. Achievements,
   Custom Titles and IAM perform transaction-local subject existence/eligibility
   checks. These require explicit ownership disposition in D4.3/D4.4, not blanket
