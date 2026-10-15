@@ -127,6 +127,16 @@ for (const [file, expected, forbiddenRelations] of [
     [],
   ],
   [
+    "modules/reputation/infrastructure/repositories/prisma-reputation-entry.reader.ts",
+    ["reputationEntry"],
+    ["actor", "user", "recipient"],
+  ],
+  [
+    "modules/users/infrastructure/repositories/prisma-reputation-actor.reader.ts",
+    ["user"],
+    ["roles", "permissions", "reputationEntries"],
+  ],
+  [
     "modules/interactions/infrastructure/repositories/prisma-interaction-delivery.reader.ts",
     ["comment", "interactionShare", "interactionTarget", "reaction"],
     ["author", "actor", "user"],
@@ -230,6 +240,10 @@ for (const [moduleName, expected] of [
     [
       "ReputationModule",
       "REPUTATION_TOTAL_READER",
+      "REPUTATION_ENTRY_READER",
+      "ReputationEntryReader",
+      "ReputationEntry",
+      "ReputationActor",
       "ReputationTotalReader",
       "REPUTATION_ACCOUNT_READER",
       "ReputationAccountReader",
@@ -388,6 +402,68 @@ const analyze = (source, file = path) =>
   analyzeBoundaries([{ path: file, source }]);
 const rules = (source, file) =>
   analyze(source, file).map((finding) => finding.rule);
+
+test("Reputation technical readers remain absent from business roots and forbidden to applications", () => {
+  const root = "apps/api/src/modules/reputation/index.ts";
+  const source = readFileSync(
+    new URL(`../../${root}`, import.meta.url),
+    "utf8",
+  );
+  ok(!source.includes("PrismaReputationEntryReader"));
+  ok(!source.includes("./infrastructure"));
+  for (const file of [
+    root,
+    "apps/api/src/modules/reputation/application/read.ts",
+    "apps/api/src/modules/news/infrastructure/read.ts",
+  ]) {
+    ok(
+      analyzeBoundaries([
+        {
+          path: file,
+          source:
+            "import { PrismaReputationEntryReader } from '@api/modules/reputation/infrastructure';",
+        },
+      ]).some(({ rule }) => rule === "infrastructure-entry-business-import"),
+    );
+  }
+});
+
+test("Reputation and Users publish only the intended guarded technical read symbols", () => {
+  for (const [moduleName, expected] of [
+    [
+      "reputation",
+      [
+        "PrismaReputationEntryReader",
+        "ReputationEntryFact",
+        "ReputationReversalFact",
+      ],
+    ],
+    ["users", ["PrismaPublicProfileReader", "PrismaReputationActorReader"]],
+  ]) {
+    const source = readFileSync(
+      new URL(
+        `../../apps/api/src/modules/${moduleName}/infrastructure.ts`,
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    const tree = createSourceFile(
+      "infrastructure.ts",
+      source,
+      ScriptTarget.Latest,
+      true,
+    );
+    const names = [];
+    for (const node of tree.statements) {
+      if (!isExportDeclaration(node)) continue;
+      ok(node.exportClause && isNamedExports(node.exportClause));
+      names.push(
+        ...node.exportClause.elements.map((element) => element.name.text),
+      );
+    }
+    deepEqual(names.sort(), [...expected].sort());
+  }
+});
 
 for (const specifier of [
   "@api/modules/users/domain/repository",

@@ -1,7 +1,7 @@
 # D4 — Transactional mention ownership
 
-Date: 2026-10-15. Status: characterization verified; proposed runtime design
-awaits owner answer. No production transfer or acceptance is claimed.
+Date: 2026-10-15. Status: characterization verified; runtime design approved by
+the owner on 2026-10-15. No production transfer or acceptance is claimed.
 
 Branch `debt/d4-transactional-mentions` starts from published D4.3d3b `60a5d53`
 (draft PR #16). Parents remain unaccepted. The authorized D4 plan requires
@@ -50,7 +50,7 @@ snapshots and successive commands may observe different commits; see
 Do not silently apply News's separately approved Repeatable Read policy to comment
 writes: that changes visibility/retry behavior and is not this design's authority.
 
-## Proposed ownership transfer — approval pending
+## Approved ownership transfer — runtime pending
 
 1. Interactions keeps its comment/target/revision/mention-diff/evidence algorithm in
    an owned stateless technical writer. Its normal repository retains reads and
@@ -82,9 +82,11 @@ owner right, public transport shape, frontend design or notification behavior.
 Eligibility is authoritative at the existing SELECT point, not newly guaranteed
 at commit time. Failures propagate and roll back the entire owned operation.
 
-The owner was asked to choose this one-statement technical composition or keep
-work at characterization/design for now. No answer is inferred from the default
-option; do not implement the proposed runtime path until that answer is received.
+The owner explicitly selected “Так, один SQL через підзапити власників” on
+2026-10-15. This authorizes the described operation-specific runtime transfer,
+not a broader SQL framework or isolation change. Implementation follows the
+independent Reputation read-boundary package already in progress; do not mix the
+two runtime changes or treat the characterization PR as completed ownership.
 
 ## Verified characterization
 

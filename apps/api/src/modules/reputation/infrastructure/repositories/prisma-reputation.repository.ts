@@ -12,17 +12,24 @@
  * • serializes actor-recipient decisions with PostgreSQL advisory locks;
  * • appends direct and compensating entries transactionally;
  * • emits audit and Outbox evidence beside ledger writes;
- * • calculates explainable public history and score.
+ * • delegates original/history display reads to the owned semantic composition port.
+ *
+ * 🏗️ Architecture:
+ * Owned policy/write repository; foreign actor joins in write responses remain a separate D4 item.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 
 import { AuditWriterService } from '@api/core/audit';
 import { PrismaService, type TransactionClient } from '@api/core/database';
 import { createEventEnvelope, OutboxWriterService } from '@api/core/events';
+import {
+  REPUTATION_ENTRY_READER,
+  type ReputationEntryReader,
+} from '../../contracts/reputation-entry-reader.port';
 
 import type { ReputationRepository } from '../../domain/repositories/reputation.repository.interface';
 import type {
@@ -92,6 +99,8 @@ export class PrismaReputationRepository implements ReputationRepository {
     private readonly prisma: PrismaService,
     private readonly audit: AuditWriterService,
     private readonly outbox: OutboxWriterService,
+    @Inject(REPUTATION_ENTRY_READER)
+    private readonly reader: ReputationEntryReader,
   ) {}
 
   async policy(): Promise<ReputationPolicy> {
@@ -169,12 +178,8 @@ export class PrismaReputationRepository implements ReputationRepository {
     });
   }
 
-  async findOriginalById(id: string): Promise<ReputationEntry | null> {
-    const entry = await this.prisma.reputationEntry.findFirst({
-      where: { id, reversesEntryId: null },
-      include: entryInclude,
-    });
-    return entry ? this.toDomain(entry) : null;
+  findOriginalById(id: string): Promise<ReputationEntry | null> {
+    return this.reader.findOriginalById(id);
   }
 
   async reverse(
@@ -215,34 +220,12 @@ export class PrismaReputationRepository implements ReputationRepository {
     });
   }
 
-  async history(
+  history(
     recipientId: string,
     page: number,
     limit: number,
   ): Promise<ReputationHistory> {
-    const where = { recipientId, reversesEntryId: null };
-    const [items, total, score] = await this.prisma.$transaction([
-      this.prisma.reputationEntry.findMany({
-        where,
-        include: entryInclude,
-        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      this.prisma.reputationEntry.count({ where }),
-      this.prisma.reputationEntry.aggregate({
-        where: { recipientId },
-        _sum: { value: true },
-      }),
-    ]);
-    return {
-      items: items.map((entry) => this.toDomain(entry)),
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-      score: score._sum.value ?? 0,
-    };
+    return this.reader.history(recipientId, page, limit);
   }
 
   private lock(
