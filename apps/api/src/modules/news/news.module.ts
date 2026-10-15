@@ -26,7 +26,6 @@ import { NewsSearchBackfillService } from './application/services/news-search-ba
 import { NEWS_SEARCH_INDEX_MAINTENANCE } from './contracts/news-search-index-maintenance.contract';
 import { NEWS_SEARCH_PROJECTION_REPOSITORY } from './domain/repositories/news-search-projection.repository.interface';
 import { PrismaNewsSearchProjectionRepository } from './infrastructure/repositories/prisma-news-search-projection.repository';
-import { PrismaNewsSearchSession } from './infrastructure/repositories/prisma-news-search.session';
 
 import { AuditModule } from '@api/core/audit';
 import { AuthorizationModule } from '@api/core/authorization';
@@ -46,14 +45,12 @@ import { NewsTaxonomyService } from './application/services/news-taxonomy.servic
 import { NewsWorkflowService } from './application/services/news-workflow.service';
 import { NewsPinsService } from './application/services/news-pins.service';
 import { NEWS_REPOSITORY } from './domain/repositories/news.repository.interface';
-import { NEWS_DELIVERY_REPOSITORY } from './domain/repositories/news-delivery.repository.interface';
 import { NEWS_LINKS_REPOSITORY } from './domain/repositories/news-links.repository.interface';
 import { NEWS_SETTINGS_REPOSITORY } from './domain/repositories/news-settings.repository.interface';
 import { NEWS_TAXONOMY_REPOSITORY } from './domain/repositories/news-taxonomy.repository.interface';
 import { NEWS_WORKFLOW_REPOSITORY } from './domain/repositories/news-workflow.repository.interface';
 import { NEWS_PINS_REPOSITORY } from './domain/repositories/news-pins.repository.interface';
 import { PrismaNewsRepository } from './infrastructure/repositories/prisma-news.repository';
-import { PrismaNewsDeliveryRepository } from './infrastructure/repositories/prisma-news-delivery.repository';
 import { PrismaNewsLinksRepository } from './infrastructure/repositories/prisma-news-links.repository';
 import { PrismaNewsSettingsRepository } from './infrastructure/repositories/prisma-news-settings.repository';
 import { PrismaNewsTaxonomyRepository } from './infrastructure/repositories/prisma-news-taxonomy.repository';
@@ -70,7 +67,6 @@ import { NewsPinsResolver } from './presentation/graphql/news-pins.graphql';
 @Module({
   imports: [PrismaModule, AuditModule, AuthorizationModule, EventsModule],
   providers: [
-    PrismaNewsSearchSession,
     NewsSearchBackfillService,
     {
       provide: NEWS_SEARCH_INDEX_MAINTENANCE,
@@ -98,10 +94,6 @@ import { NewsPinsResolver } from './presentation/graphql/news-pins.graphql';
     NewsInteractionPolicy,
     { provide: NEWS_INTERACTION_DECISIONS, useExisting: NewsInteractionPolicy },
     { provide: NEWS_REPOSITORY, useClass: PrismaNewsRepository },
-    {
-      provide: NEWS_DELIVERY_REPOSITORY,
-      useClass: PrismaNewsDeliveryRepository,
-    },
     { provide: NEWS_LINKS_REPOSITORY, useClass: PrismaNewsLinksRepository },
     {
       provide: NEWS_SETTINGS_REPOSITORY,
@@ -130,7 +122,6 @@ import { NewsPinsResolver } from './presentation/graphql/news-pins.graphql';
     NewsPinsService,
     NewsPostTemplateService,
     NEWS_REPOSITORY,
-    NEWS_DELIVERY_REPOSITORY,
     NEWS_LINKS_REPOSITORY,
     NEWS_SETTINGS_REPOSITORY,
     NEWS_TAXONOMY_REPOSITORY,

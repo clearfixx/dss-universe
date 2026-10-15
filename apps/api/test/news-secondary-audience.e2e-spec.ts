@@ -33,6 +33,8 @@ import { AppModule } from '../src/app.module';
 import { AuthenticationPresentationService } from '../src/composition/identity/application/authentication-presentation.service';
 import { NewsService } from '../src/modules/news/application/services/news.service';
 import { NewsDeliveryService } from '../src/modules/news/application/services/news-delivery.service';
+import { PrismaNewsDeliveryRepository } from '../src/modules/news/infrastructure/repositories/prisma-news-delivery.repository';
+import { PrismaInteractionDeliveryReader } from '../src/modules/interactions/infrastructure/repositories/prisma-interaction-delivery.reader';
 import { NEWS_ARTICLE_STATUSES } from '../src/modules/news/domain/types/news-article.type';
 import { CommentsService } from '../src/modules/interactions/application/services/comments.service';
 import { ReactionsService } from '../src/modules/interactions/application/services/reactions.service';
@@ -389,28 +391,26 @@ describe('News secondary audience (e2e)', () => {
   });
   it('does not query interactions when the article is inaccessible or missing', async () => {
     const post = await article('MEMBERS');
-    const commentRows = jest.spyOn(prisma.comment, 'findMany');
-    const commentCount = jest.spyOn(prisma.comment, 'count');
-    const reactionRows = jest.spyOn(prisma.reaction, 'findMany');
-    const reactionCount = jest.spyOn(prisma.reaction, 'count');
+    const interactions = app.get(PrismaInteractionDeliveryReader);
+    const commentRows = jest.spyOn(interactions, 'commentsPage');
+    const reactionRows = jest.spyOn(interactions, 'ratingPage');
     denied(await read(post), post);
     denied(
       await read({ ...post, id: randomUUID(), slug: 'synthetic-missing' }),
       post,
     );
-    for (const query of [
-      commentRows,
-      commentCount,
-      reactionRows,
-      reactionCount,
-    ])
+    for (const query of [commentRows, reactionRows])
       expect(query).not.toHaveBeenCalled();
   });
   it('propagates failed eligibility reads without falling through to interactions', async () => {
     const post = await article('MEMBERS');
-    const rows = jest.spyOn(prisma.comment, 'findMany');
-    const votes = jest.spyOn(prisma.reaction, 'findMany');
-    const eligibility = jest.spyOn(prisma.newsArticle, 'findFirst');
+    const interactions = app.get(PrismaInteractionDeliveryReader);
+    const rows = jest.spyOn(interactions, 'commentsPage');
+    const votes = jest.spyOn(interactions, 'ratingPage');
+    const eligibility = jest.spyOn(
+      app.get(PrismaNewsDeliveryRepository),
+      'eligibleTarget',
+    );
     const failure = new Error('Synthetic eligibility store unavailable');
     const delivery = app.get(NewsDeliveryService);
     eligibility.mockRejectedValueOnce(failure);

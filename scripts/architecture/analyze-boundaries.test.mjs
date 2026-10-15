@@ -42,9 +42,14 @@ const {
   forEachChild,
   isPropertyAccessExpression,
   isElementAccessExpression,
+  isPropertyAssignment,
 } = requireApi("typescript");
 
-function directPrismaSurface(source) {
+function directPrismaSurface(
+  source,
+  client = "this.prisma",
+  trackEscape = true,
+) {
   const tree = createSourceFile(
     "repository.ts",
     source,
@@ -55,7 +60,7 @@ function directPrismaSurface(source) {
   function visit(node) {
     if (
       (isPropertyAccessExpression(node) || isElementAccessExpression(node)) &&
-      node.expression.getText(tree) === "this.prisma"
+      node.expression.getText(tree) === client
     ) {
       surface.add(
         isPropertyAccessExpression(node)
@@ -64,6 +69,7 @@ function directPrismaSurface(source) {
       );
     }
     if (
+      trackEscape &&
       isPropertyAccessExpression(node) &&
       node.getText(tree) === "this.prisma" &&
       node.parent.expression !== node
@@ -96,10 +102,6 @@ for (const [file, expected] of [
     "modules/activity/infrastructure/repositories/prisma-activity.repository.ts",
     ["$transaction", "activityEntry", "activityFeedState"],
   ],
-  [
-    "modules/news/infrastructure/repositories/prisma-news-delivery.repository.ts",
-    ["$transaction", "comment", "interactionShare", "newsArticle", "reaction"],
-  ],
 ]) {
   test(
     "migrated repository keeps only owned direct Prisma delegates: " + file,
@@ -112,6 +114,59 @@ for (const [file, expected] of [
     },
   );
 }
+
+for (const [file, expected, forbiddenRelations] of [
+  [
+    "modules/news/infrastructure/repositories/prisma-news-delivery.repository.ts",
+    ["newsArticle"],
+    ["author", "actor", "interactionTarget", "reactionTarget", "user"],
+  ],
+  [
+    "modules/users/infrastructure/repositories/prisma-public-profile.reader.ts",
+    ["user"],
+    [],
+  ],
+  [
+    "modules/interactions/infrastructure/repositories/prisma-interaction-delivery.reader.ts",
+    ["comment", "interactionShare", "interactionTarget", "reaction"],
+    ["author", "actor", "user"],
+  ],
+]) {
+  test(
+    "snapshot adapter reads only owned delegates and relations: " + file,
+    () => {
+      const source = readFileSync(
+        new URL("../../apps/api/src/" + file, import.meta.url),
+        "utf8",
+      );
+      deepEqual(directPrismaSurface(source), []);
+      deepEqual(directPrismaSurface(source, "transaction", false), expected);
+      const tree = createSourceFile(file, source, ScriptTarget.Latest, true);
+      const relationNames = [];
+      function visit(node) {
+        if (
+          isPropertyAssignment(node) &&
+          forbiddenRelations.includes(node.name.getText(tree))
+        )
+          relationNames.push(node.name.getText(tree));
+        forEachChild(node, visit);
+      }
+      visit(tree);
+      deepEqual(relationNames, []);
+    },
+  );
+}
+test("News read composition coordinates adapters without moving owner SQL into root", () => {
+  const source = readFileSync(
+    new URL(
+      "../../apps/api/src/composition/news-delivery/infrastructure/prisma-news-delivery.read-unit.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  deepEqual(directPrismaSurface(source), ["$transaction", "<escaped client>"]);
+  deepEqual(directPrismaSurface(source, "transaction", false), []);
+});
 
 for (const [moduleName, expected] of [
   [

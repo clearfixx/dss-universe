@@ -72,6 +72,16 @@ function harness() {
 }
 
 describe('PrismaNewsSearchSession', () => {
+  it('rejects missing search in the root-supplied transaction before SQL', async () => {
+    const h = harness();
+    await expect(h.session.select(h.client, { first: 10 })).rejects.toThrow(
+      'requires a search expression',
+    );
+    expect(h.query).not.toHaveBeenCalled();
+    expect(h.execute).not.toHaveBeenCalled();
+    expect(h.transaction).not.toHaveBeenCalled();
+  });
+
   it('rejects missing search before opening a database snapshot', () => {
     const h = harness();
     expect(() =>
