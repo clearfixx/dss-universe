@@ -154,6 +154,10 @@ This is not full SQL ownership acceptance. Source inspection finds:
   handles inside the comment/revision/mention/audit/outbox transaction. Preserve
   transaction-local resolution and all-or-nothing evidence; do not replace it
   with a race-prone pre-read or a shared ambient transaction in business ports.
+  [Transactional mentions foundation/design](D4_TRANSACTIONAL_MENTIONS_PLAN.md)
+  now verifies 16 migrated characterization cases, including a concrete split-read
+  counterexample. Proposed one-statement owner SQL composition awaits owner answer;
+  no production transfer is claimed by those tests.
 - Reputation history still joins Users display fields. Users repository still
   reads IAM role assignments and whole transitional shared rows. Achievements,
   Custom Titles and IAM perform transaction-local subject existence/eligibility
