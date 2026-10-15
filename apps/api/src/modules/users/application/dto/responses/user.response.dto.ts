@@ -12,7 +12,7 @@
  * ===============================================================
  */
 
-import type { UserStatus } from '@prisma/client';
+import type { ViewerProfile } from '../../../contracts/viewer-profile.contract';
 
 export interface UserResponseDto {
   id: string;
@@ -26,7 +26,7 @@ export interface UserResponseDto {
   interests: string[];
   avatarUrl: string | null;
   coverUrl: string | null;
-  status: UserStatus;
+  status: ViewerProfile['status'];
   emailVerifiedAt: string | null;
   lastSeenAt: string | null;
   createdAt: string;

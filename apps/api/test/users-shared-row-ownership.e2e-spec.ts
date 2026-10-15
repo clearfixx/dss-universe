@@ -34,6 +34,7 @@ import {
 } from '../src/modules/users/domain/repositories/users.repository.interface';
 import { UsersService } from '../src/modules/users/application/services/users.service';
 import { UserMapper } from '../src/modules/users/domain/mappers/user.mapper';
+import type { UpdateUserData } from '../src/modules/users/domain/types/update-user-data.type';
 import type {
   ListUsersOptions,
   ListUsersSort,
@@ -448,5 +449,181 @@ describe('Users shared-row ownership (e2e)', () => {
           isolationLevel: options.isolationLevel,
         })),
     ).toEqual([{ maxWait: 2000, timeout: 5000, isolationLevel: undefined }]);
+  });
+  it('returns exactly safe raw records and never selects credentials across lookup/directory/update paths', async () => {
+    for (const read of [
+      () => repository.findById(ids[0]),
+      () => repository.findByEmail('boundary0@dss.test'),
+      () => repository.findByUsername('boundary0'),
+      () => repository.findPublicById(ids[0]),
+      () => repository.findPublicByUsername('boundary0'),
+      () => viewer.findById(ids[0]),
+    ]) {
+      fixture.queries.length = 0;
+      const result = await read();
+      expect(Object.keys(result!).sort()).toEqual(safeFields);
+      expect(selects('users')).toHaveLength(1);
+      const selection = selects('users')[0].split(' FROM ')[0];
+      for (const field of [
+        'passwordHash',
+        'refreshTokenHash',
+        'authVersion',
+        'deactivatedAt',
+        'loginFailedAttempts',
+        'loginLockedUntil',
+        'avatarMediaId',
+        'coverMediaId',
+      ])
+        expect(selection).not.toContain(`"${field}"`);
+    }
+    for (const row of await repository.findManyByIds(ids))
+      expect(Object.keys(row).sort()).toEqual(safeFields);
+    for (const row of (await repository.findMany()).items)
+      expect(Object.keys(row).sort()).toEqual(safeFields);
+    expect(
+      Object.keys(
+        await repository.updateById(ids[0], { bio: 'Safe profile' }),
+      ).sort(),
+    ).toEqual(safeFields);
+  });
+  it('ignores forbidden runtime update fields while persisting the requested display value', async () => {
+    const before = await prisma.user.findUniqueOrThrow({
+      where: { id: ids[1] },
+    });
+    const roleCount = await prisma.userRole.count({
+      where: { userId: ids[1] },
+    });
+    fixture.queries.length = 0;
+    const result = await repository.updateById(ids[1], {
+      displayName: 'Allowed display value',
+      id: ids[4],
+      email: 'forbidden@dss.test',
+      passwordHash: 'forbidden',
+      refreshTokenHash: 'forbidden',
+      status: 'BANNED',
+      emailVerifiedAt: new Date(0),
+      authVersion: 999,
+      loginFailedAttempts: 999,
+      deactivatedAt: new Date(0),
+      loginLockedUntil: new Date(0),
+      avatarMediaId: randomUUID(),
+      coverMediaId: randomUUID(),
+      roles: { deleteMany: {} },
+    } as unknown as UpdateUserData);
+    expect(Object.keys(result).sort()).toEqual(safeFields);
+    expect(result).toMatchObject({
+      id: ids[1],
+      displayName: 'Allowed display value',
+    });
+    const writes = fixture.queries.filter((query) => /^UPDATE\b/.test(query));
+    expect(writes).toHaveLength(1);
+    const assignments = writes[0].split(' SET ')[1].split(' WHERE ')[0];
+    for (const field of [
+      'email',
+      'status',
+      'emailVerifiedAt',
+      'passwordHash',
+      'refreshTokenHash',
+      'authVersion',
+      'loginFailedAttempts',
+      'deactivatedAt',
+      'loginLockedUntil',
+      'avatarMediaId',
+      'coverMediaId',
+    ])
+      expect(assignments).not.toContain(`"${field}"`);
+    const after = await prisma.user.findUniqueOrThrow({
+      where: { id: ids[1] },
+    });
+    for (const field of [
+      'id',
+      'email',
+      'status',
+      'emailVerifiedAt',
+      'passwordHash',
+      'refreshTokenHash',
+      'authVersion',
+      'loginFailedAttempts',
+      'deactivatedAt',
+      'loginLockedUntil',
+      'avatarMediaId',
+      'coverMediaId',
+    ] as const)
+      expect(after[field]).toEqual(before[field]);
+    expect(await prisma.userRole.count({ where: { userId: ids[1] } })).toBe(
+      roleCount,
+    );
+  });
+  it('propagates a provider fault after a genuine profile SELECT and succeeds on a fresh call', async () => {
+    const read = prisma.user.findUnique.bind(
+      prisma.user,
+    ) as typeof prisma.user.findUnique;
+    const error = new Error('synthetic post-select profile failure');
+    jest.spyOn(prisma.user, 'findUnique').mockImplementationOnce(
+      (args) =>
+        read(args).then(() => {
+          throw error;
+        }) as ReturnType<typeof read>,
+    );
+    fixture.queries.length = 0;
+    await expect(repository.findById(ids[0])).rejects.toBe(error);
+    expect(selects('users')).toHaveLength(1);
+    expect((await repository.findById(ids[0]))?.id).toBe(ids[0]);
+  });
+  it('propagates a provider fault after actual IAM reads instead of synthesizing empty roles', async () => {
+    const read = prisma.userRole.findMany.bind(
+      prisma.userRole,
+    ) as typeof prisma.userRole.findMany;
+    const error = new Error('synthetic post-select role failure');
+    jest.spyOn(prisma.userRole, 'findMany').mockImplementationOnce(
+      (args) =>
+        read(args).then(() => {
+          throw error;
+        }) as ReturnType<typeof read>,
+    );
+    fixture.queries.length = 0;
+    await expect(users.roleNamesByUserIds([ids[0]])).rejects.toBe(error);
+    expect(selects('user_roles')).toHaveLength(1);
+    expect(selects('users')).toHaveLength(0);
+    expect((await users.roleNamesByUserIds([ids[0]])).get(ids[0])).toEqual([
+      'observer',
+      'pilot',
+    ]);
+  });
+  it('observes role revocation on the next directory and display call', async () => {
+    const assignment = await prisma.userRole.findUniqueOrThrow({
+      where: { userId_roleId: { userId: ids[0], roleId: roleIds[0] } },
+    });
+    try {
+      await prisma.userRole.delete({
+        where: { userId_roleId: { userId: ids[0], roleId: roleIds[0] } },
+      });
+      expect(
+        (
+          await repository.findMany({ status: 'ACTIVE', role: 'pilot' })
+        ).items.map((row) => row.id),
+      ).toEqual([ids[1]]);
+      expect((await users.roleNamesByUserIds([ids[0]])).get(ids[0])).toEqual([
+        'observer',
+      ]);
+    } finally {
+      await prisma.userRole.create({ data: assignment });
+    }
+  });
+  it('observes changed account state without treating viewer display as authentication', async () => {
+    try {
+      await prisma.user.update({
+        where: { id: ids[2] },
+        data: { status: 'BANNED' },
+      });
+      expect(await repository.findPublicById(ids[2])).toBeNull();
+      expect((await repository.findById(ids[2]))?.status).toBe('BANNED');
+      expect((await viewer.findById(ids[2]))?.status).toBe('BANNED');
+    } finally {
+      await prisma.user.update({
+        where: { id: ids[2] },
+        data: { status: 'ACTIVE' },
+      });
+    }
   });
 });

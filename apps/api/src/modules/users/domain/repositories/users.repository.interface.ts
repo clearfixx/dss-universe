@@ -30,7 +30,6 @@
 
 import type { PaginatedResult } from '@api/shared';
 
-import type { UpdateUserContract } from '../contracts/update-user.contract';
 import type { UpdateUserData } from '../types/update-user-data.type';
 import type { UserRecord } from '../types/user-record.type';
 import type { ListUsersOptions } from '../options';
@@ -46,21 +45,11 @@ export interface UsersRepository {
 
   findManyByIds(ids: string[]): Promise<UserRecord[]>;
 
-  findRoleNamesByUserIds(userIds: string[]): Promise<Map<string, string[]>>;
-
   findPublicById(id: string): Promise<UserRecord | null>;
 
   findPublicByUsername(username: string): Promise<UserRecord | null>;
 
-  update(id: string, data: UpdateUserContract): Promise<UserRecord>;
-
   updateById(id: string, data: UpdateUserData): Promise<UserRecord>;
-
-  existsByEmail(email: string): Promise<boolean>;
-
-  existsByUsername(username: string): Promise<boolean>;
-
-  delete(id: string): Promise<void>;
 }
 
 export const USERS_REPOSITORY = Symbol('USERS_REPOSITORY');

@@ -20,7 +20,12 @@ import type { UserRecord } from '../../domain/types/user-record.type';
 import { UsersService } from './users.service';
 import type { UserPrivacyService } from './user-privacy.service';
 
-const user: UserRecord = {
+const user: UserRecord & {
+  passwordHash: string;
+  refreshTokenHash: string;
+  deactivatedAt: Date | null;
+  authVersion: number;
+} = {
   id: 'user-1',
   email: 'astronaut@dss.test',
   username: 'astronaut',
@@ -52,7 +57,8 @@ describe('UsersService', () => {
   const privacy = {
     visibilityFor: jest.fn(),
   } as unknown as jest.Mocked<UserPrivacyService>;
-  const service = new UsersService(usersRepository, privacy);
+  const roles = { readNames: jest.fn() };
+  const service = new UsersService(usersRepository, privacy, roles);
 
   beforeEach(() => {
     jest.clearAllMocks();

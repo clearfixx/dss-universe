@@ -6,9 +6,15 @@
  * 📄 File: apps/api/src/modules/auth/infrastructure.ts
  *
  * 🎯 Purpose:
- * Publishes only the opaque active-subject SQL projection for guarded root infrastructure.
+ * Publishes only owned active-ID and allowlisted account presentation fragments for guarded root infrastructure.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 export { PrismaActiveSubjectSelector } from './infrastructure/repositories/prisma-active-subject.selector';
+export {
+  profileAccountSelect,
+  profileAccountByEmail,
+  activeProfileAccount,
+  profileAccountState,
+} from './infrastructure/repositories/prisma-profile-account.shape';

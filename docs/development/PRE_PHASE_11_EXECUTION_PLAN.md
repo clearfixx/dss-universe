@@ -338,17 +338,18 @@ are implemented on separate draft review branches. See the
 [Reputation write evidence](../audits/D4_REPUTATION_WRITE_OWNERSHIP.md), plus
 [mentions runtime evidence](../audits/D4_MENTIONS_OWNED_TRANSACTION.md).
 Mentions keeps one lookup and the existing write transaction; the import inventory
-remains 89 and does not count SQL ownership. Shared-row/role ownership,
-remaining transactional subject checks, D4.4/D4.5,
+is now 84 after five reviewed Users Prisma-import removals. Shared-row/role
+ownership is locally implemented separately; remaining transactional subject checks, D4.4/D4.5,
 D5–D7, the requested stack audit and owner acceptance are still required.
 Full D4/Phase 11 readiness is not claimed. The increment records below are
 historical evidence, not the current release baseline.
 
-Next shared-row/role package: the
+Shared-row/role package: the
 [D4 Users boundary design](D4_USERS_SHARED_ROW_BOUNDARY_PLAN.md) inventories all
 lookup/directory/update/viewer paths. Twenty real migrated pre-transfer tests pass;
-owner-fragment root assembly is explicitly owner-approved, not implemented.
-No shared-row or IAM role ownership completion is claimed from characterization.
+owner-fragment root assembly is now locally implemented in a separate runtime
+branch. See [runtime evidence](../audits/D4_USERS_OWNED_PROFILE_COMPOSITION.md).
+Full quality/CI/acceptance remain open; characterization alone does not close it.
 
 D4.3d3a transfers independent News attachment metadata to Media-owned projections
 and News application composition. Full units: API 794 / Web 59 / Worker 36; 25 new

@@ -11,16 +11,16 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import type { PrismaService } from '@api/core/database';
+import type { UsersProfilePersistence } from '../../contracts/profile-persistence.port';
 import { PrismaViewerProfileReader } from './prisma-viewer-profile.reader';
 
 describe('PrismaViewerProfileReader', () => {
-  const findUnique = jest.fn();
+  const findById = jest.fn();
   const reader = new PrismaViewerProfileReader({
-    user: { findUnique },
-  } as unknown as PrismaService);
+    findById,
+  } as unknown as UsersProfilePersistence);
   beforeEach(() => jest.resetAllMocks());
-  it('selects only the sixteen viewer fields and does not trust an overbroad row', async () => {
+  it('copies only the sixteen viewer fields and does not trust an overbroad provider', async () => {
     const profile = {
       id: 'subject',
       email: 'pilot@dss.test',
@@ -39,41 +39,21 @@ describe('PrismaViewerProfileReader', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    findUnique.mockResolvedValue({
+    findById.mockResolvedValue({
       ...profile,
       passwordHash: 'private',
       futureSecret: 'private',
     });
     await expect(reader.findById('subject')).resolves.toEqual(profile);
-    expect(findUnique).toHaveBeenCalledWith({
-      where: { id: 'subject' },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        displayName: true,
-        bio: true,
-        location: true,
-        website: true,
-        technologies: true,
-        interests: true,
-        avatarUrl: true,
-        coverUrl: true,
-        status: true,
-        emailVerifiedAt: true,
-        lastSeenAt: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    expect(findById).toHaveBeenCalledWith('subject');
   });
   it('returns no profile for a missing subject', async () => {
-    findUnique.mockResolvedValue(null);
+    findById.mockResolvedValue(null);
     await expect(reader.findById('missing')).resolves.toBeNull();
   });
   it('propagates infrastructure failure instead of inventing a profile', async () => {
     const error = new Error('database unavailable');
-    findUnique.mockRejectedValue(error);
+    findById.mockRejectedValue(error);
     await expect(reader.findById('subject')).rejects.toBe(error);
   });
 });

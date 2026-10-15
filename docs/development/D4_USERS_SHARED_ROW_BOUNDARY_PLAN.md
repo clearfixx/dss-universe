@@ -1,7 +1,8 @@
 # D4 — Users shared-row and IAM role boundary
 
 Date: 2026-10-15. Status: characterization implemented; runtime design explicitly
-owner-approved, implementation pending. Branch `debt/d4-users-shared-row-boundary`, based on
+owner-approved and locally implemented in a separate runtime increment, acceptance open.
+Foundation branch `debt/d4-users-shared-row-boundary`, based on
 `d8d368e` / draft PR #20. The parent stack is unaccepted, not a release baseline.
 
 ## Problem and complete scope
@@ -38,13 +39,17 @@ repository, not Users' similarly named setter. No public Users credential/status
 endpoint or published UsersService is present. No new deletion or owner policy is
 authorized by removing unused compatibility methods.
 
-## Owner-approved runtime design — not implemented
+## Owner-approved runtime design
 
 The owner explicitly approved this owner-fragment/root composition boundary on
 2026-10-15, including removal of unused Users credential/status commands, without
 new tables, API changes or isolation/timeout changes. Working Auth operations
 remain unchanged. Implement it as a separate bounded runtime package after this
 characterization checkpoint; approval is not runtime or release acceptance.
+
+Subsequent local runtime implementation: `debt/d4-users-owned-profile-composition`;
+see [runtime evidence](../audits/D4_USERS_OWNED_PROFILE_COMPOSITION.md). The
+foundation results below remain historical pre-transfer evidence.
 
 Owners publish operation-specific guarded infrastructure fragments. Only root
 infrastructure/assembly and the owner's own infrastructure can import them:

@@ -12,6 +12,14 @@
  * ===============================================================
  */
 export { PrismaPublicProfileReader } from './infrastructure/repositories/prisma-public-profile.reader';
+export {
+  usersProfileSelect,
+  profileById,
+  profileByUsername,
+  profilesByIds,
+  profileDirectoryQuery,
+  profileUpdateData,
+} from './infrastructure/repositories/prisma-profile-persistence.shape';
 export { PrismaReputationActorReader } from './infrastructure/repositories/prisma-reputation-actor.reader';
 export { PrismaReputationWriteActorReader } from './infrastructure/repositories/prisma-reputation-write-actor.reader';
 export { PrismaMentionProfileSelector } from './infrastructure/repositories/prisma-mention-profile.selector';

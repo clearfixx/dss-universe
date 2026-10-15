@@ -73,6 +73,7 @@ import { HealthModule } from '@api/health';
 
 import { AppController } from './app.controller';
 import { IdentityCompositionModule } from './composition/identity/identity-composition.module';
+import { UsersProfileIntegrationModule } from './composition/users-profiles/users-profile-integration.module';
 import { AccessGroupIntegrationModule } from './composition/access-groups/access-group-integration.module';
 import { GamificationIntegrationModule } from './composition/gamification/gamification-integration.module';
 import { ReputationIntegrationModule } from './composition/reputation/reputation-integration.module';
@@ -114,6 +115,7 @@ import { UsersModule } from './modules/users/users.module';
     ActivityModule,
     UsersModule,
     IdentityCompositionModule,
+    UsersProfileIntegrationModule,
     AccessGroupIntegrationModule,
     GamificationIntegrationModule,
     ReputationIntegrationModule,

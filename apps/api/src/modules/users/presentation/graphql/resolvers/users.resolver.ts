@@ -8,6 +8,13 @@
  * 🎯 Purpose:
  * Exposes the Users pilot through thin, permission-aware GraphQL queries.
  *
+ * 🧠 Responsibilities:
+ * • delegates profile/directory/social use cases through owned services;
+ * • maps immutable role display into transport-owned arrays without granting authority.
+ *
+ * 🏗️ Architecture:
+ * Users presentation boundary; cross-owner persistence remains in root composition.
+ *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
@@ -342,7 +349,7 @@ export class UsersResolver {
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
         isOnline: presence.get(user.id) ?? false,
-        roles: roles.get(user.id) ?? [],
+        roles: [...(roles.get(user.id) ?? [])],
         createdAt: user.createdAt,
       })),
     };
