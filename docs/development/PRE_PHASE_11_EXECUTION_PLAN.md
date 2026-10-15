@@ -344,6 +344,12 @@ D5–D7, the requested stack audit and owner acceptance are still required.
 Full D4/Phase 11 readiness is not claimed. The increment records below are
 historical evidence, not the current release baseline.
 
+Next shared-row/role package: the
+[D4 Users boundary design](D4_USERS_SHARED_ROW_BOUNDARY_PLAN.md) inventories all
+lookup/directory/update/viewer paths. Twenty real migrated pre-transfer tests pass;
+owner-fragment root assembly is explicitly owner-approved, not implemented.
+No shared-row or IAM role ownership completion is claimed from characterization.
+
 D4.3d3a transfers independent News attachment metadata to Media-owned projections
 and News application composition. Full units: API 794 / Web 59 / Worker 36; 25 new
 E2E pass, including explicit defect characterizations. See
