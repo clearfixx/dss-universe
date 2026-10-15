@@ -330,6 +330,19 @@ Model: `gpt-6.1-sol` xhigh for the separate brainstorm and security design.
 
 Branch: `debt/d4-module-boundaries`.
 
+Current local progress (2026-10-15): owned News delivery/snapshot, Reputation
+history/original reads and the approved transactional mentions SQL composition
+are implemented on separate draft review branches. See the
+[current D4 inventory](D4_MODULE_BOUNDARY_PLAN.md),
+[Reputation read evidence](../audits/D4_REPUTATION_READ_OWNERSHIP.md) and
+[mentions runtime evidence](../audits/D4_MENTIONS_OWNED_TRANSACTION.md).
+Mentions keeps one lookup and the existing write transaction; the import inventory
+remains 89 and does not count SQL ownership. Reputation write-response joins,
+shared-row/role ownership, remaining transactional subject checks, D4.4/D4.5,
+D5–D7, the requested stack audit and owner acceptance are still required.
+Full D4/Phase 11 readiness is not claimed. The increment records below are
+historical evidence, not the current release baseline.
+
 D4.3d3a transfers independent News attachment metadata to Media-owned projections
 and News application composition. Full units: API 794 / Web 59 / Worker 36; 25 new
 E2E pass, including explicit defect characterizations. See

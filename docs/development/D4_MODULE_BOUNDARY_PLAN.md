@@ -150,14 +150,12 @@ This is not full SQL ownership acceptance. Source inspection finds:
   Full gates/review/CI/acceptance remain open; see its separate evidence above.
   Independent attachment metadata is already Media-owned and canonical manifests
   are corrected separately by DEBT-051. No full D4 SQL acceptance is claimed.
-- Interactions `prisma-comments.repository.ts:syncMentions` resolves ACTIVE Users
-  handles inside the comment/revision/mention/audit/outbox transaction. Preserve
-  transaction-local resolution and all-or-nothing evidence; do not replace it
-  with a race-prone pre-read or a shared ambient transaction in business ports.
-  [Transactional mentions foundation/design](D4_TRANSACTIONAL_MENTIONS_PLAN.md)
-  now verifies 16 migrated characterization cases, including a concrete split-read
-  counterexample. One-statement owner SQL composition was approved on 2026-10-15;
-  no production transfer is claimed by those tests.
+- Transactional mentions are now locally transferred to an Interactions-owned
+  stateless writer and approved root SQL/transaction composition, with separate
+  Users handle and Auth ACTIVE-ID selectors. All 16 golden and 13 runtime E2E pass;
+  full acceptance remains open. No profile pre-read, business ORM callback or
+  isolation/budget change is introduced. See the [design](D4_TRANSACTIONAL_MENTIONS_PLAN.md)
+  and [runtime evidence](../audits/D4_MENTIONS_OWNED_TRANSACTION.md).
 - Reputation history/original reads now locally use owned ledger/profile adapters
   and a semantic root read unit, preserving their Read Committed/independent-read
   distinction and statement order; see [read evidence](../audits/D4_REPUTATION_READ_OWNERSHIP.md).

@@ -82,6 +82,7 @@ import { ContentTargetCompositionModule } from './composition/content-targets/co
 import { InteractionPolicyCompositionModule } from './composition/interaction-policies/interaction-policy-composition.module';
 import { ContentReadIntegrationModule } from './composition/content-reads/content-read-integration.module';
 import { NewsDeliveryCompositionModule } from './composition/news-delivery/news-delivery-composition.module';
+import { CommentWriteCompositionModule } from './composition/comment-writes/comment-write-composition.module';
 import { AchievementsModule } from './modules/achievements';
 import { ActivityModule } from './modules/activity';
 import { AiCoreModule } from './modules/ai-core';
@@ -122,6 +123,7 @@ import { UsersModule } from './modules/users/users.module';
     InteractionPolicyCompositionModule,
     ContentReadIntegrationModule,
     NewsDeliveryCompositionModule,
+    CommentWriteCompositionModule,
     IdentityPresentationModule,
     AuthorizationModule,
     IamModule,

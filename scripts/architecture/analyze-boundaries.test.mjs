@@ -102,6 +102,10 @@ for (const [file, expected] of [
     "modules/activity/infrastructure/repositories/prisma-activity.repository.ts",
     ["$transaction", "activityEntry", "activityFeedState"],
   ],
+  [
+    "modules/interactions/infrastructure/repositories/prisma-comments.repository.ts",
+    ["$transaction", "comment", "commentRevision"],
+  ],
 ]) {
   test(
     "migrated repository keeps only owned direct Prisma delegates: " + file,
@@ -135,6 +139,11 @@ for (const [file, expected, forbiddenRelations] of [
     "modules/users/infrastructure/repositories/prisma-reputation-actor.reader.ts",
     ["user"],
     ["roles", "permissions", "reputationEntries"],
+  ],
+  [
+    "modules/interactions/infrastructure/repositories/prisma-comment.writer.ts",
+    ["$executeRaw", "comment", "commentRevision", "mention"],
+    ["actor", "author", "user"],
   ],
   [
     "modules/interactions/infrastructure/repositories/prisma-interaction-delivery.reader.ts",
@@ -438,7 +447,27 @@ test("Reputation and Users publish only the intended guarded technical read symb
         "ReputationReversalFact",
       ],
     ],
-    ["users", ["PrismaPublicProfileReader", "PrismaReputationActorReader"]],
+    [
+      "users",
+      [
+        "PrismaPublicProfileReader",
+        "PrismaReputationActorReader",
+        "PrismaMentionProfileSelector",
+        "MentionRecipientMatcher",
+        "MentionProfileCandidate",
+      ],
+    ],
+    ["auth", ["PrismaActiveSubjectSelector"]],
+    [
+      "interactions",
+      [
+        "PrismaInteractionTargetWriter",
+        "PrismaCommentWriter",
+        "CommentRecipientResolver",
+        "PrismaInteractionDeliveryReader",
+        "InteractionDeliveryComment",
+      ],
+    ],
   ]) {
     const source = readFileSync(
       new URL(
@@ -463,6 +492,46 @@ test("Reputation and Users publish only the intended guarded technical read symb
     }
     deepEqual(names.sort(), [...expected].sort());
   }
+});
+
+test("Comment write composition owns transaction lifetime, never owner-table SQL", () => {
+  const file =
+    "apps/api/src/composition/comment-writes/infrastructure/prisma-comment-write.transaction.ts";
+  const source = readFileSync(
+    new URL(`../../${file}`, import.meta.url),
+    "utf8",
+  );
+  deepEqual(directPrismaSurface(source), ["$transaction"]);
+  deepEqual(directPrismaSurface(source, "transaction", false), []);
+});
+
+test("Mention SQL composition imports only guarded selectors and performs no owner delegate reads", () => {
+  const file =
+    "apps/api/src/composition/comment-writes/infrastructure/prisma-mention-recipient.resolver.ts";
+  const source = readFileSync(
+    new URL(`../../${file}`, import.meta.url),
+    "utf8",
+  );
+  deepEqual(directPrismaSurface(source), []);
+  deepEqual(directPrismaSurface(source, "transaction", false), ["$queryRaw"]);
+  ok(!source.includes('FROM "users"'));
+  deepEqual(analyzeBoundaries([{ path: file, source }]), []);
+});
+
+test("Comment write business port has no Prisma/client/callback surface or technical re-export", () => {
+  const root = "apps/api/src/modules/interactions/index.ts";
+  const source = readFileSync(
+    new URL(`../../${root}`, import.meta.url),
+    "utf8",
+  );
+  ok(!source.includes("PrismaCommentWriter"));
+  ok(!source.includes("CommentRecipientResolver"));
+  const file =
+    "apps/api/src/modules/interactions/contracts/comment-write-transaction.port.ts";
+  const port = readFileSync(new URL(`../../${file}`, import.meta.url), "utf8");
+  deepEqual(analyzeBoundaries([{ path: file, source: port }]), []);
+  const tree = createSourceFile(file, port, ScriptTarget.Latest, true);
+  ok(!tree.statements.some((node) => node.getText(tree).includes("Prisma")));
 });
 
 for (const specifier of [
