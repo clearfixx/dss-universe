@@ -14,6 +14,10 @@
 // Not a business API. Feature consumers and application layers may not import this entry.
 export { PrismaInteractionTargetWriter } from './infrastructure/repositories/prisma-interaction-target.writer';
 export {
+  PrismaCommentWriter,
+  type CommentRecipientResolver,
+} from './infrastructure/repositories/prisma-comment.writer';
+export {
   PrismaInteractionDeliveryReader,
   type InteractionDeliveryComment,
 } from './infrastructure/repositories/prisma-interaction-delivery.reader';

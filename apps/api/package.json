@@ -126,6 +126,54 @@
     ],
     "coverageDirectory": "../coverage",
     "coverageThreshold": {
+      "src/composition/comment-writes/infrastructure/prisma-comment-write.transaction.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/comment-writes/infrastructure/prisma-mention-recipient.resolver.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/interactions/infrastructure/repositories/prisma-comment.writer.ts": {
+        "branches": 85,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/interactions/infrastructure/repositories/prisma-comments.repository.ts": {
+        "branches": 80,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/interactions/infrastructure/mappers/comment.mapper.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/users/infrastructure/matching/mention-recipient.matcher.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/users/infrastructure/repositories/prisma-mention-profile.selector.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/auth/infrastructure/repositories/prisma-active-subject.selector.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
       "src/composition/reputation/infrastructure/prisma-reputation.read-unit.ts": {
         "branches": 80,
         "functions": 100,

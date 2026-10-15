@@ -14,6 +14,14 @@
 
 export { InteractionsModule } from './interactions.module';
 export {
+  COMMENT_WRITE_TRANSACTION,
+  type CommentWriteTransaction,
+} from './contracts/comment-write-transaction.port';
+export type {
+  CreateComment,
+  EditCommentContent,
+} from './domain/types/comment.type';
+export {
   COMMENT_COUNT_READER,
   type CommentCountReader,
 } from './contracts/comment-count-reader.contract';

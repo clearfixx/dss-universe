@@ -1,7 +1,10 @@
 # D4 — Transactional mention ownership
 
 Date: 2026-10-15. Status: characterization verified; runtime design approved by
-the owner on 2026-10-15. No production transfer or acceptance is claimed.
+the owner on 2026-10-15. Runtime is now locally transferred on
+`debt/d4-mentions-owned-transaction`; full acceptance remains open. See
+[runtime evidence](../audits/D4_MENTIONS_OWNED_TRANSACTION.md). The foundation
+evidence below remains historical, not a claim of current full quality.
 
 Branch `debt/d4-transactional-mentions` starts from published D4.3d3b `60a5d53`
 (draft PR #16). Parents remain unaccepted. The authorized D4 plan requires
