@@ -179,6 +179,12 @@ Twenty pre-transfer migrated characterizations pass, including the installed
 batch transaction defaults. Its subsequent runtime implementation is linked
 above; characterization alone is not ownership transfer or full D4 acceptance.
 
+Next subject/recipient increment: [complete operation plan](D4_SUBJECT_CHECK_BOUNDARY_PLAN.md)
+and [pre-transfer evidence](../audits/D4_SUBJECT_CHECK_CHARACTERIZATION.md).
+Nineteen real migrated tests pin four transaction-local checks plus two independent
+IAM anchor/existence paths. ID-only existence accepts all existing states; it is
+not ACTIVE eligibility. Runtime ownership is not yet transferred.
+
 The import inventory does not detect table ownership and must not waive these
 items. This is a reviewed starting inventory, not exhaustive proof of all joins;
 complete delegate/relation/raw-SQL/Worker projection review before D4.5 acceptance.
