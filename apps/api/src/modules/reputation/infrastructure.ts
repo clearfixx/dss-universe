@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/modules/reputation/infrastructure.ts
  *
  * 🎯 Purpose:
- * Publishes only the owned technical ledger reader for guarded root composition.
+ * Publishes only owned stateless ledger adapters for guarded root composition.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -16,3 +16,7 @@ export {
   type ReputationEntryFact,
   type ReputationReversalFact,
 } from './infrastructure/repositories/prisma-reputation-entry.reader';
+export {
+  PrismaReputationWriter,
+  type ReputationEntryProjection,
+} from './infrastructure/repositories/prisma-reputation.writer';

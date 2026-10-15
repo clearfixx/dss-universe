@@ -6,16 +6,15 @@
  * 📄 File: apps/api/src/modules/reputation/infrastructure/repositories/prisma-reputation.repository.ts
  *
  * 🎯 Purpose:
- * Persists direct reputation as an append-only, concurrency-safe ledger.
+ * Persists owned Reputation policy and delegates semantic ledger read/write operations.
  *
  * 🧠 Responsibilities:
- * • serializes actor-recipient decisions with PostgreSQL advisory locks;
- * • appends direct and compensating entries transactionally;
- * • emits audit and Outbox evidence beside ledger writes;
+ * • updates owned policy with immutable audit evidence;
+ * • delegates atomic ledger writes without foreign actor joins or ORM business contracts;
  * • delegates original/history display reads to the owned semantic composition port.
  *
  * 🏗️ Architecture:
- * Owned policy/write repository; foreign actor joins in write responses remain a separate D4 item.
+ * Owned policy persistence; root composition binds separate semantic entry reads and atomic writes.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -24,8 +23,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 
 import { AuditWriterService } from '@api/core/audit';
-import { PrismaService, type TransactionClient } from '@api/core/database';
-import { createEventEnvelope, OutboxWriterService } from '@api/core/events';
+import { PrismaService } from '@api/core/database';
+import {
+  REPUTATION_WRITE_TRANSACTION,
+  type ReputationWriteTransaction,
+} from '../../contracts/reputation-write-transaction.port';
 import {
   REPUTATION_ENTRY_READER,
   type ReputationEntryReader,
@@ -34,71 +36,19 @@ import {
 import type { ReputationRepository } from '../../domain/repositories/reputation.repository.interface';
 import type {
   CreateReputationEntry,
-  ReputationActor,
   ReputationEntry,
   ReputationHistory,
   ReputationPolicy,
-  ReputationReversal,
   ReputationValue,
 } from '../../domain/types/reputation.type';
-
-const DIRECT_EVENT = 'reputation.direct.changed.v1';
-const REVERSED_EVENT = 'reputation.direct.reversed.v1';
-
-type ActorRow = {
-  id: string;
-  username: string;
-  displayName: string | null;
-  avatarUrl: string | null;
-};
-
-type EntryRow = {
-  id: string;
-  actor: ActorRow;
-  recipientId: string;
-  value: number;
-  reason: string;
-  createdAt: Date;
-  reversal?: {
-    id: string;
-    actor: ActorRow;
-    reason: string;
-    createdAt: Date;
-  } | null;
-};
-
-const entryInclude = {
-  actor: {
-    select: {
-      id: true,
-      username: true,
-      displayName: true,
-      avatarUrl: true,
-    },
-  },
-  reversal: {
-    select: {
-      id: true,
-      reason: true,
-      createdAt: true,
-      actor: {
-        select: {
-          id: true,
-          username: true,
-          displayName: true,
-          avatarUrl: true,
-        },
-      },
-    },
-  },
-} as const;
 
 @Injectable()
 export class PrismaReputationRepository implements ReputationRepository {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditWriterService,
-    private readonly outbox: OutboxWriterService,
+    @Inject(REPUTATION_WRITE_TRANSACTION)
+    private readonly writes: ReputationWriteTransaction,
     @Inject(REPUTATION_ENTRY_READER)
     private readonly reader: ReputationEntryReader,
   ) {}
@@ -138,86 +88,22 @@ export class PrismaReputationRepository implements ReputationRepository {
     });
   }
 
-  async createDirect(
-    input: CreateReputationEntry,
-  ): Promise<ReputationEntry | null> {
-    return this.prisma.$transaction(async (transaction) => {
-      await this.lock(
-        transaction,
-        `reputation:${input.actorId}:${input.recipientId}`,
-      );
-      const recent = await transaction.reputationEntry.findFirst({
-        where: {
-          actorId: input.actorId,
-          recipientId: input.recipientId,
-          reversesEntryId: null,
-          createdAt: { gt: input.cooldownStartedAfter },
-        },
-        select: { id: true },
-      });
-      if (recent) return null;
-      const entry = await transaction.reputationEntry.create({
-        data: {
-          actorId: input.actorId,
-          recipientId: input.recipientId,
-          value: input.value,
-          reason: input.reason,
-        },
-        include: entryInclude,
-      });
-      await this.appendEvidence(
-        transaction,
-        entry.id,
-        input.actorId,
-        input.recipientId,
-        input.value,
-        input.reason,
-        DIRECT_EVENT,
-      );
-      return this.toDomain(entry);
-    });
+  createDirect(input: CreateReputationEntry): Promise<ReputationEntry | null> {
+    return this.writes.createDirect(input);
   }
 
   findOriginalById(id: string): Promise<ReputationEntry | null> {
     return this.reader.findOriginalById(id);
   }
 
-  async reverse(
+  reverse(
     entryId: string,
     actorId: string,
     recipientId: string,
     value: ReputationValue,
     reason: string,
   ): Promise<ReputationEntry | null> {
-    return this.prisma.$transaction(async (transaction) => {
-      await this.lock(transaction, `reputation-reversal:${entryId}`);
-      const exists = await transaction.reputationEntry.findUnique({
-        where: { reversesEntryId: entryId },
-        select: { id: true },
-      });
-      if (exists) return null;
-      const entry = await transaction.reputationEntry.create({
-        data: {
-          actorId,
-          recipientId,
-          value,
-          reason,
-          reversesEntryId: entryId,
-        },
-        include: entryInclude,
-      });
-      await this.appendEvidence(
-        transaction,
-        entry.id,
-        actorId,
-        recipientId,
-        value,
-        reason,
-        REVERSED_EVENT,
-        entryId,
-      );
-      return this.toDomain(entry);
-    });
+    return this.writes.reverse(entryId, actorId, recipientId, value, reason);
   }
 
   history(
@@ -227,83 +113,8 @@ export class PrismaReputationRepository implements ReputationRepository {
   ): Promise<ReputationHistory> {
     return this.reader.history(recipientId, page, limit);
   }
-
-  private lock(
-    transaction: TransactionClient,
-    coordinate: string,
-  ): Promise<number> {
-    return transaction.$executeRaw`
-      SELECT pg_advisory_xact_lock(hashtextextended(${coordinate}, 0))
-    `;
-  }
-
-  private async appendEvidence(
-    transaction: TransactionClient,
-    entryId: string,
-    actorId: string,
-    recipientId: string,
-    value: ReputationValue,
-    reason: string,
-    eventName: string,
-    reversesEntryId?: string,
-  ): Promise<void> {
-    const evidence = {
-      recipientId,
-      value,
-      ...(reversesEntryId ? { reversesEntryId } : {}),
-    };
-    await this.audit.append(transaction, {
-      action:
-        eventName === DIRECT_EVENT
-          ? 'reputation.direct.changed'
-          : 'reputation.direct.reversed',
-      actorType: 'USER',
-      actorId,
-      targetType: 'ReputationEntry',
-      targetId: entryId,
-      reason,
-      metadata: evidence,
-    });
-    await this.outbox.append(
-      transaction,
-      createEventEnvelope({
-        name: eventName,
-        version: 1,
-        category: 'integration',
-        producer: 'dss.api.reputation',
-        actorId,
-        aggregate: { type: 'ReputationEntry', id: entryId },
-        payload: evidence,
-      }),
-    );
-  }
-
-  private toDomain(row: EntryRow): ReputationEntry {
-    return {
-      id: row.id,
-      actor: this.actor(row.actor),
-      recipientId: row.recipientId,
-      value: row.value as ReputationValue,
-      reason: row.reason,
-      createdAt: row.createdAt,
-      reversal: row.reversal ? this.reversal(row.reversal) : null,
-    };
-  }
-
-  private actor(row: ActorRow): ReputationActor {
-    return row;
-  }
-
-  private reversal(row: NonNullable<EntryRow['reversal']>): ReputationReversal {
-    return {
-      id: row.id,
-      actor: this.actor(row.actor),
-      reason: row.reason,
-      createdAt: row.createdAt,
-    };
-  }
 }
 
 /**
- * 🔒 Advisory locks guard the 24-hour airlock. The database gets the final say.
+ * Policy stays in its cabin. Ledger appends use the transaction airlock. 🛰️
  */
