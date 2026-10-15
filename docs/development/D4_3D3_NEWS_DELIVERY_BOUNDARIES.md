@@ -1,7 +1,7 @@
 # D4.3d3 — News delivery ownership and snapshot contract
 
-Date: 2026-10-14. Status: owner-approved direction; characterization foundation,
-not runtime ownership implementation or acceptance.
+Date: 2026-10-14. Status: owner-approved direction; foundation followed by locally
+implemented [D4.3d3b](../audits/D4_3D3B_NEWS_OWNED_SNAPSHOT.md). Acceptance open.
 
 ## Baseline and authority
 
@@ -20,7 +20,7 @@ ORM clients stay exclusively inside infrastructure, never business contracts.
 The owner also approved priority separate DEBT-056 before runtime SQL transfer.
 DEBT-057 tombstone transport is recorded but not approved for correction here.
 
-## Current operation map
+## Baseline operation map (before DEBT-056 and D4.3d3b)
 
 | Operation                      | Current persistence/consistency                                                                    | Required owner transfer                                                                |
 | ------------------------------ | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |

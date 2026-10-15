@@ -13,7 +13,7 @@
  */
 import { BadRequestException } from '@nestjs/common';
 
-import type { NewsDeliveryRepository } from '../../domain/repositories/news-delivery.repository.interface';
+import type { NewsDeliveryReader } from '../../domain/ports/news-delivery-reader.interface';
 import type { ShortNewsItem } from '../../domain/types/short-news.type';
 import { NewsDeliveryService } from './news-delivery.service';
 import { NewsAttachmentDeliveryService } from './news-attachment-delivery.service';
@@ -21,7 +21,7 @@ import type { NewsAttachmentReader } from '../../domain/ports/news-attachment-re
 import type { NewsViewerDocumentReader } from '../../domain/ports/news-viewer-document-reader.interface';
 
 describe('NewsDeliveryService', () => {
-  let repository: jest.Mocked<NewsDeliveryRepository>;
+  let repository: jest.Mocked<NewsDeliveryReader>;
   let browseShort: jest.Mock;
   let browseShortNumbered: jest.Mock;
   let findFullBySlug: jest.Mock;

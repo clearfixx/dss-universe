@@ -10,6 +10,7 @@
  *
  * 🧠 Responsibilities:
  * • validates disposable connection and rejects public-qualified fixture DDL;
+ * • optionally captures SQL statement shapes without parameter values for query-work evidence.
  *
  * 🏗️ Architecture:
  * Test-only full migration fixture; never imported by production.
@@ -27,7 +28,9 @@ import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaService } from '@api/core/database';
 
-export async function createIsolatedApiSchemaFixture() {
+export async function createIsolatedApiSchemaFixture(
+  options: { captureQueries?: boolean } = {},
+) {
   const url = new URL(process.env.DATABASE_URL ?? '');
   if (
     !['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname) ||
@@ -41,7 +44,15 @@ export async function createIsolatedApiSchemaFixture() {
     connectionString: process.env.DATABASE_URL,
     options: `-c search_path=${schema},public`,
   });
-  const prisma = new PrismaService({ adapter: new PrismaPg(pool, { schema }) });
+  const queries: string[] = [];
+  const prisma = new PrismaService({
+    adapter: new PrismaPg(pool, { schema }),
+    ...(options.captureQueries
+      ? { log: [{ emit: 'event' as const, level: 'query' as const }] }
+      : {}),
+  });
+  if (options.captureQueries)
+    prisma.$on('query', ({ query }) => queries.push(query));
   let created = false;
   async function close() {
     await prisma.$disconnect();
@@ -88,7 +99,7 @@ export async function createIsolatedApiSchemaFixture() {
     } finally {
       connection.release();
     }
-    return { schema, prisma, close };
+    return { schema, prisma, close, queries };
   } catch (error) {
     await close();
     throw error;

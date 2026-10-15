@@ -3,10 +3,10 @@
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
  * 📦 Module: News
- * 📄 File: apps/api/src/modules/news/domain/repositories/news-delivery.repository.interface.ts
+ * 📄 File: apps/api/src/modules/news/domain/ports/news-delivery-reader.interface.ts
  *
  * 🎯 Purpose:
- * Defines viewer-aware News persistence projections before owned document/attachment composition.
+ * Defines News-owned delivery operations implemented by root read composition without ORM contracts.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -22,9 +22,9 @@ import type {
   ShortNewsQuery,
 } from '../types/short-news.type';
 
-export const NEWS_DELIVERY_REPOSITORY = Symbol('NEWS_DELIVERY_REPOSITORY');
+export const NEWS_DELIVERY_READER = Symbol('NEWS_DELIVERY_READER');
 
-export interface NewsDeliveryRepository {
+export interface NewsDeliveryReader {
   browseShort(input: ShortNewsQuery): Promise<ShortNewsPage>;
   browseShortNumbered(
     input: ShortNewsNumberedQuery,

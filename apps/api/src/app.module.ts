@@ -81,6 +81,7 @@ import { ContentIntegrationModule } from './composition/content/content-integrat
 import { ContentTargetCompositionModule } from './composition/content-targets/content-target-composition.module';
 import { InteractionPolicyCompositionModule } from './composition/interaction-policies/interaction-policy-composition.module';
 import { ContentReadIntegrationModule } from './composition/content-reads/content-read-integration.module';
+import { NewsDeliveryCompositionModule } from './composition/news-delivery/news-delivery-composition.module';
 import { AchievementsModule } from './modules/achievements';
 import { ActivityModule } from './modules/activity';
 import { AiCoreModule } from './modules/ai-core';
@@ -120,6 +121,7 @@ import { UsersModule } from './modules/users/users.module';
     ContentTargetCompositionModule,
     InteractionPolicyCompositionModule,
     ContentReadIntegrationModule,
+    NewsDeliveryCompositionModule,
     IdentityPresentationModule,
     AuthorizationModule,
     IamModule,

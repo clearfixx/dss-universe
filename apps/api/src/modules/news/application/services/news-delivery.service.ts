@@ -31,9 +31,9 @@ import {
 } from '../../domain/ports/news-viewer-document-reader.interface';
 
 import {
-  NEWS_DELIVERY_REPOSITORY,
-  type NewsDeliveryRepository,
-} from '../../domain/repositories/news-delivery.repository.interface';
+  NEWS_DELIVERY_READER,
+  type NewsDeliveryReader,
+} from '../../domain/ports/news-delivery-reader.interface';
 import {
   NEWS_POST_TYPES,
   type NewsPostType,
@@ -76,8 +76,8 @@ const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 @Injectable()
 export class NewsDeliveryService {
   constructor(
-    @Inject(NEWS_DELIVERY_REPOSITORY)
-    private readonly delivery: NewsDeliveryRepository,
+    @Inject(NEWS_DELIVERY_READER)
+    private readonly delivery: NewsDeliveryReader,
     private readonly attachments: NewsAttachmentDeliveryService,
     @Inject(NEWS_VIEWER_DOCUMENT_READER)
     private readonly documents: NewsViewerDocumentReader,

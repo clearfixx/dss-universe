@@ -13,6 +13,15 @@
  */
 export { NEWS_SEARCH_PROJECTION_VERSION } from './domain/constants/news-search-projection.constant';
 export {
+  NEWS_DELIVERY_READER,
+  type NewsDeliveryReader,
+} from './domain/ports/news-delivery-reader.interface';
+export type { NewsFullRecord } from './domain/types/news-full-record.type';
+export type {
+  NewsCommentItem,
+  NewsCommentsPage,
+} from './domain/types/news-comment.type';
+export {
   NEWS_SEARCH_BATCH_PROJECTOR,
   type NewsSearchBatchProjector,
 } from './domain/ports/news-search-batch-projector.interface';

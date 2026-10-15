@@ -14,7 +14,7 @@
  * • selects pins, totals and pages from a transaction-local matching relation.
  *
  * 🏗️ Architecture:
- * Private News infrastructure. Transaction callbacks stay inside News persistence;
+ * Guarded News infrastructure. Root composition supplies the shared read snapshot;
  * Editor/ContentAccess decisions arrive only through the semantic News port.
  *
  * ⚠️ Important:
@@ -67,26 +67,36 @@ export class PrismaNewsSearchSession {
   ): Promise<T> {
     const search = input.search;
     if (!search) throw new Error('News search requires a search expression.');
-    const now = new Date();
     return this.prisma.$transaction(
-      async (transaction) => {
-        const eligible = newsSearchEligibility(input);
-        const metadataMatch = newsSearchMetadataMatch(search);
-        const gaps = await transaction.$queryRaw<{ id: string }[]>(Prisma.sql`
+      async (transaction) =>
+        read(transaction, await this.select(transaction, input)),
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+    );
+  }
+
+  async select(
+    transaction: Prisma.TransactionClient,
+    input: SearchInput,
+  ): Promise<SearchSelection> {
+    const search = input.search;
+    if (!search) throw new Error('News search requires a search expression.');
+    const now = new Date();
+    const eligible = newsSearchEligibility(input);
+    const metadataMatch = newsSearchMetadataMatch(search);
+    const gaps = await transaction.$queryRaw<{ id: string }[]>(Prisma.sql`
         SELECT a."id" FROM "news_articles" a
         LEFT JOIN "news_search_projections" p ON p."articleId" = a."id"
         WHERE ${eligible} AND (p."articleId" IS NULL
           OR p."sourceVersion" <> a."currentVersion"
           OR p."projectionVersion" <> ${NEWS_SEARCH_PROJECTION_VERSION}) LIMIT 1
       `);
-        if (gaps.length)
-          throw new Error('News search index requires maintenance.');
-        await transaction.$executeRaw(Prisma.sql`
+    if (gaps.length) throw new Error('News search index requires maintenance.');
+    await transaction.$executeRaw(Prisma.sql`
         CREATE TEMP TABLE "dss_news_search_matches" (
           "id" text PRIMARY KEY, "publishedAt" timestamp(3) NOT NULL
         ) ON COMMIT DROP
       `);
-        await transaction.$executeRaw(Prisma.sql`
+    await transaction.$executeRaw(Prisma.sql`
         INSERT INTO pg_temp."dss_news_search_matches" ("id", "publishedAt")
         SELECT a."id", a."publishedAt" FROM "news_articles" a
         JOIN "news_search_projections" p ON p."articleId" = a."id"
@@ -94,16 +104,16 @@ export class PrismaNewsSearchSession {
           ${input.viewerId ? Prisma.sql`NOT p."hasContentGates"` : Prisma.sql`TRUE`}
           AND p."publicSearchText" ILIKE ('%' || ${search} || '%')))
       `);
-        if (input.viewerId) {
-          await this.matchGated(
-            transaction,
-            eligible,
-            metadataMatch,
-            search,
-            input.viewerId,
-          );
-        }
-        const pins = await transaction.$queryRaw<{ id: string }[]>(Prisma.sql`
+    if (input.viewerId) {
+      await this.matchGated(
+        transaction,
+        eligible,
+        metadataMatch,
+        search,
+        input.viewerId,
+      );
+    }
+    const pins = await transaction.$queryRaw<{ id: string }[]>(Prisma.sql`
         SELECT m."id" FROM pg_temp."dss_news_search_matches" m
         JOIN "news_pins" pin ON pin."articleId" = m."id"
         WHERE (pin."expiresAt" IS NULL OR pin."expiresAt" > ${now})
@@ -118,19 +128,17 @@ export class PrismaNewsSearchSession {
           })
         ORDER BY m."publishedAt" DESC, m."id" DESC LIMIT 20
       `);
-        const pinnedIds = pins.map(({ id }) => id);
-        const unpinned = pinnedIds.length
-          ? Prisma.sql`m."id" NOT IN (${Prisma.join(pinnedIds)})`
-          : Prisma.sql`TRUE`;
-        const [count] = await transaction.$queryRaw<
-          { total: number }[]
-        >(Prisma.sql`
+    const pinnedIds = pins.map(({ id }) => id);
+    const unpinned = pinnedIds.length
+      ? Prisma.sql`m."id" NOT IN (${Prisma.join(pinnedIds)})`
+      : Prisma.sql`TRUE`;
+    const [count] = await transaction.$queryRaw<{ total: number }[]>(Prisma.sql`
         SELECT COUNT(*)::integer AS "total" FROM pg_temp."dss_news_search_matches" m WHERE ${unpinned}
       `);
-        const numbered = 'page' in input;
-        const size = numbered ? input.pageSize : input.first;
-        const cursor = !numbered ? input.cursor : undefined;
-        const rows = await transaction.$queryRaw<{ id: string }[]>(Prisma.sql`
+    const numbered = 'page' in input;
+    const size = numbered ? input.pageSize : input.first;
+    const cursor = !numbered ? input.cursor : undefined;
+    const rows = await transaction.$queryRaw<{ id: string }[]>(Prisma.sql`
         SELECT m."id" FROM pg_temp."dss_news_search_matches" m WHERE ${unpinned}
         ${
           cursor
@@ -141,15 +149,12 @@ export class PrismaNewsSearchSession {
         ORDER BY m."publishedAt" DESC, m."id" DESC
         LIMIT ${numbered ? size : size + 1} OFFSET ${numbered ? (input.page - 1) * size : 0}
       `);
-        return read(transaction, {
-          itemIds: rows.slice(0, size).map(({ id }) => id),
-          pinnedIds,
-          total: count.total,
-          hasNextPage: !numbered && rows.length > size,
-        });
-      },
-      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
-    );
+    return {
+      itemIds: rows.slice(0, size).map(({ id }) => id),
+      pinnedIds,
+      total: count.total,
+      hasNextPage: !numbered && rows.length > size,
+    };
   }
 
   private async matchGated(

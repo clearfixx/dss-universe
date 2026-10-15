@@ -3,8 +3,11 @@
 Date: 2026-10-14. Status: authorized debt-remediation execution, not Phase 11.
 Branch: `debt/d4-module-boundaries`.
 Implemented increments: D4.1, D4.2 and bounded D4.3a/b/c/d1/d2/d3a; remaining import inventory 89,
-full D4 and the rest of D4.3 OPEN. See
+full D4 and the rest of D4.3 OPEN.
+Locally implemented D4.3d3b transfers the mapped News delivery SQL into owned
+adapters and a scoped root snapshot; full acceptance remains open. Evidence:
 [approved read-boundary foundation](D4_3D3_NEWS_DELIVERY_BOUNDARIES.md),
+[D4.3d3b local ownership/snapshot evidence](../audits/D4_3D3B_NEWS_OWNED_SNAPSHOT.md),
 [D4.3d3a evidence](../audits/D4_3D3A_NEWS_ATTACHMENT_METADATA.md),
 [D4.3d2 evidence](../audits/D4_3D2_ACTIVITY_VIEWER_CONTEXT.md),
 [D4.3d1 evidence](../audits/D4_3D_GATE_WALL_OWNER_EVIDENCE.md) and
@@ -142,12 +145,11 @@ executes 211 tests, with 210 passing and the existing DEBT-045 failure/open hand
 
 This is not full SQL ownership acceptance. Source inspection finds:
 
-- News `prisma-news-delivery.repository.ts` joins Users author presentation and
-  Interactions reaction/bookmark/comment/view facts; direct share/reaction/comment
-  queries remain. Independent attachment metadata is already Media-owned; the
-  canonical manifest is corrected separately by DEBT-051. Split published read
-  contracts/root presentation composition while preserving query ordering,
-  pagination, audience/redaction and binary access policy.
+- News delivery ownership is now locally transferred in D4.3d3b to owned News,
+  Users and Interactions technical readers plus the approved root snapshot unit.
+  Full gates/review/CI/acceptance remain open; see its separate evidence above.
+  Independent attachment metadata is already Media-owned and canonical manifests
+  are corrected separately by DEBT-051. No full D4 SQL acceptance is claimed.
 - Interactions `prisma-comments.repository.ts:syncMentions` resolves ACTIVE Users
   handles inside the comment/revision/mention/audit/outbox transaction. Preserve
   transaction-local resolution and all-or-nothing evidence; do not replace it
@@ -165,10 +167,11 @@ complete delegate/relation/raw-SQL/Worker projection review before D4.5 acceptan
 Owner-approved follow-up (2026-10-14): use a scoped root-infrastructure read UoW
 and owner persistence adapters with Repeatable Read for composed News responses,
 not global isolation changes or ORM business contracts. Six migrated foundation
-characterizations pass, including deterministic isolation probes. Runtime transfer
-has not started. Newly confirmed Critical DEBT-056 secondary audience disclosure
-is separately approved for priority correction first; DEBT-057 tombstone transport
-is only recorded, not silently included. See the foundation for exact scope.
+characterizations pass, including deterministic isolation probes. Priority
+DEBT-056 is implemented separately in draft PR #15. D4.3d3b runtime transfer now
+passes its focused and deterministic coherence regressions; full gates remain
+open. DEBT-057 tombstone transport is only recorded, not silently included.
+See the foundation and implementation evidence for exact scope.
 Preserve transaction and failure semantics when migrating each fact. Full D4.3,
 D4.4/D4.5 and D5–D7 remain OPEN.
 
