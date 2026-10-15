@@ -169,6 +169,13 @@ This is not full SQL ownership acceptance. Source inspection finds:
   checks. These require explicit ownership disposition in D4.3/D4.4, not blanket
   approval as harmless joins.
 
+The next shared-row/role increment has a separate
+[operation inventory and proposed owner-fragment design](D4_USERS_SHARED_ROW_BOUNDARY_PLAN.md).
+Twenty pre-transfer migrated characterizations pass, including the installed
+batch transaction defaults. Production still reads the legacy shared rows/roles;
+the technical assembly is explicitly owner-approved for a subsequent runtime package. This
+foundation is not runtime ownership transfer or full D4 acceptance.
+
 The import inventory does not detect table ownership and must not waive these
 items. This is a reviewed starting inventory, not exhaustive proof of all joins;
 complete delegate/relation/raw-SQL/Worker projection review before D4.5 acceptance.
