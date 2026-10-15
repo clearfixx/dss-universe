@@ -2,7 +2,7 @@
 
 > Status: Active
 >
-> Updated: 2026-10-14
+> Updated: 2026-10-16
 
 ## Purpose
 
@@ -744,3 +744,27 @@ declares required body. Reconcile the public tombstone contract and generated
 client compatibility in a separate reviewed package; do not insert a fabricated
 body or silently change schema during SQL ownership migration. Owner was notified.
 No correction is authorized by the D4 snapshot or DEBT-056 approval.
+
+### DEBT-058 — Existing Web document-tool test exceeds unchanged five-second deadline (Medium, OPEN, D6 / frontend test owner)
+
+On 2026-10-16, the D4 gamification transaction package's adjacent full Web coverage
+run reports 58 PASS / 1 FAIL across 25 suites. The unchanged test
+`DssEditor document tools > exposes document-grade tools only for the WIKI profile`
+in `apps/web/src/features/editor/dss-editor-document-tools.spec.tsx:46` times out at
+5000 ms (reported case duration 5244 ms). API coverage and lint were running
+concurrently. This correlation is not proof that host load caused the timeout,
+nor evidence of a frontend runtime or backend regression.
+
+No Web source, expectation or deadline is changed. Preserve the initial red run
+separately from any bounded repeat. D6/frontend test ownership should trace the
+async tool/render lifecycle and resource behavior before deciding a correction;
+do not hide the result by raising timeouts, skipping assertions or changing UI.
+This is distinct from DEBT-050's unhandled React scheduler error and DEBT-035's
+worker allocation failures. Owner was notified; separate implementation requires
+scope agreement. Local raw evidence: `node_modules/.cache/dss-d4-gamification-web-unit.log`.
+
+A subsequent repeat of the entire Web coverage suite with two workers passes
+59/59 (29.57 s), using the unchanged five-second deadline and assertions. No
+frontend code is changed. Passing that bounded repeat neither closes the initial
+failure nor establishes host contention as its cause. Separate raw evidence:
+`node_modules/.cache/dss-d4-gamification-web-repeat.log`.

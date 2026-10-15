@@ -126,6 +126,60 @@
     ],
     "coverageDirectory": "../coverage",
     "coverageThreshold": {
+      "src/composition/gamification/infrastructure/prisma-manual-award.transaction.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/gamification/infrastructure/prisma-title-grant.transaction.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/achievements/infrastructure/repositories/prisma-manual-award.writer.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/custom-titles/infrastructure/repositories/prisma-title-grant.writer.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/users/infrastructure/repositories/prisma-transactional-profile-existence.reader.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/achievements/infrastructure/repositories/achievement-evidence.writer.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/achievements/infrastructure/repositories/achievement-award.shape.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/custom-titles/infrastructure/repositories/title-evidence.writer.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/custom-titles/infrastructure/repositories/title-grant.shape.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
       "src/composition/users-profiles/infrastructure/prisma-users-profile.persistence.ts": {
         "branches": 75,
         "functions": 100,

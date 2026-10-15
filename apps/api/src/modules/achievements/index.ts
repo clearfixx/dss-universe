@@ -14,6 +14,11 @@
 
 export { AchievementsModule } from './achievements.module';
 export {
+  MANUAL_AWARD_TRANSACTION,
+  type ManualAwardTransaction,
+  type ManualAchievementAward,
+} from './contracts/manual-award-transaction.port';
+export {
   ACHIEVEMENT_RECIPIENT_EXISTENCE,
   type AchievementRecipientExistence,
 } from './contracts/recipient-existence.port';

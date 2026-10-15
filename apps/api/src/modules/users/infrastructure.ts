@@ -6,12 +6,13 @@
  * 📄 File: apps/api/src/modules/users/infrastructure.ts
  *
  * 🎯 Purpose:
- * Publishes allowlisted technical display readers solely for guarded root read composition.
+ * Publishes allowlisted technical profile adapters solely for guarded root composition.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 export { PrismaPublicProfileReader } from './infrastructure/repositories/prisma-public-profile.reader';
+export { PrismaTransactionalProfileExistenceReader } from './infrastructure/repositories/prisma-transactional-profile-existence.reader';
 export {
   usersProfileSelect,
   profileById,
