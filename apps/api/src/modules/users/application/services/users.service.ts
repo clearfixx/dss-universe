@@ -12,8 +12,8 @@
  * 🧠 Responsibilities:
  * • reads users through the repository abstraction;
  * • exposes public user data through response DTOs;
- * • keeps internal record access available for trusted modules;
- * • updates user profile, avatar, cover, status, and auth-related fields;
+ * • updates profile, avatar, cover and last-seen display state only;
+ * • requests role names through a display-only input port;
  * • throws domain-level exceptions when users are not found.
  *
  * 🏗️ Architecture:
@@ -21,8 +21,7 @@
  * and does not access Prisma directly.
  *
  * ⚠️ Important:
- * Public methods should return DTOs. Internal record methods exist for
- * trusted modules like Auth and should not leak into controllers.
+ * Users receives no credential records and performs no Auth credential/status commands.
  *
  * 💡 Notes:
  * 🧠 Business logic belongs here.
@@ -33,7 +32,10 @@
  */
 
 import { Inject, Injectable } from '@nestjs/common';
-import type { UserStatus } from '@prisma/client';
+import {
+  PROFILE_ROLE_NAMES_READER,
+  type ProfileRoleNamesReader,
+} from '../../contracts/profile-role-names.port';
 
 import { UserNotFoundException } from '../../domain/exceptions/user-not-found.exception';
 import { UserMapper } from '../../domain/mappers/user.mapper';
@@ -56,6 +58,8 @@ export class UsersService {
     @Inject(USERS_REPOSITORY)
     private readonly usersRepository: UsersRepository,
     private readonly privacy: UserPrivacyService,
+    @Inject(PROFILE_ROLE_NAMES_READER)
+    private readonly roleNames: ProfileRoleNamesReader,
   ) {}
 
   async list(
@@ -93,40 +97,9 @@ export class UsersService {
     return Boolean(user);
   }
 
-  async findRecordById(id: string): Promise<UserRecord | null> {
-    return this.usersRepository.findById(id);
-  }
-
-  async findRecordByEmail(email: string): Promise<UserRecord | null> {
-    return this.usersRepository.findByEmail(email);
-  }
-
-  async findRecordByUsername(username: string): Promise<UserRecord | null> {
-    return this.usersRepository.findByUsername(username);
-  }
-
   async markLastSeen(id: string): Promise<UserResponseDto> {
     const user = await this.usersRepository.updateById(id, {
       lastSeenAt: new Date(),
-    });
-
-    return this.toResponseDto(user);
-  }
-
-  async markEmailVerified(id: string): Promise<UserResponseDto> {
-    const user = await this.usersRepository.updateById(id, {
-      emailVerifiedAt: new Date(),
-    });
-
-    return this.toResponseDto(user);
-  }
-
-  async changePasswordHash(
-    id: string,
-    passwordHash: string,
-  ): Promise<UserResponseDto> {
-    const user = await this.usersRepository.updateById(id, {
-      passwordHash,
     });
 
     return this.toResponseDto(user);
@@ -170,22 +143,16 @@ export class UsersService {
     return this.toResponseDto(user);
   }
 
-  async changeStatus(id: string, status: UserStatus): Promise<UserResponseDto> {
-    const user = await this.usersRepository.updateById(id, {
-      status,
-    });
-
-    return this.toResponseDto(user);
-  }
-
   async getManyByIds(ids: string[]): Promise<UserResponseDto[]> {
     const users = await this.usersRepository.findManyByIds(ids);
 
     return users.map((user) => this.toResponseDto(user));
   }
 
-  roleNamesByUserIds(userIds: string[]): Promise<Map<string, string[]>> {
-    return this.usersRepository.findRoleNamesByUserIds(userIds);
+  roleNamesByUserIds(
+    userIds: string[],
+  ): Promise<ReadonlyMap<string, readonly string[]>> {
+    return this.roleNames.readNames(userIds);
   }
 
   async getPublicByUsername(

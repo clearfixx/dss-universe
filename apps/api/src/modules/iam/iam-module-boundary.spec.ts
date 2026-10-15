@@ -19,11 +19,16 @@ import { MODULE_METADATA } from '@nestjs/common/constants';
 import { IamModule } from './iam.module';
 import { IAM_ACCESS_MEMBERSHIPS } from './access-groups/contracts/effective-memberships.contract';
 import { IAM_PUBLIC_GROUP_DISPLAY } from './access-groups/contracts/public-group-display.contract';
+import { IAM_ROLE_DISPLAY_READER } from './contracts/role-display-reader.contract';
 
 describe('IAM integration boundary', () => {
   it('keeps every application service and repository private', () => {
     expect(
       Reflect.getMetadata(MODULE_METADATA.EXPORTS, IamModule) ?? [],
-    ).toEqual([IAM_ACCESS_MEMBERSHIPS, IAM_PUBLIC_GROUP_DISPLAY]);
+    ).toEqual([
+      IAM_ACCESS_MEMBERSHIPS,
+      IAM_PUBLIC_GROUP_DISPLAY,
+      IAM_ROLE_DISPLAY_READER,
+    ]);
   });
 });

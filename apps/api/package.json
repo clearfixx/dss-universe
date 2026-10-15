@@ -126,6 +126,54 @@
     ],
     "coverageDirectory": "../coverage",
     "coverageThreshold": {
+      "src/composition/users-profiles/infrastructure/prisma-users-profile.persistence.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/users-profiles/infrastructure/profile-role-names.adapter.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/users/infrastructure/repositories/prisma-profile-persistence.shape.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/auth/infrastructure/repositories/prisma-profile-account.shape.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/iam/infrastructure/repositories/prisma-profile-role.shape.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/iam/infrastructure/repositories/prisma-role-display.reader.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/users/infrastructure/repositories/prisma-users.repository.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/users/infrastructure/repositories/prisma-viewer-profile.reader.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
       "src/composition/reputation/infrastructure/prisma-reputation-write.transaction.ts": {
         "branches": 75,
         "functions": 100,

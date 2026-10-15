@@ -13,6 +13,7 @@
  * • registers UsersService;
  * • binds the UsersRepository contract to PrismaUsersRepository.
  * • publishes the username-only display projection through its contract token.
+ * • consumes root-bound safe profile persistence and display-only role input ports.
  *
  * 🏗️ Architecture:
  * NestJS feature module. Owns the Users module dependency graph.

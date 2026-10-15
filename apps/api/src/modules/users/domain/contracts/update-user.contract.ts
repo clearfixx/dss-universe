@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/modules/users/domain/contracts/update-user.contract.ts
  *
  * 🎯 Purpose:
- * Defines the domain contract required to update user data.
+ * Defines the narrow identity-display update shape, never credential changes.
  *
  * 🧠 Responsibilities:
  * • describes mutable user fields accepted by the Users repository;
@@ -29,10 +29,8 @@
  */
 
 export type UpdateUserContract = {
-  email?: string;
   username?: string;
   displayName?: string | null;
-  passwordHash?: string;
 };
 
 /**

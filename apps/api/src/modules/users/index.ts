@@ -28,6 +28,19 @@
 
 export { UsersModule } from './users.module';
 export {
+  USERS_PROFILE_PERSISTENCE,
+  type UsersProfilePersistence,
+} from './contracts/profile-persistence.port';
+export {
+  PROFILE_ROLE_NAMES_READER,
+  type ProfileRoleNamesReader,
+} from './contracts/profile-role-names.port';
+export type {
+  ListUsersOptions,
+  ListUsersSort,
+} from './domain/options/list-users.options';
+export type { UpdateUserData } from './domain/types/update-user-data.type';
+export {
   USER_ACTIVITY_CONTEXT_READER,
   type UserActivityContextReader,
   type UserActivityContext,

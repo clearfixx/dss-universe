@@ -27,6 +27,10 @@
  * ===============================================================
  */
 export { IamModule } from './iam.module';
+export {
+  IAM_ROLE_DISPLAY_READER,
+  type IamRoleDisplayReader,
+} from './contracts/role-display-reader.contract';
 export { REGISTRATION_ROLE_NAME } from './contracts/registration-role.policy';
 export {
   IAM_ACCESS_MEMBERSHIPS,

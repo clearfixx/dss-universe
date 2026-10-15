@@ -2,7 +2,7 @@
 
 Date: 2026-10-14. Status: authorized debt-remediation execution, not Phase 11.
 Branch: `debt/d4-module-boundaries`.
-Implemented increments: D4.1, D4.2 and bounded D4.3a/b/c/d1/d2/d3a; remaining import inventory 89,
+Implemented increments: D4.1, D4.2 and bounded D4.3a/b/c/d1/d2/d3a; remaining import inventory 84,
 full D4 and the rest of D4.3 OPEN.
 Locally implemented D4.3d3b transfers the mapped News delivery SQL into owned
 adapters and a scoped root snapshot; full acceptance remains open. Evidence:
@@ -19,7 +19,7 @@ Authority: approved pre-Phase-11 D4 plan and ADR-003/004.
 ## Outcome and invariants
 
 Close the full D4 inventory, not merely rename broad services into facades.
-Starting inventory: 135 findings; latest reviewed inventory: 89. Every reduction needs exact source,
+Starting inventory: 135 findings; latest reviewed inventory: 84. Every reduction needs exact source,
 behavioral and contract evidence; no automatic baseline growth or waiver.
 Keep NestJS, Prisma, PostgreSQL, Outbox/BullMQ and existing transport responses.
 Do not invent frontend design, new scoring formulas, owner policy or Phase 11 flows.
@@ -163,18 +163,21 @@ This is not full SQL ownership acceptance. Source inspection finds:
   through a semantic root write unit and owned ledger/Users adapters, preserving
   default isolation, both actor-read stages and atomic audit/outbox semantics;
   see [write evidence](../audits/D4_REPUTATION_WRITE_OWNERSHIP.md). Full quality,
-  CI and acceptance remain open. Users repository still
-  reads IAM role assignments and whole transitional shared rows. Achievements,
+  CI and acceptance remain open. Users shared-row/profile/directory/update/viewer
+  paths and role display are now locally transferred through the owner-approved
+  guarded fragments/root composition, with safe records and no unused Auth
+  commands in Users; see [runtime evidence](../audits/D4_USERS_OWNED_PROFILE_COMPOSITION.md).
+  Five reviewed Prisma imports are removed (89 → 84); full quality/CI/acceptance
+  remain open. Achievements,
   Custom Titles and IAM perform transaction-local subject existence/eligibility
   checks. These require explicit ownership disposition in D4.3/D4.4, not blanket
   approval as harmless joins.
 
-The next shared-row/role increment has a separate
+The shared-row/role increment has a separate
 [operation inventory and proposed owner-fragment design](D4_USERS_SHARED_ROW_BOUNDARY_PLAN.md).
 Twenty pre-transfer migrated characterizations pass, including the installed
-batch transaction defaults. Production still reads the legacy shared rows/roles;
-the technical assembly is explicitly owner-approved for a subsequent runtime package. This
-foundation is not runtime ownership transfer or full D4 acceptance.
+batch transaction defaults. Its subsequent runtime implementation is linked
+above; characterization alone is not ownership transfer or full D4 acceptance.
 
 The import inventory does not detect table ownership and must not waive these
 items. This is a reviewed starting inventory, not exhaustive proof of all joins;

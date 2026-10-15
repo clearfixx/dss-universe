@@ -91,6 +91,15 @@ test("bounded owned-storage characterization sees direct, computed and escaped P
 });
 for (const [file, expected] of [
   [
+    "modules/iam/infrastructure/repositories/prisma-role-display.reader.ts",
+    ["userRole"],
+  ],
+  ["modules/users/infrastructure/repositories/prisma-users.repository.ts", []],
+  [
+    "modules/users/infrastructure/repositories/prisma-viewer-profile.reader.ts",
+    [],
+  ],
+  [
     "modules/content-access/infrastructure/repositories/prisma-content-gates.repository.ts",
     ["contentGate"],
   ],
@@ -305,6 +314,13 @@ for (const [moduleName, expected] of [
     "users",
     [
       "UsersModule",
+      "USERS_PROFILE_PERSISTENCE",
+      "UsersProfilePersistence",
+      "PROFILE_ROLE_NAMES_READER",
+      "ProfileRoleNamesReader",
+      "ListUsersOptions",
+      "ListUsersSort",
+      "UpdateUserData",
       "USER_ACTIVITY_CONTEXT_READER",
       "UserActivityContextReader",
       "UserActivityContext",
@@ -369,6 +385,8 @@ for (const [moduleName, expected] of [
     "iam",
     [
       "IamModule",
+      "IAM_ROLE_DISPLAY_READER",
+      "IamRoleDisplayReader",
       "REGISTRATION_ROLE_NAME",
       "IAM_ACCESS_MEMBERSHIPS",
       "IamAccessMembershipReader",
@@ -470,6 +488,12 @@ test("Reputation and Users publish only the intended guarded technical read symb
       "users",
       [
         "PrismaPublicProfileReader",
+        "usersProfileSelect",
+        "profileById",
+        "profileByUsername",
+        "profilesByIds",
+        "profileDirectoryQuery",
+        "profileUpdateData",
         "PrismaReputationActorReader",
         "PrismaReputationWriteActorReader",
         "PrismaMentionProfileSelector",
@@ -477,7 +501,17 @@ test("Reputation and Users publish only the intended guarded technical read symb
         "MentionProfileCandidate",
       ],
     ],
-    ["auth", ["PrismaActiveSubjectSelector"]],
+    [
+      "auth",
+      [
+        "PrismaActiveSubjectSelector",
+        "profileAccountSelect",
+        "profileAccountByEmail",
+        "activeProfileAccount",
+        "profileAccountState",
+      ],
+    ],
+    ["iam", ["profileDirectoryRole"]],
     [
       "interactions",
       [
@@ -549,6 +583,124 @@ test("Reputation write composition binds adapters without copying owner SQL or e
   deepEqual(analyzeBoundaries([{ path: port, source: contract }]), []);
   const tree = createSourceFile(port, contract, ScriptTarget.Latest, true);
   ok(!tree.statements.some((node) => node.getText(tree).includes("Prisma")));
+});
+
+for (const [file, binding, fields] of [
+  [
+    "modules/users/infrastructure/repositories/prisma-profile-persistence.shape.ts",
+    "usersProfileSelect",
+    [
+      "id",
+      "username",
+      "displayName",
+      "bio",
+      "location",
+      "website",
+      "technologies",
+      "interests",
+      "avatarUrl",
+      "coverUrl",
+      "lastSeenAt",
+      "createdAt",
+      "updatedAt",
+    ],
+  ],
+  [
+    "modules/auth/infrastructure/repositories/prisma-profile-account.shape.ts",
+    "profileAccountSelect",
+    ["email", "status", "emailVerifiedAt"],
+  ],
+]) {
+  test("shared-row owner selection is exact and frozen: " + binding, () => {
+    const source = readFileSync(
+      new URL("../../apps/api/src/" + file, import.meta.url),
+      "utf8",
+    );
+    const tree = createSourceFile(file, source, ScriptTarget.Latest, true);
+    const declaration = tree.statements
+      .flatMap((node) => node.declarationList?.declarations ?? [])
+      .find((node) => node.name.getText(tree) === binding);
+    equal(declaration.initializer.expression.getText(tree), "Object.freeze");
+    const argument = declaration.initializer.arguments[0];
+    const object = argument.expression ?? argument;
+    deepEqual(
+      object.properties.map((node) => node.name.getText(tree)).sort(),
+      fields.slice().sort(),
+    );
+    ok(
+      object.properties.every(
+        (node) =>
+          isPropertyAssignment(node) &&
+          node.initializer.getText(tree) === "true",
+      ),
+    );
+  });
+}
+
+test("Users shared-row root composes only owner fragments and preserves a lazy batch without business ORM contracts", () => {
+  const file =
+    "apps/api/src/composition/users-profiles/infrastructure/prisma-users-profile.persistence.ts";
+  const source = readFileSync(
+    new URL("../../" + file, import.meta.url),
+    "utf8",
+  );
+  deepEqual(directPrismaSurface(source), ["$transaction", "user"]);
+  const tree = createSourceFile(file, source, ScriptTarget.Latest, true);
+  const forbidden = new Set([
+    "email",
+    "status",
+    "emailVerifiedAt",
+    "username",
+    "displayName",
+    "roles",
+    "passwordHash",
+    "refreshTokenHash",
+  ]);
+  function visit(node) {
+    if (isPropertyAssignment(node))
+      ok(
+        !forbidden.has(node.name.getText(tree)),
+        "root copies owner field " + node.name.getText(tree),
+      );
+    forEachChild(node, visit);
+  }
+  visit(tree);
+  ok(source.includes("this.prisma.$transaction(["));
+  for (const port of [
+    "profile-persistence.port.ts",
+    "profile-role-names.port.ts",
+  ]) {
+    const path = "apps/api/src/modules/users/contracts/" + port;
+    const contract = readFileSync(
+      new URL("../../" + path, import.meta.url),
+      "utf8",
+    );
+    deepEqual(analyzeBoundaries([{ path, source: contract }]), []);
+    ok(!contract.includes("Prisma"));
+  }
+});
+
+test("IAM display reads assignment/name facts without foreign profiles or permissions", () => {
+  const file =
+    "apps/api/src/modules/iam/infrastructure/repositories/prisma-role-display.reader.ts";
+  const source = readFileSync(
+    new URL("../../" + file, import.meta.url),
+    "utf8",
+  );
+  const tree = createSourceFile(file, source, ScriptTarget.Latest, true);
+  const forbidden = new Set([
+    "user",
+    "status",
+    "permissions",
+    "passwordHash",
+    "email",
+    "authVersion",
+  ]);
+  function visit(node) {
+    if (isPropertyAssignment(node)) ok(!forbidden.has(node.name.getText(tree)));
+    forEachChild(node, visit);
+  }
+  visit(tree);
 });
 
 test("Mention SQL composition imports only guarded selectors and performs no owner delegate reads", () => {

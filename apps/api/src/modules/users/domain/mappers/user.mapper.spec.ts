@@ -47,7 +47,14 @@ const profile: SafeUser = {
   updatedAt: new Date('2026-10-10T00:00:00Z'),
 };
 
-const record: UserRecord = {
+const record: UserRecord & {
+  passwordHash: string;
+  refreshTokenHash: string;
+  authVersion: number;
+  deactivatedAt: Date | null;
+  loginFailedAttempts: number;
+  loginLockedUntil: Date;
+} = {
   ...profile,
   passwordHash: 'private-password-hash',
   refreshTokenHash: 'private-refresh-hash',

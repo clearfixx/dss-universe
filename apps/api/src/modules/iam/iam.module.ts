@@ -13,6 +13,7 @@
  * • registers IAM services;
  * • binds owned persistence contracts to IAM infrastructure adapters;
  * • defines the IAM module boundary.
+ * • publishes role-name display without exposing assignments or staff authority.
  *
  * 🏗️ Architecture:
  * Feature module for Identity and Access Management.
@@ -32,6 +33,8 @@
 import { Module } from '@nestjs/common';
 
 import { PrismaModule } from '@api/core/database';
+import { IAM_ROLE_DISPLAY_READER } from './contracts/role-display-reader.contract';
+import { PrismaRoleDisplayReader } from './infrastructure/repositories/prisma-role-display.reader';
 
 import { PermissionsController, PermissionsService } from './permissions';
 import { RolesController, RolesService } from './roles';
@@ -64,6 +67,7 @@ import { AccessGroupsService } from './access-groups/application/access-groups.s
     AccessGroupsController,
   ],
   providers: [
+    { provide: IAM_ROLE_DISPLAY_READER, useClass: PrismaRoleDisplayReader },
     RolesService,
     { provide: IAM_ROLE_REPOSITORY, useClass: PrismaRoleRepository },
     PermissionsService,
@@ -105,6 +109,10 @@ import { AccessGroupsService } from './access-groups/application/access-groups.s
         }),
     },
   ],
-  exports: [IAM_ACCESS_MEMBERSHIPS, IAM_PUBLIC_GROUP_DISPLAY],
+  exports: [
+    IAM_ACCESS_MEMBERSHIPS,
+    IAM_PUBLIC_GROUP_DISPLAY,
+    IAM_ROLE_DISPLAY_READER,
+  ],
 })
 export class IamModule {}

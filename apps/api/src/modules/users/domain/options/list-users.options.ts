@@ -13,7 +13,7 @@
  */
 
 import type { PaginationOptions } from '@api/shared';
-import type { UserStatus } from '@prisma/client';
+import type { ViewerProfile } from '../../contracts/viewer-profile.contract';
 
 export type ListUsersSort =
   | 'NEWEST'
@@ -25,7 +25,7 @@ export type ListUsersSort =
 export type ListUsersOptions = {
   pagination?: PaginationOptions;
   search?: string;
-  status?: UserStatus;
+  status?: ViewerProfile['status'];
   sort?: ListUsersSort;
   userIds?: string[];
   role?: string;

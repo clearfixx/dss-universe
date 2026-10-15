@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "date": "2026-10-14",
-  "sourceBase": "8281815",
+  "date": "2026-10-15",
+  "sourceBase": "f47d214",
   "status": "review inventory; not a waiver or compliance certificate",
   "scope": "Authored API modules/core/composition TypeScript; excludes tests/declarations; bounded syntactic analysis",
   "findings": [
@@ -86,41 +86,6 @@
       "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/editor/presentation/graphql/editor.model.ts\",\"@prisma/client\"]",
       "rule": "persistence-outside-infrastructure",
       "file": "apps/api/src/modules/editor/presentation/graphql/editor.model.ts",
-      "detail": "@prisma/client",
-      "package": "D4"
-    },
-    {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/users/application/dto/responses/user.response.dto.ts\",\"@prisma/client\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/users/application/dto/responses/user.response.dto.ts",
-      "detail": "@prisma/client",
-      "package": "D4"
-    },
-    {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/users/application/services/users.service.ts\",\"@prisma/client\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/users/application/services/users.service.ts",
-      "detail": "@prisma/client",
-      "package": "D4"
-    },
-    {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/users/domain/options/list-users.options.ts\",\"@prisma/client\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/users/domain/options/list-users.options.ts",
-      "detail": "@prisma/client",
-      "package": "D4"
-    },
-    {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/users/domain/types/update-user-data.type.ts\",\"@prisma/client\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/users/domain/types/update-user-data.type.ts",
-      "detail": "@prisma/client",
-      "package": "D4"
-    },
-    {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/users/domain/types/user-record.type.ts\",\"@prisma/client\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/users/domain/types/user-record.type.ts",
       "detail": "@prisma/client",
       "package": "D4"
     },
