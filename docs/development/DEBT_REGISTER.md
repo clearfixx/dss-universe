@@ -410,6 +410,15 @@ verified own Jest PID 2188 is stopped after zero client connections/owned schema
 exit -1. No scoring, ordering, fixture, assertion or protection changes.
 See [IAM transaction evidence](../audits/D4_IAM_SUBJECT_TRANSACTIONS.md).
 
+Leaderboard characterization foundation (2026-10-16): full E2E **454 PASS / 2 FAIL**,
+456 tests / 43 suites, zero skipped; all 14 isolated migrated ranking cases PASS.
+News repeats null/zero. Read-only synthetic-DB inspection proves the other
+10-point month fixture was created **66.927 seconds earlier** than leader-oldest;
+all-time totals 10/60 explain the level difference. Ranking code is unchanged.
+Completed JSON precedes verified own Jest PID 23832 cleanup after zero clients
+and owned schemas; terminal exit 1. No fixture/scoring/assertion/protection change.
+See [foundation evidence](../audits/D4_LEADERBOARD_CHARACTERIZATION.md).
+
 ### DEBT-046 — Last privileged role-holder removal is unguarded (High, IMPLEMENTED / review pending, D3.4)
 
 At `a9c5596`, UserAccessService.revokeRole does not invoke the existing
@@ -811,3 +820,21 @@ output lifecycle and write failures separately in D6; no generated-output locati
 test boot configuration, deadline or runtime correction is authorized by this
 ownership package. Owner notified. Raw evidence: `node_modules/.cache/d4-authz-full-e2e*`
 and `node_modules/.cache/d4-authz-affected-repeat*`.
+
+### DEBT-060 — Leaderboard empty page loses total when viewer is absent (Medium, OPEN, separate correction requested)
+
+Isolated real migrated characterization on 2026-10-16 reproduces the production
+repository returning total=0/totalPages=0 for page 99, limit 1, missing viewer,
+while page 1 returns total=1 for the same active population. The SQL returns only
+the requested rank range or viewer row; the mapper derives total from returned
+rows and falls back to zero when neither exists. An existing off-page active
+viewer retains total correctly. This is not a score or permission leak.
+
+The normal GraphQL path requires an authenticated viewer; direct repository use
+and a viewer excluded before the ranking read expose this edge. No claim of an
+unauthenticated HTTP reproduction. Test pins the legacy behavior explicitly as
+DEBT-060 to keep ownership transfer behavior-neutral, not to endorse zero as the
+intended count. Owner notified and asked about a separate correction after transfer.
+Preserve ranking/one-statement visibility when fixing; do not add an uncoordinated
+count query or silently rewrite this in the ownership package. Evidence:
+`apps/api/test/leaderboard-ownership.e2e-spec.ts` and the Leaderboard ownership plan.

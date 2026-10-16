@@ -25,7 +25,7 @@ owner; read/write purpose; status/privacy predicates; order/pagination; transact
 lock and failure stages; returned/event projections; characterization and required
 transfer. A module is complete only when every applicable path has this evidence.
 
-## Confirmed remaining composition: Core Authorization
+## Core Authorization — local transfer, acceptance open
 
 Source: `apps/api/src/core/authorization/repositories/permissions.repository.ts`,
 both methods; PermissionsService, AuthorizationModule, public exports and actual
@@ -93,6 +93,12 @@ foundation HTTP E2E is one broad test on shared fixtures; it alone is insufficie
 and has the separately recorded DEBT-045 global-fixture tie. Preserve actual edge
 behavior in characterization; report unexpected defects separately, not fix silently.
 
+Subsequent foundation: fourteen real migrated cases now characterize this path,
+including both original SQL shapes and live state changes. See the
+[operation plan](D4_LEADERBOARD_OWNERSHIP_PLAN.md). DEBT-060 records the confirmed
+empty-page/missing-viewer total edge separately. This is progress in the inventory,
+not completed ownership transfer or exhaustive SQL/Worker acceptance.
+
 ## Worker SQL inspected in this pass
 
 | File                               | Actual SQL/purpose                                                                                            | Initial boundary classification                                                              |
@@ -142,8 +148,9 @@ Core Outbox dispatch/projection contracts, provider payload privacy, SQL transac
 semantics and rebuild/retraction policy. Mark reviewed owned operations distinctly
 from open compositions, design questions and unauthorized behavioral defects.
 
-Next: complete the path-by-path matrix, then prioritized Authorization (subject to
-owner direction), Leaderboards characterization/transfer,
+Next: complete the path-by-path matrix alongside the confirmed Leaderboards
+characterization, then its owner-agreed runtime transfer. Authorization's local
+transfer is recorded separately, not awaiting direction again. Continue
 then D4.4 explicit surfaces/ORM isolation and D4.5 enforcement/acceptance. Full
 D5–D7, stack audit, CI/review/owner acceptance and Phase 11 brainstorm remain.
 Do not close D4 or start Phase 11 on the basis of this document.
