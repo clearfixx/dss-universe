@@ -27,7 +27,7 @@
  * Controller
  *
  * ⚠️ Important:
- * PrismaModule is required by PermissionsRepository for database access.
+ * Assignment inputs are wired at the root; this module owns decisions, not IAM persistence.
  *
  * 💡 Notes:
  * If Nest says "can't resolve dependencies",
@@ -39,8 +39,6 @@
 
 import { Module } from '@nestjs/common';
 
-import { PrismaModule } from '@api/core/database';
-
 import { AuthorizationTestController } from './authorization-test.controller';
 import { PermissionsGuard } from './guards/permissions.guard';
 import { PermissionsRepository } from './repositories/permissions.repository';
@@ -50,7 +48,6 @@ import { ACCESS_CAPABILITY_DECISIONS } from './contracts/access-capability-decis
 import { AccessCapabilityDecisionsService } from './services/access-capability-decisions.service';
 
 @Module({
-  imports: [PrismaModule],
   controllers: [AuthorizationTestController],
   providers: [
     PermissionsGuard,

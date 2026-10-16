@@ -77,6 +77,7 @@ import { UsersProfileIntegrationModule } from './composition/users-profiles/user
 import { AccessGroupIntegrationModule } from './composition/access-groups/access-group-integration.module';
 import { IamTransactionCompositionModule } from './composition/iam-transactions/iam-transaction-composition.module';
 import { IamSubjectReadCompositionModule } from './composition/iam-subject-reads/iam-subject-read-composition.module';
+import { AuthorizationReadCompositionModule } from './composition/authorization-reads/authorization-read-composition.module';
 import { GamificationIntegrationModule } from './composition/gamification/gamification-integration.module';
 import { ReputationIntegrationModule } from './composition/reputation/reputation-integration.module';
 import { ProfileAssetCompositionModule } from './composition/profile-assets/profile-asset-composition.module';
@@ -121,6 +122,7 @@ import { UsersModule } from './modules/users/users.module';
     AccessGroupIntegrationModule,
     IamTransactionCompositionModule,
     IamSubjectReadCompositionModule,
+    AuthorizationReadCompositionModule,
     GamificationIntegrationModule,
     ReputationIntegrationModule,
     ProfileAssetCompositionModule,

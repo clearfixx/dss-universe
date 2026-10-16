@@ -33,6 +33,8 @@
 import { Module } from '@nestjs/common';
 
 import { PrismaModule } from '@api/core/database';
+import { IAM_ROLE_PERMISSION_KEYS_READER } from './contracts/role-permission-keys-reader.contract';
+import { PrismaRolePermissionKeysReader } from './infrastructure/repositories/prisma-role-permission-keys.reader';
 import { IAM_ROLE_DISPLAY_READER } from './contracts/role-display-reader.contract';
 import { PrismaRoleDisplayReader } from './infrastructure/repositories/prisma-role-display.reader';
 
@@ -67,6 +69,10 @@ import { AccessGroupsService } from './access-groups/application/access-groups.s
     AccessGroupsController,
   ],
   providers: [
+    {
+      provide: IAM_ROLE_PERMISSION_KEYS_READER,
+      useClass: PrismaRolePermissionKeysReader,
+    },
     { provide: IAM_ROLE_DISPLAY_READER, useClass: PrismaRoleDisplayReader },
     RolesService,
     { provide: IAM_ROLE_REPOSITORY, useClass: PrismaRoleRepository },
@@ -110,6 +116,7 @@ import { AccessGroupsService } from './access-groups/application/access-groups.s
     },
   ],
   exports: [
+    IAM_ROLE_PERMISSION_KEYS_READER,
     IAM_ACCESS_MEMBERSHIPS,
     IAM_PUBLIC_GROUP_DISPLAY,
     IAM_ROLE_DISPLAY_READER,

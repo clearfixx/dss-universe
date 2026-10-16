@@ -22,7 +22,7 @@
  *   ↓
  * PermissionsRepository
  *   ↓
- * Prisma
+ * Owned fact inputs (root composition)
  *
  * ⚠️ Important:
  * Access-token generation depends on the access profile contract returned here.
