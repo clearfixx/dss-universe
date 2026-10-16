@@ -101,6 +101,12 @@ not completed ownership transfer or exhaustive SQL/Worker acceptance.
 
 ## Worker SQL inspected in this pass
 
+Subsequent source-boundary review covers all fourteen Worker sources and records
+each effect/owner, Auth producer allowlists, shared handler/marker semantics and
+DEBT-061's confirmed identity mismatch: [Worker matrix](../audits/D4_WORKER_SOURCE_BOUNDARIES.md).
+This does not certify live delivery, every producer/retraction or actual store
+rollback/replay; those explicit acceptance gaps remain.
+
 | File                               | Actual SQL/purpose                                                                                            | Initial boundary classification                                                              |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | password-recovery.processor.ts     | Auth users ID/email/authVersion, ACTIVE row lock, password_resets monotonic upsert; commit before SMTP        | Auth-owned job persistence; document ownership/entry separately, no Users profile read       |

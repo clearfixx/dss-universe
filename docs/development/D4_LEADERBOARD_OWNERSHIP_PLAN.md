@@ -2,7 +2,8 @@
 
 Date: 2026-10-16. Foundation branch `debt/d4-leaderboard-characterization`,
 based on `bb57015` / draft PR #27 (unaccepted).
-Status: current behavior characterized; runtime design awaiting owner direction.
+Status: current behavior characterized; one-SQL runtime direction owner-approved
+on 2026-10-16. DEBT-060 correction approved as a separate subsequent package.
 Foundation gate evidence: [characterization checkpoint](../audits/D4_LEADERBOARD_CHARACTERIZATION.md).
 
 ## Current proof
@@ -23,7 +24,7 @@ endsAt; live title disable and account deactivation on subsequent reads; exact
 safe public card fields. Legacy DEBT-060 is explicitly a characterization, not
 desired pagination behavior or a silent fix. No HTTP guard redesign is claimed.
 
-## Proposed runtime boundaries
+## Approved runtime boundaries
 
 Use the existing semantic Leaderboards query/window values. A Leaderboards-owned
 row-facts input receives only allowlisted scalar ranking facts (numeric rank/total/
@@ -58,8 +59,8 @@ visibility, current logical SQL shape/bindings, aliases, inclusive bounds, signe
 ledger semantics, zero-point ACTIVE inclusion, row-number ties and viewer OR clause.
 No extra transaction, isolation/timeout change, materialized score or scoring rule.
 
-Owner was asked to confirm this exact one-statement direction. Approval of general
-D4 work is not a claim that this runtime package is already delivered. Existing
+Owner confirmed this exact one-statement direction. Approval is not a claim
+that this runtime package is already delivered. Existing
 public LeaderboardsService exports remain a separate D4.4 surface review.
 
 ## Verification and separate corrections
@@ -72,7 +73,7 @@ ledger/history-protection or fixture-isolation weakening. Full CI/review/owner
 acceptance remains separate from local tests.
 
 DEBT-060: current out-of-range page returns total=0 when no viewer row is returned,
-even with an active population. Correct separately after ownership if approved,
+even with an active population. Owner approved correction separately after ownership,
 retaining one SQL view and ranking. Do not smuggle that behavior change into the
 ownership diff. DEBT-059 schema-write and DEBT-045 shared-fixture/News failures are
 separate D6 work, not reasons to suppress broad tests.
