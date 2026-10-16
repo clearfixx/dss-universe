@@ -6,12 +6,13 @@
  * 📄 File: apps/api/src/modules/auth/infrastructure.ts
  *
  * 🎯 Purpose:
- * Publishes only owned active-ID and allowlisted account presentation fragments for guarded root infrastructure.
+ * Publishes owned ID readers and allowlisted account fragments for guarded root infrastructure.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 export { PrismaActiveSubjectSelector } from './infrastructure/repositories/prisma-active-subject.selector';
+export { PrismaTransactionalSubjectExistenceReader } from './infrastructure/repositories/prisma-transactional-subject-existence.reader';
 export {
   profileAccountSelect,
   profileAccountByEmail,

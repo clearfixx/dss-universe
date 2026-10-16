@@ -27,6 +27,9 @@ import { PrismaService } from '@api/core/database';
 import { AuditWriterService } from '@api/core/audit';
 import { AuditRedactionService } from '@api/core/audit/services/audit-redaction.service';
 import { PrismaAccessGroupRepository } from './prisma-access-group.repository';
+import { PrismaMembershipGrantTransaction } from '../../../../composition/iam-transactions/infrastructure/prisma-membership-grant.transaction';
+import { PrismaMembershipGrantWriter } from './prisma-membership-grant.writer';
+import { PrismaTransactionalSubjectExistenceReader } from '../../../auth/infrastructure';
 import type {
   AccessGroupRecord,
   CreateAccessGroup,
@@ -42,7 +45,15 @@ dbSuite('IAM isolated access-group persistence', () => {
   });
   const prisma = new PrismaService({ adapter: new PrismaPg(pool, { schema }) });
   const audit = new AuditWriterService(new AuditRedactionService());
-  const repository = new PrismaAccessGroupRepository(prisma, audit);
+  const repository = new PrismaAccessGroupRepository(
+    prisma,
+    audit,
+    new PrismaMembershipGrantTransaction(
+      prisma,
+      new PrismaMembershipGrantWriter(audit),
+      new PrismaTransactionalSubjectExistenceReader(),
+    ),
+  );
   const now = new Date('2030-01-01T00:00:00.000Z');
   const expiry = new Date('2030-02-01T00:00:00.000Z');
   let initialPremium: AccessGroupRecord | null;

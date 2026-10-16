@@ -390,6 +390,18 @@ protection or unrelated product behavior is changed to suppress it.
 The isolated entire Auth E2E repeat passes all 26 tests, zero skips, normal exit;
 this does not prove why the full-run registration deadline was exceeded.
 
+Fresh D4 IAM transactional subject transfer run (2026-10-16) repeats both known
+cases: **427 PASS / 2 FAIL**, 429 tests / 41 suites, zero skipped. All 29 relevant
+IAM/subject/HTTP and 26 Auth cases pass. Read-only inspection confirms the
+winning synthetic `points-user` and expected `leader-oldest` each have 10 month
+points, but the former was created 4.093 seconds earlier; all-time totals 10/60
+explain the differing level projection. Unchanged points/createdAt tie-breaking
+therefore selects the other suite's fixture. News repeats viewCount null/zero
+and prohibited target cleanup. Complete JSON precedes retained-handle cleanup;
+verified own Jest PID 2188 is stopped after zero client connections/owned schemas,
+exit -1. No scoring, ordering, fixture, assertion or protection changes.
+See [IAM transaction evidence](../audits/D4_IAM_SUBJECT_TRANSACTIONS.md).
+
 ### DEBT-046 — Last privileged role-holder removal is unguarded (High, IMPLEMENTED / review pending, D3.4)
 
 At `a9c5596`, UserAccessService.revokeRole does not invoke the existing

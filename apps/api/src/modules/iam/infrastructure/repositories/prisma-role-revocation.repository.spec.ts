@@ -29,6 +29,9 @@ import { BadRequestException } from '@nestjs/common';
 import { PrismaService } from '@api/core/database';
 import { IamSafetyService } from '../../safety';
 import { PrismaRoleRevocationRepository } from './prisma-role-revocation.repository';
+import { PrismaRoleRevocationTransaction } from '../../../../composition/iam-transactions/infrastructure/prisma-role-revocation.transaction';
+import { PrismaRoleRevocationWriter } from './prisma-role-revocation.writer';
+import { PrismaTransactionalSubjectExistenceReader } from '../../../auth/infrastructure';
 
 const dbSuite = process.env.RUN_IAM_DB_TESTS === '1' ? describe : describe.skip;
 dbSuite('IAM atomic role revocation PostgreSQL', () => {
@@ -39,7 +42,13 @@ dbSuite('IAM atomic role revocation PostgreSQL', () => {
     options: `-c search_path=${schema},public -c application_name=${schema}`,
   });
   const prisma = new PrismaService({ adapter: new PrismaPg(pool, { schema }) });
-  const repository = new PrismaRoleRevocationRepository(prisma);
+  const repository = new PrismaRoleRevocationRepository(
+    new PrismaRoleRevocationTransaction(
+      prisma,
+      new PrismaRoleRevocationWriter(),
+      new PrismaTransactionalSubjectExistenceReader(),
+    ),
+  );
   const safety = new IamSafetyService();
   const policy = (state: { roleName: string; adminsWithRoleCount: number }) => {
     safety.assertLastAdminRoleIsNotRemoved(state);

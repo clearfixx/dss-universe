@@ -75,6 +75,7 @@ import { AppController } from './app.controller';
 import { IdentityCompositionModule } from './composition/identity/identity-composition.module';
 import { UsersProfileIntegrationModule } from './composition/users-profiles/users-profile-integration.module';
 import { AccessGroupIntegrationModule } from './composition/access-groups/access-group-integration.module';
+import { IamTransactionCompositionModule } from './composition/iam-transactions/iam-transaction-composition.module';
 import { GamificationIntegrationModule } from './composition/gamification/gamification-integration.module';
 import { ReputationIntegrationModule } from './composition/reputation/reputation-integration.module';
 import { ProfileAssetCompositionModule } from './composition/profile-assets/profile-asset-composition.module';
@@ -117,6 +118,7 @@ import { UsersModule } from './modules/users/users.module';
     IdentityCompositionModule,
     UsersProfileIntegrationModule,
     AccessGroupIntegrationModule,
+    IamTransactionCompositionModule,
     GamificationIntegrationModule,
     ReputationIntegrationModule,
     ProfileAssetCompositionModule,
