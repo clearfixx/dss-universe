@@ -11,18 +11,16 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-export type RoleRevocationResult =
-  | 'subject-not-found'
-  | 'role-not-found'
-  | 'assignment-not-found'
-  | 'revoked';
+import type {
+  RoleRevocationCheck,
+  RoleRevocationResult,
+} from '../../contracts/role-revocation-transaction.port';
+export type { RoleRevocationResult } from '../../contracts/role-revocation-transaction.port';
 export interface RoleRevocationRepository {
   revoke(
     subjectId: string,
     roleId: string,
-    assertCanRevoke: (
-      state: Readonly<{ roleName: string; adminsWithRoleCount: number }>,
-    ) => undefined,
+    assertCanRevoke: RoleRevocationCheck,
   ): Promise<RoleRevocationResult>;
 }
 export const IAM_ROLE_REVOCATION_REPOSITORY = Symbol(

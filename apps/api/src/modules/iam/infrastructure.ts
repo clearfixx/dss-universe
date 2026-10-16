@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/modules/iam/infrastructure.ts
  *
  * 🎯 Purpose:
- * Publishes only the owned directory role predicate to guarded root infrastructure.
+ * Publishes owned directory fragments and stateless writers to guarded root infrastructure.
  *
  * 🧠 Responsibilities:
  * • keeps technical Prisma fragments out of the normal business entry.
@@ -18,3 +18,5 @@
  * ===============================================================
  */
 export { profileDirectoryRole } from './infrastructure/repositories/prisma-profile-role.shape';
+export { PrismaMembershipGrantWriter } from './infrastructure/repositories/prisma-membership-grant.writer';
+export { PrismaRoleRevocationWriter } from './infrastructure/repositories/prisma-role-revocation.writer';

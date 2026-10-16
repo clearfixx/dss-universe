@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/modules/iam/infrastructure/repositories/prisma-access-group.repository.ts
  *
  * 🎯 Purpose:
- * Persists isolated access grants and closed capabilities with atomic audit.
+ * Persists owned groups/history and delegates composed atomic membership grants.
  *
  * 🧠 Responsibilities:
  * • keeps database transactions and minimal projections private;
@@ -19,11 +19,16 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { AccessGroupKeyConflict } from '../../access-groups/domain/access-group.errors';
 import { PrismaService } from '@api/core/database';
 import { AuditWriterService } from '@api/core/audit';
+import {
+  MEMBERSHIP_GRANT_TRANSACTION,
+  type MembershipGrantTransaction,
+} from '../../contracts/membership-grant-transaction.port';
+import { membershipSelect } from './access-membership.shape';
 import type { AccessGroupRepository } from '../../access-groups/contracts/access-group.repository.interface';
 import type { PublicAccessGroup } from '../../access-groups/contracts/public-group-display.contract';
 import type {
@@ -50,18 +55,6 @@ const groupSelect = {
   updatedAt: true,
   capabilities: { select: { key: true }, orderBy: { key: 'asc' } },
 } as const;
-const membershipSelect = {
-  id: true,
-  groupId: true,
-  subjectId: true,
-  validFrom: true,
-  validUntil: true,
-  grantedById: true,
-  createdAt: true,
-  revokedAt: true,
-  revokedById: true,
-  revokeReason: true,
-} as const;
 type SelectedGroup = Omit<AccessGroupRecord, 'capabilities'> & {
   capabilities: { key: AccessCapability }[];
 };
@@ -71,6 +64,8 @@ export class PrismaAccessGroupRepository implements AccessGroupRepository {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditWriterService,
+    @Inject(MEMBERSHIP_GRANT_TRANSACTION)
+    private readonly grants: MembershipGrantTransaction,
   ) {}
 
   private toGroup(record: SelectedGroup): AccessGroupRecord {
@@ -246,45 +241,7 @@ export class PrismaAccessGroupRepository implements AccessGroupRepository {
     input: GrantAccessMembership,
     actorId: string,
   ): Promise<MembershipRecord | null> {
-    return this.prisma.transaction(async (tx) => {
-      await tx.$queryRaw`SELECT id FROM access_groups WHERE id = ${input.groupId} FOR UPDATE`;
-      const group = await tx.accessGroup.findUnique({
-        where: { id: input.groupId },
-        select: { enabled: true },
-      });
-      if (!group?.enabled) return null;
-      if (
-        !(await tx.user.findUnique({
-          where: { id: input.subjectId },
-          select: { id: true },
-        }))
-      )
-        return null;
-      const record = await tx.accessGroupMembership.create({
-        data: {
-          groupId: input.groupId,
-          subjectId: input.subjectId,
-          validFrom: input.validFrom,
-          validUntil: input.validUntil,
-          grantedById: actorId,
-        },
-        select: membershipSelect,
-      });
-      await this.audit.append(tx, {
-        action: 'iam.access-membership.granted',
-        actorType: 'USER',
-        actorId,
-        targetType: 'AccessGroupMembership',
-        targetId: record.id,
-        metadata: {
-          subjectId: record.subjectId,
-          groupId: record.groupId,
-          validFrom: record.validFrom.toISOString(),
-          validUntil: record.validUntil?.toISOString() ?? null,
-        },
-      });
-      return record;
-    });
+    return this.grants.grant(input, actorId);
   }
   revoke(
     id: string,

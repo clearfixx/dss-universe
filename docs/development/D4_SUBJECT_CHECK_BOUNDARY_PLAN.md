@@ -44,6 +44,10 @@ release acceptance.
    safety callback/row lock/count/delete and explicit Read Committed. Do not add
    an audit/outbox stage to role revocation that currently does not have one inside
    its persistence transaction.
+   Local runtime transfer and fresh quality evidence:
+   [IAM checkpoint](../audits/D4_IAM_SUBJECT_TRANSACTIONS.md).
+   Bounded local verification is complete; inherited red gates/acceptance stay
+   open, and independent reads remain below.
 3. **IAM independent anchor/read transfer:** narrow subjectExists binding and
    owner-fragment assignment-anchor assembly. Preserve null versus empty assignment
    result, name/key ordering and current independent nested reads. A single Prisma

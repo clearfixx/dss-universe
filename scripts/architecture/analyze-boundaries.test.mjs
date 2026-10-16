@@ -388,6 +388,14 @@ for (const [moduleName, expected] of [
     "iam",
     [
       "IamModule",
+      "MEMBERSHIP_GRANT_TRANSACTION",
+      "MembershipGrantTransaction",
+      "ROLE_REVOCATION_TRANSACTION",
+      "RoleRevocationTransaction",
+      "RoleRevocationCheck",
+      "RoleRevocationResult",
+      "GrantAccessMembership",
+      "MembershipRecord",
       "IAM_ROLE_DISPLAY_READER",
       "IamRoleDisplayReader",
       "REGISTRATION_ROLE_NAME",
@@ -509,13 +517,21 @@ test("Reputation and Users publish only the intended guarded technical read symb
       "auth",
       [
         "PrismaActiveSubjectSelector",
+        "PrismaTransactionalSubjectExistenceReader",
         "profileAccountSelect",
         "profileAccountByEmail",
         "activeProfileAccount",
         "profileAccountState",
       ],
     ],
-    ["iam", ["profileDirectoryRole"]],
+    [
+      "iam",
+      [
+        "profileDirectoryRole",
+        "PrismaMembershipGrantWriter",
+        "PrismaRoleRevocationWriter",
+      ],
+    ],
     ["achievements", ["PrismaManualAwardWriter"]],
     ["custom-titles", ["PrismaTitleGrantWriter"]],
     [
@@ -635,6 +651,102 @@ test("Gamification recipient repositories no longer read Users in either client 
     ok(!directPrismaSurface(source).includes("user"));
     ok(!directPrismaSurface(source, "transaction", false).includes("user"));
     ok(!source.includes("createEventEnvelope"));
+  }
+});
+
+for (const [file, writer] of [
+  ["prisma-membership-grant.transaction.ts", "PrismaMembershipGrantWriter"],
+  ["prisma-role-revocation.transaction.ts", "PrismaRoleRevocationWriter"],
+]) {
+  test(`${file} binds IAM/Auth without copying owner SQL or exposing technical adapters`, () => {
+    const source = readFileSync(
+      new URL(
+        `../../apps/api/src/composition/iam-transactions/infrastructure/${file}`,
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    deepEqual(directPrismaSurface(source), ["$transaction"]);
+    deepEqual(directPrismaSurface(source, "tx", false), []);
+    for (const [owner, symbol] of [
+      ["iam", writer],
+      ["auth", "PrismaTransactionalSubjectExistenceReader"],
+    ]) {
+      const root = readFileSync(
+        new URL(
+          `../../apps/api/src/modules/${owner}/index.ts`,
+          import.meta.url,
+        ),
+        "utf8",
+      );
+      ok(!root.includes(symbol));
+      for (const consumer of [
+        `apps/api/src/modules/${owner}/index.ts`,
+        `apps/api/src/modules/${owner}/application/read.ts`,
+        "apps/api/src/modules/news/infrastructure/read.ts",
+      ]) {
+        ok(
+          analyzeBoundaries([
+            {
+              path: consumer,
+              source: `import { ${symbol} } from '@api/modules/${owner}/infrastructure';`,
+            },
+          ]).some(
+            ({ rule }) => rule === "infrastructure-entry-business-import",
+          ),
+        );
+      }
+    }
+  });
+}
+for (const [owner, file, client, expected] of [
+  [
+    "iam",
+    "prisma-membership-grant.writer.ts",
+    "tx",
+    ["$queryRaw", "accessGroup", "accessGroupMembership"],
+  ],
+  [
+    "iam",
+    "prisma-role-revocation.writer.ts",
+    "transaction",
+    ["$queryRaw", "role", "userRole"],
+  ],
+  [
+    "auth",
+    "prisma-transactional-subject-existence.reader.ts",
+    "transaction",
+    ["user"],
+  ],
+]) {
+  test(`${file} retains only owned delegates and no transaction lifetime`, () => {
+    const source = readFileSync(
+      new URL(
+        `../../apps/api/src/modules/${owner}/infrastructure/repositories/${file}`,
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    deepEqual(directPrismaSurface(source), []);
+    deepEqual(directPrismaSurface(source, client, false), expected);
+  });
+}
+test("IAM transactional repositories no longer read subjects or compose a role transaction", () => {
+  for (const file of [
+    "prisma-access-group.repository.ts",
+    "prisma-role-revocation.repository.ts",
+  ]) {
+    const source = readFileSync(
+      new URL(
+        `../../apps/api/src/modules/iam/infrastructure/repositories/${file}`,
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    for (const client of ["this.prisma", "tx", "transaction"])
+      ok(!directPrismaSurface(source, client, false).includes("user"));
+    if (file.includes("role-revocation"))
+      deepEqual(directPrismaSurface(source), []);
   }
 });
 

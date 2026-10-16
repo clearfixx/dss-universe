@@ -126,6 +126,42 @@
     ],
     "coverageDirectory": "../coverage",
     "coverageThreshold": {
+      "src/composition/iam-transactions/infrastructure/prisma-membership-grant.transaction.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/iam-transactions/infrastructure/prisma-role-revocation.transaction.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/iam/infrastructure/repositories/prisma-membership-grant.writer.ts": {
+        "branches": 85,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/iam/infrastructure/repositories/prisma-role-revocation.writer.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/auth/infrastructure/repositories/prisma-transactional-subject-existence.reader.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/iam/infrastructure/repositories/access-membership.shape.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
       "src/composition/gamification/infrastructure/prisma-manual-award.transaction.ts": {
         "branches": 75,
         "functions": 100,

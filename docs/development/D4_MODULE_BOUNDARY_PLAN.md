@@ -171,8 +171,9 @@ This is not full SQL ownership acceptance. Source inspection finds:
   remain open. Achievements and Custom Titles transaction-local recipient checks
   now use Users-owned ID-only reads through root units and owner writers; see
   [runtime evidence](../audits/D4_GAMIFICATION_RECIPIENT_TRANSACTIONS.md).
-  IAM transaction-local and independent subject anchors still require the
-  approved Auth-owned transfer. These are all-state existence checks, not ACTIVE
+  IAM transaction-local checks have a [local Auth-owned runtime transfer](../audits/D4_IAM_SUBJECT_TRANSACTIONS.md)
+  with inherited red gates and acceptance open; independent subject anchors still require
+  the approved separate transfer. These are all-state existence checks, not ACTIVE
   eligibility; no blanket approval of remaining joins or full D4 closure.
 
 The shared-row/role increment has a separate
@@ -186,7 +187,8 @@ and [pre-transfer evidence](../audits/D4_SUBJECT_CHECK_CHARACTERIZATION.md).
 Nineteen real migrated tests pin four transaction-local checks plus two independent
 IAM anchor/existence paths. ID-only existence accepts all existing states; it is
 not ACTIVE eligibility. The [gamification runtime follow-up](../audits/D4_GAMIFICATION_RECIPIENT_TRANSACTIONS.md)
-transfers awards/title grants; IAM transactional/independent anchors remain open.
+transfers awards/title grants; IAM transactional transfer is locally verified
+with inherited red gates/acceptance open, and independent anchors remain unimplemented.
 
 The import inventory does not detect table ownership and must not waive these
 items. This is a reviewed starting inventory, not exhaustive proof of all joins;

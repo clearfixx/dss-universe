@@ -6,15 +6,15 @@
  * 📄 File: apps/api/src/modules/iam/infrastructure/repositories/prisma-role-revocation.repository.ts
  *
  * 🎯 Purpose:
- * Serializes role-holder removal so application safety policy sees current state.
+ * Delegates protected role removal through the IAM-owned semantic transaction port.
  *
  * 🧠 Responsibilities:
- * • validates opaque subject and role/assignment existence;
- * • locks the shared role before counting holders;
- * • commits deletion only after synchronous application policy accepts it.
+ * • forwards subject/role IDs and the existing IAM safety callback;
+ * • retains established results without foreign SQL or transaction lifetime;
+ * • propagates owned writer and safety failures without fallback.
  *
  * 🏗️ Architecture:
- * Private IAM transaction adapter; no ORM client or profile crosses its port.
+ * Private IAM repository; root owns lifetime and the guarded IAM writer owns persistence.
  *
  * ⚠️ Important:
  * READ COMMITTED refreshes the count after lock waits. Policy errors roll back.
@@ -23,9 +23,12 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { PrismaService } from '@api/core/database';
+import { Inject, Injectable } from '@nestjs/common';
+import {
+  ROLE_REVOCATION_TRANSACTION,
+  type RoleRevocationTransaction,
+} from '../../contracts/role-revocation-transaction.port';
+
 import type {
   RoleRevocationRepository,
   RoleRevocationResult,
@@ -33,40 +36,16 @@ import type {
 
 @Injectable()
 export class PrismaRoleRevocationRepository implements RoleRevocationRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject(ROLE_REVOCATION_TRANSACTION)
+    private readonly writes: RoleRevocationTransaction,
+  ) {}
 
   revoke(
     subjectId: string,
     roleId: string,
     assertCanRevoke: Parameters<RoleRevocationRepository['revoke']>[2],
   ): Promise<RoleRevocationResult> {
-    return this.prisma.$transaction<RoleRevocationResult>(
-      async (transaction) => {
-        const subject = await transaction.user.findUnique({
-          where: { id: subjectId },
-          select: { id: true },
-        });
-        if (!subject) return 'subject-not-found';
-        await transaction.$queryRaw`SELECT id FROM roles WHERE id = ${roleId} FOR UPDATE`;
-        const role = await transaction.role.findUnique({
-          where: { id: roleId },
-          select: { name: true },
-        });
-        if (!role) return 'role-not-found';
-        const assignment = await transaction.userRole.findUnique({
-          where: { userId_roleId: { userId: subjectId, roleId } },
-          select: { userId: true },
-        });
-        if (!assignment) return 'assignment-not-found';
-        const count = await transaction.userRole.count({ where: { roleId } });
-        assertCanRevoke({ roleName: role.name, adminsWithRoleCount: count });
-        await transaction.userRole.delete({
-          where: { userId_roleId: { userId: subjectId, roleId } },
-          select: { userId: true },
-        });
-        return 'revoked';
-      },
-      { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted },
-    );
+    return this.writes.revoke(subjectId, roleId, assertCanRevoke);
   }
 }

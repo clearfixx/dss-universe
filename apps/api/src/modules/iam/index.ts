@@ -28,6 +28,20 @@
  */
 export { IamModule } from './iam.module';
 export {
+  MEMBERSHIP_GRANT_TRANSACTION,
+  type MembershipGrantTransaction,
+} from './contracts/membership-grant-transaction.port';
+export {
+  ROLE_REVOCATION_TRANSACTION,
+  type RoleRevocationTransaction,
+  type RoleRevocationCheck,
+  type RoleRevocationResult,
+} from './contracts/role-revocation-transaction.port';
+export type {
+  GrantAccessMembership,
+  MembershipRecord,
+} from './access-groups/domain/access-group.types';
+export {
   IAM_ROLE_DISPLAY_READER,
   type IamRoleDisplayReader,
 } from './contracts/role-display-reader.contract';

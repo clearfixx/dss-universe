@@ -30,6 +30,9 @@ import { PermissionsRepository } from '@api/core/authorization/repositories/perm
 import { AccessCapabilityDecisionsService } from '@api/core/authorization/services/access-capability-decisions.service';
 import { applyAccessGroupMigration } from '../../../../../test/helpers/access-group-schema.fixture';
 import { PrismaAccessGroupRepository } from '../../../iam/infrastructure/repositories/prisma-access-group.repository';
+import { PrismaMembershipGrantTransaction } from '../../../../composition/iam-transactions/infrastructure/prisma-membership-grant.transaction';
+import { PrismaMembershipGrantWriter } from '../../../iam/infrastructure/repositories/prisma-membership-grant.writer';
+import { PrismaTransactionalSubjectExistenceReader } from '../../../auth/infrastructure';
 import { PrismaSubjectEligibilityReader } from '../../../auth/infrastructure/repositories/prisma-subject-eligibility.reader';
 import { IamMembershipAdapter } from '../../../../composition/access-groups/infrastructure/iam-membership.adapter';
 import { ContentAudienceAdapter } from '../../../../composition/access-groups/infrastructure/content-audience.adapter';
@@ -73,9 +76,15 @@ dbSuite('Content Gate audience PostgreSQL integration', () => {
   });
   const prisma = new PrismaService({ adapter: new PrismaPg(pool, { schema }) });
   const repository = new PrismaContentGatesRepository(prisma);
+  const membershipAudit = new AuditWriterService(new AuditRedactionService());
   const memberships = new PrismaAccessGroupRepository(
     prisma,
-    new AuditWriterService(new AuditRedactionService()),
+    membershipAudit,
+    new PrismaMembershipGrantTransaction(
+      prisma,
+      new PrismaMembershipGrantWriter(membershipAudit),
+      new PrismaTransactionalSubjectExistenceReader(),
+    ),
   );
   const permissions = new PermissionsRepository(prisma);
   const decisions = new AccessCapabilityDecisionsService(
