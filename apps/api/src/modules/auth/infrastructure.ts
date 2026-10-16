@@ -19,3 +19,7 @@ export {
   activeProfileAccount,
   profileAccountState,
 } from './infrastructure/repositories/prisma-profile-account.shape';
+export {
+  subjectAnchorSelect,
+  subjectById,
+} from './infrastructure/repositories/prisma-subject-anchor.shape';

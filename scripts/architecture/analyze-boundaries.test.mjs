@@ -398,6 +398,10 @@ for (const [moduleName, expected] of [
       "MembershipRecord",
       "IAM_ROLE_DISPLAY_READER",
       "IamRoleDisplayReader",
+      "IAM_SUBJECT_EXISTENCE_READER",
+      "IamSubjectExistenceReader",
+      "IAM_ASSIGNMENT_READER",
+      "IamAssignmentReader",
       "REGISTRATION_ROLE_NAME",
       "IAM_ACCESS_MEMBERSHIPS",
       "IamAccessMembershipReader",
@@ -422,6 +426,8 @@ for (const [moduleName, expected] of [
       "CredentialSubjectStore",
       "AuthClient",
       "AUTH_ERRORS",
+      "AUTH_SUBJECT_EXISTENCE_READER",
+      "AuthSubjectExistenceReader",
       "AUTH_SUBJECT_ELIGIBILITY",
       "AuthSubjectEligibility",
       "AUTH_ACCOUNT_EVIDENCE",
@@ -455,6 +461,18 @@ for (const [moduleName, expected] of [
 }
 const analyze = (source, file = path) =>
   analyzeBoundaries([{ path: file, source }]);
+test("Independent IAM assignment repository does not access the Auth-owned user delegate", () => {
+  const source = readFileSync(
+    new URL(
+      "../../apps/api/src/modules/iam/infrastructure/repositories/prisma-subject-access.repository.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  ok(!directPrismaSurface(source).includes("user"));
+  ok(source.includes("this.subjects.exists(id)"));
+  ok(source.includes("this.assignments.find(userId)"));
+});
 const rules = (source, file) =>
   analyze(source, file).map((finding) => finding.rule);
 
@@ -518,6 +536,8 @@ test("Reputation and Users publish only the intended guarded technical read symb
       [
         "PrismaActiveSubjectSelector",
         "PrismaTransactionalSubjectExistenceReader",
+        "subjectAnchorSelect",
+        "subjectById",
         "profileAccountSelect",
         "profileAccountByEmail",
         "activeProfileAccount",
@@ -530,6 +550,8 @@ test("Reputation and Users publish only the intended guarded technical read symb
         "profileDirectoryRole",
         "PrismaMembershipGrantWriter",
         "PrismaRoleRevocationWriter",
+        "iamAssignmentSelect",
+        "mapIamAssignments",
       ],
     ],
     ["achievements", ["PrismaManualAwardWriter"]],

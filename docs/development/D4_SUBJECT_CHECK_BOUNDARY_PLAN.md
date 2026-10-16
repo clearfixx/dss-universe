@@ -2,7 +2,8 @@
 
 Date: 2026-10-16. Status: pre-transfer characterization implemented; owner
 semantics explicitly approved, gamification runtime follow-up linked below;
-IAM runtime transfer open. Foundation branch
+IAM transactional and independent read transfers locally implemented; quality,
+review and acceptance evidence distinguished below. Foundation branch
 `debt/d4-subject-check-characterization`, based on `3493925` / draft PR #22.
 The parent review stack is unaccepted, not a release baseline.
 
@@ -50,8 +51,11 @@ release acceptance.
    open, and independent reads remain below.
 3. **IAM independent anchor/read transfer:** narrow subjectExists binding and
    owner-fragment assignment-anchor assembly. Preserve null versus empty assignment
-   result, name/key ordering and current independent nested reads. A single Prisma
+   result, `assignedAt ASC` role/direct assignment ordering, unsorted role permission
+   keys and current independent nested reads. A single Prisma
    operation is not necessarily one SQL statement or a snapshot transaction.
+   Local transfer and exact pre/post read evidence:
+   [independent IAM reads](../audits/D4_IAM_INDEPENDENT_SUBJECT_READS.md).
 
 These are bounded execution packages, not permission to stop after the easiest
 ID check. All six mapped paths remain part of full D4 acceptance. Before each

@@ -27,6 +27,10 @@ export type { CredentialSubjectStore } from './contracts/credential-subject-stor
 export type { AuthClient } from './application/types/auth-client.type';
 export { AUTH_ERRORS } from './domain/constants/auth-errors.constant';
 export {
+  AUTH_SUBJECT_EXISTENCE_READER,
+  type AuthSubjectExistenceReader,
+} from './contracts/subject-existence-reader.contract';
+export {
   AUTH_SUBJECT_ELIGIBILITY,
   type AuthSubjectEligibility,
 } from './contracts/subject-eligibility.contract';

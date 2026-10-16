@@ -9,12 +9,12 @@
  * Persists IAM assignments without exposing profile data or ORM relation shapes.
  *
  * 🧠 Responsibilities:
- * • reads allowlisted ordered assignment facts;
- * • checks opaque subject, role and permission existence;
+ * • delegates subject existence and safe assignments through semantic inputs;
+ * • checks owned role and permission existence;
  * • applies ordinary role grants and direct permission mutations.
  *
  * 🏗️ Architecture:
- * Private IAM infrastructure adapter implementing the owned assignment port.
+ * Private IAM adapter; root assembles Auth anchors and IAM-owned read facts.
  *
  * ⚠️ Important:
  * No role revocation here: its dedicated locked capability owns final-holder safety.
@@ -23,81 +23,35 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '@api/core/database';
+import {
+  IAM_SUBJECT_EXISTENCE_READER,
+  type IamSubjectExistenceReader,
+} from '../../contracts/subject-existence-reader.contract';
+import {
+  IAM_ASSIGNMENT_READER,
+  type IamAssignmentReader,
+} from '../../contracts/assignment-reader.contract';
 import type { SubjectAccessRepository } from '../../user-access/contracts/subject-access.repository.interface';
 import type { SubjectAccessAssignments } from '../../user-access/types/subject-access-assignments.type';
 
 @Injectable()
 export class PrismaSubjectAccessRepository implements SubjectAccessRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(IAM_SUBJECT_EXISTENCE_READER)
+    private readonly subjects: IamSubjectExistenceReader,
+    @Inject(IAM_ASSIGNMENT_READER)
+    private readonly assignments: IamAssignmentReader,
+  ) {}
   async findAssignments(
     userId: string,
   ): Promise<SubjectAccessAssignments | null> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        roles: {
-          select: {
-            role: {
-              select: {
-                id: true,
-                name: true,
-                permissions: {
-                  select: {
-                    permission: {
-                      select: {
-                        key: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-          orderBy: {
-            assignedAt: 'asc',
-          },
-        },
-        directPermissions: {
-          select: {
-            permission: {
-              select: {
-                id: true,
-                key: true,
-              },
-            },
-          },
-          orderBy: {
-            assignedAt: 'asc',
-          },
-        },
-      },
-    });
-    if (!user) return null;
-    return {
-      subjectId: user.id,
-      roles: user.roles.map(({ role }) => ({
-        id: role.id,
-        name: role.name,
-        permissionKeys: role.permissions.map(
-          ({ permission }) => permission.key,
-        ),
-      })),
-      directPermissions: user.directPermissions.map(({ permission }) => ({
-        id: permission.id,
-        key: permission.key,
-      })),
-    };
+    return this.assignments.find(userId);
   }
   async subjectExists(id: string): Promise<boolean> {
-    return (
-      (await this.prisma.user.findUnique({
-        where: { id },
-        select: { id: true },
-      })) !== null
-    );
+    return this.subjects.exists(id);
   }
   async roleExists(id: string): Promise<boolean> {
     return (

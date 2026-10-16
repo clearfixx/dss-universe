@@ -221,6 +221,104 @@ describe('Transactional subject checks (e2e)', () => {
     expect(await access.subjectExists(randomUUID())).toBe(false);
     expect(await access.findAssignments(randomUUID())).toBeNull();
   });
+  it.each(states)(
+    'preserves populated independent assignment reads for %s without profile facts',
+    async (status) => {
+      const subjectId = ids[states.indexOf(status)];
+      const suffix = randomUUID();
+      const firstRole = await prisma.role.create({
+        data: { name: `z-${suffix}`, label: 'First by assignment time' },
+      });
+      const secondRole = await prisma.role.create({
+        data: { name: `a-${suffix}`, label: 'Second by assignment time' },
+      });
+      const firstPermission = await prisma.permission.create({
+        data: { key: `z.${suffix}`, label: 'First direct assignment' },
+      });
+      const secondPermission = await prisma.permission.create({
+        data: { key: `a.${suffix}`, label: 'Second direct assignment' },
+      });
+      const first = new Date('2026-01-01T00:00:00Z');
+      const second = new Date('2026-01-02T00:00:00Z');
+      await prisma.userRole.createMany({
+        data: [
+          { userId: subjectId, roleId: firstRole.id, assignedAt: first },
+          { userId: subjectId, roleId: secondRole.id, assignedAt: second },
+        ],
+      });
+      await prisma.userPermission.createMany({
+        data: [
+          {
+            userId: subjectId,
+            permissionId: firstPermission.id,
+            assignedAt: first,
+          },
+          {
+            userId: subjectId,
+            permissionId: secondPermission.id,
+            assignedAt: second,
+          },
+        ],
+      });
+      await prisma.rolePermission.create({
+        data: { roleId: firstRole.id, permissionId: secondPermission.id },
+      });
+      try {
+        fixture.queries.length = 0;
+        expect(await access.findAssignments(subjectId)).toEqual({
+          subjectId,
+          roles: [
+            {
+              id: firstRole.id,
+              name: firstRole.name,
+              permissionKeys: [secondPermission.key],
+            },
+            { id: secondRole.id, name: secondRole.name, permissionKeys: [] },
+          ],
+          directPermissions: [
+            { id: firstPermission.id, key: firstPermission.key },
+            { id: secondPermission.id, key: secondPermission.key },
+          ],
+        });
+        assertIdOnly();
+        const tables = fixture.queries.map(
+          (query) => /FROM "[^"]+"\."([^"]+)"/.exec(query)?.[1],
+        );
+        expect(tables).toHaveLength(7);
+        expect(tables[0]).toBe('users');
+        expect([...tables].sort()).toEqual([
+          'permissions',
+          'permissions',
+          'role_permissions',
+          'roles',
+          'user_permissions',
+          'user_roles',
+          'users',
+        ]);
+        expect(tables.indexOf('roles')).toBeGreaterThan(
+          tables.indexOf('user_roles'),
+        );
+        expect(tables.indexOf('role_permissions')).toBeGreaterThan(
+          tables.indexOf('roles'),
+        );
+        expect(tables.lastIndexOf('permissions')).toBeGreaterThan(
+          tables.indexOf('role_permissions'),
+        );
+        for (const table of ['user_roles', 'user_permissions']) {
+          const query = fixture.queries[tables.indexOf(table)];
+          expect(query).toContain(`"${table}"."assignedAt" ASC`);
+        }
+        expect(fixture.queries.every((query) => /^SELECT\b/.test(query))).toBe(
+          true,
+        );
+      } finally {
+        await prisma.userRole.deleteMany({ where: { userId: subjectId } });
+        await prisma.userPermission.deleteMany({
+          where: { userId: subjectId },
+        });
+      }
+    },
+  );
   it('keeps missing-recipient precedence while both owned award/title lookups still execute', async () => {
     const missing = randomUUID();
     fixture.queries.length = 0;

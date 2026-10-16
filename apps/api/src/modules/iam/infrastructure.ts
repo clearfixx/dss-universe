@@ -20,3 +20,7 @@
 export { profileDirectoryRole } from './infrastructure/repositories/prisma-profile-role.shape';
 export { PrismaMembershipGrantWriter } from './infrastructure/repositories/prisma-membership-grant.writer';
 export { PrismaRoleRevocationWriter } from './infrastructure/repositories/prisma-role-revocation.writer';
+export {
+  iamAssignmentSelect,
+  mapIamAssignments,
+} from './infrastructure/repositories/prisma-assignment.shape';

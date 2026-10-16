@@ -126,6 +126,36 @@
     ],
     "coverageDirectory": "../coverage",
     "coverageThreshold": {
+      "src/composition/iam-subject-reads/infrastructure/prisma-iam-assignment.reader.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/iam-subject-reads/infrastructure/auth-subject-existence.adapter.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/auth/infrastructure/repositories/prisma-subject-existence.reader.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/auth/infrastructure/repositories/prisma-subject-anchor.shape.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/iam/infrastructure/repositories/prisma-assignment.shape.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
       "src/composition/iam-transactions/infrastructure/prisma-membership-grant.transaction.ts": {
         "branches": 75,
         "functions": 100,

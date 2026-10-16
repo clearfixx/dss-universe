@@ -172,8 +172,9 @@ This is not full SQL ownership acceptance. Source inspection finds:
   now use Users-owned ID-only reads through root units and owner writers; see
   [runtime evidence](../audits/D4_GAMIFICATION_RECIPIENT_TRANSACTIONS.md).
   IAM transaction-local checks have a [local Auth-owned runtime transfer](../audits/D4_IAM_SUBJECT_TRANSACTIONS.md)
-  with inherited red gates and acceptance open; independent subject anchors still require
-  the approved separate transfer. These are all-state existence checks, not ACTIVE
+  with inherited red gates and acceptance open; independent subject anchors now have
+  a [local separate transfer](../audits/D4_IAM_INDEPENDENT_SUBJECT_READS.md).
+  These are all-state existence checks, not ACTIVE
   eligibility; no blanket approval of remaining joins or full D4 closure.
 
 The shared-row/role increment has a separate

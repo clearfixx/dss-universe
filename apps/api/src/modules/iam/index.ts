@@ -47,6 +47,14 @@ export {
 } from './contracts/role-display-reader.contract';
 export { REGISTRATION_ROLE_NAME } from './contracts/registration-role.policy';
 export {
+  IAM_SUBJECT_EXISTENCE_READER,
+  type IamSubjectExistenceReader,
+} from './contracts/subject-existence-reader.contract';
+export {
+  IAM_ASSIGNMENT_READER,
+  type IamAssignmentReader,
+} from './contracts/assignment-reader.contract';
+export {
   IAM_ACCESS_MEMBERSHIPS,
   type IamAccessMembershipReader,
 } from './access-groups/contracts/effective-memberships.contract';
