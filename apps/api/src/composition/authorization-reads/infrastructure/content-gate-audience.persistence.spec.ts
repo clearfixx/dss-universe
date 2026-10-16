@@ -2,8 +2,8 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: Content Access
- * 📄 File: apps/api/src/modules/content-access/infrastructure/repositories/prisma-content-gates.repository.integration.spec.ts
+ * 📦 Module: Authorization Read Composition
+ * 📄 File: apps/api/src/composition/authorization-reads/infrastructure/content-gate-audience.persistence.spec.ts
  *
  * 🎯 Purpose:
  * Proves audience-before-threshold delivery using real PostgreSQL viewer facts.
@@ -28,29 +28,31 @@ import { AuditWriterService } from '@api/core/audit';
 import { AuditRedactionService } from '@api/core/audit/services/audit-redaction.service';
 import { PermissionsRepository } from '@api/core/authorization/repositories/permissions.repository';
 import { AccessCapabilityDecisionsService } from '@api/core/authorization/services/access-capability-decisions.service';
-import { applyAccessGroupMigration } from '../../../../../test/helpers/access-group-schema.fixture';
-import { PrismaAccessGroupRepository } from '../../../iam/infrastructure/repositories/prisma-access-group.repository';
-import { PrismaMembershipGrantTransaction } from '../../../../composition/iam-transactions/infrastructure/prisma-membership-grant.transaction';
-import { PrismaMembershipGrantWriter } from '../../../iam/infrastructure/repositories/prisma-membership-grant.writer';
-import { PrismaTransactionalSubjectExistenceReader } from '../../../auth/infrastructure';
-import { PrismaSubjectEligibilityReader } from '../../../auth/infrastructure/repositories/prisma-subject-eligibility.reader';
-import { IamMembershipAdapter } from '../../../../composition/access-groups/infrastructure/iam-membership.adapter';
-import { ContentAudienceAdapter } from '../../../../composition/access-groups/infrastructure/content-audience.adapter';
+import { applyAccessGroupMigration } from '../../../../test/helpers/access-group-schema.fixture';
+import { PrismaAccessGroupRepository } from '@api/modules/iam/infrastructure/repositories/prisma-access-group.repository';
+import { PrismaMembershipGrantTransaction } from '@api/composition/iam-transactions/infrastructure/prisma-membership-grant.transaction';
+import { PrismaMembershipGrantWriter } from '@api/modules/iam/infrastructure/repositories/prisma-membership-grant.writer';
+import { PrismaTransactionalSubjectExistenceReader } from '@api/modules/auth/infrastructure';
+import { PrismaSubjectEligibilityReader } from '@api/modules/auth/infrastructure/repositories/prisma-subject-eligibility.reader';
+import { IamMembershipAdapter } from '@api/composition/access-groups/infrastructure/iam-membership.adapter';
+import { ContentAudienceAdapter } from '@api/composition/access-groups/infrastructure/content-audience.adapter';
 import { createEmptyEditorDocument } from '@dss/editor';
-import { ContentGatesService } from '../../application/services/content-gates.service';
-import { ContentGateDecisionsService } from '../../application/services/content-gate-decisions.service';
-import { EditorGateDecisionAdapter } from '../../../../composition/content/infrastructure/editor-gate-decision.adapter';
-import { EditorService } from '../../../editor/application/services/editor.service';
-import { EditorContentDeliveryService } from '../../../editor/application/services/editor-content-delivery.service';
-import type { EditorHtmlRenderer } from '../../../editor/infrastructure/rendering/editor-html.renderer';
-import { PrismaContentGatesRepository } from './prisma-content-gates.repository';
-import { ContentGateViewerFactsService } from '../../application/services/content-gate-viewer-facts.service';
-import { GateAccountEvidenceAdapter } from '../../../../composition/content-reads/infrastructure/gate-account-evidence.adapter';
-import { GateCommentCountAdapter } from '../../../../composition/content-reads/infrastructure/gate-comment-count.adapter';
-import { GateReputationTotalAdapter } from '../../../../composition/content-reads/infrastructure/gate-reputation-total.adapter';
-import { PrismaAccountEvidenceReader } from '../../../auth/infrastructure/repositories/prisma-account-evidence.reader';
-import { PrismaCommentCountReader } from '../../../interactions/infrastructure/repositories/prisma-comment-count.reader';
-import { PrismaReputationTotalReader } from '../../../reputation/infrastructure/repositories/prisma-reputation-total.reader';
+import { ContentGatesService } from '@api/modules/content-access/application/services/content-gates.service';
+import { ContentGateDecisionsService } from '@api/modules/content-access/application/services/content-gate-decisions.service';
+import { EditorGateDecisionAdapter } from '@api/composition/content/infrastructure/editor-gate-decision.adapter';
+import { EditorService } from '@api/modules/editor/application/services/editor.service';
+import { EditorContentDeliveryService } from '@api/modules/editor/application/services/editor-content-delivery.service';
+import type { EditorHtmlRenderer } from '@api/modules/editor/infrastructure/rendering/editor-html.renderer';
+import { PrismaContentGatesRepository } from '@api/modules/content-access/infrastructure/repositories/prisma-content-gates.repository';
+import { ContentGateViewerFactsService } from '@api/modules/content-access/application/services/content-gate-viewer-facts.service';
+import { GateAccountEvidenceAdapter } from '@api/composition/content-reads/infrastructure/gate-account-evidence.adapter';
+import { GateCommentCountAdapter } from '@api/composition/content-reads/infrastructure/gate-comment-count.adapter';
+import { GateReputationTotalAdapter } from '@api/composition/content-reads/infrastructure/gate-reputation-total.adapter';
+import { PrismaAccountEvidenceReader } from '@api/modules/auth/infrastructure/repositories/prisma-account-evidence.reader';
+import { PrismaCommentCountReader } from '@api/modules/interactions/infrastructure/repositories/prisma-comment-count.reader';
+import { PrismaReputationTotalReader } from '@api/modules/reputation/infrastructure/repositories/prisma-reputation-total.reader';
+import { PrismaAuthorizationSubjectReader } from './prisma-authorization-subject.reader';
+import { PrismaRolePermissionKeysReader } from '@api/modules/iam/infrastructure/repositories/prisma-role-permission-keys.reader';
 
 const dbSuite =
   process.env.RUN_AUTH_DB_TESTS === '1' ? describe : describe.skip;
@@ -86,7 +88,10 @@ dbSuite('Content Gate audience PostgreSQL integration', () => {
       new PrismaTransactionalSubjectExistenceReader(),
     ),
   );
-  const permissions = new PermissionsRepository(prisma);
+  const permissions = new PermissionsRepository(
+    new PrismaRolePermissionKeysReader(prisma),
+    new PrismaAuthorizationSubjectReader(prisma),
+  );
   const decisions = new AccessCapabilityDecisionsService(
     new IamMembershipAdapter({
       readEffective: (id, at) => memberships.effectiveMemberships(id, at),

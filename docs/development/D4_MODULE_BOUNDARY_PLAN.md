@@ -188,8 +188,13 @@ and [pre-transfer evidence](../audits/D4_SUBJECT_CHECK_CHARACTERIZATION.md).
 Nineteen real migrated tests pin four transaction-local checks plus two independent
 IAM anchor/existence paths. ID-only existence accepts all existing states; it is
 not ACTIVE eligibility. The [gamification runtime follow-up](../audits/D4_GAMIFICATION_RECIPIENT_TRANSACTIONS.md)
-transfers awards/title grants; IAM transactional transfer is locally verified
-with inherited red gates/acceptance open, and independent anchors remain unimplemented.
+transfers awards/title grants; IAM transactional and independent anchor transfers
+are locally verified with inherited red gates/acceptance open. The subsequent
+[SQL/Worker inventory](D4_SQL_WORKER_INVENTORY.md) remains in progress; its first
+pass is not an exhaustive ownership acceptance.
+The owner subsequently approved prioritizing the discovered Core Authorization
+assignment reads before Leaderboards. Its [separate runtime evidence](../audits/D4_AUTHORIZATION_READ_OWNERSHIP.md)
+distinguishes local implementation/gates from complete SQL ownership acceptance.
 
 The import inventory does not detect table ownership and must not waive these
 items. This is a reviewed starting inventory, not exhaustive proof of all joins;

@@ -191,6 +191,10 @@ No frontend redesign or smoke-test suppression is authorized by D0.
 10 PASS / 3 FAIL again; failed arrival/guest home tests wait for the same
 `Enter Station` link. Logs inspected directly; no frontend/test changes or waiver.
 
+PR #26 run `38844155392`, Web smoke job `116790737919`: same locator and
+10 PASS / 3 FAIL confirmed directly from logs (2026-10-16). Containment jobs
+pass; this does not turn Web smoke or the overall review stack green.
+
 ### DEBT-035 — Local test concurrency exhausts memory (Medium, OPEN, D6)
 
 A repeated Web unit-test run with dev processes and Docker services running
@@ -784,3 +788,26 @@ A subsequent repeat of the entire Web coverage suite with two workers passes
 frontend code is changed. Passing that bounded repeat neither closes the initial
 failure nor establishes host contention as its cause. Separate raw evidence:
 `node_modules/.cache/dss-d4-gamification-web-repeat.log`.
+
+### DEBT-059 — API E2E schema output intermittently fails to open on Windows (Medium, OPEN, D6)
+
+2026-10-16 Authorization read transfer full E2E: 436 PASS / 6 FAIL out of 442.
+One assertion is the known DEBT-045 News null/zero mismatch. Five cases in
+Community Points Ledger (one), Outbox (two), Audit (two) fail in AppModule init
+before their assertions: `UNKNOWN: unknown error, open` on
+`apps/api/src/schema.gql`, from Nest GraphQL FileSystemHelper.writeFile.
+All nine new Authorization ownership cases and existing Authorization nine pass.
+
+The file exists with normal Archive attributes after the run and has no Git diff.
+No evidence establishes antivirus, another process, ACL, filesystem or test
+concurrency as the cause. Do not classify this as a proven authorization regression
+or waive it as harmless environment noise. Full JSON/terminal evidence retained;
+only completed own Jest PID 9280 stopped after zero DB clients and owned schemas.
+
+Bounded repeat of all three affected suites plus Authorization ownership passes
+14/14, normal exit (12.624 s), unchanged expectations/deadlines/DB protections.
+This does not replace the full red result or close this debt. Investigate schema
+output lifecycle and write failures separately in D6; no generated-output location,
+test boot configuration, deadline or runtime correction is authorized by this
+ownership package. Owner notified. Raw evidence: `node_modules/.cache/d4-authz-full-e2e*`
+and `node_modules/.cache/d4-authz-affected-repeat*`.

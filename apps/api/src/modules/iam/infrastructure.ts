@@ -24,3 +24,7 @@ export {
   iamAssignmentSelect,
   mapIamAssignments,
 } from './infrastructure/repositories/prisma-assignment.shape';
+export {
+  iamAuthorizationSelect,
+  mapAuthorizationAssignmentFacts,
+} from './infrastructure/repositories/authorization-assignment.shape';

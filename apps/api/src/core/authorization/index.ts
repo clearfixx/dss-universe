@@ -50,6 +50,12 @@ export {
 export { PermissionsGuard } from './guards/permissions.guard';
 
 export { PermissionsRepository } from './repositories/permissions.repository';
+export {
+  AUTHORIZATION_ROLE_PERMISSION_FACTS,
+  AUTHORIZATION_SUBJECT_ASSIGNMENT_FACTS,
+  type AuthorizationRolePermissionFacts,
+  type AuthorizationSubjectAssignmentFacts,
+} from './contracts/permission-facts-reader.port';
 
 export { PermissionsService } from './services/permissions.service';
 

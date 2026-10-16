@@ -126,6 +126,36 @@
     ],
     "coverageDirectory": "../coverage",
     "coverageThreshold": {
+      "src/core/authorization/repositories/permissions.repository.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/authorization-reads/infrastructure/prisma-authorization-subject.reader.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/authorization-reads/infrastructure/iam-role-permission-facts.adapter.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/iam/infrastructure/repositories/prisma-role-permission-keys.reader.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/iam/infrastructure/repositories/authorization-assignment.shape.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
       "src/composition/iam-subject-reads/infrastructure/prisma-iam-assignment.reader.ts": {
         "branches": 100,
         "functions": 100,

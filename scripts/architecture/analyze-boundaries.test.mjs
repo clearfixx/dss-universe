@@ -402,6 +402,8 @@ for (const [moduleName, expected] of [
       "IamSubjectExistenceReader",
       "IAM_ASSIGNMENT_READER",
       "IamAssignmentReader",
+      "IAM_ROLE_PERMISSION_KEYS_READER",
+      "IamRolePermissionKeysReader",
       "REGISTRATION_ROLE_NAME",
       "IAM_ACCESS_MEMBERSHIPS",
       "IamAccessMembershipReader",
@@ -461,6 +463,19 @@ for (const [moduleName, expected] of [
 }
 const analyze = (source, file = path) =>
   analyzeBoundaries([{ path: file, source }]);
+test("Core Authorization repository delegates facts without owning IAM/Auth persistence", () => {
+  const source = readFileSync(
+    new URL(
+      "../../apps/api/src/core/authorization/repositories/permissions.repository.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  deepEqual(directPrismaSurface(source), []);
+  ok(!source.includes("PrismaService"));
+  ok(source.includes("this.roleFacts.read(roleNames)"));
+  ok(source.includes("this.subjectFacts.read(userId)"));
+});
 test("Independent IAM assignment repository does not access the Auth-owned user delegate", () => {
   const source = readFileSync(
     new URL(
@@ -552,6 +567,8 @@ test("Reputation and Users publish only the intended guarded technical read symb
         "PrismaRoleRevocationWriter",
         "iamAssignmentSelect",
         "mapIamAssignments",
+        "iamAuthorizationSelect",
+        "mapAuthorizationAssignmentFacts",
       ],
     ],
     ["achievements", ["PrismaManualAwardWriter"]],
