@@ -187,6 +187,10 @@ Impact: browser CI is red despite successful manual dev login. Reconcile
 expected user journeys with the frontend owner before changing tests or UI.
 No frontend redesign or smoke-test suppression is authorized by D0.
 
+2026-10-16 PR #25 CI run `38842042604`, Web smoke job `116784112882`:
+10 PASS / 3 FAIL again; failed arrival/guest home tests wait for the same
+`Enter Station` link. Logs inspected directly; no frontend/test changes or waiver.
+
 ### DEBT-035 — Local test concurrency exhausts memory (Medium, OPEN, D6)
 
 A repeated Web unit-test run with dev processes and Docker services running

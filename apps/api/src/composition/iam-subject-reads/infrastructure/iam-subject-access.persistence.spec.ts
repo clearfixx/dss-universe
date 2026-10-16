@@ -2,8 +2,8 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: IAM User Access
- * 📄 File: apps/api/src/modules/iam/infrastructure/repositories/prisma-subject-access.repository.spec.ts
+ * 📦 Module: IAM Subject Read Composition
+ * 📄 File: apps/api/src/composition/iam-subject-reads/infrastructure/iam-subject-access.persistence.spec.ts
  *
  * 🎯 Purpose:
  * Proves safe ordered IAM assignment facts and ordinary writes in real PostgreSQL.
@@ -27,7 +27,9 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '@api/core/database';
-import { PrismaSubjectAccessRepository } from './prisma-subject-access.repository';
+import { PrismaSubjectAccessRepository } from '@api/modules/iam/infrastructure/repositories/prisma-subject-access.repository';
+import { PrismaIamAssignmentReader } from '@api/composition/iam-subject-reads/infrastructure/prisma-iam-assignment.reader';
+import { PrismaSubjectExistenceReader } from '@api/modules/auth/infrastructure/repositories/prisma-subject-existence.reader';
 
 const dbSuite = process.env.RUN_IAM_DB_TESTS === '1' ? describe : describe.skip;
 dbSuite('IAM subject assignments PostgreSQL boundary', () => {
@@ -38,7 +40,11 @@ dbSuite('IAM subject assignments PostgreSQL boundary', () => {
     options: `-c search_path=${schema},public`,
   });
   const prisma = new PrismaService({ adapter: new PrismaPg(pool, { schema }) });
-  const repository = new PrismaSubjectAccessRepository(prisma);
+  const repository = new PrismaSubjectAccessRepository(
+    prisma,
+    new PrismaSubjectExistenceReader(prisma),
+    new PrismaIamAssignmentReader(prisma),
+  );
   beforeAll(async () => {
     await admin.query(`CREATE SCHEMA "${schema}"`);
     for (const table of [
