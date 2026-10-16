@@ -838,3 +838,21 @@ intended count. Owner notified and asked about a separate correction after trans
 Preserve ranking/one-statement visibility when fixing; do not add an uncoordinated
 count query or silently rewrite this in the ownership package. Evidence:
 `apps/api/test/leaderboard-ownership.e2e-spec.ts` and the Leaderboard ownership plan.
+
+Owner approved a separate DEBT-060 correction after ownership transfer on
+2026-10-16, preserving one SQL view and current ranking. Not yet implemented.
+
+### DEBT-061 — Worker processed-marker and dead-letter consumer identities differ (Medium, OPEN, D6)
+
+`apps/worker/src/main.ts` configures `dss.worker.integration-events.v2` for
+DeadLetterService, but calls createIntegrationEventProcessor with only store and
+handler. Its default is `dss.worker.integration-events.v1`, so processed markers
+and dead-letter consumer/job IDs use different identities.
+
+2026-10-16 read-only AST + actual built-class diagnostic confirms factory arity 2,
+marker read/write consumer v1, DLQ consumer/job suffix v2, without loading main
+or connecting to Redis/PostgreSQL/SMTP. No evidence establishes event loss or an
+exploit. Correct separately with explicit target identity and historical marker/
+replay policy, not a cosmetic version rename in the Leaderboards package.
+Owner notified; runtime fix not authorized by this source audit. Evidence:
+[Worker boundary review](../audits/D4_WORKER_SOURCE_BOUNDARIES.md).
