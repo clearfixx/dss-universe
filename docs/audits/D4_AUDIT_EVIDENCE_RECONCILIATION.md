@@ -76,3 +76,30 @@ The first unit run ended at 21:01:13Z, while Reputation initialization failed
 at 21:02:58Z: direct overlap with unit coverage does not explain that failure.
 Concurrent processes are not established as the cause; no runtime/test-harness
 fix is authorized or implemented based on this suspicion. Preserve both reports.
+
+App timeout source follow-up: the case named registration/viewer also includes
+Editor preview, profile and social-link writes inside the same unchanged 5000ms
+test. Parsed response timings in that suite's failure window peak at 629ms,
+not a single observed >5000ms request. This does not locate all test wall time
+or prove a slow provider; no assertion split, deadline increase or failure waiver
+is made. The serial full run is the next evidence, not another speculative fix.
+
+## Serial full verification result and residual risk
+
+Separate full E2E: 491 PASS / 1 inherited DEBT-045 FAIL / 0 skipped of 492,
+47 suites, 373.783s. App registration/editor/profile case, Reputation write
+suite and all ten migrated cases pass unchanged. Additional first-run failures
+did not reproduce, but their cause is still unproved and is not marked fixed.
+Both reports remain preserved; one passing rerun is not a stability certificate.
+
+After complete serial JSON, zero DB clients and zero api_boundary schemas were
+verified; exact own PID 3636 was stopped for retained handles, shell exit 1.
+No fixture protections/deadlines/assertions changed. Serial GraphQL generation
+succeeds but check remains red for DEBT-044 only; its own barrel comment/newline
+change is restored, with schema and operation outputs unchanged. Changed-file
+format and diff checks pass; user-owned stack plan is unchanged/excluded.
+
+PR #40 delivers branch reconciliation and current evidence, not green baseline
+acceptance. D6 must address the retained E2E stability risk and known shared
+fixture/generated-output debts; CI/review/owner acceptance and the remaining D4
+scope stay open. No third full run or unapproved harness repair is started here.

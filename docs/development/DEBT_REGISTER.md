@@ -371,6 +371,14 @@ correct cleanup and explicit view-count contract acceptance before correcting
 assertions. Do not weaken DB protections, extend timeouts blindly, or call the
 full E2E gate green. No out-of-scope implementation is included here.
 
+2026-10-19 reconciliation verification adds an unresolved stability observation:
+first combined full E2E 467 PASS/25 FAIL (one app-case 5000ms timeout, Reputation
+suite schema.gql UNKNOWN open error, and known News null/zero); separate fresh
+serial full E2E 491 PASS/1 known News FAIL, no skips, unchanged code/timeouts.
+The extra failures did not reproduce, but their cause is not proven or fixed.
+Both reports are preserved; do not turn one rerun into a stability certificate.
+See [reconciliation evidence](../audits/D4_AUDIT_EVIDENCE_RECONCILIATION.md).
+
 Repeated during DEBT-052 verification on 2026-10-14: full API E2E executes all
 25 suites / 211 tests, with 24 suites and 210 tests passing. The sole failed
 News-foundation test again expects viewCount null but receives zero; afterAll

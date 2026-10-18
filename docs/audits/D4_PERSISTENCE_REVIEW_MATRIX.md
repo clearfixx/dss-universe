@@ -226,6 +226,12 @@ That parallel audit was absent from PR #39 ancestry; its test/document commits
 are now carried forward on `debt/d4-audit-evidence-reconciliation` without
 merging GitHub PRs or changing runtime code. Current combined verification and
 acceptance are pending; parent results are not current-branch certification.
+Reconciliation PR #40 subsequently runs 10 migrated cases together (PASS) and
+current full unit coverage 1101/1101. Full E2E first gives 467 PASS/25 FAIL;
+separate serial repeat gives 491 PASS/1 known DEBT-045 FAIL of 492, zero skips.
+Additional first-run failures remain an unexplained stability risk, not a fixed
+defect. Both reports and gate limits are recorded in
+[reconciliation evidence](D4_AUDIT_EVIDENCE_RECONCILIATION.md). Acceptance stays open.
 
 The [Notifications follow-up](D4_NOTIFICATIONS_PERSISTENCE_REVIEW.md) reviews
 owned preferences read/upsert, canonical defaults/order, owner GraphQL boundary
