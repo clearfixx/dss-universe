@@ -279,3 +279,13 @@ Global format (41 files), dependency audit (1 high/10 moderate), GraphQL drift
 drift restored; verified retained Jest PID stopped only after complete results
 and zero DB clients/fixture schemas. CI/review/owner acceptance remain pending;
 this bounded fix does not complete the exhaustive D4 operation review.
+
+AI Core follow-up at `9cb91b4`: all eight runtime module sources and their two
+existing specs are traced in [the operation review](D4_AI_CORE_BOUNDARY_REVIEW.md).
+No owned/foreign DB operation occurs there; the material side effect is confirmed
+external text processing through the provider boundary. Existing tests pass 5/5
+with mocked fetch, not live authorization/provider certification. Concrete Nest
+service and wildcard exports remain D4.4 work. Owner seed includes ai.editor.use
+via the complete permission list; ordinary default grants and live assignments
+must not be conflated. Greeting/poster product scope is not implemented by this
+text foundation. Full D4 remains partial; no new runtime fix is included.
