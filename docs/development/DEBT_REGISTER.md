@@ -978,3 +978,7 @@ retries, recovery and API. No runtime correction in this audit. See
 [Core Events evidence](../audits/D4_CORE_EVENTS_PERSISTENCE_REVIEW.md).
 Owner approved a separate correction after this audit on 2026-10-19.
 Exact claim identity/fencing design and its regression matrix remain to be agreed.
+Subsequently owner approved PID+UUID per-attempt lockedBy and CAS completion/
+failure on ID/PROCESSING/token. Recovery invalidates old ownership by clearing
+the token. No migration, jobId/payload/retry/recovery-age/API change; no queue.add
+cancellation or exactly-once claim. Implementation remains a separate package.

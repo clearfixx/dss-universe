@@ -60,8 +60,16 @@ Stable queue job IDs and consumer idempotency must be preserved in any correctio
 Separate claim-fenced completion/failure correction requested; audit makes no fix.
 Owner subsequently approved that separate package on 2026-10-19. Exact claim
 identity and fencing design remain the correction packet's work.
+Subsequently approved design: lockedBy carries PID+UUID unique attempt token;
+success/failure CAS checks ID/PROCESSING/token; recovery clears token. No new
+schema or queue payload/jobId/retry/default recovery/API change. Old queue.add
+is not cancelled and exactly-once is not promised. Runtime remains unchanged here.
 
 Initial new test assertions incorrectly presumed empty Audit history after
 migrations; scoped to own synthetic action instead, without deleting migration
 evidence. Expected real P2002 is logged, not suppressed. Full quality gates,
 serial full E2E, GraphQL, publication/CI/review and owner acceptance remain pending.
+
+Current gate checkpoint: API opt-in coverage 1101/1101 across 148 suites,
+zero skips, 80.183s; root lint/typecheck 9 tasks each pass. Remaining gates are
+running; do not reuse previous packet build/E2E evidence as current acceptance.
