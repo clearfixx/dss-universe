@@ -49,3 +49,21 @@ inventory remains 84 known findings, not waived. Editor 23, Storage 43, Worker
 inherited files; full audit remains red on 1 high/10 moderate vulnerabilities.
 Draft PR #40 targets PR #39's branch. Full E2E and GraphQL final evidence remain
 pending; publication is not acceptance or permission to merge.
+
+## First full combined E2E result — red, investigation required
+
+First run: 467 PASS / 25 FAIL / 0 skipped of 492 tests, 47 suites, 425.3s.
+All ten migrated Achievements/Custom Titles cases pass. Failures are inherited
+News null/zero mismatch, one app GraphQL registration timeout at unchanged
+5000ms, and Reputation write suite initialization failure opening schema.gql
+(UNKNOWN file-system error). No assertion or timeout was weakened. Concurrent
+quality processes existed during this run; that correlation is not proof of
+the file error's cause. Do not call the additional failures inherited or solved.
+
+Complete first JSON/log remain preserved in ignored d4-reconcile-full-e2e
+artifacts. After zero DB clients and zero api_boundary schemas were verified,
+only completed run PID 4064 was stopped for retained handles (shell exit 1).
+schema.gql has no tracked diff. GraphQL generation succeeds but check reproduces
+only DEBT-044 generated-barrel comment/newline drift; its own side effect is
+restored. Further serial E2E verification is required, preserving this first
+failure evidence. No automatic retry was started merely for observation timeout.
