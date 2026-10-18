@@ -947,6 +947,8 @@ re-reads selection before deletion. Preserve consistent lock ordering and curren
 timeouts. Exact implementation and deterministic schedules remain a separate packet.
 Implementation started on `debt/custom-title-selection-atomicity`: shared title
 lock/revalidation for select, exclusive title update lock and per-user revoke
-re-read with conditional selection deletion. Four actual DB interleavings pass;
-full gates and rollback/history reconciliation are pending. Debt remains open.
+re-read with conditional selection deletion. Four actual DB interleavings and
+three Outbox-failure rollback cases pass; 1101 API unit tests and root lint,
+types/build/Prisma plus adjacent tests pass. Full E2E/GraphQL and acceptance
+remain pending; known format/dependency failures are not waived. Debt remains open.
 [Design and evidence](DEBT_064_SELECTION_DESIGN.md).
