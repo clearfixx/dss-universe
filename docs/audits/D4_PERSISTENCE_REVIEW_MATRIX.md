@@ -201,6 +201,14 @@ User-owned STACK_AUDIT_PLAN.md is unchanged. No runtime source/package changes.
 
 ## Still required
 
+The [Custom Titles follow-up](D4_CUSTOM_TITLES_PERSISTENCE_REVIEW.md) traces owned
+persistence, root grant transaction, service/transport/schema and actual migration
+checks (including partial active-pair unique index absent from Prisma schema).
+Two deterministic migrated diagnostics confirm DEBT-064 selection versus revoke/
+deactivate; they pin undesired behavior, not a fix. Separate correction approved
+by the owner on 2026-10-18; exact serialization design is still pending;
+current audit gates/publication pending. Full D4 acceptance remains open.
+
 The [Notifications follow-up](D4_NOTIFICATIONS_PERSISTENCE_REVIEW.md) reviews
 owned preferences read/upsert, canonical defaults/order, owner GraphQL boundary
 and Phase 15 delivery scope. Actual HTTP defaults/update/Audit case passes;

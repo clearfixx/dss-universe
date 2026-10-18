@@ -922,3 +922,21 @@ passes retry, deterministic competing claims, terminal/deleted predicates,
 scan quarantine and variant rollback; Worker 46 tests/coverage and lint/types pass.
 This is not a global lease. Full quality gate/CI/review/owner acceptance pending;
 debt remains open. [Design and evidence](DEBT_063_RETRY_DESIGN.md).
+
+### DEBT-064 — Revoked Custom Title grant remains selected after concurrent select (Medium, OPEN, separate correction approved)
+
+Fully migrated isolated PostgreSQL and actual repository reproduce: select's
+eligible-grant query completes, revoke commits under its different grant lock,
+then select commits OK and persists selection referencing revokedAt non-null.
+Diagnostic query observer preserves actual results and history protections.
+This is title lifecycle inconsistency, not authorization escalation. See
+[Custom Titles matrix](../audits/D4_CUSTOM_TITLES_PERSISTENCE_REVIEW.md) and
+`custom-title-selection-audit.e2e-spec.ts`. Separate selection/revoke/deactivate
+serialization design/fix requested, preserving cooldown/history/Audit/Outbox/API.
+Follow-up also confirms deactivate race with the same actual eligibility-read
+barrier: title becomes inactive before select commits OK. Sequential calls deny
+revoked/inactive grants (NOT_FOUND/INACTIVE), while final raced selection remains.
+Two migrated diagnostic cases pass. No runtime correction in this audit.
+Owner approved a separate package on 2026-10-18: shared serialization of
+selection/revoke/deactivate and deterministic DB regressions, preserving cooldown,
+history, Audit/Outbox and API. Finish this audit before designing the correction.
