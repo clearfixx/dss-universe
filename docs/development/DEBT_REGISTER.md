@@ -940,3 +940,8 @@ Two migrated diagnostic cases pass. No runtime correction in this audit.
 Owner approved a separate package on 2026-10-18: shared serialization of
 selection/revoke/deactivate and deterministic DB regressions, preserving cooldown,
 history, Audit/Outbox and API. Finish this audit before designing the correction.
+Owner subsequently approved the design direction: select retains its per-user
+lock and takes a shared title lock before revalidating eligibility; deactivation
+takes the matching exclusive title lock; revoke shares the per-user lock and
+re-reads selection before deletion. Preserve consistent lock ordering and current
+timeouts. Exact implementation and deterministic schedules remain a separate packet.

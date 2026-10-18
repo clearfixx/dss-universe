@@ -207,7 +207,10 @@ checks (including partial active-pair unique index absent from Prisma schema).
 Two deterministic migrated diagnostics confirm DEBT-064 selection versus revoke/
 deactivate; they pin undesired behavior, not a fix. Separate correction approved
 by the owner on 2026-10-18; exact serialization design is still pending;
-current audit gates/publication pending. Full D4 acceptance remains open.
+current audit published as draft PR #38. Full E2E is 483 PASS / 1 inherited
+DEBT-045 FAIL / 0 skipped of 484; both diagnostics pass. Unit coverage is
+1101/1101; lint/types/build/Prisma and adjacent tests pass. Known global format,
+dependency audit and GraphQL drift remain red. Full D4 acceptance remains open.
 
 The [Notifications follow-up](D4_NOTIFICATIONS_PERSISTENCE_REVIEW.md) reviews
 owned preferences read/upsert, canonical defaults/order, owner GraphQL boundary

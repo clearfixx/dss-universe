@@ -90,7 +90,18 @@ Storage coverage passes 43 tests, Worker 46 tests and Web 59 tests.
 Frozen architecture inventory remains 84 known findings, not waived.
 Global format still reports 41 inherited files; dependency audit reports
 1 high and 10 moderate vulnerabilities. These are not green acceptance.
-Full API E2E is running against the verified disposable tmpfs container at
+Full API E2E ran against the verified disposable tmpfs container at
 loopback 5435 after zero-client verification and recreation, with migrations
 applied and no seed. Development DB 5433 is untouched. Final E2E and GraphQL
-results, publication and CI/review are pending.
+results follow below; CI/review and acceptance remain pending.
+
+Full E2E: 483 PASS / 1 FAIL / 0 skipped, 484 tests across 46 suites,
+364.946s. Only failure is inherited DEBT-045 at news-domain-foundation:478,
+expected viewCount null versus actual 0. Both new Custom Titles diagnostics pass.
+Jest retained handles after writing complete results; after verifying zero DB
+clients and zero api_boundary fixture schemas, only this run's exact PID 2800
+was stopped. Shell exit is 1, not normal green completion.
+GraphQL generation succeeds but check is red for inherited DEBT-044 only:
+generated barrel comment/newline drift. This command's own side effect was
+restored; schema.gql and operation outputs are unchanged. No check is waived.
+Published draft PR #38 against debt/media-automatic-retry; no merge requested.
