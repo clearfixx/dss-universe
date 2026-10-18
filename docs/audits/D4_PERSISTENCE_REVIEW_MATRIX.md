@@ -212,6 +212,13 @@ DEBT-045 FAIL / 0 skipped of 484; both diagnostics pass. Unit coverage is
 1101/1101; lint/types/build/Prisma and adjacent tests pass. Known global format,
 dependency audit and GraphQL drift remain red. Full D4 acceptance remains open.
 
+The [Achievements follow-up](D4_ACHIEVEMENTS_PERSISTENCE_REVIEW.md) traces all
+owned repository methods, manual root transaction, semantic evidence, service,
+transport and schema constraints. Three migrated cases cover exact cap/evidence,
+Outbox rollback and observed pair-lock waiting with real counts `[0,1]`.
+This does not certify revoke/source rollback races or automatic production wiring.
+Full current packet E2E/acceptance is pending.
+
 The [Notifications follow-up](D4_NOTIFICATIONS_PERSISTENCE_REVIEW.md) reviews
 owned preferences read/upsert, canonical defaults/order, owner GraphQL boundary
 and Phase 15 delivery scope. Actual HTTP defaults/update/Audit case passes;
