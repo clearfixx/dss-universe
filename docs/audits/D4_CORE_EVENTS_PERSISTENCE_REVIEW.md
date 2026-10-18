@@ -74,3 +74,23 @@ Current gate checkpoint: API opt-in coverage 1101/1101 across 148 suites,
 zero skips, 80.183s; root lint/typecheck 9 tasks each pass; build passes 6 tasks,
 51.756s. Remaining gates are
 running; do not reuse previous packet build/E2E evidence as current acceptance.
+
+Follow-up: Prisma validation and bounded architecture checks pass; frozen
+inventory remains 84 known findings, not waived. Fresh adjacent tests pass:
+Editor 23, Storage 43, Worker 46, Web 59, dependency patches 14. Root format/audit
+sequence is still running. Full E2E waits for its terminal result to keep this
+verification serial; no test is restarted because polling yields no output.
+
+For the approved separate DEBT-065 correction, regression scope must include
+old success AND failure after recovery, both while the successor is PROCESSING
+and after it becomes PUBLISHED, normal failure/backoff and stable jobId, single
+CAS winner, and actual default stale recovery. Claim fencing protects database
+ownership, not cancellation of an already-started queue call. No such correction
+is implemented or credited by these characterization tests.
+
+Root gate sequence has completed (exit 1 from inherited dependency audit): global
+format 41 files and full audit 1 high/10 moderate remain red. All other inspected
+gates above pass within their stated scope. Full E2E now runs alone on recreated
+verified project/service/tmpfs loopback 5435 after zero clients and empty public
+schema checks, then migrations without seed; development DB 5433 is untouched.
+GraphQL and final E2E evidence remain pending. Draft PR #41 is not accepted.
