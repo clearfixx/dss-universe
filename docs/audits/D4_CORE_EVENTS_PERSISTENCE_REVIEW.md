@@ -94,3 +94,27 @@ gates above pass within their stated scope. Full E2E now runs alone on recreated
 verified project/service/tmpfs loopback 5435 after zero clients and empty public
 schema checks, then migrations without seed; development DB 5433 is untouched.
 GraphQL and final E2E evidence remain pending. Draft PR #41 is not accepted.
+
+## Producer discovery and selected payload trace
+
+Read-only search finds 18 non-test API files mentioning envelope creation/Outbox
+append, including the factory itself: 17 candidate producer call-site files.
+Separate direct-create search finds the owned OutboxWriter delegate. These
+lexical results do not prove absence of aliases, raw SQL, delegated producers
+or calls outside API; no all-producer coverage certificate is inferred.
+
+Complete contextual reads of root Profile Wall and News draft transactions and
+News workflow repository show these explicit payloads:
+
+| Source                             | Persisted event payload and limit                                                                                                                                                                                                                                                                                        |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| root Profile Wall create/tombstone | profileOwnerId and create hasImage; author/actor and post identity in envelope. Body and media key/path are not in these payloads. Deletion reason is retained separately in Audit/target evidence.                                                                                                                      |
+| root News draft create/save        | article/author/revision/version/status, create postType/language/slug and save previousVersion. Document, short/full text and attachment binary are not in these payloads. Draft slug still requires appropriate internal retention/access policy.                                                                       |
+| News editorial workflow            | Domain event includes IDs, status/action/version/decision, reason/times, title/slug/language/visibility/indexing/category/tags. Notification event includes article/author/recipient or reviewer audience, status/action/title/slug/language. Not just an opaque ID; unpublished metadata can remain in internal Outbox. |
+
+All three append inside the same caller transaction as their owner writes.
+These source reads do not prove every rollback, producer minimization policy,
+external delivery authorization or operator retention requirement. No public
+metadata leak or secret exposure is established from internal persistence alone.
+Remaining candidate producer fields and Worker/transport consumers still need
+operation-level reconciliation; raw dispatcher error retention also remains open.
