@@ -201,6 +201,12 @@ User-owned STACK_AUDIT_PLAN.md is unchanged. No runtime source/package changes.
 
 ## Still required
 
+The [Notifications follow-up](D4_NOTIFICATIONS_PERSISTENCE_REVIEW.md) reviews
+owned preferences read/upsert, canonical defaults/order, owner GraphQL boundary
+and Phase 15 delivery scope. Actual HTTP defaults/update/Audit case passes;
+two new migrated cases prove default-read non-persistence and Audit failure
+rollback for create/replacement. Full current packet E2E/acceptance is pending.
+
 Follow-up at `87aec38`: the [Media operation review](D4_MEDIA_PERSISTENCE_REVIEW.md)
 extends source tracing through repository methods, intake, retry/quarantine,
 HTTP/GraphQL mappings and Worker persistence. It confirms DEBT-063 through actual

@@ -902,7 +902,7 @@ News failure of 480 tests, all eight cap regressions pass. Known format/audit/
 GraphQL failures remain; CI/review/owner acceptance is pending. This debt is not
 closed. [Proof and scope](../audits/DEBT_062_POINTS_CAP_AUDIT.md).
 
-### DEBT-063 — Media automatic retry cannot complete from FAILED (High, OPEN, correction approval pending)
+### DEBT-063 — Media automatic retry cannot complete from FAILED (High, OPEN, separate correction approved)
 
 Actual built Worker processor/store with fully migrated private PostgreSQL schema
 reproduces: transient transform failure records FAILED; second invocation with
@@ -912,4 +912,6 @@ also only accepts QUARANTINED. Explicit administrative PROCESSING claim succeeds
 as a control. No live BullMQ scheduling or real file-transform failure is claimed.
 Diagnostic: `scripts/audit-media-retry.mjs`; details in
 [Media review](../audits/D4_MEDIA_PERSISTENCE_REVIEW.md). Separate correction
-requested; no runtime fix in this audit, preserve terminal/quarantine behavior.
+approved by owner on 2026-10-18 as a separate package after the audit: agree an
+atomic retry claim, preserve quarantine/terminal/deletion/manual-retry behavior,
+add migrated regressions without API or timeout changes. No runtime fix yet.
