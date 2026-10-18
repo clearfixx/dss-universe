@@ -67,3 +67,11 @@ Prisma/architecture pass their bounded scope and baseline remains 84 known
 findings. Global format 41 inherited files and audit 1 high/10 moderate remain
 red. Final lint/typecheck after the additional test and adjacent package gates
 are running; full E2E/GraphQL have not yet been run for this correction.
+
+Final pre-E2E follow-up: root lint/typecheck after the eleventh test pass 9 tasks
+each (40.519s/18.312s); Editor 23, Storage 43, Worker 46, Web 59 and patches 14
+pass. Other gate processes are terminal. Full E2E now runs separately against
+verified recreated disposable tmpfs loopback 5435 after zero clients/empty public
+schema checks and migrations, without seed; dev DB untouched. GraphQL remains
+pending until E2E completes. Draft PR #42 targets audit PR #41; no merge or full
+acceptance is claimed.
