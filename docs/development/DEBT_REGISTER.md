@@ -945,3 +945,8 @@ lock and takes a shared title lock before revalidating eligibility; deactivation
 takes the matching exclusive title lock; revoke shares the per-user lock and
 re-reads selection before deletion. Preserve consistent lock ordering and current
 timeouts. Exact implementation and deterministic schedules remain a separate packet.
+Implementation started on `debt/custom-title-selection-atomicity`: shared title
+lock/revalidation for select, exclusive title update lock and per-user revoke
+re-read with conditional selection deletion. Four actual DB interleavings pass;
+full gates and rollback/history reconciliation are pending. Debt remains open.
+[Design and evidence](DEBT_064_SELECTION_DESIGN.md).

@@ -14,6 +14,13 @@
  * • applies selection cooldown atomically;
  * • appends Audit and Outbox evidence inside business transactions.
  *
+ * 🏗️ Architecture:
+ * Owned persistence adapter; per-user selection locks precede shared title locks.
+ * Definition updates take exclusive title locks and never wait for user locks.
+ *
+ * ⚠️ Important:
+ * Re-read eligibility/selection after locks; pre-lock rows are routing facts only.
+ *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
@@ -108,6 +115,7 @@ export class PrismaCustomTitlesRepository implements CustomTitlesRepository {
     try {
       return await this.prisma.$transaction(async (transaction) => {
         await this.lock(transaction, 'custom-titles:definitions');
+        await this.lock(transaction, `custom-titles:title:${input.id}`);
         const existing = await transaction.customTitle.findUnique({
           where: { id: input.id },
           select: { id: true },
@@ -179,6 +187,12 @@ export class PrismaCustomTitlesRepository implements CustomTitlesRepository {
   ): Promise<TitleRevokeResult> {
     return this.prisma.$transaction(async (transaction) => {
       await this.lock(transaction, `custom-titles:grant:${grantId}`);
+      const anchor = await transaction.userTitleGrant.findUnique({
+        where: { id: grantId },
+        select: { userId: true },
+      });
+      if (!anchor) return { status: 'NOT_FOUND', grant: null };
+      await this.lock(transaction, `custom-titles:selection:${anchor.userId}`);
       const existing = await transaction.userTitleGrant.findUnique({
         where: { id: grantId },
         include: grantInclude,
@@ -188,8 +202,8 @@ export class PrismaCustomTitlesRepository implements CustomTitlesRepository {
         return { status: 'ALREADY_REVOKED', grant: null };
       }
       if (existing.selection) {
-        await transaction.userTitleSelection.delete({
-          where: { userId: existing.userId },
+        await transaction.userTitleSelection.deleteMany({
+          where: { userId: existing.userId, grantId },
         });
       }
       const grant = await transaction.userTitleGrant.update({
@@ -222,6 +236,17 @@ export class PrismaCustomTitlesRepository implements CustomTitlesRepository {
   async select(userId: string, grantId: string): Promise<TitleSelectionResult> {
     return this.prisma.$transaction(async (transaction) => {
       await this.lock(transaction, `custom-titles:selection:${userId}`);
+      const anchor = await transaction.userTitleGrant.findFirst({
+        where: { id: grantId, userId },
+        select: { titleId: true },
+      });
+      if (anchor) {
+        await transaction.$executeRaw`
+          SELECT pg_advisory_xact_lock_shared(
+            hashtextextended(${`custom-titles:title:${anchor.titleId}`}, 0)
+          )
+        `;
+      }
       const [grant, current, settings] = await Promise.all([
         transaction.userTitleGrant.findFirst({
           where: { id: grantId, userId, revokedAt: null },
