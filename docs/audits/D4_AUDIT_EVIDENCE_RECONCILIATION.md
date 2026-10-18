@@ -40,3 +40,12 @@ recreated disposable tmpfs loopback 5435 after exact project/service/binding,
 zero-client and empty public-schema checks, followed by migrations, without seed.
 Dev DB 5433 is untouched. API coverage/root/adjacent gates are independently
 running; GraphQL check follows E2E to avoid concurrent schema writers.
+
+Fresh completed gates: API opt-in coverage 1101/1101, 148 suites, zero skips,
+82.201s, normal exit 0. Root lint/typecheck each pass 9 tasks; build passes 6
+tasks (39.176s); Prisma validates. Architecture bounded checks pass and frozen
+inventory remains 84 known findings, not waived. Editor 23, Storage 43, Worker
+46, Web 59 and dependency-patch 14 tests pass. Global format remains red on 41
+inherited files; full audit remains red on 1 high/10 moderate vulnerabilities.
+Draft PR #40 targets PR #39's branch. Full E2E and GraphQL final evidence remain
+pending; publication is not acceptance or permission to merge.
