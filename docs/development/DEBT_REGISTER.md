@@ -949,6 +949,9 @@ Implementation started on `debt/custom-title-selection-atomicity`: shared title
 lock/revalidation for select, exclusive title update lock and per-user revoke
 re-read with conditional selection deletion. Four actual DB interleavings and
 three Outbox-failure rollback cases pass; 1101 API unit tests and root lint,
-types/build/Prisma plus adjacent tests pass. Full E2E/GraphQL and acceptance
-remain pending; known format/dependency failures are not waived. Debt remains open.
+types/build/Prisma plus adjacent tests pass. Full E2E: 488 PASS / 1 inherited
+DEBT-045 FAIL / 0 skipped of 489; seven regressions and foundation HTTP/GraphQL
+pass. Draft PR #39 delivers the correction; CI/review/owner acceptance remain
+pending. Known format/dependency/GraphQL drift failures are not waived.
+Debt remains open.
 [Design and evidence](DEBT_064_SELECTION_DESIGN.md).

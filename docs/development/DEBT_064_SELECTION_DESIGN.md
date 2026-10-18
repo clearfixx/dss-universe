@@ -80,3 +80,23 @@ executed. Fresh Editor 23, Storage coverage 43, Worker coverage 46, Web coverage
 59 and dependency-patch 14 tests pass. Full dependency audit remains red at
 1 high/10 moderate vulnerabilities. This supersedes the availability blocker,
 not the remaining E2E/GraphQL/publication/acceptance requirements.
+
+## Final local verification and publication
+
+Full E2E: 488 PASS / 1 inherited DEBT-045 FAIL / 0 skipped of 489 tests,
+46 suites, 380.063s. Only failure is News viewCount null versus 0 at line 478.
+All seven new regressions and existing Custom Titles foundation HTTP/GraphQL
+test pass, including cooldown, switching, permissions and immutable history.
+After complete JSON results, Jest retained handles. Zero DB clients and zero
+api_boundary schemas were verified; only this exact run's PID 22688 was stopped.
+Shell exit 1 is not normal green completion. Development DB 5433 was untouched.
+
+GraphQL generation succeeds but check reproduces inherited DEBT-044 generated
+barrel comment/newline drift only. Its own side effect was restored; schema.gql
+and operation outputs remain unchanged. Global format, dependency audit and
+GraphQL are still red, not waived. Changed-file formatting and diff checks pass.
+
+Draft PR #39 targets the separate audit branch/PR #38. No automatic merge or
+full D4 acceptance is requested. CI, review and owner acceptance remain open;
+DEBT-064 is delivered for review, not closed. User-owned stack audit plan remains
+unchanged and excluded. No other lifecycle or integration debt is silently fixed.
