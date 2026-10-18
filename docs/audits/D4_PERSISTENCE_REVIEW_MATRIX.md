@@ -201,6 +201,14 @@ User-owned STACK_AUDIT_PLAN.md is unchanged. No runtime source/package changes.
 
 ## Still required
 
+The [Core Events/Audit follow-up](D4_CORE_EVENTS_PERSISTENCE_REVIEW.md) traces
+dispatcher/runner/queue operations, transactional writers, schema and migrations.
+Four migrated cases verify CAS, commit/redaction, real uniqueness rollback and
+confirm DEBT-065 stale-attempt publication regression. Queue boundary is doubled;
+no live delivery-loss or duplicate domain-effect claim. Separate correction
+approved by owner on 2026-10-19; current audit gates/publication remain pending. Producer retention,
+operator privacy and complete transport/Worker reconciliation are still open.
+
 The [Custom Titles follow-up](D4_CUSTOM_TITLES_PERSISTENCE_REVIEW.md) traces owned
 persistence, root grant transaction, service/transport/schema and actual migration
 checks (including partial active-pair unique index absent from Prisma schema).

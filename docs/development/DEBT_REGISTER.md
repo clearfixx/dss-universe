@@ -963,3 +963,18 @@ pass. Draft PR #39 delivers the correction; CI/review/owner acceptance remain
 pending. Known format/dependency/GraphQL drift failures are not waived.
 Debt remains open.
 [Design and evidence](DEBT_064_SELECTION_DESIGN.md).
+
+### DEBT-065 — Stale Outbox dispatcher attempt overwrites recovered publication (Medium, OPEN, separate correction approved)
+
+Actual migrated PostgreSQL/dispatcher diagnostic pauses the first queue call
+after PROCESSING claim, ages its fixture lock beyond the unchanged recovery
+threshold, recovers and publishes through a second actual dispatch, then releases
+the first call with a synthetic queue failure. Its unconditional ID update resets
+PUBLISHED to PENDING, leaving publishedAt nonnull and attempts=2. This proves
+state regression, not live BullMQ delivery loss or duplicate domain effects.
+Queue jobId remains stable; at-least-once and consumer idempotency are material.
+Separate claim-fenced completion/failure correction requested, preserving jobId,
+retries, recovery and API. No runtime correction in this audit. See
+[Core Events evidence](../audits/D4_CORE_EVENTS_PERSISTENCE_REVIEW.md).
+Owner approved a separate correction after this audit on 2026-10-19.
+Exact claim identity/fencing design and its regression matrix remain to be agreed.
