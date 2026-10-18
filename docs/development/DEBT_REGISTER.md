@@ -378,6 +378,15 @@ serial full E2E 491 PASS/1 known News FAIL, no skips, unchanged code/timeouts.
 The extra failures did not reproduce, but their cause is not proven or fixed.
 Both reports are preserved; do not turn one rerun into a stability certificate.
 See [reconciliation evidence](../audits/D4_AUDIT_EVIDENCE_RECONCILIATION.md).
+Core audit's subsequent isolated full E2E also times out in the same app case
+with no parallel quality gates (494 PASS/2 FAIL of 496; other failure News).
+Parallelism alone is therefore not an established explanation. The result is
+preserved in [Core audit evidence](../audits/D4_CORE_EVENTS_PERSISTENCE_REVIEW.md);
+stability/root cause remain open for D6, with unchanged assertions/timeouts.
+Separately, Core audit's first guarded Node newline restoration of generated
+Web barrel also hit UNKNOWN/open outside Jest, then identical retry succeeded
+and Git diff verified clean outputs. This is additional host/filesystem evidence,
+not proof of the same root cause or authorization for system reconfiguration.
 
 Repeated during DEBT-052 verification on 2026-10-14: full API E2E executes all
 25 suites / 211 tests, with 24 suites and 210 tests passing. The sole failed
@@ -982,3 +991,7 @@ Subsequently owner approved PID+UUID per-attempt lockedBy and CAS completion/
 failure on ID/PROCESSING/token. Recovery invalidates old ownership by clearing
 the token. No migration, jobId/payload/retry/recovery-age/API change; no queue.add
 cancellation or exactly-once claim. Implementation remains a separate package.
+Audit delivered as draft PR #41: four new migrated cases pass, API unit coverage
+1101/1101 and root/sibling gates pass except inherited global format/audit.
+Full E2E 494 PASS/2 FAIL of 496 (known News plus recurring app timeout), no skips;
+GraphQL drift remains DEBT-044. CI/review/acceptance open, correction not started.

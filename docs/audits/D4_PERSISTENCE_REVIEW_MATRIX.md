@@ -208,6 +208,11 @@ confirm DEBT-065 stale-attempt publication regression. Queue boundary is doubled
 no live delivery-loss or duplicate domain-effect claim. Separate correction
 approved by owner on 2026-10-19; current audit gates/publication remain pending. Producer retention,
 operator privacy and complete transport/Worker reconciliation are still open.
+Audit subsequently published as draft PR #41: full E2E 494 PASS/2 FAIL of 496,
+zero skips; four Core cases pass. Known News plus recurring app-case timeout
+remain red; latter occurs without parallel gates. Unit coverage 1101/1101,
+lint/types/build/Prisma/adjacent checks pass; format/audit/GraphQL known failures
+and CI/review/acceptance remain open. DEBT-065 correction stays separate.
 
 The [Custom Titles follow-up](D4_CUSTOM_TITLES_PERSISTENCE_REVIEW.md) traces owned
 persistence, root grant transaction, service/transport/schema and actual migration

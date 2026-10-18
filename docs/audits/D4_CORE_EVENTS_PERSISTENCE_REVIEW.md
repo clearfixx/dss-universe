@@ -118,3 +118,32 @@ external delivery authorization or operator retention requirement. No public
 metadata leak or secret exposure is established from internal persistence alone.
 Remaining candidate producer fields and Worker/transport consumers still need
 operation-level reconciliation; raw dispatcher error retention also remains open.
+
+## Final local gate evidence
+
+Full isolated E2E: 494 PASS / 2 FAIL / 0 skipped of 496, 48 suites, 420.638s.
+All four new Core cases pass. Failures are known DEBT-045 News viewCount null/0
+and recurrence of the app registration/viewer multi-operation case's unchanged
+5000ms timeout. The latter now reproduces without concurrent quality gates;
+parallelism alone is not an adequate explanation. Cause/stability remain open
+under D6; no timeout/assertion weakening or repeated rerun to hide this result.
+
+After complete JSON, zero DB clients and zero api_boundary schemas verified;
+only exact owned PID 9740 was stopped for retained handles (shell exit 1, not
+normal green completion). GraphQL generation succeeds but check is red solely
+on DEBT-044 generated-barrel comment/newline drift. Own side effect restored;
+schema.gql and operation outputs unchanged. Changed-file format/diff checks pass.
+User-owned stack audit plan is unchanged/excluded; dev DB untouched.
+
+Draft PR #41 delivers partial audit/test evidence, not full D4 acceptance or
+green release baseline. CI/review/owner acceptance remain open. Approved
+DEBT-065 correction is the next separate packet; no production fix in this audit.
+
+Additional filesystem observation: first guarded newline restoration of the
+generator's own Web barrel side effect failed with Node UNKNOWN/open (-4094),
+after E2E and other gates were terminal. A second identical guarded operation
+succeeded and exact Git diff confirmed schema/operation/barrel outputs clean.
+No broader file cleanup or source rewrite occurred. This is observed outside
+Jest, weakening a Jest-only/parallelism-only explanation for the prior schema
+error, but not proving both failures share a root cause. Preserve it for D6/host
+diagnostics; no filesystem/security software reconfiguration is authorized here.
