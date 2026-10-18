@@ -206,18 +206,26 @@ persistence, root grant transaction, service/transport/schema and actual migrati
 checks (including partial active-pair unique index absent from Prisma schema).
 Two deterministic migrated diagnostics confirm DEBT-064 selection versus revoke/
 deactivate; they pin undesired behavior, not a fix. Separate correction approved
-by the owner on 2026-10-18; exact serialization design is still pending;
+by the owner on 2026-10-18;
 current audit published as draft PR #38. Full E2E is 483 PASS / 1 inherited
 DEBT-045 FAIL / 0 skipped of 484; both diagnostics pass. Unit coverage is
 1101/1101; lint/types/build/Prisma and adjacent tests pass. Known global format,
 dependency audit and GraphQL drift remain red. Full D4 acceptance remains open.
+Separate correction PR #39 subsequently implements the approved per-user and
+shared/exclusive title-lock design. Seven migrated regressions pass; full E2E
+488 PASS / 1 inherited DEBT-045 FAIL / 0 skipped of 489. CI/review/owner
+acceptance remain open. See [DEBT-064 design](../development/DEBT_064_SELECTION_DESIGN.md).
 
 The [Achievements follow-up](D4_ACHIEVEMENTS_PERSISTENCE_REVIEW.md) traces all
 owned repository methods, manual root transaction, semantic evidence, service,
 transport and schema constraints. Three migrated cases cover exact cap/evidence,
 Outbox rollback and observed pair-lock waiting with real counts `[0,1]`.
 This does not certify revoke/source rollback races or automatic production wiring.
-Full current packet E2E/acceptance is pending.
+Original PR #36 final E2E was 484 PASS / 1 inherited DEBT-045 FAIL of 485.
+That parallel audit was absent from PR #39 ancestry; its test/document commits
+are now carried forward on `debt/d4-audit-evidence-reconciliation` without
+merging GitHub PRs or changing runtime code. Current combined verification and
+acceptance are pending; parent results are not current-branch certification.
 
 The [Notifications follow-up](D4_NOTIFICATIONS_PERSISTENCE_REVIEW.md) reviews
 owned preferences read/upsert, canonical defaults/order, owner GraphQL boundary

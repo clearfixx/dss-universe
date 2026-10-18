@@ -1,5 +1,11 @@
 # D4 — Achievements persistence review (partial)
 
+> Historical PR #36 evidence, carried forward after PR #39 on the reconciliation
+> branch. Statements about in-progress DEBT-063 or gates below describe their
+> original checkpoints, not current state. See
+> [reconciliation evidence](D4_AUDIT_EVIDENCE_RECONCILIATION.md) for fresh combined
+> verification. No old result is promoted to current acceptance.
+
 Date: 2026-10-18. Baseline `f72edda` / PR #35, acceptance open.
 Branch `debt/d4-achievements-persistence-review`. No runtime changes.
 Untracked DEBT-063 retry design remains separate, awaiting exact CAS confirmation.
