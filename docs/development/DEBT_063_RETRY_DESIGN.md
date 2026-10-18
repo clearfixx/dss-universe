@@ -97,3 +97,11 @@ Full API E2E is running separately in session 5562 on verified tmpfs loopback543
 after project/service/port checks, zero-client check, recreation, empty public
 tables and fresh migrations, without seed. No dev database touched. Final E2E,
 GraphQL, PR and CI/review acceptance remain pending.
+
+Final E2E: 481 PASS / 1 FAIL of 482, zero skipped, 360.833s. Sole failure is
+inherited DEBT-045 News viewCount null-versus-zero (line 478). Completed JSON
+retained handles; exact own PID 18316 stopped after zero clients/fixture schemas,
+not normal green completion. GraphQL check remains DEBT-044 generated barrel
+comment/newline drift; own side effect restored, schema/operations unchanged.
+All scoped implementation checks ran, but global gate/CI/review/owner acceptance
+is not green and the debt is not declared closed.
