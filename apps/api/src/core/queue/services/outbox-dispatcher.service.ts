@@ -1,4 +1,29 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Core Queue
+ * 📄 File: apps/api/src/core/queue/services/outbox-dispatcher.service.ts
+ *
+ * 🎯 Purpose:
+ * Dispatches durable Outbox events while fencing each database claim's owner.
+ *
+ * 🧠 Responsibilities:
+ * • claims due rows and retains stable queue job identities;
+ * • permits only the current attempt to publish or schedule retry;
+ * • recovers stale claims without trusting late queue completions.
+ *
+ * 🏗️ Architecture:
+ * Core persistence/queue adapter; queue delivery and database writes are separate.
+ *
+ * ⚠️ Important:
+ * Fencing does not cancel queue.add or promise exactly-once domain effects.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { Injectable } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import { DSS_JOB_NAMES } from '@dss/jobs';
 import { PrismaService } from '../../database';
 import { QueueRegistryService } from './queue-registry.service';
@@ -17,12 +42,13 @@ export class OutboxDispatcherService {
     });
     let dispatched = 0;
     for (const event of candidates) {
+      const claimToken = `${process.pid}:${randomUUID()}`;
       const claim = await this.prisma.outboxEvent.updateMany({
         where: { id: event.id, status: 'PENDING' },
         data: {
           status: 'PROCESSING',
           lockedAt: new Date(),
-          lockedBy: process.pid.toString(),
+          lockedBy: claimToken,
         },
       });
       if (claim.count === 0) continue;
@@ -56,8 +82,8 @@ export class OutboxDispatcherService {
             removeOnFail: false,
           },
         );
-        await this.prisma.outboxEvent.update({
-          where: { id: event.id },
+        const published = await this.prisma.outboxEvent.updateMany({
+          where: { id: event.id, status: 'PROCESSING', lockedBy: claimToken },
           data: {
             status: 'PUBLISHED',
             publishedAt: new Date(),
@@ -66,10 +92,10 @@ export class OutboxDispatcherService {
             lastError: null,
           },
         });
-        dispatched += 1;
+        dispatched += published.count;
       } catch (error) {
-        await this.prisma.outboxEvent.update({
-          where: { id: event.id },
+        await this.prisma.outboxEvent.updateMany({
+          where: { id: event.id, status: 'PROCESSING', lockedBy: claimToken },
           data: {
             status: 'PENDING',
             attempts: { increment: 1 },

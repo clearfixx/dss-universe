@@ -2,22 +2,22 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: Core Events Audit
+ * 📦 Module: Core Events
  * 📄 File: apps/api/test/core-outbox-audit.e2e-spec.ts
  *
  * 🎯 Purpose:
- * Verifies actual Outbox claims and characterizes stale-attempt completion.
+ * Verifies actual Outbox claims, atomic evidence and stale-attempt fencing.
  *
  * 🧠 Responsibilities:
  * • uses fully migrated isolated PostgreSQL and real dispatcher persistence;
  * • controls only the queue boundary and simulated age of a claimed row;
- * • preserves undesired-state evidence without changing runtime behavior.
+ * • verifies late success/failure cannot modify successor ownership or state.
  *
  * 🏗️ Architecture:
  * Test-only queue double; no live BullMQ delivery or consumer claim.
  *
  * ⚠️ Important:
- * Stale-attempt assertions characterize a risk, not an accepted correction.
+ * Queue delivery is doubled; only database ownership and state are certified here.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -29,7 +29,7 @@ import { OutboxDispatcherService } from '../src/core/queue/services/outbox-dispa
 import type { QueueRegistryService } from '../src/core/queue/services/queue-registry.service';
 import { createIsolatedApiSchemaFixture } from './helpers/migrated-api-schema.fixture';
 
-describe('Core Outbox persistence audit (e2e)', () => {
+describe('Core Outbox persistence and fencing (e2e)', () => {
   let fixture: Awaited<ReturnType<typeof createIsolatedApiSchemaFixture>>;
   let dispatcher: OutboxDispatcherService;
   let eventId: string;
@@ -163,60 +163,171 @@ describe('Core Outbox persistence audit (e2e)', () => {
     expect(await dispatcher.dispatchPending()).toBe(0);
   });
 
-  it('characterizes an old failed attempt reopening a recovered published row', async () => {
-    let ready!: () => void;
-    const observed = new Promise<void>((resolve) => {
-      ready = resolve;
+  it('retains normal queue failure backoff and stable job identity on retry', async () => {
+    add.mockRejectedValueOnce(new Error('synthetic queue unavailable'));
+    const startedAt = Date.now();
+    expect(await dispatcher.dispatchPending()).toBe(0);
+    const failedAt = Date.now();
+    const failed = await fixture.prisma.outboxEvent.findUniqueOrThrow({
+      where: { id: eventId },
     });
-    let release!: () => void;
-    const barrier = new Promise<void>((resolve) => {
-      release = resolve;
+    expect(failed).toMatchObject({
+      status: 'PENDING',
+      attempts: 1,
+      lockedBy: null,
+      lockedAt: null,
+      publishedAt: null,
+      lastError: 'synthetic queue unavailable',
     });
-    let entered = false;
-    add.mockImplementationOnce(async () => {
-      entered = true;
-      ready();
-      await barrier;
-      throw new Error('synthetic late queue failure');
+    expect(failed.availableAt.getTime()).toBeGreaterThanOrEqual(
+      startedAt + 1000,
+    );
+    expect(failed.availableAt.getTime()).toBeLessThanOrEqual(failedAt + 1000);
+    await fixture.prisma.outboxEvent.update({
+      where: { id: eventId },
+      data: { availableAt: new Date(0) },
     });
-    const deadline = setTimeout(() => {
-      ready();
-      release();
-    }, 1500);
-    const old = dispatcher.dispatchPending();
-    try {
-      await observed;
-      expect(entered).toBe(true);
-      expect(
-        await fixture.prisma.outboxEvent.findUniqueOrThrow({
-          where: { id: eventId },
-        }),
-      ).toMatchObject({ status: 'PROCESSING' });
-      // Age only this owned fixture claim; retain default recovery policy.
-      await fixture.prisma.outboxEvent.update({
+    expect(await dispatcher.dispatchPending()).toBe(1);
+    expect(
+      await fixture.prisma.outboxEvent.findUniqueOrThrow({
         where: { id: eventId },
-        data: { lockedAt: new Date(Date.now() - 61000) },
-      });
-      expect(await dispatcher.recoverStaleProcessing()).toBe(1);
-      expect(await dispatcher.dispatchPending()).toBe(1);
-      expect(
-        await fixture.prisma.outboxEvent.findUniqueOrThrow({
-          where: { id: eventId },
+      }),
+    ).toMatchObject({
+      status: 'PUBLISHED',
+      attempts: 1,
+      lockedBy: null,
+      lockedAt: null,
+      lastError: null,
+    });
+    for (const call of [1, 2])
+      expect(add).toHaveBeenNthCalledWith(
+        call,
+        expect.any(String),
+        expect.objectContaining({
+          eventId,
+          eventName: 'audit.synthetic.v1',
+          payload: { reference: 'synthetic-only' },
         }),
-      ).toMatchObject({ status: 'PUBLISHED' });
-      release();
-      expect(await old).toBe(0);
-      const final = await fixture.prisma.outboxEvent.findUniqueOrThrow({
-        where: { id: eventId },
-      });
-      expect(final.status).toBe('PENDING');
-      expect(final.publishedAt).not.toBeNull();
-      expect(final.attempts).toBe(2);
-      expect(add).toHaveBeenCalledTimes(2);
-    } finally {
-      clearTimeout(deadline);
-      release();
-      await Promise.allSettled([old]);
-    }
+        {
+          jobId: eventId,
+          attempts: 5,
+          backoff: { type: 'exponential', delay: 1000 },
+          removeOnComplete: false,
+          removeOnFail: false,
+        },
+      );
   });
+
+  it.each([
+    ['success', 'PUBLISHED'],
+    ['failure', 'PUBLISHED'],
+    ['success', 'PROCESSING'],
+    ['failure', 'PROCESSING'],
+    ['success', 'PENDING'],
+    ['failure', 'PENDING'],
+  ] as const)(
+    'fences old %s while successor state is %s',
+    async (outcome, successor) => {
+      let ready!: () => void;
+      const observed = new Promise<void>((resolve) => {
+        ready = resolve;
+      });
+      let release!: () => void;
+      const barrier = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      let entered = false;
+      let successorReady!: () => void;
+      const successorObserved = new Promise<void>((resolve) => {
+        successorReady = resolve;
+      });
+      let releaseSuccessor!: () => void;
+      const successorBarrier = new Promise<void>((resolve) => {
+        releaseSuccessor = resolve;
+      });
+      let successorEntered = false;
+      let newer: Promise<number> | undefined;
+      add.mockImplementationOnce(async () => {
+        entered = true;
+        ready();
+        await barrier;
+        if (outcome === 'failure')
+          throw new Error('synthetic late queue failure');
+        return { id: 'synthetic-old-job' };
+      });
+      const deadline = setTimeout(() => {
+        ready();
+        release();
+        successorReady();
+        releaseSuccessor();
+      }, 1500);
+      const old = dispatcher.dispatchPending();
+      try {
+        await observed;
+        expect(entered).toBe(true);
+        const firstClaim = await fixture.prisma.outboxEvent.findUniqueOrThrow({
+          where: { id: eventId },
+        });
+        expect(firstClaim.status).toBe('PROCESSING');
+        expect(firstClaim.lockedBy).toMatch(
+          new RegExp(`^${process.pid}:[0-9a-f-]{36}$`),
+        );
+        // Age only this owned fixture claim; retain default recovery policy.
+        await fixture.prisma.outboxEvent.update({
+          where: { id: eventId },
+          data: { lockedAt: new Date(Date.now() - 61000) },
+        });
+        expect(await dispatcher.recoverStaleProcessing()).toBe(1);
+        if (successor === 'PUBLISHED')
+          expect(await dispatcher.dispatchPending()).toBe(1);
+        if (successor === 'PROCESSING') {
+          add.mockImplementationOnce(async () => {
+            successorEntered = true;
+            successorReady();
+            await successorBarrier;
+            return { id: 'synthetic-new-job' };
+          });
+          newer = dispatcher.dispatchPending();
+          await successorObserved;
+          expect(successorEntered).toBe(true);
+        }
+        const beforeOldCompletion =
+          await fixture.prisma.outboxEvent.findUniqueOrThrow({
+            where: { id: eventId },
+          });
+        expect(beforeOldCompletion.status).toBe(successor);
+        if (successor === 'PROCESSING') {
+          expect(beforeOldCompletion.lockedBy).not.toBe(firstClaim.lockedBy);
+          expect(beforeOldCompletion.lockedBy).not.toBeNull();
+        }
+        release();
+        expect(await old).toBe(0);
+        const final = await fixture.prisma.outboxEvent.findUniqueOrThrow({
+          where: { id: eventId },
+        });
+        expect(final).toEqual(beforeOldCompletion);
+        expect(final.attempts).toBe(1);
+        expect(add).toHaveBeenCalledTimes(successor === 'PENDING' ? 1 : 2);
+        if (newer) {
+          releaseSuccessor();
+          expect(await newer).toBe(1);
+          expect(
+            await fixture.prisma.outboxEvent.findUniqueOrThrow({
+              where: { id: eventId },
+            }),
+          ).toMatchObject({
+            status: 'PUBLISHED',
+            lockedBy: null,
+            lockedAt: null,
+          });
+        }
+      } finally {
+        clearTimeout(deadline);
+        release();
+        releaseSuccessor();
+        await Promise.allSettled([old]);
+        if (newer) await Promise.allSettled([newer]);
+      }
+    },
+  );
 });

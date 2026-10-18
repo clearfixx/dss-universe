@@ -995,3 +995,8 @@ Audit delivered as draft PR #41: four new migrated cases pass, API unit coverage
 1101/1101 and root/sibling gates pass except inherited global format/audit.
 Full E2E 494 PASS/2 FAIL of 496 (known News plus recurring app timeout), no skips;
 GraphQL drift remains DEBT-044. CI/review/acceptance open, correction not started.
+Separate correction now implemented locally on `debt/outbox-claim-fencing`:
+PID+UUID token per claim and ID/PROCESSING/token CAS for success/failure.
+Ten migrated regressions pass including normal retry/jobId; root lint passes,
+expanded gates pending. No migration/API/queue payload/recovery cutoff change.
+Debt remains open. [Design and current evidence](DEBT_065_CLAIM_FENCING_DESIGN.md).
