@@ -25,6 +25,13 @@ lockedBy/lockedAt beyond dispatcher. PID prefix retains operator context while
 UUID avoids PID/timestamp reuse as attempt identity. This token is coordination
 data, not an authorization credential or new payload field.
 
+Operational limit: fencing assumes completing dispatcher processes run this
+updated code. An old binary's unconditional update cannot be fenced merely by
+new application predicates; deployment must drain/stop old dispatcher instances
+before claiming this protection across all instances. No deployment or service
+shutdown is performed in this local package. Existing stale PID-only claims
+can still be recovered by the unchanged timestamp predicate.
+
 ## Actual DB regression scope
 
 The former undesired-state diagnostic becomes six real migrated schedules:
