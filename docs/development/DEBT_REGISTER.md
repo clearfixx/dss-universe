@@ -999,4 +999,7 @@ Separate correction now implemented locally on `debt/outbox-claim-fencing`:
 PID+UUID token per claim and ID/PROCESSING/token CAS for success/failure.
 Ten migrated regressions pass including normal retry/jobId; root lint passes,
 expanded gates pending. No migration/API/queue payload/recovery cutoff change.
+Expanded eleven-case DB suite passes, including publication-persistence failure
+after enqueue and unchanged current-owner retry. API coverage 1101/1101 and build
+pass; final gate/serial E2E/GraphQL/publication/CI/acceptance remain pending.
 Debt remains open. [Design and current evidence](DEBT_065_CLAIM_FENCING_DESIGN.md).

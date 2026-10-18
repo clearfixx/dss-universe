@@ -27,6 +27,7 @@ import { AuditWriterService } from '../src/core/audit/services/audit-writer.serv
 import { AuditRedactionService } from '../src/core/audit/services/audit-redaction.service';
 import { OutboxDispatcherService } from '../src/core/queue/services/outbox-dispatcher.service';
 import type { QueueRegistryService } from '../src/core/queue/services/queue-registry.service';
+import type { PrismaService } from '../src/core/database';
 import { createIsolatedApiSchemaFixture } from './helpers/migrated-api-schema.fixture';
 
 describe('Core Outbox persistence and fencing (e2e)', () => {
@@ -215,6 +216,65 @@ describe('Core Outbox persistence and fencing (e2e)', () => {
           removeOnComplete: false,
           removeOnFail: false,
         },
+      );
+  });
+
+  it('retains current-owner retry when publication persistence fails after enqueue', async () => {
+    let failPublication = true;
+    const client = fixture.prisma.$extends({
+      query: {
+        outboxEvent: {
+          updateMany({ args, query }) {
+            if (args.data.status === 'PUBLISHED' && failPublication) {
+              failPublication = false;
+              throw new Error('synthetic publication persistence failure');
+            }
+            return query(args);
+          },
+        },
+      },
+    });
+    const dispatch = new OutboxDispatcherService(
+      client as unknown as PrismaService,
+      {
+        integrationEvents: { add },
+      } as unknown as QueueRegistryService,
+    );
+    expect(await dispatch.dispatchPending()).toBe(0);
+    expect(add).toHaveBeenCalledTimes(1);
+    expect(
+      await fixture.prisma.outboxEvent.findUniqueOrThrow({
+        where: { id: eventId },
+      }),
+    ).toMatchObject({
+      status: 'PENDING',
+      attempts: 1,
+      lockedBy: null,
+      lockedAt: null,
+      publishedAt: null,
+      lastError: 'synthetic publication persistence failure',
+    });
+    await fixture.prisma.outboxEvent.update({
+      where: { id: eventId },
+      data: { availableAt: new Date(0) },
+    });
+    expect(await dispatch.dispatchPending()).toBe(1);
+    expect(
+      await fixture.prisma.outboxEvent.findUniqueOrThrow({
+        where: { id: eventId },
+      }),
+    ).toMatchObject({
+      status: 'PUBLISHED',
+      attempts: 1,
+      lockedBy: null,
+      lastError: null,
+    });
+    for (const call of [1, 2])
+      expect(add).toHaveBeenNthCalledWith(
+        call,
+        expect.any(String),
+        expect.objectContaining({ eventId }),
+        expect.objectContaining({ jobId: eventId }),
       );
   });
 

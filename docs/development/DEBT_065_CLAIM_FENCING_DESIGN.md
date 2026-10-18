@@ -41,9 +41,22 @@ retry scheduling, error/attempt fields, then fixture due-time advancement and
 successful retry with identical event/job identity and unchanged queue options.
 Queue boundary is doubled; no live BullMQ or downstream exactly-once claim.
 
+Additional publication-storage failure regression throws at the PUBLISHED
+database boundary after queue.add returns, without fabricating a successful DB
+write. Current owner schedules retry; due fixture then publishes with the same
+job ID. Final migrated suite passes 11/11, 32.445s, normal exit. Six stale-owner
+cases plus normal queue/storage failure, claim and atomic evidence are retained.
+
 First nine-case run passes 9/9, 14.576s, normal exit. Expanded DB suite passes
 10/10, 16.585s, normal exit; root lint passes 9 tasks (44.444s).
 Other root gates still running. Expected P2002 diagnostic log remains visible.
 Full opt-in coverage, adjacent gates, serial full E2E, GraphQL, CI/review/owner
 acceptance are required; debt remains open. Known baseline failures must not be
 waived or hidden through repeated runs, timeout increases or schema changes.
+
+Current full API opt-in coverage passes 1101/1101, 148 suites, zero skips,
+81.077s. Production build passes 6 tasks (30.279s); initial root types/lint pass.
+Prisma/architecture pass their bounded scope and baseline remains 84 known
+findings. Global format 41 inherited files and audit 1 high/10 moderate remain
+red. Final lint/typecheck after the additional test and adjacent package gates
+are running; full E2E/GraphQL have not yet been run for this correction.
