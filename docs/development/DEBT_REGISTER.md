@@ -21,6 +21,15 @@ active package safe and buildable.
 
 ## Register
 
+2026-10-18 persistence audit: DEBT-062 is confirmed by actual service/DB
+concurrency (cap 1, two different events both count zero and award); owner approved
+a separate user/rule/UTC-day atomic correction. Current packet only characterizes
+the defect. Existing DEBT-007 also requires explicit automatic delivery wiring:
+Worker integration events currently route only to Activity, while Points/Levels/
+Achievements consume tests call services directly. This was already true before
+D4 and is not a regression caused by narrow service exports. See the
+[operation matrix](../audits/D4_PERSISTENCE_REVIEW_MATRIX.md).
+
 2026-10-18 D4 progress: Leaderboards now consumes allowlisted ranking facts;
 root assembles one unchanged parameterized statement from Auth, Users, Community
 Points, Reputation, Levels, Custom Titles and Leaderboards-owned SQL fragments.
@@ -874,3 +883,14 @@ exploit. Correct separately with explicit target identity and historical marker/
 replay policy, not a cosmetic version rename in the Leaderboards package.
 Owner notified; runtime fix not authorized by this source audit. Evidence:
 [Worker boundary review](../audits/D4_WORKER_SOURCE_BOUNDARIES.md).
+
+### DEBT-062 — Distinct events exceed Community Points UTC-day cap (High, ACCEPTED, separate correction approved)
+
+`PrismaCommunityPointsRepository.award` locks eventId, but dailyAwardCount scopes
+user/rule/UTC-day. Two distinct events can both read zero and atomically commit
+two awards despite cap=1. Event deduplication does not reserve the shared quota.
+Real migrated service/repository diagnostic confirms `[0,0]`, AWARDED/AWARDED,
+two entries/markers/matching audit/outbox records and balance 2; sequential cap
+control works. No live queue/public HTTP exploit or scoring formula defect is
+claimed. Owner approved a separate atomic user/rule/day fix before Phase 11.
+Current audit changes no runtime behavior. [Proof and scope](../audits/DEBT_062_POINTS_CAP_AUDIT.md).

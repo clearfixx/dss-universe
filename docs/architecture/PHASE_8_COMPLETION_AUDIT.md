@@ -38,6 +38,23 @@ No frontend modifications are made by this audit.
 
 ## Open exceptions, not accepted waivers
 
+The older exception list below records the 2026-10-10 audit snapshot; subsequent
+D3.5/D4 implementation increments have their own evidence and are not undone by
+this addendum. Component implementation is not automatic-delivery acceptance.
+
+2026-10-18 source/runtime-boundary clarification (DEBT-007): the current Worker
+integration queue handler routes only Activity projection. Points, Levels and
+Achievements `consume` services exist and are exercised directly by foundation
+tests, but those calls do not establish automatic durable runtime delivery.
+Reviewed API module/root/transport wiring has no production route invoking those
+consumers; the pre-D4 baseline `173358d` has the same Activity-only Worker wiring.
+This is not a new coupling refactor regression. See the
+[operation matrix](../audits/D4_PERSISTENCE_REVIEW_MATRIX.md). Automatic gamification
+requires a separately designed owner-safe consumer/replay pipeline and actual
+producer-to-queue-to-ledger/projection evidence before Phase 8 acceptance.
+DEBT-062 also confirms that distinct-event UTC-day quota concurrency is not
+certified by the existing duplicate-event and sequential cap tests.
+
 - Levels injects broad `CommunityPointsService` and `UsersService`; other gamification
   contexts also couple to Users. DEBT-003, D2/D4.
 - Prisma representation leakage: DEBT-004, D4.

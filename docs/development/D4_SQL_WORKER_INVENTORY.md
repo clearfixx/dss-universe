@@ -4,6 +4,12 @@ Date: 2026-10-16. Branch: `debt/d4-sql-worker-inventory`.
 Starting source: `46b88ce` / draft PR #26 (unaccepted).
 Status: **first-pass inventory, NOT exhaustive acceptance**. No runtime changes.
 
+2026-10-18 follow-up: [operation matrix](../audits/D4_PERSISTENCE_REVIEW_MATRIX.md)
+adds current-source discovery and reviewed Points/Levels/Activity plus selected
+Users/Media/Core/Worker operation traces. It confirms DEBT-062's distinct-event
+daily-cap race and strengthens DEBT-007's missing runtime gamification consumer
+acceptance. It remains partial, not closure of all seventeen feature matrices.
+
 ## Scope and proof standard
 
 The frozen import inventory has 84 findings. That does not describe SQL ownership.
