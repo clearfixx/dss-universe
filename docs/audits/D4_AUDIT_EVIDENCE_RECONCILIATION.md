@@ -67,3 +67,12 @@ schema.gql has no tracked diff. GraphQL generation succeeds but check reproduces
 only DEBT-044 generated-barrel comment/newline drift; its own side effect is
 restored. Further serial E2E verification is required, preserving this first
 failure evidence. No automatic retry was started merely for observation timeout.
+
+Serial follow-up is running with a fresh database and distinct serial-e2e
+artifacts, with no other quality gate process started alongside it. Read-only
+process inventory finds only that Jest PID 3636. Source tracing confirms every
+AppModule initialization writes the same process.cwd()/src/schema.gql path.
+The first unit run ended at 21:01:13Z, while Reputation initialization failed
+at 21:02:58Z: direct overlap with unit coverage does not explain that failure.
+Concurrent processes are not established as the cause; no runtime/test-harness
+fix is authorized or implemented based on this suspicion. Preserve both reports.
