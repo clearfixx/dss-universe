@@ -13,6 +13,12 @@
  */
 
 export { LeaderboardsModule } from './leaderboards.module';
+export {
+  LEADERBOARD_RANKING_FACTS,
+  type LeaderboardRankingFacts,
+  type LeaderboardRankingFact,
+} from './contracts/ranking-facts.port';
+export type { LeaderboardQuery } from './domain/types/leaderboards.type';
 export { LeaderboardsService } from './application/services/leaderboards.service';
 export type {
   LeaderboardEntry,

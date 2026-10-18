@@ -516,7 +516,76 @@ test("Reputation technical readers remain absent from business roots and forbidd
   }
 });
 
-test("Reputation and Users publish only the intended guarded technical read symbols", () => {
+test("Leaderboards ranking inputs have no foreign persistence and guarded SQL stays out of business roots", () => {
+  const repository = readFileSync(
+    new URL(
+      "../../apps/api/src/modules/leaderboards/infrastructure/repositories/ranking-facts-leaderboards.repository.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  deepEqual(directPrismaSurface(repository), []);
+  ok(
+    !/Prisma|\$queryRaw|community_point_entries|reputation_entries|level_definitions|user_title_grants/.test(
+      repository,
+    ),
+  );
+  const contract = readFileSync(
+    new URL(
+      "../../apps/api/src/modules/leaderboards/contracts/ranking-facts.port.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  ok(!/from ['"](?:@prisma|.*infrastructure|.*core\/database)/.test(contract));
+  for (const owner of [
+    "auth",
+    "users",
+    "community-points",
+    "reputation",
+    "levels",
+    "custom-titles",
+    "leaderboards",
+  ]) {
+    const publicRoot = readFileSync(
+      new URL(`../../apps/api/src/modules/${owner}/index.ts`, import.meta.url),
+      "utf8",
+    );
+    ok(!/from ['"]\.\/infrastructure/.test(publicRoot));
+    for (const path of [
+      "apps/api/src/modules/news/application/foreign-ranking.ts",
+      "apps/api/src/modules/news/infrastructure/foreign-ranking.ts",
+      `apps/api/src/modules/${owner}/index.ts`,
+    ]) {
+      ok(
+        analyzeBoundaries([
+          {
+            path,
+            source: `import { ownedRankingSql } from '@api/modules/${owner}/infrastructure';`,
+          },
+        ]).some(({ rule }) => rule === "infrastructure-entry-business-import"),
+      );
+    }
+  }
+});
+
+test("Leaderboard root assembly neither copies owner table algorithms nor introduces extra persistence work", () => {
+  const source = readFileSync(
+    new URL(
+      "../../apps/api/src/composition/leaderboards/infrastructure/prisma-leaderboard-ranking.reader.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  equal((source.match(/this\.prisma\.\$queryRaw</g) ?? []).length, 1);
+  ok(
+    !/\$transaction|Prisma\.raw|findUnique|findMany|"community_point_entries"|"reputation_entries"|"level_definitions"|"custom_titles"|"user_title_grants"|"user_title_selections"|ROW_NUMBER|SUM\(/.test(
+      source,
+    ),
+  );
+});
+
+test("owners publish only the intended guarded technical symbols", () => {
   for (const [moduleName, expected] of [
     [
       "reputation",
@@ -526,6 +595,7 @@ test("Reputation and Users publish only the intended guarded technical read symb
         "ReputationReversalFact",
         "PrismaReputationWriter",
         "ReputationEntryProjection",
+        "leaderboardReputationAggregate",
       ],
     ],
     [
@@ -544,6 +614,7 @@ test("Reputation and Users publish only the intended guarded technical read symb
         "PrismaMentionProfileSelector",
         "MentionRecipientMatcher",
         "MentionProfileCandidate",
+        "leaderboardProfileColumns",
       ],
     ],
     [
@@ -557,6 +628,10 @@ test("Reputation and Users publish only the intended guarded technical read symb
         "profileAccountByEmail",
         "activeProfileAccount",
         "profileAccountState",
+        "leaderboardSubjectSource",
+        "leaderboardSubjectId",
+        "leaderboardSubjectAge",
+        "leaderboardSubjectEligibility",
       ],
     ],
     [
@@ -572,7 +647,17 @@ test("Reputation and Users publish only the intended guarded technical read symb
       ],
     ],
     ["achievements", ["PrismaManualAwardWriter"]],
-    ["custom-titles", ["PrismaTitleGrantWriter"]],
+    [
+      "custom-titles",
+      [
+        "PrismaTitleGrantWriter",
+        "leaderboardTitleColumns",
+        "leaderboardTitleJoins",
+      ],
+    ],
+    ["community-points", ["leaderboardPointsAggregate"]],
+    ["levels", ["leaderboardLevelLookup"]],
+    ["leaderboards", ["leaderboardRankingColumns"]],
     [
       "interactions",
       [

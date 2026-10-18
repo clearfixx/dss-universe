@@ -4,6 +4,8 @@ Date: 2026-10-16. Foundation branch `debt/d4-leaderboard-characterization`,
 based on `bb57015` / draft PR #27 (unaccepted).
 Status: current behavior characterized; one-SQL runtime direction owner-approved
 on 2026-10-16. DEBT-060 correction approved as a separate subsequent package.
+Runtime transfer implemented on `debt/d4-leaderboard-runtime-ownership`; verification
+and CI/review acceptance must be recorded before treating the packet as accepted.
 Foundation gate evidence: [characterization checkpoint](../audits/D4_LEADERBOARD_CHARACTERIZATION.md).
 
 ## Current proof

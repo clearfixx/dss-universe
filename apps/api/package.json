@@ -126,6 +126,60 @@
     ],
     "coverageDirectory": "../coverage",
     "coverageThreshold": {
+      "src/composition/leaderboards/infrastructure/prisma-leaderboard-ranking.reader.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/leaderboards/infrastructure/repositories/ranking-facts-leaderboards.repository.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/auth/infrastructure/repositories/leaderboard-subject.sql.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/users/infrastructure/repositories/leaderboard-profile.sql.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/community-points/infrastructure/repositories/leaderboard-points.sql.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/reputation/infrastructure/repositories/leaderboard-reputation.sql.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/levels/infrastructure/repositories/leaderboard-level.sql.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/custom-titles/infrastructure/repositories/leaderboard-title.sql.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/leaderboards/infrastructure/repositories/leaderboard-ranking.sql.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
       "src/core/authorization/repositories/permissions.repository.ts": {
         "branches": 100,
         "functions": 100,

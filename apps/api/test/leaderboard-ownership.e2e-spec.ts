@@ -23,7 +23,8 @@
  * ===============================================================
  */
 import { createHash, randomUUID } from 'node:crypto';
-import { PrismaLeaderboardsRepository } from '../src/modules/leaderboards/infrastructure/repositories/prisma-leaderboards.repository';
+import { RankingFactsLeaderboardsRepository } from '../src/modules/leaderboards/infrastructure/repositories/ranking-facts-leaderboards.repository';
+import { PrismaLeaderboardRankingReader } from '../src/composition/leaderboards/infrastructure/prisma-leaderboard-ranking.reader';
 import type { LeaderboardQuery } from '../src/modules/leaderboards/domain/types/leaderboards.type';
 import { createIsolatedApiSchemaFixture } from './helpers/migrated-api-schema.fixture';
 
@@ -32,10 +33,12 @@ const end = new Date('2026-10-16T00:00:00.000Z');
 const states = ['ACTIVE', 'DEACTIVATED', 'BANNED', 'DELETED'] as const;
 describe('Leaderboard ownership characterization (e2e)', () => {
   let fixture: Awaited<ReturnType<typeof createIsolatedApiSchemaFixture>>;
-  let repository: PrismaLeaderboardsRepository;
+  let repository: RankingFactsLeaderboardsRepository;
   beforeEach(async () => {
     fixture = await createIsolatedApiSchemaFixture({ captureQueries: true });
-    repository = new PrismaLeaderboardsRepository(fixture.prisma);
+    repository = new RankingFactsLeaderboardsRepository(
+      new PrismaLeaderboardRankingReader(fixture.prisma),
+    );
   }, 60000);
   afterEach(async () => {
     await fixture?.close();

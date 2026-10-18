@@ -2,7 +2,7 @@
 
 > Status: Active
 >
-> Updated: 2026-10-16
+> Updated: 2026-10-18
 
 ## Purpose
 
@@ -20,6 +20,14 @@ active package safe and buildable.
 - `REJECTED` — reviewed and determined not to be debt.
 
 ## Register
+
+2026-10-18 D4 progress: Leaderboards now consumes allowlisted ranking facts;
+root assembles one unchanged parameterized statement from Auth, Users, Community
+Points, Reputation, Levels, Custom Titles and Leaderboards-owned SQL fragments.
+Fourteen real migrated golden cases and both original SQL fingerprints pass.
+DEBT-060 remains a separate approved correction. Full gate/CI acceptance, D4.4,
+D4.5 and exhaustive inventory remain open; no broad debt is marked resolved by
+this transfer. See [runtime checkpoint](../audits/D4_LEADERBOARD_RUNTIME_OWNERSHIP.md).
 
 | ID       | Priority | Status   | Area                  | Finding                                                                                                        | Proposed owner/package |
 | -------- | -------- | -------- | --------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------- |

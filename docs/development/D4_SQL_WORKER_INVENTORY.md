@@ -55,9 +55,9 @@ Owner approved this direction before Leaderboards on 2026-10-16. The subsequent
 Authorization package implements the transfer; quality/acceptance evidence is
 tracked separately. This does not close the remaining path-by-path inventory.
 
-## Confirmed remaining composition: Leaderboards
+## Characterized composition: Leaderboards
 
-Source: `apps/api/src/modules/leaderboards/infrastructure/repositories/prisma-leaderboards.repository.ts`,
+Pre-transfer source at `17ad445`: `apps/api/src/modules/leaderboards/infrastructure/repositories/prisma-leaderboards.repository.ts`,
 `page`; service UTC window calculation, module exports, domain projection and
 `apps/api/test/leaderboards-foundation.e2e-spec.ts` also inspected.
 
@@ -79,7 +79,7 @@ viewer outside the requested page, nullable title and current number conversions
 Do not change formula, permissions, status semantics, selected-title predicates,
 tie ordering or calendar rules during ownership transfer.
 
-Proposed next runtime design (not implemented): Leaderboards-owned semantic page
+Owner-approved runtime design: Leaderboards-owned semantic page
 input; named root infrastructure assembler; narrow guarded provider SQL fragments
 owned by Auth, Users, Community Points, Reputation, Levels and Custom Titles.
 Leaderboards owns rank/window/page semantics and its safe response mapping. Keep
@@ -97,7 +97,11 @@ Subsequent foundation: fourteen real migrated cases now characterize this path,
 including both original SQL shapes and live state changes. See the
 [operation plan](D4_LEADERBOARD_OWNERSHIP_PLAN.md). DEBT-060 records the confirmed
 empty-page/missing-viewer total edge separately. This is progress in the inventory,
-not completed ownership transfer or exhaustive SQL/Worker acceptance.
+not exhaustive SQL/Worker acceptance. Runtime transfer now replaces the original
+repository with RankingFactsLeaderboardsRepository and a root
+PrismaLeaderboardRankingReader assembled from the seven guarded owner entries.
+Both original SQL fingerprints and bindings remain unchanged; runtime verification
+and acceptance are recorded separately in the ownership checkpoint.
 
 ## Worker SQL inspected in this pass
 

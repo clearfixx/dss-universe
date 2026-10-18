@@ -14,21 +14,18 @@
 
 import { Module } from '@nestjs/common';
 
-import { PrismaModule } from '@api/core/database';
-
 import { LeaderboardsService } from './application/services/leaderboards.service';
 import { LEADERBOARDS_REPOSITORY } from './domain/repositories/leaderboards.repository.interface';
-import { PrismaLeaderboardsRepository } from './infrastructure/repositories/prisma-leaderboards.repository';
+import { RankingFactsLeaderboardsRepository } from './infrastructure/repositories/ranking-facts-leaderboards.repository';
 import { LeaderboardsResolver } from './presentation/graphql/resolvers/leaderboards.resolver';
 
 @Module({
-  imports: [PrismaModule],
   providers: [
     LeaderboardsService,
     LeaderboardsResolver,
     {
       provide: LEADERBOARDS_REPOSITORY,
-      useClass: PrismaLeaderboardsRepository,
+      useClass: RankingFactsLeaderboardsRepository,
     },
   ],
   exports: [LeaderboardsService],

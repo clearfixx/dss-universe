@@ -11,6 +11,12 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+export {
+  leaderboardSubjectSource,
+  leaderboardSubjectId,
+  leaderboardSubjectAge,
+  leaderboardSubjectEligibility,
+} from './infrastructure/repositories/leaderboard-subject.sql';
 export { PrismaActiveSubjectSelector } from './infrastructure/repositories/prisma-active-subject.selector';
 export { PrismaTransactionalSubjectExistenceReader } from './infrastructure/repositories/prisma-transactional-subject-existence.reader';
 export {

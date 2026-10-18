@@ -11,6 +11,7 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+export { leaderboardProfileColumns } from './infrastructure/repositories/leaderboard-profile.sql';
 export { PrismaPublicProfileReader } from './infrastructure/repositories/prisma-public-profile.reader';
 export { PrismaTransactionalProfileExistenceReader } from './infrastructure/repositories/prisma-transactional-profile-existence.reader';
 export {

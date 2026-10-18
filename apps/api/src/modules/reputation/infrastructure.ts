@@ -11,6 +11,7 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+export { leaderboardReputationAggregate } from './infrastructure/repositories/leaderboard-reputation.sql';
 export {
   PrismaReputationEntryReader,
   type ReputationEntryFact,
