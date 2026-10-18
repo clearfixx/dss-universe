@@ -16,7 +16,7 @@
  * Leaderboards repository adapter; foreign persistence stays behind a semantic port.
  *
  * ⚠️ Important:
- * Preserve viewer inclusion, title fallback and legacy empty-page totals until DEBT-060.
+ * Population totals are independent of returned rows; never infer them from an empty page.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -44,12 +44,11 @@ export class RankingFactsLeaderboardsRepository implements LeaderboardsRepositor
   async page(query: LeaderboardQuery): Promise<LeaderboardPage> {
     const firstRank = (query.page - 1) * query.limit + 1;
     const lastRank = firstRank + query.limit - 1;
-    const rows = await this.facts.read(query, firstRank, lastRank);
+    const { rows, total } = await this.facts.read(query, firstRank, lastRank);
     const pageRows = rows.filter(
       (row) => row.rank >= firstRank && row.rank <= lastRank,
     );
     const viewer = rows.find((row) => row.userId === query.viewerId);
-    const total = rows.length > 0 ? rows[0].total : 0;
     return {
       period: query.period,
       startsAt: query.startsAt,

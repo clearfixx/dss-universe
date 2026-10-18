@@ -2,11 +2,11 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: leaderboards
+ * 📦 Module: Leaderboards
  * 📄 File: apps/api/src/modules/leaderboards/infrastructure/repositories/leaderboard-ranking.sql.ts
  *
  * 🎯 Purpose:
- * Provides only owned, operation-specific SQL for guarded one-statement ranking composition.
+ * Owns deterministic rank ordering and page selection with an independent population total.
  *
  * ⚠️ Important:
  * Fixed aliases and trusted infrastructure expressions only; never accept raw user SQL.
@@ -25,4 +25,23 @@ export function leaderboardRankingColumns(
       ORDER BY COALESCE(period.points, 0) DESC, ${age} ASC, ${subjectId} ASC
     )::bigint AS rank,
     COUNT(*) OVER ()::bigint AS total`;
+}
+
+export function leaderboardPageWithPopulation(
+  firstRank: number,
+  lastRank: number,
+  viewerId: string,
+) {
+  return Prisma.sql`
+    SELECT page.*, population."populationTotal"
+    FROM (
+      SELECT COALESCE((SELECT total FROM ranked LIMIT 1), 0)::bigint AS "populationTotal"
+    ) population
+    LEFT JOIN LATERAL (
+      SELECT * FROM enriched
+      WHERE (rank BETWEEN ${firstRank} AND ${lastRank})
+         OR "userId" = ${viewerId}
+    ) page ON true
+    ORDER BY rank ASC
+  `;
 }

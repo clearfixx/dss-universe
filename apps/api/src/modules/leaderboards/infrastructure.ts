@@ -11,4 +11,7 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-export { leaderboardRankingColumns } from './infrastructure/repositories/leaderboard-ranking.sql';
+export {
+  leaderboardRankingColumns,
+  leaderboardPageWithPopulation,
+} from './infrastructure/repositories/leaderboard-ranking.sql';

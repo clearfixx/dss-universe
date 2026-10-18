@@ -17,6 +17,7 @@ export {
   LEADERBOARD_RANKING_FACTS,
   type LeaderboardRankingFacts,
   type LeaderboardRankingFact,
+  type LeaderboardRankingResult,
 } from './contracts/ranking-facts.port';
 export type { LeaderboardQuery } from './domain/types/leaderboards.type';
 export { LeaderboardsService } from './application/services/leaderboards.service';

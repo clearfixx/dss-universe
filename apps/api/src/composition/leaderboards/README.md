@@ -15,10 +15,15 @@ Technical `infrastructure.ts` entries are guarded by AST rules. Do not re-export
 them from public business roots, accept raw user SQL/identifiers, introduce a
 generic query framework or add independent reads, transactions or caches here.
 No credentials, account state, raw ORM rows or all-time balance cross the facts
-port. SQL aliases and bind order are pinned by the original two fingerprints and
-fourteen isolated migrated tests.
+port. Ranking-prefix fingerprints and bind order remain pinned to the original
+query. DEBT-060 deliberately changes the final page selection; the complete new
+statement has separately reviewed fingerprints and migrated regression tests.
 
-The legacy empty-page/no-viewer total behavior is deliberately unchanged by this
-ownership transfer. DEBT-060 is an approved separate correction, not hidden work
-inside this package. Existing service exports await D4.4 review; this folder does
+DEBT-060 now returns an independent population total with ranking rows in one
+facts result. Leaderboards owns a population-preserving LEFT JOIN page fragment:
+it reads the existing ranked window total (or zero when the population is empty).
+An empty requested page cannot erase that total. Root strips the technical null
+page row, never fabricates a card, and rejects a missing population result rather
+than silently returning zero. No independent count query or new transaction.
+Existing service exports await D4.4 review; this folder does
 not imply D4 acceptance or authorization to implement Phase 11.

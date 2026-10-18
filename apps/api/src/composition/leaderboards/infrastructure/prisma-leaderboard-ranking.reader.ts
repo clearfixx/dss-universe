@@ -29,8 +29,12 @@ import type {
   LeaderboardQuery,
   LeaderboardRankingFact,
   LeaderboardRankingFacts,
+  LeaderboardRankingResult,
 } from '@api/modules/leaderboards';
-import { leaderboardRankingColumns } from '@api/modules/leaderboards/infrastructure';
+import {
+  leaderboardRankingColumns,
+  leaderboardPageWithPopulation,
+} from '@api/modules/leaderboards/infrastructure';
 import {
   leaderboardSubjectSource,
   leaderboardSubjectId,
@@ -48,10 +52,10 @@ import {
 
 type RankingRow = Omit<
   LeaderboardRankingFact,
-  'rank' | 'total' | 'communityPoints' | 'reputation'
+  'rank' | 'communityPoints' | 'reputation'
 > & {
   rank: bigint;
-  total: bigint;
+  populationTotal: bigint;
   communityPoints: bigint;
   reputation: bigint;
 };
@@ -66,8 +70,10 @@ export class PrismaLeaderboardRankingReader implements LeaderboardRankingFacts {
     query: Readonly<LeaderboardQuery>,
     firstRank: number,
     lastRank: number,
-  ): Promise<readonly LeaderboardRankingFact[]> {
-    const rows = await this.prisma.$queryRaw<RankingRow[]>(Prisma.sql`
+  ): Promise<LeaderboardRankingResult> {
+    const rows = await this.prisma.$queryRaw<
+      (RankingRow | { userId: null; populationTotal: bigint })[]
+    >(Prisma.sql`
       WITH period_points AS (
         ${leaderboardPointsAggregate(query.endsAt, query.startsAt)}
       ),
@@ -99,24 +105,31 @@ export class PrismaLeaderboardRankingReader implements LeaderboardRankingFacts {
         ) level ON true
         ${leaderboardTitleJoins(Prisma.sql`ranked."userId"`)}
       )
-      SELECT * FROM enriched
-      WHERE (rank BETWEEN ${firstRank} AND ${lastRank})
-         OR "userId" = ${query.viewerId}
-      ORDER BY rank ASC
+      ${leaderboardPageWithPopulation(firstRank, lastRank, query.viewerId)}
     `);
-    return rows.map((row) => ({
-      rank: Number(row.rank),
-      total: Number(row.total),
-      userId: row.userId,
-      username: row.username,
-      displayName: row.displayName,
-      avatarUrl: row.avatarUrl,
-      communityPoints: Number(row.communityPoints),
-      reputation: Number(row.reputation),
-      currentLevel: row.currentLevel,
-      titleName: row.titleName,
-      titleColor: row.titleColor,
-      titleBadge: row.titleBadge,
-    }));
+    if (rows.length === 0)
+      throw new Error('Missing leaderboard population fact.');
+    return {
+      total: Number(rows[0].populationTotal),
+      rows: rows.flatMap((row) =>
+        row.userId === null
+          ? []
+          : [
+              {
+                rank: Number(row.rank),
+                userId: row.userId,
+                username: row.username,
+                displayName: row.displayName,
+                avatarUrl: row.avatarUrl,
+                communityPoints: Number(row.communityPoints),
+                reputation: Number(row.reputation),
+                currentLevel: row.currentLevel,
+                titleName: row.titleName,
+                titleColor: row.titleColor,
+                titleBadge: row.titleBadge,
+              },
+            ],
+      ),
+    };
   }
 }

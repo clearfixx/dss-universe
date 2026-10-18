@@ -657,7 +657,10 @@ test("owners publish only the intended guarded technical symbols", () => {
     ],
     ["community-points", ["leaderboardPointsAggregate"]],
     ["levels", ["leaderboardLevelLookup"]],
-    ["leaderboards", ["leaderboardRankingColumns"]],
+    [
+      "leaderboards",
+      ["leaderboardRankingColumns", "leaderboardPageWithPopulation"],
+    ],
     [
       "interactions",
       [

@@ -100,8 +100,11 @@ empty-page/missing-viewer total edge separately. This is progress in the invento
 not exhaustive SQL/Worker acceptance. Runtime transfer now replaces the original
 repository with RankingFactsLeaderboardsRepository and a root
 PrismaLeaderboardRankingReader assembled from the seven guarded owner entries.
-Both original SQL fingerprints and bindings remain unchanged; runtime verification
-and acceptance are recorded separately in the ownership checkpoint.
+The ownership-only packet retained both original SQL fingerprints and bindings;
+its verification is recorded separately in the ownership checkpoint. The subsequent
+approved [DEBT-060 correction](../audits/DEBT_060_LEADERBOARD_TOTALS.md) changes
+only final page assembly and separates population total from returned rows;
+ranking-prefix hashes and binding order remain pinned to the original statement.
 
 ## Worker SQL inspected in this pass
 
@@ -158,8 +161,9 @@ Core Outbox dispatch/projection contracts, provider payload privacy, SQL transac
 semantics and rebuild/retraction policy. Mark reviewed owned operations distinctly
 from open compositions, design questions and unauthorized behavioral defects.
 
-Next: complete the path-by-path matrix alongside the confirmed Leaderboards
-characterization, then its owner-agreed runtime transfer. Authorization's local
+Leaderboards characterization and owner-agreed runtime transfer are implemented
+in separate draft packets; DEBT-060 is a separately approved count correction.
+Next: complete the remaining path-by-path matrix. Authorization's local
 transfer is recorded separately, not awaiting direction again. Continue
 then D4.4 explicit surfaces/ORM isolation and D4.5 enforcement/acceptance. Full
 D5–D7, stack audit, CI/review/owner acceptance and Phase 11 brainstorm remain.

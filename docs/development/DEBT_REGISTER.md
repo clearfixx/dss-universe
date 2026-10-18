@@ -25,7 +25,8 @@ active package safe and buildable.
 root assembles one unchanged parameterized statement from Auth, Users, Community
 Points, Reputation, Levels, Custom Titles and Leaderboards-owned SQL fragments.
 Fourteen real migrated golden cases and both original SQL fingerprints pass.
-DEBT-060 remains a separate approved correction. Full gate/CI acceptance, D4.4,
+DEBT-060 is implemented in its separate approved packet, with verification and
+CI/review acceptance tracked independently. Full gate/CI acceptance, D4.4,
 D4.5 and exhaustive inventory remain open; no broad debt is marked resolved by
 this transfer. See [runtime checkpoint](../audits/D4_LEADERBOARD_RUNTIME_OWNERSHIP.md).
 
@@ -829,7 +830,7 @@ test boot configuration, deadline or runtime correction is authorized by this
 ownership package. Owner notified. Raw evidence: `node_modules/.cache/d4-authz-full-e2e*`
 and `node_modules/.cache/d4-authz-affected-repeat*`.
 
-### DEBT-060 — Leaderboard empty page loses total when viewer is absent (Medium, OPEN, separate correction requested)
+### DEBT-060 — Leaderboard empty page loses total when viewer is absent (Medium, ACCEPTED, separate correction implemented; acceptance pending)
 
 Isolated real migrated characterization on 2026-10-16 reproduces the production
 repository returning total=0/totalPages=0 for page 99, limit 1, missing viewer,
@@ -841,14 +842,23 @@ viewer retains total correctly. This is not a score or permission leak.
 The normal GraphQL path requires an authenticated viewer; direct repository use
 and a viewer excluded before the ranking read expose this edge. No claim of an
 unauthenticated HTTP reproduction. Test pins the legacy behavior explicitly as
-DEBT-060 to keep ownership transfer behavior-neutral, not to endorse zero as the
+DEBT-060 in the historical ownership packet to keep that transfer behavior-neutral, not to endorse zero as the
 intended count. Owner notified and asked about a separate correction after transfer.
 Preserve ranking/one-statement visibility when fixing; do not add an uncoordinated
 count query or silently rewrite this in the ownership package. Evidence:
 `apps/api/test/leaderboard-ownership.e2e-spec.ts` and the Leaderboard ownership plan.
 
 Owner approved a separate DEBT-060 correction after ownership transfer on
-2026-10-16, preserving one SQL view and current ranking. Not yet implemented.
+2026-10-16, preserving one SQL view and current ranking. Implemented separately
+on 2026-10-18: the same statement returns population total independently of page
+rows. A Leaderboards-owned LEFT JOIN projection preserves counts without an
+independent query; root strips the technical null page row and allowlists facts.
+Thirty isolated migrated cases pass, including all periods and missing/ineligible
+viewers, last partial pages, empty populations and current deactivation counts.
+Ranking-prefix hashes and exact bindings remain unchanged; complete SQL-tail
+hashes deliberately version the approved correction. Full gates/CI/review are
+recorded in [DEBT-060 checkpoint](../audits/DEBT_060_LEADERBOARD_TOTALS.md), not
+inferred from the focused tests. No broad D4 or Phase 11 acceptance is claimed.
 
 ### DEBT-061 — Worker processed-marker and dead-letter consumer identities differ (Medium, OPEN, D6)
 

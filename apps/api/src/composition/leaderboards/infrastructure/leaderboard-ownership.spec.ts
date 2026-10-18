@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/composition/leaderboards/infrastructure/leaderboard-ownership.spec.ts
  *
  * 🎯 Purpose:
- * Verifies unchanged SQL fingerprints, bindings, owned fragments and safe ranking facts.
+ * Verifies unchanged ranking SQL/bindings and explicit population-preserving page assembly.
  *
  * ⚠️ Important:
  * Tests real fragment assembly; provider failures propagate, no independent count or transaction.
@@ -37,7 +37,6 @@ const query: LeaderboardQuery = {
 };
 const fact: LeaderboardRankingFact = {
   rank: 3,
-  total: 8,
   userId: 'viewer',
   username: 'public',
   displayName: null,
@@ -50,7 +49,7 @@ const fact: LeaderboardRankingFact = {
   titleBadge: null,
 };
 describe('Leaderboard owned statement', () => {
-  function setup(rows: unknown[] = []) {
+  function setup(rows: unknown[] = [{ userId: null, populationTotal: 0n }]) {
     const execute = jest.fn().mockResolvedValue(rows);
     const prisma = {
       $queryRaw: execute,
@@ -70,20 +69,31 @@ describe('Leaderboard owned statement', () => {
     ],
     [null, '1b00c7d997dc49d54f498de251ba39c61a45fb85364eb87e0dbb57002d8acc21'],
   ])(
-    'preserves original normalized SQL and exact bindings for lower bound %s',
+    'preserves original ranking SQL and exact bindings; only page assembly changes for %s',
     async (lower, fingerprint) => {
       const { reader, execute, prisma } = setup();
       await expect(
         reader.read({ ...query, startsAt: lower }, 3, 4),
-      ).resolves.toEqual([]);
+      ).resolves.toEqual({ total: 0, rows: [] });
       expect(execute).toHaveBeenCalledTimes(1);
       const call = execute.mock.calls[0] as unknown[];
       const statement = call[0] as Prisma.Sql;
+      const pageStart = statement.text.indexOf(
+        'SELECT page.*, population."populationTotal"',
+      );
+      expect(pageStart).toBeGreaterThan(0);
+      const firstParameter = lower ? 5 : 4;
+      const originalShape =
+        statement.text.slice(0, pageStart) +
+        `SELECT * FROM enriched WHERE (rank BETWEEN $${firstParameter} AND $${firstParameter + 1}) OR "userId" = $${firstParameter + 2} ORDER BY rank ASC`;
       expect(
         createHash('sha256')
-          .update(statement.text.replace(/\s+/g, ' ').trim())
+          .update(originalShape.replace(/\s+/g, ' ').trim())
           .digest('hex'),
       ).toBe(fingerprint);
+      expect(statement.text.slice(pageStart).replace(/\s+/g, ' ').trim()).toBe(
+        `SELECT page.*, population."populationTotal" FROM ( SELECT COALESCE((SELECT total FROM ranked LIMIT 1), 0)::bigint AS "populationTotal" ) population LEFT JOIN LATERAL ( SELECT * FROM enriched WHERE (rank BETWEEN $${firstParameter} AND $${firstParameter + 1}) OR "userId" = $${firstParameter + 2} ) page ON true ORDER BY rank ASC`,
+      );
       expect(statement.values).toEqual(
         lower
           ? [endsAt, lower, endsAt, endsAt, 3, 4, 'viewer']
@@ -97,7 +107,7 @@ describe('Leaderboard owned statement', () => {
     const row = {
       ...fact,
       rank: 3n,
-      total: 8n,
+      populationTotal: 8n,
       communityPoints: -2n,
       reputation: -3n,
       allTimePoints: 999n,
@@ -105,7 +115,33 @@ describe('Leaderboard owned statement', () => {
       status: 'ACTIVE',
     };
     const { reader } = setup([row]);
-    expect(await reader.read(query, 3, 4)).toEqual([fact]);
+    expect(await reader.read(query, 3, 4)).toEqual({ total: 8, rows: [fact] });
+  });
+  it('binds an untrusted viewer value instead of interpolating it into page SQL', async () => {
+    const { reader, execute } = setup();
+    const viewerId = "' OR true; SELECT passwordHash FROM users; --";
+    await reader.read({ ...query, viewerId }, 3, 4);
+    const call = execute.mock.calls[0] as unknown[];
+    const statement = call[0] as Prisma.Sql;
+    expect(statement.values.at(-1)).toBe(viewerId);
+    expect(statement.text).not.toContain(viewerId);
+    expect(execute).toHaveBeenCalledTimes(1);
+  });
+  it.each([0n, 8n])(
+    'returns only population %s and no invented ranking card for a null page row',
+    async (populationTotal) => {
+      const { reader } = setup([{ userId: null, populationTotal }]);
+      expect(await reader.read(query, 3, 4)).toEqual({
+        total: Number(populationTotal),
+        rows: [],
+      });
+    },
+  );
+  it('rejects an impossible missing population row instead of fabricating a zero count', async () => {
+    const { reader } = setup([]);
+    await expect(reader.read(query, 3, 4)).rejects.toThrow(
+      'Missing leaderboard population fact.',
+    );
   });
   it('propagates provider failure without retries, empty fallback or extra reads', async () => {
     const { reader, execute } = setup();
@@ -116,13 +152,13 @@ describe('Leaderboard owned statement', () => {
   });
 });
 describe('Leaderboard fact interpretation', () => {
-  function setup(rows: readonly LeaderboardRankingFact[]) {
+  function setup(rows: readonly LeaderboardRankingFact[], total = 8) {
     const read = jest
       .fn<
         ReturnType<LeaderboardRankingFacts['read']>,
         Parameters<LeaderboardRankingFacts['read']>
       >()
-      .mockResolvedValue(rows);
+      .mockResolvedValue({ rows, total });
     return {
       read,
       repository: new RankingFactsLeaderboardsRepository({ read }),
@@ -159,12 +195,22 @@ describe('Leaderboard fact interpretation', () => {
       endsAt,
     });
   });
-  it('preserves empty-page legacy DEBT-060 and absent viewer', async () => {
-    const { repository } = setup([]);
+  it('preserves an actually empty population and absent viewer', async () => {
+    const { repository } = setup([], 0);
     expect(await repository.page(query)).toMatchObject({
       items: [],
       total: 0,
       totalPages: 0,
+      viewerRank: null,
+      viewerCommunityPoints: null,
+    });
+  });
+  it('keeps total and totalPages on an empty page with no viewer row (DEBT-060)', async () => {
+    const { repository } = setup([], 8);
+    expect(await repository.page(query)).toMatchObject({
+      items: [],
+      total: 8,
+      totalPages: 4,
       viewerRank: null,
       viewerCommunityPoints: null,
     });

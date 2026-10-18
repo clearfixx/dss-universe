@@ -6,6 +6,8 @@ Status: current behavior characterized; one-SQL runtime direction owner-approved
 on 2026-10-16. DEBT-060 correction approved as a separate subsequent package.
 Runtime transfer implemented on `debt/d4-leaderboard-runtime-ownership`; verification
 and CI/review acceptance must be recorded before treating the packet as accepted.
+DEBT-060 is implemented separately on `debt/d4-leaderboard-empty-page-totals`;
+its explicit behavior/SQL-tail change is not part of the original ownership diff.
 Foundation gate evidence: [characterization checkpoint](../audits/D4_LEADERBOARD_CHARACTERIZATION.md).
 
 ## Current proof
@@ -74,10 +76,12 @@ full API E2E. Keep initial failures and bounded repeats distinct; no deadline,
 ledger/history-protection or fixture-isolation weakening. Full CI/review/owner
 acceptance remains separate from local tests.
 
-DEBT-060: current out-of-range page returns total=0 when no viewer row is returned,
+DEBT-060: pre-correction out-of-range page returned total=0 when no viewer row was returned,
 even with an active population. Owner approved correction separately after ownership,
 retaining one SQL view and ranking. Do not smuggle that behavior change into the
-ownership diff. DEBT-059 schema-write and DEBT-045 shared-fixture/News failures are
+ownership diff. The [separate correction](../audits/DEBT_060_LEADERBOARD_TOTALS.md)
+now retains independent population totals, with an explicit SQL-tail change.
+DEBT-059 schema-write and DEBT-045 shared-fixture/News failures are
 separate D6 work, not reasons to suppress broad tests.
 
 The exhaustive SQL/Worker matrix is still required before D4.5 acceptance. This
