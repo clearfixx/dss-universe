@@ -14,6 +14,14 @@
  * • appends processed-event, audit and Outbox evidence transactionally;
  * • calculates balances from immutable ledger values.
  *
+ * 🏗️ Architecture:
+ * Community Points-owned transactional persistence adapter.
+ *
+ * ⚠️ Important:
+ * Acquire the event lock before the user/rule/UTC-day quota lock.
+ * Hold both through ledger, processed marker, Audit and Outbox commit.
+ * Quota reads rely on the existing Read Committed statement snapshots.
+ *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
@@ -169,6 +177,20 @@ export class PrismaCommunityPointsRepository implements CommunityPointsRepositor
       ) {
         await this.markProcessed(transaction, input);
         return { status: 'IGNORED', entry: null };
+      }
+
+      if (input.rule.dailyLimit !== null) {
+        await this.lock(
+          transaction,
+          JSON.stringify([
+            'community-points-daily-cap',
+            input.userId,
+            input.rule.key,
+            input.event.occurredAt.getUTCFullYear(),
+            input.event.occurredAt.getUTCMonth(),
+            input.event.occurredAt.getUTCDate(),
+          ]),
+        );
       }
 
       if (

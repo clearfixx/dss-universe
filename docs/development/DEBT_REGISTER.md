@@ -893,4 +893,11 @@ Real migrated service/repository diagnostic confirms `[0,0]`, AWARDED/AWARDED,
 two entries/markers/matching audit/outbox records and balance 2; sequential cap
 control works. No live queue/public HTTP exploit or scoring formula defect is
 claimed. Owner approved a separate atomic user/rule/day fix before Phase 11.
-Current audit changes no runtime behavior. [Proof and scope](../audits/DEBT_062_POINTS_CAP_AUDIT.md).
+The original audit changed no runtime behavior. The separate correction is now
+in progress on `debt/d4-points-daily-cap-atomicity`: event-first then shared
+user/rule/numeric-UTC-day transaction locks; eight migrated regressions pass,
+including actual advisory-lock wait observation. Full API unit coverage passes
+1101/1101 with all DB/Redis opt-ins. Full E2E: 479 PASS / 1 inherited DEBT-045
+News failure of 480 tests, all eight cap regressions pass. Known format/audit/
+GraphQL failures remain; CI/review/owner acceptance is pending. This debt is not
+closed. [Proof and scope](../audits/DEBT_062_POINTS_CAP_AUDIT.md).
