@@ -109,3 +109,11 @@ coverage, Web 59 coverage (maxWorkers=2), dependency patches 14. Full E2E sessio
 29982 remains live at this checkpoint; no complete JSON yet, no rerun or cleanup
 attempt. No production/fixture edits during that run. Final E2E/GraphQL evidence
 and draft PR publication remain pending; the global gate is not green.
+
+Final full E2E: 484 PASS / 1 FAIL of 485, zero skipped, 378.242s. All three new
+atomicity cases pass. Sole failure is inherited DEBT-045 News viewCount expected
+null/actual zero at line 478. Complete JSON preceded retained handles; exact own
+PID 25292 stopped after zero DB clients and zero fixture schemas, not normal
+green completion. GraphQL check remains red on DEBT-044 generated-barrel drift;
+its own comment/newline side effect restored, schema and operations unchanged.
+No production changes. CI/review/owner acceptance remains open.
