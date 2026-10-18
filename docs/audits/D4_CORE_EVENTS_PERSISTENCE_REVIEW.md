@@ -71,5 +71,6 @@ evidence. Expected real P2002 is logged, not suppressed. Full quality gates,
 serial full E2E, GraphQL, publication/CI/review and owner acceptance remain pending.
 
 Current gate checkpoint: API opt-in coverage 1101/1101 across 148 suites,
-zero skips, 80.183s; root lint/typecheck 9 tasks each pass. Remaining gates are
+zero skips, 80.183s; root lint/typecheck 9 tasks each pass; build passes 6 tasks,
+51.756s. Remaining gates are
 running; do not reuse previous packet build/E2E evidence as current acceptance.
