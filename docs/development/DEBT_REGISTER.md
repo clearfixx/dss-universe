@@ -1002,4 +1002,10 @@ expanded gates pending. No migration/API/queue payload/recovery cutoff change.
 Expanded eleven-case DB suite passes, including publication-persistence failure
 after enqueue and unchanged current-owner retry. API coverage 1101/1101 and build
 pass; final gate/serial E2E/GraphQL/publication/CI/acceptance remain pending.
+Final correction delivery in draft PR #42: serial full E2E 501 PASS/2 FAIL of
+503, zero skips, all eleven Core cases pass. Inherited DEBT-045 News mismatch
+and recurring registration/GraphQL timeout remain; completed Jest handles
+required verified PID-only cleanup after zero DB clients/fixture schemas.
+GraphQL check remains red for DEBT-044; generated side effects restored exactly.
+No full-green, CI/review/owner acceptance or debt closure is claimed.
 Debt remains open. [Design and current evidence](DEBT_065_CLAIM_FENCING_DESIGN.md).

@@ -75,3 +75,14 @@ verified recreated disposable tmpfs loopback 5435 after zero clients/empty publi
 schema checks and migrations, without seed; dev DB untouched. GraphQL remains
 pending until E2E completes. Draft PR #42 targets audit PR #41; no merge or full
 acceptance is claimed.
+
+Final serial full E2E: 501 PASS / 2 FAIL / 0 skipped of 503, 48 suites,
+434.610s. All eleven Core Outbox regressions pass in this full run. Failures are
+the recurring app registration/GraphQL 5000ms timeout and News foundation
+viewCount null-versus-zero mismatch (DEBT-045); no timeout/assertion changes or
+rerun-to-green. Completed Jest retained handles; only verified Jest PID 8648 was
+stopped after the complete JSON and zero active DB clients/fixture schemas.
+This is not a normal green process exit. GraphQL generation succeeds but its
+check remains red for known DEBT-044 generated barrel drift. Only that generated
+comment/newline side effect was restored; schema and generated outputs have no
+remaining diff. Full acceptance remains pending CI, review and owner approval.

@@ -265,3 +265,17 @@ every producer payload/retention path and actual rollback/replay/lifecycle behav
 The scope above deliberately has per-operation evidence instead of upgrading a
 lexical scan to a green architecture certificate. D4.4 surfaces/ORM isolation,
 D4.5 enforcement/acceptance, D5–D7, stack audit and Phase 11 brainstorm remain.
+
+DEBT-065 correction follow-up (draft PR #42, 2026-10-19): PID+UUID claim identity
+and ID/PROCESSING/token completion/failure CAS fence stale dispatcher attempts.
+Recovery, queue job identity/options, payload, API and schema remain unchanged;
+this does not cancel old queue calls or certify exactly-once effects. Eleven
+migrated regressions pass both targeted and full runs. Serial full E2E records
+501 PASS/2 inherited FAIL/0 skipped of 503 (434.610s): DEBT-045 News viewCount
+and recurring app registration timeout. API coverage 1101/1101, root lint/types/
+build/Prisma and adjacent suites pass; bounded architecture baseline stays 84.
+Global format (41 files), dependency audit (1 high/10 moderate), GraphQL drift
+(DEBT-044) and post-run Jest retained handles remain red/unresolved. Own generated
+drift restored; verified retained Jest PID stopped only after complete results
+and zero DB clients/fixture schemas. CI/review/owner acceptance remain pending;
+this bounded fix does not complete the exhaustive D4 operation review.
