@@ -201,6 +201,13 @@ User-owned STACK_AUDIT_PLAN.md is unchanged. No runtime source/package changes.
 
 ## Still required
 
+Follow-up at `87aec38`: the [Media operation review](D4_MEDIA_PERSISTENCE_REVIEW.md)
+extends source tracing through repository methods, intake, retry/quarantine,
+HTTP/GraphQL mappings and Worker persistence. It confirms DEBT-063 through actual
+built processor/store and migrated PostgreSQL; runtime correction is not part of
+that audit. This does not retroactively make the original tranche exhaustive or
+waive pending Media concurrency, capability revocation and ownership checks.
+
 Reconcile every remaining source/method across all seventeen features, Core,
 root adapters, stateless owner helpers and all fourteen Worker sources. Review
 every producer payload/retention path and actual rollback/replay/lifecycle behavior.
