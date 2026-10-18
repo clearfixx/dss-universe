@@ -1,7 +1,26 @@
 /**
- * DSS File Passport
- * File: apps/worker/src/media-processing.processor.ts
- * Purpose: Orchestrates idempotent Media transformation and persistence jobs.
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Media Worker
+ * 📄 File: apps/worker/src/media-processing.processor.ts
+ *
+ * 🎯 Purpose:
+ * Coordinates validated Media processing and safe automatic failed-state retry.
+ *
+ * 🧠 Responsibilities:
+ * • claims FAILED before scan/transform and preserves terminal states;
+ * • quarantines unsafe content and persists successful processing;
+ * • propagates retryable failures without mutating another claim winner.
+ *
+ * 🏗️ Architecture:
+ * Worker orchestration over semantic persistence/file/scanner contracts.
+ *
+ * ⚠️ Important:
+ * A failed-state CAS is not an exclusive whole-attempt lease.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 import type { Job } from "bullmq";
@@ -22,12 +41,28 @@ export function createMediaProcessingProcessor(
   return async (job) => {
     validateMediaProcessingJob(job.data);
     const status = await store.findStatus(job.data.mediaId);
-    if (status === "READY" || status === "REJECTED" || status === "DELETED") {
+    if (isTerminalStatus(status)) {
       return {
         mediaId: job.data.mediaId,
         duplicate: true,
         quarantined: false,
       };
+    }
+
+    if (
+      status === "FAILED" &&
+      !(await store.claimFailedRetry(job.data.mediaId))
+    ) {
+      const current = await store.findStatus(job.data.mediaId);
+      if (isTerminalStatus(current)) {
+        return {
+          mediaId: job.data.mediaId,
+          duplicate: true,
+          quarantined: false,
+        };
+      }
+      // Outside attempt catch: a claim loser must not fail the winner's row.
+      throw new Error(`Media retry claim unavailable for ${job.data.mediaId}.`);
     }
 
     let quarantinedDuringAttempt = false;
@@ -90,4 +125,13 @@ export function validateMediaProcessingJob(data: MediaProcessingJob): void {
   if (!isMediaProcessingJob(data)) {
     throw new Error("Invalid media processing job.");
   }
+}
+
+function isTerminalStatus(status: string | null): boolean {
+  return (
+    status === "READY" ||
+    status === "REJECTED" ||
+    status === "DELETED" ||
+    status === "DELETING"
+  );
 }

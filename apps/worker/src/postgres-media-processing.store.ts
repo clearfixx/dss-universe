@@ -1,7 +1,26 @@
 /**
- * DSS File Passport
- * File: apps/worker/src/postgres-media-processing.store.ts
- * Purpose: Atomically persists processed Media originals, variants, and status.
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Media Worker
+ * 📄 File: apps/worker/src/postgres-media-processing.store.ts
+ *
+ * 🎯 Purpose:
+ * Persists Media processing lifecycle and transactional variant completion.
+ *
+ * 🧠 Responsibilities:
+ * • conditionally claims FAILED retries without reviving deleted rows;
+ * • persists scan/failure states through bounded conditional writes;
+ * • commits variants and READY parent together or rolls both back.
+ *
+ * 🏗️ Architecture:
+ * PostgreSQL adapter for the Worker-owned semantic store contract.
+ *
+ * ⚠️ Important:
+ * Retry claim is a state CAS, not a global job lease.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 import { randomUUID } from "node:crypto";
@@ -30,6 +49,17 @@ export class PostgresMediaProcessingStore implements MediaProcessingStore {
        WHERE "id" = $1 AND "status" = 'QUARANTINED'::"MediaStatus"`,
       [mediaId],
     );
+  }
+
+  async claimFailedRetry(mediaId: string): Promise<boolean> {
+    const result = await this.pool.query(
+      `UPDATE "media" SET "status" = 'PROCESSING'::"MediaStatus",
+        "failureCode" = NULL, "failureReason" = NULL, "updatedAt" = NOW()
+       WHERE "id" = $1 AND "status" = 'FAILED'::"MediaStatus"
+         AND "deletedAt" IS NULL`,
+      [mediaId],
+    );
+    return result.rowCount === 1;
   }
 
   async markQuarantined(

@@ -6,18 +6,18 @@
  * 📄 File: scripts/audit-media-retry.mjs
  *
  * 🎯 Purpose:
- * Characterizes automatic Media retry using built Worker code and migrated PostgreSQL.
+ * Regresses automatic Media retry using built Worker code and migrated PostgreSQL.
  *
  * 🧠 Responsibilities:
  * • owns and removes one isolated schema in the disposable test database;
  * • executes real processor/store with only file/scanner boundary doubles;
- * • distinguishes automatic repeat from explicit administrative retry claim.
+ * • verifies automatic repeat completes without an administrative state repair.
  *
  * 🏗️ Architecture:
  * Test-only diagnostic; build Worker before running. Never imported by production.
  *
  * ⚠️ Important:
- * Assertions characterize existing undesired behavior, not a completed fix.
+ * Assertions verify the approved failed-state CAS correction, not a global lease.
  * No live BullMQ, filesystem transform or malware scanning certification.
  *
  * 🚀 Build. Share. Grow.
@@ -39,6 +39,7 @@ const schema = `audit_media_retry_${randomUUID().replaceAll("-", "")}`;
 const admin = new Pool({ connectionString: url.href });
 const pool = new Pool({
   connectionString: url.href,
+  application_name: schema,
   options: `-c search_path=${schema},public`,
 });
 let created = false;
@@ -114,6 +115,7 @@ try {
     height: null,
   };
   let attempts = 0;
+  let scanMode = "CLEAN";
   const store = new PostgresMediaProcessingStore(pool);
   const process = createMediaProcessingProcessor(
     store,
@@ -127,6 +129,10 @@ try {
     },
     {
       async scan() {
+        if (scanMode === "UNAVAILABLE")
+          throw new Error("synthetic scanner unavailable");
+        if (scanMode === "INFECTED")
+          return { status: "INFECTED", threatName: "synthetic threat" };
         return { status: "CLEAN" };
       },
     },
@@ -136,18 +142,129 @@ try {
     /synthetic transient transform failure/,
   );
   assert.equal(await store.findStatus(id), "FAILED");
-  await assert.rejects(process({ data }), /was not found/);
-  assert.equal(await store.findStatus(id), "FAILED");
-  assert.equal(attempts, 2);
-  // Control: explicit administrative retry claims PROCESSING before queue dispatch.
-  await pool.query(
-    `UPDATE media SET status='PROCESSING' WHERE id=$1 AND status='FAILED'`,
-    [id],
-  );
   await process({ data });
   assert.equal(await store.findStatus(id), "READY");
+  assert.equal(attempts, 2);
+  await process({ data });
+  assert.equal(await store.findStatus(id), "READY");
+  assert.equal(attempts, 2);
   console.log(
-    "Confirmed: automatic repeat remains FAILED; explicit PROCESSING claim succeeds.",
+    "Verified: automatic repeat reaches READY; subsequent delivery is a no-op.",
+  );
+
+  await pool.query(
+    `UPDATE media SET status='FAILED', "failureCode"='OLD', "failureReason"='old failure' WHERE id=$1`,
+    [id],
+  );
+  const holder = await pool.connect();
+  let claims;
+  let released = false;
+  try {
+    await holder.query("BEGIN");
+    await holder.query("SELECT id FROM media WHERE id=$1 FOR UPDATE", [id]);
+    const holderPid = (await holder.query("SELECT pg_backend_pid() AS pid"))
+      .rows[0].pid;
+    claims = [store.claimFailedRetry(id), store.claimFailedRetry(id)];
+    const until = Date.now() + 1500;
+    let waiting = 0;
+    while (Date.now() < until) {
+      waiting = (
+        await pool.query(
+          `SELECT count(*)::int AS count FROM pg_stat_activity
+             WHERE application_name=$1 AND wait_event_type='Lock'
+               AND cardinality(pg_blocking_pids(pid)) > 0
+               AND query LIKE 'UPDATE "media" SET%' AND pid<>$2`,
+          [schema, holderPid],
+        )
+      ).rows[0].count;
+      if (waiting === 2) break;
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+    await holder.query("COMMIT");
+    released = true;
+    const results = await Promise.all(claims);
+    assert.equal(
+      waiting,
+      2,
+      "Both actual CAS queries must wait on the owned row lock",
+    );
+    assert.deepEqual(results.sort(), [false, true]);
+    const row = (
+      await pool.query(
+        'SELECT status, "failureCode", "failureReason" FROM media WHERE id=$1',
+        [id],
+      )
+    ).rows[0];
+    assert.deepEqual(row, {
+      status: "PROCESSING",
+      failureCode: null,
+      failureReason: null,
+    });
+  } finally {
+    if (!released) await holder.query("ROLLBACK");
+    if (claims) await Promise.allSettled(claims);
+    holder.release();
+  }
+  for (const status of [
+    "READY",
+    "REJECTED",
+    "DELETED",
+    "DELETING",
+    "QUARANTINED",
+    "PENDING",
+    "PROCESSING",
+  ]) {
+    await pool.query(
+      `UPDATE media SET status=$2::"MediaStatus", "failureCode"='KEEP' WHERE id=$1`,
+      [id, status],
+    );
+    assert.equal(await store.claimFailedRetry(id), false);
+    assert.equal(await store.findStatus(id), status);
+    assert.equal(
+      (await pool.query('SELECT "failureCode" FROM media WHERE id=$1', [id]))
+        .rows[0].failureCode,
+      "KEEP",
+    );
+  }
+  assert.equal(await store.claimFailedRetry(randomUUID()), false);
+  await pool.query(
+    `UPDATE media SET status='FAILED', "deletedAt"=NOW() WHERE id=$1`,
+    [id],
+  );
+  assert.equal(await store.claimFailedRetry(id), false);
+  await pool.query(`UPDATE media SET "deletedAt"=NULL WHERE id=$1`, [id]);
+  scanMode = "UNAVAILABLE";
+  await assert.rejects(process({ data }), /synthetic scanner unavailable/);
+  assert.equal(await store.findStatus(id), "QUARANTINED");
+  assert.equal(attempts, 2);
+  await pool.query(`UPDATE media SET status='FAILED' WHERE id=$1`, [id]);
+  scanMode = "INFECTED";
+  assert.equal((await process({ data })).quarantined, true);
+  assert.equal(await store.findStatus(id), "QUARANTINED");
+  assert.equal(attempts, 2);
+  scanMode = "CLEAN";
+  await process({ data });
+  assert.equal(await store.findStatus(id), "READY");
+  await pool.query(`UPDATE media SET status='REJECTED' WHERE id=$1`, [id]);
+  await assert.rejects(
+    store.markReady(data, {
+      original,
+      variants: [{ ...original, name: "audit-variant" }],
+    }),
+    /was not found/,
+  );
+  assert.equal(
+    (
+      await pool.query(
+        'SELECT count(*)::int AS count FROM media_variants WHERE "mediaId"=$1',
+        [id],
+      )
+    ).rows[0].count,
+    0,
+  );
+  assert.equal(await store.findStatus(id), "REJECTED");
+  console.log(
+    "Verified: two blocked CAS contenders yield one winner; terminal/deleted predicates, retry quarantine and variant rollback hold.",
   );
 } finally {
   await pool.end();

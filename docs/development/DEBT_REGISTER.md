@@ -914,4 +914,11 @@ Diagnostic: `scripts/audit-media-retry.mjs`; details in
 [Media review](../audits/D4_MEDIA_PERSISTENCE_REVIEW.md). Separate correction
 approved by owner on 2026-10-18 as a separate package after the audit: agree an
 atomic retry claim, preserve quarantine/terminal/deletion/manual-retry behavior,
-add migrated regressions without API or timeout changes. No runtime fix yet.
+add migrated regressions without API or timeout changes. Exact CAS boundary
+subsequently confirmed. Implementation on `debt/media-automatic-retry` adds
+FAILED/deletedAt-null CAS before scanning, claim-loser re-read without mutating
+another attempt, terminal no-op including DELETING. Actual migrated diagnostic
+passes retry, deterministic competing claims, terminal/deleted predicates,
+scan quarantine and variant rollback; Worker 46 tests/coverage and lint/types pass.
+This is not a global lease. Full quality gate/CI/review/owner acceptance pending;
+debt remains open. [Design and evidence](DEBT_063_RETRY_DESIGN.md).

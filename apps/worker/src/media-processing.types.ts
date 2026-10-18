@@ -1,7 +1,15 @@
 /**
- * DSS File Passport
- * File: apps/worker/src/media-processing.types.ts
- * Purpose: Defines typed results and persistence boundaries for Media processing.
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Media Worker
+ * 📄 File: apps/worker/src/media-processing.types.ts
+ *
+ * 🎯 Purpose:
+ * Defines semantic processing facts and persistence/file/scanner boundaries.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 import type { MediaProcessingJob } from "@dss/jobs";
@@ -30,6 +38,7 @@ export type MediaMalwareScanResult =
 
 export interface MediaProcessingStore {
   findStatus(mediaId: string): Promise<string | null>;
+  claimFailedRetry(mediaId: string): Promise<boolean>;
   markProcessing(mediaId: string): Promise<void>;
   markQuarantined(mediaId: string, code: string, reason: string): Promise<void>;
   markReady(

@@ -1,7 +1,26 @@
 /**
- * DSS File Passport
- * File: apps/worker/test/media-processing.processor.spec.ts
- * Purpose: Verifies idempotent Media worker orchestration and failure persistence.
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Media Worker Tests
+ * 📄 File: apps/worker/test/media-processing.processor.spec.ts
+ *
+ * 🎯 Purpose:
+ * Verifies processing lifecycle and safe failed-state retry orchestration.
+ *
+ * 🧠 Responsibilities:
+ * • checks scan/transform ordering and quarantine behavior;
+ * • verifies claim losers do not mutate another attempt;
+ * • preserves terminal and existing initial/rescan semantics.
+ *
+ * 🏗️ Architecture:
+ * Unit contract tests with persistence/file/scanner doubles.
+ *
+ * ⚠️ Important:
+ * Actual SQL atomicity requires separate migrated PostgreSQL regressions.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
 import type { Job } from "bullmq";
@@ -57,6 +76,7 @@ const result: MediaProcessingResult = {
 describe("createMediaProcessingProcessor", () => {
   const store = {
     findStatus: vi.fn(),
+    claimFailedRetry: vi.fn(),
     markProcessing: vi.fn(),
     markQuarantined: vi.fn(),
     markReady: vi.fn(),
@@ -78,6 +98,7 @@ describe("createMediaProcessingProcessor", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     store.findStatus.mockResolvedValue("PROCESSING");
+    store.claimFailedRetry.mockResolvedValue(true);
     store.markReady.mockResolvedValue(undefined);
     store.markProcessing.mockResolvedValue(undefined);
     store.markQuarantined.mockResolvedValue(undefined);
@@ -164,5 +185,61 @@ describe("createMediaProcessingProcessor", () => {
     await processor({ data: scanJob } as Job<MediaProcessingJob>);
     expect(store.markProcessing).toHaveBeenCalledWith(data.mediaId);
     expect(files.transform).toHaveBeenCalledWith(scanJob);
+  });
+
+  it("claims FAILED before scanning and transforming an automatic retry", async () => {
+    store.findStatus.mockResolvedValue("FAILED");
+    const scanJob = { ...data, scanRequired: true };
+    await processor({ data: scanJob } as Job<MediaProcessingJob>);
+    expect(store.claimFailedRetry).toHaveBeenCalledWith(data.mediaId);
+    expect(store.claimFailedRetry.mock.invocationCallOrder[0]).toBeLessThan(
+      scanner.scan.mock.invocationCallOrder[0]!,
+    );
+    expect(scanner.scan.mock.invocationCallOrder[0]).toBeLessThan(
+      files.transform.mock.invocationCallOrder[0]!,
+    );
+    expect(store.markReady).toHaveBeenCalledWith(scanJob, result);
+  });
+
+  it.each(["PROCESSING", "FAILED", "QUARANTINED", null])(
+    "does not mutate another attempt after losing claim to %s",
+    async (current) => {
+      store.findStatus
+        .mockResolvedValueOnce("FAILED")
+        .mockResolvedValueOnce(current);
+      store.claimFailedRetry.mockResolvedValue(false);
+      await expect(
+        processor({ data } as Job<MediaProcessingJob>),
+      ).rejects.toThrow("retry claim unavailable");
+      expect(scanner.scan).not.toHaveBeenCalled();
+      expect(files.transform).not.toHaveBeenCalled();
+      expect(files.cleanupSource).not.toHaveBeenCalled();
+      expect(store.markFailed).not.toHaveBeenCalled();
+      expect(store.markQuarantined).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["READY", "REJECTED", "DELETED", "DELETING"])(
+    "does not revive terminal %s after losing claim",
+    async (current) => {
+      store.findStatus
+        .mockResolvedValueOnce("FAILED")
+        .mockResolvedValueOnce(current);
+      store.claimFailedRetry.mockResolvedValue(false);
+      await expect(
+        processor({ data } as Job<MediaProcessingJob>),
+      ).resolves.toMatchObject({ duplicate: true });
+      expect(files.transform).not.toHaveBeenCalled();
+      expect(store.markFailed).not.toHaveBeenCalled();
+    },
+  );
+
+  it("does not process an already DELETING row", async () => {
+    store.findStatus.mockResolvedValue("DELETING");
+    await expect(
+      processor({ data } as Job<MediaProcessingJob>),
+    ).resolves.toMatchObject({ duplicate: true });
+    expect(store.claimFailedRetry).not.toHaveBeenCalled();
+    expect(files.transform).not.toHaveBeenCalled();
   });
 });
