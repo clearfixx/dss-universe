@@ -1,25 +1,41 @@
 /**
- * -----------------------------------------------------------------------------
- * File: apps/api/src/core/database/index.ts
- * -----------------------------------------------------------------------------
+ * ===============================================================
+ * 🚀 DSS Universe
+ * 📦 Module: Core Database
+ * 📄 File: apps/api/src/core/database/index.ts
  *
- * DSS Universe
- * Core Database Public API
+ * 🎯 Purpose:
+ * Publishes explicit technical persistence, pagination and error contracts.
  *
- * Exposes Prisma infrastructure, transaction helpers, database exceptions,
- * and database-level pagination helpers.
+ * ⚠️ Important:
+ * Technical ORM APIs do not authorize persistence access from feature business code.
  *
- * -----------------------------------------------------------------------------
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
-export * from './prisma.module';
+export { PrismaModule } from './prisma.module';
 
-export * from './services/prisma.service';
+export { PrismaService } from './services/prisma.service';
 
-export * from './pagination';
+export {
+  getPagination,
+  createPaginatedResult,
+  type PaginationParams,
+  type PaginationMeta,
+  type PaginationQuery,
+  type PaginatedResult,
+  type DatabasePaginationParams,
+  type DatabasePaginationQuery,
+} from './pagination';
 
-export * from './transactions';
+export type { TransactionClient } from './transactions';
 
-export * from './exceptions';
+export {
+  DatabaseException,
+  isPrismaKnownRequestError,
+  mapPrismaError,
+  PrismaExceptionFilter,
+} from './exceptions';
 
-export * from './constants/database.constants';
+export { PRISMA_CLIENT_OPTIONS } from './constants/database.constants';

@@ -50,6 +50,7 @@ const {
   isStringLiteralLike,
   isCallExpression,
   isIdentifier,
+  isVariableStatement,
   SyntaxKind,
 } = requireApi("typescript");
 
@@ -96,64 +97,219 @@ test("Media retains all seventeen former aggregation targets", () => {
     );
 });
 
-test("tracked source has no literal import of the removed Media domain entry", () => {
-  const root = fileURLToPath(new URL("../../", import.meta.url));
-  const tracked = spawnSync(
-    "git",
-    ["ls-files", "*.ts", "*.tsx", "*.mts", "*.cts", "*.js", "*.mjs", "*.cjs"],
-    { cwd: root, encoding: "utf8" },
+for (const entry of [
+  { name: "Media domain", path: "apps/api/src/modules/media/domain" },
+  { name: "Core aggregate", path: "apps/api/src/core" },
+])
+  test(`tracked source has no literal import of the removed ${entry.name} entry`, () => {
+    const root = fileURLToPath(new URL("../../", import.meta.url));
+    const tracked = spawnSync(
+      "git",
+      ["ls-files", "*.ts", "*.tsx", "*.mts", "*.cts", "*.js", "*.mjs", "*.cjs"],
+      { cwd: root, encoding: "utf8" },
+    );
+    equal(tracked.status, 0, tracked.stderr);
+    const references = [];
+    const target = resolve(root, entry.path);
+    for (const file of tracked.stdout.trim().split(/\r?\n/)) {
+      if (
+        !/^(apps|packages|scripts)\//.test(file) ||
+        !existsSync(resolve(root, file))
+      )
+        continue;
+      const source = createSourceFile(
+        file,
+        readFileSync(resolve(root, file), "utf8"),
+        ScriptTarget.Latest,
+        true,
+      );
+      const inspect = (literal) => {
+        if (!literal || !isStringLiteralLike(literal)) return;
+        const specifier = literal.text;
+        const candidate = specifier.startsWith("@api/")
+          ? resolve(root, "apps/api/src", specifier.slice(5))
+          : specifier.startsWith(".")
+            ? resolve(root, dirname(file), specifier)
+            : "";
+        if (
+          candidate
+            .replace(/\.(?:[cm]?[jt]sx?)$/, "")
+            .replace(/[\\/]index$/, "") === target
+        )
+          references.push(file + ": " + specifier);
+      };
+      const visit = (node) => {
+        if (isImportDeclaration(node) || isExportDeclaration(node))
+          inspect(node.moduleSpecifier);
+        if (isImportTypeNode(node) && isLiteralTypeNode(node.argument))
+          inspect(node.argument.literal);
+        if (
+          isCallExpression(node) &&
+          (node.expression.kind === SyntaxKind.ImportKeyword ||
+            (isIdentifier(node.expression) &&
+              node.expression.text === "require") ||
+            (isPropertyAccessExpression(node.expression) &&
+              isIdentifier(node.expression.expression) &&
+              node.expression.expression.text === "require" &&
+              node.expression.name.text === "resolve"))
+        )
+          inspect(node.arguments[0]);
+        forEachChild(node, visit);
+      };
+      visit(source);
+    }
+    deepEqual(references, []);
+  });
+
+test("Core has no unused catch-all aggregation entry", () => {
+  equal(
+    existsSync(new URL("../../apps/api/src/core/index.ts", import.meta.url)),
+    false,
   );
-  equal(tracked.status, 0, tracked.stderr);
-  const references = [];
-  const target = resolve(root, "apps/api/src/modules/media/domain");
-  for (const file of tracked.stdout.trim().split(/\r?\n/)) {
-    if (
-      !/^(apps|packages|scripts)\//.test(file) ||
-      !existsSync(resolve(root, file))
-    )
-      continue;
+});
+
+const corePaginationNames = [
+  "getPagination",
+  "createPaginatedResult",
+  "PaginationParams",
+  "PaginationMeta",
+  "PaginationQuery",
+  "PaginatedResult",
+  "DatabasePaginationParams",
+  "DatabasePaginationQuery",
+];
+const coreExceptionNames = [
+  "DatabaseException",
+  "isPrismaKnownRequestError",
+  "mapPrismaError",
+  "PrismaExceptionFilter",
+];
+for (const [entry, expected] of [
+  [
+    "audit",
+    [
+      "AuditModule",
+      "AuditRedactionService",
+      "AuditWriterService",
+      "AuditActorType",
+      "AuditResult",
+      "AuditEntry",
+    ],
+  ],
+  [
+    "config",
+    [
+      "configs",
+      "appConfig",
+      "databaseConfig",
+      "jwtConfig",
+      "mailConfig",
+      "openaiConfig",
+      "redisConfig",
+      "ConfigurationModule",
+      "validationSchema",
+    ],
+  ],
+  [
+    "database",
+    [
+      "PrismaModule",
+      "PrismaService",
+      ...corePaginationNames,
+      "TransactionClient",
+      ...coreExceptionNames,
+      "PRISMA_CLIENT_OPTIONS",
+    ],
+  ],
+  ["database/exceptions", coreExceptionNames],
+  ["database/pagination", corePaginationNames],
+  [
+    "events",
+    [
+      "EventsModule",
+      "createEventEnvelope",
+      "OutboxWriterService",
+      "EventCategory",
+      "EventEnvelope",
+      "JsonPrimitive",
+      "JsonValue",
+    ],
+  ],
+  ["graphql", ["GraphqlCoreModule", "GraphqlContext"]],
+  ["observability", ["ObservabilityModule"]],
+  [
+    "queue",
+    [
+      "QueueModule",
+      "OutboxDispatcherService",
+      "QueueRegistryService",
+      "QueueOperationsService",
+    ],
+  ],
+])
+  test(`Core ${entry} retains only its explicit reviewed export names`, () => {
     const source = createSourceFile(
-      file,
-      readFileSync(resolve(root, file), "utf8"),
+      "index.ts",
+      readFileSync(
+        new URL(`../../apps/api/src/core/${entry}/index.ts`, import.meta.url),
+        "utf8",
+      ),
       ScriptTarget.Latest,
       true,
     );
-    const inspect = (literal) => {
-      if (!literal || !isStringLiteralLike(literal)) return;
-      const specifier = literal.text;
-      const candidate = specifier.startsWith("@api/")
-        ? resolve(root, "apps/api/src", specifier.slice(5))
-        : specifier.startsWith(".")
-          ? resolve(root, dirname(file), specifier)
-          : "";
-      if (
-        candidate
-          .replace(/\.(?:[cm]?[jt]sx?)$/, "")
-          .replace(/[\\/]index$/, "") === target
-      )
-        references.push(file + ": " + specifier);
-    };
-    const visit = (node) => {
-      if (isImportDeclaration(node) || isExportDeclaration(node))
-        inspect(node.moduleSpecifier);
-      if (isImportTypeNode(node) && isLiteralTypeNode(node.argument))
-        inspect(node.argument.literal);
-      if (
-        isCallExpression(node) &&
-        (node.expression.kind === SyntaxKind.ImportKeyword ||
-          (isIdentifier(node.expression) &&
-            node.expression.text === "require") ||
-          (isPropertyAccessExpression(node.expression) &&
-            isIdentifier(node.expression.expression) &&
-            node.expression.expression.text === "require" &&
-            node.expression.name.text === "resolve"))
-      )
-        inspect(node.arguments[0]);
-      forEachChild(node, visit);
-    };
-    visit(source);
-  }
-  deepEqual(references, []);
+    const names = [];
+    for (const node of source.statements) {
+      if (isExportDeclaration(node)) {
+        ok(
+          node.exportClause && isNamedExports(node.exportClause),
+          "wildcard/namespace re-exports are forbidden",
+        );
+        names.push(
+          ...node.exportClause.elements.map((element) => element.name.text),
+        );
+      } else if (
+        node.modifiers?.some(
+          (modifier) => modifier.kind === SyntaxKind.ExportKeyword,
+        )
+      ) {
+        ok(
+          entry === "config" && isVariableStatement(node),
+          "barrels do not define new runtime behavior",
+        );
+        for (const declaration of node.declarationList.declarations) {
+          ok(isIdentifier(declaration.name));
+          names.push(declaration.name.text);
+        }
+      }
+    }
+    deepEqual(names.sort(), [...expected].sort());
+  });
+
+test("Core config preserves the existing ordered namespace registrations", () => {
+  const source = createSourceFile(
+    "index.ts",
+    readFileSync(
+      new URL("../../apps/api/src/core/config/index.ts", import.meta.url),
+      "utf8",
+    ),
+    ScriptTarget.Latest,
+    true,
+  );
+  const configs = source.statements
+    .filter(isVariableStatement)
+    .flatMap((node) => node.declarationList.declarations)
+    .find((node) => node.name.getText(source) === "configs");
+  deepEqual(
+    configs?.initializer?.elements?.map((element) => element.getText(source)),
+    [
+      "appConfig",
+      "databaseConfig",
+      "jwtConfig",
+      "mailConfig",
+      "openaiConfig",
+      "redisConfig",
+    ],
+  );
 });
 
 function directPrismaSurface(

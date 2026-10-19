@@ -2,7 +2,7 @@
 
 Date: 2026-10-14. Status: authorized debt-remediation execution, not Phase 11.
 Branch: `debt/d4-module-boundaries`.
-Implemented increments: D4.1, D4.2 and bounded D4.3a/b/c/d1/d2/d3a plus AI Core/private feature/representation/presentation/News/Media D4.4; remaining import inventory 36,
+Implemented increments: D4.1, D4.2 and bounded D4.3a/b/c/d1/d2/d3a plus AI Core/private feature/representation/presentation/News/Media/Core D4.4; remaining bounded import inventory 0,
 full D4 and the rest of D4.3 OPEN.
 Locally implemented D4.3d3b transfers the mapped News delivery SQL into owned
 adapters and a scoped root snapshot; full acceptance remains open. Evidence:
@@ -19,12 +19,19 @@ Authority: approved pre-Phase-11 D4 plan and ADR-003/004.
 ## Outcome and invariants
 
 Close the full D4 inventory, not merely rename broad services into facades.
-Starting inventory: 135 findings; latest reviewed inventory: 36. Every reduction needs exact source,
+Starting inventory: 135 findings; latest reviewed bounded inventory: 0. Every reduction needs exact source,
 behavioral and contract evidence; no automatic baseline growth or waiver.
 Keep NestJS, Prisma, PostgreSQL, Outbox/BullMQ and existing transport responses.
 Do not invent frontend design, new scoring formulas, owner policy or Phase 11 flows.
 
 ## Implementation sequence
+
+Core explicit-export increment (2026-10-19): delete unused9-wildcard root
+aggregator, preserve all reviewed technical names explicitly in nine entries;
+config registration order and runtime implementations unchanged. Twelve new cases
+2 PASS/10 FAIL before, full architecture107/107 after. Inventory36 →0, no additions.
+See [evidence](../audits/D4_4_CORE_EXPLICIT_EXPORTS.md). Empty bounded AST inventory
+does not close D4.3 operation reconciliation, D4.5 graph/enforcement or full gates.
 
 Unused Media entry increment (2026-10-19): zero tracked literal import/export/
 dynamic/require/import-type consumers found after alias/path resolution. Delete

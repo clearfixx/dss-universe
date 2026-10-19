@@ -21,6 +21,14 @@ active package safe and buildable.
 
 ## Register
 
+2026-10-19 Core D4.4 progress for DEBT-027: unused9-wildcard root aggregator removed
+after zero literal-consumer scan; other27 Core wildcards replaced with exact named
+technical exports in nine entries. Config namespace order, wiring and all runtime
+implementations unchanged. Twelve new cases2 PASS/10 FAIL before, full architecture
+107/107 after. Baseline36 →0, no additions; this is bounded import inventory only,
+not D4/cycle/security acceptance. Full gates, D4.3/D4.5 and D5–D7 remain pending.
+[Core export evidence](../audits/D4_4_CORE_EXPLICIT_EXPORTS.md).
+
 2026-10-19 bounded D4.4 unused Media domain entry cleanup for DEBT-027: tracked
 literal import/export/dynamic/require/import-type scan finds zero consumers after
 alias resolution. Delete only its17-wildcard barrel; all owned targets and runtime

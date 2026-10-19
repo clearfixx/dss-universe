@@ -12,8 +12,8 @@
  * ===============================================================
  */
 
-export * from './events.module';
-export * from './factories/event-envelope.factory';
-export * from './services/outbox-writer.service';
+export { EventsModule } from './events.module';
+export { createEventEnvelope } from './factories/event-envelope.factory';
+export { OutboxWriterService } from './services/outbox-writer.service';
 export type { EventCategory, EventEnvelope } from './types/event-envelope.type';
 export type { JsonPrimitive, JsonValue } from './types/json-value.type';

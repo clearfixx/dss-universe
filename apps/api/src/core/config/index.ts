@@ -1,3 +1,15 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * 📦 Module: Core Configuration
+ * 📄 File: apps/api/src/core/config/index.ts
+ *
+ * 🎯 Purpose:
+ * Preserves ordered namespace registration and publishes existing config symbols explicitly.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import appConfig from './namespaces/app.config';
 import databaseConfig from './namespaces/database.config';
 import jwtConfig from './namespaces/jwt.config';
@@ -23,5 +35,5 @@ export {
   redisConfig,
 };
 
-export * from './configuration.module';
-export * from './validation.schema';
+export { ConfigurationModule } from './configuration.module';
+export { validationSchema } from './validation.schema';

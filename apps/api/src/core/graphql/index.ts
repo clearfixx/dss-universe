@@ -12,5 +12,5 @@
  * ===============================================================
  */
 
-export * from './graphql-core.module';
-export * from './types/graphql-context.type';
+export { GraphqlCoreModule } from './graphql-core.module';
+export type { GraphqlContext } from './types/graphql-context.type';
