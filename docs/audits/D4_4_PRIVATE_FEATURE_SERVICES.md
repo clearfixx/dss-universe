@@ -44,3 +44,30 @@ All other gate processes terminal before serial full E2E. Exact disposable5435
 project/service/loopback/tmpfs verified, zero clients, recreated/empty public schema
 verified, migrations applied/no seed; dev5433 and persistent5434 untouched. E2E
 running, GraphQL/CI/review/owner acceptance pending. No full-green claim.
+
+## Final local gate evidence
+
+Serial full E2E **501 PASS / 2 FAIL / 0 skipped of 503**, 48 suites, 388.468s.
+Failures: News viewCount null/zero mismatch and Leaderboards foundation's expected
+first user/currentLevel. The latter was not assumed inherited: reviewed failure,
+fixture source, unchanged ranking SQL and read-only current disposable data.
+Winning subject is a prior points-user fixture, older than leader-oldest, with
+10 current-month points. SQL sorts equal points by account age then ID. This
+matches the previously documented DEBT-045 cross-suite tie, not a new ranking
+formula. No assertion, SQL, timeout or fixture isolation change; no rerun-to-green.
+
+App26/26, Leaderboard ownership30/30, Content Boundaries9/9, interaction owner
+policies18/18 and Custom Titles foundation1/1 pass in that same run. News fixture
+now reaches its existing assertion through the internal setup import; it is not
+made green by removing the broad service export. No HTTP schema/response change.
+
+Completed Jest retained handles; after full JSON and verified zero DB clients/
+api_boundary schemas, only exact owned PID21228 was stopped. This is not normal
+green process termination. Read-only tie inspection emitted only two Booleans and
+the scalar total, no user text/credentials. GraphQL generation succeeds; check
+remains DEBT-044 red on generated barrel comment/newline. Own side effect restored
+exactly; schema and generated outputs have no remaining Git diff.
+
+Changed-file formatting/diff pass. Global format/audit, E2E/GraphQL and pending
+CI/review/owner acceptance prevent full-green/closure claims. Runtime local
+implementation is delivered separately from those still-open gates.

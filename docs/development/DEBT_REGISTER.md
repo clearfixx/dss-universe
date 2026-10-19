@@ -29,6 +29,15 @@ pass after red baseline; reviewed inventory 81 → 72, zero additions. Full gate
 and CI/review/acceptance pending. See
 [private feature service evidence](../audits/D4_4_PRIVATE_FEATURE_SERVICES.md).
 
+Final private-feature surface gates: coverage1113/1113, root/sibling gates pass
+except inherited format/audit. Serial E2E501/503: News viewCount and recurring
+DEBT-045 leaderboard shared-fixture tie. Read-only current DB confirms prior
+points-user is older and has10 month points; unchanged age/ID tiebreak explains
+the observed winner. App26 and ownership30 pass. Completed owned Jest PID21228
+stopped only after zero DB clients/fixture schemas. GraphQL remains DEBT-044 red,
+own generator drift restored. No fixture/assertion/ranking behavior changed;
+CI/review/acceptance and full D4 remain open.
+
 2026-10-19 bounded D4.4 progress for DEBT-027: AI Core now publishes only named
 AiCoreModule; private command service/provider/resolver wiring retained. Three
 new boundary tests fail before correction and pass after; full API coverage
