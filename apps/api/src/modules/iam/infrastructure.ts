@@ -18,6 +18,7 @@
  * ===============================================================
  */
 export { profileDirectoryRole } from './infrastructure/repositories/prisma-profile-role.shape';
+export { PrismaRegistrationRoleWriter } from './infrastructure/repositories/prisma-registration-role.writer';
 export { PrismaMembershipGrantWriter } from './infrastructure/repositories/prisma-membership-grant.writer';
 export { PrismaRoleRevocationWriter } from './infrastructure/repositories/prisma-role-revocation.writer';
 export {

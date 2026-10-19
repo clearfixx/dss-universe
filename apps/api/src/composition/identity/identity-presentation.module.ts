@@ -22,6 +22,7 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '@api/modules/auth';
 import { UsersModule } from '@api/modules/users';
+import { PrismaRegistrationRoleWriter } from '@api/modules/iam/infrastructure';
 import { IdentityCompositionModule } from './identity-composition.module';
 import { AuthenticationPresentationService } from './application/authentication-presentation.service';
 import { REGISTRATION_TRANSACTION } from './application/contracts/registration-transaction.contract';
@@ -32,6 +33,7 @@ import { AuthenticationResolver } from './presentation/graphql/authentication.re
 @Module({
   imports: [AuthModule, UsersModule, IdentityCompositionModule],
   providers: [
+    PrismaRegistrationRoleWriter,
     AuthenticationPresentationService,
     AuthenticationResolver,
     {

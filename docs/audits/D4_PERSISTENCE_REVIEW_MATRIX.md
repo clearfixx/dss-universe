@@ -4,6 +4,15 @@ Date: 2026-10-18. Branch `debt/d4-persistence-matrix`, based on `0bbb407` /
 draft PR #31 (unaccepted). **Partial source review, not exhaustive D4 acceptance.**
 No production source, schema, migration, provider, timeout or policy changes.
 
+## Registration follow-up — 2026-10-19
+
+The root registration operation now composes Auth-owned credential and Users-owned
+profile fragments, with IAM-owned baseline role lookup/assignment. Its shared-row
+INSERT and single transaction stay in root. The fourteen characterization/DB
+regressions pass after transfer; full gate evidence and remaining acceptance are
+recorded in [the bounded packet](D4_REGISTRATION_OWNED_PERSISTENCE.md).
+This reconciles this operation only, not the full Auth/Users/IAM inventory.
+
 ## Discovery boundary
 
 Git-tracked non-test TypeScript under API modules/Core/composition and Worker:

@@ -21,6 +21,16 @@ active package safe and buildable.
 
 ## Register
 
+2026-10-19 bounded registration progress for DEBT-027: Auth and Users now own
+allowlisted enrollment fragments; IAM owns baseline-role lookup/assignment.
+Root retains the single shared-row INSERT and default transaction, unchanged
+operation order, API and post-commit issuance/delivery. API coverage passes
+1,147 tests without skips; E2E completed 507/508 (only inherited News null/zero
+failure), with all 26 App cases passing. Generated consistency remains red on
+DEBT-044; format/audit and retained handles remain open. Packet acceptance,
+full D4 reconciliation and D5–D7 are not closed. See
+[bounded evidence](../audits/D4_REGISTRATION_OWNED_PERSISTENCE.md).
+
 2026-10-19 D4.5 API file-graph/Core config progress for DEBT-027: unchanged ordered
 loaders move into an owned file, removing the inherited module/barrel cycle while
 retaining all nine public exports/options. TypeScript-resolved local file graph

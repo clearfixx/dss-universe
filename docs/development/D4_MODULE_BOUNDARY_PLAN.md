@@ -369,3 +369,12 @@ unit/integration, relevant E2E, production build, architecture/license, generate
 consistency and dependency audit; record inherited blockers without waiving them.
 
 D5–D7 remain required. Stop before Phase 11 for its mandatory brainstorm.
+
+### Registration persistence follow-up (2026-10-19)
+
+The owner-approved Auth/Users enrollment fragments and IAM baseline writer move
+field/delegate ownership out of root registration. Root retains one shared-row
+INSERT and one default transaction; API, schema, error order and post-commit
+sessions/mail remain unchanged. See
+[bounded verification](../audits/D4_REGISTRATION_OWNED_PERSISTENCE.md).
+This does not close exhaustive D4.3 reconciliation or D4/D5–D7 acceptance.

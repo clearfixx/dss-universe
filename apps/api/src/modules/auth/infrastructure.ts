@@ -11,6 +11,7 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+export { credentialEnrollmentData } from './infrastructure/repositories/prisma-credential-enrollment.shape';
 export {
   leaderboardSubjectSource,
   leaderboardSubjectId,

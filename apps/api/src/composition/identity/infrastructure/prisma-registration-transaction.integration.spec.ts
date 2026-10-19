@@ -28,6 +28,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '@api/core/database';
+import { PrismaRegistrationRoleWriter } from '@api/modules/iam/infrastructure';
 import { AuditWriterService } from '@api/core/audit';
 import { AUTHENTICATION_FLOWS } from '@api/modules/auth';
 import { VIEWER_PROFILE_READER } from '@api/modules/users';
@@ -55,7 +56,10 @@ dbSuite('registration PostgreSQL atomicity', () => {
     options: `-c search_path=${schema},public`,
   });
   const prisma = new PrismaService({ adapter: new PrismaPg(pool, { schema }) });
-  const registration = new PrismaRegistrationTransaction(prisma);
+  const registration = new PrismaRegistrationTransaction(
+    prisma,
+    new PrismaRegistrationRoleWriter(),
+  );
   const generateTokens = jest.fn();
   const createSession = jest.fn();
   const requestVerification = jest.fn();

@@ -23,6 +23,11 @@ infrastructure capability receives a password hash for persistence, never as
 a profile or business response. Prisma never crosses its application contract.
 Sessions are created after commit; verification mail remains best-effort.
 
+Auth and Users own the allowlisted enrollment fragments published through their
+guarded infrastructure entries. IAM's stateless registration role writer owns
+baseline lookup and assignment. Root alone owns the shared physical INSERT and
+transaction lifetime, preserving lookup → subject → assignment ordering.
+
 Presentation failure returns no combined success/token pair. It does not undo
 an already committed account, created session or refresh rotation. This is not
 a distributed transaction or a guarantee of automatic retry after refresh failure.

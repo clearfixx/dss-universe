@@ -986,6 +986,7 @@ test("owners publish only the intended guarded technical symbols", () => {
         "MentionRecipientMatcher",
         "MentionProfileCandidate",
         "leaderboardProfileColumns",
+        "registrationProfileData",
       ],
     ],
     [
@@ -1003,6 +1004,7 @@ test("owners publish only the intended guarded technical symbols", () => {
         "leaderboardSubjectId",
         "leaderboardSubjectAge",
         "leaderboardSubjectEligibility",
+        "credentialEnrollmentData",
       ],
     ],
     [
@@ -1011,6 +1013,7 @@ test("owners publish only the intended guarded technical symbols", () => {
         "profileDirectoryRole",
         "PrismaMembershipGrantWriter",
         "PrismaRoleRevocationWriter",
+        "PrismaRegistrationRoleWriter",
         "iamAssignmentSelect",
         "mapIamAssignments",
         "iamAuthorizationSelect",
@@ -1065,6 +1068,55 @@ test("owners publish only the intended guarded technical symbols", () => {
       );
     }
     deepEqual(names.sort(), [...expected].sort());
+  }
+});
+
+test("registration root composes owner fragments while IAM owns baseline delegates", () => {
+  const read = (file) =>
+    readFileSync(
+      new URL(`../../apps/api/src/${file}`, import.meta.url),
+      "utf8",
+    );
+  const root = read(
+    "composition/identity/infrastructure/prisma-registration-transaction.ts",
+  );
+  deepEqual(directPrismaSurface(root), ["$transaction"]);
+  deepEqual(directPrismaSurface(root, "transaction", false), ["user"]);
+  for (const name of [
+    "credentialEnrollmentData",
+    "registrationProfileData",
+    "subjectAnchorSelect",
+  ]) {
+    ok(root.includes(name));
+  }
+  ok(!root.includes("REGISTRATION_ROLE_NAME"));
+  const writer = read(
+    "modules/iam/infrastructure/repositories/prisma-registration-role.writer.ts",
+  );
+  deepEqual(directPrismaSurface(writer), []);
+  deepEqual(directPrismaSurface(writer, "transaction", false), [
+    "role",
+    "userRole",
+  ]);
+  for (const [owner, symbol] of [
+    ["auth", "credentialEnrollmentData"],
+    ["users", "registrationProfileData"],
+    ["iam", "PrismaRegistrationRoleWriter"],
+  ]) {
+    ok(!read(`modules/${owner}/index.ts`).includes(symbol));
+    for (const consumer of [
+      `apps/api/src/modules/${owner}/application/enroll.ts`,
+      "apps/api/src/modules/news/infrastructure/enroll.ts",
+    ]) {
+      ok(
+        analyzeBoundaries([
+          {
+            path: consumer,
+            source: `import { ${symbol} } from '@api/modules/${owner}/infrastructure';`,
+          },
+        ]).some(({ rule }) => rule === "infrastructure-entry-business-import"),
+      );
+    }
   }
 });
 

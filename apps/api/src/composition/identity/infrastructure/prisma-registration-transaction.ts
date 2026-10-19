@@ -26,36 +26,37 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@api/core/database';
 import type { CredentialSubjectStore } from '@api/modules/auth';
-import { REGISTRATION_ROLE_NAME } from '@api/modules/iam';
+import {
+  credentialEnrollmentData,
+  subjectAnchorSelect,
+} from '@api/modules/auth/infrastructure';
+import { PrismaRegistrationRoleWriter } from '@api/modules/iam/infrastructure';
+import { registrationProfileData } from '@api/modules/users/infrastructure';
 import type { RegistrationTransaction } from '../application/contracts/registration-transaction.contract';
 
 @Injectable()
 export class PrismaRegistrationTransaction implements RegistrationTransaction {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly roles: PrismaRegistrationRoleWriter,
+  ) {}
   forProfile(
     profile: Readonly<{ username: string; displayName?: string }>,
   ): CredentialSubjectStore {
     // Copy only intended fields; never retain a caller's mutable aggregate.
-    const { username, displayName } = profile;
+    const profileData = registrationProfileData(profile);
     return {
       create: (credentials) =>
         this.prisma.$transaction(async (transaction) => {
-          const role = await transaction.role.findUniqueOrThrow({
-            where: { name: REGISTRATION_ROLE_NAME },
-            select: { id: true },
-          });
+          const roleId = await this.roles.readDefaultRoleId(transaction);
           const subject = await transaction.user.create({
             data: {
-              email: credentials.email,
-              passwordHash: credentials.passwordHash,
-              username,
-              displayName,
+              ...credentialEnrollmentData(credentials),
+              ...profileData,
             },
-            select: { id: true },
+            select: subjectAnchorSelect,
           });
-          await transaction.userRole.create({
-            data: { userId: subject.id, roleId: role.id },
-          });
+          await this.roles.assign(transaction, subject.id, roleId);
           return subject.id;
         }),
     };

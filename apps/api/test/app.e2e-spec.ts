@@ -38,6 +38,7 @@ import { TokenService } from './../src/modules/auth/application/services/token.s
 import { SecurityAlertService } from './../src/modules/auth/application/services/security-alert.service';
 import { TotpService } from './../src/modules/auth/application/services/totp.service';
 import { PrismaRegistrationTransaction } from './../src/composition/identity/infrastructure/prisma-registration-transaction';
+import { PrismaRegistrationRoleWriter } from '@api/modules/iam/infrastructure';
 import {
   ACCOUNT_CREDENTIALS_REPOSITORY,
   type AccountCredentialsRepository,
@@ -535,6 +536,7 @@ describe('DSS API (e2e)', () => {
     });
     const registration = new PrismaRegistrationTransaction(
       failingClient as unknown as PrismaService,
+      new PrismaRegistrationRoleWriter(),
     );
     await expect(
       registration
