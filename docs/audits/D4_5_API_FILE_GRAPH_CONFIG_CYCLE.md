@@ -1,7 +1,7 @@
 # D4.5 — API file graph and Core configuration cycle
 
 Date: 2026-10-19. Branch: `debt/d4-file-graph-config-cycle`.
-Status: implementation and focused verification; full gates/publication pending.
+Status: locally implemented and verified; full quality gate remains red, acceptance pending.
 Parent: unaccepted draft PR #55. This is not Phase 11 work or full D4 acceptance.
 
 ## Ownership and behavior
@@ -78,11 +78,49 @@ red in41 inherited files after formatting the two own graph files. Five focused
 config cases pass. All pre-gate sessions are terminal before full E2E begins.
 E2E uses only the verified disposable Compose project/service on127.0.0.1:5435,
 with tmpfs storage and zero clients before recreation; empty public schema before
-migrations, no seed. Full E2E/GraphQL/external CI results remain pending.
+migrations, no seed. Final results follow below; external CI is still pending.
+
+## Final local packet gate
+
+Full E2E:507 PASS/1 FAIL/0 skipped of508 across48 suites in402.136s. Only the
+unchanged News viewCount null/zero assertion fails (DEBT-045). App26, Content
+Boundaries14, ownership30, Core Outbox/Audit11 and Media platform2 pass. The App
+5000ms timeout does not reproduce this run; DEBT-048 remains unresolved, not
+fixed by inference. Complete JSON precedes cleanup: exact own Jest PID20704 is
+verified, zero DB clients/temporary schemas confirmed, then only that retained
+process is stopped. Shell reports `full-e2e=-1`, not a normal green exit. No
+timeout increase, assertion weakening, forceExit, skip or rerun-to-green.
+
+GraphQL generation succeeds; drift gate fails for the existing generated Web
+index eslint-disable/final-newline difference (DEBT-044). Only this run's own
+generated drift is restored; schema/generated paths have no remaining diff.
+Full SDL SHA-256 remains
+`C03170CB54027C557F662A5B9BF5F85CAFA2112B8623D3FCA360E8FA9C82FD2C`.
+
+A separate post-run read-only TypeScript probe uses the actual filesystem host,
+actual parsed tsconfig and tracked authored API sources:815 files,2104 static
+edges, no unresolved local imports or cycles. This supports the current graph
+result without substituting the virtual host; it is not a semantic/runtime DI
+or whole-workspace certificate. The mandatory graph/baseline gate remains clean
+with138/138 architecture tests. No baseline findings were waived.
+
+Root lint/types/Prisma/build, final API1143/1143 and adjacent suites pass as above.
+Global format41, dependency audit1 high/10 moderate, generated drift, retained
+handles and known E2E debt keep the overall gate red. Publication/CI/owner review
+are pending. User-owned untracked STACK_AUDIT_PLAN remains unchanged (SHA-256
+`B1D657CFCEA43DF16636E9C79F4BB62BF4F94848B31780234C2364CBA557796A`).
+
+Parent PR #55 CI observation at head `2d277477f5e5f739189174f9d8c0e79d4ddb7fe2`:
+storage containment passes on Ubuntu/Windows, dependency audit and Web smoke fail,
+main quality job is reported in progress. Web job118012446561 reports9 PASS,
+3 FAIL and1 flaky: three guest/arrival failures wait for the existing Enter Station
+link; demo search has an initial failure. These match existing DEBT-034 scope,
+not proof of new API-graph regressions. No frontend/test/timeout changes are made.
+These parent checks are explicitly not current-branch CI certification.
 
 ## Remaining requirements
 
-Record final-source gates, E2E, GraphQL drift, CI and review evidence before
+Record CI and review evidence and resolve remaining full-gate failures before
 acceptance. D4.3 exhaustive owner-operation reconciliation, remaining D4.5 review,
 D5–D7, the separate stack audit and mandatory Phase 11 brainstorm remain open.
 Known baseline defects are not fixed or closed by removing this cycle.

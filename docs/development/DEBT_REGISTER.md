@@ -21,6 +21,22 @@ active package safe and buildable.
 
 ## Register
 
+2026-10-19 D4.5 API file-graph/Core config progress for DEBT-027: unchanged ordered
+loaders move into an owned file, removing the inherited module/barrel cycle while
+retaining all nine public exports/options. TypeScript-resolved local file graph
+now covers all authored API src, with missing/nonliteral edges explicit; existing
+feature-layer rules retain their scope. Baseline findings stay empty, no waiver.
+Architecture138/138 and final API1143/1143 pass; five config cases include both
+initial import orders. Root/sibling gates pass except format41/audit1 high10 moderate.
+Full E2E507/508,0 skipped,402.136s: only unchanged DEBT-045 News null/zero. App26
+passes, but DEBT-048 is not closed by one non-reproduction. Completed own Jest
+PID20704 stopped after full JSON and zero clients/schemas; no normal-green claim.
+GraphQL generation passes, DEBT-044 drift red, own generated drift restored; SDL
+unchanged. Actual-host graph815 sources/2104 edges has no local unresolved edges
+or cycles, not full ownership/runtime/security proof. See
+[evidence](../audits/D4_5_API_FILE_GRAPH_CONFIG_CYCLE.md).
+Full D4, CI/publication/review, D5–D7, stack audit and Phase11 brainstorm remain open.
+
 2026-10-19 bounded D4.5 enforcement progress for DEBT-027: mandatory architecture
 command now checks the frozen inventory; standalone reporting remains diagnostic.
 Seven new regressions cover command/CI wiring, current CLI and temporary-tree
