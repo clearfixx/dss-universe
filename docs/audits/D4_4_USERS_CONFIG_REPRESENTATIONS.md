@@ -46,3 +46,31 @@ not a full-green or debt-closure claim.
 
 Full D4 source-operation reconciliation, remaining surfaces, D4.5 enforcement,
 D5–D7, the separate stack audit and Phase 11 brainstorm remain required.
+
+## Final local evidence and publication
+
+Draft PR #50 publishes source commit `22d83d6`, based on PR #49. Serial full E2E
+completed **485 PASS / 18 FAIL / 0 skipped of 503**, 48 suites, 388.748 seconds.
+One failure is the existing News foundation `viewCount: null` expectation versus
+actual `0` (DEBT-045). All 17 Content Target Transactions cases fail at their
+shared AppModule initialization with `UNKNOWN: unknown error, open schema.gql`
+in Nest's FileSystemHelper.writeFile (DEBT-059); their scenario assertions were
+not exercised. No cause such as antivirus, ACL or concurrency is established.
+This packet changes neither those scenarios nor schema output configuration.
+
+In that same run App26/26, Content Boundaries9/9, Leaderboard ownership30/30 and
+IAM subject transactions5/5 pass. No rerun-to-green. Completed Jest retained open
+handles: full JSON, exact process command and zero disposable DB clients/owned
+temporary schemas were verified before stopping only owned PID23080. The shell
+then returned -1, not a normal successful process exit.
+
+Subsequent serial GraphQL generation succeeds. The overall check remains red on
+the known DEBT-044 generated barrel comment/newline difference; only that own
+generator side effect was restored exactly. Schema and generated files have no
+remaining Git diff. Changed-file Prettier and diff checks pass; the user-owned
+untracked stack audit plan hash is unchanged.
+
+CI observed for source head `22d83d6`: containment Ubuntu/Windows pass, Web smoke
+and dependency audit fail, main quality gate still in progress. Documentation-head
+CI, review and owner acceptance are not certified. PR remains draft/unmerged;
+full gate and debt closure remain open.

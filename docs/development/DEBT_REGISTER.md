@@ -32,6 +32,15 @@ Owner requires isolated root presentation composition for remaining Content
 Access/Editor enums; [design](../audits/D4_4_CONTENT_GRAPHQL_COMPOSITION_DESIGN.md)
 only, no cross-feature exception or runtime migration implemented.
 
+Final local PR #50 evidence: E2E485 PASS/18 FAIL of503, zero skipped. News null/zero
+is DEBT-045; all17 Content Target Transactions cases fail before assertions on
+shared schema.gql UNKNOWN/open initialization (DEBT-059), not17 independently
+proven transaction defects. App26/Content Boundaries9/Leaderboard ownership30 pass.
+Only completed owned Jest PID23080 stopped after exact command/zero DB clients/
+temporary schemas verified. GraphQL generation passes but check remains DEBT-044
+red; own barrel drift restored exactly. Source-head containment CI passes,
+Web smoke/audit fail, main gate pending. No green/closure/acceptance claim.
+
 2026-10-19 further D4.4 progress for DEBT-027: nine unused public/Nest application
 service exports removed across Custom Titles, Leaderboards and Interactions.
 Two Interactions integration tokens and named input/type contracts retained;
