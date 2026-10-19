@@ -62,7 +62,16 @@ The generation gate is still recorded red, not waived after cleanup.
 
 Manual review confirms exact owner query/data projections and unchanged error
 propagation, post-commit behavior and transaction options. This is not independent
-review or green-baseline acceptance. Draft publication/CI follows separately.
+review or green-baseline acceptance.
+
+## Publication
+
+Implementation/evidence commit `97e9957` is pushed in
+[draft PR #57](https://github.com/clearfixx/dss-universe/pull/57), stacked on
+`debt/d4-file-graph-config-cycle`. Initial checks at that exact head were queued:
+main quality, dependency audit, Web smoke and Linux/Windows containment.
+No CI success, merge or independent acceptance is claimed. This publication
+link is a documentation-only follow-up; it does not change verified runtime.
 
 ## Scope remaining
 
