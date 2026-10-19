@@ -2,7 +2,7 @@
 
 Date: 2026-10-14. Status: authorized debt-remediation execution, not Phase 11.
 Branch: `debt/d4-module-boundaries`.
-Implemented increments: D4.1, D4.2 and bounded D4.3a/b/c/d1/d2/d3a; remaining import inventory 84,
+Implemented increments: D4.1, D4.2 and bounded D4.3a/b/c/d1/d2/d3a plus AI Core D4.4; remaining import inventory 81,
 full D4 and the rest of D4.3 OPEN.
 Locally implemented D4.3d3b transfers the mapped News delivery SQL into owned
 adapters and a scoped root snapshot; full acceptance remains open. Evidence:
@@ -19,12 +19,18 @@ Authority: approved pre-Phase-11 D4 plan and ADR-003/004.
 ## Outcome and invariants
 
 Close the full D4 inventory, not merely rename broad services into facades.
-Starting inventory: 135 findings; latest reviewed inventory: 84. Every reduction needs exact source,
+Starting inventory: 135 findings; latest reviewed inventory: 81. Every reduction needs exact source,
 behavioral and contract evidence; no automatic baseline growth or waiver.
 Keep NestJS, Prisma, PostgreSQL, Outbox/BullMQ and existing transport responses.
 Do not invent frontend design, new scoring formulas, owner policy or Phase 11 flows.
 
 ## Implementation sequence
+
+Bounded D4.4 follow-up (2026-10-19): AI Core now exposes only its named assembly
+module, with command service/provider private. Three focused boundary regressions
+pin the surface; reviewed AST inventory 84 → 81, no additions. Full gate and
+acceptance are pending; see [evidence](../audits/D4_4_AI_CORE_EXPLICIT_SURFACE.md).
+This does not complete remaining D4.3 operation reconciliation or full D4.4/D4.5.
 
 1. **D4.1 — Gamification read boundaries.** Community Points, Levels and
    Achievements consume their own recipient-existence ports. Users publishes

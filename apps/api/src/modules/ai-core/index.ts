@@ -6,14 +6,12 @@
  * 📄 File: apps/api/src/modules/ai-core/index.ts
  *
  * 🎯 Purpose:
- * Exposes the public AI Core module and editor command service boundary.
+ * Exposes only the named AI Core assembly module, not internal editor commands.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 
-export * from './ai-core.module';
-export * from './application/services/editor-ai.service';
-export * from './domain/types/editor-ai-command.type';
+export { AiCoreModule } from './ai-core.module';
 
 /** AI Core is optional; product truth remains available without it. */

@@ -8,6 +8,16 @@
  * 🎯 Purpose:
  * Composes provider-neutral AI Core application and GraphQL boundaries.
  *
+ * 🧠 Responsibilities:
+ * • binds the private inference provider and editor command service;
+ * • registers the local permission-protected GraphQL resolver.
+ *
+ * 🏗️ Architecture:
+ * Assembly module; no application provider is exported to neighboring features.
+ *
+ * ⚠️ Important:
+ * Keep transport behavior unchanged; future consumers need an explicit reviewed contract.
+ *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
@@ -26,7 +36,7 @@ import { EditorAiResolver } from './presentation/graphql/editor-ai.graphql';
     { provide: AI_TEXT_PROVIDER, useExisting: OpenAiTextProvider },
     EditorAiResolver,
   ],
-  exports: [EditorAiService],
+  exports: [],
 })
 export class AiCoreModule {}
 

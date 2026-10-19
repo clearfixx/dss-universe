@@ -21,6 +21,14 @@ active package safe and buildable.
 
 ## Register
 
+2026-10-19 bounded D4.4 progress for DEBT-027: AI Core now publishes only named
+AiCoreModule; private command service/provider/resolver wiring retained. Three
+new boundary tests fail before correction and pass after; full API coverage
+1104/1104 passes. Exactly three wildcard baseline entries removed, 84 → 81;
+remaining debt is not waived. Root/sibling gates pass except inherited global
+format/audit; serial full E2E and GraphQL/CI/acceptance pending. See
+[AI Core surface evidence](../audits/D4_4_AI_CORE_EXPLICIT_SURFACE.md).
+
 2026-10-18 persistence audit: DEBT-062 is confirmed by actual service/DB
 concurrency (cap 1, two different events both count zero and award); owner approved
 a separate user/rule/UTC-day atomic correction. Current packet only characterizes

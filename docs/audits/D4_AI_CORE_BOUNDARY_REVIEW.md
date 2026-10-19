@@ -62,3 +62,8 @@ two DEBT-045 failures; known format/dependency/GraphQL failures and retained Jes
 handles remain unresolved. Changed Markdown formatting/diff checks are required
 for this delivery. D4 exhaustive reconciliation, D4.4/D4.5, D5–D7, stack audit,
 CI/review/owner acceptance and Phase 11 brainstorm remain open.
+
+Subsequent bounded D4.4 correction removes the concrete Nest service and all
+three wildcard entry exports while keeping providers/resolver private and
+unchanged. See [runtime surface evidence](D4_4_AI_CORE_EXPLICIT_SURFACE.md);
+the table above remains historical to this audit baseline, not current exports.

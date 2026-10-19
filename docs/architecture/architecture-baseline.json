@@ -349,27 +349,6 @@
       "package": "D4"
     },
     {
-      "id": "[\"wildcard-export\",\"apps/api/src/modules/ai-core/index.ts\",\"./ai-core.module\"]",
-      "rule": "wildcard-export",
-      "file": "apps/api/src/modules/ai-core/index.ts",
-      "detail": "./ai-core.module",
-      "package": "D4"
-    },
-    {
-      "id": "[\"wildcard-export\",\"apps/api/src/modules/ai-core/index.ts\",\"./application/services/editor-ai.service\"]",
-      "rule": "wildcard-export",
-      "file": "apps/api/src/modules/ai-core/index.ts",
-      "detail": "./application/services/editor-ai.service",
-      "package": "D4"
-    },
-    {
-      "id": "[\"wildcard-export\",\"apps/api/src/modules/ai-core/index.ts\",\"./domain/types/editor-ai-command.type\"]",
-      "rule": "wildcard-export",
-      "file": "apps/api/src/modules/ai-core/index.ts",
-      "detail": "./domain/types/editor-ai-command.type",
-      "package": "D4"
-    },
-    {
       "id": "[\"wildcard-export\",\"apps/api/src/modules/media/domain/index.ts\",\"./entities/media.entity\"]",
       "rule": "wildcard-export",
       "file": "apps/api/src/modules/media/domain/index.ts",
