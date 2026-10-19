@@ -30,7 +30,9 @@ Blocking-gate increment (2026-10-19): mandatory architecture command now invokes
 the frozen inventory check; standalone reporting remains diagnostic. Three new
 regressions give 2 PASS/1 FAIL before; four more negative/report CLI fixtures
 bring full architecture coverage to114/114. Root lint,
-types, Prisma and build pass; remaining packet gates/publication are pending.
+types, Prisma, build and API1138 pass. E2E506/508 has unchanged DEBT-045/048
+failures; global format/audit, GraphQL drift and retained Jest handles remain
+unresolved. Publication/CI/acceptance pending; Core file-cycle review remains open.
 See [local evidence](../audits/D4_5_BLOCKING_ARCHITECTURE_GATE.md). This does not
 close operation reconciliation, graph review or full D4 acceptance.
 

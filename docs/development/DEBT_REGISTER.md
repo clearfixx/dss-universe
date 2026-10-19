@@ -21,6 +21,20 @@ active package safe and buildable.
 
 ## Register
 
+2026-10-19 bounded D4.5 enforcement progress for DEBT-027: mandatory architecture
+command now checks the frozen inventory; standalone reporting remains diagnostic.
+Seven new regressions cover command/CI wiring, current CLI and temporary-tree
+negative/report paths; full architecture114/114. API1138/1138 and root/sibling
+checks pass except inherited global format41/audit1 high10 moderate. Full E2E
+506 PASS/2 FAIL of508 in612.114s: DEBT-045 News null/zero and DEBT-048 App5000ms.
+Completed owned Jest PID9016 retained handles and was stopped after full JSON,
+zero clients/schemas; no normal-green exit claim. GraphQL generation succeeds,
+DEBT-044 drift remains red; own generated drift restored, SDL hash unchanged.
+A separate read-only file-graph probe confirms inherited Core config module/barrel
+cycle outside the bounded feature-cycle inventory. See
+[evidence and remaining scope](../audits/D4_5_BLOCKING_ARCHITECTURE_GATE.md).
+No D4/quality/debt closure or acceptance is claimed; CI/publication pending.
+
 2026-10-19 Core D4.4 progress for DEBT-027: unused9-wildcard root aggregator removed
 after zero literal-consumer scan; other27 Core wildcards replaced with exact named
 technical exports in nine entries. Config namespace order, wiring and all runtime
