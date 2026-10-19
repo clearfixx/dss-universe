@@ -21,6 +21,14 @@ active package safe and buildable.
 
 ## Register
 
+2026-10-19 D4.4 News surface increment for DEBT-027: all15 wildcard root exports
+replaced by reviewed named contracts/types; concrete services/repository bindings
+stay private. Only two existing Nest integration tokens exported. One foundation
+E2E fixture uses internal service paths, assertions unchanged. Four new boundary
+cases2 PASS/2 FAIL before and4/4 after; baseline68 →53, zero additions. Exact40
+public names pinned by architecture fixture. Full gate/CI/acceptance pending.
+[News surface evidence](../audits/D4_4_NEWS_EXPLICIT_SURFACE.md).
+
 2026-10-19 owner-approved D4.4 content presentation composition is locally wired:
 root owns shared wire enums and four existing GraphQL operations; owners publish
 four narrow capabilities, not concrete services. Policy/redaction stay owned.

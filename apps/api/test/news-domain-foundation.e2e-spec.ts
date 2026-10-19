@@ -31,14 +31,12 @@ import type { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/core/database';
 import { InteractionTargetsService } from './../src/modules/interactions/application/services/interaction-targets.service';
-import {
-  NewsDeliveryService,
-  NewsLinksService,
-  NewsService,
-  NewsSettingsService,
-  NewsTaxonomyService,
-  NewsWorkflowService,
-} from './../src/modules/news';
+import { NewsDeliveryService } from './../src/modules/news/application/services/news-delivery.service';
+import { NewsLinksService } from './../src/modules/news/application/services/news-links.service';
+import { NewsService } from './../src/modules/news/application/services/news.service';
+import { NewsSettingsService } from './../src/modules/news/application/services/news-settings.service';
+import { NewsTaxonomyService } from './../src/modules/news/application/services/news-taxonomy.service';
+import { NewsWorkflowService } from './../src/modules/news/application/services/news-workflow.service';
 
 describe('News domain foundation (e2e)', () => {
   let app: INestApplication<App>;

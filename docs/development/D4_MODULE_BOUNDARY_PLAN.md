@@ -2,7 +2,7 @@
 
 Date: 2026-10-14. Status: authorized debt-remediation execution, not Phase 11.
 Branch: `debt/d4-module-boundaries`.
-Implemented increments: D4.1, D4.2 and bounded D4.3a/b/c/d1/d2/d3a plus AI Core/private feature/representation/presentation D4.4; remaining import inventory 68,
+Implemented increments: D4.1, D4.2 and bounded D4.3a/b/c/d1/d2/d3a plus AI Core/private feature/representation/presentation/News D4.4; remaining import inventory 53,
 full D4 and the rest of D4.3 OPEN.
 Locally implemented D4.3d3b transfers the mapped News delivery SQL into owned
 adapters and a scoped root snapshot; full acceptance remains open. Evidence:
@@ -19,12 +19,19 @@ Authority: approved pre-Phase-11 D4 plan and ADR-003/004.
 ## Outcome and invariants
 
 Close the full D4 inventory, not merely rename broad services into facades.
-Starting inventory: 135 findings; latest reviewed inventory: 68. Every reduction needs exact source,
+Starting inventory: 135 findings; latest reviewed inventory: 53. Every reduction needs exact source,
 behavioral and contract evidence; no automatic baseline growth or waiver.
 Keep NestJS, Prisma, PostgreSQL, Outbox/BullMQ and existing transport responses.
 Do not invent frontend design, new scoring formulas, owner policy or Phase 11 flows.
 
 ## Implementation sequence
+
+News surface increment (2026-10-19): all15 root wildcards removed; exact named
+integration/data contracts retained. Nine services/six repositories stay local,
+Nest exports only two existing tokens. One E2E fixture's six service imports move
+to private paths, assertions unchanged. Four boundary cases2 PASS/2 FAIL before,
+4/4 after; inventory68 →53, no additions. Full gate/acceptance pending; see
+[evidence](../audits/D4_4_NEWS_EXPLICIT_SURFACE.md). This does not close full D4.
 
 Owner-approved composition increment (2026-10-19): root presentation owns the
 shared content wire enums and four unchanged operations through four narrow

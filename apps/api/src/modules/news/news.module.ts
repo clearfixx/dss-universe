@@ -16,7 +16,7 @@
  * Nest assembly; root composition supplies Editor/Media reads and policy registration.
  *
  * ⚠️ Important:
- * This increment does not declare the entire News integration surface isolated.
+ * Only search maintenance and interaction decision tokens leave this Nest assembly.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -109,24 +109,6 @@ import { NewsPinsResolver } from './presentation/graphql/news-pins.graphql';
     },
     { provide: NEWS_PINS_REPOSITORY, useClass: PrismaNewsPinsRepository },
   ],
-  exports: [
-    NEWS_SEARCH_INDEX_MAINTENANCE,
-    NEWS_INTERACTION_DECISIONS,
-    NewsService,
-    NewsDeliveryService,
-    NewsLinksService,
-    NewsSchedulerService,
-    NewsSettingsService,
-    NewsTaxonomyService,
-    NewsWorkflowService,
-    NewsPinsService,
-    NewsPostTemplateService,
-    NEWS_REPOSITORY,
-    NEWS_LINKS_REPOSITORY,
-    NEWS_SETTINGS_REPOSITORY,
-    NEWS_TAXONOMY_REPOSITORY,
-    NEWS_WORKFLOW_REPOSITORY,
-    NEWS_PINS_REPOSITORY,
-  ],
+  exports: [NEWS_SEARCH_INDEX_MAINTENANCE, NEWS_INTERACTION_DECISIONS],
 })
 export class NewsModule {}
