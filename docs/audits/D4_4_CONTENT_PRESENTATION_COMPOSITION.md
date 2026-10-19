@@ -85,3 +85,32 @@ service/sole loopback binding and zero clients verified, service recreated,
 empty public schema verified and migrations applied without seed. Dev5433 and
 persistent test5434 not reset. Full E2E currently running; GraphQL/CI/review/owner
 acceptance remain pending. No full-green/debt-closure claim.
+
+## Final local gate and publication evidence
+
+Draft PR #51 publishes source `8343c02`, based on PR #50. Full serial E2E completed
+**506 PASS / 2 FAIL / 0 skipped of 508**, 48 suites, 390.050 seconds. All14 content
+HTTP cases, Content Target Transactions17/17, App26/26 and Leaderboard ownership
+30/30 pass in that same run. No unchanged-test rerun-to-green.
+
+Failures are News foundation's expected null/actual0 viewCount and Leaderboards
+foundation's first-user/level/viewer-rank expectation. For the latter, reviewed
+current fixture source, unchanged pointsDESC/ageASC/IDASC ranking SQL and queried
+only synthetic winner/expected IDs: winner is a prior points-user, created earlier
+than expected leader-oldest, with10 month points. Read-only output was two Booleans
+and the scalar10. This matches the known DEBT-045 shared-fixture tie; no formula,
+fixture, assertion or ordering change is bundled into this transport packet.
+
+Completed Jest retained handles. Verified full JSON, exact owned command PID8856,
+zero DB clients and zero api_boundary schemas before stopping only that process;
+the shell returns-1, not a normal successful exit. No forceExit/timeout change.
+GraphQL generation afterward succeeds, but check remains DEBT-044 red on generated
+barrel comment/newline. Inspected and restored only that own generator side effect;
+schema and generated files have no remaining diff. Full schema SHA-256 remains
+identical to the pre-transfer value even after the full E2E run.
+
+Changed-file format/diff checks pass. Global format41 and dependency audit1 high/
+10 moderate remain red. Source-head CI: containment Ubuntu/Windows pass, Web smoke
+and dependency audit fail, main quality gate in progress at last observation.
+Documentation-head CI, independent review and owner acceptance are not certified.
+PR stays draft/unmerged. Full D4/remaining debt and Phase11 entry remain open.
