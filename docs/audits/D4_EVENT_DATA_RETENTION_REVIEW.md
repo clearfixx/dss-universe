@@ -70,3 +70,57 @@ moderation/target/comment/mention and News taxonomy/settings/pin/link payload
 definitions and consumers; aliases/raw-write discovery; lifecycle, operator
 transport and retention decisions. D4 operation reconciliation/D4.4/D4.5, D5–D7,
 stack audit and Phase 11 brainstorm remain open. No debt closure/green release.
+
+## Follow-up: remaining lexical producer definitions
+
+At `bc6c42a`, read complete News taxonomy/settings/pin/link repositories,
+Interaction target and moderation repositories, Comment writer, manual Achievement
+and Title grant writers. Read Levels/Points evidence methods and every current
+Achievement/Title helper call construction plus titlePayload. Revisited root Wall
+and News draft/workflow event-construction regions. This closes payload-definition
+tracing for the 17 discovered files, **not** every operation/consumer/lifecycle or
+all runtime write-discovery possibilities. Some large repository reads are
+method/context-scoped, not complete full-feature source review.
+
+| Producer definition                | Fields added to payload (actor/aggregate generally in envelope)                                                                  | Data boundary                                                                                           |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Levels transition                  | userId, fromLevel, toLevel, direction, balance; source event causation ID                                                        | no profile; occurredAt remains separate source/audit timing contract                                    |
+| Community Points award/reversal    | userId, ruleKey, points, optional sourceType/sourceId                                                                            | reason in Audit/ledger, not event payload                                                               |
+| Interaction target register/status | targetId, kind, ownerModule/type/ID, status, reason                                                                              | optional free text, not identifiers only                                                                |
+| Comment create/edit/tombstone      | commentId, targetId, authorId, parentId, reason                                                                                  | body/document/search text excluded; tombstone reason retained                                           |
+| Mention create/retract             | mention/comment/target IDs, actorId, recipientId                                                                                 | no body/username; transition Audit actor may differ from event's original mention actor                 |
+| Report create/review               | report/target/comment/reporter IDs, category/status/reviewer ID                                                                  | report/review reason in Audit, not payload                                                              |
+| Annotation create/revoke           | annotation/target/comment IDs, kind, actor, expiry/revocation times and actor                                                    | reason in Audit, not payload                                                                            |
+| News taxonomy create               | category slug/parent; tag slug; field key/type/category/postType                                                                 | field options/labels/descriptions excluded                                                              |
+| News settings update               | six typed pagination settings and default settings ID                                                                            | spread of input values, not a runtime extra-key allowlist                                               |
+| News pin set/remove                | article/pin IDs, scope/category, expiry                                                                                          | article content excluded                                                                                |
+| News link create/remove            | source/target IDs, type; create also anchorText/position                                                                         | authored free-text anchor on creation                                                                   |
+| Achievement definition/rule        | definition ID/key/name/active; rule ID/achievement/eventName/enabled                                                             | owner-helper callers select fields; no entire rule/definition spread                                    |
+| Achievement award/revoke           | award/user/achievement IDs, kind/source coordinates                                                                              | helper excludes award and revocation reason from both payload and its Audit metadata                    |
+| Title definition/update            | title ID/name/slug/color/badge/active                                                                                            | description excluded                                                                                    |
+| Title grant/revoke/select/settings | grant/user/title IDs, grant/revoke reason; selected IDs; selectionCooldownDays                                                   | free-text reason retained on grant/revoke, not on selection                                             |
+| Root Wall create/retract           | profileOwnerId, create hasImage Boolean                                                                                          | no body, media ID/path or deletion reason in Wall event; target-status event separately includes reason |
+| Root News draft create/save        | article/author/revision IDs, versions/status; create postType/language/slug                                                      | no canonical document/full text                                                                         |
+| News workflow/status notification  | transition/version/decision/reason/times; title/slug/language/visibility/indexing/category/tags; notification audience/recipient | unpublished discovery metadata is internally retained; protected body excluded                          |
+
+The table has more rows than files where one producer defines several event
+families. Previous Bookmark/Reaction/Reputation rows remain applicable. Generic
+helpers still accept arbitrary owner JSON; tracing today's callers does not turn
+their signatures into enforced minimization policy for future callers.
+
+Bounded runtime search across apps/packages for outbox_events, direct Prisma
+create/createMany/upsert and SQL INSERT found only Core OutboxWriter's create
+outside tests. This is supporting discovery, not proof against dynamic SQL,
+indirect aliases, other languages or out-of-repository writers.
+
+Actual-source ts-node probes with doubled Audit/Outbox boundaries confirm that
+Reputation puts synthetic reason only in Audit, while Comment tombstone includes
+it in both Audit and event. Only payload key names/Boolean results emitted; no
+real user data, DB write or network call. Private writer probes do not certify
+HTTP authorization, transaction rollback, live retention or consumer behavior.
+
+Remaining work is now consumer/lifecycle/retention reconciliation, independent
+operation coverage and D4.4/D4.5 rather than re-reading these same payload
+definitions. No event keys were removed/renamed, versions changed or historical
+payload rewritten. Fresh Markdown checks required; prior Worker 46-test result
+is from this unchanged-runtime packet, not a new full runtime gate here.

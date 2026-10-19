@@ -313,3 +313,12 @@ probe (zero query calls, doubled pool) pass. This does not certify generic helpe
 callers or all 17 lexical producer candidates. Full payload retention is internal
 data handling, not automatically public disclosure; remaining policy/lifecycle
 coverage is explicitly open.
+
+Same-packet event follow-up (`bc6c42a`) now traces payload definitions and current
+generic evidence-helper callers for all 17 lexical producer files, with exact
+fields and scoped source limits in the linked report. Reason/anchor/title text
+is intentionally distinguished from identifier-only events. Actual-source
+Reputation/Comment writer probes confirm differing reason placement through
+doubled evidence boundaries, not live public disclosure or transaction proof.
+Consumer/lifecycle/retention and full owner-operation reconciliation remain open;
+the lexical producer count is not a whole-project completion measure.
