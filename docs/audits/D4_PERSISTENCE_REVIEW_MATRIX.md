@@ -297,3 +297,10 @@ named public projection tokens remain separated. Presentation's Prisma enum is
 still D4.4 work. Existing API Editor tests pass 37/37; malformed nested JSON and
 depth service probes confirm DEBT-066, not an implemented correction. This does
 not certify every host's saved-document policy, shared package or frontend.
+
+Content Access follow-up at `3def394`: all 15 runtime sources are reconciled in
+[the operation review](D4_CONTENT_ACCESS_OPERATION_REVIEW.md). Gate-owned nested
+create/read, scalar evidence and explicitly closed scopes are traced. Fresh units
+57/57 pass; historical parent Content Boundaries E2E 9/9 is not a current rerun.
+Prisma presentation enums, zero future counters and unaudited policy creation
+remain limits, not silently certified or fixed behavior.

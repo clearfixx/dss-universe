@@ -1022,3 +1022,7 @@ unbounded recursion require a separately agreed depth policy and shared/API/HTTP
 regressions; current audit changes no runtime behavior. Approval requested for a
 separate pre-Phase-11 package. Existing 37 Editor unit cases pass but omit these
 inputs. [Evidence and limits](../audits/D4_EDITOR_OPERATION_REVIEW.md).
+
+Owner approved a separate correction with depth-policy design first on
+2026-10-19. Runtime implementation is not started; exact depth policy remains
+to be agreed before code changes.
