@@ -6,13 +6,6 @@
   "scope": "Authored API modules/core/composition TypeScript; excludes tests/declarations; bounded syntactic analysis",
   "findings": [
     {
-      "id": "[\"namespace-import\",\"apps/api/src/core/config/validation.schema.ts\",\"joi\"]",
-      "rule": "namespace-import",
-      "file": "apps/api/src/core/config/validation.schema.ts",
-      "detail": "joi",
-      "package": "D4"
-    },
-    {
       "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/content-access/presentation/graphql/content-gates.graphql.ts\",\"@prisma/client\"]",
       "rule": "persistence-outside-infrastructure",
       "file": "apps/api/src/modules/content-access/presentation/graphql/content-gates.graphql.ts",
@@ -23,13 +16,6 @@
       "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/editor/presentation/graphql/editor.model.ts\",\"@prisma/client\"]",
       "rule": "persistence-outside-infrastructure",
       "file": "apps/api/src/modules/editor/presentation/graphql/editor.model.ts",
-      "detail": "@prisma/client",
-      "package": "D4"
-    },
-    {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/users/presentation/graphql/resolvers/users.resolver.ts\",\"@prisma/client\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/users/presentation/graphql/resolvers/users.resolver.ts",
       "detail": "@prisma/client",
       "package": "D4"
     },

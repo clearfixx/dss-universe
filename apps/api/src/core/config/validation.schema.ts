@@ -1,4 +1,27 @@
-import * as Joi from 'joi';
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * ⚙️ Module: Configuration
+ * 📄 File: apps/api/src/core/config/validation.schema.ts
+ *
+ * 🎯 Purpose:
+ * Validates environment input before the application opens external services.
+ *
+ * 🧠 Responsibilities:
+ * • retains explicit defaults, required secrets and bounded settings;
+ * • adapts Joi's CommonJS default root without re-exporting the library.
+ *
+ * 🏗️ Architecture:
+ * Configuration-only validation adapter, not a feature policy or public business API.
+ *
+ * ⚠️ Important:
+ * Keep the Joi root as method receiver; interop changes must preserve the schema.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
+import Joi from 'joi';
 
 export const validationSchema = Joi.object({
   NODE_ENV: Joi.string()

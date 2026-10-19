@@ -21,6 +21,17 @@ active package safe and buildable.
 
 ## Register
 
+2026-10-19 D4.4 representation progress for DEBT-027: Users presentation no longer
+imports Prisma for the existing ACTIVE directory filter; configuration uses an
+explicit Joi default binding with identical full schema fingerprint. Seven new
+regressions pass after 5 PASS/2 FAIL baseline; full opt-in API 1120/1120 and
+lint/types/build/Prisma/architecture/sibling tests pass. Inventory 72 → 70 with
+zero additions. Global format/audit remain red; serial E2E/GraphQL/CI/acceptance
+pending. [Evidence](../audits/D4_4_USERS_CONFIG_REPRESENTATIONS.md).
+Owner requires isolated root presentation composition for remaining Content
+Access/Editor enums; [design](../audits/D4_4_CONTENT_GRAPHQL_COMPOSITION_DESIGN.md)
+only, no cross-feature exception or runtime migration implemented.
+
 2026-10-19 further D4.4 progress for DEBT-027: nine unused public/Nest application
 service exports removed across Custom Titles, Leaderboards and Interactions.
 Two Interactions integration tokens and named input/type contracts retained;

@@ -15,6 +15,9 @@
  * 🏗️ Architecture:
  * Users presentation boundary; cross-owner persistence remains in root composition.
  *
+ * ⚠️ Important:
+ * Directory status filters use owned contract values, never Prisma enum imports.
+ *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
@@ -68,7 +71,6 @@ import {
   MembersDirectorySortInput,
 } from '../inputs/members-directory.input';
 import { MembersDirectoryPageModel } from '../models/members-directory-page.model';
-import { UserStatus } from '@prisma/client';
 import { UserPresenceService } from '../../../application/services/user-presence.service';
 import { UserWallService } from '../../../application/services/user-wall.service';
 import { CreateWallPostInput } from '../inputs/create-wall-post.input';
@@ -331,7 +333,7 @@ export class UsersResolver {
       pagination: input,
       search: input?.search,
       sort: input?.sort ?? MembersDirectorySortInput.NEWEST,
-      status: UserStatus.ACTIVE,
+      status: 'ACTIVE',
       role: input?.role?.trim() || undefined,
       userIds: onlineUserIds,
     });
