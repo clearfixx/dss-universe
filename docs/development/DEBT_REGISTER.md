@@ -33,7 +33,8 @@ DEBT-044 drift remains red; own generated drift restored, SDL hash unchanged.
 A separate read-only file-graph probe confirms inherited Core config module/barrel
 cycle outside the bounded feature-cycle inventory. See
 [evidence and remaining scope](../audits/D4_5_BLOCKING_ARCHITECTURE_GATE.md).
-No D4/quality/debt closure or acceptance is claimed; CI/publication pending.
+Published as draft PR #55 on unaccepted PR #54. Initial CI in progress;
+no D4/quality/debt closure, merge or acceptance is claimed.
 
 2026-10-19 Core D4.4 progress for DEBT-027: unused9-wildcard root aggregator removed
 after zero literal-consumer scan; other27 Core wildcards replaced with exact named

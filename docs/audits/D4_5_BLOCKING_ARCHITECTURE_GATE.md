@@ -2,6 +2,9 @@
 
 Date: 2026-10-19. Branch: `debt/d4-blocking-architecture-gate`.
 Status: implemented and locally verified; full quality gate remains red, acceptance pending.
+Published as [draft PR #55](https://github.com/clearfixx/dss-universe/pull/55),
+stacked on unaccepted draft PR #54. Source commit `66c1e3e`; verification commit
+`743dc1e`. Initial source/verification-head CI is in progress, not certified green.
 
 ## Scope
 
