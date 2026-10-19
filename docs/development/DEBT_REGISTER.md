@@ -29,6 +29,16 @@ cases2 PASS/2 FAIL before and4/4 after; baseline68 →53, zero additions. Exact4
 public names pinned by architecture fixture. Full gate/CI/acceptance pending.
 [News surface evidence](../audits/D4_4_NEWS_EXPLICIT_SURFACE.md).
 
+Final News surface PR #52 local gate: API1138/1138 and source/sibling gates pass;
+full E2E507 PASS/1 FAIL of508, zero skips. Only unchanged News viewCount null/zero
+(DEBT-045) fails; no DI/export failure. App26/Content Boundaries14/target17/News
+snapshot16/redaction20/secondary audience21/related12 pass. Leaderboards passes
+this run, not proof its order-sensitive fixture debt is fixed. Completed exact
+Jest PID19092 stopped only after full JSON and zero clients/temporary schemas.
+GraphQL generation succeeds, DEBT-044 check red, own drift restored and full SDL
+hash unchanged. Source-head containment CI pass, Web smoke/audit fail, main pending;
+format/audit/acceptance and full D4 remain open. No merge or closure claim.
+
 2026-10-19 owner-approved D4.4 content presentation composition is locally wired:
 root owns shared wire enums and four existing GraphQL operations; owners publish
 four narrow capabilities, not concrete services. Policy/redaction stay owned.

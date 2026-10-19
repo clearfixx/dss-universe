@@ -63,3 +63,32 @@ project/service, sole loopback binding/tmpfs and zero clients before recreation;
 verified empty public schema, then applied migrations without seed. Dev5433 and
 persistent test5434 not reset. Serial full E2E is running. GraphQL/CI/review/owner
 acceptance remain pending; no full-green or debt closure is claimed.
+
+## Final local gate and publication evidence
+
+Draft PR #52 publishes source `786e0d4`, based on PR #51. Full serial E2E:
+**507 PASS / 1 FAIL / 0 skipped of508**, 48 suites, 388.702 seconds. The only
+failure is the unchanged News foundation expected null/actual0 viewCount assertion
+(DEBT-045); the internal fixture import reaches exactly that existing assertion.
+No DI/provider-export failure and no assertion, SQL, fixture or timeout change.
+
+In that same run App26, Content Boundaries14, Content Target Transactions17,
+News owned snapshot16, viewer redaction20, secondary audience21 and related
+audience12 pass. Leaderboards foundation1/1 passes this time; an order-sensitive
+shared-fixture defect is not considered fixed merely because this run passes.
+
+Completed Jest retained handles. Full JSON, exact owned PID19092 command, zero
+disposable DB clients and zero temporary api_boundary schemas verified before
+stopping only that process. Original shell returns-1, not a normal green exit.
+No forceExit, timeout increase or rerun-to-green.
+
+Subsequent GraphQL generation succeeds; overall check remains DEBT-044 red for
+generated barrel comment/newline. Inspected/restored only own generator effect;
+schema and generated files have no remaining diff. Full schema SHA-256 remains
+`C03170CB54027C557F662A5B9BF5F85CAFA2112B8623D3FCA360E8FA9C82FD2C`.
+Changed-file format and diff checks pass, user stack-audit plan hash unchanged.
+
+Source-head CI observed: containment Ubuntu/Windows pass, Web smoke/audit fail,
+main quality gate still in progress. Documentation-head CI, review and owner
+acceptance are not certified. Global format/audit, E2E, GraphQL and acceptance
+remain red/open; PR stays draft/unmerged, full D4 and debt closure not claimed.
