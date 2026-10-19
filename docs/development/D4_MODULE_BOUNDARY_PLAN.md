@@ -34,7 +34,7 @@ Architecture138/138, final-source API1143/1143 and focused config5/5 pass.
 Root lint/types/Prisma/build pass; full E2E507/508 has only unchanged DEBT-045.
 GraphQL generation passes but DEBT-044 drift, format/audit and retained handles
 remain red. Independent actual-host probe:815 sources/2104 edges, no local
-unresolved edges or cycles. Publication/CI/acceptance pending.
+unresolved edges or cycles. Draft PR #56 published; CI/acceptance pending.
 See [evidence](../audits/D4_5_API_FILE_GRAPH_CONFIG_CYCLE.md).
 This does not complete D4.3/D4.5 or certify runtime DI/other workspaces.
 
