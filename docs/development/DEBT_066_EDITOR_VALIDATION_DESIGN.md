@@ -79,6 +79,14 @@ other databases/schemas or remote instance was accessed/certified. No resets,
 seed, migration or data edits. Empty stores prove no existing local incompatibility,
 not universal compatibility. Exact depth approval remains pending.
 
+Current shared source probe via ts-node (not only existing build) accepts NEWS
+documents with deepest text at depths 64 and 65, 2250/2284 bytes. The same source
+throws RangeError at depth 12000, 408074 bytes. Synthetic JSON built textually to
+avoid generator-side stringify recursion; no persistence or network. This makes
+the proposed 65 rejection an explicit compatibility tightening, not an already
+enforced rule. Earlier 408108-byte depth fixture counted 12000 blockquotes plus
+its terminal text; these separately described probes are not identical depths.
+
 ## Required regression matrix
 
 | Layer              | Evidence required                                                                                                                                             |
