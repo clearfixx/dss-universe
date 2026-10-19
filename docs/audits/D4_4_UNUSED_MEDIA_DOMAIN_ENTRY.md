@@ -57,3 +57,27 @@ service, sole loopback5435 binding and tmpfs plus zero clients; recreated only
 that service, verified empty public schema and applied migrations without seed.
 Dev5433 and persistent test5434 not reset. Serial full E2E running; GraphQL/CI/
 review/owner acceptance pending. No full-green/debt closure claim.
+
+## Final local gate and publication evidence
+
+Draft PR #53 publishes source `e541dda`, based on PR #52. Full serial E2E
+**507 PASS / 1 FAIL / 0 skipped of508**, 48 suites, 391.176 seconds. Only the
+unchanged News viewCount expected null/actual0 assertion fails (DEBT-045).
+Media platform2/2, profile-assets8/8, Content Boundaries14/14 and App26/26 pass
+in that same full run; no missing-entry/provider loading regression observed.
+No retry-to-green, changed assertion or timeout increase.
+
+Completed Jest retained handles. Verified full JSON, exact owned PID20092 command,
+zero disposable DB clients and zero api_boundary schemas, then stopped only that
+process. Original shell returns-1, not a normal successful exit. No forceExit.
+
+Subsequent GraphQL generation succeeds, but check remains DEBT-044 red on the
+generated barrel comment/newline. Inspected and restored only own generator effect;
+schema and generated files have no remaining diff. Complete schema SHA-256 stays
+`C03170CB54027C557F662A5B9BF5F85CAFA2112B8623D3FCA360E8FA9C82FD2C`.
+Changed-file format/diff checks pass; user-owned stack audit plan hash unchanged.
+
+Source-head CI observed: containment Ubuntu/Windows pass, Web smoke/audit fail,
+main quality gate in progress. Documentation-head CI, review and owner acceptance
+not certified. PR stays draft/unmerged. Global format/audit, E2E/GraphQL and full
+D4/remaining gates stay open; no full-green or debt-closure claim.
