@@ -21,6 +21,12 @@ active package safe and buildable.
 
 ## Register
 
+2026-10-19 bounded Auth lifecycle review adds DEBT-068, reproduced with actual
+credential/email-verification adapters in isolated PostgreSQL. Six focused DB
+cases pass, including the defect characterization; no runtime correction is
+included. Owner approved a separate security package before Phase 11.
+[Operation evidence](../audits/D4_AUTH_LIFECYCLE_OPERATION_REVIEW.md).
+
 2026-10-19 bounded registration progress for DEBT-027: Auth and Users now own
 allowlisted enrollment fragments; IAM owns baseline-role lookup/assignment.
 Root retains the single shared-row INSERT and default transaction, unchanged
@@ -1216,3 +1222,20 @@ evidence across order/replay and retain idempotency without foreign aggregate
 reads. Possible tombstone projection/migration needs approval before correction;
 current audit implements nothing. See
 [consumer lifecycle evidence](../audits/D4_EVENT_DATA_RETENTION_REVIEW.md).
+
+### DEBT-068 — Old verification token confirms changed email (High, ACCEPTED, separate correction approved)
+
+Date: 2026-10-19. Actual Auth adapters in a unique PostgreSQL schema reproduce:
+issue a synthetic verification digest for the old email, run the real
+`changeEmail` transaction, then consume the old digest. New email is initially
+unverified with incremented authVersion, but consume returns true and sets its
+verification timestamp. Worker issuance checks ID/email under lock, yet the
+persisted credential is not bound to email/version and email change leaves it.
+
+This proves destination-verification bypass, not cross-account takeover or live
+HTTP/SMTP exploitation. A passing characterization pins current bad behavior.
+Owner approved a separate security package before Phase 11: invalidate obsolete
+verification credentials during address change, reconcile locking with Worker
+issuance/consume, and add deterministic DB/HTTP regressions. Preserve public API
+and existing recovery/session rules; no runtime fix is included in the audit.
+[Evidence and scope](../audits/D4_AUTH_LIFECYCLE_OPERATION_REVIEW.md).

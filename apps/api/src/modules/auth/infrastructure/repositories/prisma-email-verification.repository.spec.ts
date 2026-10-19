@@ -18,6 +18,7 @@ import { randomUUID } from 'node:crypto';
 import type { PrismaService } from '@api/core/database';
 import type { AuditWriterService } from '@api/core/audit';
 import { PrismaEmailVerificationRepository } from './prisma-email-verification.repository';
+import { PrismaAccountCredentialsRepository } from './prisma-account-credentials.repository';
 
 const dbSuite =
   process.env.RUN_AUTH_DB_TESTS === '1' ? describe : describe.skip;
@@ -54,10 +55,13 @@ dbSuite('email verification PostgreSQL transaction', () => {
     await pool.query(
       'CREATE TABLE email_verifications (LIKE public.email_verifications INCLUDING ALL)',
     );
+    await pool.query(
+      'CREATE TABLE sessions (LIKE public.sessions INCLUDING ALL)',
+    );
   });
   beforeEach(async () => {
     append.mockReset().mockResolvedValue('audit');
-    await pool.query('TRUNCATE users, email_verifications');
+    await pool.query('TRUNCATE users, email_verifications, sessions');
     await pool.query(
       `INSERT INTO users (id,email,username,"passwordHash","updatedAt") VALUES ('u','astro@dss.test','astro','synthetic-hash',NOW())`,
     );
@@ -139,5 +143,33 @@ dbSuite('email verification PostgreSQL transaction', () => {
       (await pool.query('SELECT * FROM email_verifications')).rows,
     ).toHaveLength(1);
     expect(await repository.consume('digest')).toBe(true);
+  });
+
+  it('characterizes an old verification credential validating a changed email destination', async () => {
+    const accounts = new PrismaAccountCredentialsRepository(
+      prisma as unknown as PrismaService,
+      { append } as unknown as AuditWriterService,
+    );
+    const before = await prisma.user.findUniqueOrThrow({
+      where: { id: 'u' },
+      select: { authVersion: true },
+    });
+    await accounts.changeEmail('u', 'new-destination@dss.test');
+    const changed = await prisma.user.findUniqueOrThrow({
+      where: { id: 'u' },
+      select: { email: true, emailVerifiedAt: true, authVersion: true },
+    });
+    expect(changed).toEqual({
+      email: 'new-destination@dss.test',
+      emailVerifiedAt: null,
+      authVersion: before.authVersion + 1,
+    });
+    expect(await repository.consume('digest')).toBe(true);
+    const verified = await prisma.user.findUniqueOrThrow({
+      where: { id: 'u' },
+      select: { email: true, emailVerifiedAt: true },
+    });
+    expect(verified.email).toBe('new-destination@dss.test');
+    expect(verified.emailVerifiedAt).toBeInstanceOf(Date);
   });
 });

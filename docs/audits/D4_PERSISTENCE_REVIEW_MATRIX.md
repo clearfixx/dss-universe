@@ -15,6 +15,13 @@ This reconciles this operation only, not the full Auth/Users/IAM inventory.
 
 ## Discovery boundary
 
+Auth lifecycle follow-up at parent `2dc275c` traces six session/abuse/recovery/
+verification/2FA adapters and their application, Redis, transport and Worker
+context. A real DB characterization confirms old verification credentials can
+verify a changed email (DEBT-068); owner approved a separate correction.
+[Operation-by-operation evidence](D4_AUTH_LIFECYCLE_OPERATION_REVIEW.md).
+This does not close remaining Auth/IAM operations or full D4 acceptance.
+
 Git-tracked non-test TypeScript under API modules/Core/composition and Worker:
 801 files. Lexical candidates containing PrismaService, `$queryRaw`, `$executeRaw`
 or `.query(`: 90 files, not 90 operations or complete persistence coverage.

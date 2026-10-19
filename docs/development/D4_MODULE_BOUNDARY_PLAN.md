@@ -26,6 +26,13 @@ Do not invent frontend design, new scoring formulas, owner policy or Phase 11 fl
 
 ## Implementation sequence
 
+Auth lifecycle review (2026-10-19): session/access/abuse/reset/verification/2FA
+operations and their Redis/Worker/caller context are traced in a bounded
+[operation report](../audits/D4_AUTH_LIFECYCLE_OPERATION_REVIEW.md). Actual Auth
+adapters reproduce old verification credentials confirming a changed email.
+DEBT-068 is separately approved before Phase 11; this audit changes no runtime
+policy and does not complete remaining Auth/IAM reconciliation or D4 acceptance.
+
 API file-graph increment (2026-10-19): compiler-resolved local file cycles now
 cover all authored API src, while existing feature-layer rules retain their scope.
 The real CLI first blocks the inherited Core module/barrel cycle; ordered loaders
