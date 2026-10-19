@@ -94,6 +94,7 @@ import { AiCoreModule } from './modules/ai-core';
 import { IdentityPresentationModule } from './composition/identity/identity-presentation.module';
 import { CommunityPointsModule } from './modules/community-points';
 import { ContentAccessModule } from './modules/content-access';
+import { ContentPresentationModule } from './composition/content-presentation/content-presentation.module';
 import { CustomTitlesModule } from './modules/custom-titles';
 import { EditorModule } from './modules/editor';
 import { IamModule } from './modules/iam';
@@ -129,6 +130,7 @@ import { UsersModule } from './modules/users/users.module';
     ReputationIntegrationModule,
     ProfileAssetCompositionModule,
     ContentIntegrationModule,
+    ContentPresentationModule,
     ContentTargetCompositionModule,
     InteractionPolicyCompositionModule,
     ContentReadIntegrationModule,

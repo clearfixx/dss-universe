@@ -14,6 +14,17 @@
 
 export { EditorModule } from './editor.module';
 export {
+  EDITOR_PREVIEW_READER,
+  type EditorPreviewReader,
+  type EditorPreviewView,
+} from './contracts/editor-preview-reader.contract';
+export {
+  EDITOR_DELIVERY_READER,
+  type EditorDeliveryReader,
+  type EditorDeliveryView,
+  type EditorDeliveryDecision,
+} from './contracts/editor-delivery-reader.contract';
+export {
   EDITOR_SEARCH_BATCH_PROJECTOR,
   type EditorSearchBatchProjector,
 } from './contracts/editor-search-batch-projector.contract';

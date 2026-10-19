@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/modules/editor/editor.module.ts
  *
  * 🎯 Purpose:
- * Composes server-side DSS Editor validation, projection and GraphQL preview.
+ * Composes owned Editor validation and projections through named capabilities.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -27,7 +27,10 @@ import { EditorService } from './application/services/editor.service';
 import { EditorDocumentNormalizerService } from './application/services/editor-document-normalizer.service';
 import { EditorHtmlRenderer } from './infrastructure/rendering/editor-html.renderer';
 import { ShikiEditorCodeHighlighter } from './infrastructure/rendering/shiki-editor-code-highlighter';
-import { EditorResolver } from './presentation/graphql/editor.resolver';
+import { EDITOR_PREVIEW_READER } from './contracts/editor-preview-reader.contract';
+import { EDITOR_DELIVERY_READER } from './contracts/editor-delivery-reader.contract';
+import { EditorPreviewReaderService } from './application/services/editor-preview-reader.service';
+import { EditorDeliveryReaderService } from './application/services/editor-delivery-reader.service';
 
 @Module({
   providers: [
@@ -59,9 +62,17 @@ import { EditorResolver } from './presentation/graphql/editor.resolver';
       provide: EDITOR_CODE_HIGHLIGHTER,
       useExisting: ShikiEditorCodeHighlighter,
     },
-    EditorResolver,
+    EditorPreviewReaderService,
+    EditorDeliveryReaderService,
+    { provide: EDITOR_PREVIEW_READER, useExisting: EditorPreviewReaderService },
+    {
+      provide: EDITOR_DELIVERY_READER,
+      useExisting: EditorDeliveryReaderService,
+    },
   ],
   exports: [
+    EDITOR_PREVIEW_READER,
+    EDITOR_DELIVERY_READER,
     EDITOR_SEARCH_BATCH_PROJECTOR,
     EDITOR_DOCUMENT_NORMALIZER,
     EDITOR_VIEWER_DOCUMENT_PROJECTOR,

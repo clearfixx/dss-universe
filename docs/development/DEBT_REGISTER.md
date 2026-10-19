@@ -21,6 +21,22 @@ active package safe and buildable.
 
 ## Register
 
+2026-10-19 owner-approved D4.4 content presentation composition is locally wired:
+root owns shared wire enums and four existing GraphQL operations; owners publish
+four narrow capabilities, not concrete services. Policy/redaction stay owned.
+Fourteen new cases plus five existing content boundary units pass; initial full
+API opt-in coverage1134/1134. Two Prisma presentation baseline findings removed,
+70 → 68, no additions; exact surface fixtures extended only for approved token/
+type names. New HTTP cases and final gates are pending; no closure claimed.
+[Composition evidence](../audits/D4_4_CONTENT_PRESENTATION_COMPOSITION.md).
+
+Composition final pre-full-E2E: opt-in API1134/1134, lint/types/build/Prisma/
+architecture pass; actual content HTTP14/14 with normal exit, all five added
+guard/create/evaluate/invalid-enum/provider-failure cases pass. Full schema SHA-256
+unchanged after AppModule boot, not only a source assertion. Disposable5435 reset
+after exact validation and no clients; serial full E2E running. Global format41/
+audit1 high10 moderate and later GraphQL/CI/acceptance remain open.
+
 2026-10-19 D4.4 representation progress for DEBT-027: Users presentation no longer
 imports Prisma for the existing ACTIVE directory filter; configuration uses an
 explicit Joi default binding with identical full schema fingerprint. Seven new

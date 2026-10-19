@@ -2,8 +2,8 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: DSS Editor Platform
- * 📄 File: apps/api/src/modules/editor/presentation/graphql/editor.input.ts
+ * 📦 Module: Content Presentation Composition
+ * 📄 File: apps/api/src/composition/content-presentation/presentation/graphql/editor.input.ts
  *
  * 🎯 Purpose:
  * Defines the bounded GraphQL input for server-side editor preview.

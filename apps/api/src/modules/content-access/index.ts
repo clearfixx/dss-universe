@@ -14,6 +14,21 @@
 
 export { ContentAccessModule } from './content-access.module';
 export {
+  CONTENT_GATE_CREATOR,
+  type ContentGateCreator,
+} from './contracts/content-gate-creator.contract';
+export {
+  CONTENT_GATE_POLICY_EVALUATOR,
+  type ContentGatePolicyEvaluator,
+} from './contracts/content-gate-policy-evaluator.contract';
+export type {
+  ContentGatePolicyOperator,
+  ContentGatePolicyRequirement,
+  ContentGatePolicyView,
+  ContentGatePolicyEvaluation,
+  ContentGatePolicyCreation,
+} from './contracts/content-gate-policy-view.type';
+export {
   CONTENT_GATE_DECISION_SCOPES,
   type ContentGateDecisionScope,
   type ContentGateDecisionScopes,

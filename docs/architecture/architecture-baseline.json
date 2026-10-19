@@ -6,20 +6,6 @@
   "scope": "Authored API modules/core/composition TypeScript; excludes tests/declarations; bounded syntactic analysis",
   "findings": [
     {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/content-access/presentation/graphql/content-gates.graphql.ts\",\"@prisma/client\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/content-access/presentation/graphql/content-gates.graphql.ts",
-      "detail": "@prisma/client",
-      "package": "D4"
-    },
-    {
-      "id": "[\"persistence-outside-infrastructure\",\"apps/api/src/modules/editor/presentation/graphql/editor.model.ts\",\"@prisma/client\"]",
-      "rule": "persistence-outside-infrastructure",
-      "file": "apps/api/src/modules/editor/presentation/graphql/editor.model.ts",
-      "detail": "@prisma/client",
-      "package": "D4"
-    },
-    {
       "id": "[\"wildcard-export\",\"apps/api/src/core/audit/index.ts\",\"./audit.module\"]",
       "rule": "wildcard-export",
       "file": "apps/api/src/core/audit/index.ts",

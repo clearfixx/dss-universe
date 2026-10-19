@@ -18,6 +18,7 @@ import request from 'supertest';
 import type { App } from 'supertest/types';
 import { createEmptyEditorDocument } from '@dss/editor';
 import { PrismaService } from '@api/core/database';
+import { Permission } from '@api/core/authorization';
 import {
   CONTENT_GATE_DECISIONS,
   type ContentGateDecisions,
@@ -326,6 +327,179 @@ describe('Content integration composed boundaries (e2e)', () => {
       spy.mockRestore();
     }
   });
+  it('requires authentication for all four composed content operations', async () => {
+    const operations = [
+      {
+        query:
+          'mutation($input: CreateContentGateInput!) { createContentGate(input:$input) { id } }',
+        variables: {
+          input: {
+            operator: 'ALL',
+            requirements: [{ kind: 'REPUTATION', threshold: 0 }],
+          },
+        },
+      },
+      {
+        query: 'query($id: ID!) { evaluateContentGate(id:$id) { allowed } }',
+        variables: { id: gateId },
+      },
+      {
+        query:
+          'query($input: PreviewEditorDocumentInput!) { previewEditorDocument(input:$input) { canonicalJson } }',
+        variables: { input: { documentJson: documentJson('NEWS') } },
+      },
+      {
+        query:
+          'query($input: PreviewEditorDocumentInput!) { deliverEditorDocument(input:$input) { documentJson } }',
+        variables: { input: { documentJson: documentJson('NEWS', gateId) } },
+      },
+    ];
+    const before = await prisma.contentGate.count();
+    for (const operation of operations) {
+      const response = await request(app.getHttpServer())
+        .post('/api/graphql')
+        .send(operation)
+        .expect(200);
+      const body = response.body as {
+        data: unknown;
+        errors?: Array<{ extensions?: { code?: string } }>;
+      };
+      expect(body.data).toBeNull();
+      expect(body.errors?.[0].extensions?.code).toBe('UNAUTHENTICATED');
+    }
+    expect(await prisma.contentGate.count()).toBe(before);
+  });
+
+  it('denies gate creation without configure permission before any write', async () => {
+    const before = await prisma.contentGate.count();
+    const result = await graphql(
+      viewer.tokens.accessToken,
+      'mutation($input: CreateContentGateInput!) { createContentGate(input:$input) { id } }',
+      {
+        input: {
+          operator: 'ALL',
+          requirements: [{ kind: 'REPUTATION', threshold: 0 }],
+        },
+      },
+    );
+    expect(result.body.data).toBeNull();
+    expect(result.body.errors).toBeDefined();
+    expect(await prisma.contentGate.count()).toBe(before);
+  });
+
+  it('creates and evaluates through the composed capabilities with unchanged fields', async () => {
+    const permission = await prisma.permission.upsert({
+      where: { key: Permission.ContentGatesConfigure },
+      update: {},
+      create: {
+        key: Permission.ContentGatesConfigure,
+        label: 'Configure Content Gates',
+      },
+    });
+    await prisma.userPermission.upsert({
+      where: {
+        userId_permissionId: {
+          userId: owner.user.id,
+          permissionId: permission.id,
+        },
+      },
+      create: { userId: owner.user.id, permissionId: permission.id },
+      update: {},
+    });
+    const result = await graphql<{
+      createContentGate: {
+        id: string;
+        ownerId: string;
+        operator: string;
+        requirements: Array<{
+          kind: string;
+          threshold: number | null;
+          groupKey: string | null;
+        }>;
+      };
+    }>(
+      owner.tokens.accessToken,
+      'mutation($input: CreateContentGateInput!) { createContentGate(input:$input) { id ownerId operator requirements { kind threshold groupKey } } }',
+      {
+        input: {
+          operator: 'ALL',
+          requirements: [
+            { kind: 'GROUP', groupKey: ' group:crew ' },
+            { kind: 'REPUTATION', threshold: 100 },
+          ],
+        },
+      },
+    );
+    expect(result.body.errors).toBeUndefined();
+    const created = result.body.data!.createContentGate;
+    expect(created).toMatchObject({
+      ownerId: owner.user.id,
+      operator: 'ALL',
+      requirements: [
+        { kind: 'GROUP', threshold: null, groupKey: 'group:crew' },
+        { kind: 'REPUTATION', threshold: 100, groupKey: null },
+      ],
+    });
+    const evaluation = await graphql<{
+      evaluateContentGate: {
+        gate: { id: string };
+        allowed: boolean;
+        bypassed: boolean;
+        unmet: string[];
+      };
+    }>(
+      owner.tokens.accessToken,
+      'query($id: ID!) { evaluateContentGate(id:$id) { gate { id } allowed bypassed unmet } }',
+      { id: created.id },
+    );
+    expect(evaluation.body.errors).toBeUndefined();
+    expect(evaluation.body.data!.evaluateContentGate).toEqual({
+      gate: { id: created.id },
+      allowed: false,
+      bypassed: false,
+      unmet: ['GROUP'],
+    });
+  });
+
+  it('rejects an unknown wire enum before creating a gate', async () => {
+    const before = await prisma.contentGate.count();
+    const result = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + owner.tokens.accessToken)
+      .send({
+        query:
+          'mutation($input: CreateContentGateInput!) { createContentGate(input:$input) { id } }',
+        variables: {
+          input: {
+            operator: 'UNKNOWN',
+            requirements: [{ kind: 'GROUP', groupKey: 'crew' }],
+          },
+        },
+      });
+    const body = result.body as { data?: unknown; errors?: unknown[] };
+    expect(body.data ?? null).toBeNull();
+    expect(body.errors).toBeDefined();
+    expect(await prisma.contentGate.count()).toBe(before);
+  });
+
+  it('returns no management evaluation payload when the owner provider fails', async () => {
+    const spy = jest
+      .spyOn(app.get(ContentGatesService), 'evaluate')
+      .mockRejectedValue(new Error('Synthetic management provider failure'));
+    try {
+      const result = await graphql(
+        viewer.tokens.accessToken,
+        'query($id: ID!) { evaluateContentGate(id:$id) { allowed notice } }',
+        { id: gateId },
+      );
+      expect(result.body.data).toBeNull();
+      expect(result.body.errors).toBeDefined();
+      expect(JSON.stringify(result.body)).not.toContain('Protected payload');
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
   it('preserves News draft GraphQL persistence and rejects a COMMENT profile before any write', async () => {
     const mutation =
       'mutation($input: CreateNewsDraftInput!) { createNewsDraft(input: $input) { id documentJson currentVersion status } }';

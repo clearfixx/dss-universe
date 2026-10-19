@@ -2,7 +2,7 @@
 
 Date: 2026-10-14. Status: authorized debt-remediation execution, not Phase 11.
 Branch: `debt/d4-module-boundaries`.
-Implemented increments: D4.1, D4.2 and bounded D4.3a/b/c/d1/d2/d3a plus AI Core/private feature/representation D4.4; remaining import inventory 70,
+Implemented increments: D4.1, D4.2 and bounded D4.3a/b/c/d1/d2/d3a plus AI Core/private feature/representation/presentation D4.4; remaining import inventory 68,
 full D4 and the rest of D4.3 OPEN.
 Locally implemented D4.3d3b transfers the mapped News delivery SQL into owned
 adapters and a scoped root snapshot; full acceptance remains open. Evidence:
@@ -19,12 +19,20 @@ Authority: approved pre-Phase-11 D4 plan and ADR-003/004.
 ## Outcome and invariants
 
 Close the full D4 inventory, not merely rename broad services into facades.
-Starting inventory: 135 findings; latest reviewed inventory: 70. Every reduction needs exact source,
+Starting inventory: 135 findings; latest reviewed inventory: 68. Every reduction needs exact source,
 behavioral and contract evidence; no automatic baseline growth or waiver.
 Keep NestJS, Prisma, PostgreSQL, Outbox/BullMQ and existing transport responses.
 Do not invent frontend design, new scoring formulas, owner policy or Phase 11 flows.
 
 ## Implementation sequence
+
+Owner-approved composition increment (2026-10-19): root presentation owns the
+shared content wire enums and four unchanged operations through four narrow
+capabilities. Feature policy/redaction remain private; no sibling imports or
+presentation Prisma. Fourteen new unit cases plus five existing boundary cases
+pass; inventory 70 → 68 with zero additions. Full gate/HTTP/acceptance pending;
+see [evidence](../audits/D4_4_CONTENT_PRESENTATION_COMPOSITION.md). Remaining
+68 wildcard findings and full operation reconciliation are not waived.
 
 Representation increment (2026-10-19): Users directory retains its ACTIVE filter
 without a Prisma presentation import; configuration retains its complete Joi

@@ -17,6 +17,8 @@ import {
   ContentAccessModule,
   CONTENT_GATE_DECISIONS,
   CONTENT_GATE_DECISION_SCOPES,
+  CONTENT_GATE_CREATOR,
+  CONTENT_GATE_POLICY_EVALUATOR,
   type ContentGateDecisions,
 } from '@api/modules/content-access';
 import {
@@ -25,6 +27,8 @@ import {
   EDITOR_VIEWER_DOCUMENT_PROJECTOR,
   EDITOR_SEARCH_PROJECTOR,
   EDITOR_SEARCH_BATCH_PROJECTOR,
+  EDITOR_PREVIEW_READER,
+  EDITOR_DELIVERY_READER,
   type EditorViewerDocumentProjector,
   type EditorDocumentNormalizer,
 } from '@api/modules/editor';
@@ -36,6 +40,8 @@ import { NewsViewerDocumentAdapter } from './infrastructure/news-viewer-document
 describe('Content integration boundaries', () => {
   it('keeps concrete Editor and Content Access services private', () => {
     expect(Reflect.getMetadata(MODULE_METADATA.EXPORTS, EditorModule)).toEqual([
+      EDITOR_PREVIEW_READER,
+      EDITOR_DELIVERY_READER,
       EDITOR_SEARCH_BATCH_PROJECTOR,
       EDITOR_DOCUMENT_NORMALIZER,
       EDITOR_VIEWER_DOCUMENT_PROJECTOR,
@@ -43,7 +49,12 @@ describe('Content integration boundaries', () => {
     ]);
     expect(
       Reflect.getMetadata(MODULE_METADATA.EXPORTS, ContentAccessModule),
-    ).toEqual([CONTENT_GATE_DECISIONS, CONTENT_GATE_DECISION_SCOPES]);
+    ).toEqual([
+      CONTENT_GATE_CREATOR,
+      CONTENT_GATE_POLICY_EVALUATOR,
+      CONTENT_GATE_DECISIONS,
+      CONTENT_GATE_DECISION_SCOPES,
+    ]);
     expect(
       Reflect.getMetadata(MODULE_METADATA.IMPORTS, EditorModule) ?? [],
     ).toEqual([]);

@@ -2,8 +2,8 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: DSS Editor Platform
- * 📄 File: apps/api/src/modules/editor/presentation/graphql/editor.resolver.ts
+ * 📦 Module: Content Presentation Composition
+ * 📄 File: apps/api/src/composition/content-presentation/presentation/graphql/editor.resolver.ts
  *
  * 🎯 Purpose:
  * Exposes authenticated server validation and preview through GraphQL.
@@ -12,13 +12,18 @@
  * ===============================================================
  */
 
-import { UseGuards } from '@nestjs/common';
+import { Inject, UseGuards } from '@nestjs/common';
 import { Args, Query, Resolver } from '@nestjs/graphql';
 
 import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
 
-import { EditorContentDeliveryService } from '../../application/services/editor-content-delivery.service';
-import { EditorService } from '../../application/services/editor.service';
+import {
+  EDITOR_PREVIEW_READER,
+  EDITOR_DELIVERY_READER,
+  type EditorPreviewReader,
+  type EditorDeliveryReader,
+} from '@api/modules/editor';
+import { toContentGateRequirementKind } from './content-gate.mapping';
 import { PreviewEditorDocumentInput } from './editor.input';
 import {
   EditorDocumentDeliveryModel,
@@ -29,8 +34,9 @@ import {
 @UseGuards(JwtAuthGuard)
 export class EditorResolver {
   constructor(
-    private readonly editor: EditorService,
-    private readonly delivery: EditorContentDeliveryService,
+    @Inject(EDITOR_PREVIEW_READER) private readonly editor: EditorPreviewReader,
+    @Inject(EDITOR_DELIVERY_READER)
+    private readonly delivery: EditorDeliveryReader,
   ) {}
 
   @Query(() => EditorDocumentPreviewModel)
@@ -57,7 +63,15 @@ export class EditorResolver {
     );
     return {
       documentJson: projection.documentJson,
-      gates: projection.gates,
+      gates: projection.gates.map(
+        ({ gateId, allowed, bypassed, unmet, notice }) => ({
+          gateId,
+          allowed,
+          bypassed,
+          unmet: unmet.map(toContentGateRequirementKind),
+          notice,
+        }),
+      ),
     };
   }
 }

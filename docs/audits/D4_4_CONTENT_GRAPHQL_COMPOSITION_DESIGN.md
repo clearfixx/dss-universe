@@ -1,6 +1,12 @@
 # D4.4 — Content GraphQL presentation composition
 
-Date: 2026-10-19. Status: proposed implementation design, not implemented or accepted.
+Date: 2026-10-19. Status: owner-approved design; bounded local implementation in
+progress, full acceptance pending.
+
+Owner subsequently approved implementation through isolated root composition.
+The bounded local implementation/evidence is tracked separately in
+[the composition packet](D4_4_CONTENT_PRESENTATION_COMPOSITION.md); this design
+alone is not acceptance or proof of a green full gate.
 
 The owner explicitly requires isolation instead of a direct Content Access enum
 import in Editor presentation. This follows

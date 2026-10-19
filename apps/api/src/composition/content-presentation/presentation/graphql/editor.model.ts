@@ -2,8 +2,8 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: DSS Editor Platform
- * 📄 File: apps/api/src/modules/editor/presentation/graphql/editor.model.ts
+ * 📦 Module: Content Presentation Composition
+ * 📄 File: apps/api/src/composition/content-presentation/presentation/graphql/editor.model.ts
  *
  * 🎯 Purpose:
  * Defines GraphQL-safe derived projections for a validated editor document.
@@ -13,7 +13,7 @@
  */
 
 import { Field, ID, ObjectType } from '@nestjs/graphql';
-import { ContentGateRequirementKind } from '@prisma/client';
+import { ContentGateRequirementKind } from './content-gate.enums';
 
 @ObjectType('EditorDocumentPreview')
 export class EditorDocumentPreviewModel {
