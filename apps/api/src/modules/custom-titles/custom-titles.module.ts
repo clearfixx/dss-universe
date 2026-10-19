@@ -8,6 +8,15 @@
  * 🎯 Purpose:
  * Wires the permission-neutral Custom Titles bounded context.
  *
+ * 🧠 Responsibilities:
+ * • assembles private title policy, persistence and GraphQL providers.
+ *
+ * 🏗️ Architecture:
+ * Owner-local assembly; root composition supplies the published grant input port.
+ *
+ * ⚠️ Important:
+ * Do not expose the broad title application service as an integration API.
+ *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
@@ -33,7 +42,7 @@ import { CustomTitlesResolver } from './presentation/graphql/resolvers/custom-ti
       useClass: PrismaCustomTitlesRepository,
     },
   ],
-  exports: [CustomTitlesService],
+  exports: [],
 })
 export class CustomTitlesModule {}
 

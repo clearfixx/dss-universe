@@ -8,6 +8,15 @@
  * 🎯 Purpose:
  * Wires the read-only Community Points leaderboard bounded context.
  *
+ * 🧠 Responsibilities:
+ * • assembles private ranking presentation and repository adapters.
+ *
+ * 🏗️ Architecture:
+ * Owner-local assembly; ranking facts enter through the root-composed input port.
+ *
+ * ⚠️ Important:
+ * Keep query policy private; no scoring command is exported.
+ *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
@@ -28,7 +37,7 @@ import { LeaderboardsResolver } from './presentation/graphql/resolvers/leaderboa
       useClass: RankingFactsLeaderboardsRepository,
     },
   ],
-  exports: [LeaderboardsService],
+  exports: [],
 })
 export class LeaderboardsModule {}
 

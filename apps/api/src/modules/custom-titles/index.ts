@@ -6,13 +6,12 @@
  * 📄 File: apps/api/src/modules/custom-titles/index.ts
  *
  * 🎯 Purpose:
- * Exposes the supported Custom Titles module boundary.
+ * Exposes named title contracts and assembly without its private application service.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 
-export { CustomTitlesService } from './application/services/custom-titles.service';
 export { CustomTitlesModule } from './custom-titles.module';
 export {
   TITLE_GRANT_TRANSACTION,

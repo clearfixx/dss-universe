@@ -8,6 +8,16 @@
  * 🎯 Purpose:
  * Wires the canonical interaction target registry and policy boundary.
  *
+ * 🧠 Responsibilities:
+ * • assembles local interaction commands, policies, persistence and presentation;
+ * • publishes only scalar comment counts and policy registration capability.
+ *
+ * 🏗️ Architecture:
+ * Feature assembly; atomic root writers use the separate infrastructure-only entry.
+ *
+ * ⚠️ Important:
+ * Keep broad command services private and preserve the two integration tokens.
+ *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
@@ -109,17 +119,7 @@ import { ReactionsResolver } from './presentation/graphql/resolvers/reactions.re
       useClass: PrismaModerationRepository,
     },
   ],
-  exports: [
-    COMMENT_COUNT_READER,
-    INTERACTION_POLICY_REGISTRATIONS,
-    InteractionTargetsService,
-    BookmarksService,
-    CommentDraftsService,
-    CommentsService,
-    ReactionsService,
-    AudienceEngagementService,
-    ModerationService,
-  ],
+  exports: [COMMENT_COUNT_READER, INTERACTION_POLICY_REGISTRATIONS],
 })
 export class InteractionsModule {}
 

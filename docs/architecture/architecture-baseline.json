@@ -6,69 +6,6 @@
   "scope": "Authored API modules/core/composition TypeScript; excludes tests/declarations; bounded syntactic analysis",
   "findings": [
     {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/custom-titles/index.ts\",\"./application/services/custom-titles.service: CustomTitlesService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/custom-titles/index.ts",
-      "detail": "./application/services/custom-titles.service: CustomTitlesService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/interactions/index.ts\",\"./application/services/audience-engagement.service: AudienceEngagementService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/interactions/index.ts",
-      "detail": "./application/services/audience-engagement.service: AudienceEngagementService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/interactions/index.ts\",\"./application/services/bookmarks.service: BookmarksService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/interactions/index.ts",
-      "detail": "./application/services/bookmarks.service: BookmarksService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/interactions/index.ts\",\"./application/services/comment-drafts.service: CommentDraftsService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/interactions/index.ts",
-      "detail": "./application/services/comment-drafts.service: CommentDraftsService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/interactions/index.ts\",\"./application/services/comments.service: CommentsService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/interactions/index.ts",
-      "detail": "./application/services/comments.service: CommentsService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/interactions/index.ts\",\"./application/services/interaction-targets.service: InteractionTargetsService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/interactions/index.ts",
-      "detail": "./application/services/interaction-targets.service: InteractionTargetsService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/interactions/index.ts\",\"./application/services/moderation.service: ModerationService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/interactions/index.ts",
-      "detail": "./application/services/moderation.service: ModerationService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/interactions/index.ts\",\"./application/services/reactions.service: ReactionsService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/interactions/index.ts",
-      "detail": "./application/services/reactions.service: ReactionsService",
-      "package": "D4"
-    },
-    {
-      "id": "[\"concrete-public-export\",\"apps/api/src/modules/leaderboards/index.ts\",\"./application/services/leaderboards.service: LeaderboardsService\"]",
-      "rule": "concrete-public-export",
-      "file": "apps/api/src/modules/leaderboards/index.ts",
-      "detail": "./application/services/leaderboards.service: LeaderboardsService",
-      "package": "D4"
-    },
-    {
       "id": "[\"namespace-import\",\"apps/api/src/core/config/validation.schema.ts\",\"joi\"]",
       "rule": "namespace-import",
       "file": "apps/api/src/core/config/validation.schema.ts",

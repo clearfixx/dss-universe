@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/modules/interactions/index.ts
  *
  * 🎯 Purpose:
- * Exposes the public integration surface of the Interaction Platform.
+ * Exposes named interaction contracts and projections, not internal application services.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -25,13 +25,6 @@ export {
   COMMENT_COUNT_READER,
   type CommentCountReader,
 } from './contracts/comment-count-reader.contract';
-export { BookmarksService } from './application/services/bookmarks.service';
-export { CommentDraftsService } from './application/services/comment-drafts.service';
-export { InteractionTargetsService } from './application/services/interaction-targets.service';
-export { CommentsService } from './application/services/comments.service';
-export { ReactionsService } from './application/services/reactions.service';
-export { AudienceEngagementService } from './application/services/audience-engagement.service';
-export { ModerationService } from './application/services/moderation.service';
 export type {
   InteractionCapability,
   InteractionTarget,

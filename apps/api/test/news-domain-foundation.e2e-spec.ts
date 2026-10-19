@@ -1,3 +1,22 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🧪 Module: News Foundation Verification
+ * 📄 File: apps/api/test/news-domain-foundation.e2e-spec.ts
+ *
+ * 🎯 Purpose:
+ * Verifies migrated News foundation transactions and their existing HTTP projections.
+ *
+ * 🏗️ Architecture:
+ * Integration test may obtain private providers for fixture setup, not public feature APIs.
+ *
+ * ⚠️ Important:
+ * Preserve existing assertions; test-only imports do not justify production exports.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import {
   ConflictException,
   ForbiddenException,
@@ -11,7 +30,7 @@ import type { App } from 'supertest/types';
 
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/core/database';
-import { InteractionTargetsService } from './../src/modules/interactions';
+import { InteractionTargetsService } from './../src/modules/interactions/application/services/interaction-targets.service';
 import {
   NewsDeliveryService,
   NewsLinksService,

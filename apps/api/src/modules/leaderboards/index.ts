@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/modules/leaderboards/index.ts
  *
  * 🎯 Purpose:
- * Exposes the public Leaderboards module boundary.
+ * Exposes named ranking inputs and projections without the private query service.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -20,7 +20,6 @@ export {
   type LeaderboardRankingResult,
 } from './contracts/ranking-facts.port';
 export type { LeaderboardQuery } from './domain/types/leaderboards.type';
-export { LeaderboardsService } from './application/services/leaderboards.service';
 export type {
   LeaderboardEntry,
   LeaderboardPage,

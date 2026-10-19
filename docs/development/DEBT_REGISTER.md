@@ -21,6 +21,14 @@ active package safe and buildable.
 
 ## Register
 
+2026-10-19 further D4.4 progress for DEBT-027: nine unused public/Nest application
+service exports removed across Custom Titles, Leaderboards and Interactions.
+Two Interactions integration tokens and named input/type contracts retained;
+one E2E fixture import now internal, assertions unchanged. Nine boundary tests
+pass after red baseline; reviewed inventory 81 → 72, zero additions. Full gate
+and CI/review/acceptance pending. See
+[private feature service evidence](../audits/D4_4_PRIVATE_FEATURE_SERVICES.md).
+
 2026-10-19 bounded D4.4 progress for DEBT-027: AI Core now publishes only named
 AiCoreModule; private command service/provider/resolver wiring retained. Three
 new boundary tests fail before correction and pass after; full API coverage
