@@ -29,6 +29,16 @@ implementations unchanged. Twelve new cases2 PASS/10 FAIL before, full architect
 not D4/cycle/security acceptance. Full gates, D4.3/D4.5 and D5–D7 remain pending.
 [Core export evidence](../audits/D4_4_CORE_EXPLICIT_EXPORTS.md).
 
+Final Core exports PR #54 local evidence: API1138/1138, architecture107/107,
+root/sibling gates pass except inherited global format/audit. Full E2E506 PASS/
+2 FAIL of508,0 skips: News null/zero DEBT-045 and unchanged App GraphQL registration
+5000ms scenario matching DEBT-048; root cause not established. Core Outbox/Audit11,
+Audit2, Outbox2, Content Boundaries14, Media2 and ownership30 pass; App25/26.
+Completed exact Jest PID12720 stopped after full JSON and zero clients/schemas.
+GraphQL generation passes, DEBT-044 drift check red; own drift restored, full SDL
+hash unchanged. Source-head containment CI pass, Web smoke/audit fail, main pending.
+Bounded inventory0 is not full D4/ownership/cycle/quality acceptance; no closure.
+
 2026-10-19 bounded D4.4 unused Media domain entry cleanup for DEBT-027: tracked
 literal import/export/dynamic/require/import-type scan finds zero consumers after
 alias resolution. Delete only its17-wildcard barrel; all owned targets and runtime
