@@ -25,8 +25,16 @@ import { test } from "node:test";
 import { deepEqual, equal, ok } from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { readFileSync, existsSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import {
+  readFileSync,
+  existsSync,
+  mkdtempSync,
+  mkdirSync,
+  writeFileSync,
+  rmSync,
+} from "node:fs";
+import { dirname, resolve, join } from "node:path";
+import { tmpdir } from "node:os";
 import { createRequire } from "node:module";
 import { analyzeBoundaries, compareBaseline } from "./analyze-boundaries.mjs";
 import { findDependencyCycles } from "./find-dependency-cycles.mjs";
@@ -1578,6 +1586,143 @@ test("CLI rejects unsupported arguments", () => {
   });
   equal(result.status, 1);
   ok(result.stderr.includes("Unknown argument"));
+});
+
+test("mandatory architecture command enforces the frozen inventory", () => {
+  const manifest = JSON.parse(
+    readFileSync(new URL("../../package.json", import.meta.url), "utf8"),
+  );
+  const commands = manifest.scripts["architecture:check"].split(" && ");
+  ok(
+    commands.includes(
+      "node scripts/architecture/report-boundaries.mjs --check-baseline",
+    ),
+  );
+  equal(
+    manifest.scripts["architecture:report"],
+    "node scripts/architecture/report-boundaries.mjs",
+  );
+});
+
+test("CI executes the mandatory architecture command without suppressing failure", () => {
+  const workflow = readFileSync(
+    new URL("../../.github/workflows/ci.yml", import.meta.url),
+    "utf8",
+  );
+  ok(
+    /- name: Validate architecture\r?\n\s+run: pnpm architecture:check\r?\n\s*\r?\n/.test(
+      workflow,
+    ),
+  );
+});
+
+test("CLI frozen inventory check succeeds for the reviewed current sources", () => {
+  const result = spawnSync(
+    process.execPath,
+    [
+      fileURLToPath(new URL("./report-boundaries.mjs", import.meta.url)),
+      "--check-baseline",
+    ],
+    { encoding: "utf8" },
+  );
+  equal(result.status, 0, result.stderr);
+  ok(result.stderr.includes("Frozen inventory matches (0 known findings"));
+});
+
+function runInventoryFixture(source, baselineFindings, args) {
+  const fixtureRoot = mkdtempSync(join(tmpdir(), "dss-architecture-cli-"));
+  try {
+    for (const directory of [
+      "scripts/architecture",
+      "apps/api/src/modules/auth/application",
+      "apps/api/src/core",
+      "apps/api/src/composition",
+      "docs/architecture",
+    ])
+      mkdirSync(join(fixtureRoot, directory), { recursive: true });
+    // Relocate the unmodified CLI logic, retaining the real production analyzer.
+    const cli = readFileSync(
+      new URL("./report-boundaries.mjs", import.meta.url),
+      "utf8",
+    );
+    const importSpecifier = '"./analyze-boundaries.mjs"';
+    equal(cli.split(importSpecifier).length, 2);
+    writeFileSync(
+      join(fixtureRoot, "scripts/architecture/report-boundaries.mjs"),
+      cli.replace(
+        importSpecifier,
+        JSON.stringify(
+          new URL("./analyze-boundaries.mjs", import.meta.url).href,
+        ),
+      ),
+    );
+    writeFileSync(join(fixtureRoot, path), source);
+    const baselinePath = join(
+      fixtureRoot,
+      "docs/architecture/architecture-baseline.json",
+    );
+    const baseline = JSON.stringify({ findings: baselineFindings });
+    writeFileSync(baselinePath, baseline);
+    const result = spawnSync(
+      process.execPath,
+      [
+        join(fixtureRoot, "scripts/architecture/report-boundaries.mjs"),
+        ...args,
+      ],
+      { encoding: "utf8" },
+    );
+    equal(
+      readFileSync(baselinePath, "utf8"),
+      baseline,
+      "CLI must never rewrite the baseline",
+    );
+    return result;
+  } finally {
+    // Only the unique directory created above belongs to this fixture.
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+}
+
+test("CLI blocks newly added violations without rewriting the baseline", () => {
+  const result = runInventoryFixture(
+    "import '@prisma/client';",
+    [],
+    ["--check-baseline"],
+  );
+  equal(result.status, 1, result.stderr);
+  ok(result.stderr.includes("Baseline drift: 1 added, 0 removed"));
+});
+
+test("CLI blocks removed inventory entries until explicitly reviewed", () => {
+  const result = runInventoryFixture("", analyze("import '@prisma/client';"), [
+    "--check-baseline",
+  ]);
+  equal(result.status, 1, result.stderr);
+  ok(result.stderr.includes("Baseline drift: 0 added, 1 removed"));
+});
+
+test("CLI report-only mode diagnoses ordinary violations without failing", () => {
+  const result = runInventoryFixture(
+    "import '@prisma/client';",
+    [],
+    ["--json"],
+  );
+  equal(result.status, 0, result.stderr);
+  equal(JSON.parse(result.stdout).findings.length, 1);
+});
+
+test("CLI still blocks technical entry violations even in report-only mode", () => {
+  const result = runInventoryFixture(
+    "import { PrismaInteractionTargetWriter } from '@api/modules/interactions/infrastructure';",
+    [],
+    ["--json"],
+  );
+  equal(result.status, 1, result.stderr);
+  ok(
+    JSON.parse(result.stdout).findings.some(
+      ({ rule }) => rule === "infrastructure-entry-business-import",
+    ),
+  );
 });
 
 for (const file of [

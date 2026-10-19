@@ -26,6 +26,14 @@ Do not invent frontend design, new scoring formulas, owner policy or Phase 11 fl
 
 ## Implementation sequence
 
+Blocking-gate increment (2026-10-19): mandatory architecture command now invokes
+the frozen inventory check; standalone reporting remains diagnostic. Three new
+regressions give 2 PASS/1 FAIL before; four more negative/report CLI fixtures
+bring full architecture coverage to114/114. Root lint,
+types, Prisma and build pass; remaining packet gates/publication are pending.
+See [local evidence](../audits/D4_5_BLOCKING_ARCHITECTURE_GATE.md). This does not
+close operation reconciliation, graph review or full D4 acceptance.
+
 Core explicit-export increment (2026-10-19): delete unused9-wildcard root
 aggregator, preserve all reviewed technical names explicitly in nine entries;
 config registration order and runtime implementations unchanged. Twelve new cases
