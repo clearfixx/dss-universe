@@ -51,6 +51,34 @@ CommentDraft.document and CommentRevision.document. Their source/migration and
 available local database contents still need reconciliation; this inventory is
 not a completed depth scan or proof that every JSON field is canonical content.
 
+### Local compatibility evidence (2026-10-19)
+
+Docker inventory confirms loopback-only PostgreSQL containers at 5433 (dev),
+5434 (persistent tests), 5435 (disposable tests). Information-schema discovery in
+each public schema finds exactly the five document columns above. Queried each
+using `psql -X -v ON_ERROR_STOP=1` in an explicit `BEGIN READ ONLY` transaction;
+no credentials, document bodies, row IDs or text were emitted. Recursive JSONB
+walk follows only array-valued content from root depth 0, stopping at depth 65
+to detect any value beyond the proposed 64 without unbounded descent.
+
+| Environment           | Table             | Rows | SQL-null documents | Maximum observed node depth | Beyond 64 |
+| --------------------- | ----------------- | ---: | -----------------: | --------------------------: | --------: |
+| dev 5433              | all five          |    0 |                  0 |              not applicable |         0 |
+| persistent tests 5434 | all five          |    0 |                  0 |              not applicable |         0 |
+| disposable tests 5435 | news_articles     |    1 |                  0 |                           2 |         0 |
+| disposable tests 5435 | news_revisions    |    3 |                  0 |                           2 |         0 |
+| disposable tests 5435 | comments          |    2 |                  1 |                           2 |         0 |
+| disposable tests 5435 | comment_revisions |    3 |                  0 |                           2 |         0 |
+| disposable tests 5435 | comment_drafts    |    0 |                  0 |              not applicable |         0 |
+
+Aggregate nested node/type/content/marks-container shape check found no malformed
+document among these eight non-null values. This is not full shared validation:
+attrs/mark items/profile/links/footnotes and every dynamic test fixture still need
+their own checks. Data are current local/test state only; no production, backups,
+other databases/schemas or remote instance was accessed/certified. No resets,
+seed, migration or data edits. Empty stores prove no existing local incompatibility,
+not universal compatibility. Exact depth approval remains pending.
+
 ## Required regression matrix
 
 | Layer              | Evidence required                                                                                                                                             |
