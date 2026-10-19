@@ -1026,3 +1026,7 @@ inputs. [Evidence and limits](../audits/D4_EDITOR_OPERATION_REVIEW.md).
 Owner approved a separate correction with depth-policy design first on
 2026-10-19. Runtime implementation is not started; exact depth policy remains
 to be agreed before code changes.
+Proposed boundary and acceptance matrix are in
+[DEBT-066 design](DEBT_066_EDITOR_VALIDATION_DESIGN.md): depth 64 with doc root 0,
+no content truncation, compatibility assessment before implementation. Exact
+boundary approval is pending; no runtime fix is claimed.
