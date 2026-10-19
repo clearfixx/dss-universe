@@ -25,7 +25,8 @@ import { test } from "node:test";
 import { deepEqual, equal, ok } from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import { createRequire } from "node:module";
 import { analyzeBoundaries, compareBaseline } from "./analyze-boundaries.mjs";
 import { findDependencyCycles } from "./find-dependency-cycles.mjs";
@@ -43,7 +44,117 @@ const {
   isPropertyAccessExpression,
   isElementAccessExpression,
   isPropertyAssignment,
+  isImportDeclaration,
+  isImportTypeNode,
+  isLiteralTypeNode,
+  isStringLiteralLike,
+  isCallExpression,
+  isIdentifier,
+  SyntaxKind,
 } = requireApi("typescript");
+
+test("Media has no unused domain aggregation entry", () => {
+  equal(
+    existsSync(
+      new URL(
+        "../../apps/api/src/modules/media/domain/index.ts",
+        import.meta.url,
+      ),
+    ),
+    false,
+  );
+});
+
+test("Media retains all seventeen former aggregation targets", () => {
+  for (const target of [
+    "entities/media.entity",
+    "enums/media-kind.enum",
+    "enums/media-status.enum",
+    "enums/media-storage-provider.enum",
+    "enums/media-upload-status.enum",
+    "enums/media-visibility.enum",
+    "repositories/media.repository.interface",
+    "types/create-media.input",
+    "types/media-dimensions.type",
+    "types/media-reference.type",
+    "types/media-upload-session.type",
+    "types/media-upload-policy.type",
+    "types/media-variant.type",
+    "types/media-metadata.type",
+    "exceptions/media-upload-policy.exception",
+    "repositories/media-upload-session.repository.interface",
+    "types/update-media.input",
+  ])
+    ok(
+      existsSync(
+        new URL(
+          `../../apps/api/src/modules/media/domain/${target}.ts`,
+          import.meta.url,
+        ),
+      ),
+      target,
+    );
+});
+
+test("tracked source has no literal import of the removed Media domain entry", () => {
+  const root = fileURLToPath(new URL("../../", import.meta.url));
+  const tracked = spawnSync(
+    "git",
+    ["ls-files", "*.ts", "*.tsx", "*.mts", "*.cts", "*.js", "*.mjs", "*.cjs"],
+    { cwd: root, encoding: "utf8" },
+  );
+  equal(tracked.status, 0, tracked.stderr);
+  const references = [];
+  const target = resolve(root, "apps/api/src/modules/media/domain");
+  for (const file of tracked.stdout.trim().split(/\r?\n/)) {
+    if (
+      !/^(apps|packages|scripts)\//.test(file) ||
+      !existsSync(resolve(root, file))
+    )
+      continue;
+    const source = createSourceFile(
+      file,
+      readFileSync(resolve(root, file), "utf8"),
+      ScriptTarget.Latest,
+      true,
+    );
+    const inspect = (literal) => {
+      if (!literal || !isStringLiteralLike(literal)) return;
+      const specifier = literal.text;
+      const candidate = specifier.startsWith("@api/")
+        ? resolve(root, "apps/api/src", specifier.slice(5))
+        : specifier.startsWith(".")
+          ? resolve(root, dirname(file), specifier)
+          : "";
+      if (
+        candidate
+          .replace(/\.(?:[cm]?[jt]sx?)$/, "")
+          .replace(/[\\/]index$/, "") === target
+      )
+        references.push(file + ": " + specifier);
+    };
+    const visit = (node) => {
+      if (isImportDeclaration(node) || isExportDeclaration(node))
+        inspect(node.moduleSpecifier);
+      if (isImportTypeNode(node) && isLiteralTypeNode(node.argument))
+        inspect(node.argument.literal);
+      if (
+        isCallExpression(node) &&
+        (node.expression.kind === SyntaxKind.ImportKeyword ||
+          (isIdentifier(node.expression) &&
+            node.expression.text === "require") ||
+          (isPropertyAccessExpression(node.expression) &&
+            isIdentifier(node.expression.expression) &&
+            node.expression.expression.text === "require" &&
+            node.expression.name.text === "resolve"))
+      )
+        inspect(node.arguments[0]);
+      forEachChild(node, visit);
+    };
+    visit(source);
+  }
+  deepEqual(references, []);
+});
 
 function directPrismaSurface(
   source,

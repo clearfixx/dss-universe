@@ -21,6 +21,14 @@ active package safe and buildable.
 
 ## Register
 
+2026-10-19 bounded D4.4 unused Media domain entry cleanup for DEBT-027: tracked
+literal import/export/dynamic/require/import-type scan finds zero consumers after
+alias resolution. Delete only its17-wildcard barrel; all owned targets and runtime
+providers unchanged. Three new cases2 PASS/1 FAIL before and3/3 after, full
+architecture95/95. Baseline53 →36, zero additions. Full gates/CI/acceptance pending;
+computed/external consumers not certified absent by source scan.
+[Media entry evidence](../audits/D4_4_UNUSED_MEDIA_DOMAIN_ENTRY.md).
+
 2026-10-19 D4.4 News surface increment for DEBT-027: all15 wildcard root exports
 replaced by reviewed named contracts/types; concrete services/repository bindings
 stay private. Only two existing Nest integration tokens exported. One foundation

@@ -2,7 +2,7 @@
 
 Date: 2026-10-14. Status: authorized debt-remediation execution, not Phase 11.
 Branch: `debt/d4-module-boundaries`.
-Implemented increments: D4.1, D4.2 and bounded D4.3a/b/c/d1/d2/d3a plus AI Core/private feature/representation/presentation/News D4.4; remaining import inventory 53,
+Implemented increments: D4.1, D4.2 and bounded D4.3a/b/c/d1/d2/d3a plus AI Core/private feature/representation/presentation/News/Media D4.4; remaining import inventory 36,
 full D4 and the rest of D4.3 OPEN.
 Locally implemented D4.3d3b transfers the mapped News delivery SQL into owned
 adapters and a scoped root snapshot; full acceptance remains open. Evidence:
@@ -19,12 +19,19 @@ Authority: approved pre-Phase-11 D4 plan and ADR-003/004.
 ## Outcome and invariants
 
 Close the full D4 inventory, not merely rename broad services into facades.
-Starting inventory: 135 findings; latest reviewed inventory: 53. Every reduction needs exact source,
+Starting inventory: 135 findings; latest reviewed inventory: 36. Every reduction needs exact source,
 behavioral and contract evidence; no automatic baseline growth or waiver.
 Keep NestJS, Prisma, PostgreSQL, Outbox/BullMQ and existing transport responses.
 Do not invent frontend design, new scoring formulas, owner policy or Phase 11 flows.
 
 ## Implementation sequence
+
+Unused Media entry increment (2026-10-19): zero tracked literal import/export/
+dynamic/require/import-type consumers found after alias/path resolution. Delete
+only the17-wildcard aggregation entry, retaining all targets/providers/contracts.
+Three new regressions2 PASS/1 FAIL before and3/3 after; full architecture95/95.
+Inventory53 →36, no additions. Full gate/acceptance pending; see
+[evidence](../audits/D4_4_UNUSED_MEDIA_DOMAIN_ENTRY.md). Full D4 remains open.
 
 News surface increment (2026-10-19): all15 root wildcards removed; exact named
 integration/data contracts retained. Nine services/six repositories stay local,
