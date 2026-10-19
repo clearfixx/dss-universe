@@ -803,6 +803,88 @@ describe('DSS API (e2e)', () => {
     });
   });
 
+  it('rejects old email proof after HTTP email change and accepts fresh destination proof', async () => {
+    const suffix = randomBytes(8).toString('hex');
+    const password = 'Verification-destination-123!';
+    const registered = await app
+      .get(AuthenticationPresentationService)
+      .register({
+        email: `old-proof-${suffix}@dss.test`,
+        username: `old-proof-${suffix}`,
+        password,
+      });
+    const prisma = app.get(PrismaService);
+    const oldToken = randomBytes(32).toString('hex');
+    await prisma.emailVerification.create({
+      data: {
+        userId: registered.user.id,
+        tokenHash: createHash('sha256').update(oldToken).digest('hex'),
+        expiresAt: new Date(Date.now() + 60_000),
+      },
+    });
+    const nextEmail = `new-proof-${suffix}@dss.test`;
+    await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${registered.tokens.accessToken}`)
+      .send({
+        query:
+          'mutation Change($input: ChangeEmailInput!) { changeViewerEmail(input: $input) { success } }',
+        variables: { input: { email: nextEmail, currentPassword: password } },
+      })
+      .expect(200)
+      .expect({ data: { changeViewerEmail: { success: true } } });
+    const verify = (token: string) =>
+      request(app.getHttpServer())
+        .post('/api/graphql')
+        .send({
+          query:
+            'mutation Verify($input: VerifyEmailInput!) { verifyEmail(input: $input) { success } }',
+          variables: { input: { token } },
+        });
+    const stale = await verify(oldToken).expect(200);
+    expect(stale.body).toMatchObject({
+      errors: [{ message: 'Invalid or expired verification link.' }],
+    });
+    const subject = await prisma.user.findUniqueOrThrow({
+      where: { id: registered.user.id },
+      select: { email: true, emailVerifiedAt: true },
+    });
+    expect(subject.email).toBe(nextEmail);
+    expect(subject.emailVerifiedAt).toBeNull();
+    expect(
+      await prisma.emailVerification.count({
+        where: { userId: registered.user.id },
+      }),
+    ).toBe(0);
+    expect(
+      await prisma.auditRecord.count({
+        where: {
+          targetId: registered.user.id,
+          action: 'auth.email.verified',
+        },
+      }),
+    ).toBe(0);
+    const freshToken = randomBytes(32).toString('hex');
+    await prisma.emailVerification.create({
+      data: {
+        userId: registered.user.id,
+        tokenHash: createHash('sha256').update(freshToken).digest('hex'),
+        expiresAt: new Date(Date.now() + 60_000),
+      },
+    });
+    await verify(freshToken)
+      .expect(200)
+      .expect({ data: { verifyEmail: { success: true } } });
+    expect(
+      await prisma.auditRecord.count({
+        where: {
+          targetId: registered.user.id,
+          action: 'auth.email.verified',
+        },
+      }),
+    ).toBe(1);
+  });
+
   it('persists credential-free recovery and verification delivery jobs through real BullMQ', async () => {
     const suffix = randomBytes(8).toString('hex');
     const email = `delivery-${suffix}@dss.test`;

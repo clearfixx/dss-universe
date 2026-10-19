@@ -13,6 +13,7 @@
  * • guards transitions against current authoritative account state;
  * • atomically invalidates sessions and records attributable audit evidence;
  * • increments access version when credentials change.
+ * • invalidates obsolete verification proof when the email destination changes.
  *
  * 🏗️ Architecture:
  * Auth infrastructure adapter over the transitional shared users table.
@@ -129,6 +130,7 @@ export class PrismaAccountCredentialsRepository implements AccountCredentialsRep
         authVersion: { increment: 1 },
       },
       'user.account.email_changed',
+      true,
     );
   }
 
@@ -140,6 +142,7 @@ export class PrismaAccountCredentialsRepository implements AccountCredentialsRep
         authVersion: { increment: 1 },
       },
       'user.account.password_changed',
+      false,
     );
   }
 
@@ -147,6 +150,7 @@ export class PrismaAccountCredentialsRepository implements AccountCredentialsRep
     subjectId: string,
     data: Prisma.UserUpdateInput,
     action: string,
+    invalidateEmailVerification: boolean,
   ): Promise<void> {
     await this.prisma.$transaction(async (transaction) => {
       const now = new Date();
@@ -155,6 +159,13 @@ export class PrismaAccountCredentialsRepository implements AccountCredentialsRep
         data: { ...data, refreshTokenHash: null },
         select: { id: true },
       });
+      // UPDATE holds the subject row lock also used by issuance and consume.
+      // Old destination proof must disappear before that lock is released.
+      if (invalidateEmailVerification) {
+        await transaction.emailVerification.deleteMany({
+          where: { userId: subjectId },
+        });
+      }
       await transaction.session.updateMany({
         where: { userId: subjectId, revokedAt: null },
         data: { revokedAt: now },

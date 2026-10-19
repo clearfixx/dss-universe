@@ -32,6 +32,7 @@ describe('PrismaAccountCredentialsRepository', () => {
   const transaction = {
     user: { update: jest.fn<Promise<{ id: string }>, [unknown]>() },
     session: { updateMany: jest.fn() },
+    emailVerification: { deleteMany: jest.fn() },
   };
   const append = jest.fn();
   const findUnique = jest.fn<Promise<AccountCredentials | null>, [unknown]>();
@@ -52,6 +53,7 @@ describe('PrismaAccountCredentialsRepository', () => {
     runTransaction.mockImplementation((operation) => operation(transaction));
     transaction.user.update.mockResolvedValue({ id: 'subject-1' });
     transaction.session.updateMany.mockResolvedValue({ count: 2 });
+    transaction.emailVerification.deleteMany.mockResolvedValue({ count: 1 });
     append.mockResolvedValue('audit-1');
   });
 
@@ -192,6 +194,18 @@ describe('PrismaAccountCredentialsRepository', () => {
         targetType: 'User',
         targetId: 'subject-1',
       });
+      if (kind === 'email') {
+        expect(transaction.emailVerification.deleteMany).toHaveBeenCalledWith({
+          where: { userId: 'subject-1' },
+        });
+        expect(
+          transaction.user.update.mock.invocationCallOrder[0],
+        ).toBeLessThan(
+          transaction.emailVerification.deleteMany.mock.invocationCallOrder[0],
+        );
+      } else {
+        expect(transaction.emailVerification.deleteMany).not.toHaveBeenCalled();
+      }
     },
   );
 
@@ -209,6 +223,16 @@ describe('PrismaAccountCredentialsRepository', () => {
     await expect(
       repository.changeEmail('subject-1', 'next@dss.test'),
     ).rejects.toBe(error);
+    expect(append).not.toHaveBeenCalled();
+  });
+
+  it('stops session and audit writes if verification invalidation fails', async () => {
+    const error = new Error('verification invalidation failed');
+    transaction.emailVerification.deleteMany.mockRejectedValueOnce(error);
+    await expect(
+      repository.changeEmail('subject-1', 'next@dss.test'),
+    ).rejects.toBe(error);
+    expect(transaction.session.updateMany).not.toHaveBeenCalled();
     expect(append).not.toHaveBeenCalled();
   });
 

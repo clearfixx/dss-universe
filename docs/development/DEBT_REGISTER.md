@@ -1223,7 +1223,7 @@ reads. Possible tombstone projection/migration needs approval before correction;
 current audit implements nothing. See
 [consumer lifecycle evidence](../audits/D4_EVENT_DATA_RETENTION_REVIEW.md).
 
-### DEBT-068 — Old verification token confirms changed email (High, ACCEPTED, separate correction approved)
+### DEBT-068 — Old verification token confirms changed email (High, ACCEPTED, correction implemented; acceptance pending)
 
 Date: 2026-10-19. Actual Auth adapters in a unique PostgreSQL schema reproduce:
 issue a synthetic verification digest for the old email, run the real
@@ -1239,3 +1239,13 @@ verification credentials during address change, reconcile locking with Worker
 issuance/consume, and add deterministic DB/HTTP regressions. Preserve public API
 and existing recovery/session rules; no runtime fix is included in the audit.
 [Evidence and scope](../audits/D4_AUTH_LIFECYCLE_OPERATION_REVIEW.md).
+
+The separate correction is locally implemented: email change removes old proof
+under the existing subject lock in the same transaction; password-only change
+preserves it. Focused regressions pass 26/26, including real Worker issuance and
+consume interleavings with observed locks. Full API1157/1157 and migrated
+E2E508/509 (only inherited DEBT-045) pass the new security assertions; App27/27.
+Architecture/lint/types/Prisma/build and adjacent suites pass. Format/audit,
+DEBT-044 generated drift and retained handles remain red/unresolved. CI and
+review acceptance remain pending; this entry is not marked resolved. See
+[correction evidence](../audits/DEBT_068_VERIFICATION_DESTINATION_FIX.md).

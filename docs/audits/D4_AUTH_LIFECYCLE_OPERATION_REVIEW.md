@@ -146,6 +146,11 @@ No independent review, CI acceptance or broad green baseline is claimed.
 
 ## Remaining acceptance
 
+Separate approved DEBT-068 correction follow-up:
+[destination-proof invalidation evidence](DEBT_068_VERIFICATION_DESTINATION_FIX.md).
+The characterization above describes this report's parent source, not an
+assertion that the separately corrected current runtime still accepts old proof.
+
 Reviewing locks does not prove every race, refresh replay policy or all
 credential transitions. Remaining D4 ownership reconciliation, D4.5 acceptance,
 D5–D7, the separate stack-boundary audit and Phase 11 brainstorm stay open.
