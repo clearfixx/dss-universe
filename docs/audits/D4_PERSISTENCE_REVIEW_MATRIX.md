@@ -304,3 +304,12 @@ create/read, scalar evidence and explicitly closed scopes are traced. Fresh unit
 57/57 pass; historical parent Content Boundaries E2E 9/9 is not a current rerun.
 Prisma presentation enums, zero future counters and unaudited policy creation
 remain limits, not silently certified or fixed behavior.
+
+Selected producer/retention follow-up at `8acbb38`:
+[event data review](D4_EVENT_DATA_RETENTION_REVIEW.md) traces Bookmark/Reaction/
+Reputation payload construction, two generic evidence helpers and current Worker/
+DLQ/operator paths. Fresh Worker tests 46/46 and synthetic Bookmark projector
+probe (zero query calls, doubled pool) pass. This does not certify generic helper
+callers or all 17 lexical producer candidates. Full payload retention is internal
+data handling, not automatically public disclosure; remaining policy/lifecycle
+coverage is explicitly open.
