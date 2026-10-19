@@ -1009,3 +1009,16 @@ required verified PID-only cleanup after zero DB clients/fixture schemas.
 GraphQL check remains red for DEBT-044; generated side effects restored exactly.
 No full-green, CI/review/owner acceptance or debt closure is claimed.
 Debt remains open. [Design and current evidence](DEBT_065_CLAIM_FENCING_DESIGN.md).
+
+### DEBT-066 — Editor malformed/deep document validation throws runtime errors (Medium, OPEN, correction approval requested)
+
+Actual EditorService normalization of synthetic null child, object content and
+object marks throws TypeError instead of controlled validation rejection. A
+408108-byte valid doc-root JSON with 12000 nested blockquotes throws RangeError
+before aggregate node-limit rejection. First three reproduced through current
+API source and build; depth through existing build. No HTTP/process-crash or
+data-disclosure claim. Shared validator's unchecked secondary traversal/marks and
+unbounded recursion require a separately agreed depth policy and shared/API/HTTP
+regressions; current audit changes no runtime behavior. Approval requested for a
+separate pre-Phase-11 package. Existing 37 Editor unit cases pass but omit these
+inputs. [Evidence and limits](../audits/D4_EDITOR_OPERATION_REVIEW.md).

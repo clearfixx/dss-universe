@@ -289,3 +289,11 @@ service and wildcard exports remain D4.4 work. Owner seed includes ai.editor.use
 via the complete permission list; ordinary default grants and live assignments
 must not be conflated. Greeting/poster product scope is not implemented by this
 text foundation. Full D4 remains partial; no new runtime fix is included.
+
+Editor follow-up at `c21d80b`: all 22 runtime module sources are traced in
+[Editor operation review](D4_EDITOR_OPERATION_REVIEW.md). No module DB writes or
+reads; gate decisions remain root-composed, private renderer/highlighter and
+named public projection tokens remain separated. Presentation's Prisma enum is
+still D4.4 work. Existing API Editor tests pass 37/37; malformed nested JSON and
+depth service probes confirm DEBT-066, not an implemented correction. This does
+not certify every host's saved-document policy, shared package or frontend.
