@@ -11,6 +11,7 @@
  * 🧠 Responsibilities:
  * • reads authored API source and the baseline;
  * • separates report-only diagnostics from inventory drift failure.
+ * • includes a compiler-resolved local file graph over authored API source.
  *
  * 🏗️ Architecture:
  * Read-only tooling entry point; never rewrites the baseline automatically.
@@ -25,6 +26,10 @@ import { readdir, readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { join, relative } from "node:path";
 import { analyzeBoundaries, compareBaseline } from "./analyze-boundaries.mjs";
+import {
+  analyzeFileGraph,
+  parseGraphCompilerOptions,
+} from "./analyze-file-graph.mjs";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const args = new Set(process.argv.slice(2));
@@ -46,12 +51,19 @@ async function walk(directory) {
   }
   return files;
 }
-const files = [
-  ...(await walk(join(root, "apps/api/src/modules"))),
-  ...(await walk(join(root, "apps/api/src/core"))),
-  ...(await walk(join(root, "apps/api/src/composition"))),
-];
-const findings = analyzeBoundaries(files);
+const files = await walk(join(root, "apps/api/src"));
+const compilerOptions = parseGraphCompilerOptions(
+  await readFile(join(root, "apps/api/tsconfig.json"), "utf8"),
+  join(root, "apps/api"),
+);
+const findings = [
+  ...analyzeBoundaries(
+    files.filter(({ path }) =>
+      /^apps\/api\/src\/(modules|core|composition)\//.test(path),
+    ),
+  ),
+  ...analyzeFileGraph(files, compilerOptions, root),
+].sort((a, b) => a.id.localeCompare(b.id, "en"));
 // New technical entries are blocking even while the historical inventory remains report-only.
 if (
   findings.some(
@@ -62,11 +74,19 @@ if (
 }
 if (args.has("--json")) {
   console.log(
-    JSON.stringify({ version: 1, mode: "report-only", findings }, null, 2),
+    JSON.stringify(
+      {
+        version: 1,
+        mode: args.has("--check-baseline") ? "check-baseline" : "report-only",
+        findings,
+      },
+      null,
+      2,
+    ),
   );
 } else {
   console.log(
-    `Architecture inventory (REPORT ONLY): ${findings.length} findings; NOT a compliance certificate.`,
+    `Architecture inventory (${args.has("--check-baseline") ? "BASELINE CHECK" : "REPORT ONLY"}): ${findings.length} findings; NOT a compliance certificate.`,
   );
   for (const finding of findings)
     console.log(

@@ -26,6 +26,15 @@ Do not invent frontend design, new scoring formulas, owner policy or Phase 11 fl
 
 ## Implementation sequence
 
+API file-graph increment (2026-10-19): compiler-resolved local file cycles now
+cover all authored API src, while existing feature-layer rules retain their scope.
+The real CLI first blocks the inherited Core module/barrel cycle; ordered loaders
+move into their own Core file to break it without public/registration changes.
+Architecture138/138, final-source API1143/1143 and focused config5/5 pass.
+Root lint/types/Prisma/build pass; full E2E/GraphQL/publication/acceptance pending.
+See [evidence](../audits/D4_5_API_FILE_GRAPH_CONFIG_CYCLE.md).
+This does not complete D4.3/D4.5 or certify runtime DI/other workspaces.
+
 Blocking-gate increment (2026-10-19): mandatory architecture command now invokes
 the frozen inventory check; standalone reporting remains diagnostic. Three new
 regressions give 2 PASS/1 FAIL before; four more negative/report CLI fixtures

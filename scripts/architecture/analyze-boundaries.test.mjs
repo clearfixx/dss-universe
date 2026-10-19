@@ -53,6 +53,7 @@ const {
   isElementAccessExpression,
   isPropertyAssignment,
   isImportDeclaration,
+  isNamedImports,
   isImportTypeNode,
   isLiteralTypeNode,
   isStringLiteralLike,
@@ -295,9 +296,12 @@ for (const [entry, expected] of [
 
 test("Core config preserves the existing ordered namespace registrations", () => {
   const source = createSourceFile(
-    "index.ts",
+    "config-loaders.ts",
     readFileSync(
-      new URL("../../apps/api/src/core/config/index.ts", import.meta.url),
+      new URL(
+        "../../apps/api/src/core/config/config-loaders.ts",
+        import.meta.url,
+      ),
       "utf8",
     ),
     ScriptTarget.Latest,
@@ -317,6 +321,37 @@ test("Core config preserves the existing ordered namespace registrations", () =>
       "openaiConfig",
       "redisConfig",
     ],
+  );
+});
+
+test("Core config module reads ordered loaders without importing its public barrel", () => {
+  const source = createSourceFile(
+    "configuration.module.ts",
+    readFileSync(
+      new URL(
+        "../../apps/api/src/core/config/configuration.module.ts",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+    ScriptTarget.Latest,
+    true,
+  );
+  const imports = source.statements
+    .filter(isImportDeclaration)
+    .filter(
+      (node) =>
+        node.importClause?.namedBindings &&
+        isNamedImports(node.importClause.namedBindings),
+    )
+    .filter((node) =>
+      node.importClause.namedBindings.elements.some(
+        (element) => element.name.text === "configs",
+      ),
+    );
+  deepEqual(
+    imports.map((node) => node.moduleSpecifier.text),
+    ["@api/core/config/config-loaders"],
   );
 });
 
@@ -1649,11 +1684,25 @@ function runInventoryFixture(source, baselineFindings, args) {
     equal(cli.split(importSpecifier).length, 2);
     writeFileSync(
       join(fixtureRoot, "scripts/architecture/report-boundaries.mjs"),
-      cli.replace(
-        importSpecifier,
-        JSON.stringify(
-          new URL("./analyze-boundaries.mjs", import.meta.url).href,
+      cli
+        .replace(
+          importSpecifier,
+          JSON.stringify(
+            new URL("./analyze-boundaries.mjs", import.meta.url).href,
+          ),
+        )
+        .replace(
+          '"./analyze-file-graph.mjs"',
+          JSON.stringify(
+            new URL("./analyze-file-graph.mjs", import.meta.url).href,
+          ),
         ),
+    );
+    writeFileSync(
+      join(fixtureRoot, "apps/api/tsconfig.json"),
+      readFileSync(
+        new URL("../../apps/api/tsconfig.json", import.meta.url),
+        "utf8",
       ),
     );
     writeFileSync(join(fixtureRoot, path), source);
@@ -1701,6 +1750,17 @@ test("CLI blocks removed inventory entries until explicitly reviewed", () => {
   ok(result.stderr.includes("Baseline drift: 0 added, 1 removed"));
 });
 
+test("CLI blocks local file cycles outside the feature-module cycle graph", () => {
+  const result = runInventoryFixture(
+    "import './login';",
+    [],
+    ["--check-baseline"],
+  );
+  equal(result.status, 1, result.stderr);
+  ok(result.stderr.includes("file-cycle"));
+  ok(result.stderr.includes("Baseline drift: 1 added, 0 removed"));
+});
+
 test("CLI report-only mode diagnoses ordinary violations without failing", () => {
   const result = runInventoryFixture(
     "import '@prisma/client';",
@@ -1709,6 +1769,13 @@ test("CLI report-only mode diagnoses ordinary violations without failing", () =>
   );
   equal(result.status, 0, result.stderr);
   equal(JSON.parse(result.stdout).findings.length, 1);
+  equal(JSON.parse(result.stdout).mode, "report-only");
+});
+
+test("CLI JSON explicitly identifies the blocking baseline mode", () => {
+  const result = runInventoryFixture("", [], ["--json", "--check-baseline"]);
+  equal(result.status, 0, result.stderr);
+  equal(JSON.parse(result.stdout).mode, "check-baseline");
 });
 
 test("CLI still blocks technical entry violations even in report-only mode", () => {
