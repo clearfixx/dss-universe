@@ -29,6 +29,13 @@ remaining debt is not waived. Root/sibling gates pass except inherited global
 format/audit; serial full E2E and GraphQL/CI/acceptance pending. See
 [AI Core surface evidence](../audits/D4_4_AI_CORE_EXPLICIT_SURFACE.md).
 
+Final local D4.4 AI Core E2E: 502 PASS/1 FAIL of 503, zero skips, App 26/26.
+The failure is DEBT-059 schema.gql UNKNOWN/open during News initialization;
+that case does not reach the known DEBT-045 assertion, so no fix is claimed.
+Jest terminates normally with exit 1, no manual handle cleanup; zero DB clients
+and fixture schemas afterward. GraphQL remains DEBT-044 red and own generated
+side effects restored. CI/review/owner acceptance and full D4 remain open.
+
 2026-10-18 persistence audit: DEBT-062 is confirmed by actual service/DB
 concurrency (cap 1, two different events both count zero and award); owner approved
 a separate user/rule/UTC-day atomic correction. Current packet only characterizes

@@ -42,3 +42,23 @@ compose project/service/tmpfs binding, zero DB clients; recreated only that
 disposable service, verified empty public schema, applied migrations without
 seed. Dev5433 and persistent test5434 untouched. Full E2E is running separately;
 GraphQL check waits until it is terminal. No final full-gate acceptance yet.
+
+## Final local gate evidence
+
+Serial full E2E: **502 PASS / 1 FAIL / 0 skipped of 503**, 48 suites,
+386.619s. App suite passes 26/26, exercising actual AppModule startup/schema and
+preview flow with the private AI wiring retained. No new live AI inference or
+permission test is claimed. The sole failure is News foundation initialization:
+Nest GraphQL FileSystemHelper cannot open schema.gql (UNKNOWN), existing
+DEBT-059 recurrence. That case does not reach its normal assertions; therefore
+the inherited DEBT-045 viewCount mismatch is not shown fixed by this run.
+
+Jest exits normally with code 1 for the failure, without retained-handle message
+or manual process termination. Afterward zero DB clients and api_boundary schemas
+verified. No repeated E2E run, timeout/assertion change or host configuration edit.
+
+GraphQL generation succeeds, but consistency check remains red for DEBT-044's
+generated barrel comment/newline. Restored only that own generation side effect;
+git diff confirms schema and generated outputs unchanged. Full format/audit and
+E2E/GraphQL are not green; local implementation is not CI/review/owner acceptance.
+Remaining D4/D5–D7/stack audit/Phase 11 gates are unchanged.
