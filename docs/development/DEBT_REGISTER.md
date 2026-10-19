@@ -1030,3 +1030,17 @@ Proposed boundary and acceptance matrix are in
 [DEBT-066 design](DEBT_066_EDITOR_VALIDATION_DESIGN.md): depth 64 with doc root 0,
 no content truncation, compatibility assessment before implementation. Exact
 boundary approval is pending; no runtime fix is claimed.
+
+### DEBT-067 — Wall Activity retraction before creation is lost (Medium, OPEN, separate correction approval requested)
+
+Actual current Worker projector with migrated disposable PostgreSQL: deliver
+synthetic Wall retraction at 01:01 before the older creation at 01:00. Retraction
+has no existing row to update; later create inserts one active projection with
+retractedAt NULL. Verified one active row, then ROLLBACK and zero owned rows.
+No dev mutation, real queue reordering, post-text leak or HTTP disclosure proven.
+Activity repository treats that row as a member candidate; transport maps only
+IDs/action/ranking/time, not body. Separate design should preserve retraction
+evidence across order/replay and retain idempotency without foreign aggregate
+reads. Possible tombstone projection/migration needs approval before correction;
+current audit implements nothing. See
+[consumer lifecycle evidence](../audits/D4_EVENT_DATA_RETENTION_REVIEW.md).

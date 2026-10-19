@@ -124,3 +124,44 @@ operation coverage and D4.4/D4.5 rather than re-reading these same payload
 definitions. No event keys were removed/renamed, versions changed or historical
 payload rewritten. Fresh Markdown checks required; prior Worker 46-test result
 is from this unchanged-runtime packet, not a new full runtime gate here.
+
+## Follow-up: consumer acknowledgment and lifecycle evidence
+
+Read complete shared jobs index (validation, processor, marker interface),
+PostgresProcessedEventStore and Activity repository/feed service/domain type/
+GraphQL resolver/model. Processor validates minimal event identity/version,
+checks marker, invokes handler, then writes marker. These are distinct operations;
+main's Activity handler is not a generic dispatch registry for other features.
+Activity insert uses source-event conflict protection; Wall retraction updates
+existing subject rows only. Neither provides a persisted retraction fact when
+the create projection does not yet exist.
+
+Two actual PostgreSQL probes used only verified loopback disposable container
+`dss-universe-debt053-check-postgres-test-1` at 5435/dss_test, with real current
+Worker classes/shared processor and synthetic IDs. All queries ran through one
+client inside BEGIN/ROLLBACK; no schema/reset/migration or dev DB change.
+
+| Probe                                                                     | Actual result                                                                                                   | Limit                                                                                                       |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Wall retract at 01:01 then older create at 01:00                          | one row with retractedAt NULL after both calls; zero owned rows after rollback                                  | Confirms DEBT-067 order sensitivity, not actual live queue reordering or HTTP leak                          |
+| Points awarded event through current Activity handler + real marker store | first duplicate=false, repeat duplicate=true, one marker, zero Activity rows; zero owned markers after rollback | Confirms no-op acknowledgment versus a domain effect; not Points/Levels/Achievements delivery certification |
+
+Activity reads filter retractedAt NULL and PUBLIC/MEMBERS based on viewer; a
+resurrected Wall row is therefore an eligible member-feed candidate. GraphQL maps
+only IDs/action/time/ranking fields, not metadata/body. No stored post text or
+public HTTP disclosure was demonstrated. DEBT-067 requires a separately approved
+ordering/replay design; do not add foreign Wall repository reads inside Activity
+or assume queue FIFO solves retries/multiple consumers.
+
+The no-op marker observation reinforces existing DEBT-007 and does not constitute
+a new defect per ignored event. Shared hasProcessed/handler/mark calls are not
+one DB transaction; reviewed supported projections have their own idempotency,
+not proof of arbitrary handler exactly-once execution. No new consumer registered.
+Bounded source retention search finds retained integration/DLQ jobs and no cleanup
+in these Core/Worker sources; no whole-installation retention policy certified.
+
+No runtime correction or passing automated regression for DEBT-067 is added by
+these ad-hoc service/DB probes. Source discovery, test evidence, actual DB effects
+and live end-to-end behavior remain separate levels of evidence. Consumer coverage
+for future handlers, News visibility/retraction lifecycle and operational
+retention/access decisions remain open before broad D4 acceptance.

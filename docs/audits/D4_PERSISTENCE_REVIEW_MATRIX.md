@@ -322,3 +322,10 @@ Reputation/Comment writer probes confirm differing reason placement through
 doubled evidence boundaries, not live public disclosure or transaction proof.
 Consumer/lifecycle/retention and full owner-operation reconciliation remain open;
 the lexical producer count is not a whole-project completion measure.
+
+Actual disposable DB consumer follow-up confirms DEBT-067 (Wall retract-before-
+older-create leaves active Activity row) and separately shows a real no-op
+Activity handler can write a processed marker for a Points event. Both probes
+fully rolled back; no live queue/HTTP leak or complete gamification delivery
+claimed. See the same event report; separate DEBT-067 correction approval is
+requested and existing DEBT-007 remains open.
