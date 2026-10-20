@@ -337,7 +337,12 @@ inventory is 832 non-test API/Worker sources, not a completion percentage.
 The [Media/Users foundation](../audits/D4_MEDIA_PROFILE_ASSET_FOUNDATION.md)
 on draft PR #61 adds baseline characterization only. Its separate runtime
 transfer is owner-approved after foundation verification; it is not implemented
-by the design/tests packet. Notifications surface reconciliation and remaining
+by the design/tests packet. The separate
+[runtime transfer](../audits/D4_MEDIA_PROFILE_ASSET_RUNTIME.md) is now locally
+implemented on `debt/d4-media-profile-asset-runtime`: Media keeps its algorithms,
+Users supplies binding absence, root preserves the existing transaction scope.
+API coverage1168/1168 and architecture140/140 pass; full runtime verification,
+review and CI acceptance remain open. Notifications surface reconciliation and remaining
 operation coverage, D4 acceptance, D5–D7, stack audit and Phase 11 brainstorm
 remain required. No inherited red gate is waived.
 

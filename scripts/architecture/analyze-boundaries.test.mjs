@@ -664,6 +664,8 @@ for (const [moduleName, expected] of [
     "media",
     [
       "MediaModule",
+      "MEDIA_LIBRARY_PERSISTENCE",
+      "MediaLibraryPersistence",
       "MEDIA_PUBLIC_ATTACHMENT_READER",
       "MediaPublicAttachmentReader",
       "MediaPublicAttachment",
@@ -957,6 +959,7 @@ test("Leaderboard root assembly neither copies owner table algorithms nor introd
 
 test("owners publish only the intended guarded technical symbols", () => {
   for (const [moduleName, expected] of [
+    ["media", ["PrismaMediaLibraryOperations"]],
     [
       "reputation",
       [
@@ -986,6 +989,7 @@ test("owners publish only the intended guarded technical symbols", () => {
         "MentionProfileCandidate",
         "leaderboardProfileColumns",
         "registrationProfileData",
+        "unusedProfileAssetWhere",
       ],
     ],
     [
@@ -1067,6 +1071,28 @@ test("owners publish only the intended guarded technical symbols", () => {
       );
     }
     deepEqual(names.sort(), [...expected].sort());
+  }
+});
+
+test("Media library technical entries reject business and foreign feature consumers", () => {
+  for (const [owner, symbol] of [
+    ["media", "PrismaMediaLibraryOperations"],
+    ["users", "unusedProfileAssetWhere"],
+  ]) {
+    for (const consumer of [
+      `apps/api/src/modules/${owner}/application/library.ts`,
+      "apps/api/src/modules/news/infrastructure/library.ts",
+      "apps/api/src/composition/media-library/application/library.ts",
+    ]) {
+      ok(
+        analyzeBoundaries([
+          {
+            path: consumer,
+            source: `import { ${symbol} } from '@api/modules/${owner}/infrastructure';`,
+          },
+        ]).some(({ rule }) => rule === "infrastructure-entry-business-import"),
+      );
+    }
   }
 });
 

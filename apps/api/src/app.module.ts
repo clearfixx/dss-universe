@@ -79,6 +79,7 @@ import { IamTransactionCompositionModule } from './composition/iam-transactions/
 import { IamSubjectReadCompositionModule } from './composition/iam-subject-reads/iam-subject-read-composition.module';
 import { AuthorizationReadCompositionModule } from './composition/authorization-reads/authorization-read-composition.module';
 import { LeaderboardReadCompositionModule } from './composition/leaderboards/leaderboard-read-composition.module';
+import { MediaLibraryCompositionModule } from './composition/media-library/media-library-composition.module';
 import { GamificationIntegrationModule } from './composition/gamification/gamification-integration.module';
 import { ReputationIntegrationModule } from './composition/reputation/reputation-integration.module';
 import { ProfileAssetCompositionModule } from './composition/profile-assets/profile-asset-composition.module';
@@ -126,6 +127,7 @@ import { UsersModule } from './modules/users/users.module';
     IamSubjectReadCompositionModule,
     AuthorizationReadCompositionModule,
     LeaderboardReadCompositionModule,
+    MediaLibraryCompositionModule,
     GamificationIntegrationModule,
     ReputationIntegrationModule,
     ProfileAssetCompositionModule,

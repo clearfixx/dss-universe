@@ -13,7 +13,7 @@
  * • verifies orphan reads, cleanup claims and audit rollback.
  *
  * 🏗️ Architecture:
- * Opt-in infrastructure integration tests; production adapters are unchanged.
+ * Opt-in infrastructure tests exercising the real root-composed Media port.
  *
  * ⚠️ Important:
  * Only this suite's schema is dropped. This is not a concurrent-attachment proof.
@@ -28,6 +28,7 @@ import { PrismaService } from '@api/core/database';
 import { AuditWriterService } from '@api/core/audit';
 import { AuditRedactionService } from '@api/core/audit/services/audit-redaction.service';
 import { PrismaMediaRepository } from './prisma-media.repository';
+import { PrismaProfileAwareMediaLibrary } from '@api/composition/media-library/infrastructure/prisma-profile-aware-media-library';
 
 const dbSuite = process.env.RUN_IAM_DB_TESTS === '1' ? describe : describe.skip;
 dbSuite('Media profile-asset PostgreSQL characterization', () => {
@@ -39,7 +40,11 @@ dbSuite('Media profile-asset PostgreSQL characterization', () => {
   });
   const prisma = new PrismaService({ adapter: new PrismaPg(pool, { schema }) });
   const audit = new AuditWriterService(new AuditRedactionService());
-  const repository = new PrismaMediaRepository(prisma, audit);
+  const repository = new PrismaMediaRepository(
+    prisma,
+    audit,
+    new PrismaProfileAwareMediaLibrary(prisma, audit),
+  );
   const cutoff = new Date('2026-01-01T00:00:00Z');
 
   beforeAll(async () => {

@@ -13,6 +13,7 @@
  */
 export { leaderboardProfileColumns } from './infrastructure/repositories/leaderboard-profile.sql';
 export { registrationProfileData } from './infrastructure/repositories/prisma-registration-profile.shape';
+export { unusedProfileAssetWhere } from './infrastructure/repositories/unused-profile-asset.where';
 export { PrismaPublicProfileReader } from './infrastructure/repositories/prisma-public-profile.reader';
 export { PrismaTransactionalProfileExistenceReader } from './infrastructure/repositories/prisma-transactional-profile-existence.reader';
 export {

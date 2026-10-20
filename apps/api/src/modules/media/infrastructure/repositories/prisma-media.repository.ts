@@ -12,12 +12,13 @@
  * • persists and loads Media domain records;
  * • scopes owner listings away from deleted records;
  * • exposes active-reference counts for safe deletion workflows.
+ * • delegates profile-aware library reads and claims to a narrow composed port.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 
 import { PrismaService } from '@api/core/database';
@@ -26,10 +27,13 @@ import { AuditWriterService } from '@api/core/audit';
 import { MediaStatus } from '../../domain/enums/media-status.enum';
 import { MediaStorageProvider } from '../../domain/enums/media-storage-provider.enum';
 import { MediaVisibility } from '../../domain/enums/media-visibility.enum';
-import type { MediaCleanupCandidate } from '../../domain/types/media-cleanup-candidate.type';
 import type { MediaRepository } from '../../domain/repositories/media.repository.interface';
 import type { CreateMediaInput } from '../../domain/types/create-media.input';
 import type { UpdateMediaInput } from '../../domain/types/update-media.input';
+import {
+  MEDIA_LIBRARY_PERSISTENCE,
+  type MediaLibraryPersistence,
+} from '../../contracts/media-library-persistence.port';
 import type { MediaLibraryQuery } from '../../domain/types/media-library-query.type';
 import { PrismaMediaMapper } from '../mappers/prisma-media.mapper';
 
@@ -38,6 +42,8 @@ export class PrismaMediaRepository implements MediaRepository {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditWriterService,
+    @Inject(MEDIA_LIBRARY_PERSISTENCE)
+    private readonly library: MediaLibraryPersistence,
   ) {}
 
   async create(input: CreateMediaInput) {
@@ -71,97 +77,11 @@ export class PrismaMediaRepository implements MediaRepository {
     return records.map((record) => PrismaMediaMapper.toDomain(record));
   }
 
-  async browseLibrary(query: MediaLibraryQuery) {
-    const where: Prisma.MediaWhereInput = {
-      ...(query.search
-        ? {
-            OR: [
-              {
-                originalFilename: {
-                  contains: query.search,
-                  mode: 'insensitive',
-                },
-              },
-              { mimeType: { contains: query.search, mode: 'insensitive' } },
-              { checksum: { contains: query.search, mode: 'insensitive' } },
-            ],
-          }
-        : {}),
-      ...(query.ownerId ? { ownerId: query.ownerId } : {}),
-      ...(query.status ? { status: query.status } : {}),
-      ...(query.kind ? { kind: query.kind } : {}),
-      ...(query.visibility ? { visibility: query.visibility } : {}),
-      ...(query.orphaned
-        ? {
-            references: { none: { removedAt: null } },
-            avatarFor: null,
-            coverFor: null,
-          }
-        : {}),
-      ...(query.cursor
-        ? {
-            AND: [
-              {
-                OR: [
-                  { createdAt: { lt: query.cursor.createdAt } },
-                  {
-                    createdAt: query.cursor.createdAt,
-                    id: { lt: query.cursor.id },
-                  },
-                ],
-              },
-            ],
-          }
-        : {}),
-    };
-    const records = await this.prisma.media.findMany({
-      where,
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-      take: query.first + 1,
-    });
-    const hasNextPage = records.length > query.first;
-    return {
-      items: records
-        .slice(0, query.first)
-        .map((record) => PrismaMediaMapper.toDomain(record)),
-      hasNextPage,
-    };
+  browseLibrary(query: MediaLibraryQuery) {
+    return this.library.browseLibrary(query);
   }
-
-  async getLibraryMetrics() {
-    const [media, variants, orphanedMedia, failedMedia, quarantinedMedia] =
-      await Promise.all([
-        this.prisma.media.aggregate({
-          where: { status: { not: MediaStatus.DELETED } },
-          _count: { _all: true },
-          _sum: { size: true },
-        }),
-        this.prisma.mediaVariant.aggregate({
-          where: { media: { status: { not: MediaStatus.DELETED } } },
-          _sum: { size: true },
-        }),
-        this.prisma.media.count({
-          where: {
-            status: { not: MediaStatus.DELETED },
-            references: { none: { removedAt: null } },
-            avatarFor: null,
-            coverFor: null,
-          },
-        }),
-        this.prisma.media.count({ where: { status: MediaStatus.FAILED } }),
-        this.prisma.media.count({ where: { status: MediaStatus.QUARANTINED } }),
-      ]);
-    const originalBytes = media._sum.size ?? 0;
-    const variantBytes = variants._sum.size ?? 0;
-    return {
-      totalMedia: media._count._all,
-      originalBytes,
-      variantBytes,
-      totalBytes: originalBytes + variantBytes,
-      orphanedMedia,
-      failedMedia,
-      quarantinedMedia,
-    };
+  getLibraryMetrics() {
+    return this.library.getLibraryMetrics();
   }
 
   async update(id: string, input: UpdateMediaInput) {
@@ -274,75 +194,7 @@ export class PrismaMediaRepository implements MediaRepository {
   }
 
   claimCleanupCandidates(olderThan: Date, limit: number) {
-    return this.prisma.$transaction(
-      async (transaction) => {
-        const candidates = await transaction.media.findMany({
-          where: {
-            OR: [
-              {
-                status: {
-                  in: [
-                    MediaStatus.READY,
-                    MediaStatus.FAILED,
-                    MediaStatus.REJECTED,
-                  ],
-                },
-                createdAt: { lt: olderThan },
-              },
-              { status: MediaStatus.DELETING },
-            ],
-            references: { none: { removedAt: null } },
-            avatarFor: null,
-            coverFor: null,
-          },
-          include: {
-            variants: { select: { storageKey: true } },
-          },
-          orderBy: { createdAt: 'asc' },
-          take: limit,
-        });
-
-        const claimed: MediaCleanupCandidate[] = [];
-        for (const candidate of candidates) {
-          const result = await transaction.media.updateMany({
-            where: {
-              id: candidate.id,
-              status: {
-                in: [
-                  MediaStatus.READY,
-                  MediaStatus.FAILED,
-                  MediaStatus.REJECTED,
-                  MediaStatus.DELETING,
-                ],
-              },
-              references: { none: { removedAt: null } },
-              avatarFor: null,
-              coverFor: null,
-            },
-            data: { status: MediaStatus.DELETING },
-          });
-          if (result.count !== 1) {
-            continue;
-          }
-          await this.audit.append(transaction, {
-            action: 'media.cleanup.claimed',
-            actorType: 'SYSTEM',
-            targetType: 'Media',
-            targetId: candidate.id,
-          });
-          claimed.push({
-            mediaId: candidate.id,
-            storageKeys: [
-              candidate.storageKey,
-              ...this.temporaryStorageKeys(candidate.metadata),
-              ...candidate.variants.map(({ storageKey }) => storageKey),
-            ],
-          });
-        }
-        return claimed;
-      },
-      { isolationLevel: 'Serializable' },
-    );
+    return this.library.claimCleanupCandidates(olderThan, limit);
   }
 
   async completeCleanup(mediaId: string): Promise<void> {
@@ -471,19 +323,5 @@ export class PrismaMediaRepository implements MediaRepository {
       });
       return PrismaMediaMapper.toDomain(record);
     });
-  }
-
-  private temporaryStorageKeys(metadata: Prisma.JsonValue): string[] {
-    if (
-      metadata === null ||
-      Array.isArray(metadata) ||
-      typeof metadata !== 'object'
-    ) {
-      return [];
-    }
-    const temporaryKey = metadata.temporaryKey;
-    return typeof temporaryKey === 'string' && temporaryKey.length > 0
-      ? [temporaryKey]
-      : [];
   }
 }

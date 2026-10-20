@@ -13,6 +13,10 @@
  */
 export { MediaModule } from './media.module';
 export {
+  MEDIA_LIBRARY_PERSISTENCE,
+  type MediaLibraryPersistence,
+} from './contracts/media-library-persistence.port';
+export {
   MEDIA_PUBLIC_ATTACHMENT_READER,
   type MediaPublicAttachmentReader,
   type MediaPublicAttachment,

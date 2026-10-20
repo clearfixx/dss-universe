@@ -21,6 +21,17 @@ active package safe and buildable.
 
 ## Register
 
+2026-10-20 separate Media/Users runtime ownership progress for DEBT-027:
+Users owns only the profile-binding absence predicate; Media retains the fixed
+library/metrics/cleanup algorithms; root preserves the Serializable cleanup
+transaction and Audit. API1168/1168, architecture140/140, workspace lint/types,
+Prisma/build and adjacent suites pass. Fresh migrated E2E506/509, no skips,
+App27/27 and Media2/2: only inherited News viewCount/search-budget failures.
+Retained Jest cleanup is not normal green exit. Format41/audit1 high10 moderate,
+DEBT-044 consistency and CI/review remain open. See
+[runtime evidence](../audits/D4_MEDIA_PROFILE_ASSET_RUNTIME.md). No API/schema/
+permission change, frontend work or full D4 closure is claimed.
+
 2026-10-20 Media/Users foundation for DEBT-027: draft PR #61 contains design,
 three query-shape tests and five isolated PostgreSQL characterization cases.
 Final API coverage1165/1165 (158 suites, no skips), architecture/lint/types/

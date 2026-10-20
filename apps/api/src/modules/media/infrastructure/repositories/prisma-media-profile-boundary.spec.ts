@@ -13,7 +13,7 @@
  * • checks cleanup revalidation, isolation and audit ordering.
  *
  * 🏗️ Architecture:
- * Repository characterization with mocked delegates, not PostgreSQL evidence.
+ * Real repository/root/owner composition with mocked delegates, not PostgreSQL evidence.
  *
  * ⚠️ Important:
  * Does not prove concurrent attachment safety or database rollback semantics.
@@ -24,6 +24,7 @@
 import type { PrismaService } from '@api/core/database';
 import type { AuditWriterService } from '@api/core/audit';
 import { PrismaMediaRepository } from './prisma-media.repository';
+import { PrismaProfileAwareMediaLibrary } from '@api/composition/media-library/infrastructure/prisma-profile-aware-media-library';
 
 describe('Media profile predicate characterization', () => {
   const findMany = jest.fn();
@@ -39,13 +40,16 @@ describe('Media profile predicate characterization', () => {
       return run(transaction);
     },
   );
+  const prisma = {
+    media: { findMany, aggregate, count },
+    mediaVariant: { aggregate: variantAggregate },
+    $transaction: transact,
+  } as unknown as PrismaService;
+  const audit = { append } as unknown as AuditWriterService;
   const repository = new PrismaMediaRepository(
-    {
-      media: { findMany, aggregate, count },
-      mediaVariant: { aggregate: variantAggregate },
-      $transaction: transact,
-    } as unknown as PrismaService,
-    { append } as unknown as AuditWriterService,
+    prisma,
+    audit,
+    new PrismaProfileAwareMediaLibrary(prisma, audit),
   );
   const absentBindings = {
     references: { none: { removedAt: null } },
