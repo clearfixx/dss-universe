@@ -21,6 +21,32 @@ active package safe and buildable.
 
 ## Register
 
+### DEBT-071 — Guest shared engagement bypasses MEMBERS News eligibility (Medium, ACCEPTED, separate pre-11 design/correction package)
+
+Date: 2026-10-20. Base6eaf383. Actual AppModule GraphQL, real publication
+workflow and fully migrated isolated PostgreSQL reproduce guests (also invalid
+JWT and revoked sessions) being denied Full News but successfully writing views
+and shares on MEMBERS articles, reading aggregate counts and persisting guest
+rows. Guest view recording also succeeds on a comment target whose MEMBERS
+parent is hidden by newsComments. No authored text, password/token leak or
+account takeover is proven; known target UUID is required.
+
+Cause: optional engagement actor absence becomes `anonymous`; root News binding
+drops viewer context and owner policy checks status/flags without audience.
+Direct delivery/secondary projections retain their corrected eligibility.
+Additional deliberately corrupted publishedAt-null row shows availability
+parity drift, not a normal-workflow exploit. PUBLIC/idempotency/member and
+unpublished/disabled-sharing controls pass. Focused8/8, normal exit0,11.147s.
+
+Separate proposed security package: explicit viewer context and current News
+eligibility through narrow owner contracts before engagement effects/aggregate
+reads; inherited comment READ, real guest/member/revocation/failure regressions.
+Preserve PUBLIC guest analytics, flags, API, timeouts and bounded work; no new ACL
+or silent Wall-policy changes. The owner approved a separate package with
+viewer-context design first on2026-10-20; implementation is not in this audit.
+Current packet is evidence-only. See
+[source and HTTP evidence](../audits/D4_NEWS_INTERACTION_AUDIENCE.md).
+
 ### DEBT-070 — Social-list projection returns private profile fields (High, ACCEPTED, separate pre-11 security package)
 
 Date: 2026-10-20. Real GraphQL with three synthetic Auth-registered users in a
@@ -311,7 +337,7 @@ this transfer. See [runtime checkpoint](../audits/D4_LEADERBOARD_RUNTIME_OWNERSH
 | DEBT-013 | High     | ACCEPTED | Local services        | Mailpit, ClamAV and optional OTLP verified; S3 deferred to DEBT-017, persistent observability not claimed.     | D0                     |
 | DEBT-014 | Medium   | RESOLVED | Developer tooling     | GitHub CLI installed and authenticated; repository PR and Actions access verified in D0.                       | D0                     |
 | DEBT-015 | Medium   | OPEN     | Quality gate          | Root `quality` does not execute every check performed by CI.                                                   | D1/D6                  |
-| DEBT-016 | Critical | OPEN     | Dependencies          | Audit now 0 critical / 1 high / 10 moderate; braces local mitigation is not an accepted audit exception.       | D0.5/D6                |
+| DEBT-016 | Critical | OPEN     | Dependencies          | Audit now 0 critical / 1 high / 11 moderate; braces local mitigation is not an accepted audit exception.       | D0.5/D6                |
 | DEBT-017 | High     | DEFERRED | Media/storage         | LOCAL scope approved; operational MinIO/S3 adapters absent, separate debt not blocking Phase 11.               | Storage package        |
 | DEBT-018 | High     | DEFERRED | Search                | News-local search clarified; shared Search/indexing contract remains future work, not Phase 11 prerequisite.   | D2/future Search       |
 | DEBT-019 | High     | ACCEPTED | File Passport         | Passport v3.1 rendering repaired in D1; generated/config/schema classification remains D5 work.                | D1/D5                  |

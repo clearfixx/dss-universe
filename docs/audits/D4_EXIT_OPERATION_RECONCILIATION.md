@@ -269,8 +269,13 @@ remain red; draft publication is evidence, not acceptance or permission to merge
 
 ## Remaining evidence work
 
-- Characterize the viewer-less interaction-policy route and reconcile remaining
-  root owner-fragment consistency; no unsupported new vulnerability claim.
+Follow-up at6eaf383: [News interaction audience audit](D4_NEWS_INTERACTION_AUDIENCE.md)
+characterizes the viewer-less route and records DEBT-071 with actual guest /
+invalid / revoked HTTP evidence. It does not fix the runtime or certify adjacent
+Wall semantics; the earlier pending hypothesis below is now a separate finding.
+
+- Resolve the separately approved DEBT-071 and reconcile remaining root
+  owner-fragment consistency; no unsupported adjacent vulnerability claim.
 - Cross-cutting root/Core/Worker references and existing seventeen-family report
   dispositions; distinguish historical findings from separately implemented fixes.
 - CI/independent review and resolution of inherited format/audit/E2E/drift debt;

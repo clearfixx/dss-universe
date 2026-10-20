@@ -53,6 +53,14 @@ remains historical. Full E2E508/510 (known News and App failures), format/audit
 and GraphQL consistency remain red. Further context/CI/acceptance reconciliation
 is pending; this update does not declare D4 complete.
 
+News interaction follow-up at6eaf383: [current HTTP/source evidence](D4_NEWS_INTERACTION_AUDIENCE.md)
+confirms DEBT-071 guest engagement eligibility divergence, including inherited
+comment READ. Normal editorial publication and actual session states are used;
+no authored text leak is claimed. The owner approved a separate correction with
+viewer-context design first; no runtime fix is included in this audit.
+This closes the previously uncharacterized route question, not the defect or
+full D4 acceptance. Adjacent Wall guest behavior remains explicitly unproved.
+
 ## Remaining sequence
 
 1. Media foundation and separately approved runtime transfer are locally
