@@ -5,9 +5,12 @@ Branch: `debt/d4-media-profile-asset-foundation`.
 
 ## Authority and status
 
-Owner approved detailed design and characterization, not runtime transfer.
+Owner initially approved detailed design and characterization. After the
+concrete proposal was presented, the owner approved a separate runtime
+implementation after foundation verification. This branch does not implement it.
 Production code, schema, public API and query behavior are unchanged.
-This is an intermediate foundation, not D4 acceptance or a completed package.
+Draft PR: https://github.com/clearfixx/dss-universe/pull/61.
+This is a bounded foundation, not D4 acceptance or a green release gate.
 
 ## Current ownership gap
 
@@ -44,9 +47,52 @@ not made atomic by the proposed ownership change.
    transaction on metrics, isolation changes, timeouts, retries or cleanup
    lease are introduced.
 
-Before implementation approval, choose exact writer/reader adapter signatures
-against existing guarded infrastructure-entry conventions and confirm they do
-not expose a general-purpose Prisma client to a business consumer.
+### Concrete implementation proposal (not implemented)
+
+Follow ADR-004's guarded technical entry convention, not a new integration
+framework. The existing profile-asset composition demonstrates the global
+binding pattern; the Leaderboards composition demonstrates a consumer-owned
+facts port. Proposed names below describe the intended implementation surface.
+
+- Users infrastructure exports `unusedProfileAssetWhere()` through its existing
+  named `infrastructure.ts` entry. The return type is
+  `Pick<Prisma.MediaWhereInput, 'avatarFor' | 'coverFor'>`; the implementation
+  returns only the two null relation filters. It does no IO and reads no user
+  facts. It is not exported through the Users business entry.
+- Media owns a repository-neutral `MEDIA_LIBRARY_PERSISTENCE` token and a
+  `MediaLibraryPersistence` interface containing exactly `browseLibrary(query)`,
+  `getLibraryMetrics()` and `claimCleanupCandidates(olderThan, limit)`, with the
+  existing domain inputs/results. It grants no extra operation or permission.
+  `PrismaMediaRepository` delegates only those three methods; the rest of the
+  existing repository stays in place.
+- Media infrastructure owns `PrismaMediaLibraryOperations`: the existing fixed
+  browse/metrics queries, mapping and cleanup selection/update/audit algorithm.
+  Technical methods receive the appropriate Prisma client and an additional
+  external-binding absence predicate (`Prisma.MediaWhereInput`), never an
+  arbitrary SQL string, callback, repository registry or business policy.
+  Cleanup receives the current transaction client; it does not start a nested
+  transaction. The predicate is used in both selection and guarded update.
+  This adapter is published only via Media's guarded infrastructure entry.
+- Root `PrismaProfileAwareMediaLibrary` implements the three-method semantic
+  port. It obtains the pure Users predicate and invokes the Media-owned
+  operations. Browse and metrics use the ordinary Prisma client. Cleanup alone
+  starts the existing Serializable transaction and supplies its client to the
+  Media operation. Audit remains inside the Media operation in that transaction.
+- A root-installed binding module exports only the semantic token. Feature
+  modules import neither this composition module nor each other's internals.
+  There is no new HTTP/GraphQL operation and no Prisma in the semantic port.
+
+The technical predicate parameter is intentionally not a business API: only
+allowlisted root infrastructure can assemble it. Add exact entry export and
+provider metadata tests, plus analyzer negative fixtures proving application
+and sibling feature consumers are rejected. Do not broaden the architecture
+baseline to permit new violations.
+
+Move the existing characterization to the operation adapter/composed port as
+appropriate, retaining repository delegation tests. Run DB evidence against the
+actual composition, not merely a copied version of the old implementation.
+The current tests prove the baseline only; they cannot certify unimplemented
+adapters. No inheritance-based repository override is needed.
 
 ## Characterization evidence
 
@@ -81,13 +127,54 @@ the harness without changing production code.
 Architecture, workspace lint/typecheck, Prisma validation and workspace build
 passed. Final full API coverage passed 1165/1165 (158 suites, zero skipped,
 58.935 seconds); the final focused suite passed 8/8.
-Independent review, full E2E and publication remain pending. The deterministic
+Independent review and CI acceptance remain pending. The deterministic
 concurrent-attachment schedule has not been tested; no concurrency guarantee
 is inferred from sequential fixtures or mocked claim loss.
 
 Global `format:check` remains red on 41 inherited files; dependency audit
 remains red with 1 high and 10 moderate findings. These are not waived and no
 unrelated formatting or dependency changes were made in this packet.
+
+## Full verification completion (2026-10-20)
+
+Fresh disposable PostgreSQL 5435 was verified by exact Compose project/service,
+loopback binding, tmpfs data directory and zero clients before recreation.
+The empty database received production migrations without seed. Dev 5433 and
+unit-test 5434 were not reset.
+
+Full API E2E completed 505 PASS / 4 FAIL / 0 skipped of 509, 48 suites,
+461.887 seconds. App27/27 passes. Failures:
+
+- DEBT-045 News foundation expects null viewCount but receives zero.
+- Two News search performance cases exceed the existing 5000ms interactive
+  transaction budget (5383ms and 5243ms observed); residual DEBT-053 performance
+  risk, not a new Media runtime regression. No causal host-load claim.
+- Leaderboards expects its own fixture first, but an earlier Community Points
+  fixture has equal points and legitimately wins by age. Safe-field SQL confirms
+  both identities and timestamps; points-suite cleanup only removes Outbox rows.
+  Separate DEBT-069 records test isolation debt, not a production ranking bug.
+
+Completed Jest retained handles after full JSON. Zero database clients and zero
+`api_boundary_%` schemas were confirmed, then only PID13228 (matching the unique
+report path) was stopped. Original shell reported E2E=-1; not normal successful
+completion or a green gate. No rerun, skip, timeout increase, corpus cap,
+assertion relaxation or trigger weakening was used.
+
+Adjacent fresh tests pass: Editor23, Storage43, Worker46, Web59, dependency
+patches14. GraphQL generation succeeds but consistency fails on inherited
+DEBT-044 generated eslint-disable drift. Only this run's generated change was
+restored; SDL and generated files then match Git. SDL SHA256:
+`C03170CB54027C557F662A5B9BF5F85CAFA2112B8623D3FCA360E8FA9C82FD2C`.
+
+CI inspected at test head18265e8: Linux/Windows containment SUCCESS, dependency
+audit FAILURE, Web smoke FAILURE, main quality IN_PROGRESS. Web smoke fails
+at Web E2E; step logs were unavailable while the workflow was running, so its
+underlying cause is not asserted. Documentation follow-up changes PR head;
+these observations remain head-specific, not future-head CI acceptance.
+
+Local logs/reports: ignored `node_modules/.cache/d4-media-profile-*`.
+Owner's untracked `docs/audits/STACK_AUDIT_PLAN.md` is untouched and excluded.
+SHA256: `B1D657CFCEA43DF16636E9C79F4BB62BF4F94848B31780234C2364CBA557796A`.
 
 ## Required next evidence before production transfer
 
@@ -96,7 +183,8 @@ unrelated formatting or dependency changes were made in this packet.
   explicitly record the unproved schedule, not a concurrency guarantee.
 - Run targeted tests, type/lint and architecture checks, then the agreed full
   package gates. Keep inherited red baselines visible.
-- Ask for runtime implementation approval after presenting this evidence.
+- Runtime implementation is approved as a separate package; preserve all red
+  baseline dispositions and independent acceptance requirements when proceeding.
 
 This packet does not close global D4 coverage. Notifications' concrete service
 export and remaining operation-level evidence reconciliation remain separate

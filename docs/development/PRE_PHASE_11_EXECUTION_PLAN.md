@@ -330,6 +330,17 @@ Model: `gpt-6.1-sol` xhigh for the separate brainstorm and security design.
 
 Branch: `debt/d4-module-boundaries`.
 
+Current reconciliation (2026-10-20): use the
+[family-level coverage gap map](../audits/D4_COVERAGE_GAP_RECONCILIATION.md)
+to distinguish historical reports from current operation evidence. The runtime
+inventory is 832 non-test API/Worker sources, not a completion percentage.
+The [Media/Users foundation](../audits/D4_MEDIA_PROFILE_ASSET_FOUNDATION.md)
+on draft PR #61 adds baseline characterization only. Its separate runtime
+transfer is owner-approved after foundation verification; it is not implemented
+by the design/tests packet. Notifications surface reconciliation and remaining
+operation coverage, D4 acceptance, D5–D7, stack audit and Phase 11 brainstorm
+remain required. No inherited red gate is waived.
+
 Current local progress (2026-10-15): owned News delivery/snapshot, Reputation
 history/original reads, atomic write-response composition and the approved mentions SQL composition
 are implemented on separate draft review branches. See the

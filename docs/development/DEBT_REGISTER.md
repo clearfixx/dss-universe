@@ -2,7 +2,7 @@
 
 > Status: Active
 >
-> Updated: 2026-10-19
+> Updated: 2026-10-20
 
 ## Purpose
 
@@ -20,6 +20,16 @@ active package safe and buildable.
 - `REJECTED` — reviewed and determined not to be debt.
 
 ## Register
+
+2026-10-20 Media/Users foundation for DEBT-027: draft PR #61 contains design,
+three query-shape tests and five isolated PostgreSQL characterization cases.
+Final API coverage1165/1165 (158 suites, no skips), architecture/lint/types/
+Prisma/build pass. No production code/schema changes; owner approved a separate
+runtime transfer only after foundation verification. Global coverage is mapped
+in [the reconciliation](../audits/D4_COVERAGE_GAP_RECONCILIATION.md), not inferred
+from a zero static inventory. Full E2E/review/CI remain pending; format41 and
+dependency audit1 high10 moderate stay red. See
+[foundation evidence](../audits/D4_MEDIA_PROFILE_ASSET_FOUNDATION.md).
 
 2026-10-19 IAM persistence-family progress for DEBT-027: all fourteen current
 owned repository/fragment sources and caller/root boundaries are reconciled;
@@ -881,6 +891,12 @@ At 1,000 articles/600 gates, each request reads facts/audience 10 times rather
 than 600; local member p95 1.022 seconds versus strengthened baseline 3.079.
 No cross-request cache, timeout increase, cap or public API change. This is not
 production capacity acceptance; full-suite/baseline gates and review remain open.
+On 2026-10-20 the unchanged News search performance E2E again exceeds the
+existing 5000ms interactive transaction budget (observed 5383ms and 5243ms)
+during the Media design-only packet's full E2E. This is a recurring residual
+performance failure, not evidence that Media runtime changed. No timeout,
+corpus, pagination or security assertion is relaxed; exact final run results
+belong to the Media foundation report. Host-load causality is not established.
 Final fresh full E2E: 244 PASS/2 FAIL (DEBT-045); all 72 relevant E2E PASS.
 Global format/audit remain red, and generated/Web evidence is the prior checkpoint.
 Draft PR #12 contains the implementation and the batch follow-up; no merge or
@@ -1229,6 +1245,26 @@ evidence across order/replay and retain idempotency without foreign aggregate
 reads. Possible tombstone projection/migration needs approval before correction;
 current audit implements nothing. See
 [consumer lifecycle evidence](../audits/D4_EVENT_DATA_RETENTION_REVIEW.md).
+
+### DEBT-069 — Shared E2E ledger fixtures contaminate Leaderboards expectations (Medium, OPEN, D6)
+
+Date: 2026-10-20. Full E2E on a freshly migrated disposable PostgreSQL completes
+505/509, including a Leaderboards first-month-page mismatch. Actual safe-field
+queries identify the unexpected winner as the earlier Community Points suite's
+synthetic `points-user` (created 02:31:35.439 UTC), not the current
+`leader-oldest` fixture (02:31:52.478 UTC). Both have ten monthly points; the
+existing SQL orders equal points by createdAt then subject ID, so the earlier
+fixture legitimately wins. The points suite cleans Outbox rows but leaves its
+users/ledger in the shared schema; Leaderboards assumes its own user is first.
+
+This proves cross-suite fixture contamination of the assertion, not a production
+ranking defect. The Media design-only packet changes no ranking implementation.
+Proposed separate D6 correction: isolate relevant suites with the existing
+migrated-schema helper and preserve global-population assertions, real ledger
+effects, ranking/tie semantics and unchanged timeouts. Do not filter production
+rankings by test usernames or weaken expected rank. Implementation approval and
+verification of broader shared mutable fixtures remain open. Evidence:
+[Media foundation](../audits/D4_MEDIA_PROFILE_ASSET_FOUNDATION.md).
 
 ### DEBT-068 — Old verification token confirms changed email (High, ACCEPTED, correction implemented; acceptance pending)
 
