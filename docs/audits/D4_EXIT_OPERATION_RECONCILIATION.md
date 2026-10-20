@@ -269,6 +269,14 @@ remain red; draft publication is evidence, not acceptance or permission to merge
 
 ## Remaining evidence work
 
+Follow-up at47cd877: [root SQL / owner composition audit](D4_ROOT_OWNER_SQL_RECONCILIATION.md)
+reads all18 current SQL-bearing root composition files, distinguishes approved
+explicit root algorithms from guarded owner-fragment reuse, and characterizes
+DEBT-072 through six actual migrated DB/HTTP schedules. Owner approved a separate
+pre-11 design/correction package; this audit does not change runtime or claim
+all transitive owner adapters/current-family acceptance. The reviewed root SQL
+inventory is bounded and fingerprinted separately from the historical47-file map.
+
 Follow-up at6eaf383: [News interaction audience audit](D4_NEWS_INTERACTION_AUDIENCE.md)
 characterizes the viewer-less route and records DEBT-071 with actual guest /
 invalid / revoked HTTP evidence. It does not fix the runtime or certify adjacent

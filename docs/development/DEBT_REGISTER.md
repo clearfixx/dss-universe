@@ -21,6 +21,32 @@ active package safe and buildable.
 
 ## Register
 
+### DEBT-072 — Profile asset assignment races Media cleanup claim (Medium, ACCEPTED, separate pre-11 design/correction package)
+
+Date: 2026-10-21. Base47cd877. Actual authenticated AppModule GraphQL and
+fully migrated isolated PostgreSQL reproduce both avatar and cover assignment
+committing after cleanup has claimed the same Media row as DELETING. The
+assignment returns success and persists an active reference/profile binding;
+public variant lookup denies the no-longer-READY asset. Actual DB cleanup
+completion subsequently records DELETED while the active binding/reference
+remain. This is lifecycle/data integrity inconsistency, not a demonstrated
+cross-owner access leak or physical binary loss. No Storage IO runs in the test.
+
+The existing assignment transaction rechecks READY/ownership/PUBLIC, and
+Serializable cleanup rechecks absence of committed references/profile bindings.
+They do not jointly serialize the demonstrated schedule: assignment pauses after
+its readiness read, cleanup commits, then assignment resumes. Sequential controls
+deny assignment after an already committed cleanup claim and exclude an already
+committed binding from cleanup. Six real DB/HTTP characterization cases pass;
+passing vulnerable-state assertions are not correction acceptance.
+
+Owner approved a separate pre-11 package on2026-10-21: design shared
+synchronization first, then atomic protection and deterministic DB/HTTP
+regressions preserving API and Audit. Exact lock/protocol/isolation design is
+not yet approved; no runtime correction is included in this audit. Existing
+News draft attachment semantics must not be silently tightened. See
+[root SQL audit and reproduction](../audits/D4_ROOT_OWNER_SQL_RECONCILIATION.md).
+
 ### DEBT-071 — Guest shared engagement bypasses MEMBERS News eligibility (Medium, ACCEPTED, separate pre-11 design/correction package)
 
 Date: 2026-10-20. Base6eaf383. Actual AppModule GraphQL, real publication
@@ -361,7 +387,7 @@ this transfer. See [runtime checkpoint](../audits/D4_LEADERBOARD_RUNTIME_OWNERSH
 | DEBT-013 | High     | ACCEPTED | Local services        | Mailpit, ClamAV and optional OTLP verified; S3 deferred to DEBT-017, persistent observability not claimed.     | D0                     |
 | DEBT-014 | Medium   | RESOLVED | Developer tooling     | GitHub CLI installed and authenticated; repository PR and Actions access verified in D0.                       | D0                     |
 | DEBT-015 | Medium   | OPEN     | Quality gate          | Root `quality` does not execute every check performed by CI.                                                   | D1/D6                  |
-| DEBT-016 | Critical | OPEN     | Dependencies          | Audit now 0 critical / 1 high / 11 moderate; braces local mitigation is not an accepted audit exception.       | D0.5/D6                |
+| DEBT-016 | Critical | OPEN     | Dependencies          | Audit 2026-10-21: 0 critical / 2 high / 12 moderate; local mitigations are not accepted audit exceptions.      | D0.5/D6                |
 | DEBT-017 | High     | DEFERRED | Media/storage         | LOCAL scope approved; operational MinIO/S3 adapters absent, separate debt not blocking Phase 11.               | Storage package        |
 | DEBT-018 | High     | DEFERRED | Search                | News-local search clarified; shared Search/indexing contract remains future work, not Phase 11 prerequisite.   | D2/future Search       |
 | DEBT-019 | High     | ACCEPTED | File Passport         | Passport v3.1 rendering repaired in D1; generated/config/schema classification remains D5 work.                | D1/D5                  |
