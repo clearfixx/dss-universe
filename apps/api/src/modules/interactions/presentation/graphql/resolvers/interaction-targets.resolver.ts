@@ -48,7 +48,11 @@ export class InteractionTargetsResolver {
     capability: InteractionCapabilityInput,
   ): Promise<InteractionAccessDecisionModel> {
     return this.toDecision(
-      await this.targets.authorize(targetId, actor.id, capability),
+      await this.targets.authorize(
+        targetId,
+        { kind: 'AUTHENTICATED', subjectId: actor.id },
+        capability,
+      ),
     );
   }
 

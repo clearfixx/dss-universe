@@ -274,12 +274,15 @@ characterizes the viewer-less route and records DEBT-071 with actual guest /
 invalid / revoked HTTP evidence. It does not fix the runtime or certify adjacent
 Wall semantics; the earlier pending hypothesis below is now a separate finding.
 
-- Resolve the separately approved DEBT-071 and reconcile remaining root
-  owner-fragment consistency; no unsupported adjacent vulnerability claim.
+- Complete verification/review acceptance for the separately implemented
+  [DEBT-071 correction](../development/DEBT_071_NEWS_INTERACTION_VIEWER_IMPLEMENTATION.md)
+  and reconcile remaining root owner-fragment consistency; no unsupported
+  adjacent vulnerability claim. Local runtime progress is not full D4 closure.
 - Cross-cutting root/Core/Worker references and existing seventeen-family report
   dispositions; distinguish historical findings from separately implemented fixes.
 - CI/independent review and resolution of inherited format/audit/E2E/drift debt;
   current local graph/surface and scoped checks do not waive these gates.
-- Resolve DEBT-070 through an approved separate security package, not by marking
-  this audit's intentionally vulnerable assertion as acceptance.
+- Complete CI/review acceptance for the separately implemented
+  [DEBT-070 correction](../development/DEBT_070_SOCIAL_PROFILE_PRIVACY.md), not by
+  marking this audit's intentionally vulnerable historical assertion as acceptance.
 - D5/D6/D7, owner stack-boundary audit, then required Phase11 brainstorm remain.

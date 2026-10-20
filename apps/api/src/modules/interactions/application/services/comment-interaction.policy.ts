@@ -1,3 +1,27 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Interaction Platform
+ * 📄 File: apps/api/src/modules/interactions/application/services/comment-interaction.policy.ts
+ *
+ * 🎯 Purpose:
+ * Applies comment lifecycle/capability rules and inherits the parent's viewer access.
+ *
+ * 🧠 Responsibilities:
+ * • verifies canonical comment coordinates;
+ * • forwards the same explicit viewer to parent READ;
+ * • retains local registration and unregistration identity.
+ *
+ * 🏗️ Architecture:
+ * Private Interactions policy; no foreign content or identity dependency.
+ *
+ * ⚠️ Important:
+ * The comment author must never replace the requesting viewer.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import {
   Inject,
   Injectable,
@@ -16,6 +40,7 @@ import type {
 } from '../../domain/types/interaction-target.type';
 import { InteractionPolicyRegistryService } from './interaction-policy-registry.service';
 import { InteractionTargetsService } from './interaction-targets.service';
+import type { InteractionViewer } from '../../domain/types/interaction-viewer.type';
 
 @Injectable()
 export class CommentInteractionPolicy
@@ -40,7 +65,7 @@ export class CommentInteractionPolicy
 
   async authorize(
     target: InteractionTarget,
-    actorId: string,
+    viewer: InteractionViewer,
     capability: InteractionCapability,
   ): Promise<{ allowed: boolean; reason?: string }> {
     const comment = await this.comments.findById(target.ownerId);
@@ -55,7 +80,7 @@ export class CommentInteractionPolicy
     }
     const parent = await this.targets.authorize(
       comment.interactionTargetId,
-      actorId,
+      viewer,
       'READ',
     );
     return parent.allowed

@@ -276,7 +276,11 @@ describe('News domain foundation (e2e)', () => {
       }),
     ).resolves.toBeTruthy();
     await expect(
-      targets.authorize(article.interactionTargetId, author.id, 'COMMENT'),
+      targets.authorize(
+        article.interactionTargetId,
+        { kind: 'AUTHENTICATED', subjectId: author.id },
+        'COMMENT',
+      ),
     ).resolves.toMatchObject({
       allowed: false,
       reason: 'NEWS_NOT_PUBLISHED',
@@ -608,7 +612,11 @@ describe('News domain foundation (e2e)', () => {
       { action: 'PUBLISHED', revisionVersion: 3 },
     ]);
     await expect(
-      targets.authorize(article.interactionTargetId, author.id, 'COMMENT'),
+      targets.authorize(
+        article.interactionTargetId,
+        { kind: 'AUTHENTICATED', subjectId: author.id },
+        'COMMENT',
+      ),
     ).resolves.toMatchObject({ allowed: true });
   });
 });

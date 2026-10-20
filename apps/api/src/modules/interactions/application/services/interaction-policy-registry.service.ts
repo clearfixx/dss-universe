@@ -11,6 +11,7 @@
  * 🧠 Responsibilities:
  * • registers exactly one policy per stable target kind;
  * • rejects duplicate policy ownership;
+ * • rejects malformed viewer context before dispatch;
  * • fails closed when an owning module has no active policy.
  *
  * 🚀 Build. Share. Grow.
@@ -18,6 +19,7 @@
  */
 
 import { Injectable } from '@nestjs/common';
+import type { InteractionViewer } from '../../domain/types/interaction-viewer.type';
 
 import type {
   InteractionCapability,
@@ -45,14 +47,24 @@ export class InteractionPolicyRegistryService {
 
   async authorize(
     target: InteractionTarget,
-    actorId: string,
+    viewer: InteractionViewer,
     capability: InteractionCapability,
   ): Promise<{ allowed: boolean; reason?: string }> {
+    if (
+      viewer?.kind !== 'GUEST' &&
+      !(
+        viewer?.kind === 'AUTHENTICATED' &&
+        typeof viewer.subjectId === 'string' &&
+        viewer.subjectId.trim().length > 0
+      )
+    ) {
+      return { allowed: false, reason: 'VIEWER_CONTEXT_INVALID' };
+    }
     const policy = this.policies.get(target.kind);
     if (!policy) {
       return { allowed: false, reason: 'OWNER_POLICY_UNAVAILABLE' };
     }
-    return policy.authorize(target, actorId, capability);
+    return policy.authorize(target, viewer, capability);
   }
 }
 

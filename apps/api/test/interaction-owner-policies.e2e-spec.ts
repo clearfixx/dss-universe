@@ -95,7 +95,7 @@ describe('Interaction owner policy composition (e2e)', () => {
     });
     await prisma.newsArticle.update({
       where: { id: created.id },
-      data: { status: 'PUBLISHED' },
+      data: { status: 'PUBLISHED', publishedAt: new Date() },
     });
     return created;
   }
@@ -168,7 +168,7 @@ describe('Interaction owner policy composition (e2e)', () => {
       expect(
         await targets.authorize(
           news.interactionTargetId,
-          viewer.user.id,
+          { kind: 'AUTHENTICATED', subjectId: viewer.user.id },
           capability,
         ),
       ).toMatchObject({ allowed: false, reason });
@@ -202,7 +202,7 @@ describe('Interaction owner policy composition (e2e)', () => {
           expect(
             await targets.authorize(
               post.interactionTargetId,
-              viewer.user.id,
+              { kind: 'AUTHENTICATED', subjectId: viewer.user.id },
               'READ',
             ),
           ).toMatchObject({ allowed: false, reason: 'PROFILE_BLOCKED' });
@@ -232,7 +232,7 @@ describe('Interaction owner policy composition (e2e)', () => {
       expect(
         await targets.authorize(
           post.interactionTargetId,
-          viewer.user.id,
+          { kind: 'AUTHENTICATED', subjectId: viewer.user.id },
           'COMMENT',
         ),
       ).toMatchObject({ allowed: false, reason: 'TARGET_LOCKED' });
@@ -240,7 +240,7 @@ describe('Interaction owner policy composition (e2e)', () => {
       expect(
         await targets.authorize(
           post.interactionTargetId,
-          viewer.user.id,
+          { kind: 'AUTHENTICATED', subjectId: viewer.user.id },
           'READ',
         ),
       ).toMatchObject({ allowed: true });
@@ -249,6 +249,56 @@ describe('Interaction owner policy composition (e2e)', () => {
       spy.mockRestore();
     }
   });
+  it.each(['PUBLIC', 'PRIVATE'] as const)(
+    'preserves %s Wall guest/member/owner and inherited comment READ parity',
+    async (visibility) => {
+      const post = await app
+        .get(UserWallService)
+        .create(owner.user.id, owner.user.id, 'Synthetic Wall compatibility');
+      const comment = await app
+        .get(CommentsService)
+        .create(owner.user.id, post.interactionTargetId, {
+          body: 'Synthetic Wall child',
+        });
+      await prisma.userPrivacySettings.upsert({
+        where: { userId: owner.user.id },
+        create: { userId: owner.user.id, profileVisibility: visibility },
+        update: { profileVisibility: visibility },
+      });
+      try {
+        const wall = app.get<ProfileWallInteractionDecisions>(
+          PROFILE_WALL_INTERACTION_DECISIONS,
+        );
+        for (const context of [
+          { kind: 'GUEST' } as const,
+          { kind: 'AUTHENTICATED', subjectId: viewer.user.id } as const,
+          { kind: 'AUTHENTICATED', subjectId: owner.user.id } as const,
+        ]) {
+          const legacy = await wall.authorize({
+            postId: post.id,
+            interactionTargetId: post.interactionTargetId,
+            viewerId:
+              context.kind === 'GUEST' ? 'anonymous' : context.subjectId,
+          });
+          for (const targetId of [
+            post.interactionTargetId,
+            comment.reactionTargetId,
+          ]) {
+            const result = await targets.authorize(targetId, context, 'READ');
+            expect({ allowed: result.allowed, reason: result.reason }).toEqual({
+              allowed: legacy.allowed,
+              reason: legacy.reason ?? null,
+            });
+          }
+        }
+      } finally {
+        await prisma.userPrivacySettings.update({
+          where: { userId: owner.user.id },
+          data: { profileVisibility: 'PUBLIC' },
+        });
+      }
+    },
+  );
   it.each(['news.article', 'users.profile-wall-post'])(
     'denies missing %s owner coordinates',
     async (kind) => {
@@ -261,7 +311,11 @@ describe('Interaction owner policy composition (e2e)', () => {
         },
       });
       expect(
-        await targets.authorize(target.id, viewer.user.id, 'READ'),
+        await targets.authorize(
+          target.id,
+          { kind: 'AUTHENTICATED', subjectId: viewer.user.id },
+          'READ',
+        ),
       ).toMatchObject({ allowed: false, reason: 'OWNER_RECORD_UNAVAILABLE' });
     },
   );
@@ -276,7 +330,11 @@ describe('Interaction owner policy composition (e2e)', () => {
       },
     });
     expect(
-      await targets.authorize(target.id, viewer.user.id, 'READ'),
+      await targets.authorize(
+        target.id,
+        { kind: 'AUTHENTICATED', subjectId: viewer.user.id },
+        'READ',
+      ),
     ).toMatchObject({ allowed: false, reason: 'OWNER_RECORD_UNAVAILABLE' });
   });
   it('fails closed after unbinding owners, preserves private comment routing and recovers on rebind', async () => {
@@ -302,7 +360,11 @@ describe('Interaction owner policy composition (e2e)', () => {
         comment.reactionTargetId,
       ]) {
         expect(
-          await targets.authorize(targetId, viewer.user.id, 'READ'),
+          await targets.authorize(
+            targetId,
+            { kind: 'AUTHENTICATED', subjectId: viewer.user.id },
+            'READ',
+          ),
         ).toMatchObject({ allowed: false, reason: 'OWNER_POLICY_UNAVAILABLE' });
       }
       expect(commentSpy.mock.calls).toHaveLength(1);
@@ -313,7 +375,7 @@ describe('Interaction owner policy composition (e2e)', () => {
     expect(
       await targets.authorize(
         comment.reactionTargetId,
-        viewer.user.id,
+        { kind: 'AUTHENTICATED', subjectId: viewer.user.id },
         'REACT',
       ),
     ).toMatchObject({ allowed: true });
@@ -338,7 +400,7 @@ describe('Interaction owner policy composition (e2e)', () => {
     expect(
       await targets.authorize(
         news.interactionTargetId,
-        viewer.user.id,
+        { kind: 'AUTHENTICATED', subjectId: viewer.user.id },
         'COMMENT',
       ),
     ).toMatchObject({ allowed: false, reason: 'NEWS_COMMENTS_DISABLED' });

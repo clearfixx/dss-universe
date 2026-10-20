@@ -138,7 +138,11 @@ export class CommentDraftsService {
     targetId: string,
     actorId: string,
   ): Promise<void> {
-    const decision = await this.targets.authorize(targetId, actorId, 'COMMENT');
+    const decision = await this.targets.authorize(
+      targetId,
+      { kind: 'AUTHENTICATED', subjectId: actorId },
+      'COMMENT',
+    );
     if (!decision.allowed) {
       throw new ForbiddenException(
         `Interaction target denied comment drafting: ${decision.reason ?? 'POLICY_DENIED'}.`,

@@ -65,7 +65,7 @@ export class ReactionsService {
   ): Promise<void> {
     const decision = await this.targets.authorize(
       targetId,
-      actorId,
+      { kind: 'AUTHENTICATED', subjectId: actorId },
       capability,
     );
     if (!decision.allowed) {

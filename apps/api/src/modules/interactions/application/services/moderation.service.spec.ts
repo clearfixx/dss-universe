@@ -94,7 +94,7 @@ describe('ModerationService', () => {
     );
 
     expect(targets.authorize.mock.calls).toEqual([
-      ['target-1', 'user-1', 'READ'],
+      ['target-1', { kind: 'AUTHENTICATED', subjectId: 'user-1' }, 'READ'],
     ]);
     expect(repository.createReport.mock.calls).toEqual([
       [

@@ -11,6 +11,8 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+import type { InteractionViewer } from '../domain/types/interaction-viewer.type';
+
 export type InteractionPolicyCapability =
   | 'READ'
   | 'COMMENT'
@@ -20,7 +22,7 @@ export type InteractionPolicyCapability =
 export type InteractionPolicyRequest = Readonly<{
   targetId: string;
   ownerId: string;
-  actorId: string;
+  viewer: InteractionViewer;
   capability: InteractionPolicyCapability;
 }>;
 export type InteractionPolicyVerdict = Readonly<{

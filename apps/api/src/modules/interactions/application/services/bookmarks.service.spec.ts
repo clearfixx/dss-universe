@@ -61,7 +61,7 @@ describe('BookmarksService', () => {
     await service.save('owner-1', 'target-1');
 
     expect(targets.authorize.mock.calls).toEqual([
-      ['target-1', 'owner-1', 'BOOKMARK'],
+      ['target-1', { kind: 'AUTHENTICATED', subjectId: 'owner-1' }, 'BOOKMARK'],
     ]);
     expect(repository.save.mock.calls).toEqual([['target-1', 'owner-1']]);
   });

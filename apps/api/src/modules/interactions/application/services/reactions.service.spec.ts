@@ -69,7 +69,7 @@ describe('ReactionsService', () => {
     await service.set('actor-1', 'target-1', 'UPVOTE');
 
     expect(targets.authorize.mock.calls).toEqual([
-      ['target-1', 'actor-1', 'REACT'],
+      ['target-1', { kind: 'AUTHENTICATED', subjectId: 'actor-1' }, 'REACT'],
     ]);
     expect(repository.set.mock.calls).toEqual([
       ['target-1', 'actor-1', 'UPVOTE'],
@@ -107,7 +107,7 @@ describe('ReactionsService', () => {
 
     await expect(service.summary('actor-1', 'target-1')).resolves.toBe(summary);
     expect(targets.authorize.mock.calls).toEqual([
-      ['target-1', 'actor-1', 'READ'],
+      ['target-1', { kind: 'AUTHENTICATED', subjectId: 'actor-1' }, 'READ'],
     ]);
   });
 });

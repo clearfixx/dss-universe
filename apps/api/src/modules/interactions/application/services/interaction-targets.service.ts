@@ -18,6 +18,7 @@
  */
 
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import type { InteractionViewer } from '../../domain/types/interaction-viewer.type';
 
 import {
   INTERACTION_TARGETS_REPOSITORY,
@@ -48,7 +49,7 @@ export class InteractionTargetsService {
 
   async authorize(
     targetId: string,
-    actorId: string,
+    viewer: InteractionViewer,
     capability: InteractionCapability,
   ): Promise<InteractionAccessDecision> {
     const target = await this.getById(targetId);
@@ -58,7 +59,7 @@ export class InteractionTargetsService {
     if (target.status === 'LOCKED' && capability !== 'READ') {
       return { target, capability, allowed: false, reason: 'TARGET_LOCKED' };
     }
-    const decision = await this.policies.authorize(target, actorId, capability);
+    const decision = await this.policies.authorize(target, viewer, capability);
     return {
       target,
       capability,

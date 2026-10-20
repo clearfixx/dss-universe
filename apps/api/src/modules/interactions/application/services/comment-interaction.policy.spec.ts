@@ -1,3 +1,16 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Interaction Policy Tests
+ * 📄 File: apps/api/src/modules/interactions/application/services/comment-interaction.policy.spec.ts
+ *
+ * 🎯 Purpose:
+ * Verifies canonical comment rules and unchanged guest/subject forwarding to parent READ.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import type { CommentsRepository } from '../../domain/repositories/comments.repository.interface';
 import type { InteractionTarget } from '../../domain/types/interaction-target.type';
 import type { InteractionPolicyRegistryService } from './interaction-policy-registry.service';
@@ -5,6 +18,7 @@ import type { InteractionTargetsService } from './interaction-targets.service';
 import { CommentInteractionPolicy } from './comment-interaction.policy';
 
 describe('CommentInteractionPolicy', () => {
+  const viewer = { kind: 'AUTHENTICATED', subjectId: 'actor-1' } as const;
   const target = {
     id: 'reaction-target-1',
     ownerId: 'comment-1',
@@ -30,24 +44,29 @@ describe('CommentInteractionPolicy', () => {
   beforeEach(() => jest.clearAllMocks());
 
   it('delegates comment read and reaction access to the parent target', async () => {
-    await expect(policy.authorize(target, 'actor-1', 'REACT')).resolves.toEqual(
-      {
-        allowed: true,
-      },
-    );
+    await expect(policy.authorize(target, viewer, 'REACT')).resolves.toEqual({
+      allowed: true,
+    });
     expect(targets.authorize.mock.calls[0]).toEqual([
       'article-target-1',
-      'actor-1',
+      viewer,
       'READ',
     ]);
   });
 
+  it('passes a guest to the parent without substituting comment authorship', async () => {
+    const guest = { kind: 'GUEST' } as const;
+    await policy.authorize(target, guest, 'READ');
+    expect(targets.authorize.mock.calls).toEqual([
+      ['article-target-1', guest, 'READ'],
+    ]);
+  });
   it('fails closed for a mismatched or deleted comment target', async () => {
     comments.findById.mockResolvedValueOnce({
       ...comment,
       reactionTargetId: 'different-target',
     } as never);
-    await expect(policy.authorize(target, 'actor-1', 'READ')).resolves.toEqual({
+    await expect(policy.authorize(target, viewer, 'READ')).resolves.toEqual({
       allowed: false,
       reason: 'COMMENT_UNAVAILABLE',
     });
@@ -55,11 +74,9 @@ describe('CommentInteractionPolicy', () => {
       ...comment,
       isDeleted: true,
     } as never);
-    await expect(policy.authorize(target, 'actor-1', 'REACT')).resolves.toEqual(
-      {
-        allowed: false,
-        reason: 'COMMENT_DELETED',
-      },
-    );
+    await expect(policy.authorize(target, viewer, 'REACT')).resolves.toEqual({
+      allowed: false,
+      reason: 'COMMENT_DELETED',
+    });
   });
 });

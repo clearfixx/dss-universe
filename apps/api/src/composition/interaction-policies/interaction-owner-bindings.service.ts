@@ -11,6 +11,7 @@
  * 🧠 Responsibilities:
  * • registers fixed News/Wall kinds and cleans up partial initialization;
  * • maps only owner-required inputs and allowlisted verdict fields.
+ * • keeps the approved legacy Wall guest mapping isolated from News authentication state.
  *
  * 🏗️ Architecture:
  * Root composition lifecycle; owners retain all capability/privacy decisions.
@@ -33,12 +34,14 @@ import {
   type RegisteredInteractionPolicy,
   type InteractionPolicyCapability,
   type InteractionPolicyVerdict,
+  type InteractionViewer,
 } from '@api/modules/interactions';
 import {
   NEWS_INTERACTION_DECISIONS,
   NEWS_INTERACTION_KIND,
   type NewsInteractionDecisions,
   type NewsInteractionCapability,
+  type NewsInteractionViewer,
 } from '@api/modules/news';
 import {
   PROFILE_WALL_INTERACTION_DECISIONS,
@@ -79,6 +82,7 @@ export class InteractionOwnerBindingsService
           await news.authorize({
             articleId: request.ownerId,
             interactionTargetId: request.targetId,
+            viewer: this.viewerKind(request.viewer),
             capability,
           }),
         );
@@ -91,7 +95,7 @@ export class InteractionOwnerBindingsService
           await wall.authorize({
             postId: request.ownerId,
             interactionTargetId: request.targetId,
-            viewerId: request.actorId,
+            viewerId: this.wallViewerId(request.viewer),
           }),
         ),
     } satisfies RegisteredInteractionPolicy);
@@ -108,6 +112,21 @@ export class InteractionOwnerBindingsService
   onModuleDestroy(): void {
     this.registrations.unregister(this.wallPolicy);
     this.registrations.unregister(this.newsPolicy);
+  }
+  private viewerKind(viewer: InteractionViewer): NewsInteractionViewer {
+    if (viewer?.kind === 'GUEST') return 'GUEST';
+    if (
+      viewer?.kind === 'AUTHENTICATED' &&
+      typeof viewer.subjectId === 'string' &&
+      viewer.subjectId.trim().length > 0
+    )
+      return 'AUTHENTICATED';
+    throw new Error('Unsupported interaction viewer context.');
+  }
+  private wallViewerId(viewer: InteractionViewer): string {
+    this.viewerKind(viewer);
+    // Approved compatibility bridge only: do not infer membership from this sentinel.
+    return viewer.kind === 'GUEST' ? 'anonymous' : viewer.subjectId;
   }
   private toVerdict(
     decision: InteractionPolicyVerdict,

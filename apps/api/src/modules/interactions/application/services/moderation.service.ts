@@ -151,7 +151,11 @@ export class ModerationService {
   }
 
   private async assertReadable(targetId: string, actorId: string) {
-    const decision = await this.targets.authorize(targetId, actorId, 'READ');
+    const decision = await this.targets.authorize(
+      targetId,
+      { kind: 'AUTHENTICATED', subjectId: actorId },
+      'READ',
+    );
     if (!decision.allowed) {
       throw new ForbiddenException('Interaction target denied read access.');
     }

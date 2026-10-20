@@ -12,6 +12,8 @@
  * ===============================================================
  */
 
+import type { InteractionViewer } from './interaction-viewer.type';
+
 export type InteractionTargetStatus = 'ACTIVE' | 'LOCKED' | 'RETIRED';
 
 export type InteractionCapability =
@@ -50,7 +52,7 @@ export interface InteractionTargetPolicy {
   readonly kind: string;
   authorize(
     target: InteractionTarget,
-    actorId: string,
+    viewer: InteractionViewer,
     capability: InteractionCapability,
   ): Promise<{ allowed: boolean; reason?: string }>;
 }

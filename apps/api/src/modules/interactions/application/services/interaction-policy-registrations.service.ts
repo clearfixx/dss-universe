@@ -10,6 +10,7 @@
  *
  * 🧠 Responsibilities:
  * • creates stable registry wrappers for minimal external callbacks;
+ * • projects only the explicit viewer tag and authenticated subject ID;
  * • preserves duplicate-owner and stale-unregistration identity semantics.
  *
  * 🏗️ Architecture:
@@ -41,11 +42,14 @@ export class InteractionPolicyRegistrationsService implements InteractionPolicyR
       this.wrappers.get(policy) ??
       ({
         kind: policy.kind,
-        authorize: async (target, actorId, capability) => {
+        authorize: async (target, viewer, capability) => {
           const verdict = await policy.authorize({
             targetId: target.id,
             ownerId: target.ownerId,
-            actorId,
+            viewer:
+              viewer.kind === 'AUTHENTICATED'
+                ? { kind: 'AUTHENTICATED', subjectId: viewer.subjectId }
+                : { kind: 'GUEST' },
             capability,
           });
           return verdict.reason === undefined

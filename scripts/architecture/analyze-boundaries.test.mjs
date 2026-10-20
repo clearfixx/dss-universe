@@ -551,6 +551,7 @@ for (const [moduleName, expected] of [
       "NewsInteractionDecision",
       "NewsInteractionDecisions",
       "NewsInteractionRequest",
+      "NewsInteractionViewer",
       "NewsMediaEvidence",
       "NewsMediaEvidenceReader",
       "NewsModule",

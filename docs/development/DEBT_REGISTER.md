@@ -55,6 +55,22 @@ the isolated legacy Wall bridge and retained precheck/write transaction boundary
 no atomic revocation guarantee or Wall security certification is claimed. The
 design packet changes documentation only; runtime correction remains unimplemented.
 
+2026-10-21 runtime follow-up: the separately approved correction is now locally
+implemented on `debt/debt071-news-interaction-eligibility`. Required explicit
+viewer context reaches the News-owned publication/audience policy before any
+engagement repository call; root sends News no identity/profile/session fields.
+The isolated legacy Wall bridge and current precheck/write split are preserved.
+Red-before3/8 and sequential final focused72/72 establish actual migrated HTTP
+regressions, including31 News security cases and query-work bounds. API
+coverage1206/1206, workspace lint/types/Prisma/build and architecture140 pass.
+Full E2E546/547, zero skipped, with security31/31, owner20/20 and App27/27 passing;
+only DEBT-045 fails. Exact completed-Jest cleanup follows zero DB clients/schemas;
+reported exit1 is not a normal green run. CI/review acceptance remains pending;
+format/audit/GraphQL and retained-handle debt are not waived. See
+[runtime evidence](DEBT_071_NEWS_INTERACTION_VIEWER_IMPLEMENTATION.md).
+The audit/design paragraphs above describe their historical baselines, not an
+assertion that the original bypass remains unchanged in this runtime branch.
+
 ### DEBT-070 — Social-list projection returns private profile fields (High, ACCEPTED, separate pre-11 security package)
 
 Date: 2026-10-20. Real GraphQL with three synthetic Auth-registered users in a

@@ -9,14 +9,14 @@
  * Evaluates owner-side News capabilities without knowing the interaction registry.
  *
  * 🧠 Responsibilities:
- * • retains publication and interaction-flag decisions in News;
+ * • retains current publication, audience and interaction-flag decisions in News;
  * • verifies minimal article/target coordinates before allowing a capability.
  *
  * 🏗️ Architecture:
  * Private News policy implementing its own published decision contract.
  *
  * ⚠️ Important:
- * Missing owner records or unpublished articles must not grant interaction access.
+ * A guest never acquires membership from an interaction or visitor identifier.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -40,14 +40,24 @@ export class NewsInteractionPolicy implements NewsInteractionDecisions {
   async authorize({
     articleId,
     interactionTargetId,
+    viewer,
     capability,
   }: NewsInteractionRequest): Promise<NewsInteractionDecision> {
+    if (viewer !== 'GUEST' && viewer !== 'AUTHENTICATED') {
+      return { allowed: false, reason: 'NEWS_VIEWER_CONTEXT_INVALID' };
+    }
     const article = await this.news.findById(articleId);
     if (!article || article.interactionTargetId !== interactionTargetId) {
       return { allowed: false, reason: 'OWNER_RECORD_UNAVAILABLE' };
     }
-    if (article.status !== 'PUBLISHED') {
+    if (article.status !== 'PUBLISHED' || !article.publishedAt) {
       return { allowed: false, reason: 'NEWS_NOT_PUBLISHED' };
+    }
+    if (
+      article.visibility !== 'PUBLIC' &&
+      !(article.visibility === 'MEMBERS' && viewer === 'AUTHENTICATED')
+    ) {
+      return { allowed: false, reason: 'NEWS_AUDIENCE_RESTRICTED' };
     }
     if (capability === 'COMMENT' && !article.allowComments) {
       return { allowed: false, reason: 'NEWS_COMMENTS_DISABLED' };

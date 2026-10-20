@@ -20,6 +20,7 @@ import { InteractionPolicyRegistryService } from './interaction-policy-registry.
 import { InteractionTargetsService } from './interaction-targets.service';
 
 describe('InteractionTargetsService', () => {
+  const viewer = { kind: 'AUTHENTICATED', subjectId: 'actor-1' } as const;
   const target: InteractionTarget = {
     id: 'target-1',
     kind: 'test.kind',
@@ -47,13 +48,13 @@ describe('InteractionTargetsService', () => {
     });
 
     await expect(
-      service.authorize(target.id, 'actor-1', 'COMMENT'),
+      service.authorize(target.id, viewer, 'COMMENT'),
     ).resolves.toMatchObject({ allowed: true, reason: null });
   });
 
   it('fails closed when no owner policy is registered', async () => {
     await expect(
-      service.authorize(target.id, 'actor-1', 'REACT'),
+      service.authorize(target.id, viewer, 'REACT'),
     ).resolves.toMatchObject({
       allowed: false,
       reason: 'OWNER_POLICY_UNAVAILABLE',
@@ -68,17 +69,17 @@ describe('InteractionTargetsService', () => {
     });
 
     await expect(
-      service.authorize(target.id, 'actor-1', 'COMMENT'),
+      service.authorize(target.id, viewer, 'COMMENT'),
     ).resolves.toMatchObject({ allowed: false, reason: 'TARGET_LOCKED' });
     await expect(
-      service.authorize(target.id, 'actor-1', 'READ'),
+      service.authorize(target.id, viewer, 'READ'),
     ).resolves.toMatchObject({ allowed: true });
   });
 
   it('denies every capability for retired and missing targets', async () => {
     repository.findById.mockResolvedValue({ ...target, status: 'RETIRED' });
     await expect(
-      service.authorize(target.id, 'actor-1', 'READ'),
+      service.authorize(target.id, viewer, 'READ'),
     ).resolves.toMatchObject({ allowed: false, reason: 'TARGET_RETIRED' });
 
     repository.findById.mockResolvedValue(null);

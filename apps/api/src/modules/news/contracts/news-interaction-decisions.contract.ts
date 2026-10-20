@@ -11,6 +11,7 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+export type NewsInteractionViewer = 'GUEST' | 'AUTHENTICATED';
 export type NewsInteractionCapability =
   | 'READ'
   | 'COMMENT'
@@ -20,6 +21,7 @@ export type NewsInteractionCapability =
 export type NewsInteractionRequest = Readonly<{
   articleId: string;
   interactionTargetId: string;
+  viewer: NewsInteractionViewer;
   capability: NewsInteractionCapability;
 }>;
 export type NewsInteractionDecision = Readonly<{

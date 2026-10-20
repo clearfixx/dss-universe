@@ -1,3 +1,27 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Interaction Platform
+ * 📄 File: apps/api/src/modules/interactions/application/services/audience-engagement.service.ts
+ *
+ * 🎯 Purpose:
+ * Authorizes guest/account engagement before deduplicated persistence and aggregate reads.
+ *
+ * 🧠 Responsibilities:
+ * • distinguishes guests from verified subjects for owner authorization;
+ * • retains stable hashed visitor/account keys and share channels;
+ * • prevents persistence and counter reads after a denial or owner failure.
+ *
+ * 🏗️ Architecture:
+ * Interactions application; request-time authorization precedes the existing repository transaction.
+ *
+ * ⚠️ Important:
+ * A visitor ID is not proof of membership; no positive decision is cached.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { createHash } from 'node:crypto';
 
 import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
@@ -55,7 +79,9 @@ export class AudienceEngagementService {
   ): Promise<void> {
     const decision = await this.targets.authorize(
       targetId,
-      actorId ?? 'anonymous',
+      actorId === undefined
+        ? { kind: 'GUEST' }
+        : { kind: 'AUTHENTICATED', subjectId: actorId },
       capability,
     );
     if (!decision.allowed) {
@@ -70,3 +96,5 @@ export class AudienceEngagementService {
     return `guest:${createHash('sha256').update(visitorId).digest('hex')}`;
   }
 }
+
+/** A visitor ID counts visits. It does not open the members' lounge. */

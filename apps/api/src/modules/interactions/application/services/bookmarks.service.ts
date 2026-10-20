@@ -43,7 +43,7 @@ export class BookmarksService {
   ): Promise<BookmarkMutationResult> {
     const decision = await this.targets.authorize(
       targetId,
-      ownerId,
+      { kind: 'AUTHENTICATED', subjectId: ownerId },
       'BOOKMARK',
     );
     if (!decision.allowed) {

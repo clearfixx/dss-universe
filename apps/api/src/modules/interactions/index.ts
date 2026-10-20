@@ -13,6 +13,7 @@
  */
 
 export { InteractionsModule } from './interactions.module';
+export type { InteractionViewer } from './domain/types/interaction-viewer.type';
 export {
   COMMENT_WRITE_TRANSACTION,
   type CommentWriteTransaction,

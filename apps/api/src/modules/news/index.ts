@@ -72,6 +72,7 @@ export {
   type NewsInteractionRequest,
   type NewsInteractionDecision,
   type NewsInteractionCapability,
+  type NewsInteractionViewer,
 } from './contracts/news-interaction-decisions.contract';
 export {
   NEWS_MEDIA_EVIDENCE,
