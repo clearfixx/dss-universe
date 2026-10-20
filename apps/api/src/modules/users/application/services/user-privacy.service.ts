@@ -12,7 +12,14 @@
  * • supplies privacy-safe defaults when no record exists;
  * • keeps owner access unconditional;
  * • evaluates field visibility for authenticated profile viewers;
+ * • applies the same viewer policy to single and batched profile reads;
  * • persists complete settings through the privacy repository.
+ *
+ * 🏗️ Architecture:
+ * Users-owned application policy; single and batch reads share one evaluator.
+ *
+ * ⚠️ Important:
+ * Missing settings use established defaults; failed reads never become defaults.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -85,7 +92,28 @@ export class UserPrivacyService {
     viewerId?: string,
   ): Promise<UserPrivacySettings> {
     const settings = await this.get(userId);
-    if (userId === viewerId) {
+    return this.resolveVisibility(settings, viewerId);
+  }
+
+  async visibilityForMany(
+    userIds: string[],
+    viewerId?: string,
+  ): Promise<Map<string, UserPrivacySettings>> {
+    if (userIds.length === 0) return new Map();
+    const settings = await this.getMany(userIds);
+    return new Map(
+      [...settings].map(([userId, policy]) => [
+        userId,
+        this.resolveVisibility(policy, viewerId),
+      ]),
+    );
+  }
+
+  private resolveVisibility(
+    settings: UserPrivacySettings,
+    viewerId?: string,
+  ): UserPrivacySettings {
+    if (settings.userId === viewerId) {
       return {
         ...settings,
         showLocation: true,

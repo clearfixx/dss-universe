@@ -42,6 +42,50 @@ describe('UserPrivacyService', () => {
     });
   });
 
+  it.each(['PUBLIC', 'MEMBERS', 'PRIVATE'] as const)(
+    'keeps batched %s policy identical to single reads for owner, member and guest',
+    async (profileVisibility) => {
+      const policy = {
+        userId: 'user-1',
+        ...DEFAULT_USER_PRIVACY_SETTINGS,
+        profileVisibility,
+        showLocation: false,
+        showWebsite: false,
+        showLastSeen: false,
+      };
+      repository.findManyByUserIds.mockResolvedValue([policy]);
+      findByUserId.mockResolvedValue(policy);
+      for (const viewer of ['user-1', 'other', undefined]) {
+        const batch = await service.visibilityForMany(
+          ['user-1', 'user-1'],
+          viewer,
+        );
+        expect(batch.get('user-1')).toEqual(
+          await service.visibilityFor('user-1', viewer),
+        );
+        expect(batch.size).toBe(1);
+      }
+      expect(repository.findManyByUserIds.mock.calls).toEqual([
+        [['user-1']],
+        [['user-1']],
+        [['user-1']],
+      ]);
+    },
+  );
+
+  it('does not read empty batches or swallow batch privacy failures', async () => {
+    await expect(service.visibilityForMany([], 'viewer')).resolves.toEqual(
+      new Map(),
+    );
+    expect(repository.findManyByUserIds.mock.calls).toHaveLength(0);
+    repository.findManyByUserIds.mockRejectedValueOnce(
+      new Error('privacy unavailable'),
+    );
+    await expect(
+      service.visibilityForMany(['user-1'], 'viewer'),
+    ).rejects.toThrow('privacy unavailable');
+  });
+
   it('fills missing records with defaults in batched privacy reads', async () => {
     repository.findManyByUserIds.mockResolvedValue([]);
 

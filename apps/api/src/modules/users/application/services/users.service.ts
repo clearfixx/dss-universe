@@ -12,6 +12,7 @@
  * 🧠 Responsibilities:
  * • reads users through the repository abstraction;
  * • exposes public user data through response DTOs;
+ * • applies viewer privacy to individual and batched public projections;
  * • updates profile, avatar, cover and last-seen display state only;
  * • requests role names through a display-only input port;
  * • throws domain-level exceptions when users are not found.
@@ -45,6 +46,7 @@ import {
 } from '../../domain/repositories/users.repository.interface';
 import type { SafeUser } from '../../domain/types/safe-user.type';
 import type { UserRecord } from '../../domain/types/user-record.type';
+import type { UserPrivacySettings } from '../../domain/types/user-privacy-settings.type';
 import type { UpdateUserProfileData } from '../types/update-user-profile-data.type';
 import type { UserResponseDto } from '../dto';
 import { UserResponseMapper } from '../mappers';
@@ -143,10 +145,25 @@ export class UsersService {
     return this.toResponseDto(user);
   }
 
-  async getManyByIds(ids: string[]): Promise<UserResponseDto[]> {
+  async getPublicManyByIds(
+    ids: string[],
+    viewerId: string,
+  ): Promise<UserResponseDto[]> {
+    if (ids.length === 0) return [];
     const users = await this.usersRepository.findManyByIds(ids);
-
-    return users.map((user) => this.toResponseDto(user));
+    const visibility = await this.privacy.visibilityForMany(
+      users.map(({ id }) => id),
+      viewerId,
+    );
+    return users.map((user) => {
+      const policy = visibility.get(user.id);
+      if (!policy) throw new Error('Profile privacy evidence is incomplete.');
+      return this.projectPublicProfile(
+        this.toResponseDto(user),
+        policy,
+        viewerId,
+      );
+    });
   }
 
   roleNamesByUserIds(
@@ -174,6 +191,14 @@ export class UsersService {
   ): Promise<UserResponseDto> {
     const response = this.toResponseDto(this.requireUser(user));
     const visibility = await this.privacy.visibilityFor(response.id, viewerId);
+    return this.projectPublicProfile(response, visibility, viewerId);
+  }
+
+  private projectPublicProfile(
+    response: UserResponseDto,
+    visibility: UserPrivacySettings,
+    viewerId?: string,
+  ): UserResponseDto {
     const extendedProfileVisible =
       response.id === viewerId ||
       (visibility.profileVisibility === 'PUBLIC' && !viewerId) ||

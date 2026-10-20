@@ -53,9 +53,11 @@ describe('UsersService', () => {
     findMany: jest.fn(),
     findById: jest.fn(),
     updateById: jest.fn(),
+    findManyByIds: jest.fn(),
   } as unknown as jest.Mocked<UsersRepository>;
   const privacy = {
     visibilityFor: jest.fn(),
+    visibilityForMany: jest.fn(),
   } as unknown as jest.Mocked<UserPrivacyService>;
   const roles = { readNames: jest.fn() };
   const service = new UsersService(usersRepository, privacy, roles);
@@ -87,6 +89,59 @@ describe('UsersService', () => {
     await expect(service.getById('missing')).rejects.toBeInstanceOf(
       UserNotFoundException,
     );
+  });
+
+  it('requires viewer policy for batched profiles and preserves repository order without secrets', async () => {
+    usersRepository.findManyByIds.mockResolvedValue([user]);
+    privacy.visibilityForMany.mockResolvedValue(
+      new Map([
+        [
+          user.id,
+          {
+            userId: user.id,
+            profileVisibility: 'PRIVATE',
+            showLocation: false,
+            showWebsite: false,
+            showSocialLinks: false,
+            showLastSeen: false,
+            showOnlineStatus: false,
+            allowFollowers: true,
+            showFollows: false,
+            allowWallPosts: false,
+          },
+        ],
+      ]),
+    );
+    const result = await service.getPublicManyByIds([user.id], 'viewer');
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      id: user.id,
+      bio: null,
+      technologies: [],
+      interests: [],
+    });
+    expect(result[0]).not.toHaveProperty('passwordHash');
+    expect(result[0]).not.toHaveProperty('authVersion');
+    expect(privacy.visibilityForMany.mock.calls).toEqual([
+      [[user.id], 'viewer'],
+    ]);
+    expect(privacy.visibilityFor.mock.calls).toHaveLength(0);
+  });
+
+  it('fails closed for missing or failed batched evidence and skips an empty page', async () => {
+    await expect(service.getPublicManyByIds([], 'viewer')).resolves.toEqual([]);
+    expect(usersRepository.findManyByIds.mock.calls).toHaveLength(0);
+    usersRepository.findManyByIds.mockResolvedValue([user]);
+    privacy.visibilityForMany.mockResolvedValueOnce(new Map());
+    await expect(
+      service.getPublicManyByIds([user.id], 'viewer'),
+    ).rejects.toThrow('Profile privacy evidence is incomplete.');
+    privacy.visibilityForMany.mockRejectedValueOnce(
+      new Error('policy unavailable'),
+    );
+    await expect(
+      service.getPublicManyByIds([user.id], 'viewer'),
+    ).rejects.toThrow('policy unavailable');
   });
 
   it('delegates profile updates through the repository boundary', async () => {

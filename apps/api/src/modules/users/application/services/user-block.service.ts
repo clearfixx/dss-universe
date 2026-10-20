@@ -12,7 +12,13 @@
  * • rejects self-block and missing targets;
  * • delegates atomic block and follow cleanup;
  * • exposes block enforcement to social features;
- * • returns the owner's bounded blocked-user list.
+ * • returns the owner's bounded list with each blocked profile's viewer privacy.
+ *
+ * 🏗️ Architecture:
+ * Users application; block persistence and profile privacy remain separately owned.
+ *
+ * ⚠️ Important:
+ * Blocking another account never grants access to that account's private fields.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -60,7 +66,7 @@ export class UserBlockService {
     limit = 20,
   ): Promise<PaginatedResult<UserResponseDto>> {
     const result = await this.blocks.blockedUsers(userId, page, limit);
-    const users = await this.users.getManyByIds(result.items);
+    const users = await this.users.getPublicManyByIds(result.items, userId);
     const byId = new Map(users.map((user) => [user.id, user]));
     return {
       ...result,

@@ -11,7 +11,13 @@
  * 🧠 Responsibilities:
  * • rejects self-follow and missing targets;
  * • enforces target follow and list privacy;
- * • exposes batched summaries and ordered paginated user projections.
+ * • exposes batched summaries and ordered viewer-safe paginated projections.
+ *
+ * 🏗️ Architecture:
+ * Users application; repositories own edge pages and Users owns field projection.
+ *
+ * ⚠️ Important:
+ * List access does not grant access to every listed profile's extended fields.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -129,7 +135,7 @@ export class UserSocialGraphService {
       throw new ForbiddenException('This social graph is private.');
     }
     const result = await this.graph[direction](userId, page, limit);
-    const users = await this.users.getManyByIds(result.items);
+    const users = await this.users.getPublicManyByIds(result.items, viewerId);
     const byId = new Map(users.map((user) => [user.id, user]));
     return {
       ...result,

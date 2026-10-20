@@ -29,7 +29,7 @@ PRIVATE user's bio, hidden location and interests through `followers` of a
 public profile. The same viewer's `userByUsername` response correctly returns
 null/null/empty for those fields. No successful authorization decision is mocked.
 
-Source: social graph list reads edge IDs then `UsersService.getManyByIds`, which
+At audit baseline `eec1983`, social graph list reads edge IDs then `UsersService.getManyByIds`, which
 maps unredacted display records; direct public profile reads instead apply
 viewer privacy. The GraphQL mapper copies the returned fields. Following and
 blocked-user lists share that projection path but are not yet independently
@@ -45,6 +45,20 @@ security package on 2026-10-20. This audit changes no runtime behavior. Evidence
 `apps/api/test/users-social-privacy-characterization.e2e-spec.ts`, focused1/1
 PASS with normal exit0 on 2026-10-20. Do not declare the privacy contract safe
 from the older shared-row field allowlists or green static inventory.
+
+Separate correction now locally implemented on `debt/debt070-social-profile-privacy`:
+all three lists use a required-viewer batch projection, sharing direct-profile
+policy and preserving edge paging/count/order. Privacy failure has no raw-data
+fallback. The former passing defect assertion is now a red-before/green-after
+security regression, extended with migrated HTTP paging/owner/revocation/error
+and actual bounded SQL checks. Focused5/5, API1175/1175 and final lint/types/
+Prisma/build/architecture pass. Full migrated E2E513/514, zero skipped,
+including security5/5 and App27/27; only inherited DEBT-045 fails. Retained
+handles require exact completed-process cleanup, not green shell exit.
+GraphQL DEBT-044 and global format/audit remain red; CI/review acceptance is
+pending, with no waiver. See
+[correction evidence](DEBT_070_SOCIAL_PROFILE_PRIVACY.md). Historical audit text
+above describes the pre-correction state, not a continuing claim of current leak.
 
 2026-10-20 bounded Notifications surface progress for DEBT-027: the unused
 concrete preferences-service Nest export is removed; local service/resolver/
