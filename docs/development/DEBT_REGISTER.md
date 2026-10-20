@@ -21,6 +21,16 @@ active package safe and buildable.
 
 ## Register
 
+2026-10-20 bounded Notifications surface progress for DEBT-027: the unused
+concrete preferences-service Nest export is removed; local service/resolver/
+repository remain private. Metadata regression red before/green after; API1169,
+architecture140, workspace lint/types/Prisma/build and adjacent tests pass.
+Migrated E2E508/509, no skips, App27 and two preferences atomicity cases pass;
+only DEBT-045 fails. Format41/audit1 high10 moderate, DEBT-044 consistency and
+retained handles remain open; CI/review acceptance pending. See
+[evidence](../audits/D4_NOTIFICATIONS_PRIVATE_SURFACE.md). No delivery features,
+facade, schema/API or frontend changes; full D4 remains open.
+
 2026-10-20 separate Media/Users runtime ownership progress for DEBT-027:
 Users owns only the profile-binding absence predicate; Media retains the fixed
 library/metrics/cleanup algorithms; root preserves the Serializable cleanup

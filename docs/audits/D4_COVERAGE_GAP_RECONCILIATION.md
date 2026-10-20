@@ -8,7 +8,9 @@ The baseline inventory contains 832 tracked non-test TypeScript sources under
 API and Worker (excluding `.d.ts` and spec/test/e2e-spec files).
 Sorted path + newline + file bytes + newline SHA256:
 `215011d57cf03c4bf95d61001853876088520ad79f09ab91d1c3c3e6bc2f52bc`.
-New characterization tests do not change this runtime-source inventory.
+This is a frozen pre-transfer inventory, not the current source count after
+Media runtime composition. Tests alone did not change it; later production
+adapters did. Retain the baseline hash as historical evidence.
 Neither the file count nor a zero architecture inventory proves that all
 operations have been reviewed. Historical inventories remain historical.
 
@@ -17,25 +19,25 @@ operations have been reviewed. Historical inventories remain historical.
 This table locates evidence; it does not certify current whole-family acceptance.
 Older reports must be reconciled with subsequent fixes and current sources.
 
-| Family           | Existing evidence / remaining reconciliation                                                                                                                   |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Achievements     | Persistence review and audit-evidence reconciliation; preserve imported DB regressions, not only branch-local history                                          |
-| Activity         | Viewer-context ownership work and Worker source boundaries; Wall ordering DEBT-067 still needs explicit disposition                                            |
-| AI Core          | Dedicated boundary review; limited implemented capabilities, not a claim of future Intelligence completion                                                     |
-| Auth             | Lifecycle operation review and separate DEBT-068 destination fix; do not repeat the old bug as current                                                         |
-| Community Points | Operation review and separate DEBT-062 cap serialization; live integration routing remains separately tracked                                                  |
-| Content Access   | Dedicated operation review and root presentation composition; future counters are not implemented facts                                                        |
-| Custom Titles    | Persistence review plus separate DEBT-064 serialization fix; old race evidence is historical                                                                   |
-| Editor           | Operation review and presentation composition; DEBT-066 exact depth policy remains an owner decision                                                           |
-| IAM              | Latest operation reconciliation PR60; removal of one unused export does not approve future owner policy                                                        |
-| Interactions     | Owned reads/writers and mention composition; consolidate remaining method-level evidence before declaring full coverage                                        |
-| Leaderboards     | Single-query runtime ownership and separate empty-page total fix; no formula changes authorized here                                                           |
-| Levels           | Repository operation evidence; distinguish demonstrated behavior from untested event/concurrency schedules                                                     |
-| Media            | Current profile predicates in browse/metrics/cleanup remain cross-owner; foundation packet is design/tests only                                                |
-| News             | Owned snapshot, projection security fixes and reader transfers; reconcile current operation coverage, not only lexical imports                                 |
-| Notifications    | Preferences persistence evidence; concrete Nest service export remains visible, no `index.ts` public barrel; later delivery scope is not pre-11 implementation |
-| Reputation       | Owned read/write composition evidence; reconcile current methods with reports before acceptance                                                                |
-| Users            | Owned profile composition and registration fragments; remaining social/Wall operation coverage must be explicit                                                |
+| Family           | Existing evidence / remaining reconciliation                                                                                                     |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Achievements     | Persistence review and audit-evidence reconciliation; preserve imported DB regressions, not only branch-local history                            |
+| Activity         | Viewer-context ownership work and Worker source boundaries; Wall ordering DEBT-067 still needs explicit disposition                              |
+| AI Core          | Dedicated boundary review; limited implemented capabilities, not a claim of future Intelligence completion                                       |
+| Auth             | Lifecycle operation review and separate DEBT-068 destination fix; do not repeat the old bug as current                                           |
+| Community Points | Operation review and separate DEBT-062 cap serialization; live integration routing remains separately tracked                                    |
+| Content Access   | Dedicated operation review and root presentation composition; future counters are not implemented facts                                          |
+| Custom Titles    | Persistence review plus separate DEBT-064 serialization fix; old race evidence is historical                                                     |
+| Editor           | Operation review and presentation composition; DEBT-066 exact depth policy remains an owner decision                                             |
+| IAM              | Latest operation reconciliation PR60; removal of one unused export does not approve future owner policy                                          |
+| Interactions     | Owned reads/writers and mention composition; consolidate remaining method-level evidence before declaring full coverage                          |
+| Leaderboards     | Single-query runtime ownership and separate empty-page total fix; no formula changes authorized here                                             |
+| Levels           | Repository operation evidence; distinguish demonstrated behavior from untested event/concurrency schedules                                       |
+| Media            | Profile-aware library ownership locally transferred in draft PR62; foundation and runtime evidence remain separate, CI/review acceptance open    |
+| News             | Owned snapshot, projection security fixes and reader transfers; reconcile current operation coverage, not only lexical imports                   |
+| Notifications    | Unused concrete Nest service export removed in the current bounded packet; metadata regression red-before/green-after, full verification pending |
+| Reputation       | Owned read/write composition evidence; reconcile current methods with reports before acceptance                                                  |
+| Users            | Owned profile composition and registration fragments; remaining social/Wall operation coverage must be explicit                                  |
 
 Core Authorization, root infrastructure and Worker are cross-cutting evidence,
 not additional feature modules. Worker source review does not prove exactly-once
@@ -43,10 +45,15 @@ delivery or the existence of every future integration consumer.
 
 ## Remaining sequence
 
-1. Finish Media profile-asset foundation: actual PostgreSQL behavior, query
-   shape, exact technical composition design. Obtain separate approval before
-   production transfer; keep selection and guarded claim predicates together.
-2. Implement and verify the approved transfer in its own logical package.
+1. Media foundation and separately approved runtime transfer are locally
+   implemented and published as draft PR61/62, with inherited red gates explicit.
+   See [runtime evidence](D4_MEDIA_PROFILE_ASSET_RUNTIME.md); CI/review acceptance
+   is not implied by publication.
+2. Complete current Notifications provider-surface verification and publication;
+   see [packet evidence](D4_NOTIFICATIONS_PRIVATE_SURFACE.md): API1169/1169,
+   migrated E2E508/509 (only inherited News viewCount), App27/27 and two
+   preferences atomicity cases pass. CI/review acceptance remains open. Delivery features
+   and representation cleanup are not smuggled into this export change.
 3. Reconcile Notifications consumers/export and remaining current method-level
    coverage for Interactions, News, Users and Reputation. Record exact gaps;
    do not start arbitrary new module audits because an earlier report is old.

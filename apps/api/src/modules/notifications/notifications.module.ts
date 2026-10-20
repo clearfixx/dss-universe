@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/modules/notifications/notifications.module.ts
  *
  * 🎯 Purpose:
- * Wires the Notifications policy foundation.
+ * Wires private notification preferences providers and their local resolver.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -31,7 +31,6 @@ import { NotificationPreferencesResolver } from './presentation/graphql/resolver
       useClass: PrismaNotificationPreferencesRepository,
     },
   ],
-  exports: [NotificationPreferencesService],
 })
 export class NotificationsModule {}
 
