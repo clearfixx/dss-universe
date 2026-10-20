@@ -21,6 +21,13 @@ active package safe and buildable.
 
 ## Register
 
+2026-10-19 IAM persistence-family progress for DEBT-027: all fourteen current
+owned repository/fragment sources and caller/root boundaries are reconciled;
+the now-unused registration-role policy root export is removed, with its owned
+value/writer preserved. API1157 and architecture139 pass; full local gate/CI
+acceptance follows in [the report](../audits/D4_IAM_OPERATION_RECONCILIATION.md).
+DEBT-047 remains open; this is not new owner-policy implementation or full D4 closure.
+
 2026-10-19 bounded Auth lifecycle review adds DEBT-068, reproduced with actual
 credential/email-verification adapters in isolated PostgreSQL. Six focused DB
 cases pass, including the defect characterization; no runtime correction is

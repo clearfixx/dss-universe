@@ -775,7 +775,6 @@ for (const [moduleName, expected] of [
       "IamAssignmentReader",
       "IAM_ROLE_PERMISSION_KEYS_READER",
       "IamRolePermissionKeysReader",
-      "REGISTRATION_ROLE_NAME",
       "IAM_ACCESS_MEMBERSHIPS",
       "IamAccessMembershipReader",
       "GROUP_MANAGEMENT_AUTHORITY",

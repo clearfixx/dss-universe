@@ -10,7 +10,7 @@
  *
  * 🧠 Responsibilities:
  * • exports IamModule;
- * • exposes the registration role policy required by root composition;
+ * • exposes narrow assignment, display and membership integration contracts;
  * • keeps external imports clean and predictable.
  *
  * 🏗️ Architecture:
@@ -45,7 +45,6 @@ export {
   IAM_ROLE_DISPLAY_READER,
   type IamRoleDisplayReader,
 } from './contracts/role-display-reader.contract';
-export { REGISTRATION_ROLE_NAME } from './contracts/registration-role.policy';
 export {
   IAM_ROLE_PERMISSION_KEYS_READER,
   type IamRolePermissionKeysReader,

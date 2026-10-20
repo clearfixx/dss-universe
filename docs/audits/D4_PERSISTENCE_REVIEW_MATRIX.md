@@ -15,6 +15,13 @@ This reconciles this operation only, not the full Auth/Users/IAM inventory.
 
 ## Discovery boundary
 
+IAM follow-up at parent `e38c5bf`: all fourteen current repository/fragment sources,
+their five application/safety callers, guard/controller paths and root adapters
+are reconciled in [the operation report](D4_IAM_OPERATION_RECONCILIATION.md).
+The unused public registration-role policy export is removed; its owned constant
+and writer remain intact. No new security finding or owner policy is introduced.
+DEBT-047, CI/green-baseline acceptance and wider D4 reconciliation remain open.
+
 Auth lifecycle follow-up at parent `2dc275c` traces six session/abuse/recovery/
 verification/2FA adapters and their application, Redis, transport and Worker
 context. A real DB characterization confirms old verification credentials can

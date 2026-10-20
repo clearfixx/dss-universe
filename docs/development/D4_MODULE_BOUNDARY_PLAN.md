@@ -26,6 +26,14 @@ Do not invent frontend design, new scoring formulas, owner policy or Phase 11 fl
 
 ## Implementation sequence
 
+IAM operation follow-up (2026-10-19): all fourteen owned repository/fragment
+sources and current caller/root guard boundaries are traced in
+[the source reconciliation](../audits/D4_IAM_OPERATION_RECONCILIATION.md).
+One unused public registration-policy export is removed after the writer transfer;
+the local policy/value/implementation remain. This closes that reviewed source
+family, not DEBT-047, exhaustive cross-project D4 or acceptance gates. New owner
+rights and Command Deck features remain scheduled in their relevant phases.
+
 Auth lifecycle review (2026-10-19): session/access/abuse/reset/verification/2FA
 operations and their Redis/Worker/caller context are traced in a bounded
 [operation report](../audits/D4_AUTH_LIFECYCLE_OPERATION_REVIEW.md). Actual Auth
