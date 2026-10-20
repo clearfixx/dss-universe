@@ -43,6 +43,16 @@ Core Authorization, root infrastructure and Worker are cross-cutting evidence,
 not additional feature modules. Worker source review does not prove exactly-once
 delivery or the existence of every future integration consumer.
 
+Current follow-up: [operation reconciliation](D4_EXIT_OPERATION_RECONCILIATION.md)
+records source-level review of the remaining47 infrastructure files across
+Users, Reputation, Interactions and News, with explicitly bounded context review.
+It also records confirmed DEBT-070 and the owner's approval of a separate
+pre-11 security correction. That characterization is not a safe privacy test.
+The current scoped runtime fingerprint has838 sources; the832 count above
+remains historical. Full E2E508/510 (known News and App failures), format/audit
+and GraphQL consistency remain red. Further context/CI/acceptance reconciliation
+is pending; this update does not declare D4 complete.
+
 ## Remaining sequence
 
 1. Media foundation and separately approved runtime transfer are locally

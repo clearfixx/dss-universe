@@ -21,6 +21,31 @@ active package safe and buildable.
 
 ## Register
 
+### DEBT-070 — Social-list projection returns private profile fields (High, ACCEPTED, separate pre-11 security package)
+
+Date: 2026-10-20. Real GraphQL with three synthetic Auth-registered users in a
+fully migrated isolated schema proves an authenticated outsider receives a
+PRIVATE user's bio, hidden location and interests through `followers` of a
+public profile. The same viewer's `userByUsername` response correctly returns
+null/null/empty for those fields. No successful authorization decision is mocked.
+
+Source: social graph list reads edge IDs then `UsersService.getManyByIds`, which
+maps unredacted display records; direct public profile reads instead apply
+viewer privacy. The GraphQL mapper copies the returned fields. Following and
+blocked-user lists share that projection path but are not yet independently
+proven by this fixture. No password/token disclosure or account takeover is
+claimed. The passing characterization deliberately pins a defect, not safety.
+
+Requested separate pre-11 security package: viewer-safe per-profile projection
+for social lists; cover followers/following/blockedUsers, owner and third-party
+viewers, PUBLIC/MEMBERS/PRIVATE and field flags, with preserved total/order/
+pagination and no API or transaction-budget change. Policy and implementation
+details still require source-aware design; the owner approved the separate
+security package on 2026-10-20. This audit changes no runtime behavior. Evidence:
+`apps/api/test/users-social-privacy-characterization.e2e-spec.ts`, focused1/1
+PASS with normal exit0 on 2026-10-20. Do not declare the privacy contract safe
+from the older shared-row field allowlists or green static inventory.
+
 2026-10-20 bounded Notifications surface progress for DEBT-027: the unused
 concrete preferences-service Nest export is removed; local service/resolver/
 repository remain private. Metadata regression red before/green after; API1169,
@@ -1232,7 +1257,7 @@ GraphQL check remains red for DEBT-044; generated side effects restored exactly.
 No full-green, CI/review/owner acceptance or debt closure is claimed.
 Debt remains open. [Design and current evidence](DEBT_065_CLAIM_FENCING_DESIGN.md).
 
-### DEBT-066 — Editor malformed/deep document validation throws runtime errors (Medium, OPEN, correction approval requested)
+### DEBT-066 — Editor malformed/deep document validation throws runtime errors (Medium, ACCEPTED for separate design; exact depth approval pending)
 
 Actual EditorService normalization of synthetic null child, object content and
 object marks throws TypeError instead of controlled validation rejection. A
