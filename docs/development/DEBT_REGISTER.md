@@ -2,7 +2,7 @@
 
 > Status: Active
 >
-> Updated: 2026-10-20
+> Updated: 2026-10-21
 
 ## Purpose
 
@@ -46,6 +46,14 @@ or silent Wall-policy changes. The owner approved a separate package with
 viewer-context design first on2026-10-20; implementation is not in this audit.
 Current packet is evidence-only. See
 [source and HTTP evidence](../audits/D4_NEWS_INTERACTION_AUDIENCE.md).
+
+Separate [viewer-context design](DEBT_071_NEWS_INTERACTION_VIEWER_PLAN.md)
+at4683f1f proposes explicit guest/authenticated context through Interactions,
+root projection of only authentication state to News, and current publication/
+audience checks before engagement persistence. On2026-10-20 the owner approved
+the isolated legacy Wall bridge and retained precheck/write transaction boundary;
+no atomic revocation guarantee or Wall security certification is claimed. The
+design packet changes documentation only; runtime correction remains unimplemented.
 
 ### DEBT-070 — Social-list projection returns private profile fields (High, ACCEPTED, separate pre-11 security package)
 
