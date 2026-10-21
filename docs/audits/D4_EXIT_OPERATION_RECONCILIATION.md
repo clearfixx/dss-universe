@@ -269,6 +269,12 @@ remain red; draft publication is evidence, not acceptance or permission to merge
 
 ## Remaining evidence work
 
+Final follow-up at5dc388a: [current seventeen-family disposition](D4_CURRENT_FAMILY_DISPOSITION.md)
+reconciles existing reviewed operations with current source deltas, module
+surfaces and root/cross-cutting corrections. Implementation checked, acceptance
+open: owner explicitly requests stopping here after final verification/report,
+without fixing D5/D6 debts or treating local progress as a green release.
+
 Follow-up at194e73b: [current Core/Worker delivery reconciliation](D4_CORE_WORKER_DELIVERY_RECONCILIATION.md)
 reconciles selected current routing/claim/idempotency/retention boundaries and
 adds eight actual migrated persistence bridge tests. Marker-gap replay and

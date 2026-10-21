@@ -2,6 +2,13 @@
 
 Date: 2026-10-20. Baseline: `1ba2c4849e927b424af5d5978d5986dccc363b6b`.
 
+Current final disposition at5dc388a:
+[seventeen-family/delta reconciliation](D4_CURRENT_FAMILY_DISPOSITION.md).
+The historical evidence/discovery gaps below are not a new claim that already
+corrected runtime defects persist. Current architecture implementation is
+reconciled; formal acceptance remains open. Owner explicitly requires stopping
+at this boundary, with no automatic D5/D6 or later-phase execution.
+
 ## Source inventory versus reviewed operations
 
 The baseline inventory contains 832 tracked non-test TypeScript sources under

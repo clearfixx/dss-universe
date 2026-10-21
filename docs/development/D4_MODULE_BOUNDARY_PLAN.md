@@ -1,6 +1,14 @@
 # D4 — Cross-module boundary remediation
 
 Date: 2026-10-14. Status: authorized debt-remediation execution, not Phase 11.
+
+Final current-state checkpoint at5dc388a:
+[D4 family disposition](../audits/D4_CURRENT_FAMILY_DISPOSITION.md) reconciles the
+implemented sequence below against current sources and separately records red
+acceptance gates. Owner clarification2026-10-21: stop after this final check with
+implementation checked/acceptance open; do not execute D5/D6 or later stages.
+This is not full D4 release acceptance, permission to merge, or completion of the
+broader pre-Phase11 goal.
 Branch: `debt/d4-module-boundaries`.
 Implemented increments: D4.1, D4.2 and bounded D4.3a/b/c/d1/d2/d3a plus AI Core/private feature/representation/presentation/News/Media/Core D4.4; remaining bounded import inventory 0,
 full D4 and the rest of D4.3 OPEN.

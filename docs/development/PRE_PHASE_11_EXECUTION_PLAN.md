@@ -33,6 +33,13 @@ Their schedule below remains a future plan, not current execution authority.
 Known red checks are not waived, and unfinished D4 must not be labelled complete
 merely to reach this checkpoint.
 
+Owner clarification (2026-10-21): after the
+[final D4 current-state reconciliation](../audits/D4_CURRENT_FAMILY_DISPOSITION.md),
+stop with implementation checked and formal acceptance open. Existing D5/D6/CI
+blockers are not waived or fixed under D4. Pause the active goal after reporting;
+do not automatically proceed to D5, D6, D7, stack audit or Phase11. A new owner
+command is required to resume. The broader goal is not marked achieved.
+
 ## Operating rules
 
 1. Each package uses its own branch, review and PR.
