@@ -86,3 +86,37 @@ Final full E2E after the single-workflow budget correction,
 GitHub checks and integration acceptance are pending at this publication
 checkpoint. Final acceptance evidence belongs in the integration PR; a draft
 publication is not a completed green baseline or an instruction to merge red.
+
+## First GitHub run and Web lifecycle correction
+
+Run39656914197 passes Web smoke and the explicit security gate; both Linux and
+Windows containment pass in39656914202. Quality Gate fails during Web coverage:
+59 assertions pass, but an uncaught React scheduler callback reads window after
+jsdom teardown (DEBT050, editor-ai-dialog context). That failure is retained.
+
+The test setup imported only matchers. Testing Library's installed source
+registers automatic cleanup only if global afterEach exists; this Vitest config
+does not enable globals. Shared setup now explicitly unmounts all roots inside
+awaited async act after each test. No React runtime, dialog UX, error listener or
+Vitest unhandled-error policy is changed.
+
+The new lifecycle probe renders a real effect with a disposal spy; its afterAll
+requires that the shared afterEach actually unmounted the root. An isolated
+diagnostic config with the original matchers-only setup fails that suite because
+disposal never happened (exit1), while the actual full Web coverage passes60/60,
+26 suites, no unhandled errors, natural exit0 (71.26s). The ignored diagnostic
+control files are not part of the shipped change. Updated GitHub verification
+remains required before integration.
+
+## Final local API verification
+
+The fresh final API E2E run completes586/586 across53 suites, zero skipped,
+829.869s, natural exit0. All database clients and private schemas are released;
+no PID termination, forceExit, retry-to-green without a correction, or schema
+mutation was needed. This run includes the scoped workflow-budget correction
+and the persisted-view assertion. Its API sources are unchanged by the later
+Web-only lifecycle correction. The full SDL digest remains unchanged.
+
+Local acceptance evidence is now complete for this narrow stabilization scope.
+GitHub must verify the Web lifecycle correction before main integration. This
+does not close all D6/pre-Phase11 debts or declare a production-ready release.
