@@ -3,64 +3,48 @@
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
  * 📦 Module: Authorization
- * 📄 File: permissions.repository.ts
+ * 📄 File: apps/api/src/core/authorization/repositories/permissions.repository.ts
  *
  * 🎯 Purpose:
- * Repository для читання permission'ів із бази даних.
+ * Supplies authoritative assignment facts to existing permission workflows through owned inputs.
  *
- * 🗄️ Database:
- * Role
- *   ↓
- * RolePermission
- *   ↓
- * Permission
+ * 🧠 Responsibilities:
+ * • delegates role-key and subject-assignment reads independently;
+ * • preserves missing/empty evidence and provider failure propagation;
+ * • keeps persistence and producer-owned mappings outside Authorization.
  *
- * 🧠 Design Decisions:
- * PermissionsService не працює напряму з Prisma.
- * Уся database-логіка живе тут.
+ * 🏗️ Architecture:
+ * Compatibility adapter for PermissionsService; root binds IAM/Auth-owned evidence.
  *
- * ⚠️ Don't:
- * Не додавай сюди бізнес-логіку доступу.
- * Repository питає базу. Service приймає рішення.
+ * ⚠️ Important:
+ * Facts are not decisions. Do not add a cache, ACTIVE filter or fabricated grants.
  *
- * 🛸 Якщо цей файл почав вирішувати, кому що можна —
- * він захопив владу. Зупини його. 😄
+ * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@api/core/database';
+import { Inject, Injectable } from '@nestjs/common';
+import type { UserAccessProfile } from '../types/user-access-profile.type';
+import {
+  AUTHORIZATION_ROLE_PERMISSION_FACTS,
+  AUTHORIZATION_SUBJECT_ASSIGNMENT_FACTS,
+  type AuthorizationRolePermissionFacts,
+  type AuthorizationSubjectAssignmentFacts,
+} from '../contracts/permission-facts-reader.port';
 
 @Injectable()
 export class PermissionsRepository {
-  constructor(private readonly prisma: PrismaService) {}
-
-  async findPermissionKeysByRoleNames(roleNames: string[]): Promise<string[]> {
-    if (!roleNames.length) {
-      return [];
-    }
-
-    const rolePermissions = await this.prisma.rolePermission.findMany({
-      where: {
-        role: {
-          name: {
-            in: roleNames,
-          },
-        },
-      },
-      select: {
-        permission: {
-          select: {
-            key: true,
-          },
-        },
-      },
-    });
-
-    const permissionKeys = rolePermissions.map(
-      (rolePermission) => rolePermission.permission.key,
-    );
-
-    return [...new Set<string>(permissionKeys)];
+  constructor(
+    @Inject(AUTHORIZATION_ROLE_PERMISSION_FACTS)
+    private readonly roleFacts: AuthorizationRolePermissionFacts,
+    @Inject(AUTHORIZATION_SUBJECT_ASSIGNMENT_FACTS)
+    private readonly subjectFacts: AuthorizationSubjectAssignmentFacts,
+  ) {}
+  findPermissionKeysByRoleNames(roleNames: string[]): Promise<string[]> {
+    return this.roleFacts.read(roleNames);
+  }
+  findAccessProfileByUserId(userId: string): Promise<UserAccessProfile> {
+    return this.subjectFacts.read(userId);
   }
 }
+
+/** Decisions belong to Authorization. Borrowed database keys do not confer ownership. */

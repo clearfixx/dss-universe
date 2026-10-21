@@ -2,39 +2,70 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: Authorization
- * 📄 File: authorization.module.ts
+ * 🛡️ Module: Authorization
+ * 📄 File: apps/api/src/core/authorization/authorization.module.ts
  *
  * 🎯 Purpose:
- * Збирає інфраструктуру permission-based authorization.
+ * Assembles the permission-based authorization infrastructure.
  *
- * 📦 Contains:
- * • PermissionsGuard;
- * • PermissionsService;
- * • PermissionsRepository;
- * • AuthorizationTestController.
+ * 🧠 Responsibilities:
+ * • registers PermissionsGuard;
+ * • registers PermissionsService;
+ * • registers PermissionsRepository;
+ * • publishes current subject access through a narrow read capability;
+ * • exposes AuthorizationTestController for development verification.
  *
- * 🔗 Dependencies:
- * PrismaModule потрібен репозиторію для доступу до БД.
+ * 🏗️ Architecture:
+ * Core authorization module.
  *
- * 🛰️ Якщо Nest знову скаже "can't resolve dependencies" —
- * перевір imports. Він не злий, він просто педант. 😄
+ * Authenticated request
+ *   ↓
+ * PermissionsGuard
+ *   ↓
+ * Permission metadata
+ *   ↓
+ * Controller
+ *
+ * ⚠️ Important:
+ * Assignment inputs are wired at the root; this module owns decisions, not IAM persistence.
+ *
+ * 💡 Notes:
+ * If Nest says "can't resolve dependencies",
+ * check module imports. It is not angry. It is just very literal. 😄
+ *
+ * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 
 import { Module } from '@nestjs/common';
 
-import { PrismaModule } from '@api/core/database';
-
 import { AuthorizationTestController } from './authorization-test.controller';
 import { PermissionsGuard } from './guards/permissions.guard';
 import { PermissionsRepository } from './repositories/permissions.repository';
 import { PermissionsService } from './services/permissions.service';
+import { SUBJECT_ACCESS_READER } from './contracts/subject-access-reader.interface';
+import { ACCESS_CAPABILITY_DECISIONS } from './contracts/access-capability-decisions.contract';
+import { AccessCapabilityDecisionsService } from './services/access-capability-decisions.service';
 
 @Module({
-  imports: [PrismaModule],
   controllers: [AuthorizationTestController],
-  providers: [PermissionsGuard, PermissionsService, PermissionsRepository],
-  exports: [PermissionsGuard, PermissionsService, PermissionsRepository],
+  providers: [
+    PermissionsGuard,
+    PermissionsService,
+    PermissionsRepository,
+    AccessCapabilityDecisionsService,
+    {
+      provide: ACCESS_CAPABILITY_DECISIONS,
+      useExisting: AccessCapabilityDecisionsService,
+    },
+    { provide: SUBJECT_ACCESS_READER, useExisting: PermissionsService },
+  ],
+  exports: [
+    PermissionsGuard,
+    PermissionsService,
+    PermissionsRepository,
+    SUBJECT_ACCESS_READER,
+    ACCESS_CAPABILITY_DECISIONS,
+  ],
 })
 export class AuthorizationModule {}

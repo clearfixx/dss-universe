@@ -1,0 +1,133 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: News
+ * 📄 File: apps/api/src/modules/news/domain/types/news-article.type.ts
+ *
+ * 🎯 Purpose:
+ * Defines canonical News state and draft commands independently of persistence and transport.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
+import type { EditorDocument } from '@dss/editor';
+
+export const NEWS_ARTICLE_STATUSES = [
+  'DRAFT',
+  'IN_REVIEW',
+  'CHANGES_REQUESTED',
+  'APPROVED',
+  'SCHEDULED',
+  'PUBLISHED',
+  'ARCHIVED',
+] as const;
+export type NewsArticleStatus = (typeof NEWS_ARTICLE_STATUSES)[number];
+
+export const NEWS_POST_TYPES = [
+  'STANDARD',
+  'TEXT',
+  'GALLERY',
+  'VIDEO',
+  'AUDIO',
+] as const;
+export type NewsPostType = (typeof NEWS_POST_TYPES)[number];
+export type NewsVisibility = 'PUBLIC' | 'MEMBERS';
+
+export type NewsArticle = {
+  id: string;
+  interactionTargetId: string;
+  authorId: string;
+  postType: NewsPostType;
+  status: NewsArticleStatus;
+  visibility: NewsVisibility;
+  language: string;
+  slug: string;
+  title: string;
+  shortText: string;
+  document: EditorDocument;
+  templateData: unknown;
+  plainText: string;
+  searchText: string;
+  coverMediaId: string | null;
+  currentVersion: number;
+  allowComments: boolean;
+  allowRating: boolean;
+  allowSharing: boolean;
+  allowIndexing: boolean;
+  showOnHomepage: boolean;
+  featured: boolean;
+  submittedAt: Date | null;
+  approvedAt: Date | null;
+  approvedVersion: number | null;
+  scheduledFor: Date | null;
+  scheduledById: string | null;
+  publishedAt: Date | null;
+  displayPublishedAt: Date | null;
+  archivedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type CreateNewsDraft = {
+  authorId: string;
+  postType: NewsPostType;
+  visibility: NewsVisibility;
+  language: string;
+  slug: string;
+  title: string;
+  shortText: string;
+  document: EditorDocument;
+  templateData: unknown;
+  plainText: string;
+  searchText: string;
+  publicSearchText: string;
+  hasContentGates: boolean;
+  coverMediaId: string | null;
+  attachmentMediaIds: string[];
+};
+
+export type CreateNewsDraftRequest = Omit<
+  CreateNewsDraft,
+  | 'document'
+  | 'plainText'
+  | 'searchText'
+  | 'publicSearchText'
+  | 'hasContentGates'
+  | 'templateData'
+  | 'attachmentMediaIds'
+> & { documentJson: string; templateData?: unknown };
+
+export type SaveNewsDraft = CreateNewsDraft & {
+  articleId: string;
+  baseVersion: number;
+  changeSummary: string | null;
+};
+
+export type SaveNewsDraftRequest = Omit<
+  SaveNewsDraft,
+  | 'document'
+  | 'plainText'
+  | 'searchText'
+  | 'publicSearchText'
+  | 'hasContentGates'
+  | 'authorId'
+  | 'templateData'
+  | 'attachmentMediaIds'
+> & { documentJson: string; templateData?: unknown };
+
+export type NewsEditorialListQuery = {
+  actorId: string;
+  includeAll: boolean;
+  statuses?: NewsArticleStatus[];
+  page: number;
+  pageSize: number;
+};
+
+export type NewsEditorialListPage = {
+  items: NewsArticle[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};

@@ -12,74 +12,103 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "build": "nest build",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "lint": "eslint \"{src,test}/**/*.ts\"",
+    "lint:fix": "eslint \"{src,test}/**/*.ts\" --fix",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "test": "jest",
+    "test": "jest --runInBand",
+    "test:unit": "jest --runInBand",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:e2e": "jest --config ./test/jest-e2e.json --runInBand",
     "prisma": "prisma",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
+    "db:validate": "prisma validate",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:reset": "prisma migrate reset",
     "db:deploy": "prisma migrate deploy",
+    "db:news-search": "ts-node -r tsconfig-paths/register scripts/news-search-maintenance.ts",
     "nest": "nest"
   },
   "dependencies": {
-    "@nestjs/common": "^11.0.1",
+    "@apollo/server": "^5.5.1",
+    "@as-integrations/express5": "^1.1.2",
+    "@dss/editor": "workspace:*",
+    "@dss/jobs": "workspace:*",
+    "@dss/storage": "workspace:*",
+    "@nestjs/apollo": "^13.4.5",
+    "@nestjs/common": "^11.2.7",
     "@nestjs/config": "^4.0.4",
-    "@nestjs/core": "^11.0.1",
+    "@nestjs/core": "^11.2.7",
+    "@nestjs/graphql": "^13.4.5",
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/passport": "^11.0.5",
-    "@nestjs/platform-express": "^11.0.1",
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^7.8.0",
+    "@nestjs/platform-express": "^11.2.7",
+    "@nestjs/swagger": "^11.4.7",
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/auto-instrumentations-node": "^0.78.0",
+    "@opentelemetry/resources": "^2.12.0",
+    "@opentelemetry/sdk-node": "^0.220.0",
+    "@opentelemetry/semantic-conventions": "^1.43.0",
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
     "bcrypt": "^6.0.0",
+    "bullmq": "^5.81.5",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
-    "joi": "^18.2.3",
+    "dataloader": "^2.2.3",
+    "graphql": "^16.14.2",
+    "graphql-depth-limit": "^1.1.0",
+    "graphql-query-complexity": "^1.1.1",
+    "ioredis": "^5.11.1",
+    "joi": "^18.2.9",
     "jsonwebtoken": "^9.0.3",
+    "nestjs-pino": "^4.6.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
-    "pg": "^8.22.0",
+    "pg": "^8.23.1",
+    "pino": "^10.4.0",
+    "pino-http": "^11.0.0",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.2",
+    "sharp": "^0.35.5",
+    "shiki": "^4.5.0",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.2.0",
-    "@eslint/js": "^9.18.0",
-    "@nestjs/cli": "^11.0.0",
-    "@nestjs/schematics": "^11.0.0",
-    "@nestjs/testing": "^11.0.1",
+    "@eslint/eslintrc": "^3.3.7",
+    "@eslint/js": "^9.39.5",
+    "@nestjs/cli": "^11.0.24",
+    "@nestjs/schematics": "^11.1.0",
+    "@nestjs/testing": "^11.2.7",
     "@types/bcrypt": "^6.0.0",
-    "@types/express": "^5.0.0",
+    "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^24.0.0",
+    "@types/node": "^24.19.1",
     "@types/passport-jwt": "^4.0.1",
-    "@types/pg": "^8.20.0",
-    "@types/supertest": "^7.0.0",
-    "eslint": "^9.18.0",
-    "eslint-config-prettier": "^10.0.1",
-    "eslint-plugin-prettier": "^5.2.2",
-    "globals": "^17.0.0",
-    "jest": "^30.0.0",
-    "prettier": "^3.4.2",
-    "prisma": "^7.8.0",
+    "@types/pg": "^8.23.1",
+    "@types/supertest": "^7.2.1",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "globals": "^17.13.0",
+    "jest": "^30.5.2",
+    "prettier": "3.8.4",
+    "prisma": "^7.10.0",
     "source-map-support": "^0.5.21",
-    "supertest": "^7.0.0",
-    "ts-jest": "^29.2.5",
-    "ts-loader": "^9.5.2",
+    "supertest": "^7.3.1",
+    "ts-jest": "^29.4.14",
+    "ts-loader": "^9.6.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "tsx": "^4.22.4",
-    "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0"
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.71.1"
   },
   "jest": {
     "moduleFileExtensions": [
@@ -96,6 +125,419 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "coverageThreshold": {
+      "src/composition/leaderboards/infrastructure/prisma-leaderboard-ranking.reader.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/leaderboards/infrastructure/repositories/ranking-facts-leaderboards.repository.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/auth/infrastructure/repositories/leaderboard-subject.sql.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/users/infrastructure/repositories/leaderboard-profile.sql.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/community-points/infrastructure/repositories/leaderboard-points.sql.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/reputation/infrastructure/repositories/leaderboard-reputation.sql.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/levels/infrastructure/repositories/leaderboard-level.sql.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/custom-titles/infrastructure/repositories/leaderboard-title.sql.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/leaderboards/infrastructure/repositories/leaderboard-ranking.sql.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/core/authorization/repositories/permissions.repository.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/authorization-reads/infrastructure/prisma-authorization-subject.reader.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/authorization-reads/infrastructure/iam-role-permission-facts.adapter.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/iam/infrastructure/repositories/prisma-role-permission-keys.reader.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/iam/infrastructure/repositories/authorization-assignment.shape.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/iam-subject-reads/infrastructure/prisma-iam-assignment.reader.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/iam-subject-reads/infrastructure/auth-subject-existence.adapter.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/auth/infrastructure/repositories/prisma-subject-existence.reader.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/auth/infrastructure/repositories/prisma-subject-anchor.shape.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/iam/infrastructure/repositories/prisma-assignment.shape.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/iam-transactions/infrastructure/prisma-membership-grant.transaction.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/iam-transactions/infrastructure/prisma-role-revocation.transaction.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/iam/infrastructure/repositories/prisma-membership-grant.writer.ts": {
+        "branches": 85,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/iam/infrastructure/repositories/prisma-role-revocation.writer.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/auth/infrastructure/repositories/prisma-transactional-subject-existence.reader.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/iam/infrastructure/repositories/access-membership.shape.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/gamification/infrastructure/prisma-manual-award.transaction.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/gamification/infrastructure/prisma-title-grant.transaction.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/achievements/infrastructure/repositories/prisma-manual-award.writer.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/custom-titles/infrastructure/repositories/prisma-title-grant.writer.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/users/infrastructure/repositories/prisma-transactional-profile-existence.reader.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/achievements/infrastructure/repositories/achievement-evidence.writer.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/achievements/infrastructure/repositories/achievement-award.shape.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/custom-titles/infrastructure/repositories/title-evidence.writer.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/custom-titles/infrastructure/repositories/title-grant.shape.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/users-profiles/infrastructure/prisma-users-profile.persistence.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/users-profiles/infrastructure/profile-role-names.adapter.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/users/infrastructure/repositories/prisma-profile-persistence.shape.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/auth/infrastructure/repositories/prisma-profile-account.shape.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/iam/infrastructure/repositories/prisma-profile-role.shape.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/iam/infrastructure/repositories/prisma-role-display.reader.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/users/infrastructure/repositories/prisma-users.repository.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/users/infrastructure/repositories/prisma-viewer-profile.reader.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/reputation/infrastructure/prisma-reputation-write.transaction.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/reputation/infrastructure/reputation-entry.mapper.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/reputation/infrastructure/repositories/prisma-reputation.writer.ts": {
+        "branches": 85,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/reputation/infrastructure/repositories/prisma-reputation.repository.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/users/infrastructure/repositories/prisma-reputation-write-actor.reader.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/comment-writes/infrastructure/prisma-comment-write.transaction.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/comment-writes/infrastructure/prisma-mention-recipient.resolver.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/interactions/infrastructure/repositories/prisma-comment.writer.ts": {
+        "branches": 85,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/interactions/infrastructure/repositories/prisma-comments.repository.ts": {
+        "branches": 80,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/interactions/infrastructure/mappers/comment.mapper.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/users/infrastructure/matching/mention-recipient.matcher.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/users/infrastructure/repositories/prisma-mention-profile.selector.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/auth/infrastructure/repositories/prisma-active-subject.selector.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/reputation/infrastructure/prisma-reputation.read-unit.ts": {
+        "branches": 80,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/reputation/infrastructure/repositories/prisma-reputation-entry.reader.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/users/infrastructure/repositories/prisma-reputation-actor.reader.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/composition/news-delivery/infrastructure/prisma-news-delivery.read-unit.ts": {
+        "branches": 80,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/news/application/services/news-attachment-delivery.service.ts": {
+        "branches": 80,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/content-access/application/services/content-gates.service.ts": {
+        "branches": 80,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/editor/application/services/editor-search-batch-projector.service.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/editor/application/services/editor-search-projector.service.ts": {
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/news/application/services/news-search-backfill.service.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/news/infrastructure/repositories/prisma-news-search.session.ts": {
+        "branches": 90,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/auth/application/services/auth.service.ts": {
+        "branches": 45,
+        "functions": 60,
+        "lines": 60,
+        "statements": 60
+      },
+      "src/modules/users/application/services/users.service.ts": {
+        "branches": 50,
+        "functions": 30,
+        "lines": 40,
+        "statements": 40
+      },
+      "src/modules/iam/safety/iam-safety.service.ts": {
+        "branches": 50,
+        "functions": 70,
+        "lines": 65,
+        "statements": 65
+      }
+    },
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^@api/(.*)$": "<rootDir>/$1"
+    }
   }
 }

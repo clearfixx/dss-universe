@@ -1,0 +1,29 @@
+{
+  "name": "@dss/storage",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --max-warnings=0",
+    "test": "vitest run --maxWorkers=2",
+    "test:cov": "vitest run --coverage --maxWorkers=2"
+  },
+  "devDependencies": {
+    "@dss/eslint-config": "workspace:*",
+    "@dss/tsconfig": "workspace:*",
+    "@types/node": "^24.19.1",
+    "@vitest/coverage-v8": "^4.1.11",
+    "eslint": "^9.39.5",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.71.1",
+    "vitest": "^4.1.11"
+  }
+}

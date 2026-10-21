@@ -1,0 +1,952 @@
+/* eslint-disable */
+/** Internal type. DO NOT USE DIRECTLY. */
+type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+/** Internal type. DO NOT USE DIRECTLY. */
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
+export type ActivityFeedInput = {
+  limit?: number;
+  modules?: Array<string> | null | undefined;
+  page?: number;
+};
+
+export type ActivityFeedReason =
+  | 'FOLLOWING'
+  | 'INTEREST'
+  | 'MENTION'
+  | 'OWN_ACTIVITY'
+  | 'RECENT';
+
+export type ChangeEmailInput = {
+  currentPassword: string;
+  email: string;
+};
+
+export type ChangePasswordInput = {
+  currentPassword: string;
+  newPassword: string;
+};
+
+export type ConfirmTwoFactorInput = {
+  code: string;
+};
+
+export type ContentGateOperator =
+  | 'ALL'
+  | 'ANY';
+
+export type ContentGateRequirementInput = {
+  groupKey?: string | null | undefined;
+  kind: ContentGateRequirementKind;
+  threshold?: number | null | undefined;
+};
+
+export type ContentGateRequirementKind =
+  | 'ACCOUNT_AGE_DAYS'
+  | 'COMMENTS'
+  | 'FORUM_POSTS'
+  | 'GROUP'
+  | 'PUBLICATIONS'
+  | 'REPUTATION';
+
+export type CreateCommentInput = {
+  body?: string | null | undefined;
+  documentJson?: string | null | undefined;
+  interactionTargetId: string | number;
+  parentId?: string | number | null | undefined;
+};
+
+export type CreateContentGateInput = {
+  operator: ContentGateOperator;
+  requirements: Array<ContentGateRequirementInput>;
+};
+
+export type CreateNewsDraftInput = {
+  coverMediaId?: string | number | null | undefined;
+  documentJson: string;
+  language: string;
+  postType: NewsPostType;
+  shortText: string;
+  slug: string;
+  templateDataJson?: string | null | undefined;
+  title: string;
+  visibility: NewsVisibility;
+};
+
+export type CreateWallPostInput = {
+  body?: string | null | undefined;
+  imageMediaId?: string | number | null | undefined;
+  profileOwnerId: string | number;
+};
+
+export type DeactivateAccountInput = {
+  password: string;
+};
+
+export type DisableTwoFactorInput = {
+  code: string;
+  password: string;
+};
+
+export type EditorAiCommand =
+  | 'Expand'
+  | 'Explain'
+  | 'Generate'
+  | 'GenerateCode'
+  | 'Rewrite'
+  | 'Shorten';
+
+export type GiveReputationInput = {
+  reason: string;
+  recipientId: string | number;
+  value: number;
+};
+
+export type InitiateMediaUploadInput = {
+  checksum?: string | null | undefined;
+  declaredMimeType: string;
+  declaredSize: number;
+  originalFilename: string;
+  policyKey: string;
+};
+
+export type LeaderboardInput = {
+  limit?: number;
+  page?: number;
+  period?: LeaderboardPeriod;
+};
+
+export type LeaderboardPeriod =
+  | 'ALL_TIME'
+  | 'MONTH'
+  | 'YEAR';
+
+export type LoginInput = {
+  email: string;
+  password: string;
+  twoFactorCode?: string | null | undefined;
+};
+
+export type MediaKind =
+  | 'ARCHIVE'
+  | 'AUDIO'
+  | 'DOCUMENT'
+  | 'IMAGE'
+  | 'OTHER'
+  | 'VIDEO';
+
+export type MediaLibraryInput = {
+  after?: string | null | undefined;
+  first?: number;
+  kind?: MediaKind | null | undefined;
+  orphaned?: boolean | null | undefined;
+  ownerId?: string | null | undefined;
+  search?: string | null | undefined;
+  status?: MediaStatus | null | undefined;
+  visibility?: MediaVisibility | null | undefined;
+};
+
+export type MediaStatus =
+  | 'DELETED'
+  | 'DELETING'
+  | 'FAILED'
+  | 'PENDING'
+  | 'PROCESSING'
+  | 'QUARANTINED'
+  | 'READY'
+  | 'REJECTED'
+  | 'UPLOADING';
+
+export type MediaVisibility =
+  | 'AUTHENTICATED'
+  | 'PRIVATE'
+  | 'PUBLIC'
+  | 'RESTRICTED';
+
+export type MembersDirectoryInput = {
+  limit?: number;
+  onlineOnly?: boolean;
+  page?: number;
+  role?: string | null | undefined;
+  search?: string | null | undefined;
+  sort?: MembersDirectorySort;
+};
+
+export type MembersDirectorySort =
+  | 'LAST_ACTIVE'
+  | 'NEWEST'
+  | 'OLDEST'
+  | 'USERNAME_ASC'
+  | 'USERNAME_DESC';
+
+export type NewsArticleStatus =
+  | 'APPROVED'
+  | 'ARCHIVED'
+  | 'CHANGES_REQUESTED'
+  | 'DRAFT'
+  | 'IN_REVIEW'
+  | 'PUBLISHED'
+  | 'SCHEDULED';
+
+export type NewsBrowseInput = {
+  categorySlug?: string | null | undefined;
+  featured?: boolean | null | undefined;
+  homepage?: boolean | null | undefined;
+  language?: string | null | undefined;
+  page?: number | null | undefined;
+  pageSize?: number | null | undefined;
+  postType?: NewsPostType | null | undefined;
+  search?: string | null | undefined;
+  tagSlug?: string | null | undefined;
+};
+
+export type NewsDecisionInput = {
+  articleId: string | number;
+  reason?: string | null | undefined;
+};
+
+export type NewsEditorialBrowseInput = {
+  page?: number | null | undefined;
+  pageSize?: number | null | undefined;
+  statuses?: Array<NewsArticleStatus> | null | undefined;
+};
+
+export type NewsPaginationMode =
+  | 'BOTH'
+  | 'DISABLED'
+  | 'LOAD_MORE'
+  | 'PAGES';
+
+export type NewsPinScope =
+  | 'CATEGORY'
+  | 'GLOBAL';
+
+export type NewsPostType =
+  | 'AUDIO'
+  | 'GALLERY'
+  | 'STANDARD'
+  | 'TEXT'
+  | 'VIDEO';
+
+export type NewsShareChannel =
+  | 'COPY_LINK'
+  | 'FACEBOOK'
+  | 'INSTAGRAM'
+  | 'PINTEREST'
+  | 'PRINT'
+  | 'THREADS'
+  | 'X';
+
+export type NewsVisibility =
+  | 'MEMBERS'
+  | 'PUBLIC';
+
+export type NewsVoteKind =
+  | 'DOWNVOTE'
+  | 'UPVOTE';
+
+export type NotificationCategory =
+  | 'COMMENTS_REPLIES'
+  | 'DIRECT_MESSAGES'
+  | 'MENTIONS'
+  | 'PUBLISHING_REVIEW'
+  | 'REPUTATION'
+  | 'SUBSCRIPTIONS'
+  | 'SUPPORT';
+
+export type NotificationDigestFrequency =
+  | 'DAILY'
+  | 'OFF'
+  | 'WEEKLY';
+
+export type ProfileCompletionField =
+  | 'AVATAR'
+  | 'BIO'
+  | 'COVER'
+  | 'INTERESTS'
+  | 'LOCATION'
+  | 'SOCIAL_LINKS'
+  | 'TECHNOLOGIES'
+  | 'WEBSITE';
+
+export type ProfileVisibility =
+  | 'MEMBERS'
+  | 'PRIVATE'
+  | 'PUBLIC';
+
+export type PublishNewsInput = {
+  articleId: string | number;
+  displayPublishedAt?: unknown;
+};
+
+/** A content signal that remains separate from user reputation changes. */
+export type ReactionKind =
+  | 'DOWNVOTE'
+  | 'LIKE'
+  | 'UPVOTE';
+
+export type RecordShareInput = {
+  channel: ShareChannel;
+  interactionTargetId: string | number;
+  visitorId: string;
+};
+
+export type RecordViewInput = {
+  interactionTargetId: string | number;
+  visitorId: string;
+};
+
+export type RegisterInput = {
+  displayName: string;
+  email: string;
+  password: string;
+  username: string;
+};
+
+export type RunEditorAiCommandInput = {
+  command: EditorAiCommand;
+  externalProcessingConfirmed: boolean;
+  instruction?: string | null | undefined;
+  language?: string | null | undefined;
+  profile: string;
+  sourceText?: string | null | undefined;
+};
+
+export type SaveCommentDraftInput = {
+  baseVersion: number;
+  documentJson: string;
+  interactionTargetId: string | number;
+  parentId?: string | number | null | undefined;
+};
+
+export type SaveNewsDraftInput = {
+  articleId: string | number;
+  baseVersion: number;
+  changeSummary?: string | null | undefined;
+  coverMediaId?: string | number | null | undefined;
+  documentJson: string;
+  language: string;
+  postType: NewsPostType;
+  shortText: string;
+  slug: string;
+  templateDataJson?: string | null | undefined;
+  title: string;
+  visibility: NewsVisibility;
+};
+
+export type ScheduleNewsInput = {
+  articleId: string | number;
+  displayPublishedAt?: unknown;
+  scheduledFor: unknown;
+};
+
+export type SetNewsPinInput = {
+  articleId: string | number;
+  categoryId?: string | number | null | undefined;
+  expiresAt?: unknown;
+  scope: NewsPinScope;
+};
+
+export type SetReactionInput = {
+  interactionTargetId: string | number;
+  kind: ReactionKind;
+};
+
+export type ShareChannel =
+  | 'COPY_LINK'
+  | 'FACEBOOK'
+  | 'INSTAGRAM'
+  | 'PINTEREST'
+  | 'PRINT'
+  | 'THREADS'
+  | 'X';
+
+export type UpdateNotificationPreferencesInput = {
+  digestFrequency: NotificationDigestFrequency;
+  emailCategories: Array<NotificationCategory>;
+  emailEnabled: boolean;
+  inAppCategories: Array<NotificationCategory>;
+};
+
+export type UpdateUserPrivacyInput = {
+  allowFollowers: boolean;
+  allowWallPosts: boolean;
+  profileVisibility: ProfileVisibility;
+  showFollows: boolean;
+  showLastSeen: boolean;
+  showLocation: boolean;
+  showOnlineStatus: boolean;
+  showSocialLinks: boolean;
+  showWebsite: boolean;
+};
+
+export type UpdateViewerProfileInput = {
+  bio?: string | null | undefined;
+  displayName?: string | null | undefined;
+  interests?: Array<string> | null | undefined;
+  location?: string | null | undefined;
+  technologies?: Array<string> | null | undefined;
+  website?: string | null | undefined;
+};
+
+export type UsersPageInput = {
+  limit?: number;
+  page?: number;
+};
+
+export type ViewerActivityFeedQueryVariables = Exact<{
+  input?: ActivityFeedInput | null | undefined;
+}>;
+
+
+export type ViewerActivityFeedQuery = { viewerActivityFeed: { total: number, unreadCount: number, lastVisitedAt: string | null, generatedAt: string, recommendationMode: string, items: Array<{ id: string, actorId: string, module: string, action: string, subjectType: string, subjectId: string, occurredAt: string, isUnread: boolean, reason: ActivityFeedReason }> } };
+
+export type MarkActivityFeedVisitedMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type MarkActivityFeedVisitedMutation = { markActivityFeedVisited: { visitedAt: string } };
+
+export type ApiInfoQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ApiInfoQuery = { apiInfo: { name: string, status: string, transport: string } };
+
+export type LoginMutationVariables = Exact<{
+  input: LoginInput;
+}>;
+
+
+export type LoginMutation = { login: { user: { id: string, username: string, displayName: string | null, email: string }, tokens: { accessToken: string, refreshToken: string } } };
+
+export type RegisterMutationVariables = Exact<{
+  input: RegisterInput;
+}>;
+
+
+export type RegisterMutation = { register: { user: { id: string, username: string, displayName: string | null, email: string }, tokens: { accessToken: string, refreshToken: string } } };
+
+export type CommentDraftQueryVariables = Exact<{
+  interactionTargetId: string | number;
+  parentId?: string | number | null | undefined;
+}>;
+
+
+export type CommentDraftQuery = { commentDraft: { id: string, interactionTargetId: string, parentId: string | null, documentJson: string, plainText: string, version: number, createdAt: string, updatedAt: string } | null };
+
+export type ViewerCommentDraftsQueryVariables = Exact<{
+  limit?: number;
+}>;
+
+
+export type ViewerCommentDraftsQuery = { viewerCommentDrafts: Array<{ id: string, interactionTargetId: string, parentId: string | null, documentJson: string, plainText: string, version: number, createdAt: string, updatedAt: string }> };
+
+export type SaveCommentDraftMutationVariables = Exact<{
+  input: SaveCommentDraftInput;
+}>;
+
+
+export type SaveCommentDraftMutation = { saveCommentDraft: { id: string, interactionTargetId: string, parentId: string | null, documentJson: string, plainText: string, version: number, createdAt: string, updatedAt: string } };
+
+export type DiscardCommentDraftMutationVariables = Exact<{
+  draftId: string | number;
+}>;
+
+
+export type DiscardCommentDraftMutation = { discardCommentDraft: boolean };
+
+export type EditorMediaQueryVariables = Exact<{
+  input?: MediaLibraryInput | null | undefined;
+}>;
+
+
+export type EditorMediaQuery = { editorMedia: { items: Array<{ id: string, kind: MediaKind, originalFilename: string, mimeType: string, width: number | null, height: number | null }>, pageInfo: { hasNextPage: boolean, endCursor: string | null } } };
+
+export type EditorMentionSuggestionsQueryVariables = Exact<{
+  input?: MembersDirectoryInput | null | undefined;
+}>;
+
+
+export type EditorMentionSuggestionsQuery = { members: { total: number, items: Array<{ id: string, username: string, displayName: string | null, avatarUrl: string | null, isOnline: boolean }> } };
+
+export type InitiateEditorMediaUploadMutationVariables = Exact<{
+  input: InitiateMediaUploadInput;
+}>;
+
+
+export type InitiateEditorMediaUploadMutation = { initiateMediaUpload: { id: string, status: string, originalFilename: string } };
+
+export type CreateEditorContentGateMutationVariables = Exact<{
+  input: CreateContentGateInput;
+}>;
+
+
+export type CreateEditorContentGateMutation = { createContentGate: { id: string, operator: ContentGateOperator, requirements: Array<{ id: string, kind: ContentGateRequirementKind, threshold: number | null, groupKey: string | null }> } };
+
+export type RunEditorAiCommandMutationVariables = Exact<{
+  input: RunEditorAiCommandInput;
+}>;
+
+
+export type RunEditorAiCommandMutation = { runEditorAiCommand: { generationId: string, provider: string, model: string, promptVersion: string, command: EditorAiCommand, generatedText: string, inputTokens: number | null, outputTokens: number | null, generatedContentLabel: string, requiresConfirmation: boolean } };
+
+export type MediaLibraryQueryVariables = Exact<{
+  input?: MediaLibraryInput | null | undefined;
+}>;
+
+
+export type MediaLibraryQuery = { mediaLibrary: { items: Array<{ id: string, ownerId: string | null, kind: MediaKind, status: MediaStatus, visibility: MediaVisibility, originalFilename: string, mimeType: string, extension: string, size: number, width: number | null, height: number | null, failureCode: string | null, createdAt: unknown, updatedAt: unknown }>, pageInfo: { hasNextPage: boolean, endCursor: string | null } }, mediaLibraryMetrics: { totalMedia: number, originalBytes: number, variantBytes: number, totalBytes: number, orphanedMedia: number, failedMedia: number, quarantinedMedia: number } };
+
+export type RetryFailedMediaMutationVariables = Exact<{
+  mediaId: string | number;
+}>;
+
+
+export type RetryFailedMediaMutation = { retryFailedMedia: { id: string, status: MediaStatus, failureCode: string | null, updatedAt: unknown } };
+
+export type NewsEditorialFieldsFragment = { id: string, interactionTargetId: string, authorId: string, postType: NewsPostType, status: NewsArticleStatus, visibility: NewsVisibility, language: string, slug: string, title: string, shortText: string, documentJson: string, templateDataJson: string, coverMediaId: string | null, currentVersion: number, approvedVersion: number | null, allowComments: boolean, allowRating: boolean, allowSharing: boolean, allowIndexing: boolean, showOnHomepage: boolean, featured: boolean, submittedAt: unknown, approvedAt: unknown, scheduledFor: unknown, publishedAt: unknown, displayPublishedAt: unknown, createdAt: unknown, updatedAt: unknown };
+
+export type EditorialNewsQueryVariables = Exact<{
+  input?: NewsEditorialBrowseInput | null | undefined;
+}>;
+
+
+export type EditorialNewsQuery = { editorialNews: { total: number, page: number, pageSize: number, totalPages: number, items: Array<{ id: string, interactionTargetId: string, authorId: string, postType: NewsPostType, status: NewsArticleStatus, visibility: NewsVisibility, language: string, slug: string, title: string, shortText: string, documentJson: string, templateDataJson: string, coverMediaId: string | null, currentVersion: number, approvedVersion: number | null, allowComments: boolean, allowRating: boolean, allowSharing: boolean, allowIndexing: boolean, showOnHomepage: boolean, featured: boolean, submittedAt: unknown, approvedAt: unknown, scheduledFor: unknown, publishedAt: unknown, displayPublishedAt: unknown, createdAt: unknown, updatedAt: unknown }> } };
+
+export type NewsEditorialArticleQueryVariables = Exact<{
+  articleId: string | number;
+}>;
+
+
+export type NewsEditorialArticleQuery = { newsEditorialArticle: { id: string, interactionTargetId: string, authorId: string, postType: NewsPostType, status: NewsArticleStatus, visibility: NewsVisibility, language: string, slug: string, title: string, shortText: string, documentJson: string, templateDataJson: string, coverMediaId: string | null, currentVersion: number, approvedVersion: number | null, allowComments: boolean, allowRating: boolean, allowSharing: boolean, allowIndexing: boolean, showOnHomepage: boolean, featured: boolean, submittedAt: unknown, approvedAt: unknown, scheduledFor: unknown, publishedAt: unknown, displayPublishedAt: unknown, createdAt: unknown, updatedAt: unknown } };
+
+export type CreateNewsDraftMutationVariables = Exact<{
+  input: CreateNewsDraftInput;
+}>;
+
+
+export type CreateNewsDraftMutation = { createNewsDraft: { id: string, interactionTargetId: string, authorId: string, postType: NewsPostType, status: NewsArticleStatus, visibility: NewsVisibility, language: string, slug: string, title: string, shortText: string, documentJson: string, templateDataJson: string, coverMediaId: string | null, currentVersion: number, approvedVersion: number | null, allowComments: boolean, allowRating: boolean, allowSharing: boolean, allowIndexing: boolean, showOnHomepage: boolean, featured: boolean, submittedAt: unknown, approvedAt: unknown, scheduledFor: unknown, publishedAt: unknown, displayPublishedAt: unknown, createdAt: unknown, updatedAt: unknown } };
+
+export type SaveNewsDraftMutationVariables = Exact<{
+  input: SaveNewsDraftInput;
+}>;
+
+
+export type SaveNewsDraftMutation = { saveNewsDraft: { id: string, interactionTargetId: string, authorId: string, postType: NewsPostType, status: NewsArticleStatus, visibility: NewsVisibility, language: string, slug: string, title: string, shortText: string, documentJson: string, templateDataJson: string, coverMediaId: string | null, currentVersion: number, approvedVersion: number | null, allowComments: boolean, allowRating: boolean, allowSharing: boolean, allowIndexing: boolean, showOnHomepage: boolean, featured: boolean, submittedAt: unknown, approvedAt: unknown, scheduledFor: unknown, publishedAt: unknown, displayPublishedAt: unknown, createdAt: unknown, updatedAt: unknown } };
+
+export type SubmitNewsForReviewMutationVariables = Exact<{
+  articleId: string | number;
+}>;
+
+
+export type SubmitNewsForReviewMutation = { submitNewsForReview: { article: { id: string, interactionTargetId: string, authorId: string, postType: NewsPostType, status: NewsArticleStatus, visibility: NewsVisibility, language: string, slug: string, title: string, shortText: string, documentJson: string, templateDataJson: string, coverMediaId: string | null, currentVersion: number, approvedVersion: number | null, allowComments: boolean, allowRating: boolean, allowSharing: boolean, allowIndexing: boolean, showOnHomepage: boolean, featured: boolean, submittedAt: unknown, approvedAt: unknown, scheduledFor: unknown, publishedAt: unknown, displayPublishedAt: unknown, createdAt: unknown, updatedAt: unknown } } };
+
+export type RequestNewsChangesMutationVariables = Exact<{
+  input: NewsDecisionInput;
+}>;
+
+
+export type RequestNewsChangesMutation = { requestNewsChanges: { article: { id: string, interactionTargetId: string, authorId: string, postType: NewsPostType, status: NewsArticleStatus, visibility: NewsVisibility, language: string, slug: string, title: string, shortText: string, documentJson: string, templateDataJson: string, coverMediaId: string | null, currentVersion: number, approvedVersion: number | null, allowComments: boolean, allowRating: boolean, allowSharing: boolean, allowIndexing: boolean, showOnHomepage: boolean, featured: boolean, submittedAt: unknown, approvedAt: unknown, scheduledFor: unknown, publishedAt: unknown, displayPublishedAt: unknown, createdAt: unknown, updatedAt: unknown } } };
+
+export type ApproveNewsMutationVariables = Exact<{
+  input: NewsDecisionInput;
+}>;
+
+
+export type ApproveNewsMutation = { approveNews: { article: { id: string, interactionTargetId: string, authorId: string, postType: NewsPostType, status: NewsArticleStatus, visibility: NewsVisibility, language: string, slug: string, title: string, shortText: string, documentJson: string, templateDataJson: string, coverMediaId: string | null, currentVersion: number, approvedVersion: number | null, allowComments: boolean, allowRating: boolean, allowSharing: boolean, allowIndexing: boolean, showOnHomepage: boolean, featured: boolean, submittedAt: unknown, approvedAt: unknown, scheduledFor: unknown, publishedAt: unknown, displayPublishedAt: unknown, createdAt: unknown, updatedAt: unknown } } };
+
+export type PublishNewsMutationVariables = Exact<{
+  input: PublishNewsInput;
+}>;
+
+
+export type PublishNewsMutation = { publishNews: { article: { id: string, interactionTargetId: string, authorId: string, postType: NewsPostType, status: NewsArticleStatus, visibility: NewsVisibility, language: string, slug: string, title: string, shortText: string, documentJson: string, templateDataJson: string, coverMediaId: string | null, currentVersion: number, approvedVersion: number | null, allowComments: boolean, allowRating: boolean, allowSharing: boolean, allowIndexing: boolean, showOnHomepage: boolean, featured: boolean, submittedAt: unknown, approvedAt: unknown, scheduledFor: unknown, publishedAt: unknown, displayPublishedAt: unknown, createdAt: unknown, updatedAt: unknown } } };
+
+export type ScheduleNewsMutationVariables = Exact<{
+  input: ScheduleNewsInput;
+}>;
+
+
+export type ScheduleNewsMutation = { scheduleNews: { article: { id: string, interactionTargetId: string, authorId: string, postType: NewsPostType, status: NewsArticleStatus, visibility: NewsVisibility, language: string, slug: string, title: string, shortText: string, documentJson: string, templateDataJson: string, coverMediaId: string | null, currentVersion: number, approvedVersion: number | null, allowComments: boolean, allowRating: boolean, allowSharing: boolean, allowIndexing: boolean, showOnHomepage: boolean, featured: boolean, submittedAt: unknown, approvedAt: unknown, scheduledFor: unknown, publishedAt: unknown, displayPublishedAt: unknown, createdAt: unknown, updatedAt: unknown } } };
+
+export type CancelNewsScheduleMutationVariables = Exact<{
+  input: NewsDecisionInput;
+}>;
+
+
+export type CancelNewsScheduleMutation = { cancelNewsSchedule: { article: { id: string, interactionTargetId: string, authorId: string, postType: NewsPostType, status: NewsArticleStatus, visibility: NewsVisibility, language: string, slug: string, title: string, shortText: string, documentJson: string, templateDataJson: string, coverMediaId: string | null, currentVersion: number, approvedVersion: number | null, allowComments: boolean, allowRating: boolean, allowSharing: boolean, allowIndexing: boolean, showOnHomepage: boolean, featured: boolean, submittedAt: unknown, approvedAt: unknown, scheduledFor: unknown, publishedAt: unknown, displayPublishedAt: unknown, createdAt: unknown, updatedAt: unknown } } };
+
+export type SetNewsPinMutationVariables = Exact<{
+  input: SetNewsPinInput;
+}>;
+
+
+export type SetNewsPinMutation = { setNewsPin: { id: string, articleId: string, scope: NewsPinScope, categoryId: string | null, expiresAt: unknown } };
+
+export type RemoveNewsPinMutationVariables = Exact<{
+  articleId: string | number;
+}>;
+
+
+export type RemoveNewsPinMutation = { removeNewsPin: { success: boolean } };
+
+export type NewsCatalogQueryVariables = Exact<{
+  input?: NewsBrowseInput | null | undefined;
+}>;
+
+
+export type NewsCatalogQuery = { news: { total: number, page: number, pageSize: number, totalPages: number, pinnedItems: Array<{ id: string, interactionTargetId: string, postType: NewsPostType, language: string, slug: string, title: string, shortText: string, coverMediaId: string | null, displayPublishedAt: unknown, featured: boolean, pin: { scope: NewsPinScope, categoryId: string | null, expiresAt: unknown } | null, author: { id: string, username: string, displayName: string | null, avatarUrl: string | null }, primaryCategory: { id: string, name: string, slug: string, icon: string | null } | null, tags: Array<{ id: string, name: string, slug: string }>, engagement: { viewCount: number | null, commentCount: number, upvotes: number, downvotes: number, score: number, bookmarkedByViewer: boolean, viewerReaction: NewsVoteKind | null } }>, items: Array<{ id: string, interactionTargetId: string, postType: NewsPostType, language: string, slug: string, title: string, shortText: string, coverMediaId: string | null, displayPublishedAt: unknown, featured: boolean, pin: { scope: NewsPinScope, categoryId: string | null, expiresAt: unknown } | null, author: { id: string, username: string, displayName: string | null, avatarUrl: string | null }, primaryCategory: { id: string, name: string, slug: string, icon: string | null } | null, tags: Array<{ id: string, name: string, slug: string }>, engagement: { viewCount: number | null, commentCount: number, upvotes: number, downvotes: number, score: number, bookmarkedByViewer: boolean, viewerReaction: NewsVoteKind | null } }> }, newsSettings: { newsPaginationMode: NewsPaginationMode, newsPaginationThreshold: number, newsPageSize: number } };
+
+export type FullNewsPageQueryVariables = Exact<{
+  language: string;
+  slug: string;
+}>;
+
+
+export type FullNewsPageQuery = { fullNews: { id: string, interactionTargetId: string, postType: NewsPostType, language: string, slug: string, title: string, shortText: string, coverMediaId: string | null, displayPublishedAt: unknown, featured: boolean, allowComments: boolean, allowRating: boolean, allowSharing: boolean, allowIndexing: boolean, documentJson: string, templateDataJson: string, pin: { scope: NewsPinScope, categoryId: string | null, expiresAt: unknown } | null, sharing: { total: number, channels: Array<{ channel: NewsShareChannel, count: number }> }, author: { id: string, username: string, displayName: string | null, avatarUrl: string | null }, primaryCategory: { id: string, name: string, slug: string, icon: string | null } | null, tags: Array<{ id: string, name: string, slug: string }>, engagement: { viewCount: number | null, commentCount: number, upvotes: number, downvotes: number, score: number, bookmarkedByViewer: boolean, viewerReaction: NewsVoteKind | null }, related: Array<{ id: string, type: string, anchorText: string, language: string, slug: string, title: string, shortText: string, coverMediaId: string | null, displayPublishedAt: unknown }>, attachments: Array<{ id: string, mediaId: string, label: string, filename: string, mimeType: string, extension: string, size: number, kind: string, checksumSha256: string, checksumSha1: string | null, checksumMd5: string | null, downloadUrl: string }> } | null };
+
+export type RecordNewsViewMutationVariables = Exact<{
+  input: RecordViewInput;
+}>;
+
+
+export type RecordNewsViewMutation = { recordInteractionView: { changed: boolean, viewCount: number, shareCount: number, shares: Array<{ channel: ShareChannel, count: number }> } };
+
+export type RecordNewsShareMutationVariables = Exact<{
+  input: RecordShareInput;
+}>;
+
+
+export type RecordNewsShareMutation = { recordInteractionShare: { changed: boolean, viewCount: number, shareCount: number, shares: Array<{ channel: ShareChannel, count: number }> } };
+
+export type NewsNavigationQueryVariables = Exact<{
+  articleId: string | number;
+}>;
+
+
+export type NewsNavigationQuery = { newsNavigation: { previous: { id: string, language: string, slug: string, title: string, coverMediaId: string | null, displayPublishedAt: unknown } | null, next: { id: string, language: string, slug: string, title: string, coverMediaId: string | null, displayPublishedAt: unknown } | null } };
+
+export type NewsRatingVotesQueryVariables = Exact<{
+  articleId: string | number;
+  page: number;
+  pageSize: number;
+}>;
+
+
+export type NewsRatingVotesQuery = { newsRatingVotes: { total: number, page: number, pageSize: number, totalPages: number, items: Array<{ id: string, kind: NewsVoteKind, updatedAt: unknown, actor: { id: string, username: string, displayName: string | null, avatarUrl: string | null } }> } };
+
+export type SetNewsVoteMutationVariables = Exact<{
+  input: SetReactionInput;
+}>;
+
+
+export type SetNewsVoteMutation = { setReaction: { changed: boolean, summary: { upvotes: number, downvotes: number, score: number, viewerReaction: ReactionKind | null } } };
+
+export type ClearNewsVoteMutationVariables = Exact<{
+  interactionTargetId: string | number;
+}>;
+
+
+export type ClearNewsVoteMutation = { clearReaction: { upvotes: number, downvotes: number, score: number, viewerReaction: ReactionKind | null } };
+
+export type SaveNewsBookmarkMutationVariables = Exact<{
+  interactionTargetId: string | number;
+}>;
+
+
+export type SaveNewsBookmarkMutation = { saveBookmark: { saved: boolean, changed: boolean } };
+
+export type RemoveNewsBookmarkMutationVariables = Exact<{
+  interactionTargetId: string | number;
+}>;
+
+
+export type RemoveNewsBookmarkMutation = { removeBookmark: { saved: boolean, changed: boolean } };
+
+export type NewsCommentFieldsFragment = { id: string, reactionTargetId: string, parentId: string | null, body: string, documentJson: string, isDeleted: boolean, editedAt: unknown, createdAt: unknown, author: { id: string, username: string, displayName: string | null, avatarUrl: string | null }, engagement: { upvotes: number, downvotes: number, score: number, viewerReaction: NewsVoteKind | null } };
+
+export type NewsCommentsQueryVariables = Exact<{
+  articleId: string | number;
+  page: number;
+  pageSize?: number | null | undefined;
+}>;
+
+
+export type NewsCommentsQuery = { newsComments: { total: number, page: number, pageSize: number, totalPages: number, items: Array<{ id: string, reactionTargetId: string, parentId: string | null, body: string, documentJson: string, isDeleted: boolean, editedAt: unknown, createdAt: unknown, children: Array<{ id: string, reactionTargetId: string, parentId: string | null, body: string, documentJson: string, isDeleted: boolean, editedAt: unknown, createdAt: unknown, children: Array<{ id: string, reactionTargetId: string, parentId: string | null, body: string, documentJson: string, isDeleted: boolean, editedAt: unknown, createdAt: unknown, children: Array<{ id: string, reactionTargetId: string, parentId: string | null, body: string, documentJson: string, isDeleted: boolean, editedAt: unknown, createdAt: unknown, children: Array<{ id: string, reactionTargetId: string, parentId: string | null, body: string, documentJson: string, isDeleted: boolean, editedAt: unknown, createdAt: unknown, author: { id: string, username: string, displayName: string | null, avatarUrl: string | null }, engagement: { upvotes: number, downvotes: number, score: number, viewerReaction: NewsVoteKind | null } }>, author: { id: string, username: string, displayName: string | null, avatarUrl: string | null }, engagement: { upvotes: number, downvotes: number, score: number, viewerReaction: NewsVoteKind | null } }>, author: { id: string, username: string, displayName: string | null, avatarUrl: string | null }, engagement: { upvotes: number, downvotes: number, score: number, viewerReaction: NewsVoteKind | null } }>, author: { id: string, username: string, displayName: string | null, avatarUrl: string | null }, engagement: { upvotes: number, downvotes: number, score: number, viewerReaction: NewsVoteKind | null } }>, author: { id: string, username: string, displayName: string | null, avatarUrl: string | null }, engagement: { upvotes: number, downvotes: number, score: number, viewerReaction: NewsVoteKind | null } }> }, newsSettings: { commentsPaginationMode: NewsPaginationMode, commentsPaginationThreshold: number, commentsPageSize: number } };
+
+export type CreateNewsCommentMutationVariables = Exact<{
+  input: CreateCommentInput;
+}>;
+
+
+export type CreateNewsCommentMutation = { createComment: { id: string, reactionTargetId: string } };
+
+export type PublicProfileQueryVariables = Exact<{
+  username: string;
+}>;
+
+
+export type PublicProfileQuery = { userByUsername: { id: string, username: string, displayName: string | null, bio: string | null, location: string | null, website: string | null, technologies: Array<string>, interests: Array<string>, avatarUrl: string | null, coverUrl: string | null, followerCount: number, followingCount: number, isFollowedByViewer: boolean, isOnline: boolean, lastSeenAt: string | null, createdAt: string, socialLinks: Array<{ id: string, platform: string, label: string | null, url: string, position: number }> } };
+
+export type ProfileViewerQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ProfileViewerQuery = { viewer: { id: string } };
+
+export type ProfileWallQueryVariables = Exact<{
+  profileOwnerId: string | number;
+  pagination?: UsersPageInput | null | undefined;
+}>;
+
+
+export type ProfileWallQuery = { profileWall: { total: number, page: number, limit: number, totalPages: number, items: Array<{ id: string, interactionTargetId: string, profileOwnerId: string, authorId: string, body: string | null, imageMediaId: string | null, isDeleted: boolean, deletedAt: string | null, createdAt: string, updatedAt: string }> } };
+
+export type UserActivityQueryVariables = Exact<{
+  userId: string | number;
+  pagination?: UsersPageInput | null | undefined;
+}>;
+
+
+export type UserActivityQuery = { userActivity: { total: number, page: number, limit: number, totalPages: number, items: Array<{ id: string, actorId: string, module: string, action: string, subjectType: string, subjectId: string, occurredAt: string }> } };
+
+export type ProfileGamificationQueryVariables = Exact<{
+  userId: string | number;
+}>;
+
+
+export type ProfileGamificationQuery = { levelProgress: { balance: number, currentLevel: number, currentThreshold: number, nextLevel: number | null, nextThreshold: number | null, pointsIntoLevel: number, pointsNeeded: number, progressPercent: number }, communityPointsHistory: { total: number, balance: number, items: Array<{ id: string, points: number, reason: string, ruleKey: string, occurredAt: unknown }> }, reputationHistory: { score: number, total: number, items: Array<{ id: string, value: number, reason: string, createdAt: unknown, actor: { id: string, username: string, displayName: string | null, avatarUrl: string | null } }> }, userAchievements: Array<{ id: string, awardedAt: unknown, reason: string, achievement: { id: string, key: string, name: string, description: string | null, color: string, badge: string } }>, userCustomTitles: Array<{ id: string, selected: boolean, grantedAt: unknown, grantReason: string, revokedAt: unknown, title: { id: string, name: string, description: string | null, color: string, badge: string, isActive: boolean } }> };
+
+export type MembersDirectoryQueryVariables = Exact<{
+  input?: MembersDirectoryInput | null | undefined;
+  leaderboardInput?: LeaderboardInput | null | undefined;
+}>;
+
+
+export type MembersDirectoryQuery = { members: { total: number, page: number, limit: number, totalPages: number, items: Array<{ id: string, username: string, displayName: string | null, avatarUrl: string | null, isOnline: boolean, roles: Array<string>, createdAt: string }> }, presenceSummary: { onlineMembers: number, onlineGuests: number, onlineCrawlers: number, totalOnline: number, sampledAt: unknown }, leaderboard: { period: LeaderboardPeriod, startsAt: string | null, endsAt: string, generatedAt: string, total: number, viewerRank: number | null, viewerCommunityPoints: number | null, items: Array<{ rank: number, userId: string, username: string, displayName: string | null, avatarUrl: string | null, communityPoints: number, currentLevel: number, reputation: number, selectedTitle: { name: string, color: string, badge: string } | null }> } };
+
+export type ProfileSettingsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ProfileSettingsQuery = { viewer: { id: string, username: string, displayName: string | null, email: string, emailVerifiedAt: string | null, bio: string | null, location: string | null, website: string | null, technologies: Array<string>, interests: Array<string>, avatarUrl: string | null, coverUrl: string | null, createdAt: string, socialLinks: Array<{ id: string, platform: string, label: string | null, url: string, position: number }> }, viewerPrivacySettings: { profileVisibility: ProfileVisibility, showLocation: boolean, showWebsite: boolean, showSocialLinks: boolean, showLastSeen: boolean, showOnlineStatus: boolean, allowFollowers: boolean, showFollows: boolean, allowWallPosts: boolean }, viewerProfileCompletion: { percentage: number, completedCount: number, totalCount: number, isComplete: boolean, completedFields: Array<ProfileCompletionField>, missingFields: Array<ProfileCompletionField> }, viewerSessions: Array<{ id: string, current: boolean, userAgent: string | null, ipAddress: string | null, createdAt: unknown, expiresAt: unknown }>, viewerNotificationPreferences: { inAppCategories: Array<NotificationCategory>, emailEnabled: boolean, emailCategories: Array<NotificationCategory>, digestFrequency: NotificationDigestFrequency }, viewerTwoFactorStatus: { enabled: boolean, recoveryCodesRemaining: number } };
+
+export type FollowProfileMutationVariables = Exact<{
+  userId: string | number;
+}>;
+
+
+export type FollowProfileMutation = { followUser: { userId: string, followerCount: number, followingCount: number } };
+
+export type UnfollowProfileMutationVariables = Exact<{
+  userId: string | number;
+}>;
+
+
+export type UnfollowProfileMutation = { unfollowUser: { userId: string, followerCount: number, followingCount: number } };
+
+export type GiveProfileReputationMutationVariables = Exact<{
+  input: GiveReputationInput;
+}>;
+
+
+export type GiveProfileReputationMutation = { giveReputation: { id: string, recipientId: string, value: number, reason: string, createdAt: unknown } };
+
+export type SelectViewerCustomTitleMutationVariables = Exact<{
+  grantId: string | number;
+}>;
+
+
+export type SelectViewerCustomTitleMutation = { selectCustomTitle: { id: string, selected: boolean, title: { id: string, name: string, color: string, badge: string } } };
+
+export type CreateProfileWallPostMutationVariables = Exact<{
+  input: CreateWallPostInput;
+}>;
+
+
+export type CreateProfileWallPostMutation = { createProfileWallPost: { id: string, interactionTargetId: string, profileOwnerId: string, authorId: string, body: string | null, imageMediaId: string | null, isDeleted: boolean, createdAt: string, updatedAt: string } };
+
+export type RemoveProfileWallPostMutationVariables = Exact<{
+  postId: string | number;
+  reason?: string | null | undefined;
+}>;
+
+
+export type RemoveProfileWallPostMutation = { removeProfileWallPost: { id: string, isDeleted: boolean, deletedAt: string | null } };
+
+export type UpdateViewerProfileSettingsMutationVariables = Exact<{
+  input: UpdateViewerProfileInput;
+}>;
+
+
+export type UpdateViewerProfileSettingsMutation = { updateViewerProfile: { id: string, username: string, displayName: string | null, bio: string | null, location: string | null, website: string | null, technologies: Array<string>, interests: Array<string>, updatedAt: string } };
+
+export type UpdateViewerPrivacySettingsMutationVariables = Exact<{
+  input: UpdateUserPrivacyInput;
+}>;
+
+
+export type UpdateViewerPrivacySettingsMutation = { updateViewerPrivacy: { profileVisibility: ProfileVisibility, showLocation: boolean, showWebsite: boolean, showSocialLinks: boolean, showLastSeen: boolean, showOnlineStatus: boolean, allowFollowers: boolean, showFollows: boolean, allowWallPosts: boolean } };
+
+export type UpdateViewerNotificationSettingsMutationVariables = Exact<{
+  input: UpdateNotificationPreferencesInput;
+}>;
+
+
+export type UpdateViewerNotificationSettingsMutation = { updateViewerNotificationPreferences: { inAppCategories: Array<NotificationCategory>, emailEnabled: boolean, emailCategories: Array<NotificationCategory>, digestFrequency: NotificationDigestFrequency } };
+
+export type RevokeViewerDeviceSessionMutationVariables = Exact<{
+  sessionId: string | number;
+}>;
+
+
+export type RevokeViewerDeviceSessionMutation = { revokeViewerSession: { success: boolean } };
+
+export type RevokeOtherViewerDeviceSessionsMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type RevokeOtherViewerDeviceSessionsMutation = { revokeOtherViewerSessions: { success: boolean, revokedCount: number } };
+
+export type RequestViewerEmailVerificationMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type RequestViewerEmailVerificationMutation = { requestEmailVerification: { success: boolean } };
+
+export type ChangeViewerEmailMutationVariables = Exact<{
+  input: ChangeEmailInput;
+}>;
+
+
+export type ChangeViewerEmailMutation = { changeViewerEmail: { success: boolean } };
+
+export type ChangeViewerPasswordMutationVariables = Exact<{
+  input: ChangePasswordInput;
+}>;
+
+
+export type ChangeViewerPasswordMutation = { changeViewerPassword: { success: boolean } };
+
+export type DeactivateViewerAccountMutationVariables = Exact<{
+  input: DeactivateAccountInput;
+}>;
+
+
+export type DeactivateViewerAccountMutation = { deactivateAccount: { success: boolean } };
+
+export type BeginViewerTwoFactorSetupMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type BeginViewerTwoFactorSetupMutation = { beginViewerTwoFactorSetup: { secret: string, otpauthUri: string } };
+
+export type ConfirmViewerTwoFactorSetupMutationVariables = Exact<{
+  input: ConfirmTwoFactorInput;
+}>;
+
+
+export type ConfirmViewerTwoFactorSetupMutation = { confirmViewerTwoFactorSetup: { recoveryCodes: Array<string> } };
+
+export type DisableViewerTwoFactorMutationVariables = Exact<{
+  input: DisableTwoFactorInput;
+}>;
+
+
+export type DisableViewerTwoFactorMutation = { disableViewerTwoFactor: { success: boolean } };
+
+export type SetViewerAvatarMutationVariables = Exact<{
+  mediaId: string | number;
+}>;
+
+
+export type SetViewerAvatarMutation = { setViewerAvatar: { id: string, avatarUrl: string | null } };
+
+export type RemoveViewerAvatarMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type RemoveViewerAvatarMutation = { removeViewerAvatar: { id: string, avatarUrl: string | null } };
+
+export type SetViewerCoverMutationVariables = Exact<{
+  mediaId: string | number;
+}>;
+
+
+export type SetViewerCoverMutation = { setViewerCover: { id: string, coverUrl: string | null } };
+
+export type RemoveViewerCoverMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type RemoveViewerCoverMutation = { removeViewerCover: { id: string, coverUrl: string | null } };
+
+export type ViewerQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ViewerQuery = { viewer: { id: string, username: string, displayName: string | null, email: string, avatarUrl: string | null, status: string, createdAt: string } };
+
+export const NewsEditorialFieldsFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"NewsEditorialFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"NewsEditorialArticle"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"authorId"}},{"kind":"Field","name":{"kind":"Name","value":"postType"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"shortText"}},{"kind":"Field","name":{"kind":"Name","value":"documentJson"}},{"kind":"Field","name":{"kind":"Name","value":"templateDataJson"}},{"kind":"Field","name":{"kind":"Name","value":"coverMediaId"}},{"kind":"Field","name":{"kind":"Name","value":"currentVersion"}},{"kind":"Field","name":{"kind":"Name","value":"approvedVersion"}},{"kind":"Field","name":{"kind":"Name","value":"allowComments"}},{"kind":"Field","name":{"kind":"Name","value":"allowRating"}},{"kind":"Field","name":{"kind":"Name","value":"allowSharing"}},{"kind":"Field","name":{"kind":"Name","value":"allowIndexing"}},{"kind":"Field","name":{"kind":"Name","value":"showOnHomepage"}},{"kind":"Field","name":{"kind":"Name","value":"featured"}},{"kind":"Field","name":{"kind":"Name","value":"submittedAt"}},{"kind":"Field","name":{"kind":"Name","value":"approvedAt"}},{"kind":"Field","name":{"kind":"Name","value":"scheduledFor"}},{"kind":"Field","name":{"kind":"Name","value":"publishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"displayPublishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]} as unknown as DocumentNode<NewsEditorialFieldsFragment, unknown>;
+export const NewsCommentFieldsFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"NewsCommentFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"NewsComment"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"reactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"parentId"}},{"kind":"Field","name":{"kind":"Name","value":"body"}},{"kind":"Field","name":{"kind":"Name","value":"documentJson"}},{"kind":"Field","name":{"kind":"Name","value":"isDeleted"}},{"kind":"Field","name":{"kind":"Name","value":"editedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"author"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"avatarUrl"}}]}},{"kind":"Field","name":{"kind":"Name","value":"engagement"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"upvotes"}},{"kind":"Field","name":{"kind":"Name","value":"downvotes"}},{"kind":"Field","name":{"kind":"Name","value":"score"}},{"kind":"Field","name":{"kind":"Name","value":"viewerReaction"}}]}}]}}]} as unknown as DocumentNode<NewsCommentFieldsFragment, unknown>;
+export const ViewerActivityFeedDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ViewerActivityFeed"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"ActivityFeedInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewerActivityFeed"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"actorId"}},{"kind":"Field","name":{"kind":"Name","value":"module"}},{"kind":"Field","name":{"kind":"Name","value":"action"}},{"kind":"Field","name":{"kind":"Name","value":"subjectType"}},{"kind":"Field","name":{"kind":"Name","value":"subjectId"}},{"kind":"Field","name":{"kind":"Name","value":"occurredAt"}},{"kind":"Field","name":{"kind":"Name","value":"isUnread"}},{"kind":"Field","name":{"kind":"Name","value":"reason"}}]}},{"kind":"Field","name":{"kind":"Name","value":"total"}},{"kind":"Field","name":{"kind":"Name","value":"unreadCount"}},{"kind":"Field","name":{"kind":"Name","value":"lastVisitedAt"}},{"kind":"Field","name":{"kind":"Name","value":"generatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"recommendationMode"}}]}}]}}]} as unknown as DocumentNode<ViewerActivityFeedQuery, ViewerActivityFeedQueryVariables>;
+export const MarkActivityFeedVisitedDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"MarkActivityFeedVisited"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"markActivityFeedVisited"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"visitedAt"}}]}}]}}]} as unknown as DocumentNode<MarkActivityFeedVisitedMutation, MarkActivityFeedVisitedMutationVariables>;
+export const ApiInfoDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ApiInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"apiInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"transport"}}]}}]}}]} as unknown as DocumentNode<ApiInfoQuery, ApiInfoQueryVariables>;
+export const LoginDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"Login"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"LoginInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"login"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"email"}}]}},{"kind":"Field","name":{"kind":"Name","value":"tokens"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"accessToken"}},{"kind":"Field","name":{"kind":"Name","value":"refreshToken"}}]}}]}}]}}]} as unknown as DocumentNode<LoginMutation, LoginMutationVariables>;
+export const RegisterDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"Register"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"RegisterInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"register"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"email"}}]}},{"kind":"Field","name":{"kind":"Name","value":"tokens"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"accessToken"}},{"kind":"Field","name":{"kind":"Name","value":"refreshToken"}}]}}]}}]}}]} as unknown as DocumentNode<RegisterMutation, RegisterMutationVariables>;
+export const CommentDraftDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"CommentDraft"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"interactionTargetId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"parentId"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"commentDraft"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"interactionTargetId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"interactionTargetId"}}},{"kind":"Argument","name":{"kind":"Name","value":"parentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"parentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"parentId"}},{"kind":"Field","name":{"kind":"Name","value":"documentJson"}},{"kind":"Field","name":{"kind":"Name","value":"plainText"}},{"kind":"Field","name":{"kind":"Name","value":"version"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<CommentDraftQuery, CommentDraftQueryVariables>;
+export const ViewerCommentDraftsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ViewerCommentDrafts"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"limit"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},"defaultValue":{"kind":"IntValue","value":"20"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewerCommentDrafts"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"limit"},"value":{"kind":"Variable","name":{"kind":"Name","value":"limit"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"parentId"}},{"kind":"Field","name":{"kind":"Name","value":"documentJson"}},{"kind":"Field","name":{"kind":"Name","value":"plainText"}},{"kind":"Field","name":{"kind":"Name","value":"version"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<ViewerCommentDraftsQuery, ViewerCommentDraftsQueryVariables>;
+export const SaveCommentDraftDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SaveCommentDraft"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"SaveCommentDraftInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"saveCommentDraft"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"parentId"}},{"kind":"Field","name":{"kind":"Name","value":"documentJson"}},{"kind":"Field","name":{"kind":"Name","value":"plainText"}},{"kind":"Field","name":{"kind":"Name","value":"version"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<SaveCommentDraftMutation, SaveCommentDraftMutationVariables>;
+export const DiscardCommentDraftDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DiscardCommentDraft"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"draftId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"discardCommentDraft"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"draftId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"draftId"}}}]}]}}]} as unknown as DocumentNode<DiscardCommentDraftMutation, DiscardCommentDraftMutationVariables>;
+export const EditorMediaDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"EditorMedia"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"MediaLibraryInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"editorMedia"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"originalFilename"}},{"kind":"Field","name":{"kind":"Name","value":"mimeType"}},{"kind":"Field","name":{"kind":"Name","value":"width"}},{"kind":"Field","name":{"kind":"Name","value":"height"}}]}},{"kind":"Field","name":{"kind":"Name","value":"pageInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"hasNextPage"}},{"kind":"Field","name":{"kind":"Name","value":"endCursor"}}]}}]}}]}}]} as unknown as DocumentNode<EditorMediaQuery, EditorMediaQueryVariables>;
+export const EditorMentionSuggestionsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"EditorMentionSuggestions"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"MembersDirectoryInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"members"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"avatarUrl"}},{"kind":"Field","name":{"kind":"Name","value":"isOnline"}}]}},{"kind":"Field","name":{"kind":"Name","value":"total"}}]}}]}}]} as unknown as DocumentNode<EditorMentionSuggestionsQuery, EditorMentionSuggestionsQueryVariables>;
+export const InitiateEditorMediaUploadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"InitiateEditorMediaUpload"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"InitiateMediaUploadInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"initiateMediaUpload"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"originalFilename"}}]}}]}}]} as unknown as DocumentNode<InitiateEditorMediaUploadMutation, InitiateEditorMediaUploadMutationVariables>;
+export const CreateEditorContentGateDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateEditorContentGate"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateContentGateInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createContentGate"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"operator"}},{"kind":"Field","name":{"kind":"Name","value":"requirements"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"threshold"}},{"kind":"Field","name":{"kind":"Name","value":"groupKey"}}]}}]}}]}}]} as unknown as DocumentNode<CreateEditorContentGateMutation, CreateEditorContentGateMutationVariables>;
+export const RunEditorAiCommandDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RunEditorAiCommand"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"RunEditorAiCommandInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"runEditorAiCommand"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"generationId"}},{"kind":"Field","name":{"kind":"Name","value":"provider"}},{"kind":"Field","name":{"kind":"Name","value":"model"}},{"kind":"Field","name":{"kind":"Name","value":"promptVersion"}},{"kind":"Field","name":{"kind":"Name","value":"command"}},{"kind":"Field","name":{"kind":"Name","value":"generatedText"}},{"kind":"Field","name":{"kind":"Name","value":"inputTokens"}},{"kind":"Field","name":{"kind":"Name","value":"outputTokens"}},{"kind":"Field","name":{"kind":"Name","value":"generatedContentLabel"}},{"kind":"Field","name":{"kind":"Name","value":"requiresConfirmation"}}]}}]}}]} as unknown as DocumentNode<RunEditorAiCommandMutation, RunEditorAiCommandMutationVariables>;
+export const MediaLibraryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MediaLibrary"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"MediaLibraryInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mediaLibrary"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"ownerId"}},{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"originalFilename"}},{"kind":"Field","name":{"kind":"Name","value":"mimeType"}},{"kind":"Field","name":{"kind":"Name","value":"extension"}},{"kind":"Field","name":{"kind":"Name","value":"size"}},{"kind":"Field","name":{"kind":"Name","value":"width"}},{"kind":"Field","name":{"kind":"Name","value":"height"}},{"kind":"Field","name":{"kind":"Name","value":"failureCode"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"pageInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"hasNextPage"}},{"kind":"Field","name":{"kind":"Name","value":"endCursor"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"mediaLibraryMetrics"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"totalMedia"}},{"kind":"Field","name":{"kind":"Name","value":"originalBytes"}},{"kind":"Field","name":{"kind":"Name","value":"variantBytes"}},{"kind":"Field","name":{"kind":"Name","value":"totalBytes"}},{"kind":"Field","name":{"kind":"Name","value":"orphanedMedia"}},{"kind":"Field","name":{"kind":"Name","value":"failedMedia"}},{"kind":"Field","name":{"kind":"Name","value":"quarantinedMedia"}}]}}]}}]} as unknown as DocumentNode<MediaLibraryQuery, MediaLibraryQueryVariables>;
+export const RetryFailedMediaDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RetryFailedMedia"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"mediaId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"retryFailedMedia"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"mediaId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"mediaId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"failureCode"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<RetryFailedMediaMutation, RetryFailedMediaMutationVariables>;
+export const EditorialNewsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"EditorialNews"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"NewsEditorialBrowseInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"editorialNews"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"total"}},{"kind":"Field","name":{"kind":"Name","value":"page"}},{"kind":"Field","name":{"kind":"Name","value":"pageSize"}},{"kind":"Field","name":{"kind":"Name","value":"totalPages"}},{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"NewsEditorialFields"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"NewsEditorialFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"NewsEditorialArticle"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"authorId"}},{"kind":"Field","name":{"kind":"Name","value":"postType"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"shortText"}},{"kind":"Field","name":{"kind":"Name","value":"documentJson"}},{"kind":"Field","name":{"kind":"Name","value":"templateDataJson"}},{"kind":"Field","name":{"kind":"Name","value":"coverMediaId"}},{"kind":"Field","name":{"kind":"Name","value":"currentVersion"}},{"kind":"Field","name":{"kind":"Name","value":"approvedVersion"}},{"kind":"Field","name":{"kind":"Name","value":"allowComments"}},{"kind":"Field","name":{"kind":"Name","value":"allowRating"}},{"kind":"Field","name":{"kind":"Name","value":"allowSharing"}},{"kind":"Field","name":{"kind":"Name","value":"allowIndexing"}},{"kind":"Field","name":{"kind":"Name","value":"showOnHomepage"}},{"kind":"Field","name":{"kind":"Name","value":"featured"}},{"kind":"Field","name":{"kind":"Name","value":"submittedAt"}},{"kind":"Field","name":{"kind":"Name","value":"approvedAt"}},{"kind":"Field","name":{"kind":"Name","value":"scheduledFor"}},{"kind":"Field","name":{"kind":"Name","value":"publishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"displayPublishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]} as unknown as DocumentNode<EditorialNewsQuery, EditorialNewsQueryVariables>;
+export const NewsEditorialArticleDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"NewsEditorialArticle"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"articleId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"newsEditorialArticle"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"articleId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"articleId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"NewsEditorialFields"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"NewsEditorialFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"NewsEditorialArticle"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"authorId"}},{"kind":"Field","name":{"kind":"Name","value":"postType"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"shortText"}},{"kind":"Field","name":{"kind":"Name","value":"documentJson"}},{"kind":"Field","name":{"kind":"Name","value":"templateDataJson"}},{"kind":"Field","name":{"kind":"Name","value":"coverMediaId"}},{"kind":"Field","name":{"kind":"Name","value":"currentVersion"}},{"kind":"Field","name":{"kind":"Name","value":"approvedVersion"}},{"kind":"Field","name":{"kind":"Name","value":"allowComments"}},{"kind":"Field","name":{"kind":"Name","value":"allowRating"}},{"kind":"Field","name":{"kind":"Name","value":"allowSharing"}},{"kind":"Field","name":{"kind":"Name","value":"allowIndexing"}},{"kind":"Field","name":{"kind":"Name","value":"showOnHomepage"}},{"kind":"Field","name":{"kind":"Name","value":"featured"}},{"kind":"Field","name":{"kind":"Name","value":"submittedAt"}},{"kind":"Field","name":{"kind":"Name","value":"approvedAt"}},{"kind":"Field","name":{"kind":"Name","value":"scheduledFor"}},{"kind":"Field","name":{"kind":"Name","value":"publishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"displayPublishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]} as unknown as DocumentNode<NewsEditorialArticleQuery, NewsEditorialArticleQueryVariables>;
+export const CreateNewsDraftDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateNewsDraft"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateNewsDraftInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createNewsDraft"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"NewsEditorialFields"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"NewsEditorialFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"NewsEditorialArticle"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"authorId"}},{"kind":"Field","name":{"kind":"Name","value":"postType"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"shortText"}},{"kind":"Field","name":{"kind":"Name","value":"documentJson"}},{"kind":"Field","name":{"kind":"Name","value":"templateDataJson"}},{"kind":"Field","name":{"kind":"Name","value":"coverMediaId"}},{"kind":"Field","name":{"kind":"Name","value":"currentVersion"}},{"kind":"Field","name":{"kind":"Name","value":"approvedVersion"}},{"kind":"Field","name":{"kind":"Name","value":"allowComments"}},{"kind":"Field","name":{"kind":"Name","value":"allowRating"}},{"kind":"Field","name":{"kind":"Name","value":"allowSharing"}},{"kind":"Field","name":{"kind":"Name","value":"allowIndexing"}},{"kind":"Field","name":{"kind":"Name","value":"showOnHomepage"}},{"kind":"Field","name":{"kind":"Name","value":"featured"}},{"kind":"Field","name":{"kind":"Name","value":"submittedAt"}},{"kind":"Field","name":{"kind":"Name","value":"approvedAt"}},{"kind":"Field","name":{"kind":"Name","value":"scheduledFor"}},{"kind":"Field","name":{"kind":"Name","value":"publishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"displayPublishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]} as unknown as DocumentNode<CreateNewsDraftMutation, CreateNewsDraftMutationVariables>;
+export const SaveNewsDraftDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SaveNewsDraft"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"SaveNewsDraftInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"saveNewsDraft"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"NewsEditorialFields"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"NewsEditorialFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"NewsEditorialArticle"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"authorId"}},{"kind":"Field","name":{"kind":"Name","value":"postType"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"shortText"}},{"kind":"Field","name":{"kind":"Name","value":"documentJson"}},{"kind":"Field","name":{"kind":"Name","value":"templateDataJson"}},{"kind":"Field","name":{"kind":"Name","value":"coverMediaId"}},{"kind":"Field","name":{"kind":"Name","value":"currentVersion"}},{"kind":"Field","name":{"kind":"Name","value":"approvedVersion"}},{"kind":"Field","name":{"kind":"Name","value":"allowComments"}},{"kind":"Field","name":{"kind":"Name","value":"allowRating"}},{"kind":"Field","name":{"kind":"Name","value":"allowSharing"}},{"kind":"Field","name":{"kind":"Name","value":"allowIndexing"}},{"kind":"Field","name":{"kind":"Name","value":"showOnHomepage"}},{"kind":"Field","name":{"kind":"Name","value":"featured"}},{"kind":"Field","name":{"kind":"Name","value":"submittedAt"}},{"kind":"Field","name":{"kind":"Name","value":"approvedAt"}},{"kind":"Field","name":{"kind":"Name","value":"scheduledFor"}},{"kind":"Field","name":{"kind":"Name","value":"publishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"displayPublishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]} as unknown as DocumentNode<SaveNewsDraftMutation, SaveNewsDraftMutationVariables>;
+export const SubmitNewsForReviewDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SubmitNewsForReview"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"articleId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"submitNewsForReview"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"articleId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"articleId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"article"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"NewsEditorialFields"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"NewsEditorialFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"NewsEditorialArticle"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"authorId"}},{"kind":"Field","name":{"kind":"Name","value":"postType"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"shortText"}},{"kind":"Field","name":{"kind":"Name","value":"documentJson"}},{"kind":"Field","name":{"kind":"Name","value":"templateDataJson"}},{"kind":"Field","name":{"kind":"Name","value":"coverMediaId"}},{"kind":"Field","name":{"kind":"Name","value":"currentVersion"}},{"kind":"Field","name":{"kind":"Name","value":"approvedVersion"}},{"kind":"Field","name":{"kind":"Name","value":"allowComments"}},{"kind":"Field","name":{"kind":"Name","value":"allowRating"}},{"kind":"Field","name":{"kind":"Name","value":"allowSharing"}},{"kind":"Field","name":{"kind":"Name","value":"allowIndexing"}},{"kind":"Field","name":{"kind":"Name","value":"showOnHomepage"}},{"kind":"Field","name":{"kind":"Name","value":"featured"}},{"kind":"Field","name":{"kind":"Name","value":"submittedAt"}},{"kind":"Field","name":{"kind":"Name","value":"approvedAt"}},{"kind":"Field","name":{"kind":"Name","value":"scheduledFor"}},{"kind":"Field","name":{"kind":"Name","value":"publishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"displayPublishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]} as unknown as DocumentNode<SubmitNewsForReviewMutation, SubmitNewsForReviewMutationVariables>;
+export const RequestNewsChangesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RequestNewsChanges"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"NewsDecisionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"requestNewsChanges"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"article"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"NewsEditorialFields"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"NewsEditorialFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"NewsEditorialArticle"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"authorId"}},{"kind":"Field","name":{"kind":"Name","value":"postType"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"shortText"}},{"kind":"Field","name":{"kind":"Name","value":"documentJson"}},{"kind":"Field","name":{"kind":"Name","value":"templateDataJson"}},{"kind":"Field","name":{"kind":"Name","value":"coverMediaId"}},{"kind":"Field","name":{"kind":"Name","value":"currentVersion"}},{"kind":"Field","name":{"kind":"Name","value":"approvedVersion"}},{"kind":"Field","name":{"kind":"Name","value":"allowComments"}},{"kind":"Field","name":{"kind":"Name","value":"allowRating"}},{"kind":"Field","name":{"kind":"Name","value":"allowSharing"}},{"kind":"Field","name":{"kind":"Name","value":"allowIndexing"}},{"kind":"Field","name":{"kind":"Name","value":"showOnHomepage"}},{"kind":"Field","name":{"kind":"Name","value":"featured"}},{"kind":"Field","name":{"kind":"Name","value":"submittedAt"}},{"kind":"Field","name":{"kind":"Name","value":"approvedAt"}},{"kind":"Field","name":{"kind":"Name","value":"scheduledFor"}},{"kind":"Field","name":{"kind":"Name","value":"publishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"displayPublishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]} as unknown as DocumentNode<RequestNewsChangesMutation, RequestNewsChangesMutationVariables>;
+export const ApproveNewsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ApproveNews"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"NewsDecisionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"approveNews"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"article"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"NewsEditorialFields"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"NewsEditorialFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"NewsEditorialArticle"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"authorId"}},{"kind":"Field","name":{"kind":"Name","value":"postType"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"shortText"}},{"kind":"Field","name":{"kind":"Name","value":"documentJson"}},{"kind":"Field","name":{"kind":"Name","value":"templateDataJson"}},{"kind":"Field","name":{"kind":"Name","value":"coverMediaId"}},{"kind":"Field","name":{"kind":"Name","value":"currentVersion"}},{"kind":"Field","name":{"kind":"Name","value":"approvedVersion"}},{"kind":"Field","name":{"kind":"Name","value":"allowComments"}},{"kind":"Field","name":{"kind":"Name","value":"allowRating"}},{"kind":"Field","name":{"kind":"Name","value":"allowSharing"}},{"kind":"Field","name":{"kind":"Name","value":"allowIndexing"}},{"kind":"Field","name":{"kind":"Name","value":"showOnHomepage"}},{"kind":"Field","name":{"kind":"Name","value":"featured"}},{"kind":"Field","name":{"kind":"Name","value":"submittedAt"}},{"kind":"Field","name":{"kind":"Name","value":"approvedAt"}},{"kind":"Field","name":{"kind":"Name","value":"scheduledFor"}},{"kind":"Field","name":{"kind":"Name","value":"publishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"displayPublishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]} as unknown as DocumentNode<ApproveNewsMutation, ApproveNewsMutationVariables>;
+export const PublishNewsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"PublishNews"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"PublishNewsInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"publishNews"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"article"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"NewsEditorialFields"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"NewsEditorialFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"NewsEditorialArticle"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"authorId"}},{"kind":"Field","name":{"kind":"Name","value":"postType"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"shortText"}},{"kind":"Field","name":{"kind":"Name","value":"documentJson"}},{"kind":"Field","name":{"kind":"Name","value":"templateDataJson"}},{"kind":"Field","name":{"kind":"Name","value":"coverMediaId"}},{"kind":"Field","name":{"kind":"Name","value":"currentVersion"}},{"kind":"Field","name":{"kind":"Name","value":"approvedVersion"}},{"kind":"Field","name":{"kind":"Name","value":"allowComments"}},{"kind":"Field","name":{"kind":"Name","value":"allowRating"}},{"kind":"Field","name":{"kind":"Name","value":"allowSharing"}},{"kind":"Field","name":{"kind":"Name","value":"allowIndexing"}},{"kind":"Field","name":{"kind":"Name","value":"showOnHomepage"}},{"kind":"Field","name":{"kind":"Name","value":"featured"}},{"kind":"Field","name":{"kind":"Name","value":"submittedAt"}},{"kind":"Field","name":{"kind":"Name","value":"approvedAt"}},{"kind":"Field","name":{"kind":"Name","value":"scheduledFor"}},{"kind":"Field","name":{"kind":"Name","value":"publishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"displayPublishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]} as unknown as DocumentNode<PublishNewsMutation, PublishNewsMutationVariables>;
+export const ScheduleNewsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ScheduleNews"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ScheduleNewsInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"scheduleNews"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"article"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"NewsEditorialFields"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"NewsEditorialFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"NewsEditorialArticle"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"authorId"}},{"kind":"Field","name":{"kind":"Name","value":"postType"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"shortText"}},{"kind":"Field","name":{"kind":"Name","value":"documentJson"}},{"kind":"Field","name":{"kind":"Name","value":"templateDataJson"}},{"kind":"Field","name":{"kind":"Name","value":"coverMediaId"}},{"kind":"Field","name":{"kind":"Name","value":"currentVersion"}},{"kind":"Field","name":{"kind":"Name","value":"approvedVersion"}},{"kind":"Field","name":{"kind":"Name","value":"allowComments"}},{"kind":"Field","name":{"kind":"Name","value":"allowRating"}},{"kind":"Field","name":{"kind":"Name","value":"allowSharing"}},{"kind":"Field","name":{"kind":"Name","value":"allowIndexing"}},{"kind":"Field","name":{"kind":"Name","value":"showOnHomepage"}},{"kind":"Field","name":{"kind":"Name","value":"featured"}},{"kind":"Field","name":{"kind":"Name","value":"submittedAt"}},{"kind":"Field","name":{"kind":"Name","value":"approvedAt"}},{"kind":"Field","name":{"kind":"Name","value":"scheduledFor"}},{"kind":"Field","name":{"kind":"Name","value":"publishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"displayPublishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]} as unknown as DocumentNode<ScheduleNewsMutation, ScheduleNewsMutationVariables>;
+export const CancelNewsScheduleDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CancelNewsSchedule"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"NewsDecisionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"cancelNewsSchedule"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"article"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"NewsEditorialFields"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"NewsEditorialFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"NewsEditorialArticle"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"authorId"}},{"kind":"Field","name":{"kind":"Name","value":"postType"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"shortText"}},{"kind":"Field","name":{"kind":"Name","value":"documentJson"}},{"kind":"Field","name":{"kind":"Name","value":"templateDataJson"}},{"kind":"Field","name":{"kind":"Name","value":"coverMediaId"}},{"kind":"Field","name":{"kind":"Name","value":"currentVersion"}},{"kind":"Field","name":{"kind":"Name","value":"approvedVersion"}},{"kind":"Field","name":{"kind":"Name","value":"allowComments"}},{"kind":"Field","name":{"kind":"Name","value":"allowRating"}},{"kind":"Field","name":{"kind":"Name","value":"allowSharing"}},{"kind":"Field","name":{"kind":"Name","value":"allowIndexing"}},{"kind":"Field","name":{"kind":"Name","value":"showOnHomepage"}},{"kind":"Field","name":{"kind":"Name","value":"featured"}},{"kind":"Field","name":{"kind":"Name","value":"submittedAt"}},{"kind":"Field","name":{"kind":"Name","value":"approvedAt"}},{"kind":"Field","name":{"kind":"Name","value":"scheduledFor"}},{"kind":"Field","name":{"kind":"Name","value":"publishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"displayPublishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]} as unknown as DocumentNode<CancelNewsScheduleMutation, CancelNewsScheduleMutationVariables>;
+export const SetNewsPinDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SetNewsPin"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"SetNewsPinInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"setNewsPin"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"articleId"}},{"kind":"Field","name":{"kind":"Name","value":"scope"}},{"kind":"Field","name":{"kind":"Name","value":"categoryId"}},{"kind":"Field","name":{"kind":"Name","value":"expiresAt"}}]}}]}}]} as unknown as DocumentNode<SetNewsPinMutation, SetNewsPinMutationVariables>;
+export const RemoveNewsPinDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RemoveNewsPin"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"articleId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"removeNewsPin"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"articleId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"articleId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}}]}}]}}]} as unknown as DocumentNode<RemoveNewsPinMutation, RemoveNewsPinMutationVariables>;
+export const NewsCatalogDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"NewsCatalog"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"NewsBrowseInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"news"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"total"}},{"kind":"Field","name":{"kind":"Name","value":"page"}},{"kind":"Field","name":{"kind":"Name","value":"pageSize"}},{"kind":"Field","name":{"kind":"Name","value":"totalPages"}},{"kind":"Field","name":{"kind":"Name","value":"pinnedItems"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"postType"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"shortText"}},{"kind":"Field","name":{"kind":"Name","value":"coverMediaId"}},{"kind":"Field","name":{"kind":"Name","value":"displayPublishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"featured"}},{"kind":"Field","name":{"kind":"Name","value":"pin"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"scope"}},{"kind":"Field","name":{"kind":"Name","value":"categoryId"}},{"kind":"Field","name":{"kind":"Name","value":"expiresAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"author"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"avatarUrl"}}]}},{"kind":"Field","name":{"kind":"Name","value":"primaryCategory"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"icon"}}]}},{"kind":"Field","name":{"kind":"Name","value":"tags"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}}]}},{"kind":"Field","name":{"kind":"Name","value":"engagement"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewCount"}},{"kind":"Field","name":{"kind":"Name","value":"commentCount"}},{"kind":"Field","name":{"kind":"Name","value":"upvotes"}},{"kind":"Field","name":{"kind":"Name","value":"downvotes"}},{"kind":"Field","name":{"kind":"Name","value":"score"}},{"kind":"Field","name":{"kind":"Name","value":"bookmarkedByViewer"}},{"kind":"Field","name":{"kind":"Name","value":"viewerReaction"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"postType"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"shortText"}},{"kind":"Field","name":{"kind":"Name","value":"coverMediaId"}},{"kind":"Field","name":{"kind":"Name","value":"displayPublishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"featured"}},{"kind":"Field","name":{"kind":"Name","value":"pin"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"scope"}},{"kind":"Field","name":{"kind":"Name","value":"categoryId"}},{"kind":"Field","name":{"kind":"Name","value":"expiresAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"author"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"avatarUrl"}}]}},{"kind":"Field","name":{"kind":"Name","value":"primaryCategory"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"icon"}}]}},{"kind":"Field","name":{"kind":"Name","value":"tags"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}}]}},{"kind":"Field","name":{"kind":"Name","value":"engagement"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewCount"}},{"kind":"Field","name":{"kind":"Name","value":"commentCount"}},{"kind":"Field","name":{"kind":"Name","value":"upvotes"}},{"kind":"Field","name":{"kind":"Name","value":"downvotes"}},{"kind":"Field","name":{"kind":"Name","value":"score"}},{"kind":"Field","name":{"kind":"Name","value":"bookmarkedByViewer"}},{"kind":"Field","name":{"kind":"Name","value":"viewerReaction"}}]}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"newsSettings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"newsPaginationMode"}},{"kind":"Field","name":{"kind":"Name","value":"newsPaginationThreshold"}},{"kind":"Field","name":{"kind":"Name","value":"newsPageSize"}}]}}]}}]} as unknown as DocumentNode<NewsCatalogQuery, NewsCatalogQueryVariables>;
+export const FullNewsPageDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"FullNewsPage"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"language"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"slug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"fullNews"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"language"},"value":{"kind":"Variable","name":{"kind":"Name","value":"language"}}},{"kind":"Argument","name":{"kind":"Name","value":"slug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"slug"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"postType"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"shortText"}},{"kind":"Field","name":{"kind":"Name","value":"coverMediaId"}},{"kind":"Field","name":{"kind":"Name","value":"displayPublishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"featured"}},{"kind":"Field","name":{"kind":"Name","value":"pin"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"scope"}},{"kind":"Field","name":{"kind":"Name","value":"categoryId"}},{"kind":"Field","name":{"kind":"Name","value":"expiresAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"allowComments"}},{"kind":"Field","name":{"kind":"Name","value":"allowRating"}},{"kind":"Field","name":{"kind":"Name","value":"allowSharing"}},{"kind":"Field","name":{"kind":"Name","value":"allowIndexing"}},{"kind":"Field","name":{"kind":"Name","value":"sharing"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"total"}},{"kind":"Field","name":{"kind":"Name","value":"channels"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"channel"}},{"kind":"Field","name":{"kind":"Name","value":"count"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"documentJson"}},{"kind":"Field","name":{"kind":"Name","value":"templateDataJson"}},{"kind":"Field","name":{"kind":"Name","value":"author"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"avatarUrl"}}]}},{"kind":"Field","name":{"kind":"Name","value":"primaryCategory"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"icon"}}]}},{"kind":"Field","name":{"kind":"Name","value":"tags"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}}]}},{"kind":"Field","name":{"kind":"Name","value":"engagement"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewCount"}},{"kind":"Field","name":{"kind":"Name","value":"commentCount"}},{"kind":"Field","name":{"kind":"Name","value":"upvotes"}},{"kind":"Field","name":{"kind":"Name","value":"downvotes"}},{"kind":"Field","name":{"kind":"Name","value":"score"}},{"kind":"Field","name":{"kind":"Name","value":"bookmarkedByViewer"}},{"kind":"Field","name":{"kind":"Name","value":"viewerReaction"}}]}},{"kind":"Field","name":{"kind":"Name","value":"related"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"anchorText"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"shortText"}},{"kind":"Field","name":{"kind":"Name","value":"coverMediaId"}},{"kind":"Field","name":{"kind":"Name","value":"displayPublishedAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"attachments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"mediaId"}},{"kind":"Field","name":{"kind":"Name","value":"label"}},{"kind":"Field","name":{"kind":"Name","value":"filename"}},{"kind":"Field","name":{"kind":"Name","value":"mimeType"}},{"kind":"Field","name":{"kind":"Name","value":"extension"}},{"kind":"Field","name":{"kind":"Name","value":"size"}},{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"checksumSha256"}},{"kind":"Field","name":{"kind":"Name","value":"checksumSha1"}},{"kind":"Field","name":{"kind":"Name","value":"checksumMd5"}},{"kind":"Field","name":{"kind":"Name","value":"downloadUrl"}}]}}]}}]}}]} as unknown as DocumentNode<FullNewsPageQuery, FullNewsPageQueryVariables>;
+export const RecordNewsViewDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RecordNewsView"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"RecordViewInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"recordInteractionView"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"changed"}},{"kind":"Field","name":{"kind":"Name","value":"viewCount"}},{"kind":"Field","name":{"kind":"Name","value":"shareCount"}},{"kind":"Field","name":{"kind":"Name","value":"shares"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"channel"}},{"kind":"Field","name":{"kind":"Name","value":"count"}}]}}]}}]}}]} as unknown as DocumentNode<RecordNewsViewMutation, RecordNewsViewMutationVariables>;
+export const RecordNewsShareDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RecordNewsShare"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"RecordShareInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"recordInteractionShare"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"changed"}},{"kind":"Field","name":{"kind":"Name","value":"viewCount"}},{"kind":"Field","name":{"kind":"Name","value":"shareCount"}},{"kind":"Field","name":{"kind":"Name","value":"shares"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"channel"}},{"kind":"Field","name":{"kind":"Name","value":"count"}}]}}]}}]}}]} as unknown as DocumentNode<RecordNewsShareMutation, RecordNewsShareMutationVariables>;
+export const NewsNavigationDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"NewsNavigation"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"articleId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"newsNavigation"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"articleId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"articleId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"previous"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"coverMediaId"}},{"kind":"Field","name":{"kind":"Name","value":"displayPublishedAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"next"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"coverMediaId"}},{"kind":"Field","name":{"kind":"Name","value":"displayPublishedAt"}}]}}]}}]}}]} as unknown as DocumentNode<NewsNavigationQuery, NewsNavigationQueryVariables>;
+export const NewsRatingVotesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"NewsRatingVotes"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"articleId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"page"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"pageSize"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"newsRatingVotes"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"articleId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"articleId"}}},{"kind":"Argument","name":{"kind":"Name","value":"page"},"value":{"kind":"Variable","name":{"kind":"Name","value":"page"}}},{"kind":"Argument","name":{"kind":"Name","value":"pageSize"},"value":{"kind":"Variable","name":{"kind":"Name","value":"pageSize"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"total"}},{"kind":"Field","name":{"kind":"Name","value":"page"}},{"kind":"Field","name":{"kind":"Name","value":"pageSize"}},{"kind":"Field","name":{"kind":"Name","value":"totalPages"}},{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"actor"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"avatarUrl"}}]}}]}}]}}]}}]} as unknown as DocumentNode<NewsRatingVotesQuery, NewsRatingVotesQueryVariables>;
+export const SetNewsVoteDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SetNewsVote"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"SetReactionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"setReaction"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"changed"}},{"kind":"Field","name":{"kind":"Name","value":"summary"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"upvotes"}},{"kind":"Field","name":{"kind":"Name","value":"downvotes"}},{"kind":"Field","name":{"kind":"Name","value":"score"}},{"kind":"Field","name":{"kind":"Name","value":"viewerReaction"}}]}}]}}]}}]} as unknown as DocumentNode<SetNewsVoteMutation, SetNewsVoteMutationVariables>;
+export const ClearNewsVoteDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ClearNewsVote"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"interactionTargetId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"clearReaction"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"interactionTargetId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"interactionTargetId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"upvotes"}},{"kind":"Field","name":{"kind":"Name","value":"downvotes"}},{"kind":"Field","name":{"kind":"Name","value":"score"}},{"kind":"Field","name":{"kind":"Name","value":"viewerReaction"}}]}}]}}]} as unknown as DocumentNode<ClearNewsVoteMutation, ClearNewsVoteMutationVariables>;
+export const SaveNewsBookmarkDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SaveNewsBookmark"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"interactionTargetId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"saveBookmark"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"interactionTargetId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"interactionTargetId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"saved"}},{"kind":"Field","name":{"kind":"Name","value":"changed"}}]}}]}}]} as unknown as DocumentNode<SaveNewsBookmarkMutation, SaveNewsBookmarkMutationVariables>;
+export const RemoveNewsBookmarkDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RemoveNewsBookmark"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"interactionTargetId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"removeBookmark"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"interactionTargetId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"interactionTargetId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"saved"}},{"kind":"Field","name":{"kind":"Name","value":"changed"}}]}}]}}]} as unknown as DocumentNode<RemoveNewsBookmarkMutation, RemoveNewsBookmarkMutationVariables>;
+export const NewsCommentsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"NewsComments"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"articleId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"page"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"pageSize"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"newsComments"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"articleId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"articleId"}}},{"kind":"Argument","name":{"kind":"Name","value":"page"},"value":{"kind":"Variable","name":{"kind":"Name","value":"page"}}},{"kind":"Argument","name":{"kind":"Name","value":"pageSize"},"value":{"kind":"Variable","name":{"kind":"Name","value":"pageSize"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"total"}},{"kind":"Field","name":{"kind":"Name","value":"page"}},{"kind":"Field","name":{"kind":"Name","value":"pageSize"}},{"kind":"Field","name":{"kind":"Name","value":"totalPages"}},{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"NewsCommentFields"}},{"kind":"Field","name":{"kind":"Name","value":"children"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"NewsCommentFields"}},{"kind":"Field","name":{"kind":"Name","value":"children"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"NewsCommentFields"}},{"kind":"Field","name":{"kind":"Name","value":"children"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"NewsCommentFields"}},{"kind":"Field","name":{"kind":"Name","value":"children"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"NewsCommentFields"}}]}}]}}]}}]}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"newsSettings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"commentsPaginationMode"}},{"kind":"Field","name":{"kind":"Name","value":"commentsPaginationThreshold"}},{"kind":"Field","name":{"kind":"Name","value":"commentsPageSize"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"NewsCommentFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"NewsComment"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"reactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"parentId"}},{"kind":"Field","name":{"kind":"Name","value":"body"}},{"kind":"Field","name":{"kind":"Name","value":"documentJson"}},{"kind":"Field","name":{"kind":"Name","value":"isDeleted"}},{"kind":"Field","name":{"kind":"Name","value":"editedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"author"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"avatarUrl"}}]}},{"kind":"Field","name":{"kind":"Name","value":"engagement"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"upvotes"}},{"kind":"Field","name":{"kind":"Name","value":"downvotes"}},{"kind":"Field","name":{"kind":"Name","value":"score"}},{"kind":"Field","name":{"kind":"Name","value":"viewerReaction"}}]}}]}}]} as unknown as DocumentNode<NewsCommentsQuery, NewsCommentsQueryVariables>;
+export const CreateNewsCommentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateNewsComment"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateCommentInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createComment"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"reactionTargetId"}}]}}]}}]} as unknown as DocumentNode<CreateNewsCommentMutation, CreateNewsCommentMutationVariables>;
+export const PublicProfileDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"PublicProfile"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"username"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"userByUsername"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"username"},"value":{"kind":"Variable","name":{"kind":"Name","value":"username"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"bio"}},{"kind":"Field","name":{"kind":"Name","value":"location"}},{"kind":"Field","name":{"kind":"Name","value":"website"}},{"kind":"Field","name":{"kind":"Name","value":"technologies"}},{"kind":"Field","name":{"kind":"Name","value":"interests"}},{"kind":"Field","name":{"kind":"Name","value":"avatarUrl"}},{"kind":"Field","name":{"kind":"Name","value":"coverUrl"}},{"kind":"Field","name":{"kind":"Name","value":"followerCount"}},{"kind":"Field","name":{"kind":"Name","value":"followingCount"}},{"kind":"Field","name":{"kind":"Name","value":"isFollowedByViewer"}},{"kind":"Field","name":{"kind":"Name","value":"isOnline"}},{"kind":"Field","name":{"kind":"Name","value":"lastSeenAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"socialLinks"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"platform"}},{"kind":"Field","name":{"kind":"Name","value":"label"}},{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"position"}}]}}]}}]}}]} as unknown as DocumentNode<PublicProfileQuery, PublicProfileQueryVariables>;
+export const ProfileViewerDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ProfileViewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<ProfileViewerQuery, ProfileViewerQueryVariables>;
+export const ProfileWallDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ProfileWall"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"profileOwnerId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"pagination"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"UsersPageInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"profileWall"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"profileOwnerId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"profileOwnerId"}}},{"kind":"Argument","name":{"kind":"Name","value":"pagination"},"value":{"kind":"Variable","name":{"kind":"Name","value":"pagination"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"profileOwnerId"}},{"kind":"Field","name":{"kind":"Name","value":"authorId"}},{"kind":"Field","name":{"kind":"Name","value":"body"}},{"kind":"Field","name":{"kind":"Name","value":"imageMediaId"}},{"kind":"Field","name":{"kind":"Name","value":"isDeleted"}},{"kind":"Field","name":{"kind":"Name","value":"deletedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"total"}},{"kind":"Field","name":{"kind":"Name","value":"page"}},{"kind":"Field","name":{"kind":"Name","value":"limit"}},{"kind":"Field","name":{"kind":"Name","value":"totalPages"}}]}}]}}]} as unknown as DocumentNode<ProfileWallQuery, ProfileWallQueryVariables>;
+export const UserActivityDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"UserActivity"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"userId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"pagination"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"UsersPageInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"userActivity"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"userId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userId"}}},{"kind":"Argument","name":{"kind":"Name","value":"pagination"},"value":{"kind":"Variable","name":{"kind":"Name","value":"pagination"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"actorId"}},{"kind":"Field","name":{"kind":"Name","value":"module"}},{"kind":"Field","name":{"kind":"Name","value":"action"}},{"kind":"Field","name":{"kind":"Name","value":"subjectType"}},{"kind":"Field","name":{"kind":"Name","value":"subjectId"}},{"kind":"Field","name":{"kind":"Name","value":"occurredAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"total"}},{"kind":"Field","name":{"kind":"Name","value":"page"}},{"kind":"Field","name":{"kind":"Name","value":"limit"}},{"kind":"Field","name":{"kind":"Name","value":"totalPages"}}]}}]}}]} as unknown as DocumentNode<UserActivityQuery, UserActivityQueryVariables>;
+export const ProfileGamificationDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ProfileGamification"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"userId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"levelProgress"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"userId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"balance"}},{"kind":"Field","name":{"kind":"Name","value":"currentLevel"}},{"kind":"Field","name":{"kind":"Name","value":"currentThreshold"}},{"kind":"Field","name":{"kind":"Name","value":"nextLevel"}},{"kind":"Field","name":{"kind":"Name","value":"nextThreshold"}},{"kind":"Field","name":{"kind":"Name","value":"pointsIntoLevel"}},{"kind":"Field","name":{"kind":"Name","value":"pointsNeeded"}},{"kind":"Field","name":{"kind":"Name","value":"progressPercent"}}]}},{"kind":"Field","name":{"kind":"Name","value":"communityPointsHistory"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"userId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userId"}}},{"kind":"Argument","name":{"kind":"Name","value":"pagination"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"page"},"value":{"kind":"IntValue","value":"1"}},{"kind":"ObjectField","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"5"}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"total"}},{"kind":"Field","name":{"kind":"Name","value":"balance"}},{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"points"}},{"kind":"Field","name":{"kind":"Name","value":"reason"}},{"kind":"Field","name":{"kind":"Name","value":"ruleKey"}},{"kind":"Field","name":{"kind":"Name","value":"occurredAt"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"reputationHistory"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"userId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userId"}}},{"kind":"Argument","name":{"kind":"Name","value":"pagination"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"page"},"value":{"kind":"IntValue","value":"1"}},{"kind":"ObjectField","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"5"}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"score"}},{"kind":"Field","name":{"kind":"Name","value":"total"}},{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"value"}},{"kind":"Field","name":{"kind":"Name","value":"reason"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"actor"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"avatarUrl"}}]}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"userAchievements"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"userId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"awardedAt"}},{"kind":"Field","name":{"kind":"Name","value":"reason"}},{"kind":"Field","name":{"kind":"Name","value":"achievement"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"key"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"color"}},{"kind":"Field","name":{"kind":"Name","value":"badge"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"userCustomTitles"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"userId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"selected"}},{"kind":"Field","name":{"kind":"Name","value":"grantedAt"}},{"kind":"Field","name":{"kind":"Name","value":"grantReason"}},{"kind":"Field","name":{"kind":"Name","value":"revokedAt"}},{"kind":"Field","name":{"kind":"Name","value":"title"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"color"}},{"kind":"Field","name":{"kind":"Name","value":"badge"}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}}]}}]}}]}}]} as unknown as DocumentNode<ProfileGamificationQuery, ProfileGamificationQueryVariables>;
+export const MembersDirectoryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MembersDirectory"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"MembersDirectoryInput"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"leaderboardInput"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"LeaderboardInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"members"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"avatarUrl"}},{"kind":"Field","name":{"kind":"Name","value":"isOnline"}},{"kind":"Field","name":{"kind":"Name","value":"roles"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"total"}},{"kind":"Field","name":{"kind":"Name","value":"page"}},{"kind":"Field","name":{"kind":"Name","value":"limit"}},{"kind":"Field","name":{"kind":"Name","value":"totalPages"}}]}},{"kind":"Field","name":{"kind":"Name","value":"presenceSummary"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"onlineMembers"}},{"kind":"Field","name":{"kind":"Name","value":"onlineGuests"}},{"kind":"Field","name":{"kind":"Name","value":"onlineCrawlers"}},{"kind":"Field","name":{"kind":"Name","value":"totalOnline"}},{"kind":"Field","name":{"kind":"Name","value":"sampledAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"leaderboard"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"leaderboardInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"period"}},{"kind":"Field","name":{"kind":"Name","value":"startsAt"}},{"kind":"Field","name":{"kind":"Name","value":"endsAt"}},{"kind":"Field","name":{"kind":"Name","value":"generatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"total"}},{"kind":"Field","name":{"kind":"Name","value":"viewerRank"}},{"kind":"Field","name":{"kind":"Name","value":"viewerCommunityPoints"}},{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"rank"}},{"kind":"Field","name":{"kind":"Name","value":"userId"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"avatarUrl"}},{"kind":"Field","name":{"kind":"Name","value":"communityPoints"}},{"kind":"Field","name":{"kind":"Name","value":"currentLevel"}},{"kind":"Field","name":{"kind":"Name","value":"reputation"}},{"kind":"Field","name":{"kind":"Name","value":"selectedTitle"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"color"}},{"kind":"Field","name":{"kind":"Name","value":"badge"}}]}}]}}]}}]}}]} as unknown as DocumentNode<MembersDirectoryQuery, MembersDirectoryQueryVariables>;
+export const ProfileSettingsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ProfileSettings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"emailVerifiedAt"}},{"kind":"Field","name":{"kind":"Name","value":"bio"}},{"kind":"Field","name":{"kind":"Name","value":"location"}},{"kind":"Field","name":{"kind":"Name","value":"website"}},{"kind":"Field","name":{"kind":"Name","value":"technologies"}},{"kind":"Field","name":{"kind":"Name","value":"interests"}},{"kind":"Field","name":{"kind":"Name","value":"avatarUrl"}},{"kind":"Field","name":{"kind":"Name","value":"coverUrl"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"socialLinks"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"platform"}},{"kind":"Field","name":{"kind":"Name","value":"label"}},{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"position"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"viewerPrivacySettings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"profileVisibility"}},{"kind":"Field","name":{"kind":"Name","value":"showLocation"}},{"kind":"Field","name":{"kind":"Name","value":"showWebsite"}},{"kind":"Field","name":{"kind":"Name","value":"showSocialLinks"}},{"kind":"Field","name":{"kind":"Name","value":"showLastSeen"}},{"kind":"Field","name":{"kind":"Name","value":"showOnlineStatus"}},{"kind":"Field","name":{"kind":"Name","value":"allowFollowers"}},{"kind":"Field","name":{"kind":"Name","value":"showFollows"}},{"kind":"Field","name":{"kind":"Name","value":"allowWallPosts"}}]}},{"kind":"Field","name":{"kind":"Name","value":"viewerProfileCompletion"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"percentage"}},{"kind":"Field","name":{"kind":"Name","value":"completedCount"}},{"kind":"Field","name":{"kind":"Name","value":"totalCount"}},{"kind":"Field","name":{"kind":"Name","value":"isComplete"}},{"kind":"Field","name":{"kind":"Name","value":"completedFields"}},{"kind":"Field","name":{"kind":"Name","value":"missingFields"}}]}},{"kind":"Field","name":{"kind":"Name","value":"viewerSessions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"current"}},{"kind":"Field","name":{"kind":"Name","value":"userAgent"}},{"kind":"Field","name":{"kind":"Name","value":"ipAddress"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"expiresAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"viewerNotificationPreferences"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"inAppCategories"}},{"kind":"Field","name":{"kind":"Name","value":"emailEnabled"}},{"kind":"Field","name":{"kind":"Name","value":"emailCategories"}},{"kind":"Field","name":{"kind":"Name","value":"digestFrequency"}}]}},{"kind":"Field","name":{"kind":"Name","value":"viewerTwoFactorStatus"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"enabled"}},{"kind":"Field","name":{"kind":"Name","value":"recoveryCodesRemaining"}}]}}]}}]} as unknown as DocumentNode<ProfileSettingsQuery, ProfileSettingsQueryVariables>;
+export const FollowProfileDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"FollowProfile"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"userId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"followUser"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"userId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"userId"}},{"kind":"Field","name":{"kind":"Name","value":"followerCount"}},{"kind":"Field","name":{"kind":"Name","value":"followingCount"}}]}}]}}]} as unknown as DocumentNode<FollowProfileMutation, FollowProfileMutationVariables>;
+export const UnfollowProfileDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UnfollowProfile"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"userId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unfollowUser"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"userId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"userId"}},{"kind":"Field","name":{"kind":"Name","value":"followerCount"}},{"kind":"Field","name":{"kind":"Name","value":"followingCount"}}]}}]}}]} as unknown as DocumentNode<UnfollowProfileMutation, UnfollowProfileMutationVariables>;
+export const GiveProfileReputationDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"GiveProfileReputation"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"GiveReputationInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"giveReputation"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"recipientId"}},{"kind":"Field","name":{"kind":"Name","value":"value"}},{"kind":"Field","name":{"kind":"Name","value":"reason"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}}]}}]}}]} as unknown as DocumentNode<GiveProfileReputationMutation, GiveProfileReputationMutationVariables>;
+export const SelectViewerCustomTitleDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SelectViewerCustomTitle"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"grantId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"selectCustomTitle"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"grantId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"grantId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"selected"}},{"kind":"Field","name":{"kind":"Name","value":"title"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"color"}},{"kind":"Field","name":{"kind":"Name","value":"badge"}}]}}]}}]}}]} as unknown as DocumentNode<SelectViewerCustomTitleMutation, SelectViewerCustomTitleMutationVariables>;
+export const CreateProfileWallPostDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateProfileWallPost"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateWallPostInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createProfileWallPost"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"profileOwnerId"}},{"kind":"Field","name":{"kind":"Name","value":"authorId"}},{"kind":"Field","name":{"kind":"Name","value":"body"}},{"kind":"Field","name":{"kind":"Name","value":"imageMediaId"}},{"kind":"Field","name":{"kind":"Name","value":"isDeleted"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<CreateProfileWallPostMutation, CreateProfileWallPostMutationVariables>;
+export const RemoveProfileWallPostDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RemoveProfileWallPost"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"postId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"reason"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"removeProfileWallPost"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"postId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"postId"}}},{"kind":"Argument","name":{"kind":"Name","value":"reason"},"value":{"kind":"Variable","name":{"kind":"Name","value":"reason"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"isDeleted"}},{"kind":"Field","name":{"kind":"Name","value":"deletedAt"}}]}}]}}]} as unknown as DocumentNode<RemoveProfileWallPostMutation, RemoveProfileWallPostMutationVariables>;
+export const UpdateViewerProfileSettingsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateViewerProfileSettings"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateViewerProfileInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateViewerProfile"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"bio"}},{"kind":"Field","name":{"kind":"Name","value":"location"}},{"kind":"Field","name":{"kind":"Name","value":"website"}},{"kind":"Field","name":{"kind":"Name","value":"technologies"}},{"kind":"Field","name":{"kind":"Name","value":"interests"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<UpdateViewerProfileSettingsMutation, UpdateViewerProfileSettingsMutationVariables>;
+export const UpdateViewerPrivacySettingsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateViewerPrivacySettings"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateUserPrivacyInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateViewerPrivacy"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"profileVisibility"}},{"kind":"Field","name":{"kind":"Name","value":"showLocation"}},{"kind":"Field","name":{"kind":"Name","value":"showWebsite"}},{"kind":"Field","name":{"kind":"Name","value":"showSocialLinks"}},{"kind":"Field","name":{"kind":"Name","value":"showLastSeen"}},{"kind":"Field","name":{"kind":"Name","value":"showOnlineStatus"}},{"kind":"Field","name":{"kind":"Name","value":"allowFollowers"}},{"kind":"Field","name":{"kind":"Name","value":"showFollows"}},{"kind":"Field","name":{"kind":"Name","value":"allowWallPosts"}}]}}]}}]} as unknown as DocumentNode<UpdateViewerPrivacySettingsMutation, UpdateViewerPrivacySettingsMutationVariables>;
+export const UpdateViewerNotificationSettingsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateViewerNotificationSettings"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateNotificationPreferencesInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateViewerNotificationPreferences"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"inAppCategories"}},{"kind":"Field","name":{"kind":"Name","value":"emailEnabled"}},{"kind":"Field","name":{"kind":"Name","value":"emailCategories"}},{"kind":"Field","name":{"kind":"Name","value":"digestFrequency"}}]}}]}}]} as unknown as DocumentNode<UpdateViewerNotificationSettingsMutation, UpdateViewerNotificationSettingsMutationVariables>;
+export const RevokeViewerDeviceSessionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RevokeViewerDeviceSession"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"sessionId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"revokeViewerSession"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"sessionId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"sessionId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}}]}}]}}]} as unknown as DocumentNode<RevokeViewerDeviceSessionMutation, RevokeViewerDeviceSessionMutationVariables>;
+export const RevokeOtherViewerDeviceSessionsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RevokeOtherViewerDeviceSessions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"revokeOtherViewerSessions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}},{"kind":"Field","name":{"kind":"Name","value":"revokedCount"}}]}}]}}]} as unknown as DocumentNode<RevokeOtherViewerDeviceSessionsMutation, RevokeOtherViewerDeviceSessionsMutationVariables>;
+export const RequestViewerEmailVerificationDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RequestViewerEmailVerification"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"requestEmailVerification"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}}]}}]}}]} as unknown as DocumentNode<RequestViewerEmailVerificationMutation, RequestViewerEmailVerificationMutationVariables>;
+export const ChangeViewerEmailDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ChangeViewerEmail"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ChangeEmailInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"changeViewerEmail"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}}]}}]}}]} as unknown as DocumentNode<ChangeViewerEmailMutation, ChangeViewerEmailMutationVariables>;
+export const ChangeViewerPasswordDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ChangeViewerPassword"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ChangePasswordInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"changeViewerPassword"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}}]}}]}}]} as unknown as DocumentNode<ChangeViewerPasswordMutation, ChangeViewerPasswordMutationVariables>;
+export const DeactivateViewerAccountDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeactivateViewerAccount"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"DeactivateAccountInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deactivateAccount"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}}]}}]}}]} as unknown as DocumentNode<DeactivateViewerAccountMutation, DeactivateViewerAccountMutationVariables>;
+export const BeginViewerTwoFactorSetupDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"BeginViewerTwoFactorSetup"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"beginViewerTwoFactorSetup"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"secret"}},{"kind":"Field","name":{"kind":"Name","value":"otpauthUri"}}]}}]}}]} as unknown as DocumentNode<BeginViewerTwoFactorSetupMutation, BeginViewerTwoFactorSetupMutationVariables>;
+export const ConfirmViewerTwoFactorSetupDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ConfirmViewerTwoFactorSetup"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ConfirmTwoFactorInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"confirmViewerTwoFactorSetup"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"recoveryCodes"}}]}}]}}]} as unknown as DocumentNode<ConfirmViewerTwoFactorSetupMutation, ConfirmViewerTwoFactorSetupMutationVariables>;
+export const DisableViewerTwoFactorDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DisableViewerTwoFactor"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"DisableTwoFactorInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"disableViewerTwoFactor"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}}]}}]}}]} as unknown as DocumentNode<DisableViewerTwoFactorMutation, DisableViewerTwoFactorMutationVariables>;
+export const SetViewerAvatarDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SetViewerAvatar"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"mediaId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"setViewerAvatar"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"mediaId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"mediaId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"avatarUrl"}}]}}]}}]} as unknown as DocumentNode<SetViewerAvatarMutation, SetViewerAvatarMutationVariables>;
+export const RemoveViewerAvatarDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RemoveViewerAvatar"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"removeViewerAvatar"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"avatarUrl"}}]}}]}}]} as unknown as DocumentNode<RemoveViewerAvatarMutation, RemoveViewerAvatarMutationVariables>;
+export const SetViewerCoverDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SetViewerCover"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"mediaId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"setViewerCover"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"mediaId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"mediaId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"coverUrl"}}]}}]}}]} as unknown as DocumentNode<SetViewerCoverMutation, SetViewerCoverMutationVariables>;
+export const RemoveViewerCoverDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RemoveViewerCover"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"removeViewerCover"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"coverUrl"}}]}}]}}]} as unknown as DocumentNode<RemoveViewerCoverMutation, RemoveViewerCoverMutationVariables>;
+export const ViewerDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"avatarUrl"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}}]}}]}}]} as unknown as DocumentNode<ViewerQuery, ViewerQueryVariables>;

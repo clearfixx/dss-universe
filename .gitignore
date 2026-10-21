@@ -7,14 +7,17 @@ node_modules
 
 dist
 build
+dist
 .next
 .turbo
 
 coverage
+playwright-report
+test-results
 
 .DS_Store
 .idea
-.vscode
+# .vscode
 
 *.log
 *.tsbuildinfo

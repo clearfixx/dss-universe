@@ -1,0 +1,42 @@
+query CommentDraft($interactionTargetId: ID!, $parentId: ID) {
+  commentDraft(interactionTargetId: $interactionTargetId, parentId: $parentId) {
+    id
+    interactionTargetId
+    parentId
+    documentJson
+    plainText
+    version
+    createdAt
+    updatedAt
+  }
+}
+
+query ViewerCommentDrafts($limit: Int! = 20) {
+  viewerCommentDrafts(limit: $limit) {
+    id
+    interactionTargetId
+    parentId
+    documentJson
+    plainText
+    version
+    createdAt
+    updatedAt
+  }
+}
+
+mutation SaveCommentDraft($input: SaveCommentDraftInput!) {
+  saveCommentDraft(input: $input) {
+    id
+    interactionTargetId
+    parentId
+    documentJson
+    plainText
+    version
+    createdAt
+    updatedAt
+  }
+}
+
+mutation DiscardCommentDraft($draftId: ID!) {
+  discardCommentDraft(draftId: $draftId)
+}

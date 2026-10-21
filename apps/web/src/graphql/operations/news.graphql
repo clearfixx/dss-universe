@@ -1,0 +1,342 @@
+query NewsCatalog($input: NewsBrowseInput) {
+  news(input: $input) {
+    total
+    page
+    pageSize
+    totalPages
+    pinnedItems {
+      id
+      interactionTargetId
+      postType
+      language
+      slug
+      title
+      shortText
+      coverMediaId
+      displayPublishedAt
+      featured
+      pin {
+        scope
+        categoryId
+        expiresAt
+      }
+      author {
+        id
+        username
+        displayName
+        avatarUrl
+      }
+      primaryCategory {
+        id
+        name
+        slug
+        icon
+      }
+      tags {
+        id
+        name
+        slug
+      }
+      engagement {
+        viewCount
+        commentCount
+        upvotes
+        downvotes
+        score
+        bookmarkedByViewer
+        viewerReaction
+      }
+    }
+    items {
+      id
+      interactionTargetId
+      postType
+      language
+      slug
+      title
+      shortText
+      coverMediaId
+      displayPublishedAt
+      featured
+      pin {
+        scope
+        categoryId
+        expiresAt
+      }
+      author {
+        id
+        username
+        displayName
+        avatarUrl
+      }
+      primaryCategory {
+        id
+        name
+        slug
+        icon
+      }
+      tags {
+        id
+        name
+        slug
+      }
+      engagement {
+        viewCount
+        commentCount
+        upvotes
+        downvotes
+        score
+        bookmarkedByViewer
+        viewerReaction
+      }
+    }
+  }
+  newsSettings {
+    newsPaginationMode
+    newsPaginationThreshold
+    newsPageSize
+  }
+}
+
+query FullNewsPage($language: String!, $slug: String!) {
+  fullNews(language: $language, slug: $slug) {
+    id
+    interactionTargetId
+    postType
+    language
+    slug
+    title
+    shortText
+    coverMediaId
+    displayPublishedAt
+    featured
+    pin {
+      scope
+      categoryId
+      expiresAt
+    }
+    allowComments
+    allowRating
+    allowSharing
+    allowIndexing
+    sharing {
+      total
+      channels {
+        channel
+        count
+      }
+    }
+    documentJson
+    templateDataJson
+    author {
+      id
+      username
+      displayName
+      avatarUrl
+    }
+    primaryCategory {
+      id
+      name
+      slug
+      icon
+    }
+    tags {
+      id
+      name
+      slug
+    }
+    engagement {
+      viewCount
+      commentCount
+      upvotes
+      downvotes
+      score
+      bookmarkedByViewer
+      viewerReaction
+    }
+    related {
+      id
+      type
+      anchorText
+      language
+      slug
+      title
+      shortText
+      coverMediaId
+      displayPublishedAt
+    }
+    attachments {
+      id
+      mediaId
+      label
+      filename
+      mimeType
+      extension
+      size
+      kind
+      checksumSha256
+      checksumSha1
+      checksumMd5
+      downloadUrl
+    }
+  }
+}
+
+mutation RecordNewsView($input: RecordViewInput!) {
+  recordInteractionView(input: $input) {
+    changed
+    viewCount
+    shareCount
+    shares {
+      channel
+      count
+    }
+  }
+}
+
+mutation RecordNewsShare($input: RecordShareInput!) {
+  recordInteractionShare(input: $input) {
+    changed
+    viewCount
+    shareCount
+    shares {
+      channel
+      count
+    }
+  }
+}
+
+query NewsNavigation($articleId: ID!) {
+  newsNavigation(articleId: $articleId) {
+    previous {
+      id
+      language
+      slug
+      title
+      coverMediaId
+      displayPublishedAt
+    }
+    next {
+      id
+      language
+      slug
+      title
+      coverMediaId
+      displayPublishedAt
+    }
+  }
+}
+
+query NewsRatingVotes($articleId: ID!, $page: Int!, $pageSize: Int!) {
+  newsRatingVotes(articleId: $articleId, page: $page, pageSize: $pageSize) {
+    total
+    page
+    pageSize
+    totalPages
+    items {
+      id
+      kind
+      updatedAt
+      actor {
+        id
+        username
+        displayName
+        avatarUrl
+      }
+    }
+  }
+}
+
+mutation SetNewsVote($input: SetReactionInput!) {
+  setReaction(input: $input) {
+    changed
+    summary {
+      upvotes
+      downvotes
+      score
+      viewerReaction
+    }
+  }
+}
+
+mutation ClearNewsVote($interactionTargetId: ID!) {
+  clearReaction(interactionTargetId: $interactionTargetId) {
+    upvotes
+    downvotes
+    score
+    viewerReaction
+  }
+}
+
+mutation SaveNewsBookmark($interactionTargetId: ID!) {
+  saveBookmark(interactionTargetId: $interactionTargetId) {
+    saved
+    changed
+  }
+}
+
+mutation RemoveNewsBookmark($interactionTargetId: ID!) {
+  removeBookmark(interactionTargetId: $interactionTargetId) {
+    saved
+    changed
+  }
+}
+
+fragment NewsCommentFields on NewsComment {
+  id
+  reactionTargetId
+  parentId
+  body
+  documentJson
+  isDeleted
+  editedAt
+  createdAt
+  author {
+    id
+    username
+    displayName
+    avatarUrl
+  }
+  engagement {
+    upvotes
+    downvotes
+    score
+    viewerReaction
+  }
+}
+
+query NewsComments($articleId: ID!, $page: Int!, $pageSize: Int) {
+  newsComments(articleId: $articleId, page: $page, pageSize: $pageSize) {
+    total
+    page
+    pageSize
+    totalPages
+    items {
+      ...NewsCommentFields
+      children {
+        ...NewsCommentFields
+        children {
+          ...NewsCommentFields
+          children {
+            ...NewsCommentFields
+            children {
+              ...NewsCommentFields
+            }
+          }
+        }
+      }
+    }
+  }
+  newsSettings {
+    commentsPaginationMode
+    commentsPaginationThreshold
+    commentsPageSize
+  }
+}
+
+mutation CreateNewsComment($input: CreateCommentInput!) {
+  createComment(input: $input) {
+    id
+    reactionTargetId
+  }
+}

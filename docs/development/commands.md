@@ -1,57 +1,64 @@
 # DSS Universe — Development Commands
 
-## API
+Run commands from the repository root.
 
-Run API in development mode:
+## Daily development
 
+```bash
+pnpm dev
 pnpm api:dev
+pnpm build
+```
 
-Build API:
+## Quality gate
 
-pnpm api:build
+```bash
+pnpm lint
+pnpm typecheck
+pnpm db:validate
+pnpm test
+pnpm test:cov
+pnpm architecture:check
+pnpm quality
+```
 
-Run API lint:
+Use `pnpm lint:fix` only when an automatic rewrite is intentional.
 
-pnpm api:lint
-Docker
+## End-to-end tests
 
-Start local infrastructure:
+API tests require the isolated test database:
 
+```bash
+docker compose -f docker-compose.test.yml up -d --wait
+DATABASE_URL=postgresql://dss_test:dss_test@127.0.0.1:5433/dss_test pnpm --filter @dss/api db:deploy
+pnpm --filter @dss/api test:e2e
+docker compose -f docker-compose.test.yml down
+```
+
+Web browser tests start their own server on port 3100:
+
+```bash
+pnpm --filter @dss/web exec playwright install chromium
+pnpm --filter @dss/web test:e2e
+```
+
+## Local infrastructure
+
+```bash
 pnpm db:up
-
-Stop local infrastructure:
-
-pnpm db:down
-
-Restart local infrastructure:
-
-pnpm db:restart
-
-Show running containers:
-
 pnpm db:ps
-
-Show Docker logs:
-
 pnpm db:logs
+pnpm db:down
+```
 
-Open pgAdmin:
+## Prisma
 
-pnpm db:pgadmin
-Prisma
+```bash
+pnpm db:generate
+pnpm api:db:migrate
+pnpm api:db:deploy
+pnpm api:db:seed
+pnpm api:db:studio
+```
 
-Generate Prisma Client:
-
-pnpm api:prisma:generate
-
-Create and apply migration:
-
-pnpm api:prisma:migrate
-
-Open Prisma Studio:
-
-pnpm api:prisma:studio
-
-Run seed:
-
-pnpm api:seed
+Never point automated tests at a development or production database.

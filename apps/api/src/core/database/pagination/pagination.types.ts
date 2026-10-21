@@ -24,4 +24,14 @@ export interface PaginatedResult<T> {
   meta: PaginationMeta;
 }
 
+export type DatabasePaginationParams = {
+  page?: number;
+  limit?: number;
+};
 
+export type DatabasePaginationQuery = {
+  skip: number;
+  take: number;
+  page: number;
+  limit: number;
+};

@@ -1,63 +1,35 @@
-/* * 🚀 DSS Universe
- * ---------------------------------------------------------------
- * 📦 Module: Authorization
- * 📄 File: permissions.service.ts
- *
- * 🧠 Призначення:
- * Єдине місце, яке знає, які права має користувач.
- *
- * 🏗️ Архітектурна примітка:
- * Не перевіряємо ролі напряму.
- * Роль = "погон".
- * Permission = реальне право.
- *
- * 💡 Примітка на майбутнє:
- * Якщо виникла думка написати:
- *     if (user.role === 'ADMIN')
- * ...то десь заплакав один архітектор. 😄
- *
- * ☕ Гарного дня тому, хто відкрив цей файл.
- * ===============================================================*/
-
 /**
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: Authorization
- * 📄 File: permissions.service.ts
+ * 🛡️ Module: Authorization
+ * 📄 File: apps/api/src/core/authorization/services/permissions.service.ts
  *
  * 🎯 Purpose:
- * Центральний сервіс перевірки permission'ів.
+ * Provides permission-checking helpers and access-profile loading
+ * for authorization workflows.
  *
  * 🧠 Responsibilities:
- * • отримує permission'и користувача через repository;
- * • перевіряє, чи має користувач потрібні права;
- * • приховує деталі джерела даних від Guard.
+ * • loads permission keys for role names through the repository;
+ * • loads effective user roles and permissions;
+ * • checks whether a permission set satisfies required permissions;
+ * • keeps authorization decision helpers outside guards and controllers.
  *
  * 🏗️ Architecture:
- * PermissionsGuard
- *   ↓
+ * Authorization service.
+ *
  * PermissionsService
  *   ↓
  * PermissionsRepository
  *   ↓
- * Prisma
+ * Owned fact inputs (root composition)
  *
  * ⚠️ Important:
- * Не перевіряємо ролі напряму в контролерах.
- * Backend приймає рішення через permission'и.
+ * Access-token generation depends on the access profile contract returned here.
  *
- * 💡 Future:
- * ▢ Redis cache;
- * ▢ permission inheritance;
- * ▢ dynamic role editor in Admin Panel.
- *
- *💡 Примітка на майбутнє:
- * Якщо виникла думка написати:
- *     if (user.role === 'ADMIN')
- * ...то десь заплакав один архітектор. 😄
- *
- * ☕ Гарного дня тому, хто відкрив цей файл.
+ * 💡 Notes:
+ * If you want to write `if (user.role === "admin")`,
+ * drink coffee and add a permission instead. ☕
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -65,15 +37,21 @@
 
 import { Injectable } from '@nestjs/common';
 
-import { PermissionKey } from '../enums/permission.registry';
+import type { PermissionKey } from '../enums/permission.registry';
 import { PermissionsRepository } from '../repositories/permissions.repository';
+import type { UserAccessProfile } from '../types/user-access-profile.type';
+import type { SubjectAccessReader } from '../contracts/subject-access-reader.interface';
 
 @Injectable()
-export class PermissionsService {
+export class PermissionsService implements SubjectAccessReader {
   constructor(private readonly permissionsRepository: PermissionsRepository) {}
 
   async getPermissionsByRoleNames(roleNames: string[]): Promise<string[]> {
     return this.permissionsRepository.findPermissionKeysByRoleNames(roleNames);
+  }
+
+  async getAccessProfileByUserId(userId: string): Promise<UserAccessProfile> {
+    return this.permissionsRepository.findAccessProfileByUserId(userId);
   }
 
   async hasAllPermissions(

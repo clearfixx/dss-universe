@@ -1,0 +1,572 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: DSS Editor Frontend
+ * 📄 File: apps/web/src/features/editor/dss-editor.tsx
+ *
+ * 🎯 Purpose:
+ * Provides the reusable SSR-safe Tiptap surface and custom DSS toolbar.
+ *
+ * 🧠 Responsibilities:
+ * • resolves product profiles into permission-aware toolbar groups;
+ * • executes local formatting commands through the headless editor engine;
+ * • delegates DSS dialogs such as Media, AI and Content Gate to host modules;
+ * • serializes versioned canonical JSON for forms and GraphQL workflows.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
+
+"use client";
+
+import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
+import {
+  AlignCenter,
+  AlignLeft,
+  AtSign,
+  Bold,
+  Braces,
+  Code,
+  FileImage,
+  Heading2,
+  Italic,
+  Link2,
+  List,
+  ListOrdered,
+  ListTree,
+  ListTodo,
+  LockKeyhole,
+  NotebookText,
+  Paperclip,
+  Quote,
+  Redo2,
+  Sparkles,
+  Strikethrough,
+  Table2,
+  Undo2,
+  Video,
+  type LucideIcon,
+} from "lucide-react";
+import type {
+  EditorDocument,
+  EditorNode,
+  EditorPermission,
+  EditorProfile,
+  EditorToolId,
+} from "@dss/editor";
+import {
+  createEmptyEditorDocument,
+  DSS_EDITOR_SCHEMA_VERSION,
+  EDITOR_CODE_LANGUAGES,
+  EDITOR_TOOL_DEFINITIONS,
+  getEditorProfileDefinition,
+  resolveEditorProfile,
+} from "@dss/editor";
+import { Fragment, useMemo, useState } from "react";
+
+import { createEditorExtensions } from "./editor-extensions";
+import { EditorAiDialog, type EditorAiSelection } from "./editor-ai-dialog";
+import { EditorContentGateDialog } from "./editor-content-gate-dialog";
+import {
+  EditorMediaDialog,
+  EditorMentionDialog,
+  type EditorMediaSelection,
+  type EditorMentionSelection,
+} from "./editor-resource-dialog";
+import styles from "./dss-editor.module.css";
+
+type DialogToolId = Extract<
+  EditorToolId,
+  | "link"
+  | "mention"
+  | "image"
+  | "video"
+  | "attachment"
+  | "contentGate"
+  | "aiAssist"
+>;
+
+export type DssEditorActionRequest = {
+  profile: EditorProfile;
+  toolId: DialogToolId;
+};
+
+type DssEditorProps = {
+  profile: EditorProfile;
+  permissions?: readonly EditorPermission[];
+  initialDocument?: EditorDocument;
+  name?: string;
+  editable?: boolean;
+  ariaLabel?: string;
+  onDocumentChange?: (document: EditorDocument) => void;
+  onRequestAction?: (request: DssEditorActionRequest) => void;
+};
+
+const NO_EDITOR_PERMISSIONS: readonly EditorPermission[] = [];
+const INTERNAL_DIALOG_TOOLS = new Set<DialogToolId>([
+  "mention",
+  "image",
+  "video",
+  "attachment",
+  "contentGate",
+  "aiAssist",
+]);
+
+const TOOL_PRESENTATION: Record<
+  EditorToolId,
+  { label: string; icon: LucideIcon }
+> = {
+  bold: { label: "Bold", icon: Bold },
+  italic: { label: "Italic", icon: Italic },
+  strike: { label: "Strike", icon: Strikethrough },
+  inlineCode: { label: "Inline code", icon: Code },
+  alignLeft: { label: "Align left", icon: AlignLeft },
+  alignCenter: { label: "Align center", icon: AlignCenter },
+  link: { label: "Insert link", icon: Link2 },
+  heading: { label: "Heading", icon: Heading2 },
+  bulletList: { label: "Bullet list", icon: List },
+  orderedList: { label: "Ordered list", icon: ListOrdered },
+  blockquote: { label: "Quote", icon: Quote },
+  codeBlock: { label: "Code block", icon: Braces },
+  mention: { label: "Mention user", icon: AtSign },
+  image: { label: "Insert image", icon: FileImage },
+  video: { label: "Insert video", icon: Video },
+  attachment: { label: "Attach file", icon: Paperclip },
+  contentGate: { label: "Hidden content", icon: LockKeyhole },
+  aiAssist: { label: "DSS AI Core", icon: Sparkles },
+  table: { label: "Insert table", icon: Table2 },
+  taskList: { label: "Insert task list", icon: ListTodo },
+  footnote: { label: "Insert footnote", icon: NotebookText },
+  tableOfContents: { label: "Insert table of contents", icon: ListTree },
+  undo: { label: "Undo", icon: Undo2 },
+  redo: { label: "Redo", icon: Redo2 },
+};
+
+export function DssEditor({
+  profile,
+  permissions = NO_EDITOR_PERMISSIONS,
+  initialDocument,
+  name = "documentJson",
+  editable = true,
+  ariaLabel = "DSS Editor",
+  onDocumentChange,
+  onRequestAction,
+}: DssEditorProps) {
+  const [activeDialog, setActiveDialog] = useState<DialogToolId | null>(null);
+  const [activeAiSource, setActiveAiSource] = useState("");
+  const definition = getEditorProfileDefinition(profile);
+  const resolved = useMemo(
+    () => resolveEditorProfile(profile, permissions),
+    [permissions, profile],
+  );
+  const document = initialDocument ?? createEmptyEditorDocument(profile);
+  const extensions = useMemo(() => createEditorExtensions(profile), [profile]);
+  const editor = useEditor({
+    extensions,
+    content: document.content,
+    editable,
+    immediatelyRender: false,
+    onUpdate: ({ editor: current }) => {
+      onDocumentChange?.({
+        schemaVersion: DSS_EDITOR_SCHEMA_VERSION,
+        profile,
+        content: current.getJSON() as EditorDocument["content"],
+      });
+    },
+  });
+  const selectedState = useEditorState({
+    editor,
+    selector: ({ editor: current }) => ({
+      json: current?.getJSON() ?? document.content,
+      characters: current?.getText().length ?? 0,
+      bold: current?.isActive("bold") ?? false,
+      italic: current?.isActive("italic") ?? false,
+      strike: current?.isActive("strike") ?? false,
+      inlineCode: current?.isActive("code") ?? false,
+      alignCenter: current?.isActive({ textAlign: "center" }) ?? false,
+      heading: current?.isActive("heading", { level: 2 }) ?? false,
+      bulletList: current?.isActive("bulletList") ?? false,
+      orderedList: current?.isActive("orderedList") ?? false,
+      blockquote: current?.isActive("blockquote") ?? false,
+      codeBlock: current?.isActive("codeBlock") ?? false,
+      table: current?.isActive("table") ?? false,
+      taskList: current?.isActive("taskList") ?? false,
+      footnote: current?.isActive("footnoteReference") ?? false,
+      tableOfContents: current?.isActive("tableOfContents") ?? false,
+      canUndo: current?.can().undo() ?? false,
+      canRedo: current?.can().redo() ?? false,
+    }),
+  });
+  const state = selectedState ?? {
+    json: document.content,
+    characters: 0,
+    bold: false,
+    italic: false,
+    strike: false,
+    inlineCode: false,
+    alignCenter: false,
+    heading: false,
+    bulletList: false,
+    orderedList: false,
+    blockquote: false,
+    codeBlock: false,
+    table: false,
+    taskList: false,
+    footnote: false,
+    tableOfContents: false,
+    canUndo: false,
+    canRedo: false,
+  };
+  const canonical: EditorDocument = {
+    schemaVersion: DSS_EDITOR_SCHEMA_VERSION,
+    profile,
+    content: state.json as EditorDocument["content"],
+  };
+
+  const isActive = (toolId: EditorToolId): boolean => {
+    if (toolId === "alignLeft") return !state.alignCenter;
+    if (toolId === "alignCenter") return state.alignCenter;
+    if (
+      toolId in state &&
+      typeof state[toolId as keyof typeof state] === "boolean"
+    ) {
+      return state[toolId as keyof typeof state] as boolean;
+    }
+    return false;
+  };
+  const isDisabled = (toolId: EditorToolId): boolean => {
+    if (!editor) return true;
+    if (toolId === "undo") return !state.canUndo;
+    if (toolId === "redo") return !state.canRedo;
+    return (
+      EDITOR_TOOL_DEFINITIONS[toolId].action === "DIALOG" &&
+      !onRequestAction &&
+      !INTERNAL_DIALOG_TOOLS.has(toolId as DialogToolId)
+    );
+  };
+  const requestDialog = (toolId: EditorToolId): void => {
+    if (EDITOR_TOOL_DEFINITIONS[toolId].action !== "DIALOG") return;
+    const dialogTool = toolId as DialogToolId;
+    if (onRequestAction) {
+      onRequestAction({ profile, toolId: dialogTool });
+      return;
+    }
+    if (INTERNAL_DIALOG_TOOLS.has(dialogTool)) {
+      if (dialogTool === "aiAssist" && editor) {
+        const { from, to } = editor.state.selection;
+        setActiveAiSource(editor.state.doc.textBetween(from, to, "\n"));
+      }
+      setActiveDialog(dialogTool);
+    }
+  };
+  const insertMedia = (selection: EditorMediaSelection): void => {
+    if (!editor || !activeDialog) return;
+    const content =
+      activeDialog === "attachment"
+        ? {
+            type: "attachment",
+            attrs: { mediaId: selection.id, label: selection.label },
+          }
+        : {
+            type: "mediaReference",
+            attrs: {
+              mediaId: selection.id,
+              alt: selection.label,
+              caption: "",
+            },
+          };
+    editor.chain().focus().insertContent(content).run();
+    setActiveDialog(null);
+  };
+  const insertMention = (selection: EditorMentionSelection): void => {
+    if (!editor) return;
+    editor
+      .chain()
+      .focus()
+      .insertContent([
+        {
+          type: "mention",
+          attrs: { userId: selection.id, username: selection.username },
+        },
+        { type: "text", text: " " },
+      ])
+      .run();
+    setActiveDialog(null);
+  };
+  const insertContentGate = (gateId: string): void => {
+    if (!editor) return;
+    editor
+      .chain()
+      .focus()
+      .insertContent({
+        type: "contentGate",
+        attrs: { gateId },
+        content: [{ type: "paragraph", content: [] }],
+      })
+      .run();
+    setActiveDialog(null);
+  };
+  const applyAiSuggestion = (selection: EditorAiSelection): void => {
+    if (!editor) return;
+    if (selection.command === "GenerateCode") {
+      const language = EDITOR_CODE_LANGUAGES.includes(
+        selection.language as (typeof EDITOR_CODE_LANGUAGES)[number],
+      )
+        ? selection.language
+        : "plaintext";
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: "codeBlock",
+          attrs: { language },
+          content: [{ type: "text", text: selection.generatedText }],
+        })
+        .run();
+    } else {
+      editor
+        .chain()
+        .focus()
+        .insertContent({ type: "text", text: selection.generatedText })
+        .run();
+    }
+    setActiveAiSource("");
+    setActiveDialog(null);
+  };
+  const runTool = (toolId: EditorToolId): void => {
+    if (!editor) return;
+    const chain = editor.chain().focus();
+    switch (toolId) {
+      case "bold":
+        chain.toggleBold().run();
+        break;
+      case "italic":
+        chain.toggleItalic().run();
+        break;
+      case "strike":
+        chain.toggleStrike().run();
+        break;
+      case "inlineCode":
+        chain.toggleCode().run();
+        break;
+      case "alignLeft":
+        chain.setTextAlign("left").run();
+        break;
+      case "alignCenter":
+        chain.setTextAlign("center").run();
+        break;
+      case "heading":
+        chain.toggleHeading({ level: 2 }).run();
+        break;
+      case "bulletList":
+        chain.toggleBulletList().run();
+        break;
+      case "orderedList":
+        chain.toggleOrderedList().run();
+        break;
+      case "blockquote":
+        chain.toggleBlockquote().run();
+        break;
+      case "codeBlock":
+        chain.toggleCodeBlock().run();
+        break;
+      case "table":
+        chain
+          .insertContent({
+            type: "table",
+            content: [
+              {
+                type: "tableRow",
+                content: [
+                  tableCell("tableHeader", "Heading"),
+                  tableCell("tableHeader", "Heading"),
+                ],
+              },
+              {
+                type: "tableRow",
+                content: [
+                  tableCell("tableCell", "Cell"),
+                  tableCell("tableCell", "Cell"),
+                ],
+              },
+            ],
+          })
+          .run();
+        break;
+      case "taskList":
+        chain
+          .insertContent({
+            type: "taskList",
+            content: [
+              {
+                type: "taskItem",
+                attrs: { checked: false },
+                content: [{ type: "paragraph", content: [] }],
+              },
+            ],
+          })
+          .run();
+        break;
+      case "footnote": {
+        const noteId = nextFootnoteId(state.json as EditorDocument["content"]);
+        chain
+          .insertContent([
+            { type: "footnoteReference", attrs: { noteId } },
+            {
+              type: "footnoteDefinition",
+              attrs: { noteId },
+              content: [{ type: "paragraph", content: [] }],
+            },
+          ])
+          .run();
+        break;
+      }
+      case "tableOfContents":
+        chain.insertContent({ type: "tableOfContents" }).run();
+        break;
+      case "undo":
+        chain.undo().run();
+        break;
+      case "redo":
+        chain.redo().run();
+        break;
+      default:
+        requestDialog(toolId);
+    }
+  };
+
+  return (
+    <section className={styles.shell} aria-label={ariaLabel}>
+      {editable ? (
+        <div
+          className={styles.toolbar}
+          role="toolbar"
+          aria-label="Editor tools"
+        >
+          {resolved.toolbar.map((group, groupIndex) => (
+            <Fragment key={group.id}>
+              {groupIndex > 0 ? <span className={styles.divider} /> : null}
+              {group.tools.map((toolId) => {
+                const presentation = TOOL_PRESENTATION[toolId];
+                const Icon = presentation.icon;
+                return (
+                  <Tool
+                    key={toolId}
+                    label={presentation.label}
+                    active={isActive(toolId)}
+                    disabled={isDisabled(toolId)}
+                    onClick={() => runTool(toolId)}
+                  >
+                    <Icon size={16} />
+                  </Tool>
+                );
+              })}
+            </Fragment>
+          ))}
+        </div>
+      ) : null}
+      <EditorContent className={styles.surface} editor={editor} />
+      <input
+        type="hidden"
+        name={name}
+        value={JSON.stringify(canonical)}
+        readOnly
+      />
+      <div className={styles.meta}>
+        <span>
+          {profile} · schema v{DSS_EDITOR_SCHEMA_VERSION}
+        </span>
+        <span>
+          {state.characters.toLocaleString()} /{" "}
+          {definition.maxCharacters.toLocaleString()}
+        </span>
+      </div>
+      {activeDialog === "mention" ? (
+        <EditorMentionDialog
+          onClose={() => setActiveDialog(null)}
+          onSelect={insertMention}
+        />
+      ) : null}
+      {activeDialog === "contentGate" ? (
+        <EditorContentGateDialog
+          onClose={() => setActiveDialog(null)}
+          onSelect={insertContentGate}
+        />
+      ) : null}
+      {activeDialog === "aiAssist" ? (
+        <EditorAiDialog
+          profile={profile}
+          sourceText={activeAiSource}
+          onClose={() => {
+            setActiveAiSource("");
+            setActiveDialog(null);
+          }}
+          onApply={applyAiSuggestion}
+        />
+      ) : null}
+      {activeDialog === "image" ||
+      activeDialog === "video" ||
+      activeDialog === "attachment" ? (
+        <EditorMediaDialog
+          mode={activeDialog}
+          onClose={() => setActiveDialog(null)}
+          onSelect={insertMedia}
+        />
+      ) : null}
+    </section>
+  );
+}
+
+function tableCell(type: "tableHeader" | "tableCell", text: string) {
+  return {
+    type,
+    content: [
+      {
+        type: "paragraph",
+        content: [{ type: "text", text }],
+      },
+    ],
+  };
+}
+
+function nextFootnoteId(content: EditorNode): string {
+  let count = 0;
+  const visit = (node: EditorNode): void => {
+    if (node.type === "footnoteDefinition") count += 1;
+    for (const child of node.content ?? []) {
+      visit(child);
+    }
+  };
+  visit(content);
+  return `note-${count + 1}`;
+}
+
+function Tool({
+  label,
+  active = false,
+  disabled = false,
+  onClick,
+  children,
+}: {
+  label: string;
+  active?: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      aria-pressed={active}
+      data-active={active}
+      disabled={disabled}
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Tiptap flies the engine; every visible switch still belongs to DSS. */

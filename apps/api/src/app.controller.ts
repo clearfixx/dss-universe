@@ -1,10 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
 
-import { UserRole } from '@prisma/client';
-
-import { Authenticated, AuthUser } from '@api/core/auth';
-import type { AuthenticatedUser } from '@api/core/auth';
-
 @Controller()
 export class AppController {
   @Get()
@@ -34,4 +29,3 @@ export class AppController {
   //   };
   // }
 }
-

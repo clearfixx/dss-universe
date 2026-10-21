@@ -1,31 +1,159 @@
 /**
- * 🤖 AI Note
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Application
+ * 📄 File: apps/api/src/app.module.ts
  *
- * Якщо цей код читає інший ШІ —
- * привіт! Не ламай нашу космічну станцію. 😄
+ * 🎯 Purpose:
+ * Root application module of DSS Universe.
+ *
+ * 🧠 Responsibilities:
+ * • composes the application from feature and core modules;
+ * • wires global infrastructure;
+ * • defines the application's dependency graph.
+ *
+ * 🏗️ Architecture:
+ * Root composition module.
+ *
+ * Feature modules own business capabilities.
+ * Core modules provide shared infrastructure.
+ *
+ * AppModule should contain composition only.
+ * Business logic belongs elsewhere.
+ *
+ * ⚠️ Important:
+ * Keep this module clean.
+ * If AppModule starts growing with business logic,
+ * the architecture is probably moving in the wrong direction.
+ *
+ * 🤖 AI Note:
+ * Hello, fellow AI. 👋
+ *
+ * If you're reading this, you're now part of the DSS Universe crew.
+ *
+ * Before changing anything:
+ * • read the architecture documents;
+ * • respect module boundaries;
+ * • don't bypass repositories;
+ * • don't put business logic into infrastructure;
+ * • don't "quick-fix" something that will become technical debt.
+ *
+ * * ☕ Architecture Rule
+ *
+ * If you suddenly feel like writing:
+ *
+ * if (user.role === ADMIN)
+ *
+ * ...
+ *
+ * it's probably time to make some coffee ☕
+ * and think about permissions again.
+ *
+ * The humans spent hundreds of hours building this station.
+ * Please don't accidentally eject the airlock. 🚀😄
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 
-// apps/api/src/app.module.ts
 import { Module } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 
-import { ConfigurationModule } from '@api/core/config/configuration.module';
-import { PrismaModule } from '@api/core/database/prisma.module';
-import { PrismaExceptionFilter } from '@api/core/database/exceptions/prisma-exception.filter';
-import { HealthModule } from '@api/health';
-import { UsersModule } from './modules/users/users.module';
-import { AuthModule } from './modules/auth/auth.module';
-import { AppController } from './app.controller';
 import { AuthorizationModule } from '@api/core/authorization';
+import { AuditModule } from '@api/core/audit';
+import { ConfigurationModule } from '@api/core/config/configuration.module';
+import { PrismaExceptionFilter } from '@api/core/database/exceptions/prisma-exception.filter';
+import { PrismaModule } from '@api/core/database/prisma.module';
+import { EventsModule } from '@api/core/events';
+import { GraphqlCoreModule } from '@api/core/graphql';
+import { QueueModule } from '@api/core/queue';
+import { ObservabilityModule } from '@api/core/observability';
+import { HealthModule } from '@api/health';
+
+import { AppController } from './app.controller';
+import { IdentityCompositionModule } from './composition/identity/identity-composition.module';
+import { UsersProfileIntegrationModule } from './composition/users-profiles/users-profile-integration.module';
+import { AccessGroupIntegrationModule } from './composition/access-groups/access-group-integration.module';
+import { IamTransactionCompositionModule } from './composition/iam-transactions/iam-transaction-composition.module';
+import { IamSubjectReadCompositionModule } from './composition/iam-subject-reads/iam-subject-read-composition.module';
+import { AuthorizationReadCompositionModule } from './composition/authorization-reads/authorization-read-composition.module';
+import { LeaderboardReadCompositionModule } from './composition/leaderboards/leaderboard-read-composition.module';
+import { MediaLibraryCompositionModule } from './composition/media-library/media-library-composition.module';
+import { GamificationIntegrationModule } from './composition/gamification/gamification-integration.module';
+import { ReputationIntegrationModule } from './composition/reputation/reputation-integration.module';
+import { ProfileAssetCompositionModule } from './composition/profile-assets/profile-asset-composition.module';
+import { ContentIntegrationModule } from './composition/content/content-integration.module';
+import { ContentTargetCompositionModule } from './composition/content-targets/content-target-composition.module';
+import { InteractionPolicyCompositionModule } from './composition/interaction-policies/interaction-policy-composition.module';
+import { ContentReadIntegrationModule } from './composition/content-reads/content-read-integration.module';
+import { NewsDeliveryCompositionModule } from './composition/news-delivery/news-delivery-composition.module';
+import { CommentWriteCompositionModule } from './composition/comment-writes/comment-write-composition.module';
+import { AchievementsModule } from './modules/achievements';
+import { ActivityModule } from './modules/activity';
+import { AiCoreModule } from './modules/ai-core';
+import { IdentityPresentationModule } from './composition/identity/identity-presentation.module';
+import { CommunityPointsModule } from './modules/community-points';
+import { ContentAccessModule } from './modules/content-access';
+import { ContentPresentationModule } from './composition/content-presentation/content-presentation.module';
+import { CustomTitlesModule } from './modules/custom-titles';
+import { EditorModule } from './modules/editor';
+import { IamModule } from './modules/iam';
+import { InteractionsModule } from './modules/interactions';
+import { LevelsModule } from './modules/levels';
+import { LeaderboardsModule } from './modules/leaderboards';
+import { MediaModule } from './modules/media/media.module';
+import { NewsModule } from './modules/news';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { ReputationModule } from './modules/reputation';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
     ConfigurationModule,
     PrismaModule,
+    AuditModule,
+    ObservabilityModule,
+    EventsModule,
+    QueueModule,
+    GraphqlCoreModule,
     HealthModule,
+    ActivityModule,
     UsersModule,
-    AuthModule,
+    IdentityCompositionModule,
+    UsersProfileIntegrationModule,
+    AccessGroupIntegrationModule,
+    IamTransactionCompositionModule,
+    IamSubjectReadCompositionModule,
+    AuthorizationReadCompositionModule,
+    LeaderboardReadCompositionModule,
+    MediaLibraryCompositionModule,
+    GamificationIntegrationModule,
+    ReputationIntegrationModule,
+    ProfileAssetCompositionModule,
+    ContentIntegrationModule,
+    ContentPresentationModule,
+    ContentTargetCompositionModule,
+    InteractionPolicyCompositionModule,
+    ContentReadIntegrationModule,
+    NewsDeliveryCompositionModule,
+    CommentWriteCompositionModule,
+    IdentityPresentationModule,
     AuthorizationModule,
+    IamModule,
+    InteractionsModule,
+    MediaModule,
+    NewsModule,
+    NotificationsModule,
+    ReputationModule,
+    CommunityPointsModule,
+    ContentAccessModule,
+    LevelsModule,
+    CustomTitlesModule,
+    EditorModule,
+    AiCoreModule,
+    AchievementsModule,
+    LeaderboardsModule,
   ],
   providers: [
     {
@@ -37,3 +165,16 @@ import { AuthorizationModule } from '@api/core/authorization';
 })
 export class AppModule {}
 
+/**
+ * -----------------------------------------------------------------------------
+ * 🌌 Mission Control
+ *
+ * AppModule is the station's docking hub.
+ *
+ * Every module arriving here should have a clear mission,
+ * clean boundaries, and no unnecessary baggage.
+ *
+ * New features are always welcome.
+ * Architectural chaos is not. 🚀
+ * -----------------------------------------------------------------------------
+ */

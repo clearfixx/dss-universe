@@ -1,0 +1,1839 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Achievement {
+  badge: String!
+  color: String!
+  createdAt: DateTime!
+  description: String
+  id: ID!
+  isActive: Boolean!
+  key: String!
+  name: String!
+  slug: String!
+  updatedAt: DateTime!
+}
+
+type AchievementAward {
+  achievement: Achievement!
+  achievementId: ID!
+  awardedAt: DateTime!
+  awardedById: ID
+  id: ID!
+  kind: AchievementAwardKind!
+  reason: String!
+  revocation: AchievementAwardRevocation
+  ruleId: ID
+  sourceEventName: String
+  sourceId: String
+  sourceType: String
+  userId: ID!
+}
+
+enum AchievementAwardKind {
+  MANUAL
+  RULE
+}
+
+type AchievementAwardRevocation {
+  awardId: ID!
+  id: ID!
+  occurredAt: DateTime!
+  reason: String!
+  revokedById: ID
+}
+
+type AchievementRule {
+  achievement: Achievement!
+  achievementId: ID!
+  cooldownHours: Int!
+  dailyCap: Int
+  enabled: Boolean!
+  eventName: String!
+  id: ID!
+  recipientPayloadKey: String!
+  repeatable: Boolean!
+}
+
+input ActivityFeedInput {
+  limit: Int! = 20
+  modules: [String!]
+  page: Int! = 1
+}
+
+type ActivityFeedItem {
+  action: String!
+  actorId: ID!
+  id: ID!
+  isUnread: Boolean!
+  module: String!
+  occurredAt: String!
+  reason: ActivityFeedReason!
+  score: Float!
+  subjectId: ID!
+  subjectType: String!
+}
+
+type ActivityFeedPage {
+  generatedAt: String!
+  items: [ActivityFeedItem!]!
+  lastVisitedAt: String
+  limit: Int!
+  page: Int!
+  recommendationMode: String!
+  total: Int!
+  totalPages: Int!
+  unreadCount: Int!
+}
+
+enum ActivityFeedReason {
+  FOLLOWING
+  INTEREST
+  MENTION
+  OWN_ACTIVITY
+  RECENT
+}
+
+type ActivityFeedVisit {
+  visitedAt: String!
+}
+
+type ApiInfo {
+  name: String!
+  status: String!
+  transport: String!
+}
+
+type AudienceEngagement {
+  changed: Boolean!
+  shareCount: Int!
+  shares: [ShareChannelCount!]!
+  viewCount: Int!
+}
+
+type AuthPayloadModel {
+  tokens: AuthTokensModel!
+  user: Viewer!
+}
+
+type AuthSession {
+  createdAt: DateTime!
+  current: Boolean!
+  expiresAt: DateTime!
+  id: ID!
+  ipAddress: String
+  userAgent: String
+}
+
+type AuthTokensModel {
+  accessToken: String!
+  refreshToken: String!
+}
+
+type Bookmark {
+  createdAt: String!
+  id: ID!
+  interactionTargetId: ID!
+}
+
+type BookmarkMutationPayload {
+  bookmark: Bookmark
+  changed: Boolean!
+  saved: Boolean!
+}
+
+type BookmarkPage {
+  items: [Bookmark!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+input BookmarksPageInput {
+  limit: Int! = 20
+  page: Int! = 1
+}
+
+input ChangeEmailInput {
+  currentPassword: String!
+  email: String!
+}
+
+input ChangePasswordInput {
+  currentPassword: String!
+  newPassword: String!
+}
+
+type Comment {
+  authorId: ID!
+  body: String
+  createdAt: String!
+  deletedAt: String
+  documentJson: String
+  editedAt: String
+  id: ID!
+  interactionTargetId: ID!
+  isDeleted: Boolean!
+  mentionedUserIds: [ID!]!
+  parentId: ID
+  reactionTargetId: ID!
+  updatedAt: String!
+}
+
+type CommentDraft {
+  createdAt: String!
+  documentJson: String!
+  id: ID!
+  interactionTargetId: ID!
+  parentId: ID
+  plainText: String!
+  updatedAt: String!
+  version: Int!
+}
+
+type CommentPage {
+  items: [Comment!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+type CommentRevision {
+  body: String!
+  commentId: ID!
+  createdAt: String!
+  documentJson: String!
+  editorId: ID!
+  id: ID!
+  version: Int!
+}
+
+input CommentsPageInput {
+  limit: Int! = 20
+  page: Int! = 1
+}
+
+type CommunityPointEntry {
+  actorId: ID
+  id: ID!
+  occurredAt: DateTime!
+  points: Int!
+  reason: String!
+  reversal: CommunityPointReversal
+  ruleKey: String!
+  sourceEventName: String
+  sourceId: ID
+  sourceType: String
+  userId: ID!
+}
+
+type CommunityPointHistory {
+  balance: Int!
+  items: [CommunityPointEntry!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+type CommunityPointReversal {
+  actorId: ID
+  id: ID!
+  occurredAt: DateTime!
+  reason: String!
+}
+
+type CommunityPointRule {
+  dailyLimit: Int
+  enabled: Boolean!
+  eventName: String!
+  key: String!
+  payloadValue: Int
+  points: Int!
+  updatedAt: DateTime!
+  updatedById: ID
+}
+
+input CommunityPointsPageInput {
+  limit: Int! = 20
+  page: Int! = 1
+}
+
+input ConfirmTwoFactorInput {
+  code: String!
+}
+
+type ContentGateEvaluationModel {
+  allowed: Boolean!
+  bypassed: Boolean!
+  gate: ContentGateModel!
+  notice: String!
+  unmet: [ContentGateRequirementKind!]!
+}
+
+type ContentGateModel {
+  createdAt: DateTime!
+  id: ID!
+  operator: ContentGateOperator!
+  ownerId: ID!
+  requirements: [ContentGateRequirementModel!]!
+  updatedAt: DateTime!
+}
+
+enum ContentGateOperator {
+  ALL
+  ANY
+}
+
+input ContentGateRequirementInput {
+  groupKey: String
+  kind: ContentGateRequirementKind!
+  threshold: Int
+}
+
+enum ContentGateRequirementKind {
+  ACCOUNT_AGE_DAYS
+  COMMENTS
+  FORUM_POSTS
+  GROUP
+  PUBLICATIONS
+  REPUTATION
+}
+
+type ContentGateRequirementModel {
+  groupKey: String
+  id: ID!
+  kind: ContentGateRequirementKind!
+  threshold: Int
+}
+
+type ContentReport {
+  category: ContentReportCategory!
+  commentId: ID
+  createdAt: String!
+  id: ID!
+  interactionTargetId: ID!
+  reason: String!
+  reporterId: ID!
+  reviewNote: String
+  reviewedAt: String
+  reviewedById: ID
+  status: ContentReportStatus!
+  updatedAt: String!
+}
+
+enum ContentReportCategory {
+  HARASSMENT
+  ILLEGAL
+  MISINFORMATION
+  OTHER
+  SPAM
+}
+
+type ContentReportPage {
+  items: [ContentReport!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+enum ContentReportStatus {
+  DISMISSED
+  OPEN
+  RESOLVED
+}
+
+input CreateCommentInput {
+  body: String
+  documentJson: String
+  interactionTargetId: ID!
+  parentId: ID
+}
+
+input CreateContentGateInput {
+  operator: ContentGateOperator!
+  requirements: [ContentGateRequirementInput!]!
+}
+
+input CreateCustomTitleInput {
+  badge: String!
+  color: String!
+  description: String
+  name: String!
+}
+
+input CreateModerationAnnotationInput {
+  commentId: ID
+  expiresAt: String
+  interactionTargetId: ID!
+  kind: ModerationAnnotationKind!
+  reason: String!
+}
+
+input CreateNewsDraftInput {
+  coverMediaId: ID
+  documentJson: String!
+  language: String!
+  postType: NewsPostType!
+  shortText: String!
+  slug: String!
+  templateDataJson: String
+  title: String!
+  visibility: NewsVisibility!
+}
+
+input CreateWallPostInput {
+  body: String
+  imageMediaId: ID
+  profileOwnerId: ID!
+}
+
+type CustomTitle {
+  badge: String!
+  color: String!
+  createdAt: DateTime!
+  description: String
+  id: ID!
+  isActive: Boolean!
+  name: String!
+  slug: String!
+  updatedAt: DateTime!
+}
+
+type CustomTitleSettings {
+  selectionCooldownDays: Int!
+  updatedAt: DateTime!
+  updatedById: ID
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+input DeactivateAccountInput {
+  password: String!
+}
+
+input DisableTwoFactorInput {
+  code: String!
+  password: String!
+}
+
+input EditCommentInput {
+  body: String
+  commentId: ID!
+  documentJson: String
+}
+
+enum EditorAiCommand {
+  Expand
+  Explain
+  Generate
+  GenerateCode
+  Rewrite
+  Shorten
+}
+
+type EditorAiCommandResult {
+  command: EditorAiCommand!
+  generatedContentLabel: String!
+  generatedText: String!
+  generationId: ID!
+  inputTokens: Int
+  model: String!
+  outputTokens: Int
+  promptVersion: String!
+  provider: String!
+  requiresConfirmation: Boolean!
+}
+
+type EditorContentGateDecision {
+  allowed: Boolean!
+  bypassed: Boolean!
+  gateId: ID!
+  notice: String!
+  unmet: [ContentGateRequirementKind!]!
+}
+
+type EditorDocumentDelivery {
+  documentJson: String!
+  gates: [EditorContentGateDecision!]!
+}
+
+type EditorDocumentPreview {
+  canonicalJson: String!
+  html: String!
+  plainText: String!
+  searchText: String!
+}
+
+type FullNews {
+  allowComments: Boolean!
+  allowIndexing: Boolean!
+  allowRating: Boolean!
+  allowSharing: Boolean!
+  attachments: [NewsAttachment!]!
+  author: NewsAuthor!
+  coverMediaId: ID
+  displayPublishedAt: DateTime!
+  documentJson: String!
+  engagement: NewsEngagement!
+  featured: Boolean!
+  id: ID!
+  interactionTargetId: ID!
+  language: String!
+  pin: NewsPin
+  postType: NewsPostType!
+  primaryCategory: NewsCategorySummary
+  publishedAt: DateTime!
+  related: [NewsRelatedItem!]!
+  sharing: NewsSharing!
+  shortText: String!
+  slug: String!
+  tags: [NewsTagSummary!]!
+  templateDataJson: String!
+  title: String!
+  visibility: NewsVisibility!
+}
+
+input GiveReputationInput {
+  reason: String!
+  recipientId: ID!
+  value: Int!
+}
+
+input GrantCustomTitleInput {
+  reason: String!
+  titleId: ID!
+  userId: ID!
+}
+
+input InitiateMediaUploadInput {
+  checksum: String
+  declaredMimeType: String!
+  declaredSize: Int!
+  originalFilename: String!
+  policyKey: String!
+}
+
+type InteractionAccessDecision {
+  allowed: Boolean!
+  capability: InteractionCapability!
+  reason: String
+  target: InteractionTarget!
+}
+
+enum InteractionCapability {
+  BOOKMARK
+  COMMENT
+  REACT
+  READ
+}
+
+type InteractionTarget {
+  createdAt: String!
+  id: ID!
+  kind: String!
+  ownerId: ID!
+  ownerModule: String!
+  ownerType: String!
+  status: String!
+  updatedAt: String!
+}
+
+type LeaderboardEntry {
+  avatarUrl: String
+  communityPoints: Int!
+  currentLevel: Int!
+  displayName: String
+  rank: Int!
+  reputation: Int!
+  selectedTitle: LeaderboardSelectedTitle
+  userId: ID!
+  username: String!
+}
+
+input LeaderboardInput {
+  limit: Int! = 20
+  page: Int! = 1
+  period: LeaderboardPeriod! = ALL_TIME
+}
+
+type LeaderboardPage {
+  endsAt: String!
+  generatedAt: String!
+  items: [LeaderboardEntry!]!
+  limit: Int!
+  page: Int!
+  period: LeaderboardPeriod!
+  startsAt: String
+  total: Int!
+  totalPages: Int!
+  viewerCommunityPoints: Int
+  viewerRank: Int
+}
+
+enum LeaderboardPeriod {
+  ALL_TIME
+  MONTH
+  YEAR
+}
+
+type LeaderboardSelectedTitle {
+  badge: String!
+  color: String!
+  name: String!
+}
+
+type LevelDefinition {
+  level: Int!
+  threshold: Int!
+  updatedAt: DateTime!
+  updatedById: ID
+}
+
+input LevelHistoryPageInput {
+  limit: Int! = 20
+  page: Int! = 1
+}
+
+type LevelProgress {
+  balance: Int!
+  currentLevel: Int!
+  currentThreshold: Int!
+  nextLevel: Int
+  nextThreshold: Int
+  pointsIntoLevel: Int!
+  pointsNeeded: Int!
+  progressPercent: Float!
+  userId: ID!
+}
+
+type LevelTransition {
+  balance: Int!
+  direction: LevelTransitionDirection!
+  fromLevel: Int!
+  id: ID!
+  occurredAt: DateTime!
+  sourceEventName: String!
+  toLevel: Int!
+  userId: ID!
+}
+
+enum LevelTransitionDirection {
+  DOWN
+  UP
+}
+
+type LevelTransitionHistory {
+  items: [LevelTransition!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+  twoFactorCode: String
+}
+
+type LogoutResultModel {
+  success: Boolean!
+}
+
+type ManagedNewsPin {
+  articleId: ID!
+  categoryId: ID
+  createdAt: DateTime!
+  expiresAt: DateTime
+  id: ID!
+  pinnedById: ID!
+  scope: NewsPinScope!
+  updatedAt: DateTime!
+}
+
+input ManualAchievementAwardInput {
+  achievementId: ID!
+  reason: String!
+  userId: ID!
+}
+
+type MediaAccess {
+  expiresAt: DateTime!
+  url: String!
+}
+
+enum MediaKind {
+  ARCHIVE
+  AUDIO
+  DOCUMENT
+  IMAGE
+  OTHER
+  VIDEO
+}
+
+type MediaLibraryConnection {
+  items: [MediaLibraryItem!]!
+  pageInfo: MediaLibraryPageInfo!
+}
+
+input MediaLibraryInput {
+  after: String
+  first: Int! = 25
+  kind: MediaKind
+  orphaned: Boolean
+  ownerId: String
+  search: String
+  status: MediaStatus
+  visibility: MediaVisibility
+}
+
+type MediaLibraryItem {
+  createdAt: DateTime!
+  extension: String!
+  failureCode: String
+  height: Int
+  id: ID!
+  kind: MediaKind!
+  mimeType: String!
+  originalFilename: String!
+  ownerId: ID
+  size: Int!
+  status: MediaStatus!
+  updatedAt: DateTime!
+  visibility: MediaVisibility!
+  width: Int
+}
+
+type MediaLibraryMetrics {
+  failedMedia: Int!
+  originalBytes: Float!
+  orphanedMedia: Int!
+  quarantinedMedia: Int!
+  totalBytes: Float!
+  totalMedia: Int!
+  variantBytes: Float!
+}
+
+type MediaLibraryPageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+}
+
+type MediaQuarantineItem {
+  createdAt: DateTime!
+  failureCode: String
+  failureReason: String
+  id: ID!
+  mimeType: String!
+  originalFilename: String!
+  ownerId: ID
+  size: Int!
+  status: String!
+  updatedAt: DateTime!
+}
+
+enum MediaStatus {
+  DELETED
+  DELETING
+  FAILED
+  PENDING
+  PROCESSING
+  QUARANTINED
+  READY
+  REJECTED
+  UPLOADING
+}
+
+type MediaUploadSession {
+  checksum: String
+  completedAt: DateTime
+  createdAt: DateTime!
+  declaredMimeType: String!
+  declaredSize: Int!
+  expiresAt: DateTime!
+  id: String!
+  originalFilename: String!
+  policyKey: String!
+  status: String!
+}
+
+enum MediaVisibility {
+  AUTHENTICATED
+  PRIVATE
+  PUBLIC
+  RESTRICTED
+}
+
+type MemberDirectoryEntry {
+  avatarUrl: String
+  createdAt: String!
+  displayName: String
+  id: ID!
+  isOnline: Boolean!
+  roles: [String!]!
+  username: String!
+}
+
+input MembersDirectoryInput {
+  limit: Int! = 20
+  onlineOnly: Boolean! = false
+  page: Int! = 1
+  role: String
+  search: String
+  sort: MembersDirectorySort! = NEWEST
+}
+
+type MembersDirectoryPage {
+  items: [MemberDirectoryEntry!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+enum MembersDirectorySort {
+  LAST_ACTIVE
+  NEWEST
+  OLDEST
+  USERNAME_ASC
+  USERNAME_DESC
+}
+
+type ModerationAnnotation {
+  actorId: ID!
+  commentId: ID
+  createdAt: String!
+  expiresAt: String
+  id: ID!
+  interactionTargetId: ID!
+  kind: ModerationAnnotationKind!
+  reason: String!
+  revokeReason: String
+  revokedAt: String
+  revokedById: ID
+}
+
+enum ModerationAnnotationKind {
+  BAN
+  READ_ONLY
+  REMOVAL
+  WARNING
+}
+
+input ModerationPageInput {
+  limit: Int! = 20
+  page: Int! = 1
+}
+
+type Mutation {
+  abortMediaUpload(id: String!): MediaUploadSession!
+  approveNews(input: NewsDecisionInput!): NewsEditorialTransition!
+  awardAchievement(input: ManualAchievementAwardInput!): AchievementAward!
+  beginViewerTwoFactorSetup: TwoFactorSetupModel!
+  blockUser(userId: ID!): UserBlockResult!
+  cancelNewsSchedule(input: NewsDecisionInput!): NewsEditorialTransition!
+  changeViewerEmail(input: ChangeEmailInput!): LogoutResultModel!
+  changeViewerPassword(input: ChangePasswordInput!): LogoutResultModel!
+  clearReaction(interactionTargetId: ID!): ReactionSummary!
+  confirmViewerTwoFactorSetup(input: ConfirmTwoFactorInput!): TwoFactorConfirmationModel!
+  createComment(input: CreateCommentInput!): Comment!
+  createContentGate(input: CreateContentGateInput!): ContentGateModel!
+  createCustomTitle(input: CreateCustomTitleInput!): CustomTitle!
+  createModerationAnnotation(input: CreateModerationAnnotationInput!): ModerationAnnotation!
+  createNewsDraft(input: CreateNewsDraftInput!): NewsEditorialArticle!
+  createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
+  deactivateAccount(input: DeactivateAccountInput!): LogoutResultModel!
+  disableViewerTwoFactor(input: DisableTwoFactorInput!): LogoutResultModel!
+  discardCommentDraft(draftId: ID!): Boolean!
+  editComment(input: EditCommentInput!): Comment!
+  followUser(userId: ID!): UserSocialGraphSummary!
+  giveReputation(input: GiveReputationInput!): ReputationEntry!
+  grantCustomTitle(input: GrantCustomTitleInput!): UserTitleGrant!
+  initiateMediaUpload(input: InitiateMediaUploadInput!): MediaUploadSession!
+  login(input: LoginInput!): AuthPayloadModel!
+  logout: LogoutResultModel!
+  markActivityFeedVisited: ActivityFeedVisit!
+  publishNews(input: PublishNewsInput!): NewsEditorialTransition!
+  reactivateAccount(input: LoginInput!): AuthPayloadModel!
+  recordInteractionShare(input: RecordShareInput!): AudienceEngagement!
+  recordInteractionView(input: RecordViewInput!): AudienceEngagement!
+  refreshTokens(input: RefreshTokenInput!): AuthPayloadModel!
+  register(input: RegisterInput!): AuthPayloadModel!
+  rejectQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
+  removeBookmark(interactionTargetId: ID!): BookmarkMutationPayload!
+  removeComment(commentId: ID!, reason: String): Comment!
+  removeNewsPin(articleId: ID!): RemoveNewsPinResult!
+  removeProfileWallPost(postId: ID!, reason: String): ProfileWallPost!
+  removeViewerAvatar: Viewer!
+  removeViewerCover: Viewer!
+  reportContent(input: ReportContentInput!): ContentReport!
+  requestEmailVerification: LogoutResultModel!
+  requestNewsChanges(input: NewsDecisionInput!): NewsEditorialTransition!
+  requestPasswordRecovery(input: RequestPasswordRecoveryInput!): LogoutResultModel!
+  rescanQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
+  resetPassword(input: ResetPasswordInput!): LogoutResultModel!
+  retryFailedMedia(mediaId: ID!): MediaLibraryItem!
+  reverseCommunityPoints(input: ReverseCommunityPointsInput!): CommunityPointEntry!
+  reverseReputation(input: ReverseReputationInput!): ReputationEntry!
+  reviewContentReport(input: ReviewContentReportInput!): ContentReport!
+  revokeAchievementAward(input: RevokeAchievementAwardInput!): AchievementAward!
+  revokeCustomTitle(input: RevokeCustomTitleInput!): UserTitleGrant!
+  revokeModerationAnnotation(annotationId: ID!, reason: String!): ModerationAnnotation!
+  revokeOtherViewerSessions: RevokeSessionsResultModel!
+  revokeViewerSession(sessionId: ID!): LogoutResultModel!
+  rollbackAchievementSource(input: RollbackAchievementSourceInput!): [AchievementAward!]!
+  runEditorAiCommand(input: RunEditorAiCommandInput!): EditorAiCommandResult!
+  saveAchievement(input: SaveAchievementInput!): Achievement!
+  saveAchievementRule(input: SaveAchievementRuleInput!): AchievementRule!
+  saveBookmark(interactionTargetId: ID!): BookmarkMutationPayload!
+  saveCommentDraft(input: SaveCommentDraftInput!): CommentDraft!
+  saveNewsDraft(input: SaveNewsDraftInput!): NewsEditorialArticle!
+  scheduleNews(input: ScheduleNewsInput!): NewsEditorialTransition!
+  selectCustomTitle(grantId: ID!): UserTitleGrant!
+  setNewsPin(input: SetNewsPinInput!): ManagedNewsPin!
+  setReaction(input: SetReactionInput!): SetReactionPayload!
+  setViewerAvatar(mediaId: ID!): Viewer!
+  setViewerCover(mediaId: ID!): Viewer!
+  submitNewsForReview(articleId: ID!): NewsEditorialTransition!
+  unblockUser(userId: ID!): UserBlockResult!
+  unfollowUser(userId: ID!): UserSocialGraphSummary!
+  updateCommunityPointRule(input: UpdateCommunityPointRuleInput!): CommunityPointRule!
+  updateCustomTitle(input: UpdateCustomTitleInput!): CustomTitle!
+  updateCustomTitleSettings(input: UpdateCustomTitleSettingsInput!): CustomTitleSettings!
+  updateLevelDefinition(input: UpdateLevelDefinitionInput!): LevelDefinition!
+  updateNewsSettings(input: UpdateNewsSettingsInput!): NewsSettings!
+  updateReputationPolicy(input: UpdateReputationPolicyInput!): ReputationPolicy!
+  updateViewerNotificationPreferences(input: UpdateNotificationPreferencesInput!): NotificationPreferences!
+  updateViewerPrivacy(input: UpdateUserPrivacyInput!): UserPrivacySettings!
+  updateViewerProfile(input: UpdateViewerProfileInput!): Viewer!
+  updateViewerSocialLinks(input: UpdateViewerSocialLinksInput!): [UserSocialLink!]!
+  verifyEmail(input: VerifyEmailInput!): LogoutResultModel!
+}
+
+enum NewsArticleStatus {
+  APPROVED
+  ARCHIVED
+  CHANGES_REQUESTED
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  SCHEDULED
+}
+
+type NewsAttachment {
+  checksumMd5: String
+  checksumSha1: String
+  checksumSha256: String!
+  downloadUrl: String!
+  extension: String!
+  filename: String!
+  id: ID!
+  kind: String!
+  label: String!
+  mediaId: ID!
+  mimeType: String!
+  size: Int!
+}
+
+type NewsAuthor {
+  avatarUrl: String
+  displayName: String
+  id: ID!
+  username: String!
+}
+
+input NewsBrowseInput {
+  categorySlug: String
+  featured: Boolean
+  homepage: Boolean
+  language: String
+  page: Int
+  pageSize: Int
+  postType: NewsPostType
+  search: String
+  tagSlug: String
+}
+
+type NewsCategorySummary {
+  icon: String
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+type NewsComment {
+  author: NewsAuthor!
+  body: String!
+  children: [NewsComment!]!
+  createdAt: DateTime!
+  documentJson: String!
+  editedAt: DateTime
+  engagement: NewsCommentEngagement!
+  id: ID!
+  isDeleted: Boolean!
+  parentId: ID
+  reactionTargetId: ID!
+}
+
+type NewsCommentEngagement {
+  downvotes: Int!
+  score: Int!
+  upvotes: Int!
+  viewerReaction: NewsVoteKind
+}
+
+type NewsCommentsPage {
+  items: [NewsComment!]!
+  page: Int!
+  pageSize: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+input NewsDecisionInput {
+  articleId: ID!
+  reason: String
+}
+
+enum NewsEditorialAction {
+  APPROVED
+  CHANGES_REQUESTED
+  PUBLISHED
+  SCHEDULED
+  SCHEDULE_CANCELLED
+  SUBMITTED
+}
+
+type NewsEditorialArticle {
+  allowComments: Boolean!
+  allowIndexing: Boolean!
+  allowRating: Boolean!
+  allowSharing: Boolean!
+  approvedAt: DateTime
+  approvedVersion: Int
+  authorId: ID!
+  coverMediaId: ID
+  createdAt: DateTime!
+  currentVersion: Int!
+  displayPublishedAt: DateTime
+  documentJson: String!
+  featured: Boolean!
+  id: ID!
+  interactionTargetId: ID!
+  language: String!
+  postType: NewsPostType!
+  publishedAt: DateTime
+  scheduledFor: DateTime
+  shortText: String!
+  showOnHomepage: Boolean!
+  slug: String!
+  status: NewsArticleStatus!
+  submittedAt: DateTime
+  templateDataJson: String!
+  title: String!
+  updatedAt: DateTime!
+  visibility: NewsVisibility!
+}
+
+input NewsEditorialBrowseInput {
+  page: Int
+  pageSize: Int
+  statuses: [NewsArticleStatus!]
+}
+
+type NewsEditorialDecision {
+  action: NewsEditorialAction!
+  actorId: ID!
+  articleId: ID!
+  createdAt: DateTime!
+  id: ID!
+  reason: String
+  revisionVersion: Int!
+}
+
+type NewsEditorialPage {
+  items: [NewsEditorialArticle!]!
+  page: Int!
+  pageSize: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+type NewsEditorialTransition {
+  article: NewsEditorialArticle!
+  decision: NewsEditorialDecision!
+}
+
+type NewsEngagement {
+  bookmarkedByViewer: Boolean!
+  commentCount: Int!
+  downvotes: Int!
+  score: Int!
+  upvotes: Int!
+  viewCount: Int
+  viewerReaction: NewsVoteKind
+}
+
+type NewsNavigation {
+  next: NewsNavigationItem
+  previous: NewsNavigationItem
+}
+
+type NewsNavigationItem {
+  coverMediaId: ID
+  displayPublishedAt: DateTime!
+  id: ID!
+  language: String!
+  slug: String!
+  title: String!
+}
+
+enum NewsPaginationMode {
+  BOTH
+  DISABLED
+  LOAD_MORE
+  PAGES
+}
+
+type NewsPin {
+  categoryId: ID
+  expiresAt: DateTime
+  scope: NewsPinScope!
+}
+
+enum NewsPinScope {
+  CATEGORY
+  GLOBAL
+}
+
+enum NewsPostType {
+  AUDIO
+  GALLERY
+  STANDARD
+  TEXT
+  VIDEO
+}
+
+type NewsRatingVote {
+  actor: NewsAuthor!
+  id: ID!
+  kind: NewsVoteKind!
+  updatedAt: DateTime!
+}
+
+type NewsRatingVotePage {
+  items: [NewsRatingVote!]!
+  page: Int!
+  pageSize: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+type NewsRelatedItem {
+  anchorText: String!
+  coverMediaId: ID
+  displayPublishedAt: DateTime!
+  id: ID!
+  language: String!
+  shortText: String!
+  slug: String!
+  title: String!
+  type: String!
+}
+
+type NewsSettings {
+  commentsPageSize: Int!
+  commentsPaginationMode: NewsPaginationMode!
+  commentsPaginationThreshold: Int!
+  newsPageSize: Int!
+  newsPaginationMode: NewsPaginationMode!
+  newsPaginationThreshold: Int!
+  updatedAt: DateTime!
+}
+
+enum NewsShareChannel {
+  COPY_LINK
+  FACEBOOK
+  INSTAGRAM
+  PINTEREST
+  PRINT
+  THREADS
+  X
+}
+
+type NewsShareChannelCount {
+  channel: NewsShareChannel!
+  count: Int!
+}
+
+type NewsSharing {
+  channels: [NewsShareChannelCount!]!
+  total: Int!
+}
+
+type NewsTagSummary {
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+enum NewsVisibility {
+  MEMBERS
+  PUBLIC
+}
+
+enum NewsVoteKind {
+  DOWNVOTE
+  UPVOTE
+}
+
+enum NotificationCategory {
+  COMMENTS_REPLIES
+  DIRECT_MESSAGES
+  MENTIONS
+  PUBLISHING_REVIEW
+  REPUTATION
+  SUBSCRIPTIONS
+  SUPPORT
+}
+
+enum NotificationDigestFrequency {
+  DAILY
+  OFF
+  WEEKLY
+}
+
+type NotificationPreferences {
+  digestFrequency: NotificationDigestFrequency!
+  emailCategories: [NotificationCategory!]!
+  emailEnabled: Boolean!
+  inAppCategories: [NotificationCategory!]!
+}
+
+type NumberedNewsPage {
+  items: [ShortNews!]!
+  page: Int!
+  pageSize: Int!
+  pinnedItems: [ShortNews!]!
+  total: Int!
+  totalPages: Int!
+}
+
+type PresenceSummary {
+  onlineCrawlers: Int!
+  onlineGuests: Int!
+  onlineMembers: Int!
+  sampledAt: DateTime!
+  totalOnline: Int!
+}
+
+input PreviewEditorDocumentInput {
+  documentJson: String!
+}
+
+type ProfileCompletion {
+  completedCount: Int!
+  completedFields: [ProfileCompletionField!]!
+  isComplete: Boolean!
+  missingFields: [ProfileCompletionField!]!
+  percentage: Int!
+  totalCount: Int!
+}
+
+enum ProfileCompletionField {
+  AVATAR
+  BIO
+  COVER
+  INTERESTS
+  LOCATION
+  SOCIAL_LINKS
+  TECHNOLOGIES
+  WEBSITE
+}
+
+enum ProfileVisibility {
+  MEMBERS
+  PRIVATE
+  PUBLIC
+}
+
+type ProfileWallPage {
+  items: [ProfileWallPost!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+type ProfileWallPost {
+  authorId: ID!
+  body: String
+  createdAt: String!
+  deletedAt: String
+  id: ID!
+  imageMediaId: ID
+  interactionTargetId: ID!
+  isDeleted: Boolean!
+  profileOwnerId: ID!
+  updatedAt: String!
+}
+
+input PublishNewsInput {
+  articleId: ID!
+  displayPublishedAt: DateTime
+}
+
+type Query {
+  achievementRules: [AchievementRule!]!
+  achievements: [Achievement!]!
+  achievementsAdmin: [Achievement!]!
+  apiInfo: ApiInfo!
+  blockedUsers(pagination: UsersPageInput): UsersPageModel!
+  commentDraft(interactionTargetId: ID!, parentId: ID): CommentDraft
+  commentRevisions(commentId: ID!): [CommentRevision!]!
+  commentsForTarget(interactionTargetId: ID!, pagination: CommentsPageInput, parentId: ID): CommentPage!
+  communityPointRules: [CommunityPointRule!]!
+  communityPointsHistory(pagination: CommunityPointsPageInput, userId: ID!): CommunityPointHistory!
+  contentReports(pagination: ModerationPageInput, status: ContentReportStatus): ContentReportPage!
+  customTitleSettings: CustomTitleSettings!
+  customTitles: [CustomTitle!]!
+  customTitlesAdmin: [CustomTitle!]!
+  deliverEditorDocument(input: PreviewEditorDocumentInput!): EditorDocumentDelivery!
+  editorMedia(input: MediaLibraryInput): MediaLibraryConnection!
+  editorialNews(input: NewsEditorialBrowseInput): NewsEditorialPage!
+  evaluateContentGate(id: ID!): ContentGateEvaluationModel!
+  followers(pagination: UsersPageInput, userId: ID!): UsersPageModel!
+  following(pagination: UsersPageInput, userId: ID!): UsersPageModel!
+  fullNews(language: String!, slug: String!): FullNews
+  interactionTarget(id: ID!): InteractionTarget!
+  interactionTargetAccess(capability: InteractionCapability!, targetId: ID!): InteractionAccessDecision!
+  leaderboard(input: LeaderboardInput): LeaderboardPage!
+  levelDefinitions: [LevelDefinition!]!
+  levelHistory(pagination: LevelHistoryPageInput, userId: ID!): LevelTransitionHistory!
+  levelProgress(userId: ID!): LevelProgress!
+  mediaAccessUrl(mediaId: ID!, variantName: String!): MediaAccess!
+  mediaLibrary(input: MediaLibraryInput): MediaLibraryConnection!
+  mediaLibraryMetrics: MediaLibraryMetrics!
+  mediaUploadSession(id: String!): MediaUploadSession!
+  members(input: MembersDirectoryInput): MembersDirectoryPage!
+  moderationAnnotations(commentId: ID, interactionTargetId: ID!): [ModerationAnnotation!]!
+  news(input: NewsBrowseInput): NumberedNewsPage!
+  newsComments(articleId: ID!, page: Int! = 1, pageSize: Int): NewsCommentsPage!
+  newsEditorialArticle(articleId: ID!): NewsEditorialArticle!
+  newsNavigation(articleId: ID!): NewsNavigation!
+  newsRatingVotes(articleId: ID!, page: Int! = 1, pageSize: Int! = 20): NewsRatingVotePage!
+  newsSettings: NewsSettings!
+  presenceSummary: PresenceSummary!
+  previewEditorDocument(input: PreviewEditorDocumentInput!): EditorDocumentPreview!
+  profileWall(pagination: UsersPageInput, profileOwnerId: ID!): ProfileWallPage!
+  publicActivityFeed(input: ActivityFeedInput): ActivityFeedPage!
+  quarantinedMedia(limit: Int! = 25): [MediaQuarantineItem!]!
+  reactionSummary(interactionTargetId: ID!): ReactionSummary!
+  reputationHistory(pagination: ReputationPageInput, userId: ID!): ReputationHistory!
+  reputationPolicy: ReputationPolicy!
+  user(id: ID!): User!
+  userAchievementHistory(userId: ID!): [AchievementAward!]!
+  userAchievements(userId: ID!): [AchievementAward!]!
+  userActivity(pagination: UsersPageInput, userId: ID!): UserActivityPage!
+  userByUsername(username: String!): User!
+  userCustomTitles(userId: ID!): [UserTitleGrant!]!
+  users(pagination: UsersPageInput): UsersPageModel!
+  viewer: Viewer!
+  viewerActivityFeed(input: ActivityFeedInput): ActivityFeedPage!
+  viewerBookmarks(pagination: BookmarksPageInput): BookmarkPage!
+  viewerCommentDrafts(limit: Int! = 20): [CommentDraft!]!
+  viewerNotificationPreferences: NotificationPreferences!
+  viewerPrivacySettings: UserPrivacySettings!
+  viewerProfileCompletion: ProfileCompletion!
+  viewerSessions: [AuthSession!]!
+  viewerTwoFactorStatus: TwoFactorStatusModel!
+}
+
+type Reaction {
+  actorId: ID!
+  createdAt: String!
+  id: ID!
+  interactionTargetId: ID!
+  kind: ReactionKind!
+  updatedAt: String!
+}
+
+"""A content signal that remains separate from user reputation changes."""
+enum ReactionKind {
+  DOWNVOTE
+  LIKE
+  UPVOTE
+}
+
+type ReactionSummary {
+  downvotes: Int!
+  interactionTargetId: ID!
+  likes: Int!
+  score: Int!
+  total: Int!
+  updatedAt: String
+  upvotes: Int!
+  viewerReaction: ReactionKind
+}
+
+input RecordShareInput {
+  channel: ShareChannel!
+  interactionTargetId: ID!
+  visitorId: String!
+}
+
+input RecordViewInput {
+  interactionTargetId: ID!
+  visitorId: String!
+}
+
+input RefreshTokenInput {
+  refreshToken: String!
+}
+
+input RegisterInput {
+  displayName: String!
+  email: String!
+  password: String!
+  username: String!
+}
+
+type RemoveNewsPinResult {
+  success: Boolean!
+}
+
+input ReportContentInput {
+  category: ContentReportCategory!
+  commentId: ID
+  interactionTargetId: ID!
+  reason: String!
+}
+
+enum ReportReviewDecision {
+  DISMISSED
+  RESOLVED
+}
+
+type ReputationActor {
+  avatarUrl: String
+  displayName: String
+  id: ID!
+  username: String!
+}
+
+type ReputationEntry {
+  actor: ReputationActor!
+  createdAt: DateTime!
+  id: ID!
+  reason: String!
+  recipientId: ID!
+  reversal: ReputationReversal
+  value: Int!
+}
+
+type ReputationHistory {
+  items: [ReputationEntry!]!
+  limit: Int!
+  page: Int!
+  score: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+input ReputationPageInput {
+  limit: Int! = 20
+  page: Int! = 1
+}
+
+type ReputationPolicy {
+  minimumAccountAgeDays: Int!
+  updatedAt: DateTime!
+  updatedById: ID
+}
+
+type ReputationReversal {
+  actor: ReputationActor!
+  createdAt: DateTime!
+  id: ID!
+  reason: String!
+}
+
+input RequestPasswordRecoveryInput {
+  email: String!
+}
+
+input ResetPasswordInput {
+  password: String!
+  token: String!
+}
+
+input ReverseCommunityPointsInput {
+  entryId: ID!
+  reason: String!
+}
+
+input ReverseReputationInput {
+  entryId: ID!
+  reason: String!
+}
+
+input ReviewContentReportInput {
+  decision: ReportReviewDecision!
+  note: String!
+  reportId: ID!
+}
+
+input RevokeAchievementAwardInput {
+  awardId: ID!
+  reason: String!
+}
+
+input RevokeCustomTitleInput {
+  grantId: ID!
+  reason: String!
+}
+
+type RevokeSessionsResultModel {
+  revokedCount: Int!
+  success: Boolean!
+}
+
+input RollbackAchievementSourceInput {
+  reason: String!
+  sourceId: String!
+  sourceType: String!
+}
+
+input RunEditorAiCommandInput {
+  command: EditorAiCommand!
+  externalProcessingConfirmed: Boolean!
+  instruction: String
+  language: String
+  profile: String!
+  sourceText: String
+}
+
+input SaveAchievementInput {
+  badge: String!
+  color: String!
+  description: String
+  id: ID
+  isActive: Boolean! = true
+  key: String!
+  name: String!
+}
+
+input SaveAchievementRuleInput {
+  achievementId: ID!
+  cooldownHours: Int! = 0
+  dailyCap: Int
+  enabled: Boolean! = true
+  eventName: String!
+  id: ID
+  recipientPayloadKey: String! = "userId"
+  repeatable: Boolean! = false
+}
+
+input SaveCommentDraftInput {
+  baseVersion: Int!
+  documentJson: String!
+  interactionTargetId: ID!
+  parentId: ID
+}
+
+input SaveNewsDraftInput {
+  articleId: ID!
+  baseVersion: Int!
+  changeSummary: String
+  coverMediaId: ID
+  documentJson: String!
+  language: String!
+  postType: NewsPostType!
+  shortText: String!
+  slug: String!
+  templateDataJson: String
+  title: String!
+  visibility: NewsVisibility!
+}
+
+input ScheduleNewsInput {
+  articleId: ID!
+  displayPublishedAt: DateTime
+  scheduledFor: DateTime!
+}
+
+input SetNewsPinInput {
+  articleId: ID!
+  categoryId: ID
+  expiresAt: DateTime
+  scope: NewsPinScope!
+}
+
+input SetReactionInput {
+  interactionTargetId: ID!
+  kind: ReactionKind!
+}
+
+type SetReactionPayload {
+  changed: Boolean!
+  reaction: Reaction!
+  summary: ReactionSummary!
+}
+
+enum ShareChannel {
+  COPY_LINK
+  FACEBOOK
+  INSTAGRAM
+  PINTEREST
+  PRINT
+  THREADS
+  X
+}
+
+type ShareChannelCount {
+  channel: ShareChannel!
+  count: Int!
+}
+
+type ShortNews {
+  author: NewsAuthor!
+  coverMediaId: ID
+  displayPublishedAt: DateTime!
+  engagement: NewsEngagement!
+  featured: Boolean!
+  id: ID!
+  interactionTargetId: ID!
+  language: String!
+  pin: NewsPin
+  postType: NewsPostType!
+  primaryCategory: NewsCategorySummary
+  publishedAt: DateTime!
+  shortText: String!
+  slug: String!
+  tags: [NewsTagSummary!]!
+  title: String!
+  visibility: NewsVisibility!
+}
+
+type TwoFactorConfirmationModel {
+  recoveryCodes: [String!]!
+}
+
+type TwoFactorSetupModel {
+  otpauthUri: String!
+  secret: String!
+}
+
+type TwoFactorStatusModel {
+  enabled: Boolean!
+  recoveryCodesRemaining: Int!
+}
+
+input UpdateCommunityPointRuleInput {
+  dailyLimit: Int
+  enabled: Boolean!
+  key: String!
+  points: Int!
+}
+
+input UpdateCustomTitleInput {
+  badge: String!
+  color: String!
+  description: String
+  id: ID!
+  isActive: Boolean!
+  name: String!
+}
+
+input UpdateCustomTitleSettingsInput {
+  selectionCooldownDays: Int!
+}
+
+input UpdateLevelDefinitionInput {
+  level: Int!
+  threshold: Int!
+}
+
+input UpdateNewsSettingsInput {
+  commentsPageSize: Int!
+  commentsPaginationMode: NewsPaginationMode!
+  commentsPaginationThreshold: Int!
+  newsPageSize: Int!
+  newsPaginationMode: NewsPaginationMode!
+  newsPaginationThreshold: Int!
+}
+
+input UpdateNotificationPreferencesInput {
+  digestFrequency: NotificationDigestFrequency!
+  emailCategories: [NotificationCategory!]!
+  emailEnabled: Boolean!
+  inAppCategories: [NotificationCategory!]!
+}
+
+input UpdateReputationPolicyInput {
+  minimumAccountAgeDays: Int!
+}
+
+input UpdateUserPrivacyInput {
+  allowFollowers: Boolean!
+  allowWallPosts: Boolean!
+  profileVisibility: ProfileVisibility!
+  showFollows: Boolean!
+  showLastSeen: Boolean!
+  showLocation: Boolean!
+  showOnlineStatus: Boolean!
+  showSocialLinks: Boolean!
+  showWebsite: Boolean!
+}
+
+input UpdateViewerProfileInput {
+  bio: String
+  displayName: String
+  interests: [String!]
+  location: String
+  technologies: [String!]
+  website: String
+}
+
+input UpdateViewerSocialLinksInput {
+  links: [ViewerSocialLinkInput!]!
+}
+
+type User {
+  avatarUrl: String
+  bio: String
+  coverUrl: String
+  createdAt: String!
+  displayName: String
+  followerCount: Int!
+  followingCount: Int!
+  id: ID!
+  interests: [String!]!
+  isFollowedByViewer: Boolean!
+  isOnline: Boolean!
+  lastSeenAt: String
+  location: String
+  socialLinks: [UserSocialLink!]!
+  status: String!
+  technologies: [String!]!
+  username: String!
+  website: String
+}
+
+type UserActivity {
+  action: String!
+  actorId: ID!
+  id: ID!
+  module: String!
+  occurredAt: String!
+  subjectId: ID!
+  subjectType: String!
+}
+
+type UserActivityPage {
+  items: [UserActivity!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+type UserBlockResult {
+  blocked: Boolean!
+  userId: ID!
+}
+
+type UserPrivacySettings {
+  allowFollowers: Boolean!
+  allowWallPosts: Boolean!
+  profileVisibility: ProfileVisibility!
+  showFollows: Boolean!
+  showLastSeen: Boolean!
+  showLocation: Boolean!
+  showOnlineStatus: Boolean!
+  showSocialLinks: Boolean!
+  showWebsite: Boolean!
+}
+
+type UserSocialGraphSummary {
+  followerCount: Int!
+  followingCount: Int!
+  userId: ID!
+}
+
+type UserSocialLink {
+  id: ID!
+  label: String
+  platform: String!
+  position: Int!
+  url: String!
+}
+
+type UserTitleGrant {
+  grantReason: String!
+  grantedAt: DateTime!
+  grantedById: ID!
+  id: ID!
+  revokeReason: String
+  revokedAt: DateTime
+  revokedById: ID
+  selected: Boolean!
+  title: CustomTitle!
+  titleId: ID!
+  userId: ID!
+}
+
+input UsersPageInput {
+  limit: Int! = 20
+  page: Int! = 1
+}
+
+type UsersPageModel {
+  items: [User!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+input VerifyEmailInput {
+  token: String!
+}
+
+type Viewer {
+  avatarUrl: String
+  bio: String
+  coverUrl: String
+  createdAt: String!
+  displayName: String
+  email: String!
+  emailVerifiedAt: String
+  followerCount: Int!
+  followingCount: Int!
+  id: ID!
+  interests: [String!]!
+  isFollowedByViewer: Boolean!
+  isOnline: Boolean!
+  lastSeenAt: String
+  location: String
+  socialLinks: [UserSocialLink!]!
+  status: String!
+  technologies: [String!]!
+  updatedAt: String!
+  username: String!
+  website: String
+}
+
+input ViewerSocialLinkInput {
+  label: String
+  platform: String!
+  url: String!
+}

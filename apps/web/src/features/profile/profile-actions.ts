@@ -1,0 +1,386 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Profile Frontend
+ * 📄 File: apps/web/src/features/profile/profile-actions.ts
+ *
+ * 🎯 Purpose:
+ * Executes authenticated profile mutations without exposing access tokens to
+ * client components.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
+
+"use server";
+
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+
+import {
+  BeginViewerTwoFactorSetupDocument,
+  ChangeViewerEmailDocument,
+  ChangeViewerPasswordDocument,
+  CreateProfileWallPostDocument,
+  DeactivateViewerAccountDocument,
+  DisableViewerTwoFactorDocument,
+  ConfirmViewerTwoFactorSetupDocument,
+  FollowProfileDocument,
+  GiveProfileReputationDocument,
+  RemoveViewerAvatarDocument,
+  RemoveViewerCoverDocument,
+  RevokeOtherViewerDeviceSessionsDocument,
+  RevokeViewerDeviceSessionDocument,
+  RequestViewerEmailVerificationDocument,
+  SetViewerAvatarDocument,
+  SetViewerCoverDocument,
+  SelectViewerCustomTitleDocument,
+  UnfollowProfileDocument,
+  UpdateViewerNotificationSettingsDocument,
+  UpdateViewerPrivacySettingsDocument,
+  UpdateViewerProfileSettingsDocument,
+  type NotificationCategory,
+  type NotificationDigestFrequency,
+  type ProfileVisibility,
+} from "@/gql/graphql";
+import { getClient } from "@/lib/apollo/rsc-client";
+import {
+  ACCESS_COOKIE,
+  PERSISTENT_SESSION_COOKIE,
+  REFRESH_COOKIE,
+} from "@/features/auth/session-contract";
+
+async function context() {
+  const token = (await cookies()).get("dss_access_token")?.value;
+  if (!token) throw new Error("Authentication required.");
+  return { headers: { authorization: `Bearer ${token}` } };
+}
+
+function cleanList(value: FormDataEntryValue | null): string[] {
+  return String(value ?? "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+export async function setProfileFollowState(
+  userId: string,
+  username: string,
+  following: boolean,
+): Promise<void> {
+  await getClient().mutate({
+    mutation: following ? UnfollowProfileDocument : FollowProfileDocument,
+    variables: { userId },
+    context: await context(),
+  });
+  revalidatePath(`/profile/${username}`);
+}
+
+export async function createWallPost(
+  profileOwnerId: string,
+  username: string,
+  formData: FormData,
+): Promise<void> {
+  const body = String(formData.get("body") ?? "").trim();
+  const imageMediaId = String(formData.get("imageMediaId") ?? "").trim();
+  if (!body && !imageMediaId) {
+    throw new Error("Додайте текст або зображення.");
+  }
+  await getClient().mutate({
+    mutation: CreateProfileWallPostDocument,
+    variables: {
+      input: {
+        profileOwnerId,
+        body: body || null,
+        imageMediaId: imageMediaId || null,
+      },
+    },
+    context: await context(),
+  });
+  revalidatePath(`/profile/${username}`);
+}
+
+export async function giveProfileReputation(
+  recipientId: string,
+  username: string,
+  formData: FormData,
+): Promise<void> {
+  const reason = String(formData.get("reason") ?? "").trim();
+  const value = Number.parseInt(String(formData.get("value") ?? ""), 10);
+  if ((value !== 1 && value !== -1) || reason.length < 3) {
+    throw new Error("Оберіть оцінку та поясніть її причину.");
+  }
+  await getClient().mutate({
+    mutation: GiveProfileReputationDocument,
+    variables: { input: { recipientId, value, reason } },
+    context: await context(),
+  });
+  revalidatePath(`/profile/${username}`);
+}
+
+export async function selectViewerCustomTitle(
+  username: string,
+  formData: FormData,
+): Promise<void> {
+  const grantId = String(formData.get("grantId") ?? "").trim();
+  if (!grantId) throw new Error("Оберіть звання.");
+  await getClient().mutate({
+    mutation: SelectViewerCustomTitleDocument,
+    variables: { grantId },
+    context: await context(),
+  });
+  revalidatePath(`/profile/${username}`);
+}
+
+export async function updateProfileSettings(formData: FormData): Promise<void> {
+  await getClient().mutate({
+    mutation: UpdateViewerProfileSettingsDocument,
+    variables: {
+      input: {
+        displayName: String(formData.get("displayName") ?? "").trim() || null,
+        bio: String(formData.get("bio") ?? "").trim() || null,
+        location: String(formData.get("location") ?? "").trim() || null,
+        website: String(formData.get("website") ?? "").trim() || null,
+        technologies: cleanList(formData.get("technologies")),
+        interests: cleanList(formData.get("interests")),
+      },
+    },
+    context: await context(),
+  });
+  revalidatePath("/settings/profile");
+}
+
+const privacyKeys = [
+  "showLocation",
+  "showWebsite",
+  "showSocialLinks",
+  "showLastSeen",
+  "showOnlineStatus",
+  "allowFollowers",
+  "showFollows",
+  "allowWallPosts",
+] as const;
+
+export async function updatePrivacySettings(formData: FormData): Promise<void> {
+  const switches = Object.fromEntries(
+    privacyKeys.map((key) => [key, formData.get(key) === "on"]),
+  ) as Record<(typeof privacyKeys)[number], boolean>;
+  await getClient().mutate({
+    mutation: UpdateViewerPrivacySettingsDocument,
+    variables: {
+      input: {
+        ...switches,
+        profileVisibility: String(
+          formData.get("profileVisibility") ?? "PUBLIC",
+        ) as ProfileVisibility,
+      },
+    },
+    context: await context(),
+  });
+  revalidatePath("/settings/profile");
+}
+
+export async function updateNotificationSettings(
+  formData: FormData,
+): Promise<void> {
+  const categories = formData
+    .getAll("categories")
+    .map(String) as NotificationCategory[];
+  await getClient().mutate({
+    mutation: UpdateViewerNotificationSettingsDocument,
+    variables: {
+      input: {
+        inAppCategories: categories,
+        emailEnabled: formData.get("emailEnabled") === "on",
+        emailCategories: categories,
+        digestFrequency: String(
+          formData.get("digestFrequency") ?? "OFF",
+        ) as NotificationDigestFrequency,
+      },
+    },
+    context: await context(),
+  });
+  revalidatePath("/settings/profile");
+}
+
+export async function revokeSession(sessionId: string): Promise<void> {
+  await getClient().mutate({
+    mutation: RevokeViewerDeviceSessionDocument,
+    variables: { sessionId },
+    context: await context(),
+  });
+  revalidatePath("/settings/profile");
+}
+
+export async function revokeOtherSessions(): Promise<void> {
+  await getClient().mutate({
+    mutation: RevokeOtherViewerDeviceSessionsDocument,
+    context: await context(),
+  });
+  revalidatePath("/settings/profile");
+}
+
+export async function requestViewerEmailVerification(): Promise<void> {
+  await getClient().mutate({
+    mutation: RequestViewerEmailVerificationDocument,
+    context: await context(),
+  });
+  revalidatePath("/settings/profile");
+}
+
+export async function updateViewerMedia(
+  kind: "avatar" | "cover",
+  formData: FormData,
+): Promise<void> {
+  const mediaId = String(formData.get("mediaId") ?? "").trim();
+  if (!mediaId) throw new Error("Media ID is required.");
+  await getClient().mutate({
+    mutation:
+      kind === "avatar" ? SetViewerAvatarDocument : SetViewerCoverDocument,
+    variables: { mediaId },
+    context: await context(),
+  });
+  revalidatePath("/settings/profile");
+}
+
+export async function removeViewerMedia(
+  kind: "avatar" | "cover",
+): Promise<void> {
+  await getClient().mutate({
+    mutation:
+      kind === "avatar"
+        ? RemoveViewerAvatarDocument
+        : RemoveViewerCoverDocument,
+    context: await context(),
+  });
+  revalidatePath("/settings/profile");
+}
+
+export async function changeViewerEmail(formData: FormData): Promise<void> {
+  await getClient().mutate({
+    mutation: ChangeViewerEmailDocument,
+    variables: {
+      input: {
+        email: String(formData.get("email") ?? "").trim(),
+        currentPassword: String(formData.get("currentPassword") ?? ""),
+      },
+    },
+    context: await context(),
+  });
+  await clearLocalSession();
+  redirect("/login?reason=credentials-changed");
+}
+
+export async function changeViewerPassword(formData: FormData): Promise<void> {
+  await getClient().mutate({
+    mutation: ChangeViewerPasswordDocument,
+    variables: {
+      input: {
+        currentPassword: String(formData.get("currentPassword") ?? ""),
+        newPassword: String(formData.get("newPassword") ?? ""),
+      },
+    },
+    context: await context(),
+  });
+  await clearLocalSession();
+  redirect("/login?reason=credentials-changed");
+}
+
+export async function deactivateViewerAccount(
+  formData: FormData,
+): Promise<void> {
+  await getClient().mutate({
+    mutation: DeactivateViewerAccountDocument,
+    variables: {
+      input: { password: String(formData.get("password") ?? "") },
+    },
+    context: await context(),
+  });
+  await clearLocalSession();
+  redirect("/login?reason=account-deactivated");
+}
+
+export type TwoFactorActionState = {
+  status: "idle" | "error" | "ready" | "enabled";
+  message?: string;
+  secret?: string;
+  otpauthUri?: string;
+  recoveryCodes?: string[];
+};
+
+export async function beginViewerTwoFactorSetup(
+  _state: TwoFactorActionState,
+): Promise<TwoFactorActionState> {
+  void _state;
+  try {
+    const result = await getClient().mutate({
+      mutation: BeginViewerTwoFactorSetupDocument,
+      context: await context(),
+    });
+    const setup = result.data?.beginViewerTwoFactorSetup;
+    if (!setup) throw new Error("SETUP_UNAVAILABLE");
+    return {
+      status: "ready",
+      secret: setup.secret,
+      otpauthUri: setup.otpauthUri,
+    };
+  } catch {
+    return {
+      status: "error",
+      message: "Не вдалося розпочати налаштування 2FA.",
+    };
+  }
+}
+
+export async function confirmViewerTwoFactorSetup(
+  _state: TwoFactorActionState,
+  formData: FormData,
+): Promise<TwoFactorActionState> {
+  try {
+    const result = await getClient().mutate({
+      mutation: ConfirmViewerTwoFactorSetupDocument,
+      variables: { input: { code: String(formData.get("code") ?? "").trim() } },
+      context: await context(),
+    });
+    const confirmation = result.data?.confirmViewerTwoFactorSetup;
+    if (!confirmation) throw new Error("CONFIRMATION_UNAVAILABLE");
+    revalidatePath("/settings/profile");
+    return { status: "enabled", recoveryCodes: confirmation.recoveryCodes };
+  } catch {
+    return {
+      status: "error",
+      message:
+        "Код не підтверджено. Перевірте час у застосунку й спробуйте ще раз.",
+    };
+  }
+}
+
+export async function disableViewerTwoFactor(
+  formData: FormData,
+): Promise<void> {
+  await getClient().mutate({
+    mutation: DisableViewerTwoFactorDocument,
+    variables: {
+      input: {
+        password: String(formData.get("password") ?? ""),
+        code: String(formData.get("code") ?? "").trim(),
+      },
+    },
+    context: await context(),
+  });
+  await clearLocalSession();
+  redirect("/login?reason=two-factor-disabled");
+}
+
+async function clearLocalSession() {
+  const store = await cookies();
+  store.delete(ACCESS_COOKIE);
+  store.delete(REFRESH_COOKIE);
+  store.delete(PERSISTENT_SESSION_COOKIE);
+}
+
+/**
+ * 🔐 The browser asks for a mission. The server carries the clearance.
+ */

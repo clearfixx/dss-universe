@@ -1,17 +1,162 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Users
+ * 📄 File: apps/api/src/modules/users/users.module.ts
+ *
+ * 🎯 Purpose:
+ * Declares the Users module and wires its internal dependencies.
+ *
+ * 🧠 Responsibilities:
+ * • registers the UsersController;
+ * • registers UsersService;
+ * • binds the UsersRepository contract to PrismaUsersRepository.
+ * • publishes the username-only display projection through its contract token.
+ * • consumes root-bound safe profile persistence and display-only role input ports.
+ *
+ * 🏗️ Architecture:
+ * NestJS feature module. Owns the Users module dependency graph.
+ *
+ * ⚠️ Important:
+ * Keep module wiring explicit. Do not hide dependencies behind magic exports.
+ *
+ * 💡 Notes:
+ * Modules are docking ports. Keep the connection clean. 🛰️
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
+
 import { Module } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { USERS_REPOSITORY } from './interfaces/users.repository.interface';
-import { PrismaUsersRepository } from './repositories/prisma-users.repository';
+import { USER_ACTIVITY_CONTEXT_READER } from './contracts/activity-context-reader.contract';
+import { PrismaUserActivityContextReader } from './infrastructure/repositories/prisma-user-activity-context.reader';
+import { USER_BLOCK_DECISIONS } from './contracts/block-decision.contract';
+import type { UserBlockRepository } from './domain/repositories/user-block.repository.interface';
+import { PROFILE_EXISTENCE_READER } from './contracts/profile-existence.contract';
+import { PrismaProfileExistenceReader } from './infrastructure/repositories/prisma-profile-existence.reader';
+import { ProfileGroupsService } from './application/services/profile-groups.service';
+import { VIEWER_PROFILE_READER } from './contracts/viewer-profile.contract';
+import { PrismaViewerProfileReader } from './infrastructure/repositories/prisma-viewer-profile.reader';
+import { PROFILE_DISPLAY_READER } from './contracts/profile-display-reader.contract';
+import { PrismaProfileDisplayReader } from './infrastructure/repositories/prisma-profile-display.reader';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+
+import { PrismaModule } from '@api/core/database';
+
+import { UsersService } from './application/services/users.service';
+import { USERS_REPOSITORY } from './domain/repositories/users.repository.interface';
+import { PrismaUsersRepository } from './infrastructure/repositories/prisma-users.repository';
+import { UsersController } from './presentation/controllers/users.controller';
+import { UsersResolver } from './presentation/graphql/resolvers/users.resolver';
+import { UserSocialLinksService } from './application/services/user-social-links.service';
+import { USER_SOCIAL_LINKS_REPOSITORY } from './domain/repositories/user-social-links.repository.interface';
+import { PrismaUserSocialLinksRepository } from './infrastructure/repositories/prisma-user-social-links.repository';
+import { UserSocialLinksLoader } from './presentation/graphql/loaders/user-social-links.loader';
+import { UserPrivacyService } from './application/services/user-privacy.service';
+import { USER_PRIVACY_REPOSITORY } from './domain/repositories/user-privacy.repository.interface';
+import { PrismaUserPrivacyRepository } from './infrastructure/repositories/prisma-user-privacy.repository';
+import { UserSocialGraphService } from './application/services/user-social-graph.service';
+import { USER_SOCIAL_GRAPH_REPOSITORY } from './domain/repositories/user-social-graph.repository.interface';
+import { PrismaUserSocialGraphRepository } from './infrastructure/repositories/prisma-user-social-graph.repository';
+import { UserSocialGraphLoader } from './presentation/graphql/loaders/user-social-graph.loader';
+import { UserBlockService } from './application/services/user-block.service';
+import { USER_BLOCK_REPOSITORY } from './domain/repositories/user-block.repository.interface';
+import { PrismaUserBlockRepository } from './infrastructure/repositories/prisma-user-block.repository';
+import { UserPresenceService } from './application/services/user-presence.service';
+import { UserPresenceInterceptor } from './presentation/interceptors/user-presence.interceptor';
+import { UserWallService } from './application/services/user-wall.service';
+import { USER_WALL_REPOSITORY } from './domain/repositories/user-wall.repository.interface';
+import { PrismaUserWallRepository } from './infrastructure/repositories/prisma-user-wall.repository';
+import { ProfileCompletionService } from './application/services/profile-completion.service';
+import { UserActivityFeedService } from './application/services/user-activity-feed.service';
+import { PROFILE_WALL_INTERACTION_DECISIONS } from './contracts/profile-wall-interaction-decisions.contract';
+import { ProfileWallInteractionPolicy } from './application/services/profile-wall-interaction.policy';
 
 @Module({
+  imports: [PrismaModule],
+  controllers: [UsersController],
   providers: [
+    {
+      provide: USER_ACTIVITY_CONTEXT_READER,
+      useClass: PrismaUserActivityContextReader,
+    },
+    {
+      provide: USER_BLOCK_DECISIONS,
+      inject: [USER_BLOCK_REPOSITORY],
+      useFactory: (repository: UserBlockRepository) =>
+        Object.freeze({
+          isBlocked: (first: string, second: string) =>
+            repository.existsEitherDirection(first, second),
+        }),
+    },
+    {
+      provide: PROFILE_EXISTENCE_READER,
+      useClass: PrismaProfileExistenceReader,
+    },
+    { provide: VIEWER_PROFILE_READER, useClass: PrismaViewerProfileReader },
+    { provide: PROFILE_DISPLAY_READER, useClass: PrismaProfileDisplayReader },
     UsersService,
+    ProfileGroupsService,
+    UsersResolver,
+    UserSocialLinksService,
+    UserSocialLinksLoader,
+    UserPrivacyService,
+    UserSocialGraphService,
+    UserSocialGraphLoader,
+    UserBlockService,
+    UserPresenceService,
+    UserWallService,
+    ProfileCompletionService,
+    UserActivityFeedService,
+    ProfileWallInteractionPolicy,
+    {
+      provide: PROFILE_WALL_INTERACTION_DECISIONS,
+      useExisting: ProfileWallInteractionPolicy,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: UserPresenceInterceptor,
+    },
     {
       provide: USERS_REPOSITORY,
       useClass: PrismaUsersRepository,
     },
+    {
+      provide: USER_SOCIAL_LINKS_REPOSITORY,
+      useClass: PrismaUserSocialLinksRepository,
+    },
+    {
+      provide: USER_PRIVACY_REPOSITORY,
+      useClass: PrismaUserPrivacyRepository,
+    },
+    {
+      provide: USER_SOCIAL_GRAPH_REPOSITORY,
+      useClass: PrismaUserSocialGraphRepository,
+    },
+    {
+      provide: USER_BLOCK_REPOSITORY,
+      useClass: PrismaUserBlockRepository,
+    },
+    {
+      provide: USER_WALL_REPOSITORY,
+      useClass: PrismaUserWallRepository,
+    },
   ],
-  exports: [UsersService, USERS_REPOSITORY],
+  exports: [
+    USER_ACTIVITY_CONTEXT_READER,
+    PROFILE_WALL_INTERACTION_DECISIONS,
+    USER_BLOCK_DECISIONS,
+    PROFILE_EXISTENCE_READER,
+    VIEWER_PROFILE_READER,
+    PROFILE_DISPLAY_READER,
+  ],
 })
 export class UsersModule {}
 
+/**
+ * -----------------------------------------------------------------------------
+ * 🛰️ Every module is a docking port.
+ * Bad wiring creates space debris.
+ * -----------------------------------------------------------------------------
+ */

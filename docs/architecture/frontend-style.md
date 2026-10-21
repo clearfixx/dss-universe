@@ -1,5 +1,4 @@
-﻿
-DSS Universe Frontend Style
+﻿DSS Universe Frontend Style
 Frontend principles
 UI should feel like a living system, not static pages.
 Components should be small and understandable.

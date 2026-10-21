@@ -1,5 +1,11 @@
 # Backend Standard
 
+> Legacy examples below are not current authorization or layering guidance.
+> Authentication and Authorization are distinct; use permission checks, not
+> role-name route checks. Follow [Architecture Rules](../docs/architecture/ARCHITECTURE_RULES.md)
+> and [Module Boundaries](../docs/architecture/module-boundaries.md).
+> D2 owns detailed contracts and enforcement; do not copy the old role decorator.
+
 The backend is built with NestJS, Prisma, PostgreSQL, and modular architecture.
 
 ## Layers

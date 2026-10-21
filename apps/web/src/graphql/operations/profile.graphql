@@ -1,0 +1,438 @@
+query PublicProfile($username: String!) {
+  userByUsername(username: $username) {
+    id
+    username
+    displayName
+    bio
+    location
+    website
+    technologies
+    interests
+    avatarUrl
+    coverUrl
+    followerCount
+    followingCount
+    isFollowedByViewer
+    isOnline
+    lastSeenAt
+    createdAt
+    socialLinks {
+      id
+      platform
+      label
+      url
+      position
+    }
+  }
+}
+
+query ProfileViewer {
+  viewer {
+    id
+  }
+}
+
+query ProfileWall($profileOwnerId: ID!, $pagination: UsersPageInput) {
+  profileWall(profileOwnerId: $profileOwnerId, pagination: $pagination) {
+    items {
+      id
+      interactionTargetId
+      profileOwnerId
+      authorId
+      body
+      imageMediaId
+      isDeleted
+      deletedAt
+      createdAt
+      updatedAt
+    }
+    total
+    page
+    limit
+    totalPages
+  }
+}
+
+query UserActivity($userId: ID!, $pagination: UsersPageInput) {
+  userActivity(userId: $userId, pagination: $pagination) {
+    items {
+      id
+      actorId
+      module
+      action
+      subjectType
+      subjectId
+      occurredAt
+    }
+    total
+    page
+    limit
+    totalPages
+  }
+}
+
+query ProfileGamification($userId: ID!) {
+  levelProgress(userId: $userId) {
+    balance
+    currentLevel
+    currentThreshold
+    nextLevel
+    nextThreshold
+    pointsIntoLevel
+    pointsNeeded
+    progressPercent
+  }
+  communityPointsHistory(userId: $userId, pagination: { page: 1, limit: 5 }) {
+    total
+    balance
+    items {
+      id
+      points
+      reason
+      ruleKey
+      occurredAt
+    }
+  }
+  reputationHistory(userId: $userId, pagination: { page: 1, limit: 5 }) {
+    score
+    total
+    items {
+      id
+      value
+      reason
+      createdAt
+      actor {
+        id
+        username
+        displayName
+        avatarUrl
+      }
+    }
+  }
+  userAchievements(userId: $userId) {
+    id
+    awardedAt
+    reason
+    achievement {
+      id
+      key
+      name
+      description
+      color
+      badge
+    }
+  }
+  userCustomTitles(userId: $userId) {
+    id
+    selected
+    grantedAt
+    grantReason
+    revokedAt
+    title {
+      id
+      name
+      description
+      color
+      badge
+      isActive
+    }
+  }
+}
+
+query MembersDirectory(
+  $input: MembersDirectoryInput
+  $leaderboardInput: LeaderboardInput
+) {
+  members(input: $input) {
+    items {
+      id
+      username
+      displayName
+      avatarUrl
+      isOnline
+      roles
+      createdAt
+    }
+    total
+    page
+    limit
+    totalPages
+  }
+  presenceSummary {
+    onlineMembers
+    onlineGuests
+    onlineCrawlers
+    totalOnline
+    sampledAt
+  }
+  leaderboard(input: $leaderboardInput) {
+    period
+    startsAt
+    endsAt
+    generatedAt
+    total
+    viewerRank
+    viewerCommunityPoints
+    items {
+      rank
+      userId
+      username
+      displayName
+      avatarUrl
+      communityPoints
+      currentLevel
+      reputation
+      selectedTitle {
+        name
+        color
+        badge
+      }
+    }
+  }
+}
+
+query ProfileSettings {
+  viewer {
+    id
+    username
+    displayName
+    email
+    emailVerifiedAt
+    bio
+    location
+    website
+    technologies
+    interests
+    avatarUrl
+    coverUrl
+    createdAt
+    socialLinks {
+      id
+      platform
+      label
+      url
+      position
+    }
+  }
+  viewerPrivacySettings {
+    profileVisibility
+    showLocation
+    showWebsite
+    showSocialLinks
+    showLastSeen
+    showOnlineStatus
+    allowFollowers
+    showFollows
+    allowWallPosts
+  }
+  viewerProfileCompletion {
+    percentage
+    completedCount
+    totalCount
+    isComplete
+    completedFields
+    missingFields
+  }
+  viewerSessions {
+    id
+    current
+    userAgent
+    ipAddress
+    createdAt
+    expiresAt
+  }
+  viewerNotificationPreferences {
+    inAppCategories
+    emailEnabled
+    emailCategories
+    digestFrequency
+  }
+  viewerTwoFactorStatus {
+    enabled
+    recoveryCodesRemaining
+  }
+}
+
+mutation FollowProfile($userId: ID!) {
+  followUser(userId: $userId) {
+    userId
+    followerCount
+    followingCount
+  }
+}
+
+mutation UnfollowProfile($userId: ID!) {
+  unfollowUser(userId: $userId) {
+    userId
+    followerCount
+    followingCount
+  }
+}
+
+mutation GiveProfileReputation($input: GiveReputationInput!) {
+  giveReputation(input: $input) {
+    id
+    recipientId
+    value
+    reason
+    createdAt
+  }
+}
+
+mutation SelectViewerCustomTitle($grantId: ID!) {
+  selectCustomTitle(grantId: $grantId) {
+    id
+    selected
+    title {
+      id
+      name
+      color
+      badge
+    }
+  }
+}
+
+mutation CreateProfileWallPost($input: CreateWallPostInput!) {
+  createProfileWallPost(input: $input) {
+    id
+    interactionTargetId
+    profileOwnerId
+    authorId
+    body
+    imageMediaId
+    isDeleted
+    createdAt
+    updatedAt
+  }
+}
+
+mutation RemoveProfileWallPost($postId: ID!, $reason: String) {
+  removeProfileWallPost(postId: $postId, reason: $reason) {
+    id
+    isDeleted
+    deletedAt
+  }
+}
+
+mutation UpdateViewerProfileSettings($input: UpdateViewerProfileInput!) {
+  updateViewerProfile(input: $input) {
+    id
+    username
+    displayName
+    bio
+    location
+    website
+    technologies
+    interests
+    updatedAt
+  }
+}
+
+mutation UpdateViewerPrivacySettings($input: UpdateUserPrivacyInput!) {
+  updateViewerPrivacy(input: $input) {
+    profileVisibility
+    showLocation
+    showWebsite
+    showSocialLinks
+    showLastSeen
+    showOnlineStatus
+    allowFollowers
+    showFollows
+    allowWallPosts
+  }
+}
+
+mutation UpdateViewerNotificationSettings(
+  $input: UpdateNotificationPreferencesInput!
+) {
+  updateViewerNotificationPreferences(input: $input) {
+    inAppCategories
+    emailEnabled
+    emailCategories
+    digestFrequency
+  }
+}
+
+mutation RevokeViewerDeviceSession($sessionId: ID!) {
+  revokeViewerSession(sessionId: $sessionId) {
+    success
+  }
+}
+
+mutation RevokeOtherViewerDeviceSessions {
+  revokeOtherViewerSessions {
+    success
+    revokedCount
+  }
+}
+
+mutation RequestViewerEmailVerification {
+  requestEmailVerification {
+    success
+  }
+}
+
+mutation ChangeViewerEmail($input: ChangeEmailInput!) {
+  changeViewerEmail(input: $input) {
+    success
+  }
+}
+
+mutation ChangeViewerPassword($input: ChangePasswordInput!) {
+  changeViewerPassword(input: $input) {
+    success
+  }
+}
+
+mutation DeactivateViewerAccount($input: DeactivateAccountInput!) {
+  deactivateAccount(input: $input) {
+    success
+  }
+}
+
+mutation BeginViewerTwoFactorSetup {
+  beginViewerTwoFactorSetup {
+    secret
+    otpauthUri
+  }
+}
+
+mutation ConfirmViewerTwoFactorSetup($input: ConfirmTwoFactorInput!) {
+  confirmViewerTwoFactorSetup(input: $input) {
+    recoveryCodes
+  }
+}
+
+mutation DisableViewerTwoFactor($input: DisableTwoFactorInput!) {
+  disableViewerTwoFactor(input: $input) {
+    success
+  }
+}
+
+mutation SetViewerAvatar($mediaId: ID!) {
+  setViewerAvatar(mediaId: $mediaId) {
+    id
+    avatarUrl
+  }
+}
+
+mutation RemoveViewerAvatar {
+  removeViewerAvatar {
+    id
+    avatarUrl
+  }
+}
+
+mutation SetViewerCover($mediaId: ID!) {
+  setViewerCover(mediaId: $mediaId) {
+    id
+    coverUrl
+  }
+}
+
+mutation RemoveViewerCover {
+  removeViewerCover {
+    id
+    coverUrl
+  }
+}

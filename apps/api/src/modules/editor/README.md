@@ -1,0 +1,51 @@
+# DSS Editor Platform Passport ✍️
+
+## Purpose
+
+The server-side Editor Platform validates and projects one canonical,
+versioned Tiptap JSON document contract for every DSS content module.
+
+## Current foundation
+
+- shared `@dss/editor` framework-neutral contract;
+- product profiles for comments, forum content, news, Research Lab, Wiki,
+  messages and administration;
+- framework-neutral capability, toolbar and editor-permission registry;
+- structured mention, Media Reference, attachment, code, and Content Gate
+  nodes;
+- bounded recursive server validation;
+- canonical JSON plus derived plain-text and search projections;
+- escaped HTML projection with Shiki `dark-plus` code highlighting;
+- authenticated GraphQL preview endpoint;
+- authenticated viewer-safe delivery projection with recursive server-side
+  Content Gate redaction;
+- SSR-safe Tiptap frontend shell.
+- custom permission-aware DSS toolbar with no Tiptap UI dependency;
+- engineering guard against Tiptap Pro and Cloud packages.
+- framework-neutral debounced autosave coordination with monotonic versions,
+  retryable failures and explicit conflict state;
+- frontend document-change contract for host-owned draft commands.
+- reusable React autosave adapter and explicit draft recovery prompt;
+- Comments-owned persistence as the first real host-module integration;
+- DSS-owned Media Library picker limited to the actor's READY resources;
+- privacy-aware member suggestions and structured mention insertion.
+- provider-neutral AI Core commands with permission enforcement, explicit
+  external-processing consent, labeled suggestions and human-controlled Apply.
+- Knowledge Forge-grade tables, task lists, paired footnotes and one
+  heading-derived table of contents for `WIKI` and trusted `ADMIN` documents.
+
+## Boundary
+
+DSS Editor owns document shape, validation, and projections. News, Research
+Lab, Knowledge Forge, Community Hub, and Comments own their records, drafts,
+publication state, revisions, and permissions.
+
+HTML is never canonical input. Media nodes carry DSS Media Platform IDs rather
+than storage URLs. Content Gate nodes reference policies owned by the Content
+Gate Platform.
+
+## Deferred integrations
+
+- owning-module publication workflows;
+
+🚀 Build. Share. Grow.

@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "date": "2026-10-15",
+  "sourceBase": "f47d214",
+  "status": "review inventory; not a waiver or compliance certificate",
+  "scope": "Bounded AST rules over authored API modules/core/composition; TypeScript-resolved local file graph over all authored API src TS/TSX; excludes tests/declarations, external packages and non-API workspace aliases; no runtime DI certification",
+  "findings": []
+}

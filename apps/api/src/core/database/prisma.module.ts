@@ -9,5 +9,3 @@ import { PrismaService } from './services/prisma.service';
   exports: [PrismaService],
 })
 export class PrismaModule {}
-
-

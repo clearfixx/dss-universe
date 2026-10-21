@@ -2,13 +2,20 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: Database Seed
+ * 🌱 Module: Database Seed
  * 📄 File: role-permissions.seed.ts
  *
  * 🎯 Purpose:
- * Прив'язує permission'и до базових системних ролей.
+ * Assigns base permissions to system roles.
  *
- * 🧠 Architecture:
+ * 🧠 Responsibilities:
+ * • maps system roles to permission keys;
+ * • creates missing role-permission assignments;
+ * • keeps seeded RBAC defaults predictable.
+ *
+ * 🏗️ Architecture:
+ * Database seed.
+ *
  * Role
  *   ↓
  * RolePermission
@@ -16,10 +23,13 @@
  * Permission
  *
  * ⚠️ Important:
- * Backend перевіряє permission'и, а не назву ролі.
+ * Backend checks permissions, not role names.
  *
- * 💡 Якщо хочеться написати if (role === 'ADMIN'),
- * значить час випити каву і повернутися до permission'ів. ☕
+ * 💡 Notes:
+ * If you want `if (role === "admin")`,
+ * drink coffee and add a permission instead. ☕
+ *
+ * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 
@@ -32,9 +42,9 @@ import {
 } from '../../src/core/authorization';
 
 const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
-  USER: [Permission.UsersRead],
+  user: [Permission.UsersRead],
 
-  MODERATOR: [
+  moderator: [
     Permission.UsersRead,
     Permission.UsersUpdate,
     Permission.UsersBan,
@@ -42,9 +52,16 @@ const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     Permission.RolesRead,
 
     Permission.PermissionsRead,
+    Permission.ReputationReverse,
+    Permission.CommunityPointsReverse,
+    Permission.ContentReportsReview,
+    Permission.ModerationAnnotationsManage,
+    Permission.NewsReview,
+    Permission.NewsLinksManage,
+    Permission.NewsPinsManage,
   ],
 
-  ADMIN: [
+  admin: [
     Permission.UsersRead,
     Permission.UsersCreate,
     Permission.UsersUpdate,
@@ -61,13 +78,32 @@ const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
 
     Permission.SystemSettingsRead,
     Permission.SystemSettingsUpdate,
+    Permission.MediaQuarantineManage,
+    Permission.MediaLibraryRead,
+    Permission.MediaJobsManage,
+    Permission.ReputationReverse,
+    Permission.ReputationSettingsManage,
+    Permission.CommunityPointsReverse,
+    Permission.CommunityPointsSettingsManage,
+    Permission.LevelsSettingsManage,
+    Permission.CustomTitlesManage,
+    Permission.CustomTitlesSettingsManage,
+    Permission.AchievementsManage,
+    Permission.ContentReportsReview,
+    Permission.ModerationAnnotationsManage,
+    Permission.NewsReview,
+    Permission.NewsPublish,
+    Permission.NewsTaxonomyManage,
+    Permission.NewsSettingsManage,
+    Permission.NewsLinksManage,
+    Permission.NewsPinsManage,
   ],
 
-  OWNER: PERMISSION_LIST.map((permission) => permission.key),
+  owner: PERMISSION_LIST.map((permission) => permission.key),
 };
 
-export async function seedRolePermissions(prisma: PrismaClient) {
-  console.log('🔐 Seeding role permissions...');
+export async function seedRolePermissions(prisma: PrismaClient): Promise<void> {
+  console.log('Seeding role permissions...');
 
   for (const [roleName, permissionKeys] of Object.entries(ROLE_PERMISSIONS)) {
     const role = await prisma.role.findUnique({
@@ -77,7 +113,7 @@ export async function seedRolePermissions(prisma: PrismaClient) {
     });
 
     if (!role) {
-      console.warn(`⚠️ Role not found: ${roleName}`);
+      console.warn(`Role not found: ${roleName}`);
       continue;
     }
 
@@ -89,7 +125,7 @@ export async function seedRolePermissions(prisma: PrismaClient) {
       });
 
       if (!permission) {
-        console.warn(`⚠️ Permission not found: ${permissionKey}`);
+        console.warn(`Permission not found: ${permissionKey}`);
         continue;
       }
 
@@ -109,5 +145,5 @@ export async function seedRolePermissions(prisma: PrismaClient) {
     }
   }
 
-  console.log('✅ Role permissions seeded');
+  console.log('Role permissions seeded');
 }

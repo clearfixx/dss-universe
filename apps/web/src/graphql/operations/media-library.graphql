@@ -1,0 +1,42 @@
+query MediaLibrary($input: MediaLibraryInput) {
+  mediaLibrary(input: $input) {
+    items {
+      id
+      ownerId
+      kind
+      status
+      visibility
+      originalFilename
+      mimeType
+      extension
+      size
+      width
+      height
+      failureCode
+      createdAt
+      updatedAt
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+  mediaLibraryMetrics {
+    totalMedia
+    originalBytes
+    variantBytes
+    totalBytes
+    orphanedMedia
+    failedMedia
+    quarantinedMedia
+  }
+}
+
+mutation RetryFailedMedia($mediaId: ID!) {
+  retryFailedMedia(mediaId: $mediaId) {
+    id
+    status
+    failureCode
+    updatedAt
+  }
+}

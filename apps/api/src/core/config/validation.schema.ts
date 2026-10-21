@@ -1,4 +1,27 @@
-import * as Joi from 'joi';
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * ⚙️ Module: Configuration
+ * 📄 File: apps/api/src/core/config/validation.schema.ts
+ *
+ * 🎯 Purpose:
+ * Validates environment input before the application opens external services.
+ *
+ * 🧠 Responsibilities:
+ * • retains explicit defaults, required secrets and bounded settings;
+ * • adapts Joi's CommonJS default root without re-exporting the library.
+ *
+ * 🏗️ Architecture:
+ * Configuration-only validation adapter, not a feature policy or public business API.
+ *
+ * ⚠️ Important:
+ * Keep the Joi root as method receiver; interop changes must preserve the schema.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
+import Joi from 'joi';
 
 export const validationSchema = Joi.object({
   NODE_ENV: Joi.string()
@@ -6,24 +29,67 @@ export const validationSchema = Joi.object({
     .default('development'),
 
   PORT: Joi.number().default(3001),
+  WEB_ORIGINS: Joi.string().default('http://localhost:3000'),
 
   DATABASE_URL: Joi.string().required(),
 
   JWT_ACCESS_SECRET: Joi.string().required(),
   JWT_REFRESH_SECRET: Joi.string().required(),
+  MEDIA_SIGNING_SECRET: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string().min(32).required(),
+    otherwise: Joi.string()
+      .min(32)
+      .default('development-media-signing-secret-change-me'),
+  }),
 
   JWT_ACCESS_EXPIRES_IN: Joi.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: Joi.string().default('7d'),
+  AUTH_LOGIN_FAILURE_LIMIT: Joi.number().integer().min(3).max(20).default(5),
+  AUTH_LOGIN_LOCK_MINUTES: Joi.number().integer().min(1).max(1440).default(15),
+  AUTH_LOGIN_IP_FAILURE_LIMIT: Joi.number()
+    .integer()
+    .min(5)
+    .max(500)
+    .default(30),
+  AUTH_LOGIN_WINDOW_MINUTES: Joi.number()
+    .integer()
+    .min(1)
+    .max(1440)
+    .default(15),
+  AUTH_2FA_ENCRYPTION_KEY: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string().min(32).required(),
+    otherwise: Joi.string().min(32).default('development-2fa-key-change-this'),
+  }),
 
   REDIS_HOST: Joi.string().default('localhost'),
   REDIS_PORT: Joi.number().default(6379),
+  OUTBOX_DISPATCH_INTERVAL_MS: Joi.number().integer().min(0).default(1000),
+  MEDIA_RETENTION_DAYS: Joi.number().integer().min(1).default(30),
+  NEWS_SCHEDULER_INTERVAL_MS: Joi.number().integer().min(0).default(0),
+  MEDIA_CLEANUP_INTERVAL_MS: Joi.number()
+    .integer()
+    .min(0)
+    .default(60 * 60 * 1000),
+  LOG_LEVEL: Joi.string()
+    .valid('fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent')
+    .default('info'),
 
   OPENAI_API_KEY: Joi.string().allow('').optional(),
+  OPENAI_MODEL: Joi.string().allow('').optional(),
+  OPENAI_BASE_URL: Joi.string().uri().default('https://api.openai.com/v1'),
+  OPENAI_TIMEOUT_MS: Joi.number()
+    .integer()
+    .min(1_000)
+    .max(120_000)
+    .default(30_000),
 
   MAIL_HOST: Joi.string().allow('').optional(),
+  MAIL_FROM: Joi.string().email().allow('').optional(),
+  PASSWORD_RESET_WEB_URL: Joi.string().uri().optional(),
+  EMAIL_VERIFICATION_WEB_URL: Joi.string().uri().optional(),
   MAIL_PORT: Joi.number().optional(),
   MAIL_USER: Joi.string().allow('').optional(),
   MAIL_PASSWORD: Joi.string().allow('').optional(),
 });
-
-

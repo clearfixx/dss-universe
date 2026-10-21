@@ -1,8 +1,43 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 🔐 Module: Authentication
+ * 📄 File: roles.guard.ts
+ *
+ * 🎯 Purpose:
+ * Protects routes using legacy role-based access checks.
+ *
+ * 🧠 Responsibilities:
+ * • reads required role metadata;
+ * • compares required roles with authenticated user roles;
+ * • blocks requests without matching roles.
+ *
+ * 🏗️ Architecture:
+ * Legacy authentication guard.
+ *
+ * ⚠️ Important:
+ * Prefer PermissionsGuard for new backend authorization.
+ * Roles are useful for grouping permissions, not for final access checks.
+ *
+ * 💡 Notes:
+ * This guard stays only as a bridge.
+ * Bridges are useful, but nobody should build a city on one. 🌉
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
+
+import {
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
 import { ROLES_KEY } from '../constants/roles.constant';
-import type { AuthenticatedUser } from '../types/authenticated-user.type';
+import type { AuthenticatedRequest } from '../types/authenticated-request.type';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -18,16 +53,27 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<{
-      user?: AuthenticatedUser;
-    }>();
-
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const user = request.user;
 
     if (!user) {
-      return false;
+      throw new ForbiddenException('Authentication is required.');
     }
 
-    return requiredRoles.includes(user.role);
+    const userRoles = user.roles.map((role) => role.toLowerCase());
+
+    const normalizedRequiredRoles = requiredRoles.map((role) =>
+      role.toLowerCase(),
+    );
+
+    const hasRequiredRole = normalizedRequiredRoles.some((role) =>
+      userRoles.includes(role),
+    );
+
+    if (!hasRequiredRole) {
+      throw new ForbiddenException('Insufficient role.');
+    }
+
+    return true;
   }
 }

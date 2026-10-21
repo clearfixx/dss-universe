@@ -10,5 +10,3 @@ import { HealthService } from './services/health.service';
   providers: [HealthService],
 })
 export class HealthModule {}
-
-

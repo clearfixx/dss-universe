@@ -2,21 +2,35 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: Database Seed
+ * 🌱 Module: Database Seed
  * 📄 File: index.ts
  *
  * 🎯 Purpose:
- * Mission Control для seed-процесу.
+ * Mission Control for the database seed process.
  *
  * 🧠 Responsibilities:
- * • керує порядком виконання seed-файлів;
- * • передає один PrismaClient усім дочірнім seed'ам;
- * • тримає seed-процес передбачуваним.
+ * • controls seed execution order;
+ * • passes one PrismaClient to child seed files;
+ * • keeps database initialization predictable.
+ *
+ * 🏗️ Architecture:
+ * Database seed orchestrator.
+ *
+ * Seed entrypoint
+ *   ↓
+ * Seed mission
+ *   ↓
+ * Individual seed files
+ *   ↓
+ * PostgreSQL
  *
  * ⚠️ Important:
- * Системні дані мають створюватися до користувачів.
+ * System data must be created before users.
  *
- * 🛰️ Не міняй порядок без кави й вагомої причини.
+ * 💡 Notes:
+ * Never change seed order without coffee and a good reason. 🛰️
+ *
+ * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 

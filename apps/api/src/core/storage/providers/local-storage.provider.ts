@@ -1,0 +1,90 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Storage
+ * 📄 File: apps/api/src/core/storage/providers/local-storage.provider.ts
+ *
+ * 🎯 Purpose:
+ * Provides a local filesystem storage adapter for development and early DSS
+ * Universe media features.
+ *
+ * 🧠 Responsibilities:
+ * • validates portable storage keys before filesystem effects;
+ * • writes uploaded files to the local filesystem;
+ * • creates missing upload directories;
+ * • returns stable public URLs for stored files;
+ * • deletes previously stored local files when requested.
+ *
+ * 🏗️ Architecture:
+ * Infrastructure provider.
+ * Can be replaced later by S3, Cloudflare R2, or another storage backend.
+ *
+ * ⚠️ Important:
+ * Feature modules should depend on StorageService, not this provider directly.
+ * Containment is lexical; uploads directories must be application-controlled.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
+
+import { Injectable } from '@nestjs/common';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { dirname, resolve } from 'node:path';
+import { normalizeStorageKey, resolveStorageKey } from '@dss/storage';
+
+import type {
+  SavedFile,
+  SaveFileInput,
+  StorageProvider,
+} from '../interfaces/storage-provider.interface';
+
+@Injectable()
+export class LocalStorageProvider implements StorageProvider {
+  private readonly uploadsRoot = resolve(
+    process.env.DSS_UPLOADS_DIR ?? resolve(process.cwd(), 'uploads'),
+  );
+
+  async save(input: SaveFileInput): Promise<SavedFile> {
+    const safeDirectory = normalizeStorageKey(input.directory);
+    const safeFilename = normalizeStorageKey(input.filename);
+    const relativePath = `${safeDirectory}/${safeFilename}`;
+    const absolutePath = this.resolveWithinRoot(relativePath);
+
+    await mkdir(dirname(absolutePath), {
+      recursive: true,
+    });
+
+    await writeFile(absolutePath, input.buffer);
+
+    return {
+      path: relativePath,
+      url: `/uploads/${relativePath}`,
+    };
+  }
+
+  async delete(path: string): Promise<void> {
+    const safePath = normalizeStorageKey(path);
+    const absolutePath = this.resolveWithinRoot(safePath);
+
+    await rm(absolutePath, {
+      force: true,
+    });
+  }
+
+  async read(path: string): Promise<Buffer> {
+    const safePath = normalizeStorageKey(path);
+    return readFile(this.resolveWithinRoot(safePath));
+  }
+
+  private resolveWithinRoot(path: string): string {
+    return resolveStorageKey(this.uploadsRoot, path);
+  }
+}
+
+/**
+ * -----------------------------------------------------------------------------
+ * 🗄️ Local storage is temporary docking.
+ * The contract is what lets us move the station later.
+ * -----------------------------------------------------------------------------
+ */

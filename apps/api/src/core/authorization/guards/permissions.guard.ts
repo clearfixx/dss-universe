@@ -2,13 +2,20 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: Authorization
+ * 🛡️ Module: Authorization
  * 📄 File: permissions.guard.ts
  *
- * 🛡️ Purpose:
- * Зупиняє HTTP-запит, якщо користувач не має потрібних permission'ів.
+ * 🎯 Purpose:
+ * Blocks HTTP requests when the authenticated user lacks required permissions.
  *
- * 🔄 Flow:
+ * 🧠 Responsibilities:
+ * • reads required permissions from route metadata;
+ * • reads effective permissions from request.user;
+ * • allows or rejects the request before it reaches the controller.
+ *
+ * 🏗️ Architecture:
+ * Authorization guard.
+ *
  * Request
  *   ↓
  * JwtAuthGuard
@@ -17,12 +24,15 @@
  *   ↓
  * Controller
  *
- * ⚠️ Security:
- * Frontend може приховати кнопку.
- * Але тільки backend вирішує, чи дія дозволена.
+ * ⚠️ Important:
+ * Frontend may hide a button.
+ * Backend decides whether the action is allowed.
  *
- * 🛸 Mission:
- * Захищає DSS Universe від "та я ж адмін, чесно". 😄
+ * 💡 Notes:
+ * If this guard stopped the request,
+ * it probably prevented a very bad day. 🛡️
+ *
+ * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 
@@ -33,23 +43,18 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { GqlExecutionContext } from '@nestjs/graphql';
+
+import type { AuthenticatedRequest } from '@api/core/auth';
 
 import { PERMISSIONS_KEY } from '../decorators/require-permissions.decorator';
-import { PermissionKey } from '../enums/permission.registry';
-import { PermissionsService } from '../services/permissions.service';
-
-type UserWithRoles = {
-  roles?: string[];
-};
+import type { PermissionKey } from '../enums/permission.registry';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
-  constructor(
-    private readonly reflector: Reflector,
-    private readonly permissionsService: PermissionsService,
-  ) {}
+  constructor(private readonly reflector: Reflector) {}
 
-  async canActivate(context: ExecutionContext): Promise<boolean> {
+  canActivate(context: ExecutionContext): boolean {
     const requiredPermissions = this.reflector.getAllAndOverride<
       PermissionKey[]
     >(PERMISSIONS_KEY, [context.getHandler(), context.getClass()]);
@@ -58,16 +63,22 @@ export class PermissionsGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
-    const user = request.user as UserWithRoles | undefined;
+    const request =
+      context.getType<string>() === 'graphql'
+        ? GqlExecutionContext.create(context).getContext<{
+            req: AuthenticatedRequest;
+          }>().req
+        : context.switchToHttp().getRequest<AuthenticatedRequest>();
+    const user = request.user;
 
-    if (!user?.roles?.length) {
-      throw new ForbiddenException('User roles were not found.');
+    if (!user) {
+      throw new ForbiddenException('Authentication is required.');
     }
 
-    const hasAllPermissions = await this.permissionsService.hasAllPermissions(
-      user.roles,
-      requiredPermissions,
+    const userPermissions = new Set<string>(user.permissions);
+
+    const hasAllPermissions = requiredPermissions.every((permission) =>
+      userPermissions.has(permission),
     );
 
     if (!hasAllPermissions) {

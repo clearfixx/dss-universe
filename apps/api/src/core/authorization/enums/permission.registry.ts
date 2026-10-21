@@ -1,18 +1,40 @@
 /**
  * ===============================================================
- * 🛰️ DSS Universe Permission Registry
+ * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * Єдине джерело правди для всіх permission'ів системи.
+ * 🛡️ Module: Authorization
+ * 📄 File: permission.registry.ts
  *
- * 🧠 Архітектурна примітка:
- * Permission — це не роль.
- * Permission — це конкретна дія, яку backend дозволяє або забороняє.
+ * 🎯 Purpose:
+ * Defines the central permission registry for DSS Universe.
  *
- * 🎖️ Роль = "погон".
- * 🔑 Permission = реальний ключ від дверей.
+ * 🧠 Responsibilities:
+ * • stores all known backend permission keys;
+ * • provides labels and descriptions for seeded permissions;
+ * • exposes typed permission helpers for guards, seeds, and controllers.
  *
- * Якщо хочеться написати if (user.role === 'ADMIN') —
- * зроби чай, видихни, і додай permission. 😄
+ * 🏗️ Architecture:
+ * Authorization registry.
+ *
+ * Permission Registry
+ *   ↓
+ * Seed
+ *   ↓
+ * Database
+ *   ↓
+ * JWT effective permissions
+ *   ↓
+ * PermissionsGuard
+ *
+ * ⚠️ Important:
+ * Permission is not a role.
+ * Permission is the concrete action backend allows or denies.
+ *
+ * 💡 Notes:
+ * Role = rank.
+ * Permission = real key to the door. 🔑
+ *
+ * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 
@@ -41,6 +63,124 @@ export const PERMISSIONS = {
     key: 'users.ban',
     label: 'Ban users',
     description: 'Allows banning or restricting user accounts.',
+  },
+
+  MediaRestrictedRead: {
+    key: 'media.restricted.read',
+    label: 'Read restricted media',
+    description: 'Allows access to restricted media owned by other users.',
+  },
+  MediaQuarantineManage: {
+    key: 'media.quarantine.manage',
+    label: 'Manage media quarantine',
+    description:
+      'Allows reviewing, rescanning, and rejecting quarantined media.',
+  },
+  MediaLibraryRead: {
+    key: 'media.library.read',
+    label: 'Read Media Library',
+    description: 'Allows browsing Media Library records and storage metrics.',
+  },
+  MediaJobsManage: {
+    key: 'media.jobs.manage',
+    label: 'Manage media jobs',
+    description: 'Allows retrying failed Media processing jobs.',
+  },
+
+  ReputationReverse: {
+    key: 'reputation.reverse',
+    label: 'Reverse reputation',
+    description: 'Allows reversing direct reputation entries.',
+  },
+  ReputationSettingsManage: {
+    key: 'reputation.settings.manage',
+    label: 'Manage reputation settings',
+    description: 'Allows updating Reputation policy settings.',
+  },
+  CommunityPointsReverse: {
+    key: 'community-points.reverse',
+    label: 'Reverse Community Points',
+    description: 'Allows appending compensating Community Points reversals.',
+  },
+  CommunityPointsSettingsManage: {
+    key: 'community-points.settings.manage',
+    label: 'Manage Community Points settings',
+    description:
+      'Allows updating Community Points rules and anti-abuse limits.',
+  },
+  LevelsSettingsManage: {
+    key: 'levels.settings.manage',
+    label: 'Manage level settings',
+    description:
+      'Allows creating and updating Community Points level thresholds.',
+  },
+  CustomTitlesManage: {
+    key: 'custom-titles.manage',
+    label: 'Manage custom titles',
+    description:
+      'Allows creating, updating, granting, and revoking custom titles.',
+  },
+  CustomTitlesSettingsManage: {
+    key: 'custom-titles.settings.manage',
+    label: 'Manage custom title settings',
+    description: 'Allows updating custom title selection policy.',
+  },
+  AchievementsManage: {
+    key: 'achievements.manage',
+    label: 'Manage achievements',
+    description:
+      'Allows managing achievement definitions, rules, awards, and rollbacks.',
+  },
+
+  ContentReportsReview: {
+    key: 'content-reports.review',
+    label: 'Review content reports',
+    description: 'Allows reviewing and resolving reports about public content.',
+  },
+  ModerationAnnotationsManage: {
+    key: 'moderation-annotations.manage',
+    label: 'Manage moderation annotations',
+    description: 'Allows publishing and revoking moderation annotations.',
+  },
+  ContentGatesConfigure: {
+    key: 'content-gates.configure',
+    label: 'Configure Content Gates',
+    description: 'Allows creating reusable hidden-content access policies.',
+  },
+  AiEditorUse: {
+    key: 'ai.editor.use',
+    label: 'Use AI Editor assistance',
+    description: 'Allows requesting human-confirmed AI Editor suggestions.',
+  },
+  NewsReview: {
+    key: 'news.review',
+    label: 'Review News',
+    description: 'Allows requesting changes and approving News submissions.',
+  },
+  NewsPublish: {
+    key: 'news.publish',
+    label: 'Publish News',
+    description: 'Allows publishing an approved News revision.',
+  },
+  NewsTaxonomyManage: {
+    key: 'news.taxonomy.manage',
+    label: 'Manage News taxonomy',
+    description: 'Allows managing News categories, tags, and typed fields.',
+  },
+  NewsSettingsManage: {
+    key: 'news.settings.manage',
+    label: 'Manage News settings',
+    description: 'Allows changing News and News-comment presentation policy.',
+  },
+  NewsLinksManage: {
+    key: 'news.links.manage',
+    label: 'Manage News links',
+    description: 'Allows managing explicit SEO links between News articles.',
+  },
+  NewsPinsManage: {
+    key: 'news.pins.manage',
+    label: 'Manage pinned News',
+    description: 'Allows pinning published News globally or within a category.',
   },
 
   RolesRead: {

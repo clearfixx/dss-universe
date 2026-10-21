@@ -2,7 +2,10 @@
 
 ## Status
 
-Approved
+Historical; superseded by [ADR-003](003-subject-and-access-ownership.md).
+
+The original role-only implementation below is historical evidence, not current
+permission/capability policy. IAM owns assignments; Authorization owns decisions.
 
 ## Context
 
