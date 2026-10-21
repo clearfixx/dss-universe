@@ -15,10 +15,11 @@
  *
  * 🏗️ Architecture:
  * Test-only protocol prototype in a fully migrated, owned disposable schema.
- * Cleanup and Audit use actual adapters; assignment is deliberately a SQL prototype.
+ * Cleanup/guard/Audit use actual adapters; remaining assignment writes are a SQL prototype.
  *
  * ⚠️ Important:
- * No production provider is changed or substituted. These are not HTTP correction tests.
+ * A pass-through observer records real underlying cleanup errors without changing results.
+ * These are not HTTP correction tests; public behavior has separate regressions.
  * No Storage IO, global locks, schema migration or transaction timeout change.
  *
  * 🚀 Build. Share. Grow.
@@ -26,10 +27,14 @@
  */
 import { randomUUID } from 'node:crypto';
 import { Pool } from 'pg';
-import { Prisma } from '@prisma/client';
+import { MediaStatus, Prisma } from '@prisma/client';
 import type { TransactionClient } from '@api/core/database';
 import { AuditWriterService } from '@api/core/audit';
 import { AuditRedactionService } from '@api/core/audit/services/audit-redaction.service';
+import {
+  guardReadyPublicProfileMediaForAssignment,
+  PrismaMediaLibraryOperations,
+} from '@api/modules/media/infrastructure';
 import { PrismaProfileAwareMediaLibrary } from '../src/composition/media-library/infrastructure/prisma-profile-aware-media-library';
 import { createIsolatedApiSchemaFixture } from './helpers/migrated-api-schema.fixture';
 
@@ -98,7 +103,7 @@ describe('DEBT072 SQL protocol design evidence (not runtime acceptance)', () => 
   }
   type Fixture = Awaited<ReturnType<typeof seed>>;
 
-  // Prototype only: the future Media-owned adapter must implement and test its own entry.
+  // The lock-only branch is an intentionally weaker negative control, never production assignment.
   async function guard(
     tx: TransactionClient,
     item: Fixture,
@@ -111,12 +116,12 @@ describe('DEBT072 SQL protocol design evidence (not runtime acceptance)', () => 
           AND status='READY' AND visibility='PUBLIC'
         FOR UPDATE
       `);
-    return tx.$queryRaw<{ id: string }[]>(Prisma.sql`
-      UPDATE media SET status=status
-      WHERE id=${item.media.id} AND "ownerId"=${item.user.id}
-        AND status='READY' AND visibility='PUBLIC'
-      RETURNING id
-    `);
+    const allowed = await guardReadyPublicProfileMediaForAssignment(
+      tx,
+      item.media.id,
+      item.user.id,
+    );
+    return allowed ? [{ id: item.media.id }] : [];
   }
   async function writeBinding(
     tx: TransactionClient,
@@ -196,6 +201,30 @@ describe('DEBT072 SQL protocol design evidence (not runtime acceptance)', () => 
     const guarded = deferred<number>();
     const resume = deferred<void>();
     const rollbackError = new Error('synthetic assignment rollback');
+    const conflicts: unknown[] = [];
+    const observe = jest.spyOn(
+      PrismaMediaLibraryOperations.prototype,
+      'claimCleanupCandidates',
+    );
+    const actualClaim = observe.getMockImplementation();
+    if (!actualClaim)
+      throw new Error('Missing actual owner claim implementation.');
+    observe.mockImplementation(async function (
+      this: PrismaMediaLibraryOperations,
+      ...args: Parameters<
+        PrismaMediaLibraryOperations['claimCleanupCandidates']
+      >
+    ) {
+      try {
+        const boundClaim = actualClaim.bind(
+          this,
+        ) as PrismaMediaLibraryOperations['claimCleanupCandidates'];
+        return await boundClaim(...args);
+      } catch (error) {
+        conflicts.push(error);
+        throw error;
+      }
+    });
     const assignment = fixture.prisma.$transaction(async (tx) => {
       expect(await guard(tx, item, protocol)).toEqual([{ id: item.media.id }]);
       const [connection] = await tx.$queryRaw<
@@ -231,11 +260,13 @@ describe('DEBT072 SQL protocol design evidence (not runtime acceptance)', () => 
         assignment: await assignmentOutcome,
         cleanup: await cleanupOutcome,
         rollbackError,
+        conflicts,
       };
     } finally {
       resume.resolve();
       await assignmentOutcome;
       await cleanup?.catch(() => undefined);
+      observe.mockRestore();
     }
   }
 
@@ -260,15 +291,15 @@ describe('DEBT072 SQL protocol design evidence (not runtime acceptance)', () => 
     },
   );
   it.each(['AVATAR', 'COVER'] as const)(
-    'makes stale cleanup abort when the conditional %s write guard commits',
+    'defers stale cleanup after the conditional %s write guard commits',
     async (slot) => {
       const item = await seed();
       const result = await compete(item, slot, 'WRITE_VERSION');
       expect(result.assignment.ok).toBe(true);
-      expect(result.cleanup.ok).toBe(false);
-      if (result.cleanup.ok) throw new Error('Cleanup unexpectedly committed');
-      expect(result.cleanup.error).toMatchObject({ code: 'P2034' });
-      expect(result.cleanup.error).toBeInstanceOf(
+      expect(result.cleanup).toEqual({ ok: true, claims: [] });
+      expect(result.conflicts).toHaveLength(1);
+      expect(result.conflicts[0]).toMatchObject({ code: 'P2034' });
+      expect(result.conflicts[0]).toBeInstanceOf(
         Prisma.PrismaClientKnownRequestError,
       );
       expect(await state(item, slot)).toMatchObject({
@@ -297,10 +328,10 @@ describe('DEBT072 SQL protocol design evidence (not runtime acceptance)', () => 
       const item = await seed();
       const result = await compete(item, slot, 'WRITE_VERSION');
       expect(result.assignment.ok).toBe(true);
-      expect(result.cleanup.ok).toBe(false);
-      if (result.cleanup.ok) throw new Error('Cleanup unexpectedly committed');
-      expect(result.cleanup.error).toMatchObject({ code: 'P2034' });
-      expect(result.cleanup.error).toBeInstanceOf(
+      expect(result.cleanup).toEqual({ ok: true, claims: [] });
+      expect(result.conflicts).toHaveLength(1);
+      expect(result.conflicts[0]).toMatchObject({ code: 'P2034' });
+      expect(result.conflicts[0]).toBeInstanceOf(
         Prisma.PrismaClientKnownRequestError,
       );
       expect(await state(unrelated, slot)).toMatchObject({
@@ -362,4 +393,69 @@ describe('DEBT072 SQL protocol design evidence (not runtime acceptance)', () => 
       });
     },
   );
+  it.each(Object.values(MediaStatus).filter((status) => status !== 'READY'))(
+    'rejects %s Media without writing business fields',
+    async (status) => {
+      const item = await seed();
+      const before = await fixture.prisma.media.update({
+        where: { id: item.media.id },
+        data: { status },
+      });
+      await fixture.prisma.$transaction(async (tx) => {
+        expect(
+          await guardReadyPublicProfileMediaForAssignment(
+            tx,
+            item.media.id,
+            item.user.id,
+          ),
+        ).toBe(false);
+      });
+      expect(
+        await fixture.prisma.media.findUniqueOrThrow({
+          where: { id: item.media.id },
+        }),
+      ).toEqual(before);
+    },
+  );
+  it('rejects PRIVATE, foreign-owner and missing IDs without modifying Media', async () => {
+    const own = await seed();
+    const foreign = await seed();
+    const before = await fixture.prisma.media.update({
+      where: { id: own.media.id },
+      data: { visibility: 'PRIVATE' },
+    });
+    await fixture.prisma.$transaction(async (tx) => {
+      expect(
+        await guardReadyPublicProfileMediaForAssignment(
+          tx,
+          own.media.id,
+          own.user.id,
+        ),
+      ).toBe(false);
+      expect(
+        await guardReadyPublicProfileMediaForAssignment(
+          tx,
+          foreign.media.id,
+          own.user.id,
+        ),
+      ).toBe(false);
+      expect(
+        await guardReadyPublicProfileMediaForAssignment(
+          tx,
+          randomUUID(),
+          own.user.id,
+        ),
+      ).toBe(false);
+    });
+    expect(
+      await fixture.prisma.media.findUniqueOrThrow({
+        where: { id: own.media.id },
+      }),
+    ).toEqual(before);
+    expect(
+      await fixture.prisma.media.findUniqueOrThrow({
+        where: { id: foreign.media.id },
+      }),
+    ).toEqual(foreign.media);
+  });
 });

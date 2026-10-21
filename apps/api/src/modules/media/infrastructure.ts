@@ -12,3 +12,4 @@
  * ===============================================================
  */
 export { PrismaMediaLibraryOperations } from './infrastructure/repositories/prisma-media-library.operations';
+export { guardReadyPublicProfileMediaForAssignment } from './infrastructure/repositories/prisma-profile-media-write.guard';

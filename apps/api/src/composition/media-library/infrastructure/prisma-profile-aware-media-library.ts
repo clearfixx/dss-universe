@@ -12,6 +12,7 @@
  * • supplies the profile predicate without loading profile records;
  * • preserves ordinary browse and independent metrics reads;
  * • scopes cleanup claims and Audit to the existing Serializable transaction.
+ * • defers the entire rolled-back batch only for known Prisma P2034 conflicts.
  *
  * 🏗️ Architecture:
  * Root infrastructure adapter implementing a repository-neutral Media port.
@@ -23,6 +24,7 @@
  * ===============================================================
  */
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '@api/core/database';
 import { AuditWriterService } from '@api/core/audit';
 import type { MediaLibraryPersistence } from '@api/modules/media';
@@ -53,16 +55,27 @@ export class PrismaProfileAwareMediaLibrary implements MediaLibraryPersistence {
       unusedProfileAssetWhere(),
     );
   }
-  claimCleanupCandidates(olderThan: Date, limit: number) {
-    return this.prisma.$transaction(
-      (transaction) =>
-        this.operations.claimCleanupCandidates(
-          transaction,
-          olderThan,
-          limit,
-          unusedProfileAssetWhere(),
-        ),
-      { isolationLevel: 'Serializable' },
-    );
+  async claimCleanupCandidates(olderThan: Date, limit: number) {
+    try {
+      return await this.prisma.$transaction(
+        (transaction) =>
+          this.operations.claimCleanupCandidates(
+            transaction,
+            olderThan,
+            limit,
+            unusedProfileAssetWhere(),
+          ),
+        { isolationLevel: 'Serializable' },
+      );
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2034'
+      ) {
+        // No keys survive rollback. The next normal invocation gets a fresh snapshot.
+        return [];
+      }
+      throw error;
+    }
   }
 }

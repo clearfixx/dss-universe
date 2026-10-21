@@ -26,6 +26,13 @@ Scheduling this audit does not approve its unresolved target decisions or
 authorize technology replacements. The existing debt-closure sequence continues
 first; the stack audit uses the resulting accepted baseline.
 
+Owner checkpoint (2026-10-21): continue the already approved work only through
+D4, then stop and report its actual completion/remaining acceptance blockers.
+Do not start D5, D6, D7, the stack audit or Phase11 without a new owner command.
+Their schedule below remains a future plan, not current execution authority.
+Known red checks are not waived, and unfinished D4 must not be labelled complete
+merely to reach this checkpoint.
+
 ## Operating rules
 
 1. Each package uses its own branch, review and PR.

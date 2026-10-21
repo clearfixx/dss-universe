@@ -4,6 +4,11 @@ Date: 2026-10-21. Base: `5372db30672d826196e12938be2bc2fcc259c1ec` / draft PR69.
 Branch: `debt/debt072-profile-cleanup-design`. Approved design plus test-only protocol
 evidence; production correction is not implemented in this packet.
 
+Runtime follow-up at406b874: the separate approved correction is now locally
+implemented; see [current implementation evidence](DEBT_072_PROFILE_CLEANUP_IMPLEMENTATION.md).
+The design/probe outcomes below describe their original named base, not the
+current corrected production path. CI/release acceptance remains separate.
+
 The owner approved a separate pre-11 design/correction package and explicitly
 approved the exact conditional-write / P2034 whole-batch defer design below
 on2026-10-21, including the physical-write cost and contention-related delay.

@@ -269,6 +269,14 @@ remain red; draft publication is evidence, not acceptance or permission to merge
 
 ## Remaining evidence work
 
+Follow-up at406b874: [DEBT072 runtime correction](../development/DEBT_072_PROFILE_CLEANUP_IMPLEMENTATION.md)
+locally applies the separately approved Media write guard/P2034 whole-batch defer.
+Actual expanded39-case DB/HTTP regressions and API1225 pass; full E2E576/578
+retains News/Leaderboards fixture failures. Full gate and review acceptance
+remain separate. This closes neither overall D4 evidence work nor inherited reds.
+Owner checkpoint2026-10-21: stop after actual D4 completion/report; later D5–D7,
+stack audit and Phase11 require a new command, not automatic continuation.
+
 Follow-up at47cd877: [root SQL / owner composition audit](D4_ROOT_OWNER_SQL_RECONCILIATION.md)
 reads all18 current SQL-bearing root composition files, distinguishes approved
 explicit root algorithms from guarded owner-fragment reuse, and characterizes

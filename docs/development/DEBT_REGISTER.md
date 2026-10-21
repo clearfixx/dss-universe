@@ -67,6 +67,25 @@ dependency audit2 high/12 moderate, GraphQL DEBT044 and CI/review remain open.
 No runtime, API, schema or timeout change; the production race remains until the
 separate approved implementation package is delivered and verified.
 
+Runtime follow-up at406b874 on `debt/debt072-profile-cleanup-atomicity`:
+Media-owned conditional write guard and known-P2034 whole-batch defer are locally
+implemented with unchanged API/schema/isolation/timeouts/metadata. Red-before
+unit6/7 and HTTP4/6 become unit19/19 and expanded actual DB/HTTP39/39, including
+cleanup-first waits, actual Audit rollback and retention zero-delete/fresh progress.
+Underlying P2034 remains observed, not mocked away; only physical Storage delete
+is stubbed for safe IO observation. Read-only dev integrity check finds0 profile
+joins to DELETING/DELETED; no data repair. Final API with explicit in-band coverage
+passes1225/1225; an intervening unchanged Auth test/hook5000ms timeout and later
+isolated14/14 are preserved, cause unproven. Full fresh E2E576/578, zero skips:
+all39 target cases pass; existing News null/zero and Leaderboards shared-fixture
+tie fail (DEBT045/069). Read-only current fixture evidence confirms the earlier
+ACTIVE points-user and leader-oldest both have10 monthly points. Exact completed
+Jest-only cleanup follows complete JSON and zero other clients/owned schemas;
+shell exits1, not a normal green gate. Lint/types/Prisma/build/architecture140
+and adjacent tests pass. Format41, audit2 high/12 moderate, DEBT044 consistency
+and CI/review acceptance remain red/pending; debt is not closed. See
+[runtime evidence](DEBT_072_PROFILE_CLEANUP_IMPLEMENTATION.md).
+
 ### DEBT-071 — Guest shared engagement bypasses MEMBERS News eligibility (Medium, ACCEPTED, separate pre-11 design/correction package)
 
 Date: 2026-10-20. Base6eaf383. Actual AppModule GraphQL, real publication

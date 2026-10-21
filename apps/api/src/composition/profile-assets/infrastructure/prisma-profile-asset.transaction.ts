@@ -9,7 +9,7 @@
  * Commits Media references, Users profile fields and audit as one explicit unit of work.
  *
  * 🧠 Responsibilities:
- * • rechecks current Media ownership/availability inside the transaction;
+ * • obtains the owned Media write guard inside the current transaction;
  * • coordinates reference retirement and profile field writes atomically;
  * • commits attributable audit beside the mutation.
  *
@@ -18,6 +18,7 @@
  *
  * ⚠️ Important:
  * Only closed avatar/cover slots are supported. No application port exposes Prisma.
+ * The physical guard write coordinates cleanup without changing Media metadata.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -29,6 +30,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '@api/core/database';
 import { AuditWriterService } from '@api/core/audit';
+import { guardReadyPublicProfileMediaForAssignment } from '@api/modules/media/infrastructure';
 import type {
   ProfileAssetTransaction,
   ProfileAssetAssignment,
@@ -48,16 +50,12 @@ export class PrismaProfileAssetTransaction implements ProfileAssetTransaction {
   async assign(input: ProfileAssetAssignment): Promise<void> {
     const purpose = this.purpose(input.slot);
     await this.prisma.$transaction(async (tx) => {
-      const media = await tx.media.findUnique({
-        where: { id: input.mediaId },
-        select: { ownerId: true, status: true, visibility: true },
-      });
-      if (
-        !media ||
-        media.ownerId !== input.subjectId ||
-        media.status !== 'READY' ||
-        media.visibility !== 'PUBLIC'
-      ) {
+      const eligible = await guardReadyPublicProfileMediaForAssignment(
+        tx,
+        input.mediaId,
+        input.subjectId,
+      );
+      if (!eligible) {
         throw new ConflictException(
           `${purpose === 'avatar' ? 'Avatar' : 'Cover'} media changed before it could be assigned.`,
         );

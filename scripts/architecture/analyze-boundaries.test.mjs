@@ -960,7 +960,13 @@ test("Leaderboard root assembly neither copies owner table algorithms nor introd
 
 test("owners publish only the intended guarded technical symbols", () => {
   for (const [moduleName, expected] of [
-    ["media", ["PrismaMediaLibraryOperations"]],
+    [
+      "media",
+      [
+        "PrismaMediaLibraryOperations",
+        "guardReadyPublicProfileMediaForAssignment",
+      ],
+    ],
     [
       "reputation",
       [
@@ -1078,6 +1084,7 @@ test("owners publish only the intended guarded technical symbols", () => {
 test("Media library technical entries reject business and foreign feature consumers", () => {
   for (const [owner, symbol] of [
     ["media", "PrismaMediaLibraryOperations"],
+    ["media", "guardReadyPublicProfileMediaForAssignment"],
     ["users", "unusedProfileAssetWhere"],
   ]) {
     for (const consumer of [
