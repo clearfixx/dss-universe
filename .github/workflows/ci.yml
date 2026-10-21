@@ -97,7 +97,7 @@ jobs:
 
       - name: Upload coverage
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage
           path: |
@@ -107,7 +107,7 @@ jobs:
 
       - name: Upload API E2E report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: api-e2e-report
           path: apps/api/test-results/api-e2e.json
