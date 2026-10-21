@@ -42,10 +42,30 @@ passing vulnerable-state assertions are not correction acceptance.
 
 Owner approved a separate pre-11 package on2026-10-21: design shared
 synchronization first, then atomic protection and deterministic DB/HTTP
-regressions preserving API and Audit. Exact lock/protocol/isolation design is
-not yet approved; no runtime correction is included in this audit. Existing
+regressions preserving API and Audit. At that audit snapshot the exact protocol
+was not yet approved; the audit included no runtime correction. Existing
 News draft attachment semantics must not be silently tightened. See
 [root SQL audit and reproduction](../audits/D4_ROOT_OWNER_SQL_RECONCILIATION.md).
+
+Separate design follow-up at5372db3: [DEBT072 protocol design](DEBT_072_PROFILE_CLEANUP_DESIGN.md)
+compares lock-only versus a Media-owned conditional physical write that preserves
+business fields/updatedAt. Real migrated SQL prototype against the current root
+cleanup observes stale Serializable cleanup P2034; proposed known-conflict
+handling rolls back/defer the whole batch to the next normal invocation, without
+IO, new retries/isolation/timeouts or API changes. Assignment in this probe is
+test-only, not a production provider or HTTP correction. On2026-10-21 the owner
+explicitly approved this exact conditional write/P2034 defer design, including
+physical write cost and contention-related cleanup delay. Focused24/24 pass;
+runtime implementation remains a separate package. This does not close the debt
+or waive inherited gates.
+
+Design/probe final local evidence: API1206/1206, focused24/24 and full E2E562/563,
+zero skipped, with protocol10/10 and original HTTP audit6/6 passing. Only inherited
+DEBT045 fails; known retained Jest handles require verified PID-only cleanup.
+Lint/types/Prisma/build/architecture140 and adjacent tests pass. Format41,
+dependency audit2 high/12 moderate, GraphQL DEBT044 and CI/review remain open.
+No runtime, API, schema or timeout change; the production race remains until the
+separate approved implementation package is delivered and verified.
 
 ### DEBT-071 — Guest shared engagement bypasses MEMBERS News eligibility (Medium, ACCEPTED, separate pre-11 design/correction package)
 
