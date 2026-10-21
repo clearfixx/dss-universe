@@ -5,6 +5,11 @@ Scope: all fourteen non-test `apps/worker/src/*.ts` files, shared jobs contracts
 Auth queue producer allowlists and Core Outbox/queue plumbing. Source review,
 not a live SMTP/ClamAV/Redis delivery certification or full API SQL acceptance.
 
+Current bounded follow-up at194e73b: [Core/Worker delivery evidence](D4_CORE_WORKER_DELIVERY_RECONCILIATION.md)
+uses actual current stores/projector and migrated PostgreSQL for marker-gap
+replay. It does not refresh every historical row/source fingerprint below or
+claim live queue/mail/scan delivery; DEBT061 identity policy stays separate.
+
 Sorted basename + newline + UTF-8 source + newline SHA-256:
 `9fae89854b49ed2014aa2ece42a7fd59d07f7a7410cf43e5b0a46503a2a10662`.
 Worker source unchanged since `e57c683`; no runtime correction in this review.

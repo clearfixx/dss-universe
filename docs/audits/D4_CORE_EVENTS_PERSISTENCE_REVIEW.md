@@ -3,6 +3,11 @@
 Date: 2026-10-19. Baseline `8f208f0` / draft PR #40, unaccepted.
 Branch `debt/d4-core-event-persistence-review`. No runtime changes.
 
+Current follow-up at194e73b: [Core/Worker reconciliation](D4_CORE_WORKER_DELIVERY_RECONCILIATION.md)
+distinguishes the implemented DEBT065 claim fencing/named Events exports from
+the historical vulnerable state below, and adds real Worker marker-gap/replay
+evidence. This report's original base/limitations are not silently replaced.
+
 Complete reads: OutboxWriter, envelope factory/types/JSON contract, Events module
 and index, AuditWriter/Redaction/entry contract/module/index, dispatcher, runner,
 QueueRegistry/QueueOperations/Queue module, initial Outbox/Audit migrations,

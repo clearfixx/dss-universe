@@ -15,6 +15,12 @@ This reconciles this operation only, not the full Auth/Users/IAM inventory.
 
 ## Discovery boundary
 
+Current selected-route follow-up at194e73b:
+[Core/Worker delivery reconciliation](D4_CORE_WORKER_DELIVERY_RECONCILIATION.md)
+distinguishes approved current claim fencing from historical DEBT065 and adds
+real PostgreSQL projection/marker-gap replay evidence. It does not reclassify
+the historical candidate table below as exhaustive current-family acceptance.
+
 IAM follow-up at parent `e38c5bf`: all fourteen current repository/fragment sources,
 their five application/safety callers, guard/controller paths and root adapters
 are reconciled in [the operation report](D4_IAM_OPERATION_RECONCILIATION.md).

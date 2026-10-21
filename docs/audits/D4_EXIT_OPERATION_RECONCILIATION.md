@@ -269,6 +269,12 @@ remain red; draft publication is evidence, not acceptance or permission to merge
 
 ## Remaining evidence work
 
+Follow-up at194e73b: [current Core/Worker delivery reconciliation](D4_CORE_WORKER_DELIVERY_RECONCILIATION.md)
+reconciles selected current routing/claim/idempotency/retention boundaries and
+adds eight actual migrated persistence bridge tests. Marker-gap replay and
+ordered retraction are now DB evidence, not mock-SQL assertions. Full quality,
+all-source/lifecycle/family disposition and acceptance remain separate.
+
 Follow-up at406b874: [DEBT072 runtime correction](../development/DEBT_072_PROFILE_CLEANUP_IMPLEMENTATION.md)
 locally applies the separately approved Media write guard/P2034 whole-batch defer.
 Actual expanded39-case DB/HTTP regressions and API1225 pass; full E2E576/578
