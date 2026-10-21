@@ -20,6 +20,7 @@ import type { App } from 'supertest/types';
 
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/core/database';
+import { createIsolatedApiSchemaFixture } from './helpers/migrated-api-schema.fixture';
 
 type RegisteredUser = {
   id: string;
@@ -48,13 +49,18 @@ type LeaderboardResponse = {
 };
 
 describe('Leaderboards foundation (e2e)', () => {
+  let fixture: Awaited<ReturnType<typeof createIsolatedApiSchemaFixture>>;
   let app: INestApplication<App>;
   let prisma: PrismaService;
 
   beforeAll(async () => {
+    fixture = await createIsolatedApiSchemaFixture();
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(PrismaService)
+      .useValue(fixture.prisma)
+      .compile();
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('api');
     app.useGlobalPipes(
@@ -69,7 +75,11 @@ describe('Leaderboards foundation (e2e)', () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    try {
+      await app?.close();
+    } finally {
+      await fixture?.close();
+    }
   });
 
   it('projects explainable period rankings from the Community Points ledger', async () => {

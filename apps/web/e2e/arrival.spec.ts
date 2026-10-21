@@ -22,7 +22,7 @@ test("resizing during construction completes the scene without hiding controls",
   );
   await page.keyboard.press("Escape");
   await expect(
-    page.getByRole("link", { name: "Enter Station" }).first(),
+    page.getByRole("link", { name: "Sign in" }).first(),
   ).toBeVisible();
 });
 
@@ -92,7 +92,7 @@ test("the guest page remains usable without JavaScript", async ({
     page.getByRole("button", { name: "Search demo" }),
   ).not.toBeVisible();
   await expect(
-    page.getByRole("link", { name: "Enter Station" }).first(),
+    page.getByRole("link", { name: "Sign in" }).first(),
   ).toBeVisible();
   await context.close();
 });

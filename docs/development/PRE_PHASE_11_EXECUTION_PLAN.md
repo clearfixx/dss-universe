@@ -42,6 +42,12 @@ command is required to resume. The broader goal is not marked achieved.
 
 ## Operating rules
 
+Owner resumption (2026-10-21): the earlier D4 stop is superseded by explicit
+authorization for narrow D6 CI stabilization, then integration of all verified
+development branches into main for owner testing, followed by the remaining
+plan. D5 now covers file responsibilities only; Passport work is deferred.
+Red checks must be resolved or explicitly dispositioned by the owner, not hidden.
+
 1. Each package uses its own branch, review and PR.
 2. A package branch starts from the latest accepted baseline, not from an
    unrelated feature branch.
@@ -82,7 +88,7 @@ debt/d2-architecture-contracts
 debt/d3-auth-identity-boundary
 debt/d3-5-iam-access-groups (reserved; separate scope approval required)
 debt/d4-module-boundaries
-debt/d5-file-passports
+debt/d5-file-responsibilities
 debt/d6-quality-baseline
 debt/d7-release-gate
 phase/11-knowledge-forge-brainstorm
@@ -136,7 +142,7 @@ D0 Environment ───────────────┐
                          D4 Module boundaries
                                       |
                                       v
-                         D5 File Passports
+                         D5 File responsibilities
                                       |
                                       v
                          D6 Full quality baseline
@@ -454,24 +460,23 @@ cycle-free; integration behavior and event idempotency remain tested.
 
 Model: `gpt-6.1-sol` high/xhigh.
 
-### D5 — File Passport migration and responsibility audit
+### D5 — File responsibility audit
 
-Branch: `debt/d5-file-passports`.
+Branch: `debt/d5-file-responsibilities`.
 
 Scope:
 
-- approve generated/configuration/Prisma inclusion rules;
-- protect generated files;
-- enforce Passports for changed/new authored files;
-- migrate backend modules in reviewable batches;
-- coordinate Web files without altering UI/UX;
+- review actual file responsibilities against existing ownership boundaries;
 - split only files whose unrelated responsibilities are confirmed.
 
-Exit gate: reproducible checker, truthful paths/purpose/responsibilities, and no
-manual modifications to generated output.
+Owner decision (2026-10-21): all File Passport migration, classification and
+checker work is excluded from D5 and deferred to a future GPT-5.6 task. Existing
+standards still apply to normal development; no bulk Passport cleanup is authorized.
+Execute the narrow D6 CI stabilization first, integrate verified branches into
+main, then resume this responsibility audit and the remaining plan.
 
-Model: `gpt-6.1-sol` high for semantic review; `gpt-6-luna` medium for approved
-mechanical migration.
+Exit gate: evidence-backed responsibility findings and reviewed corrections,
+without speculative splitting or frontend redesign.
 
 ### D6 — Full quality baseline
 

@@ -5,8 +5,11 @@ test("guest foundation page renders", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: /Explore/ })).toBeVisible();
   await expect(
-    page.getByRole("link", { name: "Enter Station" }).first(),
+    page.getByRole("link", { name: "Sign in" }).first(),
   ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Sign in" }).first(),
+  ).toHaveAttribute("href", "/login");
 });
 
 test("authenticated application shell renders", async ({ page }) => {

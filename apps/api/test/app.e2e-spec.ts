@@ -1208,7 +1208,7 @@ describe('DSS API (e2e)', () => {
     expect(body.errors).toBeDefined();
   });
 
-  it('registers and resolves the authenticated viewer through GraphQL', async () => {
+  async function registeredViewerWorkflow() {
     const suffix = String(Date.now()) + Math.random().toString(16).slice(2);
     const username = 'astronaut-' + suffix;
     const email = username + '@dss.test';
@@ -3793,7 +3793,14 @@ describe('DSS API (e2e)', () => {
         .map((job) => job.remove()),
     );
     await queuedJob?.remove();
-  });
+  }
+
+  // This full-stack workflow performs 87 sequential HTTP requests, not one latency probe.
+  it(
+    'registers and verifies the authenticated feature workflow',
+    registeredViewerWorkflow,
+    30_000,
+  );
 
   it('purges only claimed unreferenced media after retention', async () => {
     const storage = app.get(StorageService);

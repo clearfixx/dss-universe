@@ -16,6 +16,7 @@ jobs:
   quality:
     name: Lint, types, schema, tests, build
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:17-alpine
@@ -84,7 +85,9 @@ jobs:
         run: pnpm test:cov
 
       - name: API end-to-end tests
-        run: pnpm --filter @dss/api test:e2e
+        run: |
+          mkdir -p apps/api/test-results
+          pnpm --filter @dss/api test:e2e --json --outputFile=test-results/api-e2e.json
 
       - name: Validate generated GraphQL operations
         run: pnpm graphql:check
@@ -100,6 +103,14 @@ jobs:
           path: |
             apps/api/coverage
             apps/web/coverage
+          if-no-files-found: ignore
+
+      - name: Upload API E2E report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-e2e-report
+          path: apps/api/test-results/api-e2e.json
           if-no-files-found: ignore
 
   web-e2e:
@@ -127,7 +138,7 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm audit --audit-level high
+      - run: pnpm test:security-policy && pnpm security:check
       - name: Verify local dependency patches
         if: always()
         run: pnpm test:dependency-patches

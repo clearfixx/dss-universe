@@ -36,9 +36,11 @@ import { NewsLinksService } from './../src/modules/news/application/services/new
 import { NewsService } from './../src/modules/news/application/services/news.service';
 import { NewsSettingsService } from './../src/modules/news/application/services/news-settings.service';
 import { NewsTaxonomyService } from './../src/modules/news/application/services/news-taxonomy.service';
+import { createIsolatedApiSchemaFixture } from './helpers/migrated-api-schema.fixture';
 import { NewsWorkflowService } from './../src/modules/news/application/services/news-workflow.service';
 
 describe('News domain foundation (e2e)', () => {
+  let fixture: Awaited<ReturnType<typeof createIsolatedApiSchemaFixture>>;
   let app: INestApplication<App>;
   let prisma: PrismaService;
   let news: NewsService;
@@ -55,9 +57,13 @@ describe('News domain foundation (e2e)', () => {
   const commentTargetIds: string[] = [];
 
   beforeAll(async () => {
+    fixture = await createIsolatedApiSchemaFixture();
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(PrismaService)
+      .useValue(fixture.prisma)
+      .compile();
     app = moduleFixture.createNestApplication();
     await app.init();
     prisma = app.get(PrismaService);
@@ -71,115 +77,11 @@ describe('News domain foundation (e2e)', () => {
   });
 
   afterAll(async () => {
-    if (prisma) {
-      const articles = await prisma.newsArticle.findMany({
-        where: { id: { in: articleIds } },
-        select: { interactionTargetId: true },
-      });
-      const targetIds = articles.map(
-        ({ interactionTargetId }) => interactionTargetId,
-      );
-      await prisma.comment.deleteMany({
-        where: { interactionTargetId: { in: targetIds } },
-      });
-      await prisma.reactionAggregate.deleteMany({
-        where: { interactionTargetId: { in: commentTargetIds } },
-      });
-      await prisma.reaction.deleteMany({
-        where: { interactionTargetId: { in: commentTargetIds } },
-      });
-      await prisma.interactionTarget.deleteMany({
-        where: { id: { in: commentTargetIds } },
-      });
-      await prisma.bookmark.deleteMany({
-        where: { interactionTargetId: { in: targetIds } },
-      });
-      await prisma.reaction.deleteMany({
-        where: { interactionTargetId: { in: targetIds } },
-      });
-      await prisma.reactionAggregate.deleteMany({
-        where: { interactionTargetId: { in: targetIds } },
-      });
-      await prisma.newsRevision.deleteMany({
-        where: { articleId: { in: articleIds } },
-      });
-      await prisma.newsEditorialDecision.deleteMany({
-        where: { articleId: { in: articleIds } },
-      });
-      await prisma.newsInternalLink.deleteMany({
-        where: { id: { in: linkIds } },
-      });
-      await prisma.newsArticle.deleteMany({
-        where: { id: { in: articleIds } },
-      });
-      await prisma.interactionTarget.updateMany({
-        where: { id: { in: targetIds } },
-        data: { status: 'RETIRED' },
-      });
-      await prisma.auditRecord.deleteMany({
-        where: {
-          OR: [
-            { targetType: 'NewsArticle', targetId: { in: articleIds } },
-            { targetType: 'InteractionTarget', targetId: { in: targetIds } },
-          ],
-        },
-      });
-      await prisma.outboxEvent.deleteMany({
-        where: {
-          OR: [
-            { producer: 'dss.api.news', aggregateId: { in: articleIds } },
-            {
-              producer: 'dss.api.interactions',
-              aggregateId: { in: targetIds },
-            },
-          ],
-        },
-      });
-      await prisma.auditRecord.deleteMany({
-        where: {
-          OR: [
-            { targetType: 'NewsInternalLink', targetId: { in: linkIds } },
-            { targetType: 'NewsSettings', targetId: 'default' },
-          ],
-        },
-      });
-      await prisma.outboxEvent.deleteMany({
-        where: {
-          producer: 'dss.api.news',
-          OR: [
-            { aggregateType: 'NewsInternalLink', aggregateId: { in: linkIds } },
-            { aggregateType: 'NewsSettings', aggregateId: 'default' },
-          ],
-        },
-      });
-      await prisma.newsSettings.update({
-        where: { id: 'default' },
-        data: {
-          newsPaginationMode: 'BOTH',
-          newsPaginationThreshold: 12,
-          newsPageSize: 12,
-          commentsPaginationMode: 'BOTH',
-          commentsPaginationThreshold: 20,
-          commentsPageSize: 20,
-          updatedById: null,
-        },
-      });
-      await prisma.newsFieldDefinition.deleteMany({
-        where: { id: { in: taxonomyIds } },
-      });
-      await prisma.newsCategory.deleteMany({
-        where: { id: { in: taxonomyIds } },
-      });
-      await prisma.newsTag.deleteMany({ where: { id: { in: taxonomyIds } } });
-      await prisma.auditRecord.deleteMany({
-        where: { targetId: { in: taxonomyIds } },
-      });
-      await prisma.outboxEvent.deleteMany({
-        where: { producer: 'dss.api.news', aggregateId: { in: taxonomyIds } },
-      });
-      await prisma.user.deleteMany({ where: { id: { in: userIds } } });
+    try {
+      await app?.close();
+    } finally {
+      await fixture?.close();
     }
-    if (app) await app.close();
   });
 
   it('creates one draft, revision, interaction identity and evidence atomically', async () => {
@@ -503,7 +405,7 @@ describe('News domain foundation (e2e)', () => {
           id: article.id,
           displayPublishedAt,
           engagement: {
-            viewCount: null,
+            viewCount: 0,
             commentCount: 1,
             upvotes: 12,
             downvotes: 2,
@@ -514,6 +416,18 @@ describe('News domain foundation (e2e)', () => {
       ],
     });
     expect(shortNews.endCursor).toEqual(expect.any(String));
+    await prisma.interactionView.create({
+      data: {
+        interactionTargetId: article.interactionTargetId,
+        actorId: author.id,
+        viewerKey: `news-foundation-${author.id}`,
+      },
+    });
+    const viewedNews = await delivery.browseShort(
+      { language: 'uk', search: 'fully operational', first: 1 },
+      author.id,
+    );
+    expect(viewedNews.items[0].engagement.viewCount).toBe(1);
 
     await expect(
       settings.update(publisher.id, {
