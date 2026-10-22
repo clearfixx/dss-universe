@@ -1,0 +1,84 @@
+/**
+ * DSS Universe — Full Quality Gate tests
+ * File: scripts/full-quality-policy.test.mjs
+ * Purpose: Guard disposable endpoints and keep browser credentials isolated.
+ */
+import assert from "node:assert/strict";
+import test from "node:test";
+import FullQualityWebReporter from "./full-quality-web-reporter.mjs";
+import {
+  createBrowserEnvironment,
+  createQualityEnvironment,
+  qualitySteps,
+} from "./full-quality-policy.mjs";
+
+const valid = {
+  DATABASE_URL: "postgresql://dss_test:dss_test@127.0.0.1:5435/dss_test",
+};
+
+test("browser reporter rejects empty, skipped and retried runs", () => {
+  for (const tests of [
+    [],
+    [{ expectedStatus: "passed", results: [{ status: "skipped" }] }],
+    [
+      {
+        expectedStatus: "passed",
+        results: [{ status: "failed" }, { status: "passed" }],
+      },
+    ],
+  ]) {
+    const reporter = new FullQualityWebReporter();
+    reporter.onBegin({}, { allTests: () => tests });
+    assert.deepEqual(reporter.onEnd({ status: "passed" }), {
+      status: "failed",
+    });
+  }
+  const reporter = new FullQualityWebReporter();
+  reporter.onBegin(
+    {},
+    {
+      allTests: () => [
+        { expectedStatus: "passed", results: [{ status: "passed" }] },
+      ],
+    },
+  );
+  assert.equal(reporter.onEnd({ status: "passed" }), undefined);
+});
+test("accepts only prepared local disposable endpoints", () => {
+  assert.equal(createQualityEnvironment(valid).REDIS_PORT, "6380");
+  for (const port of ["5432", "5433", "6432"]) {
+    assert.throws(() =>
+      createQualityEnvironment({
+        DATABASE_URL: valid.DATABASE_URL.replace("5435", port),
+      }),
+    );
+  }
+  for (const overrides of [
+    { REDIS_HOST: "remote" },
+    { REDIS_PORT: "6379" },
+    { TEST_REDIS_PORT: "6379" },
+    { DATABASE_URL: `${valid.DATABASE_URL}?schema=public` },
+  ])
+    assert.throws(() => createQualityEnvironment({ ...valid, ...overrides }));
+});
+test("browser environment excludes inherited secrets and disables reuse", () => {
+  const env = createBrowserEnvironment({
+    Path: "runtime",
+    DATABASE_URL: "secret",
+    JWT_ACCESS_SECRET: "secret",
+    NODE_OPTIONS: "injection",
+    CI: "",
+    NEXT_PUBLIC_SECRET: "unexpected",
+  });
+  assert.deepEqual(env, { Path: "runtime", CI: "1", NODE_ENV: "development" });
+});
+test("full plan includes coverage, E2E and generation but never provisioning/reset", () => {
+  const steps = qualitySteps("unique.json");
+  assert.ok(steps.some((step) => step.includes("--coverage")));
+  assert.ok(steps.some((step) => step.includes("--outputFile=unique.json")));
+  assert.ok(
+    steps.findIndex(([step]) => step === "db:generate") <
+      steps.findIndex(([step]) => step === "typecheck"),
+  );
+  assert.doesNotMatch(JSON.stringify(steps), /reset|install|db:deploy|db:push/);
+});
