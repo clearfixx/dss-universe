@@ -50,3 +50,9 @@ The earlier same-source application coverage/E2E evidence belongs to DEBT-073;
 the production command itself is additionally exercised by this real smoke.
 Remote CI at the new checkpoint and phase review remain required before
 acceptance; earlier green CI atc10c937 must not be attributed to this change.
+
+Remote run39768009772 at395c744 later fails one of586 E2E tests on the
+existing social-privacy timestamp race, now separately approved as DEBT-074.
+Its other checks pass. The failed log is retained as
+`dss-d6-ci055-failed.log`; no red merge or blind rerun is authorized by this
+local production-start evidence. Remote acceptance remains open.

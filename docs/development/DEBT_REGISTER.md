@@ -21,6 +21,24 @@ active package safe and buildable.
 
 ## Register
 
+### DEBT-074 — Social privacy owner assertion races asynchronous presence (Medium, ACCEPTED, separate D6 package)
+
+On2026-10-22 GitHub run39768009772 at395c744 fails1/586 E2E assertions:
+`following redacts each profile without changing total, ordering or page boundaries`.
+The HTTP owner profile contains the seeded lastSeenAt2026-01-01, while a later
+database read sees the current presence timestamp. UserPresenceInterceptor
+starts touch without awaiting it before next.handle; the test incorrectly
+assumes its later DB read is the exact response snapshot. This is confirmed
+test synchronization debt, not evidence that the privacy projection leaks.
+The failed run/log is retained, not rerun blindly or attributed to the API
+production-entry correction.
+
+Owner approved a separate package after DEBT-061: stabilize presence facts in
+the test deterministically, retain exact privacy/owner/timestamp assertions,
+and add a regression for the ordering. No runtime changes, sleeps, timeout
+increase or broad timestamp matcher. Current Worker package only records this
+finding; CI remains red until the separate correction and new verification.
+
 ### DEBT-073 — Workspace quality does not execute requested DB/Redis opt-ins (Medium, ACCEPTED, separate D6 package)
 
 Date: 2026-10-22. D5 worktree based on43d9562. With `DATABASE_URL` targeting
@@ -1295,7 +1313,7 @@ hashes deliberately version the approved correction. Full gates/CI/review are
 recorded in [DEBT-060 checkpoint](../audits/DEBT_060_LEADERBOARD_TOTALS.md), not
 inferred from the focused tests. No broad D4 or Phase 11 acceptance is claimed.
 
-### DEBT-061 — Worker processed-marker and dead-letter consumer identities differ (Medium, OPEN, D6)
+### DEBT-061 — Worker processed-marker and dead-letter consumer identities differ (Medium, ACCEPTED, D6)
 
 `apps/worker/src/main.ts` configures `dss.worker.integration-events.v2` for
 DeadLetterService, but calls createIntegrationEventProcessor with only store and
@@ -1309,6 +1327,13 @@ exploit. Correct separately with explicit target identity and historical marker/
 replay policy, not a cosmetic version rename in the Leaderboards package.
 Owner notified; runtime fix not authorized by this source audit. Evidence:
 [Worker boundary review](../audits/D4_WORKER_SOURCE_BOUNDARIES.md).
+
+Owner approved v1 preservation on2026-10-22: a shared Worker-owned identity for
+processor/new DLQ; historical markers and DLQv2 are not renamed/deleted; current
+retry stays intact. Implementation,50 Worker unit tests and3 actual migrated
+DB/live Redis regressions pass locally, with isolated resources cleaned up.
+Full gates and remote review remain open; see
+[approved design and evidence](../audits/DEBT_061_CONSUMER_IDENTITY_DESIGN.md).
 
 ### DEBT-062 — Distinct events exceed Community Points UTC-day cap (High, ACCEPTED, separate correction approved)
 
