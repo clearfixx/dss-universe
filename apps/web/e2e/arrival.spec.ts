@@ -1,4 +1,10 @@
 import { expect, test } from "@playwright/test";
+import {
+  installStationObserverProbe,
+  releaseStationObserver,
+  waitForHeldStationObserver,
+  waitForStationDemoReadiness,
+} from "./helpers/station-demo-readiness";
 
 test("resizing during construction completes the scene without hiding controls", async ({
   page,
@@ -150,12 +156,37 @@ test("Core module controls stay within a narrow viewport", async ({ page }) => {
   }
 });
 
+test("demo time before native visibility delivery does not advance activity", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await installStationObserverProbe(page, true);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await waitForHeldStationObserver(page);
+  await expect(page.locator("[data-arrival]")).toHaveAttribute(
+    "data-arrival",
+    "ready",
+  );
+  await page.clock.fastForward(7000);
+  await expect(
+    page.getByText("A new idea becomes shared knowledge."),
+  ).toBeVisible();
+  await releaseStationObserver(page);
+  await waitForStationDemoReadiness(page);
+  await page.clock.fastForward(7000);
+  await expect(
+    page.getByText("Alex shared a guide to React architecture."),
+  ).toBeVisible();
+});
+
 test("demo activity can be paused and resumed", async ({ page }) => {
   const consoleErrors: string[] = [];
   page.on("console", (message) => {
     if (message.type() === "error") consoleErrors.push(message.text());
   });
   await page.clock.install();
+  await installStationObserverProbe(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   const pause = page.getByRole("button", { name: "Pause ambient activity" });
@@ -163,8 +194,7 @@ test("demo activity can be paused and resumed", async ({ page }) => {
   await expect(
     page.getByText("A new idea becomes shared knowledge."),
   ).toBeVisible();
-  // Allow the initial visibility observer to start the ambient timer.
-  await page.waitForTimeout(100);
+  const visibleDelivery = await waitForStationDemoReadiness(page);
   await page.clock.fastForward(7000);
   await expect(
     page.getByText("Alex shared a guide to React architecture."),
@@ -175,8 +205,7 @@ test("demo activity can be paused and resumed", async ({ page }) => {
     page.getByText("Alex shared a guide to React architecture."),
   ).toBeVisible();
   await page.getByRole("button", { name: "Resume ambient activity" }).click();
-  // Let the browser deliver the new IntersectionObserver subscription before advancing time.
-  await page.waitForTimeout(100);
+  await waitForStationDemoReadiness(page, visibleDelivery);
   await page.clock.fastForward(7000);
   await expect(
     page.getByText("Maria helped a developer find their next step."),

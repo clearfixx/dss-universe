@@ -96,3 +96,9 @@ compiled API entry validation. It fails at its final fresh Web smoke12/13,
 tracked as DEBT-077. No reset, retries, increased timeout or UI changes.
 Earlier failed wrappers remain recorded under DEBT-015/075/076. No new remote
 green status or full D6 acceptance is claimed for these local commits.
+
+The owner then approved the DEBT-077 test-only observer-readiness package.
+Focused controls2/2 and full fresh browser smoke14/14 pass (strict reporter,
+no retries/skips/reuse). App/UI code, event expectations and timeouts are
+unchanged. A final consolidated wrapper and remote CI are still required;
+individual passing boundaries do not retroactively change earlier failed runs.

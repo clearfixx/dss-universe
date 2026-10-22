@@ -71,3 +71,9 @@ server no longer listens on3100 after Playwright teardown.
 Evidence: `dss-d6-quality-full-after076.log` in temporary storage and
 `node_modules/.cache/quality-full-eS98bn/{api-e2e,web-smoke}.json`.
 This is still a failed full wrapper; partial green steps do not accept D6.
+
+The separately approved DEBT-077 test-only correction subsequently passes fresh
+Web smoke14/14 with strict reporter, no retries/skips or server reuse. All
+individual boundaries now have passing evidence, but this does not turn the
+earlier failed wrapper into a green one. A consolidated full-gate run of the
+final source remains required before push/phase acceptance.
