@@ -41,6 +41,7 @@ import {
 } from "@dss/jobs";
 import { DeadLetterService } from "./dead-letter.service.js";
 import { createIntegrationEventProcessor } from "./integration-event.processor.js";
+import { INTEGRATION_EVENT_CONSUMER_NAME } from "./integration-event-consumer.js";
 import { PostgresProcessedEventStore } from "./processed-event.store.js";
 import { LocalMediaFileProcessor } from "./local-media-file.processor.js";
 import { createMediaProcessingProcessor } from "./media-processing.processor.js";
@@ -138,18 +139,22 @@ if (!recoveryConfigured)
   logger.warn(
     "Password recovery worker disabled: configure SMTP and PASSWORD_RESET_WEB_URL",
   );
-const consumerName = "dss.worker.integration-events.v2";
 const deadLetterQueue = new Queue<DeadLetterIntegrationEventJob>(
   DSS_QUEUE_NAMES.INTEGRATION_EVENTS_DEAD_LETTER,
   { connection },
 );
-const deadLetters = new DeadLetterService(pool, deadLetterQueue, consumerName);
+const deadLetters = new DeadLetterService(
+  pool,
+  deadLetterQueue,
+  INTEGRATION_EVENT_CONSUMER_NAME,
+);
 const activityProjector = new PostgresActivityProjector(pool);
 const worker = new Worker<IntegrationEventJob>(
   DSS_QUEUE_NAMES.INTEGRATION_EVENTS,
   createIntegrationEventProcessor(
     new PostgresProcessedEventStore(pool),
     (event) => activityProjector.project(event),
+    INTEGRATION_EVENT_CONSUMER_NAME,
   ),
   { connection },
 );

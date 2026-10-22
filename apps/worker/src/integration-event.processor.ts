@@ -5,11 +5,12 @@ import {
   type IntegrationEventJob,
   type ProcessedEventStore,
 } from "@dss/jobs";
+import { INTEGRATION_EVENT_CONSUMER_NAME } from "./integration-event-consumer.js";
 
 export function createIntegrationEventProcessor(
   store: ProcessedEventStore,
   handler: IntegrationEventHandler = async () => undefined,
-  consumerName = "dss.worker.integration-events.v1",
+  consumerName = INTEGRATION_EVENT_CONSUMER_NAME,
 ): (
   job: Job<IntegrationEventJob>,
 ) => Promise<{ eventId: string; duplicate: boolean }> {

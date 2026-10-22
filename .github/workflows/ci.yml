@@ -75,6 +75,9 @@ jobs:
       - name: Apply database migrations
         run: pnpm --filter @dss/api db:deploy
 
+      - name: Check migrated database against Prisma schema (read-only)
+        run: pnpm db:check-drift
+
       - name: Lint
         run: pnpm lint
 
@@ -82,7 +85,7 @@ jobs:
         run: pnpm typecheck
 
       - name: Unit tests with coverage
-        run: pnpm test:cov
+        run: pnpm test:full-policy && pnpm test:full --coverage
 
       - name: API end-to-end tests
         run: |
@@ -93,7 +96,7 @@ jobs:
         run: pnpm graphql:check
 
       - name: Build
-        run: pnpm build
+        run: pnpm build && pnpm test:api-build-entry
 
       - name: Upload coverage
         if: always()

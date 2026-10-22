@@ -21,6 +21,31 @@ active package safe and buildable.
 
 ## Register
 
+### DEBT-074 — Social privacy owner assertion races asynchronous presence (Medium, ACCEPTED, separate D6 package)
+
+On2026-10-22 GitHub run39768009772 at395c744 fails1/586 E2E assertions:
+`following redacts each profile without changing total, ordering or page boundaries`.
+The HTTP owner profile contains the seeded lastSeenAt2026-01-01, while a later
+database read sees the current presence timestamp. UserPresenceInterceptor
+starts touch without awaiting it before next.handle; the test incorrectly
+assumes its later DB read is the exact response snapshot. This is confirmed
+test synchronization debt, not evidence that the privacy projection leaks.
+The failed run/log is retained, not rerun blindly or attributed to the API
+production-entry correction.
+
+Owner approved a separate package after DEBT-061: stabilize presence facts in
+the test deterministically, retain exact privacy/owner/timestamp assertions,
+and add a regression for the ordering. No runtime changes, sleeps, timeout
+increase or broad timestamp matcher. Current Worker package only records this
+finding; CI remains red until the separate correction and new verification.
+
+The separate correction now controls only presence.touch in the privacy suite,
+preserves exact seeded profile/timestamp comparisons, and adds a promise-gated
+HTTP case proving a later actual DB write does not change the response snapshot.
+Focused6/6 cases pass without sleep, timeout changes or runtime changes.
+Full gates/remote acceptance remain open; see
+[test synchronization evidence](../audits/DEBT_074_SOCIAL_PRIVACY_PRESENCE.md).
+
 ### DEBT-073 — Workspace quality does not execute requested DB/Redis opt-ins (Medium, ACCEPTED, separate D6 package)
 
 Date: 2026-10-22. D5 worktree based on43d9562. With `DATABASE_URL` targeting
@@ -39,6 +64,13 @@ intended integration-test count/skip policy, with clean-checkout and CI evidence
 Owner approved the separate D6 package on2026-10-22: explicitly forward and hash
 DB/Redis test env and verify mandatory opt-ins are not skipped. D5 does not change
 the runner/CI; implementation, regressions and full D6 acceptance remain pending.
+
+Implementation is now on the separate D6 branch: API-specific strict env/hash,
+an uncached full profile and fail-closed Jest result policy. Focused controls and
+the final local quality, coverage and same-database586/586 E2E runs pass.
+Checkpointc10c937 in PR#79 also has all five remote checks green, coverage1281/1281
+and downloaded E2E JSON586/586 without skips. Phase-level review/acceptance is
+still open. See [current evidence](../audits/DEBT_073_FULL_TEST_ENV.md).
 
 ### DEBT-072 — Profile asset assignment races Media cleanup claim (Medium, ACCEPTED, separate pre-11 design/correction package)
 
@@ -428,41 +460,45 @@ CI/review acceptance tracked independently. Full gate/CI acceptance, D4.4,
 D4.5 and exhaustive inventory remain open; no broad debt is marked resolved by
 this transfer. See [runtime checkpoint](../audits/D4_LEADERBOARD_RUNTIME_OWNERSHIP.md).
 
-| ID       | Priority | Status   | Area                  | Finding                                                                                                        | Proposed owner/package |
-| -------- | -------- | -------- | --------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| DEBT-001 | Critical | OPEN     | Auth/Users            | Auth imports Users repository/mapper internals and owns user lifecycle decisions.                              | D2–D3                  |
-| DEBT-002 | High     | OPEN     | Layering              | Auth and IAM application services access Prisma directly.                                                      | D3                     |
-| DEBT-003 | High     | OPEN     | Module boundaries     | Reputation, Achievements, Community Points and Levels depend on broad foreign services.                        | D4                     |
-| DEBT-004 | High     | OPEN     | Domain isolation      | Prisma enums/types leak into domain, application and presentation layers.                                      | D4                     |
-| DEBT-005 | High     | OPEN     | Architecture tooling  | Boundary checker passes despite known ownership and layering violations.                                       | D2–D4                  |
-| DEBT-006 | High     | ACCEPTED | Roadmap               | Current Position and Project Context reconciled in D1; owner PR review pending.                                | D1                     |
-| DEBT-007 | High     | ACCEPTED | Phase 8               | Phase 8 classified implemented with completion audit; runtime/owner acceptance remains pending.                | D1/D6                  |
-| DEBT-008 | High     | ACCEPTED | Phase 5               | D3.5 groups/Premium implemented with explicit approval; review/CI/full baseline acceptance pending.            | D3.5 / D6              |
-| DEBT-009 | Medium   | OPEN     | File Passport         | Preliminary scan reports 247 potentially non-compliant source-like files; classification is required.          | D5                     |
-| DEBT-010 | Medium   | OPEN     | Standards             | Older Auth/Authorization and role-based guidance conflicts with newer permission-based boundaries.             | D1–D2                  |
-| DEBT-011 | Medium   | ACCEPTED | Workflow docs         | Canonical phase/workflow fencing repaired in D1; documentation checks pass, review pending.                    | D1                     |
-| DEBT-012 | High     | ACCEPTED | Environment           | D0 env inventory and local alignment implemented; acceptance awaits the full quality gate.                     | D0                     |
-| DEBT-013 | High     | ACCEPTED | Local services        | Mailpit, ClamAV and optional OTLP verified; S3 deferred to DEBT-017, persistent observability not claimed.     | D0                     |
-| DEBT-014 | Medium   | RESOLVED | Developer tooling     | GitHub CLI installed and authenticated; repository PR and Actions access verified in D0.                       | D0                     |
-| DEBT-015 | Medium   | OPEN     | Quality gate          | Root `quality` does not execute every check performed by CI.                                                   | D1/D6                  |
-| DEBT-016 | Critical | OPEN     | Dependencies          | Audit 2026-10-21: 0 critical / 2 high / 12 moderate; local mitigations are not accepted audit exceptions.      | D0.5/D6                |
-| DEBT-017 | High     | DEFERRED | Media/storage         | LOCAL scope approved; operational MinIO/S3 adapters absent, separate debt not blocking Phase 11.               | Storage package        |
-| DEBT-018 | High     | DEFERRED | Search                | News-local search clarified; shared Search/indexing contract remains future work, not Phase 11 prerequisite.   | D2/future Search       |
-| DEBT-019 | High     | ACCEPTED | File Passport         | Passport v3.1 rendering repaired in D1; generated/config/schema classification remains D5 work.                | D1/D5                  |
-| DEBT-020 | Critical | OPEN     | Media security        | Windows separators bypass upload-root containment in API storage and two Worker consumers.                     | D0.6                   |
-| DEBT-021 | High     | ACCEPTED | Quality orchestration | D0 adds shared-package build ordering; local lint/typecheck pass, clean CI evidence remains required.          | D0/D6                  |
-| DEBT-022 | Medium   | OPEN     | Formatting            | D2 repository Prettier check reports 41 legacy non-compliant files (initial audit: 52).                        | D5/D6                  |
-| DEBT-023 | Medium   | OPEN     | Worker tests          | Sharp output cleanup fails with `EBUSY` on Windows in the current diagnostic run.                              | D0.6/D6                |
-| DEBT-024 | Critical | ACCEPTED | IAM/product ownership | Isolated IAM groups and Authorization Guardian decisions implemented; review/full baseline acceptance pending. | D3.5 / D6              |
-| DEBT-025 | High     | ACCEPTED | Roadmap sources       | Legacy phases/milestones marked historical and linked to canonical roadmap; review pending.                    | D1                     |
-| DEBT-026 | High     | OPEN     | Completion evidence   | Phase 9/10 completion gates are not currently reproducible from the red repository baseline.                   | D1/D6                  |
-| DEBT-027 | High     | OPEN     | Public APIs           | Module roots broadly export concrete services and wildcard surfaces, enabling structural coupling.             | D2/D4                  |
-| DEBT-028 | High     | OPEN     | Architecture rules    | Approved documents conflict on whether application services may access database services directly.             | D1/D2                  |
-| DEBT-029 | High     | ACCEPTED | Worker environment    | D0 adds env loading, template and fail-fast validation; readiness verified, acceptance gate remains red.       | D0                     |
-| DEBT-030 | High     | ACCEPTED | Endpoint contract     | D0 aligns Web API/GraphQL defaults and examples to 3001; root/application ownership documented.                | D0                     |
-| DEBT-031 | High     | ACCEPTED | Bootstrap             | Node bootstrap verified on Windows with DB alignment guard; existing env files preserved.                      | D0                     |
-| DEBT-032 | Medium   | ACCEPTED | Compose               | Dev/test healthchecks verified; original pgAdmin image pinned by digest; acceptance gate remains red.          | D0                     |
-| DEBT-033 | Medium   | ACCEPTED | Observability         | Explicit telemetry startup and optional collector verified; no persistent monitoring backend claimed.          | D0                     |
+| ID       | Priority | Status      | Area                    | Finding                                                                                                                                                                   | Proposed owner/package                       |
+| -------- | -------- | ----------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| DEBT-001 | Critical | OPEN        | Auth/Users              | Auth imports Users repository/mapper internals and owns user lifecycle decisions.                                                                                         | D2–D3                                        |
+| DEBT-002 | High     | OPEN        | Layering                | Auth and IAM application services access Prisma directly.                                                                                                                 | D3                                           |
+| DEBT-003 | High     | OPEN        | Module boundaries       | Reputation, Achievements, Community Points and Levels depend on broad foreign services.                                                                                   | D4                                           |
+| DEBT-004 | High     | OPEN        | Domain isolation        | Prisma enums/types leak into domain, application and presentation layers.                                                                                                 | D4                                           |
+| DEBT-005 | High     | OPEN        | Architecture tooling    | Boundary checker passes despite known ownership and layering violations.                                                                                                  | D2–D4                                        |
+| DEBT-006 | High     | ACCEPTED    | Roadmap                 | Current Position and Project Context reconciled in D1; owner PR review pending.                                                                                           | D1                                           |
+| DEBT-007 | High     | ACCEPTED    | Phase 8                 | Phase 8 classified implemented with completion audit; runtime/owner acceptance remains pending.                                                                           | D1/D6                                        |
+| DEBT-008 | High     | ACCEPTED    | Phase 5                 | D3.5 groups/Premium implemented with explicit approval; review/CI/full baseline acceptance pending.                                                                       | D3.5 / D6                                    |
+| DEBT-009 | Medium   | OPEN        | File Passport           | Preliminary scan reports 247 potentially non-compliant source-like files; classification is required.                                                                     | D5                                           |
+| DEBT-010 | Medium   | OPEN        | Standards               | Older Auth/Authorization and role-based guidance conflicts with newer permission-based boundaries.                                                                        | D1–D2                                        |
+| DEBT-011 | Medium   | ACCEPTED    | Workflow docs           | Canonical phase/workflow fencing repaired in D1; documentation checks pass, review pending.                                                                               | D1                                           |
+| DEBT-012 | High     | ACCEPTED    | Environment             | D0 env inventory and local alignment implemented; acceptance awaits the full quality gate.                                                                                | D0                                           |
+| DEBT-013 | High     | ACCEPTED    | Local services          | Mailpit, ClamAV and optional OTLP verified; S3 deferred to DEBT-017, persistent observability not claimed.                                                                | D0                                           |
+| DEBT-014 | Medium   | RESOLVED    | Developer tooling       | GitHub CLI installed and authenticated; repository PR and Actions access verified in D0.                                                                                  | D0                                           |
+| DEBT-015 | Medium   | IMPLEMENTED | Quality gate            | Consolidated `quality:full` exits0 at2837644: API1298, E2E593, fresh Web14, all required local steps pass. See `../audits/DEBT_015_FULL_QUALITY_GATE.md`.                 | D6 / remote and phase acceptance open        |
+| DEBT-075 | Medium   | IMPLEMENTED | E2E isolation           | Isolated migrated fixture passes twice focused and in full API E2E593/593, without reset. See `../audits/DEBT_075_ACHIEVEMENTS_FIXTURE_ISOLATION.md`.                     | D6 / remote acceptance open                  |
+| DEBT-076 | Medium   | IMPLEMENTED | Web test reliability    | Owner-approved two-worker bound and real-config regression pass; full-gate coverage60/60. See `../audits/DEBT_076_WEB_COVERAGE_TIMEOUTS.md`.                              | D6 / remote acceptance open                  |
+| DEBT-077 | Medium   | IMPLEMENTED | Web smoke readiness     | Owner-approved native-observer readiness control and test-only correction pass focused2/2 and fresh full smoke14/14. See `../audits/DEBT_077_ARRIVAL_SMOKE_READINESS.md`. | D6 / consolidated and remote acceptance open |
+| DEBT-078 | Medium   | IMPLEMENTED | Generated format policy | Exact-path Next generated declaration exclusion; real Prettier policy regression and root format pass. See `../audits/DEBT_078_GENERATED_NEXT_FORMAT_POLICY.md`.          | D6 / consolidated and remote acceptance open |
+| DEBT-016 | Critical | OPEN        | Dependencies            | Audit 2026-10-21: 0 critical / 2 high / 12 moderate; local mitigations are not accepted audit exceptions.                                                                 | D0.5/D6                                      |
+| DEBT-017 | High     | DEFERRED    | Media/storage           | LOCAL scope approved; operational MinIO/S3 adapters absent, separate debt not blocking Phase 11.                                                                          | Storage package                              |
+| DEBT-018 | High     | DEFERRED    | Search                  | News-local search clarified; shared Search/indexing contract remains future work, not Phase 11 prerequisite.                                                              | D2/future Search                             |
+| DEBT-019 | High     | ACCEPTED    | File Passport           | Passport v3.1 rendering repaired in D1; generated/config/schema classification remains D5 work.                                                                           | D1/D5                                        |
+| DEBT-020 | Critical | OPEN        | Media security          | Windows separators bypass upload-root containment in API storage and two Worker consumers.                                                                                | D0.6                                         |
+| DEBT-021 | High     | ACCEPTED    | Quality orchestration   | D0 adds shared-package build ordering; local lint/typecheck pass, clean CI evidence remains required.                                                                     | D0/D6                                        |
+| DEBT-022 | Medium   | OPEN        | Formatting              | D2 repository Prettier check reports 41 legacy non-compliant files (initial audit: 52).                                                                                   | D5/D6                                        |
+| DEBT-023 | Medium   | OPEN        | Worker tests            | Sharp output cleanup fails with `EBUSY` on Windows in the current diagnostic run.                                                                                         | D0.6/D6                                      |
+| DEBT-024 | Critical | ACCEPTED    | IAM/product ownership   | Isolated IAM groups and Authorization Guardian decisions implemented; review/full baseline acceptance pending.                                                            | D3.5 / D6                                    |
+| DEBT-025 | High     | ACCEPTED    | Roadmap sources         | Legacy phases/milestones marked historical and linked to canonical roadmap; review pending.                                                                               | D1                                           |
+| DEBT-026 | High     | OPEN        | Completion evidence     | Phase 9/10 completion gates are not currently reproducible from the red repository baseline.                                                                              | D1/D6                                        |
+| DEBT-027 | High     | OPEN        | Public APIs             | Module roots broadly export concrete services and wildcard surfaces, enabling structural coupling.                                                                        | D2/D4                                        |
+| DEBT-028 | High     | OPEN        | Architecture rules      | Approved documents conflict on whether application services may access database services directly.                                                                        | D1/D2                                        |
+| DEBT-029 | High     | ACCEPTED    | Worker environment      | D0 adds env loading, template and fail-fast validation; readiness verified, acceptance gate remains red.                                                                  | D0                                           |
+| DEBT-030 | High     | ACCEPTED    | Endpoint contract       | D0 aligns Web API/GraphQL defaults and examples to 3001; root/application ownership documented.                                                                           | D0                                           |
+| DEBT-031 | High     | ACCEPTED    | Bootstrap               | Node bootstrap verified on Windows with DB alignment guard; existing env files preserved.                                                                                 | D0                                           |
+| DEBT-032 | Medium   | ACCEPTED    | Compose                 | Dev/test healthchecks verified; original pgAdmin image pinned by digest; acceptance gate remains red.                                                                     | D0                                           |
+| DEBT-033 | Medium   | ACCEPTED    | Observability           | Explicit telemetry startup and optional collector verified; no persistent monitoring backend claimed.                                                                     | D0                                           |
 
 ## Additional D0 verification findings
 
@@ -671,7 +707,7 @@ Review required/optional fields and invalid-input compatibility, then switch to
 runtime DTO imports with explicit regression tests. Do not silently turn this
 boundary refactor into an API validation behavior change; no exemption is granted.
 
-### DEBT-041 — Nondeterministic TOTP envelope tamper assertion (Medium, OPEN, D6 / Auth test owner)
+### DEBT-041 — Nondeterministic TOTP envelope tamper assertion (Medium, IMPLEMENTED / acceptance open, D6 / Auth test owner)
 
 A sequential D3.2 coverage run fails the unchanged TotpService test at line 23:
 `decrypt(first.slice(0, -1) + 'x')` does not throw. The ciphertext is random and
@@ -681,6 +717,11 @@ AES-GCM authentication bypass. Replace it in a separately reviewed test fix with
 deterministic byte corruption and unchanged-envelope control. Keep the assertion
 and security behavior; do not skip it, weaken encryption or claim rerun success
 resolves the nondeterminism. No TOTP production/test edit is included in D3.2.
+
+The separate D6 correction now flips a real decoded byte in each of IV/tag/
+ciphertext, verifies the bytes differ, preserves untouched-envelope controls
+and still requires rejection. Production crypto is unchanged. Combined gates
+and review remain open; see [deterministic test evidence](../audits/DEBT_041_TOTP_TAMPER_TEST.md).
 
 ### DEBT-042 — Second-factor lifecycle concurrency review (High, IMPLEMENTED / review pending, D3.4)
 
@@ -918,7 +959,7 @@ cleanup and diagnose the slow/failing operation; do not raise timeouts blindly.
 See [registration evidence](../audits/D3_REGISTRATION_POSTGRES_ATOMICITY.md).
 No out-of-scope E2E restructuring is implemented by this package.
 
-### DEBT-049 — Historical migrations and Prisma schema drift (Medium, OPEN, D6)
+### DEBT-049 — Historical migrations and Prisma schema drift (Medium, IMPLEMENTED / acceptance open, separate D6 package)
 
 On 2026-10-13, after all 53 migrations were applied to the disposable test DB,
 `prisma migrate status` reported up-to-date but
@@ -936,6 +977,19 @@ drift and reconcile by reviewed forward migration/model annotations. In
 particular, do not blindly apply a generated diff dropping indexes or changing
 outbox identifiers. D3.5 does not modify these unrelated tables or waive the gate.
 See [D3.5 evidence](../audits/D3_5_ACCESS_GROUPS_IMPLEMENTATION.md).
+
+Owner approved preserving actual SQL on2026-10-22: twelve now() annotations
+with @updatedAt retained, native Outbox UUID and both existing Users indexes.
+The read-only diff is now empty for disposable5434/5435; static14/14 and
+actual migrated DB3/3 checks pass. No historical rewrite, repair DDL or data
+conversion. Full gates/CI remain open; see
+[bounded schema alignment](../audits/DEBT_049_PRISMA_SCHEMA_ALIGNMENT.md).
+
+Full local quality and fresh coverage1298/1298 plus same-DB E2E593/593 now
+pass at9588857; drift stays empty after tests. A retained registry fetch error
+stops the wrapper after E2E; a bounded network recheck passes the unchanged
+security gate, then GraphQL consistency passes. New-head remote CI and phase
+review remain required; no production schema repair or red merge is performed.
 
 ### DEBT-050 — Web coverage reports an unhandled React scheduler error (Medium, OPEN, D6)
 
@@ -1156,6 +1210,13 @@ readiness. The current evidence proves the local start failure, not its complete
 root cause or behavior in every deployment. No entry/compiler/runtime fix is
 silently included in DEBT-053; owner notification accompanies this finding.
 
+D6 now corrects the production command to the observed clean Nest build entry,
+adds a post-build entry/syntax regression to quality and CI, and verifies actual
+production-mode HTTP liveness/readiness with disposable DB/Redis. The owned
+smoke process and DB connections are released; SDL is unchanged. Final gates,
+remote CI and review remain open; see
+[bounded verification](../audits/DEBT_055_API_PRODUCTION_START.md).
+
 ### DEBT-056 — Guest News secondary reads bypass MEMBERS audience (Critical, IMPLEMENTED / acceptance open)
 
 On 2026-10-14, real migrated AppModule/GraphQL characterization publishes a
@@ -1281,7 +1342,7 @@ hashes deliberately version the approved correction. Full gates/CI/review are
 recorded in [DEBT-060 checkpoint](../audits/DEBT_060_LEADERBOARD_TOTALS.md), not
 inferred from the focused tests. No broad D4 or Phase 11 acceptance is claimed.
 
-### DEBT-061 — Worker processed-marker and dead-letter consumer identities differ (Medium, OPEN, D6)
+### DEBT-061 — Worker processed-marker and dead-letter consumer identities differ (Medium, ACCEPTED, D6)
 
 `apps/worker/src/main.ts` configures `dss.worker.integration-events.v2` for
 DeadLetterService, but calls createIntegrationEventProcessor with only store and
@@ -1295,6 +1356,13 @@ exploit. Correct separately with explicit target identity and historical marker/
 replay policy, not a cosmetic version rename in the Leaderboards package.
 Owner notified; runtime fix not authorized by this source audit. Evidence:
 [Worker boundary review](../audits/D4_WORKER_SOURCE_BOUNDARIES.md).
+
+Owner approved v1 preservation on2026-10-22: a shared Worker-owned identity for
+processor/new DLQ; historical markers and DLQv2 are not renamed/deleted; current
+retry stays intact. Implementation,50 Worker unit tests and3 actual migrated
+DB/live Redis regressions pass locally, with isolated resources cleaned up.
+Full gates and remote review remain open; see
+[approved design and evidence](../audits/DEBT_061_CONSUMER_IDENTITY_DESIGN.md).
 
 ### DEBT-062 — Distinct events exceed Community Points UTC-day cap (High, ACCEPTED, separate correction approved)
 

@@ -9,6 +9,8 @@ export default defineConfig({
     },
   },
   test: {
+    // Keep jsdom coverage workers bounded without extending test timeouts.
+    maxWorkers: 2,
     exclude: ["e2e/**", "node_modules/**", ".next/**"],
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
