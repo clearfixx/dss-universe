@@ -14,12 +14,20 @@ failure confirms two enabled, active-definition rules for
 `community.topic.published.v1`. Earlier disposable-DB runs were green; a reset
 would hide this repeat-run isolation defect, not repair it.
 
-## Proposed separate scope — approval pending
+## Approved separate correction
 
-Isolate this fixture's database state using the existing migrated private-schema
-test pattern, retain exact award/idempotency/cap/rollback assertions, then verify
-two consecutive runs without a database reset. No production changes, wider
-cleanup, assertion filtering/weakening, sleeps or increased timeouts.
+The owner approved isolation using the existing migrated private-schema fixture.
+AppModule receives that fixture's Prisma provider; teardown drops only its owned
+schema instead of deleting all achievement Outbox rows from the shared database.
+All award/idempotency/cap/rollback assertions remain unchanged. The migration
+setup uses the existing fixture pattern's 60-second setup budget; the test body
+timeout is unchanged. No production changes, wider cleanup, assertion filtering,
+sleeps or retry-to-green.
 
-DEBT-015's full acceptance remains open. Its runner correctly stopped before
-GraphQL, build and Web smoke; no retry-to-green was attempted.
+Two consecutive focused runs pass without a database reset (one test each,
+9.235 seconds and 9.432 seconds). Raw logs: `dss-d6-075-first.log` and
+`dss-d6-075-second.log` in temporary storage. Full-gate acceptance is separate.
+
+DEBT-015's full acceptance remains open. Its second invocation failed at Web
+coverage before reaching this E2E suite. Focused verification is green, not a
+claim of a new all-suite green result. No retry-to-green was attempted.

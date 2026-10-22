@@ -47,3 +47,15 @@ The raw log is `dss-d6-quality-full-first.log` in local temporary storage;
 JSON is in `node_modules/.cache/quality-full-2mjyuI/api-e2e.json`.
 This is a failed wrapper, not a completed full gate. Fixture isolation requires
 a separate correction; see `DEBT_075_ACHIEVEMENTS_FIXTURE_ISOLATION.md`.
+
+After the approved DEBT-075 correction passed twice in isolation, a second full
+invocation stopped earlier at Web coverage: 57/60 tests passed, three exceeded
+the existing 5000ms timeout. Affected cases: NewsPagination controls,
+MembersDirectory presence/profile links, ProfileSettingsView completion/owner
+controls/current session. See `dss-d6-quality-full-after075.log` in temporary
+storage. This run did not reach API E2E, GraphQL, build or browser smoke.
+
+The root cause of these timeouts is not established. A later memory snapshot
+does not prove resource pressure during failure. No timeouts, assertions or UI
+were changed; no third blind full rerun was attempted. DEBT-076 tracks diagnosis.
+The runner remains locally implemented, with full acceptance open.

@@ -21,6 +21,7 @@ import type { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/core/database';
 import { AchievementsService } from './../src/modules/achievements/application/services/achievements.service';
+import { createIsolatedApiSchemaFixture } from './helpers/migrated-api-schema.fixture';
 
 type RegisteredUser = {
   id: string;
@@ -54,14 +55,19 @@ type Award = {
 };
 
 describe('Achievements foundation (e2e)', () => {
+  let fixture: Awaited<ReturnType<typeof createIsolatedApiSchemaFixture>>;
   let app: INestApplication<App>;
   let prisma: PrismaService;
   let achievements: AchievementsService;
 
   beforeAll(async () => {
+    fixture = await createIsolatedApiSchemaFixture();
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(PrismaService)
+      .useValue(fixture.prisma)
+      .compile();
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('api');
     app.useGlobalPipes(
@@ -74,15 +80,11 @@ describe('Achievements foundation (e2e)', () => {
     await app.init();
     prisma = app.get(PrismaService);
     achievements = app.get(AchievementsService);
-  });
+  }, 60000);
 
   afterAll(async () => {
-    if (prisma) {
-      await prisma.outboxEvent.deleteMany({
-        where: { producer: 'dss.api.achievements' },
-      });
-    }
     if (app) await app.close();
+    await fixture?.close();
   });
 
   it('awards semantic events and preserves reversible evidence', async () => {
