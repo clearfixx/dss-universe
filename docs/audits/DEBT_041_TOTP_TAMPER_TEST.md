@@ -31,3 +31,8 @@ policy33/33, build/post-build check and architecture140/140 with zero findings.
 The preserved final log is `dss-d6-combined-quality.log`. Combined fresh
 coverage/E2E and new-head GitHub CI remain required; prior green checkpoint
 evidence must not be attributed to this test change.
+
+The final combined fresh coverage and same-DB E2E now pass locally as well:
+API coverage1284/1284, full E2E590/590 in54 suites, zero skips/runtime errors.
+See [current D6 evidence](D6_FULL_QUALITY_BASELINE.md). New-head CI/review and
+phase acceptance remain open.

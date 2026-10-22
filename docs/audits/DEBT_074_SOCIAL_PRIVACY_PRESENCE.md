@@ -55,3 +55,9 @@ correction makes the full combined `pnpm quality` pass naturally: API1284/1284,
 Worker50/50, Web60/60, build/post-build check and architecture140/140.
 Log: `dss-d6-combined-quality.log`. Fresh coverage plus full E2E and new-head
 remote CI/review remain open, not inferred from these unit/build gates.
+
+Final combined fresh coverage and same-DB E2E now pass: API1284/1284 coverage
+and590/590 E2E in54 suites with zero skips/runtime errors, natural exit0.
+Exact cleanup/SDL/security/generated evidence is recorded in
+[current D6 evidence](D6_FULL_QUALITY_BASELINE.md). New-head remote acceptance
+remains required before closing the earlier CI finding.

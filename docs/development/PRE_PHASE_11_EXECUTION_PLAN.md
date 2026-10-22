@@ -489,6 +489,12 @@ without speculative splitting or frontend redesign.
 
 Branch: `debt/d6-quality-baseline`.
 
+Current checkpoint2026-10-22: local full quality, fresh coverage and same-DB
+API E2E590/590 pass after the separately scoped073/055/061/074/041 changes.
+See [current evidence](../audits/D6_FULL_QUALITY_BASELINE.md). Draft PR#79 still
+requires new-head CI, phase review and debt-disposition reconciliation; this
+does not accept D6/D7 or authorize Phase11. Passport work stays excluded.
+
 Scope:
 
 - fix clean-checkout Editor build/type resolution;

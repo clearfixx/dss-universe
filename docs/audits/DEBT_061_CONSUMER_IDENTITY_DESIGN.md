@@ -97,3 +97,9 @@ This Worker correction does not change that test or waive the failed gate.
 The local checkpoint is retained separately; publish after the separately
 approved DEBT-074 correction and combined verification, avoiding a knowingly
 red intermediate CI run. Do not merge the phase or declare Phase11 ready.
+
+Combined fresh coverage and full E2E subsequently pass after the two separate
+test fixes: Worker50/50 coverage and API590/590 E2E in54 suites, no skips or
+runtime errors. Owned DB/Redis resources are released and SDL is unchanged.
+See [current D6 evidence](D6_FULL_QUALITY_BASELINE.md). Publish the separate
+logical commits together; new-head CI and phase review remain open.
