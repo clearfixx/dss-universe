@@ -124,3 +124,32 @@ also passed naturally: 167 suites, 1262 tests, no skipped tests, 65.659s.
 Eight initial candidates now have bounded separations. News delivery remains a
 mixed-role candidate beyond the pin enum extraction; editorial, Users guard and
 AI editor transport remain pending. Full phase acceptance is still open.
+
+## News delivery and editorial transport — 2026-10-22
+
+Delivery and editorial now keep only their existing resolver implementations.
+Optional News JWT handling lives in its own guard; inputs, structural output
+models and wire-enum registration live in feature-local presentation files.
+Editorial DTOs and its unit test no longer import the delivery resolver for enums.
+NewsModule retains the same guard provider identity through a named import of
+its new location. No cross-owner contract, public barrel, database or policy
+change is introduced.
+
+An ad hoc TypeScript declaration comparison against the preceding Git checkpoint
+confirmed 37 moved class/enum declarations and both resolver implementations
+unchanged after ignoring whitespace and added named-export modifiers. The first
+comparison attempt used an unavailable root TypeScript dependency; the corrected
+check used API's own dependency. The comparison also had to normalize exports
+after decorators; neither diagnostic required a runtime source correction.
+
+Passed: 23 focused tests, seven migrated E2E suites (120 tests), API typecheck,
+lint/build and 140 architecture tests. Regenerated SDL remains byte-identical to
+the recorded canonical hash. Full API unit/DB/Redis run passed naturally:
+168 suites, 1266 tests, no skipped tests, 54.221s.
+The E2E selection exercises audience, redaction, related items, attachments,
+secondary projections and delivery composition; it is not a replacement for the
+whole phase E2E gate.
+
+Ten original candidates now have bounded separations. Users optional guard and
+AI editor transport remain, along with broader semantic review and full phase
+acceptance. File Passport work remains excluded.

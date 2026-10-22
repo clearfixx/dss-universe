@@ -58,10 +58,8 @@ import { PrismaNewsWorkflowRepository } from './infrastructure/repositories/pris
 import { PrismaNewsPinsRepository } from './infrastructure/repositories/prisma-news-pins.repository';
 import { NewsSettingsResolver } from './presentation/graphql/news-settings.graphql';
 import { NewsEditorialResolver } from './presentation/graphql/news-editorial.graphql';
-import {
-  NewsDeliveryResolver,
-  OptionalNewsJwtGuard,
-} from './presentation/graphql/news-delivery.graphql';
+import { NewsDeliveryResolver } from './presentation/graphql/news-delivery.graphql';
+import { OptionalNewsJwtGuard } from './presentation/graphql/guards/optional-news-jwt.guard';
 import { NewsPinsResolver } from './presentation/graphql/news-pins.graphql';
 
 @Module({
