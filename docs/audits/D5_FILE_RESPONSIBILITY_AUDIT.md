@@ -2,7 +2,8 @@
 
 Date: 2026-10-21. Baseline main851c93a, merged integration PR#74.
 Branch: `debt/d5-file-responsibilities`, separate managed worktree. Primary main
-remains available for owner testing. No runtime changes in this checkpoint.
+remains available for owner testing. Initial inventory was documentation-only;
+the bounded implementation checkpoint below is not full D5 acceptance.
 
 ## Agreed boundaries and approach
 
@@ -56,3 +57,25 @@ the guard policy during a file move; current News viewer security must remain.
 and relative internal imports. These two actual reads confirm candidate roles,
 not a new security finding or a completed remediation. Remaining candidates and
 broader semantic review are pending. No File Passport cleanup is authorized.
+
+## Bounded implementation checkpoint — 2026-10-22
+
+Redis lifecycle now lives in a feature-private service file. RedisModule still
+provides the same connection and exports only REDIS_CONNECTION. Engagement wire
+enum, input classes, output projections and optional JWT guard now live in their
+corresponding presentation files; resolver methods and module wiring are unchanged.
+Named imports are used; no public barrel, schema, migration or dependency changes
+are part of this move.
+
+Verified: 13 focused lifecycle/guard tests, scoped ESLint, API typecheck,
+Prisma validation and architecture checks (140 tests, zero baseline findings).
+The fresh worktree required Prisma generation with an explicit test URL and
+workspace dependency builds before typecheck; the initial missing-artifact
+failure was not treated as passing evidence. No database migration was run.
+
+Also passed: 31 HTTP News engagement security regressions in a private migrated
+schema on disposable port5435, API build, and regenerated SDL comparison. The SDL
+remains byte-identical (SHA256
+`C03170CB54027C557F662A5B9BF5F85CAFA2112B8623D3FCA360E8FA9C82FD2C`).
+No generated GraphQL changes were accepted. Full phase gates and the remaining
+source reviews remain open; these two separations do not complete D5.

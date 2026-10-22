@@ -1,78 +1,27 @@
-import { ExecutionContext, Injectable, UseGuards } from '@nestjs/common';
-import {
-  Args,
-  Context,
-  Field,
-  GqlExecutionContext,
-  ID,
-  InputType,
-  Int,
-  Mutation,
-  ObjectType,
-  registerEnumType,
-  Resolver,
-} from '@nestjs/graphql';
-import { AuthGuard } from '@nestjs/passport';
-import { IsEnum, IsUUID } from 'class-validator';
-
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Interaction Platform
+ * 📄 File: apps/api/src/modules/interactions/presentation/graphql/resolvers/audience-engagement.resolver.ts
+ * 🎯 Purpose: Delegates optional-viewer mutations through the existing engagement contracts.
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
+import { UseGuards } from '@nestjs/common';
+import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
 import type { AuthenticatedUser } from '@api/core/auth';
 import { AudienceEngagementService } from '../../../application/services/audience-engagement.service';
 import {
   SHARE_CHANNELS,
   type AudienceEngagementResult,
 } from '../../../domain/types/audience-engagement.type';
-
-enum ShareChannelModel {
-  FACEBOOK = 'FACEBOOK',
-  X = 'X',
-  THREADS = 'THREADS',
-  INSTAGRAM = 'INSTAGRAM',
-  PINTEREST = 'PINTEREST',
-  COPY_LINK = 'COPY_LINK',
-  PRINT = 'PRINT',
-}
-
-registerEnumType(ShareChannelModel, { name: 'ShareChannel' });
-
-@Injectable()
-class OptionalEngagementJwtGuard extends AuthGuard('jwt') {
-  getRequest(context: ExecutionContext) {
-    return GqlExecutionContext.create(context).getContext<{
-      req: { user?: AuthenticatedUser };
-    }>().req;
-  }
-
-  handleRequest<TUser>(error: unknown, user: TUser): TUser | undefined {
-    return error ? undefined : user;
-  }
-}
-
-@InputType()
-class RecordViewInput {
-  @Field(() => ID) @IsUUID() interactionTargetId!: string;
-  @Field() @IsUUID() visitorId!: string;
-}
-
-@InputType()
-class RecordShareInput extends RecordViewInput {
-  @Field(() => ShareChannelModel)
-  @IsEnum(ShareChannelModel)
-  channel!: ShareChannelModel;
-}
-
-@ObjectType('ShareChannelCount')
-class ShareChannelCountModel {
-  @Field(() => ShareChannelModel) channel!: ShareChannelModel;
-  @Field(() => Int) count!: number;
-}
-
-@ObjectType('AudienceEngagement')
-class AudienceEngagementModel {
-  @Field() changed!: boolean;
-  @Field(() => Int) viewCount!: number;
-  @Field(() => Int) shareCount!: number;
-  @Field(() => [ShareChannelCountModel]) shares!: ShareChannelCountModel[];
-}
+import { OptionalEngagementJwtGuard } from '../guards/optional-engagement-jwt.guard';
+import {
+  RecordViewInput,
+  RecordShareInput,
+} from '../inputs/audience-engagement.input';
+import { AudienceEngagementModel } from '../models/audience-engagement.model';
 
 @Resolver()
 @UseGuards(OptionalEngagementJwtGuard)
