@@ -4,8 +4,14 @@
 
 `pnpm quality:full` adds sequential fail-fast verification without changing the
 shorter `pnpm quality`, application behavior or UI. Services and migrated test
-databases must already exist. The runner never installs dependencies/browsers,
-starts Docker, deploys migrations, resets databases or stops existing servers.
+databases must already exist. The runner invokes no dependency/browser install
+or service-provisioning command, starts no Docker, deploys no migrations, resets
+no database and stops no existing server. pnpm may perform its own dependency
+freshness check; retained logs report already up to date, without source/lock
+changes. This is not a claim of sandboxing package-manager internals.
+
+Current status: implemented and locally verified at2837644. The consolidated
+`pnpm quality:full` exits0; remote CI and phase acceptance remain open.
 
 ## Boundaries
 
@@ -83,3 +89,17 @@ The next consolidated attempt stops at formatting of Next-generated
 generated-file ignore correction passes root formatting and five policy
 controls without rewriting generated output. The final wrapper must still run;
 none of these partial verifications is advertised as full success.
+
+## Final consolidated local result at2837644
+
+`pnpm quality:full` naturally exits0 in one run. Coverage: API1298, Web60,
+Worker50, Storage43, all passing, seven fresh Turbo tasks. API E2E593/593 in55
+suites (489.875s), zero skipped/todo/runtime errors. Full-policy controls40/40,
+quality controls5/5; format, architecture/licenses, Prisma validation/generation
+and drift, lint/types, security, GraphQL consistency, build and API entry pass.
+Final fresh Web smoke14/14 in27.8s; strict reporter confirms all tests passed
+once, no skips/retries/expected failures. Port3100 is released afterward.
+
+Evidence: `dss-d6-quality-full-after078.log` in temporary storage and
+`node_modules/.cache/quality-full-MjJNT7/{api-e2e,web-smoke}.json`.
+Prior failures remain above; this result does not erase them or accept D6/D7.

@@ -1,8 +1,35 @@
 # D6 — Current full quality baseline evidence
 
 Date: 2026-10-22. Branch: `debt/d6-quality-baseline`, draft PR#79.
-Verified application/test source checkpoint:2e8efee. Status: local gates green;
-new-head remote CI, phase review and acceptance remain open.
+Current verified source checkpoint:2837644. `pnpm quality:full` naturally exits0
+as one consolidated run, including API coverage1298/1298, E2E593/593 and fresh
+Web smoke14/14. New-head remote CI, phase review and acceptance remain open.
+Historical evidence below is retained, not substituted for this checkpoint.
+
+## Current consolidated verification
+
+Raw log: `dss-d6-quality-full-after078.log` in local temporary storage.
+JSON reports: `node_modules/.cache/quality-full-MjJNT7/{api-e2e,web-smoke}.json`.
+The complete wrapper exits0, without reset, forceExit, automatic retries,
+service provisioning or reuse of an existing Web server.
+
+- Formatting, architecture/license140/140 and zero inventory findings pass.
+- Prisma validation/generation and read-only drift, lint/types pass.
+- Full-profile policy40/40, quality policy5/5, security policy9/9 and accepted
+  exact braces-patch14/14 controls pass. No new vulnerability exception.
+- Forced coverage: API1298/1298 in171 suites, Web60, Worker50, Storage43;
+  seven successful Turbo tasks, zero cached,2m49.254s.
+- API E2E593/593 in55 suites,489.875s, success=true and zero
+  failed/pending/todo/runtime errors, verified from JSON.
+- GraphQL consistency, build and compiled API entry regression1/1 pass.
+- Fresh browser smoke14/14,27.8s, retries0, workers2, no skipped/expected failures;
+  strict reporter records status=passed and tests=14.
+
+After teardown: zero DB clients/private fixture schemas, no listener on3100,
+unchanged migration files and canonical full SDL SHA256
+`C03170CB54027C557F662A5B9BF5F85CAFA2112B8623D3FCA360E8FA9C82FD2C`.
+No dev DB5433 reset/migration occurred. Web smoke remains a separate mocked-flow
+boundary, not a claim of browser-to-real-database product acceptance.
 
 ## Logical checkpoints
 
@@ -17,12 +44,19 @@ new-head remote CI, phase review and acceptance remain open.
   exact HTTP response versus deliberately later persistence evidence.
 - 2e8efee — separately scoped D6 DEBT-041 actual-byte TOTP corruption tests,
   retaining authenticated-decryption rejection and unchanged-envelope controls.
+- 9588857 — DEBT-049 preserves SQL while aligning Prisma annotations and drift gate.
+- dcdd7e2 — DEBT-015 explicit full gate and fail-closed reports/service guards.
+- dc7adbe — approved DEBT-075 isolated migrated Achievements E2E fixture.
+- 9350e85 — approved DEBT-076 bounded Vitest workers, unchanged timeout/coverage.
+- 2a8948a — approved DEBT-077 real observer readiness and browser characterization.
+- 2837644 — DEBT-078 excludes only Next-generated declaration from formatting.
 
-No frontend source, public API, schema/migration, dependency or runtime timeout
-changed in these three latest checkpoints. The Worker identity correction is
-an intentional approved runtime change; the two later corrections are tests.
+The Worker identity correction is an intentional approved runtime change;
+074/041 are tests. Later049 changes Prisma annotations without SQL/history
+changes;015/075/076/077/078 change verification infrastructure/fixtures only.
+No UI redesign, new public API or runtime timeout change is included.
 
-## Final combined local verification
+## Historical combined local verification at2e8efee
 
 `pnpm quality` naturally exits0: formatting, lint, typecheck, Prisma validation,
 33 full-profile controls, API1284/1284 in170 suites, Worker50/50, Web60/60,
