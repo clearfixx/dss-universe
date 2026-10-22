@@ -49,3 +49,9 @@ controls, then stops on the existing DEBT-041 nondeterministic TOTP tamper test:
 without a correction. Scoped privacy-file lint also passes. The separate local
 DEBT-074 checkpoint has focused verification; full acceptance remains open
 until the independent D6 DEBT-041 test correction and combined gates.
+
+After the separately committed DEBT-074 change, the independent DEBT-041
+correction makes the full combined `pnpm quality` pass naturally: API1284/1284,
+Worker50/50, Web60/60, build/post-build check and architecture140/140.
+Log: `dss-d6-combined-quality.log`. Fresh coverage plus full E2E and new-head
+remote CI/review remain open, not inferred from these unit/build gates.

@@ -20,8 +20,30 @@ describe('TotpService', () => {
     const second = service.encrypt('TOPSECRET');
     expect(first).not.toBe(second);
     expect(service.decrypt(first)).toBe('TOPSECRET');
-    expect(() => service.decrypt(`${first.slice(0, -1)}x`)).toThrow();
   });
+
+  it.each([
+    ['IV', 0],
+    ['authentication tag', 1],
+    ['ciphertext', 2],
+  ] as const)(
+    'rejects an actual byte change in the %s',
+    (_component, index) => {
+      const envelope = service.encrypt('TOPSECRET');
+      const parts = envelope.split('.');
+      expect(parts).toHaveLength(3);
+      const original = Buffer.from(parts[index], 'base64url');
+      expect(original.length).toBeGreaterThan(0);
+      const changed = Buffer.from(original);
+      changed[0] ^= 0x01;
+      expect(changed).not.toEqual(original);
+      parts[index] = changed.toString('base64url');
+      const corrupted = parts.join('.');
+      expect(corrupted).not.toBe(envelope);
+      expect(service.decrypt(envelope)).toBe('TOPSECRET');
+      expect(() => service.decrypt(corrupted)).toThrow();
+    },
+  );
 
   it('normalizes recovery codes before keyed hashing', () => {
     expect(service.recoveryHash('ABCDEF-123456')).toBe(

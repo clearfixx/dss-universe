@@ -703,7 +703,7 @@ Review required/optional fields and invalid-input compatibility, then switch to
 runtime DTO imports with explicit regression tests. Do not silently turn this
 boundary refactor into an API validation behavior change; no exemption is granted.
 
-### DEBT-041 — Nondeterministic TOTP envelope tamper assertion (Medium, OPEN, D6 / Auth test owner)
+### DEBT-041 — Nondeterministic TOTP envelope tamper assertion (Medium, IMPLEMENTED / acceptance open, D6 / Auth test owner)
 
 A sequential D3.2 coverage run fails the unchanged TotpService test at line 23:
 `decrypt(first.slice(0, -1) + 'x')` does not throw. The ciphertext is random and
@@ -713,6 +713,11 @@ AES-GCM authentication bypass. Replace it in a separately reviewed test fix with
 deterministic byte corruption and unchanged-envelope control. Keep the assertion
 and security behavior; do not skip it, weaken encryption or claim rerun success
 resolves the nondeterminism. No TOTP production/test edit is included in D3.2.
+
+The separate D6 correction now flips a real decoded byte in each of IV/tag/
+ciphertext, verifies the bytes differ, preserves untouched-envelope controls
+and still requires rejection. Production crypto is unchanged. Combined gates
+and review remain open; see [deterministic test evidence](../audits/DEBT_041_TOTP_TAMPER_TEST.md).
 
 ### DEBT-042 — Second-factor lifecycle concurrency review (High, IMPLEMENTED / review pending, D3.4)
 
