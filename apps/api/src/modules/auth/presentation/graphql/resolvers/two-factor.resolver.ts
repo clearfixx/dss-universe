@@ -1,49 +1,15 @@
 import { UseGuards } from '@nestjs/common';
-import {
-  Args,
-  Field,
-  InputType,
-  Int,
-  Mutation,
-  ObjectType,
-  Query,
-  Resolver,
-} from '@nestjs/graphql';
-import { IsString, Matches, MinLength } from 'class-validator';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
 import { TwoFactorService } from '../../../application/services/two-factor.service';
 import { LogoutResultModel } from '../models/logout-result.model';
-
-@ObjectType()
-class TwoFactorStatusModel {
-  @Field() enabled!: boolean;
-  @Field(() => Int) recoveryCodesRemaining!: number;
-}
-
-@ObjectType()
-class TwoFactorSetupModel {
-  @Field() secret!: string;
-  @Field() otpauthUri!: string;
-}
-
-@ObjectType()
-class TwoFactorConfirmationModel {
-  @Field(() => [String]) recoveryCodes!: string[];
-}
-
-@InputType()
-class ConfirmTwoFactorInput {
-  @Field() @IsString() @Matches(/^\d{6}$/) code!: string;
-}
-
-@InputType()
-class DisableTwoFactorInput {
-  @Field() @IsString() @MinLength(8) password!: string;
-  @Field()
-  @IsString()
-  @Matches(/^(?:\d{6}|[a-f0-9]{6}-[a-f0-9]{6})$/i)
-  code!: string;
-}
+import { ConfirmTwoFactorInput } from '../inputs/confirm-two-factor.input';
+import { DisableTwoFactorInput } from '../inputs/disable-two-factor.input';
+import {
+  TwoFactorStatusModel,
+  TwoFactorSetupModel,
+  TwoFactorConfirmationModel,
+} from '../models/two-factor.model';
 
 @Resolver()
 export class TwoFactorResolver {

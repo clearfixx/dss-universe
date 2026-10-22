@@ -4,34 +4,7 @@ import {
   NotFoundException,
   UseGuards,
 } from '@nestjs/common';
-import {
-  Args,
-  Field,
-  GraphQLISODateTime,
-  ID,
-  InputType,
-  Int,
-  Mutation,
-  ObjectType,
-  Query,
-  registerEnumType,
-  Resolver,
-} from '@nestjs/graphql';
-import {
-  IsEnum,
-  IsArray,
-  IsInt,
-  IsJSON,
-  IsOptional,
-  IsString,
-  IsUUID,
-  MaxLength,
-  Max,
-  ArrayMaxSize,
-  Min,
-  MinLength,
-} from 'class-validator';
-
+import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
 import { Permission, PermissionsService } from '@api/core/authorization';
 import { NewsService } from '../../application/services/news.service';
@@ -44,183 +17,25 @@ import type {
 import {
   NewsPostTypeModel,
   NewsVisibilityModel,
-} from './news-delivery.graphql';
-
-enum NewsArticleStatusModel {
-  DRAFT = 'DRAFT',
-  IN_REVIEW = 'IN_REVIEW',
-  CHANGES_REQUESTED = 'CHANGES_REQUESTED',
-  APPROVED = 'APPROVED',
-  SCHEDULED = 'SCHEDULED',
-  PUBLISHED = 'PUBLISHED',
-  ARCHIVED = 'ARCHIVED',
-}
-
-enum NewsEditorialActionModel {
-  SUBMITTED = 'SUBMITTED',
-  CHANGES_REQUESTED = 'CHANGES_REQUESTED',
-  APPROVED = 'APPROVED',
-  SCHEDULED = 'SCHEDULED',
-  SCHEDULE_CANCELLED = 'SCHEDULE_CANCELLED',
-  PUBLISHED = 'PUBLISHED',
-}
-
-registerEnumType(NewsArticleStatusModel, { name: 'NewsArticleStatus' });
-registerEnumType(NewsEditorialActionModel, { name: 'NewsEditorialAction' });
-
-@ObjectType('NewsEditorialArticle')
-class NewsEditorialArticleModel {
-  @Field(() => ID) id!: string;
-  @Field(() => ID) interactionTargetId!: string;
-  @Field(() => ID) authorId!: string;
-  @Field(() => NewsPostTypeModel) postType!: NewsPostTypeModel;
-  @Field(() => NewsArticleStatusModel) status!: NewsArticleStatusModel;
-  @Field(() => NewsVisibilityModel) visibility!: NewsVisibilityModel;
-  @Field() language!: string;
-  @Field() slug!: string;
-  @Field() title!: string;
-  @Field() shortText!: string;
-  @Field() documentJson!: string;
-  @Field() templateDataJson!: string;
-  @Field(() => ID, { nullable: true }) coverMediaId!: string | null;
-  @Field(() => Int) currentVersion!: number;
-  @Field(() => Int, { nullable: true }) approvedVersion!: number | null;
-  @Field() allowComments!: boolean;
-  @Field() allowRating!: boolean;
-  @Field() allowSharing!: boolean;
-  @Field() allowIndexing!: boolean;
-  @Field() showOnHomepage!: boolean;
-  @Field() featured!: boolean;
-  @Field(() => GraphQLISODateTime, { nullable: true })
-  submittedAt!: Date | null;
-  @Field(() => GraphQLISODateTime, { nullable: true })
-  approvedAt!: Date | null;
-  @Field(() => GraphQLISODateTime, { nullable: true })
-  scheduledFor!: Date | null;
-  @Field(() => GraphQLISODateTime, { nullable: true })
-  publishedAt!: Date | null;
-  @Field(() => GraphQLISODateTime, { nullable: true })
-  displayPublishedAt!: Date | null;
-  @Field(() => GraphQLISODateTime) createdAt!: Date;
-  @Field(() => GraphQLISODateTime) updatedAt!: Date;
-}
-
-@ObjectType('NewsEditorialDecision')
-class NewsEditorialDecisionModel {
-  @Field(() => ID) id!: string;
-  @Field(() => ID) articleId!: string;
-  @Field(() => Int) revisionVersion!: number;
-  @Field(() => ID) actorId!: string;
-  @Field(() => NewsEditorialActionModel) action!: NewsEditorialActionModel;
-  @Field(() => String, { nullable: true }) reason!: string | null;
-  @Field(() => GraphQLISODateTime) createdAt!: Date;
-}
-
-@ObjectType('NewsEditorialTransition')
-class NewsEditorialTransitionModel {
-  @Field(() => NewsEditorialArticleModel) article!: NewsEditorialArticleModel;
-  @Field(() => NewsEditorialDecisionModel)
-  decision!: NewsEditorialDecisionModel;
-}
-
-@ObjectType('NewsEditorialPage')
-class NewsEditorialPageModel {
-  @Field(() => [NewsEditorialArticleModel]) items!: NewsEditorialArticleModel[];
-  @Field(() => Int) total!: number;
-  @Field(() => Int) page!: number;
-  @Field(() => Int) pageSize!: number;
-  @Field(() => Int) totalPages!: number;
-}
-
-@InputType()
-class NewsEditorialBrowseInput {
-  @Field(() => Int, { nullable: true })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  page?: number;
-
-  @Field(() => Int, { nullable: true })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(100)
-  pageSize?: number;
-
-  @Field(() => [NewsArticleStatusModel], { nullable: true })
-  @IsOptional()
-  @IsArray()
-  @ArrayMaxSize(7)
-  @IsEnum(NewsArticleStatusModel, { each: true })
-  statuses?: NewsArticleStatusModel[];
-}
-
-@InputType()
-class CreateNewsDraftInput {
-  @Field(() => NewsPostTypeModel)
-  @IsEnum(NewsPostTypeModel)
-  postType!: NewsPostTypeModel;
-
-  @Field(() => NewsVisibilityModel)
-  @IsEnum(NewsVisibilityModel)
-  visibility!: NewsVisibilityModel;
-
-  @Field() @IsString() @MinLength(2) @MaxLength(8) language!: string;
-  @Field() @IsString() @MinLength(1) @MaxLength(180) slug!: string;
-  @Field() @IsString() @MinLength(3) @MaxLength(180) title!: string;
-  @Field() @IsString() @MinLength(10) @MaxLength(500) shortText!: string;
-  @Field() @IsString() documentJson!: string;
-
-  @Field(() => String, { nullable: true })
-  @IsOptional()
-  @IsJSON()
-  templateDataJson?: string;
-
-  @Field(() => ID, { nullable: true })
-  @IsOptional()
-  @IsUUID()
-  coverMediaId?: string;
-}
-
-@InputType()
-class SaveNewsDraftInput extends CreateNewsDraftInput {
-  @Field(() => ID) @IsUUID() articleId!: string;
-  @Field(() => Int) @IsInt() @Min(1) baseVersion!: number;
-
-  @Field(() => String, { nullable: true })
-  @IsOptional()
-  @IsString()
-  @MaxLength(500)
-  changeSummary?: string;
-}
-
-@InputType()
-class NewsDecisionInput {
-  @Field(() => ID) @IsUUID() articleId!: string;
-
-  @Field(() => String, { nullable: true })
-  @IsOptional()
-  @IsString()
-  @MaxLength(1000)
-  reason?: string;
-}
-
-@InputType()
-class ScheduleNewsInput {
-  @Field(() => ID) @IsUUID() articleId!: string;
-  @Field(() => GraphQLISODateTime) scheduledFor!: Date;
-  @Field(() => GraphQLISODateTime, { nullable: true })
-  @IsOptional()
-  displayPublishedAt?: Date;
-}
-
-@InputType()
-class PublishNewsInput {
-  @Field(() => ID) @IsUUID() articleId!: string;
-  @Field(() => GraphQLISODateTime, { nullable: true })
-  @IsOptional()
-  displayPublishedAt?: Date;
-}
+} from './models/news-delivery.enums';
+import {
+  NewsArticleStatusModel,
+  NewsEditorialActionModel,
+} from './models/news-editorial.enums';
+import {
+  NewsEditorialArticleModel,
+  NewsEditorialDecisionModel,
+  NewsEditorialTransitionModel,
+  NewsEditorialPageModel,
+} from './models/news-editorial.model';
+import {
+  NewsEditorialBrowseInput,
+  CreateNewsDraftInput,
+  SaveNewsDraftInput,
+  NewsDecisionInput,
+  ScheduleNewsInput,
+  PublishNewsInput,
+} from './inputs/news-editorial.input';
 
 @Resolver(() => NewsEditorialArticleModel)
 @UseGuards(JwtAuthGuard)

@@ -22,7 +22,7 @@
  * ===============================================================
  */
 
-import { ExecutionContext, Injectable, UseGuards } from '@nestjs/common';
+import { UseGuards } from '@nestjs/common';
 import {
   Args,
   ID,
@@ -32,9 +32,8 @@ import {
   Query,
   ResolveField,
   Resolver,
-  GqlExecutionContext,
 } from '@nestjs/graphql';
-import { AuthGuard } from '@nestjs/passport';
+import { OptionalUsersJwtGuard } from '../guards/optional-users-jwt.guard';
 
 import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
 import {
@@ -82,19 +81,6 @@ import { ProfileCompletionService } from '../../../application/services/profile-
 import { ProfileCompletionModel } from '../models/profile-completion.model';
 import { UserActivityFeedService } from '../../../application/services/user-activity-feed.service';
 import { UserActivityPageModel } from '../models/user-activity.model';
-
-@Injectable()
-class OptionalUsersJwtGuard extends AuthGuard('jwt') {
-  getRequest(context: ExecutionContext) {
-    return GqlExecutionContext.create(context).getContext<{
-      req: { user?: AuthenticatedUser };
-    }>().req;
-  }
-
-  handleRequest<TUser>(error: unknown, user: TUser): TUser | undefined {
-    return error ? undefined : user;
-  }
-}
 
 @Resolver(() => UserModel)
 export class UsersResolver {

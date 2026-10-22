@@ -12,19 +12,8 @@
  * ===============================================================
  */
 
-import { Field, ObjectType, Query, Resolver } from '@nestjs/graphql';
-
-@ObjectType()
-class ApiInfo {
-  @Field()
-  name!: string;
-
-  @Field()
-  status!: string;
-
-  @Field()
-  transport!: string;
-}
+import { Query, Resolver } from '@nestjs/graphql';
+import { ApiInfo } from '../types/api-info.model';
 
 @Resolver()
 export class SystemResolver {

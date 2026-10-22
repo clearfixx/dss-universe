@@ -9,7 +9,7 @@ import type { NewsArticle } from '../../domain/types/news-article.type';
 import {
   NewsPostTypeModel,
   NewsVisibilityModel,
-} from './news-delivery.graphql';
+} from './models/news-delivery.enums';
 import { NewsEditorialResolver } from './news-editorial.graphql';
 
 describe('NewsEditorialResolver', () => {

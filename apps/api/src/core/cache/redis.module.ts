@@ -1,25 +1,8 @@
-import {
-  Global,
-  Inject,
-  Injectable,
-  Module,
-  type OnApplicationShutdown,
-  type OnModuleInit,
-} from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import IORedis from 'ioredis';
 import { REDIS_CONNECTION } from './redis.constants';
-
-@Injectable()
-class RedisLifecycleService implements OnModuleInit, OnApplicationShutdown {
-  constructor(@Inject(REDIS_CONNECTION) private readonly connection: IORedis) {}
-  async onModuleInit(): Promise<void> {
-    if (this.connection.status === 'wait') await this.connection.connect();
-  }
-  async onApplicationShutdown(): Promise<void> {
-    if (this.connection.status !== 'end') await this.connection.quit();
-  }
-}
+import { RedisLifecycleService } from './redis-lifecycle.service';
 
 @Global()
 @Module({

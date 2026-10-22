@@ -2,7 +2,7 @@
 
 > Status: Active
 >
-> Updated: 2026-10-21
+> Updated: 2026-10-22
 
 ## Purpose
 
@@ -20,6 +20,25 @@ active package safe and buildable.
 - `REJECTED` — reviewed and determined not to be debt.
 
 ## Register
+
+### DEBT-073 — Workspace quality does not execute requested DB/Redis opt-ins (Medium, ACCEPTED, separate D6 package)
+
+Date: 2026-10-22. D5 worktree based on43d9562. With `DATABASE_URL` targeting
+disposable5434, `REDIS_PORT=6380` and all four existing `RUN_*` opt-ins explicitly
+set in the invoking shell, `pnpm quality` reports API14 skipped suites and
+106 skipped tests (1175 passed /1281 total). Turbo uses its current strict
+environment configuration; those opt-ins are not declared in turbo.json.
+Direct API Jest runs in preceding checkpoints execute the opt-in scenarios.
+
+This is a verification coverage gap, not a newly proven runtime security flaw.
+A green aggregate command must not be described as all DB/Redis scenarios passing.
+The current D5 package will gather separate uncached coverage with explicit env
+passthrough, without changing runner or CI configuration. Proposed separate D6
+correction: explicitly forward/hash relevant test configuration and enforce the
+intended integration-test count/skip policy, with clean-checkout and CI evidence.
+Owner approved the separate D6 package on2026-10-22: explicitly forward and hash
+DB/Redis test env and verify mandatory opt-ins are not skipped. D5 does not change
+the runner/CI; implementation, regressions and full D6 acceptance remain pending.
 
 ### DEBT-072 — Profile asset assignment races Media cleanup claim (Medium, ACCEPTED, separate pre-11 design/correction package)
 
