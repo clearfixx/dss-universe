@@ -103,3 +103,24 @@ Users also contains a local optional JWT guard. These are source-review leads,
 not approval to alter authorization or a claim that their entire files have been
 semantically audited. Six of the original twelve candidates have bounded moves;
 that count is not a completion percentage for the broader responsibility audit.
+
+## News settings and pins transport — 2026-10-22
+
+Settings and pins resolvers now import feature-local input and output classes.
+Pagination mode and pin scope wire enums have their own model files; pin DTOs no
+longer import a delivery resolver to obtain the enum. Delivery uses that same
+enum identity. Registration names/values, field metadata, guards, permission
+checks and service calls are unchanged. No compatibility barrel or broader
+public feature export was introduced; reference checks found only local uses.
+
+The scoped unit run passed 28 tests across input validation, settings/pins service
+policies and the editorial resolver. Migrated News foundation and engagement
+audience suites passed 32 tests. SDL is byte-identical to the hash above. These
+HTTP suites verify application wiring and existing audience behavior; they do not
+claim direct HTTP coverage of every settings/pin mutation. API typecheck, lint
+and architecture checks passed. API build and the full API unit/DB/Redis run
+also passed naturally: 167 suites, 1262 tests, no skipped tests, 65.659s.
+
+Eight initial candidates now have bounded separations. News delivery remains a
+mixed-role candidate beyond the pin enum extraction; editorial, Users guard and
+AI editor transport remain pending. Full phase acceptance is still open.

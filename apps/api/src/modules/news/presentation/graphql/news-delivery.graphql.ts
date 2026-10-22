@@ -49,6 +49,7 @@ import {
   Min,
 } from 'class-validator';
 
+import { NewsPinScopeModel } from './models/news-pin-scope.model';
 import { NewsDeliveryService } from '../../application/services/news-delivery.service';
 import { NewsSettingsService } from '../../application/services/news-settings.service';
 import type { FullNewsItem } from '../../domain/types/short-news.type';
@@ -96,16 +97,10 @@ export enum NewsShareChannelModel {
   PRINT = 'PRINT',
 }
 
-export enum NewsPinScopeModel {
-  GLOBAL = 'GLOBAL',
-  CATEGORY = 'CATEGORY',
-}
-
 registerEnumType(NewsPostTypeModel, { name: 'NewsPostType' });
 registerEnumType(NewsVisibilityModel, { name: 'NewsVisibility' });
 registerEnumType(NewsVoteKindModel, { name: 'NewsVoteKind' });
 registerEnumType(NewsShareChannelModel, { name: 'NewsShareChannel' });
-registerEnumType(NewsPinScopeModel, { name: 'NewsPinScope' });
 
 @ObjectType('NewsPin')
 export class NewsPinModel {
