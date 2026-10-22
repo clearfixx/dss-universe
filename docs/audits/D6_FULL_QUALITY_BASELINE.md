@@ -69,3 +69,16 @@ confirms590/590 across54 suites with zero pending/todo/runtime errors; retained
 under node_modules/.cache/d6-ci-f4b2346. The run log is
 dss-d6-ci-f4b2346.log in local temp. This does not include the subsequently
 approved DEBT-049 schema alignment, whose own new-head acceptance remains open.
+
+## Subsequent DEBT-049 local verification
+
+Owner-approved source checkpoint9588857 preserves SQL and aligns Prisma
+annotations, adds a read-only drift gate to quality/CI and passes full local
+quality. Fresh coverage: API1298/1298, Worker50/50, Web60/60. Same-DB E2E:
+593/593 in55 suites, zero pending/todo/runtime errors, natural test exit0.
+Drift is empty before and after the tests; migrations/SDL are unchanged.
+An npm fetch failure correctly stops the wrapper after E2E; a classified
+network recheck passes security, followed by GraphQL consistency. The original
+failure and all later results are retained, not described as one green wrapper.
+See [detailed evidence](DEBT_049_PRISMA_SCHEMA_ALIGNMENT.md).
+New-head remote checks and phase acceptance remain open.

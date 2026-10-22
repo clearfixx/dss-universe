@@ -1,7 +1,7 @@
 # DEBT-049 — Preserve existing SQL while aligning Prisma
 
 Date: 2026-10-22. Separate owner-approved D6 package.
-Status: focused verification passes; full quality/coverage/E2E and CI open.
+Status: local quality/coverage/E2E verified; new-head CI/review open.
 
 ## Reproduction and approved boundary
 
@@ -56,3 +56,31 @@ API1298/1298 in171 suites, workspace tests, build/production-entry check,
 license/architecture140/140 with zero findings. Final log:
 `dss-d6-schema-quality-final.log`. Fresh coverage/full E2E, final consistency
 and security checks and new-head CI remain open; no merge is claimed.
+
+## Final source-checkpoint verification
+
+At9588857, a newly recreated disposable5435 DB receives the unchanged54
+migrations; read-only drift is empty before tests. Full coverage passes
+API1298/1298 in171 suites, Worker50/50 and Web60/60, seven fresh tasks with
+zero cached results,1m45.453s. Full E2E then passes593/593 in55 suites,
+464.359s, without a reset between stages. JSON confirms success with zero
+failed/pending/todo/runtime errors. DB clients/private schemas are released;
+SDL SHA256 remains
+`C03170CB54027C557F662A5B9BF5F85CAFA2112B8623D3FCA360E8FA9C82FD2C`.
+
+The pipeline wrapper subsequently exits1 because npm audit returns fetch
+failed, not because tests fail. This failed evidence is retained. A separate
+diagnostic audit returns a complete report (one existing high,12 moderate,
+zero critical); a bounded security-gate network recheck naturally exits0,
+verifying the exact accepted braces patch/advisory exception. No new exception,
+cached audit substitution or test rerun is used. GraphQL consistency then
+passes, and a post-E2E drift check is still empty. Migration/client/SDL outputs
+have no unplanned tracked diff.
+
+Final local temp evidence: dss-d6-schema-migrations.log,
+dss-d6-schema-drift-fresh.log, dss-d6-schema-coverage.log,
+dss-d6-schema-e2e.log, dss-d6-schema-security.log (original fetch failure),
+dss-d6-schema-audit-diagnostic.json, dss-d6-schema-security-network-recheck.log,
+dss-d6-schema-graphql.log and dss-d6-schema-drift-after-e2e.log.
+Full JSON is retained in node_modules/.cache/d6-schema-e2e.json.
+These results do not constitute new-head clean remote CI or phase acceptance.

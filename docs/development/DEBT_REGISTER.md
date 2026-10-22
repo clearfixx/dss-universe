@@ -955,7 +955,7 @@ cleanup and diagnose the slow/failing operation; do not raise timeouts blindly.
 See [registration evidence](../audits/D3_REGISTRATION_POSTGRES_ATOMICITY.md).
 No out-of-scope E2E restructuring is implemented by this package.
 
-### DEBT-049 — Historical migrations and Prisma schema drift (Medium, ACCEPTED, separate D6 package)
+### DEBT-049 — Historical migrations and Prisma schema drift (Medium, IMPLEMENTED / acceptance open, separate D6 package)
 
 On 2026-10-13, after all 53 migrations were applied to the disposable test DB,
 `prisma migrate status` reported up-to-date but
@@ -980,6 +980,12 @@ The read-only diff is now empty for disposable5434/5435; static14/14 and
 actual migrated DB3/3 checks pass. No historical rewrite, repair DDL or data
 conversion. Full gates/CI remain open; see
 [bounded schema alignment](../audits/DEBT_049_PRISMA_SCHEMA_ALIGNMENT.md).
+
+Full local quality and fresh coverage1298/1298 plus same-DB E2E593/593 now
+pass at9588857; drift stays empty after tests. A retained registry fetch error
+stops the wrapper after E2E; a bounded network recheck passes the unchanged
+security gate, then GraphQL consistency passes. New-head remote CI and phase
+review remain required; no production schema repair or red merge is performed.
 
 ### DEBT-050 — Web coverage reports an unhandled React scheduler error (Medium, OPEN, D6)
 
