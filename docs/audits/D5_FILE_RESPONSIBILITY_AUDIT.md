@@ -1,4 +1,4 @@
-# D5 — File responsibility audit (initial, incomplete)
+# D5 — File responsibility audit (local verification complete; review/CI open)
 
 Date: 2026-10-21. Baseline main851c93a, merged integration PR#74.
 Branch: `debt/d5-file-responsibilities`, separate managed worktree. Primary main
@@ -153,3 +153,90 @@ whole phase E2E gate.
 Ten original candidates now have bounded separations. Users optional guard and
 AI editor transport remain, along with broader semantic review and full phase
 acceptance. File Passport work remains excluded.
+
+## Users and AI editor transport — 2026-10-22
+
+Users optional JWT extraction now lives in a private feature-local guard. AI
+editor input validation, result projection and wire-enum registration are split
+from the resolver. The enum remains the same domain object, registered through
+one presentation file; this is not a new AI integration or external call.
+Consent validation, permission metadata and service delegation are unchanged.
+
+Passed: 18 focused guard/input/public-boundary tests, two migrated E2E suites
+(32 tests), API typecheck/lint/build and 140 architecture tests. AppModule wiring
+and Users social privacy have HTTP evidence; no direct AI inference HTTP coverage
+is claimed. SDL retains the canonical hash above. The full workspace `quality`
+command exited0, including production build and all 140 architecture checks.
+Its Turbo API task skipped106 opt-in tests; this gap is DEBT-073, not accepted
+integration coverage. A separate direct uncached API coverage run with all four
+DB/Redis opt-ins passed1281/1281 in170 suites, zero skipped,106.27s, natural exit0.
+Web browser smoke passed13/13 without retries in38s; it verifies the local
+Next.js render/interaction flow, not live browser-to-DB authentication. The
+Verification skill kept these evidence boundaries explicit. Security policy
+tests, exact approved braces patch regressions and GraphQL consistency passed.
+Separate uncached Web coverage also passed60/60 in26 suites, natural exit0,
+23.00s, with no reported unhandled errors. Aggregate API coverage is72.1%
+statements/66.37% branches/43.65% functions/71.3% lines; configured thresholds
+passed. Web coverage is72.98% statements/59.74% branches/76.52% functions/75.49%
+lines. These totals are not a claim of exhaustive behavioral coverage.
+
+The repeated filesystem AST inventory covers 870 API/Worker runtime files and
+finds zero mixed decorator-role candidates. All twelve original candidates now
+have bounded separations. This detector is still not a semantic compliance proof.
+A second AST query found175 GraphQL DTO classes with no methods, accessors or
+constructors. It checks structural DTO purity, not every possible initializer or
+cross-owner data-flow risk.
+
+### Additional source-level dispositions
+
+- Worker main.ts was read in full: connection factories, processor wiring,
+  heartbeat and shutdown belong to its composition-root role. No speculative
+  split or policy change is justified by its length alone.
+- Worker environment.ts was read in full: database/mail URL and port validation
+  form one startup configuration responsibility; no queue processing or secrets
+  logging is introduced there.
+- EditorAiService was read in full: command validation, consent, prompt/provider
+  orchestration and result labeling implement one AI editor use case. Its provider
+  remains behind a port; moving consent out of the use case would weaken the
+  existing application boundary, so no split is proposed.
+
+At this intermediate checkpoint full API E2E was running on a freshly recreated
+disposable5435 database after all54 migrations. Its final evidence is below.
+Zero decorator candidates is not a reason to skip acceptance requirements or
+mark the pre-Phase11 goal done.
+
+### Full-run report-output failure retained
+
+The first full E2E run reports53 passed suites /586 passed assertions in476.669s,
+but exits1: the operator did not create the ignored node_modules/.cache report
+directory, and Jest's final JSON write fails ENOENT. This is not a passing full
+command and is not hidden. Its original log is retained separately. After the
+exact missing-directory cause was established, that directory was explicitly
+created and the full command was restarted on a freshly recreated disposable5435
+database. No source assertion, timeout, runtime behavior or generated SDL was
+changed to obtain a green retry. The corrected run completed naturally with exit0
+in440.009s. Its JSON reports success:true,53 passed suites,586 passed tests,
+zero failed/pending/todo tests and zero runtime error suites. PostgreSQL then
+reports zero remaining clients and zero private api_boundary schemas. SDL retains
+the canonical SHA256 above. No forceExit or source correction was used.
+
+Further structural review covers80 DTO/input files (88 classes), with no methods,
+accessors or constructors. Cross-checking all twelve original candidate files
+against integrated main851c93a finds all75 original class/enum declarations
+unchanged after ignoring whitespace and named-export modifiers. These checks
+supplement, rather than replace, semantic review and full command exit evidence.
+
+## Local audit disposition and review gate
+
+All twelve confirmed mixed-role candidates are corrected on this phase branch.
+Source comparisons preserve75 original class/enum declarations; focused behavior,
+full opt-in API coverage, Web coverage/smoke, full migrated API E2E, workspace
+quality and generated output checks supply the evidence described above.
+Reviewed composition/configuration/use-case files retain their cohesive roles;
+no further split is justified solely by file length. This is evidence-backed
+disposition of the audit findings, not a promise that every future data flow or
+all possible semantic defects are proven absent.
+
+Remaining acceptance: phase diff review, push/PR and green remote CI. D6/D7 and
+the separate stack audit remain required before the Phase11 brainstorm. DEBT-073
+is owner-approved for a separate D6 package and is not fixed or waived in D5.
