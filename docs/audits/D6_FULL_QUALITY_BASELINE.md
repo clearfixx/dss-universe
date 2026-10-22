@@ -102,3 +102,10 @@ Focused controls2/2 and full fresh browser smoke14/14 pass (strict reporter,
 no retries/skips/reuse). App/UI code, event expectations and timeouts are
 unchanged. A final consolidated wrapper and remote CI are still required;
 individual passing boundaries do not retroactively change earlier failed runs.
+
+Checkpoint2a8948a contains the DEBT-077 correction. Its consolidated attempt
+fails before tests because Next dev generated CRLF `next-env.d.ts`, an ignored
+artifact incorrectly included in source formatting. DEBT-078 adds an exact-path
+Prettier exclusion and an actual-ignore-policy regression; all five quality
+controls and root formatting pass without editing the generated file.
+Consolidated and remote acceptance stay open.

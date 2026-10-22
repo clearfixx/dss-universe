@@ -5,7 +5,26 @@
  */
 import assert from "node:assert/strict";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
+import { getFileInfo } from "prettier";
 import FullQualityWebReporter from "./full-quality-web-reporter.mjs";
+
+test("format policy excludes only the generated Next environment declaration", async () => {
+  const ignorePath = fileURLToPath(
+    new URL("../.prettierignore", import.meta.url),
+  );
+  for (const [path, ignored] of [
+    ["apps/web/next-env.d.ts", true],
+    ["apps/web/vitest.config.ts", false],
+    ["apps/web/e2e/arrival.spec.ts", false],
+  ]) {
+    const info = await getFileInfo(
+      fileURLToPath(new URL(`../${path}`, import.meta.url)),
+      { ignorePath },
+    );
+    assert.equal(info.ignored, ignored, path);
+  }
+});
 import {
   createBrowserEnvironment,
   createQualityEnvironment,

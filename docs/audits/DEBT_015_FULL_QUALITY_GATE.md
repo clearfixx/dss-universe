@@ -77,3 +77,9 @@ Web smoke14/14 with strict reporter, no retries/skips or server reuse. All
 individual boundaries now have passing evidence, but this does not turn the
 earlier failed wrapper into a green one. A consolidated full-gate run of the
 final source remains required before push/phase acceptance.
+
+The next consolidated attempt stops at formatting of Next-generated
+`apps/web/next-env.d.ts` (CRLF), tracked separately as DEBT-078. The exact-path
+generated-file ignore correction passes root formatting and five policy
+controls without rewriting generated output. The final wrapper must still run;
+none of these partial verifications is advertised as full success.
