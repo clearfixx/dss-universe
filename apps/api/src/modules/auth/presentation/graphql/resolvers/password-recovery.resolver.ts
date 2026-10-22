@@ -1,32 +1,9 @@
-import {
-  Args,
-  Context,
-  Field,
-  InputType,
-  Mutation,
-  Resolver,
-} from '@nestjs/graphql';
-import {
-  IsEmail,
-  IsString,
-  Matches,
-  MaxLength,
-  MinLength,
-} from 'class-validator';
+import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
 import type { GraphqlContext } from '@api/core/graphql';
 import { PasswordRecoveryService } from '../../../application/services/password-recovery.service';
 import { LogoutResultModel } from '../models/logout-result.model';
-
-@InputType()
-export class RequestPasswordRecoveryInput {
-  @Field() @IsEmail() @MaxLength(254) email!: string;
-}
-
-@InputType()
-export class ResetPasswordInput {
-  @Field() @IsString() @Matches(/^[a-f0-9]{64}$/) token!: string;
-  @Field() @IsString() @MinLength(8) @MaxLength(72) password!: string;
-}
+import { RequestPasswordRecoveryInput } from '../inputs/request-password-recovery.input';
+import { ResetPasswordInput } from '../inputs/reset-password.input';
 
 @Resolver()
 export class PasswordRecoveryResolver {

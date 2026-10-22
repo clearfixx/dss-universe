@@ -79,3 +79,27 @@ remains byte-identical (SHA256
 `C03170CB54027C557F662A5B9BF5F85CAFA2112B8623D3FCA360E8FA9C82FD2C`).
 No generated GraphQL changes were accepted. Full phase gates and the remaining
 source reviews remain open; these two separations do not complete D5.
+
+## Security transport separation — 2026-10-22
+
+Source review confirmed that SystemResolver mixed its API status model with query
+handling, and the email verification, password recovery and two-factor resolvers
+mixed inputs/result models with operation delegation. The extracted classes now
+live in existing Core GraphQL types and Auth inputs/models directories. No public
+barrel or cross-module capability was added. Repository-wide reference checks
+found no source consumers of the former resolver-local input exports.
+
+Names, field metadata, validation decorators, guards and service calls remain
+unchanged. Eleven new focused input-validation cases pass, as do the 27 existing
+AppModule HTTP scenarios, API lint/typecheck/build and all 140 architecture tests.
+Regenerated SDL retains the same SHA256 recorded above. Full API unit/DB/Redis
+verification passed naturally: 166 suites, 1249 tests, no skipped tests, 80.27s.
+The logged IAM uniqueness errors belong to exercised negative scenarios, not
+failed suites. Full D5 acceptance remains open.
+
+Next candidates include AI editor transport and News delivery/editorial/settings/
+pins, where shared wire enums must not keep DTOs dependent on resolver files.
+Users also contains a local optional JWT guard. These are source-review leads,
+not approval to alter authorization or a claim that their entire files have been
+semantically audited. Six of the original twelve candidates have bounded moves;
+that count is not a completion percentage for the broader responsibility audit.
