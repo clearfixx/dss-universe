@@ -60,3 +60,12 @@ browser-to-database story, every historical debt's resolution or full product
 acceptance. Remote Web smoke and other new-head CI checks must still pass.
 D7 must reconcile debt dispositions and complete release review; the separate
 stack audit follows the accepted baseline, before any Phase11 brainstorm/code.
+
+## Remote verification of checkpoint f4b2346
+
+All five checks pass atf4b2346: quality run39773064819 and containment
+run39773064674 (both OSes). Downloaded api-e2e-report JSON independently
+confirms590/590 across54 suites with zero pending/todo/runtime errors; retained
+under node_modules/.cache/d6-ci-f4b2346. The run log is
+dss-d6-ci-f4b2346.log in local temp. This does not include the subsequently
+approved DEBT-049 schema alignment, whose own new-head acceptance remains open.

@@ -955,7 +955,7 @@ cleanup and diagnose the slow/failing operation; do not raise timeouts blindly.
 See [registration evidence](../audits/D3_REGISTRATION_POSTGRES_ATOMICITY.md).
 No out-of-scope E2E restructuring is implemented by this package.
 
-### DEBT-049 — Historical migrations and Prisma schema drift (Medium, OPEN, D6)
+### DEBT-049 — Historical migrations and Prisma schema drift (Medium, ACCEPTED, separate D6 package)
 
 On 2026-10-13, after all 53 migrations were applied to the disposable test DB,
 `prisma migrate status` reported up-to-date but
@@ -973,6 +973,13 @@ drift and reconcile by reviewed forward migration/model annotations. In
 particular, do not blindly apply a generated diff dropping indexes or changing
 outbox identifiers. D3.5 does not modify these unrelated tables or waive the gate.
 See [D3.5 evidence](../audits/D3_5_ACCESS_GROUPS_IMPLEMENTATION.md).
+
+Owner approved preserving actual SQL on2026-10-22: twelve now() annotations
+with @updatedAt retained, native Outbox UUID and both existing Users indexes.
+The read-only diff is now empty for disposable5434/5435; static14/14 and
+actual migrated DB3/3 checks pass. No historical rewrite, repair DDL or data
+conversion. Full gates/CI remain open; see
+[bounded schema alignment](../audits/DEBT_049_PRISMA_SCHEMA_ALIGNMENT.md).
 
 ### DEBT-050 — Web coverage reports an unhandled React scheduler error (Medium, OPEN, D6)
 
