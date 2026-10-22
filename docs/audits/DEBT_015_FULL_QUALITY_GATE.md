@@ -59,3 +59,15 @@ The root cause of these timeouts is not established. A later memory snapshot
 does not prove resource pressure during failure. No timeouts, assertions or UI
 were changed; no third blind full rerun was attempted. DEBT-076 tracks diagnosis.
 The runner remains locally implemented, with full acceptance open.
+
+After the approved DEBT-076 worker bound, checkpoint9350e85 passes every step
+through API entry validation. Coverage: API1298, Web60, Worker50, Storage43,
+all passing; seven fresh Turbo tasks. API E2E593/593 in55 suites,754.824 seconds,
+zero skipped/todo/runtime errors. GraphQL consistency and build pass. The final
+fresh Web smoke fails12/13 on arrival pause/resume readiness (DEBT-077), and the
+reporter and wrapper correctly fail. No retry was performed. The owned Web
+server no longer listens on3100 after Playwright teardown.
+
+Evidence: `dss-d6-quality-full-after076.log` in temporary storage and
+`node_modules/.cache/quality-full-eS98bn/{api-e2e,web-smoke}.json`.
+This is still a failed full wrapper; partial green steps do not accept D6.

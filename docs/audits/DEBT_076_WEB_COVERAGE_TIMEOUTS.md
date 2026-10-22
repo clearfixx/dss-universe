@@ -54,3 +54,9 @@ cases take 510ms, 674ms and 953ms. Coverage totals match both diagnostic control
 Web lint and typecheck pass. Raw evidence: `dss-d6-076-web-configured.log`,
 `dss-d6-076-web-lint.log`, `dss-d6-076-web-types.log` in temporary storage.
 Full-gate and remote acceptance still require fresh evidence.
+
+Full-gate checkpoint9350e85 now passes Web coverage60/60, API1298/1298,
+Worker50/50 and Storage43/43, all seven Turbo tasks fresh. API E2E593/593,
+GraphQL consistency, build and API entry checks pass. The wrapper fails only at
+the final fresh browser smoke (12/13); this is tracked separately as DEBT-077,
+not reclassified as a Web coverage failure. Remote acceptance remains open.

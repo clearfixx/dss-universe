@@ -82,3 +82,17 @@ network recheck passes security, followed by GraphQL consistency. The original
 failure and all later results are retained, not described as one green wrapper.
 See [detailed evidence](DEBT_049_PRISMA_SCHEMA_ALIGNMENT.md).
 New-head remote checks and phase acceptance remain open.
+
+## Subsequent full-gate and test isolation checkpoints
+
+Remote checkpoint2ca6871 has all five checks green (quality39778289154,
+containment39778289021). This predates the following local commits:
+dcdd7e2 adds full gate, dc7adbe isolates Achievements fixture,9350e85 bounds Web
+Vitest workers with owner approval and a real-config regression.
+
+The full gate at9350e85 passes coverage(API1298/Web60/Worker50/Storage43),
+E2E593/593 with no skips/todo/runtime errors, GraphQL consistency, build and
+compiled API entry validation. It fails at its final fresh Web smoke12/13,
+tracked as DEBT-077. No reset, retries, increased timeout or UI changes.
+Earlier failed wrappers remain recorded under DEBT-015/075/076. No new remote
+green status or full D6 acceptance is claimed for these local commits.

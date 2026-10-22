@@ -31,3 +31,8 @@ Two consecutive focused runs pass without a database reset (one test each,
 DEBT-015's full acceptance remains open. Its second invocation failed at Web
 coverage before reaching this E2E suite. Focused verification is green, not a
 claim of a new all-suite green result. No retry-to-green was attempted.
+
+Subsequent full-gate checkpoint9350e85 passes all593 API E2E tests in55 suites
+against the same disposable DB without reset, including this isolated fixture.
+The wrapper later fails at an unrelated browser smoke (DEBT-077). This proves
+the E2E correction in the full suite, not overall D6 acceptance.
