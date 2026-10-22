@@ -36,6 +36,66 @@
       "dependsOn": ["build"],
       "cache": false
     },
+    "@dss/api#test": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/scripts/full-api-test-policy.cjs"
+      ],
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"],
+      "env": [
+        "NODE_ENV",
+        "DATABASE_URL",
+        "REDIS_HOST",
+        "REDIS_PORT",
+        "TEST_REDIS_PORT",
+        "RUN_IAM_DB_TESTS",
+        "RUN_AUTH_DB_TESTS",
+        "RUN_RECOVERY_DB_TESTS",
+        "RUN_AUTH_REDIS_TESTS",
+        "DSS_REQUIRE_FULL_API_TESTS"
+      ]
+    },
+    "@dss/api#test:unit": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/scripts/full-api-test-policy.cjs"
+      ],
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"],
+      "env": [
+        "NODE_ENV",
+        "DATABASE_URL",
+        "REDIS_HOST",
+        "REDIS_PORT",
+        "TEST_REDIS_PORT",
+        "RUN_IAM_DB_TESTS",
+        "RUN_AUTH_DB_TESTS",
+        "RUN_RECOVERY_DB_TESTS",
+        "RUN_AUTH_REDIS_TESTS",
+        "DSS_REQUIRE_FULL_API_TESTS"
+      ]
+    },
+    "@dss/api#test:cov": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/scripts/full-api-test-policy.cjs"
+      ],
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"],
+      "env": [
+        "NODE_ENV",
+        "DATABASE_URL",
+        "REDIS_HOST",
+        "REDIS_PORT",
+        "TEST_REDIS_PORT",
+        "RUN_IAM_DB_TESTS",
+        "RUN_AUTH_DB_TESTS",
+        "RUN_RECOVERY_DB_TESTS",
+        "RUN_AUTH_REDIS_TESTS",
+        "DSS_REQUIRE_FULL_API_TESTS"
+      ]
+    },
     "clean": {
       "cache": false
     }

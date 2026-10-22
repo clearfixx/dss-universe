@@ -48,7 +48,14 @@ development branches into main for owner testing, followed by the remaining
 plan. D5 now covers file responsibilities only; Passport work is deferred.
 Red checks must be resolved or explicitly dispositioned by the owner, not hidden.
 
-1. Each package uses its own branch, review and PR.
+Owner acceptance (2026-10-22): D5 PR#78 was accepted after five green remote checks
+and full local verification, then merged asfcab53c. Main is available for owner
+testing. D6 proceeds separately on `debt/d6-quality-baseline`; DEBT-073 is the
+first owner-approved bounded package. File Passport work remains excluded.
+
+1. Each phase uses a dedicated branch, review and PR; logical packages are
+   checkpointed there. Separately approved security corrections may use their
+   own branches. Do not create a PR per file or audit note.
 2. A package branch starts from the latest accepted baseline, not from an
    unrelated feature branch.
 3. No package is merged while its required checks are red.

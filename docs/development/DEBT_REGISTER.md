@@ -40,6 +40,12 @@ Owner approved the separate D6 package on2026-10-22: explicitly forward and hash
 DB/Redis test env and verify mandatory opt-ins are not skipped. D5 does not change
 the runner/CI; implementation, regressions and full D6 acceptance remain pending.
 
+Implementation is now on the separate D6 branch: API-specific strict env/hash,
+an uncached full profile and fail-closed Jest result policy. Focused controls and
+the final local quality, coverage and same-database586/586 E2E runs pass;
+remote CI/review remain open. See
+[current evidence](../audits/DEBT_073_FULL_TEST_ENV.md). Not marked resolved yet.
+
 ### DEBT-072 — Profile asset assignment races Media cleanup claim (Medium, ACCEPTED, separate pre-11 design/correction package)
 
 Date: 2026-10-21. Base47cd877. Actual authenticated AppModule GraphQL and
