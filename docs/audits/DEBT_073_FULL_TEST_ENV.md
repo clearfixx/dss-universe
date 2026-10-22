@@ -1,7 +1,8 @@
 # DEBT-073 — Explicit full API test environment
 
 Date: 2026-10-22. Branch: `debt/d6-quality-baseline`, based on accepted
-mainfcab53c (D5 PR#78). Status: local gates passed; remote CI/review open.
+mainfcab53c (D5 PR#78). Status: locally and remotely verified at checkpointc10c937;
+phase-level review/acceptance remains open in draft PR#79.
 
 ## Problem and scope
 
@@ -92,8 +93,18 @@ is retained in this worktree's ignored `node_modules/.cache/d6-bounded-e2e.json`
 These are local evidence, not yet a clean remote CI acceptance or a fresh
 browser-to-database verification. No frontend source changed in this package.
 
-Remote CI/review and remaining D6 packages are open. No other D6 debt or
-Phase11 readiness is declared complete.
+## Remote checkpoint verification
+
+[PR#79](https://github.com/clearfixx/dss-universe/pull/79) atc10c937 has all five
+checks successful. Quality run39766026502 reports API coverage1281/1281 in170
+suites and E2E586/586 in53 suites. Its downloaded `api-e2e-report` JSON confirms
+success with zero pending/todo/runtime errors, independently of the check badge.
+Containment run39766026427 passes on both Ubuntu and Windows; dependency audit
+and Web smoke also pass. Downloaded evidence is retained in the worktree's
+ignored `node_modules/.cache/d6-ci-073` and `dss-d6-ci073.log` in local temp.
+
+Phase-level review/acceptance and remaining D6 packages are open. No other D6
+debt or Phase11 readiness is declared complete.
 
 References: [Turbo environment variables](https://turborepo.dev/docs/crafting-your-repository/using-environment-variables)
 and [task configuration](https://turborepo.dev/docs/reference/configuration).

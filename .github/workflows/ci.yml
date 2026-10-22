@@ -93,7 +93,7 @@ jobs:
         run: pnpm graphql:check
 
       - name: Build
-        run: pnpm build
+        run: pnpm build && pnpm test:api-build-entry
 
       - name: Upload coverage
         if: always()

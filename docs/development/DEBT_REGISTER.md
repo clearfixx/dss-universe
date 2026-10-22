@@ -42,9 +42,10 @@ the runner/CI; implementation, regressions and full D6 acceptance remain pending
 
 Implementation is now on the separate D6 branch: API-specific strict env/hash,
 an uncached full profile and fail-closed Jest result policy. Focused controls and
-the final local quality, coverage and same-database586/586 E2E runs pass;
-remote CI/review remain open. See
-[current evidence](../audits/DEBT_073_FULL_TEST_ENV.md). Not marked resolved yet.
+the final local quality, coverage and same-database586/586 E2E runs pass.
+Checkpointc10c937 in PR#79 also has all five remote checks green, coverage1281/1281
+and downloaded E2E JSON586/586 without skips. Phase-level review/acceptance is
+still open. See [current evidence](../audits/DEBT_073_FULL_TEST_ENV.md).
 
 ### DEBT-072 — Profile asset assignment races Media cleanup claim (Medium, ACCEPTED, separate pre-11 design/correction package)
 
@@ -1161,6 +1162,13 @@ runtime entry without breaking other compiled paths, and verify actual process
 readiness. The current evidence proves the local start failure, not its complete
 root cause or behavior in every deployment. No entry/compiler/runtime fix is
 silently included in DEBT-053; owner notification accompanies this finding.
+
+D6 now corrects the production command to the observed clean Nest build entry,
+adds a post-build entry/syntax regression to quality and CI, and verifies actual
+production-mode HTTP liveness/readiness with disposable DB/Redis. The owned
+smoke process and DB connections are released; SDL is unchanged. Final gates,
+remote CI and review remain open; see
+[bounded verification](../audits/DEBT_055_API_PRODUCTION_START.md).
 
 ### DEBT-056 — Guest News secondary reads bypass MEMBERS audience (Critical, IMPLEMENTED / acceptance open)
 
