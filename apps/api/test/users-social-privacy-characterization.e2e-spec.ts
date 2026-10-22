@@ -13,6 +13,7 @@
  * • authenticates viewers with actual Auth-issued credentials;
  * • verifies private profile fields stay redacted in social-list responses.
  * • preserves page metadata and bounded privacy-query work under real persistence.
+ * • isolates presence side effects and controls a late-persistence ordering case.
  *
  * 🏗️ Architecture:
  * Real HTTP security regression with actual Users privacy and Auth credentials.
@@ -33,6 +34,7 @@ import { PrismaService } from '../src/core/database';
 import { AuthenticationPresentationService } from '../src/composition/identity/application/authentication-presentation.service';
 import { UserSocialGraphService } from '../src/modules/users/application/services/user-social-graph.service';
 import { UserBlockService } from '../src/modules/users/application/services/user-block.service';
+import { UserPresenceService } from '../src/modules/users/application/services/user-presence.service';
 import {
   USER_PRIVACY_REPOSITORY,
   type UserPrivacyRepository,
@@ -61,6 +63,7 @@ const fields = 'id bio location website technologies interests lastSeenAt';
 describe('Users social-list privacy (e2e)', () => {
   let fixture: Awaited<ReturnType<typeof createIsolatedApiSchemaFixture>>;
   let app: INestApplication<App>;
+  let presenceTouch: jest.SpiedFunction<UserPresenceService['touch']>;
   beforeAll(async () => {
     fixture = await createIsolatedApiSchemaFixture({ captureQueries: true });
     const module = await Test.createTestingModule({ imports: [AppModule] })
@@ -70,8 +73,13 @@ describe('Users social-list privacy (e2e)', () => {
     app = module.createNestApplication();
     app.setGlobalPrefix('api');
     await app.init();
+    // Privacy owns the response snapshot; asynchronous presence has separate tests.
+    presenceTouch = jest
+      .spyOn(app.get(UserPresenceService), 'touch')
+      .mockResolvedValue(undefined);
   }, 60000);
   afterAll(async () => {
+    presenceTouch?.mockRestore();
     await app?.close();
     await fixture?.close();
   });
@@ -241,16 +249,16 @@ describe('Users social-list privacy (e2e)', () => {
         });
         const ownProfile = (await page(kind, hub.user.id, subjects[2].token))
           .items[0];
-        // The real authentication flow updates lastSeenAt; compare with persisted
-        // evidence rather than weakening this assertion to any timestamp.
+        // Presence is controlled in this suite: compare exact seeded facts,
+        // not a later database snapshot racing an unrelated asynchronous write.
         const current = await fixture.prisma.user.findUniqueOrThrow({
           where: { id: privateProfile.id },
           select: { lastSeenAt: true },
         });
-        expect(ownProfile).toEqual({
-          ...privateProfile,
-          lastSeenAt: current.lastSeenAt?.toISOString() ?? null,
-        });
+        expect(current.lastSeenAt?.toISOString()).toBe(
+          privateProfile.lastSeenAt,
+        );
+        expect(ownProfile).toEqual(privateProfile);
         await fixture.prisma.userPrivacySettings.update({
           where: { userId: subjects[0].profile.id },
           data: { profileVisibility: 'PRIVATE' },
@@ -268,6 +276,73 @@ describe('Users social-list privacy (e2e)', () => {
     },
     30000,
   );
+
+  it('keeps the exact owner response when presence persists after that response', async () => {
+    const owner = await register();
+    const hub = await register();
+    const initial = new Date('2026-01-01T00:00:00.000Z');
+    const later = new Date('2026-01-02T00:00:00.000Z');
+    const data = {
+      bio: 'synthetic-late-presence-private',
+      location: 'Synthetic Location',
+      website: 'https://dss.test',
+      technologies: ['TypeScript'],
+      interests: ['Space'],
+      lastSeenAt: initial,
+    };
+    await fixture.prisma.user.update({ where: { id: owner.user.id }, data });
+    await fixture.prisma.userPrivacySettings.create({
+      data: {
+        userId: owner.user.id,
+        profileVisibility: 'PRIVATE',
+        showLocation: false,
+        showWebsite: false,
+        showLastSeen: false,
+      },
+    });
+    await connect('following', hub.user.id, owner.user.id);
+
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolveGate) => {
+      release = resolveGate;
+    });
+    const persisted = gate.then(async () => {
+      await fixture.prisma.user.update({
+        where: { id: owner.user.id },
+        data: { lastSeenAt: later },
+      });
+    });
+    presenceTouch.mockImplementationOnce(() => persisted);
+    try {
+      const response = await page(
+        'following',
+        hub.user.id,
+        owner.tokens.accessToken,
+      );
+      const expected = {
+        ...data,
+        id: owner.user.id,
+        lastSeenAt: initial.toISOString(),
+      };
+      expect(presenceTouch).toHaveBeenLastCalledWith(owner.user.id, undefined);
+      expect(response.items).toEqual([expected]);
+      release();
+      await persisted;
+      const current = await fixture.prisma.user.findUniqueOrThrow({
+        where: { id: owner.user.id },
+        select: { lastSeenAt: true },
+      });
+      expect(current.lastSeenAt?.toISOString()).toBe(later.toISOString());
+      expect(response.items).toEqual([expected]);
+      expect(response.items[0].lastSeenAt).not.toBe(
+        current.lastSeenAt?.toISOString(),
+      );
+    } finally {
+      release();
+      await persisted;
+      presenceTouch.mockResolvedValue(undefined);
+    }
+  });
 
   it('does not return unredacted data when batched privacy evidence fails', async () => {
     const hub = await register();

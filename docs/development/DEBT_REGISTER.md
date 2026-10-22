@@ -39,6 +39,13 @@ and add a regression for the ordering. No runtime changes, sleeps, timeout
 increase or broad timestamp matcher. Current Worker package only records this
 finding; CI remains red until the separate correction and new verification.
 
+The separate correction now controls only presence.touch in the privacy suite,
+preserves exact seeded profile/timestamp comparisons, and adds a promise-gated
+HTTP case proving a later actual DB write does not change the response snapshot.
+Focused6/6 cases pass without sleep, timeout changes or runtime changes.
+Full gates/remote acceptance remain open; see
+[test synchronization evidence](../audits/DEBT_074_SOCIAL_PRIVACY_PRESENCE.md).
+
 ### DEBT-073 — Workspace quality does not execute requested DB/Redis opt-ins (Medium, ACCEPTED, separate D6 package)
 
 Date: 2026-10-22. D5 worktree based on43d9562. With `DATABASE_URL` targeting
