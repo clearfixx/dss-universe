@@ -885,6 +885,29 @@ filesystem transform/scanning, queue worker startup or service restart occurred.
 This supersedes the earlier source-only063 evidence for the diagnostic run,
 not its stated no-global-lease boundary or the consolidated security failure.
 
+### REST DTO compatibility probe —040
+
+Read current REST DTOs, GraphQL inputs, controller, bootstrap and app E2E setup.
+Register displayName is required in both decorated contracts, while the root
+application composition accepts an optional displayName. Login factor is optional
+with the same format decorators; GraphQL refresh additionally requires length1,
+whereas the REST DTO declares only IsString. These are compatibility decisions,
+not permission to silently make transports identical.
+
+Current compiled controller metadata remains Function for body parameters.
+Synthetic in-process Nest ValidationPipe with Function metatype and actual
+production options (transform/whitelist/forbidUnknownValues=true) returns400
+unknown-value; with explicit built RegisterDto, the otherwise-valid body without
+displayName returns400 with displayName validation messages. Without explicit
+forbidUnknownValues the Function probe accepts it. No HTTP endpoint or DB was
+touched by the probe, and it does not prove production endpoint outcome.
+
+The inspected app E2E setup also explicitly enables forbidUnknownValues, and
+accepted-main REST assertions passed. Therefore do not explain the discrepancy
+as weaker E2E pipe options: actual Jest-versus-build emitted metadata and built
+HTTP behavior need characterization. A separate compatibility-first040 packet
+was requested; no import, decorator or API change is made in D7.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`
