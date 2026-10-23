@@ -205,6 +205,39 @@ This checksum verifies no SDL change here, not API behavioral equivalence.
 
 ## Remaining streams
 
+### Fresh dependency-security gate — BLOCKED (2026-10-23)
+
+`pnpm security:check` naturally exits1 on current accepted dependency baseline.
+Retained raw log: `dss-d7-security-check.log` in the local temporary directory.
+Log SHA256: `BF7278FFA2AF464ECBCB55E3FC7D13B2FB2C2E4E841C831840C3AC32B124A99D`.
+Registry report: zero low/info, 12 moderate, two high, two critical. The precise
+braces exception still passes exact patch/installed-file verification and all
+14 regressions; independent policy tests pass 9/9. No exception was added.
+
+| Package / installed version | Advisory                                                                 | Reported severity | Patched release |
+| --------------------------- | ------------------------------------------------------------------------ | ----------------- | --------------- |
+| next 16.3.8                 | [GHSA-2464-fhr4-w9xw](https://github.com/advisories/GHSA-2464-fhr4-w9xw) | Critical          | 16.4.1          |
+| next 16.3.8                 | [GHSA-p3m5-59mp-jv5r](https://github.com/advisories/GHSA-p3m5-59mp-jv5r) | High              | 16.4.1          |
+| next 16.3.8                 | [GHSA-673q-mjm6-r5xr](https://github.com/advisories/GHSA-673q-mjm6-r5xr) | Critical          | 16.4.1          |
+
+Opened the three primary GitHub advisories and independently queried npm package
+metadata: next and eslint-config-next 16.4.1 exist; Next requires Node >=20.9.0,
+compatible with the approved Node24 baseline. Actual installed next and
+eslint-config-next are both16.3.8. npm audit paths include direct Web Next and
+Apollo Next integration. The affected-version finding is verified; exploitation
+of DSS is not. SVG optimization impact has upstream-library/platform conditions;
+the cache advisory describes typed-array-returning `use cache` functions. A
+bounded configuration/source grep did not find the selected feature strings,
+but does not prove transitive/deployment immunity or justify a new exception.
+
+This refreshes existing DEBT-016, not a duplicate new debt. Old green D6 audit
+results remain accurate historical evidence, not current security acceptance.
+D7 cannot be accepted as a green release gate while these findings block.
+Asked owner for a separate correction packet (Next/config16.4.1, controlled
+lockfile delta, full quality/security/CI, no UI/UX change). Approval is pending;
+D7 itself has no dependency/runtime changes. No exploit probe or live deployment
+test was performed, and no broad stack change is proposed.
+
 ### News/Editor and Media/Outbox checkpoint — 2026-10-23
 
 The following maps current implementations to the original narrow defect, not
