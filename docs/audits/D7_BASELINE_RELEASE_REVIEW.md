@@ -405,6 +405,44 @@ tracked as039. No route/module rename, phase renumbering or feature scope change
 was made. Therefore039 and broad canonical-documentation acceptance are not
 closed solely by fixing the orientation snapshot.
 
+### D0 operational revalidation — 2026-10-23
+
+Fresh read-only runtime checks: Node24.18.0, pnpm11.9.0 and Docker client/server
+29.8.2 respond. GitHub CLI reports authenticated repository-capable account;
+tokens/credentials were not printed beyond CLI's masked status. Dev PostgreSQL
+5433/Redis6379 and disposable5434/5435/6380 containers report healthy. ClamAV
+container reports healthy and host3310 accepts TCP; no scan/processing or full
+antivirus-delivery acceptance is claimed. Optional OTLP collector is not running
+and host4318 is unavailable; this remains the approved optional profile, not an
+unexpected mandatory-service failure. No service was started or stopped.
+
+Mailpit is running/healthy internally but host readiness is not established:
+
+- HostConfig declares loopback1025/8025 bindings, while current NetworkSettings
+  reports empty mappings for both container ports.
+- Host8025 TCP fails; HTTP `/readyz` is unavailable with a3s bound and no host8025
+  listener is found.
+- Host1025 TCP connects, but does not return an SMTP220 greeting within2s. A host
+  listener PID1432 exists on wildcard addresses; its identity/cause is not proved
+  to be Mailpit or Docker. No process was killed or mail sent.
+- Container `/mailpit readyz` invocation completes and State remains healthy.
+  Internal health and host protocol readiness are distinct evidence boundaries.
+
+This reopens current host-mail readiness under existing013; it is not a new
+duplicate defect, a proved WSL cause or permission to recreate containers in
+the review packet. Earlier D0 delivery results remain historical. LOCAL storage
+and absent MinIO/S3 parity retain explicit017 deferral. Source/container metadata
+alone does not prove current env alignment, SMTP delivery or telemetry export.
+
+Inspected API/Worker validation contracts without reading/printing local env
+values. Required JWT inputs and production Media/2FA secrets are explicit; Worker
+rejects missing/non-PostgreSQL DB input and incomplete configured mail endpoints.
+Fresh pure tests: API config6/6 and Worker environment5/5, zero pending/todo,
+JSON `node_modules/.cache/d7-config-review.json` and
+`node_modules/.cache/d7-worker-environment-review.json`. Bootstrap was inspected
+in part, not executed; no migrations/seed/env writes occurred. These tests do
+not certify every local secret, all production configuration or bootstrapping.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`

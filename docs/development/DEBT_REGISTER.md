@@ -28,6 +28,23 @@ The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079.
 D6 acceptance does not
 automatically resolve unrelated OPEN findings.
 
+### DEBT-013 — D7 host-mail readiness revalidation (High, OPEN readiness observation)
+
+2026-10-23: Mailpit container is running/healthy and its internal readyz invocation
+completes, but host HTTP /readyz on127.0.0.1:8025 is unavailable (3s bound) and
+no8025 listener is found. Host TCP1025 accepts a connection, but the read does not
+produce an SMTP220 greeting within2s. Container HostConfig declares loopback
+bindings1025/8025, whereas NetworkSettings lists empty port mappings. Host1025
+has an unrelated-to-this-check listener PID1432; its ownership/root cause was
+not established and nothing was stopped. No email was sent.
+
+This does not prove a Mailpit-internal failure or a particular Docker/WSL cause.
+It means current host-to-Mailpit readiness is not established by container health.
+Retain earlier D0 delivery evidence as historical; fresh operational acceptance
+requires scoped diagnosis/recovery and protocol verification. D7 performs no
+container restart/recreate, env edit or installation. See
+[D7 readiness evidence](../audits/D7_BASELINE_RELEASE_REVIEW.md).
+
 ### DEBT-016 — Fresh D7 dependency-security finding (Critical, OPEN)
 
 2026-10-23: actual `pnpm security:check` exits1. Raw audit reports two critical,
@@ -510,7 +527,7 @@ this transfer. See [runtime checkpoint](../audits/D4_LEADERBOARD_RUNTIME_OWNERSH
 | DEBT-010 | Medium   | OPEN     | Standards               | Older Auth/Authorization and role-based guidance conflicts with newer permission-based boundaries.                                                                                       | D1–D2                                    |
 | DEBT-011 | Medium   | ACCEPTED | Workflow docs           | Canonical phase/workflow fencing repaired in D1; documentation checks pass, review pending.                                                                                              | D1                                       |
 | DEBT-012 | High     | ACCEPTED | Environment             | D0 env inventory and local alignment implemented; acceptance awaits the full quality gate.                                                                                               | D0                                       |
-| DEBT-013 | High     | ACCEPTED | Local services          | Mailpit, ClamAV and optional OTLP verified; S3 deferred to DEBT-017, persistent observability not claimed.                                                                               | D0                                       |
+| DEBT-013 | High     | OPEN     | Local services          | D7 host-mail readiness fails despite internal Mailpit health; scoped diagnosis/recovery requested. ClamAV healthy; OTLP optional; S3 deferred017.                                        | D0 / separate operational packet         |
 | DEBT-014 | Medium   | RESOLVED | Developer tooling       | GitHub CLI installed and authenticated; repository PR and Actions access verified in D0.                                                                                                 | D0                                       |
 | DEBT-015 | Medium   | RESOLVED | Quality gate            | Consolidated full gate exits0; PR79 head2287d92 CI5/5, owner accepted D6 and merged f118d82. See `../audits/DEBT_015_FULL_QUALITY_GATE.md`.                                              | Accepted D6 / scoped contract only       |
 | DEBT-075 | Medium   | RESOLVED | E2E isolation           | Owned migrated fixture passes twice focused and full E2E593/593 without reset; accepted in D6 PR79. See `../audits/DEBT_075_ACHIEVEMENTS_FIXTURE_ISOLATION.md`.                          | Accepted D6                              |
