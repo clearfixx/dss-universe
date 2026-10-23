@@ -985,3 +985,51 @@ not accepted-main correction;016 approval/remediation and final gate remain.
    audit follows its owner-authored plan separately.
 
 No D7 acceptance, stack-audit completion or Phase11 readiness is claimed.
+
+### Identity public surfaces and atomic enrollment — additional D7 evidence
+
+Reviewed the actual Auth/Users/IAM named roots, their Nest export arrays, Auth
+credential/account-evidence contracts, Users profile port and IAM assignment
+contract. Auth exports four capability tokens, Users six and IAM four; concrete
+application services remain local providers in these inspected modules. A named
+TypeScript export is not the same thing as a Nest provider export: several
+consumer-owned ports are implemented/bound by root composition rather than
+exported as feature providers. This inspection does not certify all module roots.
+
+CredentialSubjectStore is a deliberately trusted write-only enrollment input:
+email/passwordHash enter the root transaction, which returns only subject ID.
+Inspected consumers are Auth enrollment, its owned credential fragment and root
+registration contract/adapter. The shared INSERT composes explicit Auth and Users
+fragments, with IAM-owned baseline-role lookup/assignment in the same transaction.
+No profile object is passed into Auth.enroll. This is the approved transitional
+shared-row composition, not a claim of physically separate persistence.
+
+Inspected AuthenticationPresentationService explicitly copies profile and token
+fields, denies missing/mismatched profiles and does not spread provider results.
+PrismaViewerProfileReader delegates to safe profile assembly and UserMapper's
+explicit allowlist. ViewerProfile intentionally includes email, account state and
+presence for existing internal presentation; it is not an anonymous/public HTTP
+privacy contract. Social/public redaction remains a separate responsibility.
+Auth account evidence selects only status/createdAt and returns active/createdAt.
+
+Fresh tests on D7 head3f90321: public surfaces/profile-asset boundaries/registration
+unit suites17/17; presentation allowlists, Users mapper/reader and actual PostgreSQL
+registration atomicity24/24, zero skipped. The DB suite uses its own registration
+schema on disposable5434 and instruments downstream issuance/delivery; it is not
+a fully migrated-schema or HTTP proof. Expected injected database rejection logs
+are asserted rollback scenarios, not unnoticed test failures. Raw latter report:
+`node_modules/.cache/d7-identity-public-review.json` (ignored). Remaining lifecycle,
+all-public-root and transport/log/event review is not closed by these seven suites.
+
+### Separate057 candidate — implementation checkpoint
+
+Owner approved the exact nullable contract; separate draft PR81 at
+ccc8f9ca74bea7aa2db539b627f644c8f6658498 implements only NewsComment body/documentJson
+nullability, generated Web compatibility and database-null preservation in the
+Interactions delivery mapper. No migration, writer/history rewrite or UI redesign.
+Local related HTTP71/71, Web61/61, architecture140/140, API/Web types, changed-source
+lint and production build pass. Full quality stops at the same three blocking
+Next advisories after earlier checks; later consolidated stages did not run.
+At this checkpoint both containment OS checks and Web smoke pass, dependency audit
+fails and the quality job remains live. Candidate is not merged or accepted main;
+terminal CI must be reconciled before any stronger claim.
