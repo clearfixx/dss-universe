@@ -931,6 +931,29 @@ open for Research Lab/Knowledge Forge product-boundary reconciliation and actual
 route/UI integration. Old checkpoint statements about reversed roadmap labels
 describe the pre-correction source, not the current canonical naming table.
 
+### Separate040 candidate — terminal CI evidence
+
+Owner-approved040 implementation remains separate in draft PR80 at
+2ae30c6844aff8071308f2fe3c5590fcf68e779d, not merged into main or D7. Owner confirmed
+REST optional/nonblank displayName and unchanged GraphQL. Concrete DTO imports,
+17 unit regressions and real HTTP validation/flows are implemented there.
+
+Its forced local full coverage exits0: API1315/1315 in172 suites, Web60, Worker50,
+Storage43;7 tasks,zero cache. Raw log SHA256:
+`D2A5FF06BF944363A4BB15AB5F51E773390B0A7EF298EC66C8EDA8837FEDEC10`.
+CI Quality39964996282 is terminal: quality and Web smoke succeed, dependency audit
+fails on the same three Next advisories. Storage39964996186 succeeds on both OS.
+Quality job120452430847 logs actual1315 unit/607 E2E passes, empty schema drift
+and both post-build tests, including concrete DTO loopback HTTP regression.
+
+Downloaded actual CI E2E artifact passes strict no-skip policy:607/607 in56 suites,
+zero failed/pending/todo/runtime errors. Retained under
+`node_modules/.cache/debt040-ci-2ae30c6/api-e2e.json`, SHA256
+`E6607DE01902C9BB106835EEB2B1DF08B57C49D4186BC4821FEF2D9980B08E9D`.
+PR body updated with these exact-head results without another source push/CI run.
+Four green checks do not waive the failed fifth.040 is a verified candidate,
+not accepted-main correction;016 approval/remediation and final gate remain.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`
