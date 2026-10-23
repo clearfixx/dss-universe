@@ -99,3 +99,15 @@ GHSA-673q-mjm6-r5xr (critical). The existing exact braces exception was verified
 with 14 passing regressions; no exception was added. Later full-gate coverage,
 E2E/build/smoke steps did not execute in that attempt; independent build and
 focused regressions above are not a substitute for those missing gates.
+
+Initial CI at ccc8f9c: API units1298/1298; E2E595/596. The sole failure was the
+old pre-transfer characterization explicitly expecting the now-corrected GraphQL
+non-null error. Its assertion is updated to require an intact page, exact null
+body/document, deleted flag and retained non-disclosure assertion. Both tombstone
+HTTP suites then pass locally9/9. This is approved behavior correction, not removal
+of a privacy assertion. Latest-head CI still needs verification.
+
+Initial CI containment passed both OS. Web job was green but its actual logs show
+one flaky/13 passed after retries, not a clean14/14 first attempt. D7 separately
+records DEBT-080 for reproduction and strict CI acceptance policy alignment;
+this package does not change UI, Playwright retries, assertions or timeouts.
