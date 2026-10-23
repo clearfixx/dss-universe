@@ -42,10 +42,10 @@ does not override the current dependency failure or missing risk decisions.
 | DEBT-017 | X      | LOCAL operational scope approved; MinIO/S3 adapter parity remains future debt, not pre11 prerequisite.                                                     |
 | DEBT-018 | X      | News-local search approved; shared Search Platform remains future debt, not pre11 prerequisite.                                                            |
 | DEBT-019 | X      | Historical Passport rendering repair retained; remaining cleanup/classification deferred outside D7.                                                       |
-| DEBT-020 | R      | Shared portable storage43 tests and cross-OS CI exist; finish exact API/two Worker consumer path and variant IO mapping.                                   |
-| DEBT-021 | R      | Inspect shared-package build dependency ordering against current Turbo/CI, not only accepted overall success.                                              |
+| DEBT-020 | C      | Exact API/two Worker portable guards and pre-IO variant validation inspected; fresh15+13 tests and accepted cross-OS CI. Physical037 separate.             |
+| DEBT-021 | C      | Upstream shared builds, strict forced wrapper and actual Turbo controls reviewed; fresh40 policy tests and accepted D6 gates.                              |
 | DEBT-022 | M      | Fresh repository format check exits0; old41-file count is stale, registry closure still to reconcile explicitly.                                           |
-| DEBT-023 | R      | Inspect buffer-backed Sharp test correction and actual Windows containment/Worker evidence; no broad Windows reliability claim.                            |
+| DEBT-023 | C      | Buffer-backed Sharp metadata/source cleanup and fresh Worker13 tests; accepted cross-OS CI. No blanket Windows reliability claim.                          |
 | DEBT-024 | R      | Same group/Guardian policy review as008, preserving distinct ownership and sanctions precedence boundaries.                                                |
 | DEBT-025 | M      | Canonical roadmap precedence and legacy-document warnings inspected; complete remaining source-index reconciliation.                                       |
 | DEBT-026 | R      | Accepted D6 reproduces broad gates; individually reconcile Phase9/10 completion contracts, not blanket completion.                                         |
@@ -67,7 +67,7 @@ does not override the current dependency failure or missing risk decisions.
 | DEBT-042 | M      | Subject-before-factor locking and atomic disable inspected; opt-in concurrency/rollback assertions reviewed, not freshly rerun.                            |
 | DEBT-043 | M      | Current request access replaces stale claims; exact same-JWT revoke/rename/delete HTTP case passes in main CI.                                             |
 | DEBT-044 | C      | Accepted generator baseline/clean consistency evidence; unchanged SDL hash, not all generated-export architecture compliance.                              |
-| DEBT-045 | R      | Reconcile isolated News/leaderboard fixtures, real zero-to-one view count and guaranteed app cleanup against original defects.                             |
+| DEBT-045 | C      | Owned migrated News/leaderboard schemas and finally cleanup; real view0-to1/global rankings preserved; exact main workflow cases pass.                     |
 | DEBT-046 | M      | Role lock/count/pure policy/delete unit inspected; blocked concurrent-removal assertions reviewed;047 is not closed by it.                                 |
 | DEBT-047 | Q      | Current eligibility/permission changes lack shared availability policy; minimal pre11 design versus explicit deferral question pending.                    |
 | DEBT-048 | M      | Accepted narrow workflow-budget rationale documented; confirm exact current long-workflow boundary before scoped closure.                                  |
@@ -91,11 +91,11 @@ does not override the current dependency failure or missing risk decisions.
 | DEBT-066 | Q      | Malformed/deep TypeError/RangeError still reproduced; exact depth/compatibility policy remains unapproved.                                                 |
 | DEBT-067 | Q      | UPDATE-only retraction cannot persist missing-source tombstone; separate ordering design question pending.                                                 |
 | DEBT-068 | M      | Change/consume/issuance subject locking and proof invalidation inspected; exact main HTTP old/fresh proof case passes.                                     |
-| DEBT-069 | R      | Reconcile ledger/leaderboard fixture isolation and global ranking assertions; no production ranking rewrite.                                               |
+| DEBT-069 | C      | Leaderboards private population isolates unrelated ledger fixtures without changing ranking/tie assertions; main workflow passes.                          |
 | DEBT-070 | M      | All three social page paths use batch viewer-safe projection; exact main privacy suite6/6; failed evidence denies.                                         |
 | DEBT-071 | M      | Explicit viewer policy and main engagement31/31; approved precheck/separate-transaction race boundary retained.                                            |
 | DEBT-072 | M      | Conditional physical assignment UPDATE and cleanup P2034 batch rollback inspected; main DB suites12/12+19/19.                                              |
-| DEBT-073 | R      | Inspect full opt-in environment/cache/processor enforcement and required suites, not only overall full gate success.                                       |
+| DEBT-073 | C      | Full wrapper/env/hash/result processor inspected; fresh40 controls include actual skipped-Jest rejection; accepted D6 full profile.                        |
 | DEBT-074 | M      | Exact owner response/asynchronous-presence characterization belongs to reviewed social suite; finish deterministic fixture-specific source mapping.        |
 | DEBT-075 | C      | Accepted owned migrated fixture/repeat/no-reset full-suite verification; original assertions preserved.                                                    |
 | DEBT-076 | C      | Accepted bounded Web workers/config regression and unchanged timeout/coverage; scoped mitigation only.                                                     |

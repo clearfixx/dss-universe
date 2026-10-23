@@ -104,7 +104,13 @@ Focused6/6 cases pass without sleep, timeout changes or runtime changes.
 Full gates/remote acceptance remain open; see
 [test synchronization evidence](../audits/DEBT_074_SOCIAL_PRIVACY_PRESENCE.md).
 
-### DEBT-073 — Workspace quality does not execute requested DB/Redis opt-ins (Medium, ACCEPTED, separate D6 package)
+### DEBT-073 — Workspace quality does not execute requested DB/Redis opt-ins (Medium, RESOLVED for accepted full-profile enforcement)
+
+D7 revalidation reads the complete policy/wrapper, exact task env/input hashing,
+actual Turbo dry-run controls and real Jest negative test. Fresh policy40/40
+passes; skipped mandatory child test is rejected as expected. Accepted D6 full
+profile/CI proves delivered execution, not just a configuration claim. No test
+cache/skip exception was introduced; current unrelated security failure remains.
 
 Date: 2026-10-22. D5 worktree based on43d9562. With `DATABASE_URL` targeting
 disposable5434, `REDIS_PORT=6380` and all four existing `RUN_*` opt-ins explicitly
@@ -543,10 +549,10 @@ this transfer. See [runtime checkpoint](../audits/D4_LEADERBOARD_RUNTIME_OWNERSH
 | DEBT-017 | High     | DEFERRED | Media/storage           | LOCAL scope approved; operational MinIO/S3 adapters absent, separate debt not blocking Phase 11.                                                                                         | Storage package                          |
 | DEBT-018 | High     | DEFERRED | Search                  | News-local search clarified; shared Search/indexing contract remains future work, not Phase 11 prerequisite.                                                                             | D2/future Search                         |
 | DEBT-019 | High     | DEFERRED | File Passport           | Historical D1 rendering repair retained; remaining Passport classification/cleanup explicitly deferred outside D5/D7 to future GPT-5.6 work. No compliance closure claimed.              | Owner / future Passport workstream       |
-| DEBT-020 | Critical | OPEN     | Media security          | Windows separators bypass upload-root containment in API storage and two Worker consumers.                                                                                               | D0.6                                     |
-| DEBT-021 | High     | ACCEPTED | Quality orchestration   | D0 adds shared-package build ordering; local lint/typecheck pass, clean CI evidence remains required.                                                                                    | D0/D6                                    |
+| DEBT-020 | Critical | RESOLVED | Media security          | Portable guards verified in API and both Worker consumers; fresh15+13 regressions and accepted cross-OS CI. Physical threat model remains037.                                            | Accepted D0.6/D6 scoped correction       |
+| DEBT-021 | High     | RESOLVED | Quality orchestration   | Shared upstream builds and strict forced profile verified; accepted D6 tasks/CI and fresh40 policy controls.                                                                             | Accepted D0/D6 ordering scope            |
 | DEBT-022 | Medium   | OPEN     | Formatting              | D2 repository Prettier check reports 41 legacy non-compliant files (initial audit: 52).                                                                                                  | D5/D6                                    |
-| DEBT-023 | Medium   | OPEN     | Worker tests            | Sharp output cleanup fails with `EBUSY` on Windows in the current diagnostic run.                                                                                                        | D0.6/D6                                  |
+| DEBT-023 | Medium   | RESOLVED | Worker tests            | Buffer-backed Sharp metadata and owned source cleanup verified; current Worker storage/scanner13 tests and accepted Windows/Linux CI.                                                    | Scoped handle correction                 |
 | DEBT-024 | Critical | ACCEPTED | IAM/product ownership   | Isolated IAM groups and Authorization Guardian decisions implemented; review/full baseline acceptance pending.                                                                           | D3.5 / D6                                |
 | DEBT-025 | High     | ACCEPTED | Roadmap sources         | Legacy phases/milestones marked historical and linked to canonical roadmap; review pending.                                                                                              | D1                                       |
 | DEBT-026 | High     | OPEN     | Completion evidence     | Phase 9/10 completion gates are not currently reproducible from the red repository baseline.                                                                                             | D1/D6                                    |
@@ -862,7 +868,13 @@ implementation. Reconcile the checked-in output and configured generator in D6,
 coordinated with the Web workstream, then prove clean regeneration. Do not waive
 the consistency gate or claim it passes from successful generation alone.
 
-### DEBT-045 — API E2E shared fixtures and News cleanup drift (Medium, OPEN, D6)
+### DEBT-045 — API E2E shared fixtures and News cleanup drift (Medium, RESOLVED for accepted foundation fixture/count scope)
+
+D7 revalidation confirms owned migrated News/Leaderboards schemas, finally app/
+fixture cleanup, exact global ranking assertions and persisted view0-to1. Both
+main workflow cases pass in the accepted full593-test artifact. Historical
+failures below remain evidence; separate intermittent schema-write059 is not
+closed by this scoped fixture/count correction.
 
 The full D3.4 API E2E run finished in 114.253 seconds with 44 passed and two
 failed tests. Leaderboards assumes its own 10-point subject ranks first, but an
@@ -1625,7 +1637,13 @@ reads. Possible tombstone projection/migration needs approval before correction;
 current audit implements nothing. See
 [consumer lifecycle evidence](../audits/D4_EVENT_DATA_RETENTION_REVIEW.md).
 
-### DEBT-069 — Shared E2E ledger fixtures contaminate Leaderboards expectations (Medium, OPEN, D6)
+### DEBT-069 — Shared E2E ledger fixtures contaminate Leaderboards expectations (Medium, RESOLVED for accepted leaderboard fixture isolation)
+
+D7 revalidation confirms the leaderboard suite now owns its fully migrated
+schema and app teardown, preserving global population/tie behavior. Its accepted
+main workflow passes without a production ranking filter/rewrite. The earlier
+Community Points fixture cannot populate that private schema. This does not
+claim every other suite has complete isolation or exception-proof teardown.
 
 Date: 2026-10-20. Full E2E on a freshly migrated disposable PostgreSQL completes
 505/509, including a Leaderboards first-month-page mismatch. Actual safe-field

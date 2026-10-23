@@ -471,6 +471,44 @@ This maps the approved correction without adding an independent count query,
 changing rank order or claiming unauthenticated HTTP behavior. Not rerun as DB
 tests in this checkpoint; current dependency acceptance remains blocked.
 
+### Full-profile / fixtures / portable IO reconciliation
+
+Fresh `pnpm test:full-policy` exits0:40/40, zero skipped/todo. Read the full
+environment/result policy, full-test wrapper, actual Jest negative-control test,
+Turbo task definitions, dry-run/hash assertions and isolated-schema fixture.
+The wrapper injects four DB/Redis opt-ins, uses strict env, force/no restored
+results and concurrency1. Each API task hashes relevant env plus the external
+result-policy source; actual Turbo dry runs prove changed keys change hashes.
+Actual child Jest with a skipped mandatory test exits1, while its complete
+control exits0. This is executable gate-policy evidence, not a new full API/DB
+run. Log: `dss-d7-full-policy-review.log` in local temp.
+
+For021, inspected shared upstream build ordering on test/lint/typecheck and
+the full wrapper; accepted D6 fresh tasks/CI complement current dry-run controls.
+For045/069, News and Leaderboards override Prisma with distinct owned migrated
+schemas and close app/fixture in finally. The fixture enforces loopback dss_test,
+unique schema/search_path and rejects public-qualified migration DDL. News
+preserves actual persisted views0-to1; Leaderboards preserves global population,
+tie order and inactive exclusion rather than filtering production rankings.
+Exact main foundation suites each pass their full workflow case. No new DB
+execution or blanket fixture-cleanup fault tolerance claim is made here.
+
+For020, inspected API LocalStorageProvider and both Worker consumers: common
+portable normalization/resolution, API pre-IO checks, all Worker variant keys
+before filesystem effects and scan-path resolution before opening TCP. For023,
+actual test metadata uses Sharp over readFile bytes, verifies source removal
+and leaves production Sharp caching unchanged. Fresh API storage15/15 and the
+two Worker storage/scanner suites pass without pending/todo; JSON retained at
+`node_modules/.cache/d7-api-storage-review.json` and
+`node_modules/.cache/d7-worker-storage-review.json`. Existing accepted-main
+Windows/Linux containment jobs provide the cross-OS evidence; this checkpoint
+does not rerun Linux. Physical hostile-writer containment remains037.
+
+Registry/routing reconciliation marks020/021/023/045/069/073 scoped corrections
+accepted, based on inspected code, exact regressions and accepted D6/main gates.
+This is not blanket D7 acceptance: current Next dependency and host-mail failures,
+unresolved Windows intermittent observation059 and remaining review still stand.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`
