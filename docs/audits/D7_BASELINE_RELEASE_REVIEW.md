@@ -681,6 +681,33 @@ this checkpoint. Fresh processor unit run:16/16 passed. No current DB, live
 scanner/filesystem or BullMQ guarantee is inferred. Matrix053/061/063/074 now
 reflect completed source mapping rather than requesting duplicate inspection.
 
+### Phase8–10 requirement-level reconciliation
+
+The accepted-main artifact is evidence for the named suites below, not a new
+D7 execution. Foundation suites contain long multi-assertion scenarios; one
+test is not one implemented capability.
+
+| Completion requirement                  | Inspected assertions / evidence                                                                                                                                     | Remaining boundary                                                                                                 |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Phase8 explainable/reversible ledgers   | Reputation and Points foundation scenarios each pass1/1; assertions include reasons/history, reversal and immutable records.                                        | Direct service consumption is not automatic event delivery007.                                                     |
+| Phase8 period rankings                  | Leaderboards foundation1/1 asserts MONTH/YEAR/ALL_TIME, ties, inactive exclusion, viewer rank and ledger correction.                                                | No production load or arbitrary concurrent-ranking guarantee.                                                      |
+| Phase8 anti-abuse                       | Points cap8/8 and title selection7/7 mapped above; foundation duplicate/cooldown and achievement reversal assertions inspected.                                     | No universal anti-spam claim; current formulas remain unchanged.                                                   |
+| Phase8 permission-neutral titles/groups | Titles foundation1/1 and groups5/5; distinct group/policy evidence recorded above.                                                                                  | Old generic-groups-absent wording is historical, not current implementation state.                                 |
+| Phase9 canonical/redacted document      | Editor/News unit and HTTP evidence above; current malformed/deep document066 and News null tombstone057 contradict unconditional safety.                            | Separate approved/design corrections remain necessary.                                                             |
+| Phase9 deterministic feed               | Activity Feed3/3 asserts guest visibility, block filtering, FOLLOWING/INTEREST reasons and independent visit cursor. Actual Web page loads feed without an AI call. | UI fallback activity/metrics are static examples; no live AI failure-injection or completed Mission Control claim. |
+| Phase9 shared ownership                 | Root ports/transactions and interaction owner policy suites mapped above.                                                                                           | Domain HTTP079 and Activity ordering067 remain separate; no blanket semantic independence.                         |
+| Phase10 publication lifecycle           | News foundation1/1 includes draft/revisions, review, schedule, explicit publishDue invocation, delivery/navigation and real view increment.                         | Manual due invocation does not prove scheduler recovery under process failure.                                     |
+| Phase10 pin windows/workflow            | Fresh workflow/pinning units12/12, plus hybrid corpus assertions for expired/category pins and exact pages.                                                         | No live wall-clock scheduler/retry certification from units.                                                       |
+| Phase10 delivery/search                 | Viewer redaction20/20, attachment29/29, related12/12, secondary21/21, engagement31/31 and search performance5/5 mapped above.                                       | 057 remains; accepted Search/Notifications deferrals do not erase007 runtime wiring.                               |
+| Phase10 SEO/browser                     | Accepted generated-operation and14-smoke evidence exists.                                                                                                           | Generic smoke is not every SEO metadata/sitemap/publication scenario.                                              |
+
+The fresh two-suite Jest command passed12/12; its combined shell call later
+returned1 because a separate documentation grep found no matches, not because
+Jest failed. No runtime/UI changes, gate waivers or phase acceptance were made.
+007/026 move from unreviewed routing to mapped-with-explicit-gaps;036 is also
+mapped with its bounded direct-use scan and unchanged upstream-error limitation.
+Zero R entries means initial routing is complete, not that M/Q/O work is closed.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`

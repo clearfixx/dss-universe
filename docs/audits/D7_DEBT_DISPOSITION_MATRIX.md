@@ -29,7 +29,7 @@ does not override the current dependency failure or missing risk decisions.
 | DEBT-004 | M      | No direct Prisma/database imports in bounded non-infrastructure feature scan; root enum/mapping composition inspected,16 tests pass. Alias/transitive semantics require remaining review. |
 | DEBT-005 | M      | Current mandatory frozen-baseline/file-graph enforcement verified140/140,zero bounded findings; stale D2 rollout doc clarified. Domain/HTTP079 remains outside guarantees.                |
 | DEBT-006 | M      | Project Context now selects accepted D6/active D7 and fences historical checkpoints; remaining orientation sources need reconciliation.                                                   |
-| DEBT-007 | R      | Reconcile every Phase8 completion-audit requirement with present contracts, migrations and exact tests; no blanket phase acceptance.                                                      |
+| DEBT-007 | M      | Phase8 requirement assertions/main suites mapped; Activity-only Worker leaves automatic gamification007 unresolved. Not phase acceptance.                                                 |
 | DEBT-008 | M      | Current groups/Premium/Guardian policy and migration guards inspected; fresh74 units/main HTTP5+5; full Phase5 acceptance separate.                                                       |
 | DEBT-009 | X      | Owner deferred Passport cleanup/classification to future GPT-5.6 work; excluded from D5/D7.                                                                                               |
 | DEBT-010 | M      | Legacy backend/role examples explicitly redirect to current rules; not every old guidance file has been reviewed.                                                                         |
@@ -48,7 +48,7 @@ does not override the current dependency failure or missing risk decisions.
 | DEBT-023 | C      | Buffer-backed Sharp metadata/source cleanup and fresh Worker13 tests; accepted cross-OS CI. No blanket Windows reliability claim.                                                         |
 | DEBT-024 | M      | IAM evidence/Authorization decisions/root translation reviewed; Premium non-staff and audience-first verified. Future ACL/sanctions not claimed.                                          |
 | DEBT-025 | M      | Canonical roadmap precedence and legacy-document warnings inspected; complete remaining source-index reconciliation.                                                                      |
-| DEBT-026 | R      | Accepted D6 reproduces broad gates; individually reconcile Phase9/10 completion contracts, not blanket completion.                                                                        |
+| DEBT-026 | M      | Phase9/10 completion rows mapped to exact suites/source;057/066/067 and scheduler/SEO scope limits retained. Not blanket completion.                                                      |
 | DEBT-027 | M      | Auth/IAM named roots and private Nest providers inspected; remaining public roots/technical-entry consumers need mapping.                                                                 |
 | DEBT-028 | M      | Current Architecture Rules/ADR003/004 separate persistence from services; reviewed older drafts are marked historical.                                                                    |
 | DEBT-029 | M      | Current Worker fail-fast source and fresh5-test environment suite pass; no new Worker start/delivery proof.                                                                               |
@@ -58,7 +58,7 @@ does not override the current dependency failure or missing risk decisions.
 | DEBT-033 | M      | Optional collector absent/4318 unavailable as permitted; no persistent monitoring/export readiness claimed.                                                                               |
 | DEBT-034 | C      | Actual Sign in locator and /login journey plus accepted fresh/CI14-test smoke; no UI rewrite.                                                                                             |
 | DEBT-035 | M      | API runInBand and Web maxWorkers2 inspected; scoped worker mitigation is not universal OOM root-cause proof.                                                                              |
-| DEBT-036 | R      | Upstream parenthesized braces expansion behavior remains separate from depth patch; assess supported-pattern reachability/disposition.                                                    |
+| DEBT-036 | M      | Fresh braces14/14; bounded authored-source scan shows no direct expansion path. Transitive pattern reachability/upstream error remain unresolved.                                         |
 | DEBT-037 | Q      | Lexical-only containment confirmed; explicit trusted-local-writer versus hostile-writer policy question pending.                                                                          |
 | DEBT-038 | C      | Accepted bounded30-minute quality workflow and terminal593-test E2E/main CI; no future capacity guarantee.                                                                                |
 | DEBT-039 | Q      | Owner naming override exists, but roadmap still reverses labels and Research Lab/Knowledge Forge scope reconciliation is unfinished.                                                      |
