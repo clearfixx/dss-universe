@@ -657,7 +657,12 @@ the upstream result/error behavior. No affected application path is established.
 Review supported pattern policy if such expansion is introduced; do not silently
 absorb an upstream behavior rewrite into D0.5.
 
-### DEBT-034 — Web smoke selectors drift (High, OPEN, D6 / frontend owner)
+### DEBT-034 — Web smoke selectors drift (High, RESOLVED for accepted smoke journey)
+
+D7 reconciliation: current arrival/home tests use the actual Sign in control and
+home verifies /login. Accepted D6 fresh Web smoke is14/14, including exact-head
+and main CI, with no runtime/UI rewrite. Earlier Enter Station failures below
+are historical; future unrelated browser flakes are not waived.
 
 CI run `38064940272` fails Web smoke; the earlier run's logs explicitly wait
 for `getByRole('link', { name: 'Enter Station' })` in `arrival.spec.ts:96`.
@@ -709,7 +714,12 @@ Decide whether hostile local writers are in scope; if so, design OS-specific phy
 containment and TOCTOU defenses. Do not silently expand this package or describe
 lexical checks as sandbox isolation.
 
-### DEBT-038 — API E2E exceeds CI job limit (High, OPEN, D6)
+### DEBT-038 — API E2E exceeds CI job limit (High, RESOLVED for accepted bounded CI workflow)
+
+D7 reconciliation: current quality job has an explicit30-minute bound; accepted
+D6 completes593/593 E2E and all five checks, including terminal main CI. This
+closes the original unbounded/red baseline delivery scope, not a guarantee that
+every future workload or runner will finish in that budget.
 
 D2 Quality Gate run `38083005484` started API E2E at 20:17:17 UTC on 2026-10-10
 and cancelled it at 02:15:22 UTC on 2026-10-11 after the six-hour job limit.
@@ -743,7 +753,13 @@ Review required/optional fields and invalid-input compatibility, then switch to
 runtime DTO imports with explicit regression tests. Do not silently turn this
 boundary refactor into an API validation behavior change; no exemption is granted.
 
-### DEBT-041 — Nondeterministic TOTP envelope tamper assertion (Medium, IMPLEMENTED / acceptance open, D6 / Auth test owner)
+### DEBT-041 — Nondeterministic TOTP envelope tamper assertion (Medium, RESOLVED for accepted test correction)
+
+D7 revalidation: current tests flip an actual decoded byte independently in IV,
+tag and ciphertext, prove changed bytes/envelope and require authenticated
+decryption failure. Fresh TOTP/2FA/JWT selection passes24/24; accepted D6 full
+profile and CI include this correction. No cryptographic runtime change or
+universal security certification is implied.
 
 A sequential D3.2 coverage run fails the unchanged TotpService test at line 23:
 `decrypt(first.slice(0, -1) + 'x')` does not throw. The ciphertext is random and
@@ -1040,7 +1056,14 @@ stops the wrapper after E2E; a bounded network recheck passes the unchanged
 security gate, then GraphQL consistency passes. New-head remote CI and phase
 review remain required; no production schema repair or red merge is performed.
 
-### DEBT-050 — Web coverage reports an unhandled React scheduler error (Medium, OPEN, D6)
+### DEBT-050 — Web coverage reports an unhandled React scheduler error (Medium, RESOLVED for accepted teardown correction)
+
+D7 revalidation: shared setup explicitly awaits act/cleanup because Vitest
+globals are disabled. The lifecycle regression requires root effect disposal
+after shared teardown; fresh selected test passes1/1. Accepted D6 includes the
+negative-control investigation, Web coverage60/60 and green exact-head/main CI.
+This closes the investigated teardown defect, not all possible scheduler issues
+or DEBT-058's separate intermittent timeout observation.
 
 CI run `38446264899`, job `115465567069`, head `f9784af`, failed on coverage
 before API E2E/generated validation/build. All 25 Web suites / 59 tests passed,

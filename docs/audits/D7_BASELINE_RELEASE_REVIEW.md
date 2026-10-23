@@ -339,6 +339,42 @@ acceptance, broader source/contract reconciliation and the current dependency
 security blocker remain separate. No rating formula, API, timeout or schema
 change was made for this checkpoint.
 
+### Factor / revocation / CI reconciliation — 2026-10-23
+
+For042, inspected actual begin/confirm/disable/recovery persistence: the subject
+row is locked before reading a possibly absent factor; proof and disable,
+session revocation, authVersion and audit share the transaction. Reviewed opt-in
+PostgreSQL suite assertions cover first setup, password-change wait, competing
+disable/confirm/recovery and rollback. Those tests were not selected without
+their disposable-DB profile in this checkpoint; source existence is not a fresh
+DB pass. No recovery secret enters the inspected audit payloads.
+
+For043, current JWT strategy validates session first, then reads current access
+and constructs copied permissions/roles rather than trusting JWT grant claims.
+The exact accepted-main HTTP case `honors direct revoke, grant, key rename and
+permission deletion with the same JWT` passes; source assertions exercise
+200/403 transitions with an unchanged token, not just refreshed login.
+
+For046, current role-revocation writer locks the role, reads/counts assignments,
+evaluates the pure safety callback and deletes in one transaction. Reviewed
+PostgreSQL tests observe two blocked revocations, require one success/one denial
+and one remaining assignment for each protected role. Main HTTP/composition case
+`retains last-admin policy rejection under the real role lock` passes. This is
+assignment safety only, not the ACTIVE/permission-coverage policy missing in047.
+
+Fresh four-suite TOTP/2FA/JWT/request-access unit selection:24/24, no failed,
+pending or todo; JSON `node_modules/.cache/d7-session-factor-unit-review.json`.
+Fresh Web lifecycle selection:1/1, no pending/todo; JSON
+`node_modules/.cache/d7-web-lifecycle-review.json`. Neither result is a fresh
+concurrency DB, full coverage or live-browser gate.
+
+Scoped register reconciliation now marks034,038,041,050 RESOLVED for accepted
+D6 smoke journey, bounded CI workflow, decoded-byte tamper-test and teardown
+corrections respectively. Each entry retains its historical failure and states
+the scope limit. DEBT-058/059 remain separate intermittent observations: passing
+later gates alone does not establish their original root cause. Current Next
+security failure also remains blocking despite these historical corrections.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`
