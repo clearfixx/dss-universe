@@ -735,6 +735,26 @@ retain failure reasons/DLQ payloads. No secret leak is established by this
 inspection, but those paths are not certified secret-free. No broad clean-secret
 claim, new waiver, env disclosure or logging/runtime change is made.
 
+### Credential-mail producer checkpoint
+
+Read verification/recovery/security-alert application orchestration and all three
+BullMQ delivery adapters. Queue payloads explicitly select destination/time,
+verification subject ID or security event identity/kind as appropriate; arbitrary
+extra credential fields are not spread into jobs. These jobs contain personal
+email destinations by design, not anonymous payloads. Recovery queues unknown
+addresses too, avoiding a producer-side account lookup in the public request.
+Security alerts remain best effort after committed operations, not transactional
+Outbox delivery; registration verification enqueue failure does not undo signup.
+
+Read actual Redis recovery/verification adapters after correcting the initially
+guessed directory. Token/email/IP inputs become namespace-specific HMAC digests
+before Redis keys; atomic INCR/first-use EXPIRE uses the existing900-second fixed
+window. Raw reset tokens do not appear in these key strings. No Redis failure
+allow-fallback is present. Fresh six selected producer/rate-limit/alert unit
+suites:23/23 passed. This is source/unit evidence, not fresh SMTP, Redis runtime,
+timing-enumeration or crash-durable security-alert delivery acceptance. No real
+mail, queue enqueue or production data write was performed.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`
