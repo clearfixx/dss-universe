@@ -612,6 +612,29 @@ env content. No API/Web/Worker start, service recreate, env edit, migration or
 seed was performed. These four entries move to mapped evidence, not universal
 operational acceptance; host-mail and current dependency gate remain blocking.
 
+### Completion-claim reconciliation checkpoint
+
+Read the complete Phase8/9/10 completion audits against the current Worker
+composition. `apps/worker/src/main.ts` supplies only
+`activityProjector.project(event)` to the integration-event processor. Points,
+Levels and Achievements expose `consume` methods, but their foundation E2E
+files invoke these services directly. Those successful component tests do not
+prove producer-to-queue-to-gamification delivery. DEBT-007 remains unresolved;
+the Phase8 audit already records this limitation. D6 acceptance does not remove it.
+
+Phase9's broad safe-document claim remains bounded by the reproduced malformed
+document defect066; its shared tombstone foundation is not a certificate for
+News GraphQL delivery057. Phase10's publication routing signals are not automatic
+gamification or notification delivery. The accepted main E2E evidence mapped
+above strengthens individual workflows, not blanket product completion.
+DEBT-026 still requires individual reconciliation of the other completion rows.
+
+Fresh `node --test scripts/braces-patch.test.mjs`:14 passed, zero failed/skipped.
+A bounded source scan of apps/packages/scripts found no direct authored braces
+expansion use outside the security tooling/tests. This does not resolve transitive
+glob consumers, user-controlled pattern reachability or the upstream
+parenthesized-pattern error036. No upstream semantics or exception was changed.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`
