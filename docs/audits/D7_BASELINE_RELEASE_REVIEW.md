@@ -831,7 +831,7 @@ Ran three opt-in suites on explicit disposable5434: registration atomicity8/8,
 access-group persistence15/15 and IAM assignment reads3/3. JSON success=true,
 26 passed, zero failed/pending/todo and zero non-passed assertions. Retained:
 `node_modules/.cache/d7-registration-groups-current.json`. Read-only namespace
-check afterwards finds no registration_, access_groups_ or iam_access_ schemas.
+check afterwards finds no registration*, access_groups* or iam*access* schemas.
 
 Registration exercises actual shared-row transaction and application composition
 with downstream token/session/mail instrumentation, including injected failure
