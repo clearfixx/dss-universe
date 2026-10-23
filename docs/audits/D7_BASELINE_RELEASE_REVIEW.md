@@ -375,6 +375,36 @@ the scope limit. DEBT-058/059 remain separate intermittent observations: passing
 later gates alone does not establish their original root cause. Current Next
 security failure also remains blocking despite these historical corrections.
 
+### Canonical orientation / documentation reconciliation — 2026-10-23
+
+Read D1 scope decisions and reconciliation report, the current owner vision
+intro, plan authority/entry rules, canonical-roadmap precedence note and the
+entire Project Context snapshot. The snapshot still selected DEBT-051 as active,
+mixed historical red gates into present quality statements and scheduled D5
+Passports. This is current documentation drift within existing006/011/025/039,
+not evidence that the accepted runtime regressed to its old branch.
+
+Project Context now begins with accepted main and active D7, current Next audit
+failure, deferred Passport scope and the stack-audit/brainstorm fences. Old
+checkpoints are retained under an explicit historical boundary. The module
+description now reflects one product rather than separate products; current
+IAM foundation is distinguished from future resource ACL and owner features.
+Plan authority now records accepted D6 and the explicitly approved D7 scope.
+Remote main and PR79 merged state were checked again before these updates.
+
+For010/028, inspected legacy `docs/architecture/backend.md` and
+`standards/backend.md` precedence warnings: they redirect to current layered
+rules, not active authority for role-only checks or service-owned Prisma. ADR003/
+004 and Architecture Rules remain authoritative. This review did not certify
+every old draft/example or rewrite embedded standards/Passport templates.
+
+Canonical roadmap itself still contains reversed historical Mission Control /
+Command Deck labels despite its top-level owner override. Research Lab versus
+Knowledge Forge still needs the explicit product/phase reconciliation already
+tracked as039. No route/module rename, phase renumbering or feature scope change
+was made. Therefore039 and broad canonical-documentation acceptance are not
+closed solely by fixing the orientation snapshot.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`

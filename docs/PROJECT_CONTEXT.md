@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-14 — DEBT-051 canonical attachment correction; acceptance still open
+> Updated: 2026-10-23 — D7 review; accepted D6 baseline, current dependency gate blocked
 
 ## Product and authority
 
@@ -10,7 +10,7 @@ DSS Universe is a modular developer community and learning platform:
 Build. Share. Learn. Grow. Together.
 
 News, Knowledge Forge, Research Lab, Community Hub, Academy and Downloads are
-separate products. Shared Media, Editor, interactions, authorization, events
+owned content modules within one product. Shared Media, Editor, interactions, authorization, events
 and gamification support them without owning their content lifecycles.
 Mission Control is the user's dashboard; Command Deck is administration.
 The [owner's product vision](development/PRODUCT_VISION_1_0.md) corrects historical
@@ -28,6 +28,40 @@ Legacy roadmaps are historical. This snapshot does not override source code,
 approved ADRs or recorded owner decisions.
 
 ## Current position
+
+Current accepted main is `f118d82d62eca0f7783a79c0f624c7ee7e688c27`, the owner-accepted
+D6 PR#79 merge. Remote main and merged PR state were rechecked on 2026-10-23.
+D5 PR#78 was accepted earlier. Active work is the separately approved D7 review
+on `debt/d7-release-gate`: evidence/debt reconciliation only, no runtime/UI,
+Passport cleanup or stack audit. See [D7 evidence](audits/D7_BASELINE_RELEASE_REVIEW.md)
+and the [debt register](development/DEBT_REGISTER.md).
+
+Accepted D6 consolidated full gate and five CI checks passed, including API
+E2E593/593, API coverage1298/1298 and Web smoke14/14. Those are scoped historical
+verification, not an all-debt or current dependency-security certificate. Fresh
+D7 security check now fails on three Next16.3.8 advisories (two critical/one high),
+in addition to the single approved, exact-patch-verified braces high exception.
+No new exception or dependency correction is implicitly authorized by this note.
+
+D7 also retains open Editor validation, administrator availability, Wall ordering
+and Domain/HTTP coupling findings. Generic IAM access groups, non-staff Premium
+and explicit Guardian foundation are implemented; owning-resource ACL builders,
+new owner/Command Deck requirements and full product acceptance are not implied.
+LOCAL storage and News-local search remain the approved current scope.
+
+Next: finish individual D7 dispositions and separately approved corrections,
+then full verification/owner acceptance. The separate technology-boundary stack
+audit follows D7 acceptance, then the mandatory Phase11 brainstorm. Phase11
+implementation has not started. Passport cleanup is deferred to the owner's
+future GPT-5.6 workstream, not a D5 or D7 task. The owner's untracked stack audit
+plan in the primary checkout is not copied or modified by this review.
+
+## Historical implementation checkpoints (not current work selection)
+
+The following package/branch/test descriptions through the Repository map are
+retained historical evidence. Their active/pending/red statements apply to their
+recorded checkpoints, not the current accepted-main status above. Do not select
+work from an old "next" instruction or infer a present defect from an old count.
 
 Active package: `debt/debt-051-canonical-attachments`, explicitly stacked on
 DEBT-054 `b4e3d62` / draft PR #13, not an accepted baseline. Canonical NEWS doc
@@ -340,8 +374,9 @@ read `apps/web/AGENTS.md` and installed Next.js documentation.
 - Never expose hashes, tokens, protected document bodies or storage credentials.
 - Media owns binaries; products own content/publication policy.
 - Titles/achievements do not grant authority; points and reputation are distinct.
-- System roles are USER, MODERATOR, ADMIN, OWNER. Custom groups/Premium remain
-  approved product intent, not implemented behavior; see D1 owner decisions.
+- Owner/staff product requirements remain phase-governed, not a claim that all
+  future roles are implemented. IAM groups/Premium/Guardian foundation exists;
+  Premium grants no staff authority. See D1 decisions and the D7 evidence.
 - Tiptap JSON is canonical; HTML/plain text are derived. Content Gates must redact
   denied content server-side. Premium/sanction precedence is not silently assumed.
 - Normal content deletion preserves tombstones; security/legal/retention purges
@@ -353,7 +388,7 @@ These are target invariants, not a claim that the repository enforces them all.
 D2–D5 close audited exceptions. Planned moderation, themes, AI, Academy and other
 later products remain governed by the roadmap, not invented here.
 
-## Quality evidence, not promises
+## Historical quality evidence, not current gate results
 
 At D0.6 code commit `c0a5137`: API unit 308 passed / 3 skipped; Worker 36 passed;
 storage 43 passed. Lint, types, Prisma validation, build and architecture checks
@@ -368,8 +403,9 @@ Never promote unit-only or focused CI to full E2E/release acceptance.
 
 ## Next work and autonomy
 
-Finish the agreed D0–D7 preparation/debt closure, including remaining D4 module
-boundaries, D5 Passports, D6 full quality and D7 owner/release acceptance.
+Finish D7 debt reconciliation, approved follow-up corrections and owner/release
+acceptance from the accepted D6 baseline. D5 responsibilities and D6 gates were
+accepted; Passport cleanup remains a separate deferred workstream.
 On 2026-10-14 the owner added a separate post-preparation
 [stack audit](audits/STACK_AUDIT_PLAN.md). Conduct it against the accepted baseline,
 confirm its scope and obtain decisions/verification/final acceptance before the
