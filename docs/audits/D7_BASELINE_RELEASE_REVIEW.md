@@ -317,6 +317,28 @@ D6 drift/catalog/CRUD evidence. For 055, the current package command and fresh
 post-build entry check pass 1/1; actual HTTP readiness remains the separately
 recorded D6 production-mode smoke, not a fresh D7 server startup.
 
+### Points / title / email / social checkpoint — 2026-10-23
+
+| Debt | Current implementation and reviewed invariant                                                                                                                                                                                                                             | Evidence and limits                                                                                                                                                                                                                                                                            |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 062  | Award takes the event lock before the shared user/rule/UTC-day lock, then counts and inserts ledger/marker/evidence in the same transaction. Unlimited rules do not acquire the quota lock.                                                                               | Main CI `community-points-cap-audit`: 8/8. Reviewed deterministic final-slot test observes PostgreSQL lock waiting, then counts [0,1] and AWARDED/CAPPED outcomes; suite also covers duplicate delivery, day separation and rollback. No fresh DB run here.                                    |
+| 064  | Selection retains user lock, takes shared title lock and rereads grant/current/settings. Revoke takes the same user lock and rereads selection; definition update takes exclusive title lock before removing selections.                                                  | Main CI `custom-title-selection-audit`: 7/7, including both operation orders for revoke/deactivate and three evidence-failure rollback cases. Source review confirms the lock coordinate matches. Not a global title lock or complete proof of all future commands.                            |
+| 068  | Email change updates the subject, invalidates all old verification proof, revokes sessions and audits in one transaction. Consume locks that subject then conditionally deletes the exact unexpired proof; Worker issuance locks the subject only for its expected email. | Main CI contains the exact passed HTTP test `rejects old email proof after HTTP email change and accepts fresh destination proof`. Opt-in repository suite source additionally covers two lock orders, issuance ordering and rollback; not freshly selected without its disposable-DB profile. |
+| 070  | Followers/following and blocked-user pages call the same Users viewer-safe batch projection, map by ID and restore edge order. Missing privacy evidence throws instead of returning an unredacted profile.                                                                | Main CI `users-social-privacy-characterization`: 6/6, covering all three page kinds, owner visibility, privacy failure and the stabilized asynchronous-presence assertion. No current HTTP replay in D7.                                                                                       |
+
+Fresh pure unit selection passes 24/24 in three distinct suites, with no pending,
+todo or runtime errors. JSON: `node_modules/.cache/d7-account-social-title-unit-review.json`.
+Selected account credential repository (mocked transaction), social graph
+service and Custom Titles application service; this is not a replacement for
+DB lock/rollback or HTTP tests. Main CI suite counts above are independently
+extracted from the retained accepted-main JSON, not inferred from file names.
+
+These corrections are present in current source; their old OPEN/approval-only
+labels must not be mistaken for absent runtime implementations. Final D7
+acceptance, broader source/contract reconciliation and the current dependency
+security blocker remain separate. No rating formula, API, timeout or schema
+change was made for this checkpoint.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`

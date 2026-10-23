@@ -1419,7 +1419,12 @@ DB/live Redis regressions pass locally, with isolated resources cleaned up.
 Full gates and remote review remain open; see
 [approved design and evidence](../audits/DEBT_061_CONSUMER_IDENTITY_DESIGN.md).
 
-### DEBT-062 — Distinct events exceed Community Points UTC-day cap (High, ACCEPTED, separate correction approved)
+### DEBT-062 — Distinct events exceed Community Points UTC-day cap (High, IMPLEMENTED, D7 acceptance review)
+
+D7 revalidation confirms current event-then-quota transaction locks and the
+accepted-main eight-case DB suite, including observed final-slot serialization
+and rollback. Historical reproduction/approval below is retained. Broader
+release acceptance is not implied; see [D7 mapping](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 
 `PrismaCommunityPointsRepository.award` locks eventId, but dailyAwardCount scopes
 user/rule/UTC-day. Two distinct events can both read zero and atomically commit
@@ -1458,7 +1463,13 @@ scan quarantine and variant rollback; Worker 46 tests/coverage and lint/types pa
 This is not a global lease. Full quality gate/CI/review/owner acceptance pending;
 debt remains open. [Design and evidence](DEBT_063_RETRY_DESIGN.md).
 
-### DEBT-064 — Revoked Custom Title grant remains selected after concurrent select (Medium, OPEN, separate correction approved)
+### DEBT-064 — Revoked Custom Title grant remains selected after concurrent select (Medium, IMPLEMENTED, D7 acceptance review)
+
+D7 revalidation confirms shared user/title synchronization and eligibility
+rereads in current source; accepted-main seven-case DB suite covers both lock
+orders and evidence rollback. This correction exists; historical OPEN/pending
+checkpoints below are not current implementation status. Final release acceptance
+remains separate; see [D7 mapping](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 
 Fully migrated isolated PostgreSQL and actual repository reproduce: select's
 eligible-grant query completes, revoke commits under its different grant lock,
