@@ -544,6 +544,42 @@ The owner also approved the separate057 sequence after review: tombstone
 nullability/client compatibility design, then correction and HTTP regressions.
 No057 implementation, generated client or public SDL change is part of D7.
 
+### Gamification / representation / checker checkpoint
+
+For003, inspected Reputation's minimal account/block/profile ports and Points/
+Levels/Achievements owned recipient/balance contracts, root adapters/module
+bindings and public roots. Existence forwards only ID/Boolean and is not silently
+changed to ACTIVE eligibility; Levels reads the authoritative scalar Points
+balance without duplicating a ledger/cache. Nest exports keep application
+services private. This maps the original broad-service transfer in these paths,
+not every semantic transaction or public surface across all features.
+
+For004, bounded direct-import scan of feature TypeScript outside infrastructure,
+module assembly and tests finds no Prisma/database imports. Inspected root
+content presentation owns wire-enums, explicit mapping and four guarded existing
+operations; Editor/ContentAccess business capabilities retain independent values.
+No permission policy or ORM enters those transport DTOs/mappings. A textual scan
+alone does not resolve aliases, transitive exports or prove all representations.
+
+Fresh composition tests16/16 pass across three suites, no pending/todo; JSON
+`node_modules/.cache/d7-composition-boundary-review.json`. Reviewed assertions
+include private provider metadata, minimal adapter forwarding/failure, actual
+SDL schema-factory/guard/mapping contracts and capability isolation. This is not
+a new HTTP/DB verification or a claim that Editor malformed-input066 is fixed.
+
+For005/028, actual report CLI now walks all API src and composes the local
+compiler-resolved file graph with feature/Core/root boundary findings. Mandatory
+architecture command compares the frozen baseline. The old tooling document
+still described D2 report-only/not-yet-CI rollout and excluded root composition;
+it now has an explicit current clarification while retaining historical counts.
+No scanner rule, baseline identity or application source was changed. Domain/
+HTTP079 and secret-flow/physical-containment limitations remain explicit.
+
+Fresh mandatory architecture gate exits0:140/140 tests, zero skipped/todo and
+zero bounded findings, frozen baseline unchanged. Retained log:
+`dss-d7-current-architecture-review.log` in local temp. This verifies the current
+checker contract, not universal semantic compliance.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`
