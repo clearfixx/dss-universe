@@ -1033,3 +1033,12 @@ Next advisories after earlier checks; later consolidated stages did not run.
 At this checkpoint both containment OS checks and Web smoke pass, dependency audit
 fails and the quality job remains live. Candidate is not merged or accepted main;
 terminal CI must be reconciled before any stronger claim.
+
+Correction after inspecting actual Web job logs: job120465792097 is green but
+reports one flaky and13 passed. Core module demo test arrival.spec.ts106 failed
+its line112 visibility assertion on the first attempt and passed on retry.
+CI Playwright config permits retries2 and ci.yml invokes plain test:e2e; strict
+local quality:full's retries0/report policy does not apply to this CI command.
+Record DEBT-080 separately; no clean-first-attempt Web acceptance or specific
+runtime root cause is claimed. The earlier green-check observation above refers
+only to GitHub status, not the stricter result policy.

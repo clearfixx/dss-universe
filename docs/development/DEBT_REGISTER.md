@@ -24,14 +24,30 @@ active package safe and buildable.
 
 D7 review is in progress from accepted main `f118d82`; see
 [current evidence and limits](../audits/D7_BASELINE_RELEASE_REVIEW.md).
-The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079.
+The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079/080.
 D6 acceptance does not
 automatically resolve unrelated OPEN findings.
 
-[D7 individual review routing](../audits/D7_DEBT_DISPOSITION_MATRIX.md) maps all79
+[D7 individual review routing](../audits/D7_DEBT_DISPOSITION_MATRIX.md) maps all80
 unique IDs exactly once, distinguishing accepted scoped corrections from partial
 evidence, remaining review and unresolved decisions. It is not a new status model
 or a declaration that every debt has been reviewed/closed.
+
+### DEBT-080 — Green CI Web check can conceal a flaky smoke test (Medium, OPEN)
+
+PR81 head ccc8f9c, Quality run39968841410/job120465792097 reports success, but
+actual job logs record one flaky test and13 passed: arrival.spec.ts106 fails
+the Begin with inference visibility assertion at line112 (5000ms), then succeeds
+on retry. Playwright config enables two retries under CI; ci.yml invokes the
+plain Web test:e2e command. This is not a clean14/14 first-attempt pass. No
+runtime defect or precise hydration/readiness cause is established by this log.
+
+The separate local quality:full runner already forces retries0 and rejects
+retried results. Its stronger guarantee must not be attributed to the plain CI
+Web job. Proposed separate package: reproduce real readiness/action ordering,
+retain assertions/timeouts and UI/runtime, and align mandatory CI smoke with
+the no-retry acceptance policy. No retry-to-green, timeout increase or speculative
+UI change. Implementation requires owner approval; D7 only records the evidence.
 
 ### DEBT-013 — D7 host-mail readiness revalidation (High, OPEN readiness observation)
 

@@ -3,8 +3,8 @@
 Date: 2026-10-23. Baseline: accepted main `f118d82`.
 Status: **IN PROGRESS; not a release certificate**.
 
-This covers every unique register ID001–079 exactly once. It does not say all
-79 entries are resolved or fully reviewed. The [register](../development/DEBT_REGISTER.md)
+This covers every unique register ID001–080 exactly once. It does not say all
+80 entries are resolved or fully reviewed. The [register](../development/DEBT_REGISTER.md)
 retains authoritative implementation/decision status; the categories below are
 review routing, not new debt statuses. Detailed inspected evidence and limitations
 are in the [D7 review](D7_BASELINE_RELEASE_REVIEW.md). A historical green D6 gate
@@ -102,6 +102,8 @@ does not override the current dependency failure or missing risk decisions.
 | DEBT-077 | C      | Accepted actual-observer readiness correction and fresh/CI smoke; no runtime/UI or retry-to-green change.                                                                                    |
 | DEBT-078 | C      | Accepted exact generated-path format exclusion and actual Prettier policy regression.                                                                                                        |
 | DEBT-079 | Q      | Ten inherited Domain/Nest HTTP exception dependencies confirmed; separate error/transport-preserving design scope required.                                                                  |
+
+| DEBT-080 | O | PR81 green Web job contains one flaky/13 passed; plain CI allows retries2 unlike strict local gate. Separate reproduction and no-retry CI alignment require approval. |
 
 ## Execution order from this checkpoint
 
