@@ -580,6 +580,38 @@ zero bounded findings, frozen baseline unchanged. Retained log:
 `dss-d7-current-architecture-review.log` in local temp. This verifies the current
 checker contract, not universal semantic compliance.
 
+### Bootstrap / Compose / endpoint checkpoint
+
+For030/031/032, read the remaining bootstrap source and complete dev/test Compose
+definitions. Bootstrap preserves existing env files, uses exclusive creation for
+missing ones and generated random secrets, validates pinned runtimes and compares
+effective API/Worker DB/Redis coordinates to root Compose before deploy/seed.
+It calls frozen install, healthy Compose startup and committed deploy/seed; no
+automatic migration authoring/reset. Inspection is not a fresh bootstrap run or
+proof that all external process overrides/configurations are safe.
+
+Dev Compose binds declared database/Redis/admin/mail/scanner endpoints to
+loopback and defines service healthchecks; pgAdmin uses an explicit digest.
+Disposable test PostgreSQL is loopback/tmpfs with its own credentials and Redis
+port. Optional observability remains a profile. Current Mailpit host mismatch013
+does not disappear because the source Compose binding is correct.
+
+For012/030, read primary-checkout local envs only into a metadata comparison:
+API/Worker declared PostgreSQL and Redis coordinates match root Compose; both
+files and Web env exist, and API has no .env.local override. No values, URLs,
+passwords or connection strings were emitted. The comparison excludes arbitrary
+current/future process-env overrides and does not authenticate against dev DB.
+API JWT access/refresh and2FA key fields are present; explicit MEDIA_SIGNING_SECRET
+is absent. The inspected schema permits a dev fallback and requires a32-character
+secret in production; production is not selected in that file. No secret entropy
+or production readiness is certified and no missing secret is silently written.
+
+Web config/proxy and examples use API3001 `/api` and `/api/graphql`, independently
+of Web3000. Local public endpoint alignment is checked as booleans, not printed
+env content. No API/Web/Worker start, service recreate, env edit, migration or
+seed was performed. These four entries move to mapped evidence, not universal
+operational acceptance; host-mail and current dependency gate remain blocking.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`
