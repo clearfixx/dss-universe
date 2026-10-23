@@ -908,6 +908,14 @@ as weaker E2E pipe options: actual Jest-versus-build emitted metadata and built
 HTTP behavior need characterization. A separate compatibility-first040 packet
 was requested; no import, decorator or API change is made in D7.
 
+### Owner approval — separate040 compatibility packet
+
+The owner explicitly approved comparing Jest/production metadata and HTTP
+behavior first, then agreeing displayName compatibility before DTO validation
+correction. Continue in a separate branch from accepted main, not as D7 runtime
+changes. Existing Auth/Users ownership and successful response shapes remain
+fixed boundaries. Next/Mailpit approvals remain separate and are not inferred.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`
