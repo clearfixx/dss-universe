@@ -708,6 +708,33 @@ Jest failed. No runtime/UI changes, gate waivers or phase acceptance were made.
 mapped with its bounded direct-use scan and unchanged upstream-error limitation.
 Zero R entries means initial routing is complete, not that M/Q/O work is closed.
 
+### Identity / mail / logging secret-boundary checkpoint
+
+Read actual authentication presentation and legacy JWT issuer: both construct
+explicit fields, not whole persistence-record spreads. Response tokens are the
+intentional login/refresh contract; credential hashes are not profile output.
+Authoritative request access returns copied roles/permissions only. Fresh four
+API suites covering presentation, issuance, request access and audit redaction:
+18/18 passed. This is not every DTO/HTTP response;040 remains separate.
+
+Read the credential repository and mail processors. Account audit entries carry
+action/actor/target coordinates rather than credential values. Mail tokens are
+generated in Worker, stored as hashes, placed in URL fragments for intended email
+delivery and not returned as job results. SMTP send failures become generic errors;
+Worker mail failure logs contain job IDs, not recipient/message/provider errors.
+Nodemailer logger/debug are disabled. Fresh three mail processor suites:8/8 pass;
+no real email or SMTP readiness is demonstrated (013 remains open).
+
+Audit redaction recursively censors sensitive key names, not arbitrary secrets
+under innocuous keys; its current unit covers one nested-credentials example.
+API pino config has explicit authorization/cookie/password/token/GraphQL paths,
+not a universal arbitrary-object sanitizer. OutboxWriter persists the producer's
+payload/metadata without general redaction; producer-by-producer semantics still
+matter. Non-mail Worker integration/media failures log Error objects and may
+retain failure reasons/DLQ payloads. No secret leak is established by this
+inspection, but those paths are not certified secret-free. No broad clean-secret
+claim, new waiver, env disclosure or logging/runtime change is made.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`
