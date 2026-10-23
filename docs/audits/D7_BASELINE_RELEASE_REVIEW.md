@@ -136,6 +136,73 @@ separate scope are in [DEBT-079](DEBT_079_DOMAIN_HTTP_COUPLING.md). This demonst
 a limitation already stated in the architecture inventory, not permission to
 waive Domain independence. No error implementation or response is changed.
 
+### Identity/IAM evidence checkpoint — 2026-10-23
+
+Source is still the accepted baseline; only D7 documentation differs. Inspected
+AuthModule and IamModule provider bindings and exports, the two public roots,
+Auth credential orchestration, IAM role/permission/assignment/group services,
+request session validation, request access composition and registration unit of
+work. IAM's legacy-named `subject-access.service.spec.ts` actually exercises
+`UserAccessService`; there is no separate `subject-access.service.ts`. A missing
+path is not evidence that a service was removed or that its policy is absent.
+
+| Debt | Current source and evidence                                                                                                                                                                                                                                                                                        | Remaining acceptance boundary                                                                                                                                                                                                                   |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 001  | AuthService uses its own credential repository; enrollment receives a write-only subject store. Root AuthenticationPresentationService binds Users profile input and allowlists the response. Root PrismaRegistrationTransaction combines disjoint owner fragments and IAM baseline assignment in one transaction. | Original direct Users repository/mapper coupling is not present in these inspected paths. Reconcile all lifecycle consumers and real DB rollback evidence before closing the broad entry. Owner availability remains separately tracked as 047. |
+| 002  | Auth application and actual IAM service subfeatures use owned repository/capability contracts. The focused ORM scan returns only comments, not Prisma imports/client calls in these paths. Module assembly binds infrastructure implementations privately.                                                         | This supports implemented removal of the original direct-Prisma service coupling, not framework-free Domain compliance (079), all repository ownership, or whole-module security acceptance.                                                    |
+| 027  | Auth/IAM roots publish named tokens/types; Nest module exports expose four narrow contracts each, not application services/repositories. IAM metadata regression pins its exact exports.                                                                                                                           | Other feature roots and technical-entry consumers still require individual review; no whole-repository public-surface closure.                                                                                                                  |
+| 022  | Current whole-repository `format:check` exits0, unlike the historical 41-file diagnostic. Accepted D6 full gate also passed.                                                                                                                                                                                       | The original formatting count is stale, not a live failure. This is scoped Prettier evidence, not File Passport review or semantic code-style certification.                                                                                    |
+
+Fresh focused unit verification (not a new full profile):
+
+- Ten explicit suites: 78/78 passed, exit0. Includes access-session validation,
+  JWT strategy, authoritative request access reader, authentication presentation,
+  IAM module boundary, roles, permissions, two assignment suites and IAM safety.
+- Three additional explicit suites: 47/47 passed, exit0. Includes AuthService,
+  registration transaction unit contract and access-group application policy.
+  JSON retained at `node_modules/.cache/d7-identity-unit-review.json`.
+- These are 125 tests in 13 distinct suites, not 125 DB/HTTP regressions. No
+  integration suite was selected and no disposable database migration was run.
+
+Reviewed assertions cover session subject/version/revocation/expiry checks,
+fresh access instead of stale token grants, denial on authority failures,
+profile/token allowlists even for an overbroad provider, registration failure
+ordering, disjoint credential/profile fragments, IAM output allowlists and
+Premium rejection of delegated capabilities. Mocked transaction propagation
+does not prove PostgreSQL rollback: the separate opt-in registration integration
+suite uses an isolated schema and must be mapped to full-profile evidence.
+No historical test filename or green unit count substitutes for that proof.
+
+### DEBT-049 — migration-history reconciliation checkpoint
+
+Read [the schema alignment evidence](DEBT_049_PRISMA_SCHEMA_ALIGNMENT.md) and
+compared accepted D5 `fcab53c` with accepted D6 `f118d82`. Under `apps/api/prisma`
+the only changed tracked file is `schema.prisma`; the migration-history diff
+exits0 and the current directory contains 54 migration directories. This proves
+no D6 rewrite/addition in that history, not that every historical migration is
+safe for every production dataset.
+
+The exact model diff adds twelve `@default(now())` while retaining `@updatedAt`,
+Outbox ID `@db.Uuid`, and the two named Users indexes. Current migration SQL
+already declares the twelve timestamp defaults, native UUID and these index
+names; the alignment does not introduce a new SQL operation. The historical
+Outbox migration also explicitly has its own nondefault `updatedAt`; it is not
+one of the twelve changed fields.
+
+The existing D6 report separately records migrated DB catalog/default/create/
+update checks and empty read-only drift before/after tests. Those are retained
+D6 evidence, not a fresh D7 DB test. Its old CI-pending statements describe that
+checkpoint; the final accepted D6/head and main CI evidence above supersedes
+them without rewriting the historical failures. D7 has not yet rerun live drift.
+
+Fresh static schema-contract verification passes 14/14 in one suite, exit0;
+JSON is retained at `node_modules/.cache/d7-schema-contract-review.json`.
+It checks model source contracts, not a live catalog or production migration.
+
+Canonical `apps/api/src/schema.gql` still has SHA256
+`C03170CB54027C557F662A5B9BF5F85CAFA2112B8623D3FCA360E8FA9C82FD2C`.
+This checksum verifies no SDL change here, not API behavioral equivalence.
+
 ## Remaining streams
 
 ### Entry-check checkpoint (2026-10-23)
