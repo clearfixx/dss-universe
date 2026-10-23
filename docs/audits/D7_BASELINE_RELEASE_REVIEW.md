@@ -635,6 +635,36 @@ expansion use outside the security tooling/tests. This does not resolve transiti
 glob consumers, user-controlled pattern reachability or the upstream
 parenthesized-pattern error036. No upstream semantics or exception was changed.
 
+### Search / durable identity / presence evidence checkpoint
+
+Read the complete News search performance suite. Its migrated250/1000-article
+corpora contain60% gated articles; five samples per lane assert zero guest
+projections, exact member projection/facts/audience reads, batches64 and maximum
+projection concurrency4. Pagination assertions cover total980, page6/page10,
+cursor tails and qualifying pins beyond500. Separate cases compare concurrent
+viewer scopes and reject a later batch evidence failure before next-request
+recovery. Latency/memory and EXPLAIN are recorded, not production capacity SLOs.
+The retained accepted-main E2E artifact has all5 exact cases passed, no other
+statuses. This completes the pending053 performance-source mapping, not a fresh
+D7 performance run or universal load guarantee.
+
+For061, read the consumer identity boundary suite: a child bridge invokes the
+actual Worker implementations against an owned migrated schema/unique Redis
+prefix. New marker/DLQ identities are asserted v1. Two retry cases preserve old
+v2 DLQ history while asserting canonical-marker deduplication and exact handler
+counts for already-processed versus unprocessed events. Accepted-main artifact:
+3/3 passed. This is actual DB/Redis boundary evidence, not proof of exactly-once
+or automatic gamification integration.
+
+For074, the social privacy suite controls only asynchronous presence touch, not
+authorization/privacy grants. Exact seeded timestamps and owner profile equality
+remain asserted. A promise gate deliberately persists a later timestamp after
+the response, proves the response snapshot remains unchanged and releases/awaits
+the gate in finally. No sleep or widened timestamp tolerance is used. Main's
+same suite passes6/6; no fresh D7 HTTP run is inferred. The earlier combined
+read output was truncated; the identity suite's omitted opening was subsequently
+read separately before these conclusions.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`
