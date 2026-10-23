@@ -916,6 +916,21 @@ correction. Continue in a separate branch from accepted main, not as D7 runtime
 changes. Existing Auth/Users ownership and successful response shapes remain
 fixed boundaries. Next/Mailpit approvals remain separate and are not inferred.
 
+### Owner naming reconciliation checkpoint
+
+While PR80's separate exact-head CI continued, corrected only canonical roadmap
+and module-map product labels to the already approved owner decision: personal
+Mission Control, administrative Command Deck. Phase19/22 numbers and scope are
+unchanged. Legacy /command-deck and /mission-control route strings are explicitly
+retained for compatibility review, not treated as permission or rename authority.
+Historical Media delivery wording is labelled historical, not a new UI change.
+
+Module-map access/scope wording remains subordinate to recorded owner decisions;
+this edit implements no owner powers, administrative endpoints or UI.039 remains
+open for Research Lab/Knowledge Forge product-boundary reconciliation and actual
+route/UI integration. Old checkpoint statements about reversed roadmap labels
+describe the pre-correction source, not the current canonical naming table.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`

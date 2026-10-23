@@ -2,7 +2,7 @@
 
 > Status: Canonical for 1.0
 >
-> Updated: 2026-07-18
+> Naming reconciled: 2026-10-23 (owner clarification)
 
 This document fixes the approved product names, boundaries and primary routes. Generic names may appear in code as domain terms, but user-facing navigation and product documentation use the branded names below.
 
@@ -13,15 +13,22 @@ This document fixes the approved product names, boundaries and primary routes. G
 | Forum                         | Community Hub      | Topics, replies, voting, curators and community discussions  |
 | Articles / analytical content | Research Lab       | Long-form research, guides and analytical publications       |
 | Wiki                          | Knowledge Forge    | Collaborative, versioned manuals and knowledge articles      |
-| Admin Panel                   | Mission Control    | General administration and platform operations               |
-| Personal dashboard            | Command Deck       | Personal progress, tasks, recommendations and activity       |
+| Admin Panel                   | Command Deck       | General administration and platform operations               |
+| Personal dashboard            | Mission Control    | Personal progress, tasks, recommendations and activity       |
 | Learning                      | Academy            | Courses, lessons, enrollment and progress                    |
 | Media                         | DSS Media Platform | Upload, processing, metadata, access and file lifecycle      |
 | AI                            | AI Core            | Cross-platform AI capabilities and orchestration             |
 | Support                       | Support Center     | Tickets, feature requests, bugs and release information      |
 | Maintenance                   | Maintenance Center | Health, queues, cache, storage, search and maintenance modes |
 
-The deprecated product name `Control Center` must not be used. `Mission Control` is the administrative platform. `Command Deck` is the authenticated user's personal dashboard.
+The deprecated product name `Control Center` must not be used. `Command Deck` is the administrative platform. `Mission Control` is the authenticated user's personal dashboard.
+
+The [owner product vision](../development/PRODUCT_VISION_1_0.md) and
+[administrative decisions](../development/COMMAND_DECK_OWNER_DECISIONS.md)
+take precedence over historical scope/access wording below. This naming update
+does not implement those features or resolve Research Lab/Knowledge Forge scope.
+Existing/suggested legacy route strings are retained for compatibility review;
+they are not authority to rename URLs or infer permissions from a path.
 
 ## Primary Experience Surfaces
 
@@ -29,7 +36,7 @@ The deprecated product name `Control Center` must not be used. `Mission Control`
 | ----------------- | -------------- | ----------------------- | ------------------------ |
 | Guest landing     | Guest          | `/`                     | Public Web / CMS Builder |
 | Universe Feed     | Signed-in user | `/`                     | Feed Platform            |
-| Command Deck      | Signed-in user | `/command-deck`         | Command Deck             |
+| Mission Control   | Signed-in user | `/command-deck`         | Mission Control          |
 | Astronaut Profile | Public/user    | `/astronauts/:username` | Users                    |
 | Account Settings  | Owner          | `/settings`             | Users / IAM              |
 | Members Directory | Public/user    | `/astronauts`           | Users / Gamification     |
@@ -58,10 +65,10 @@ The deprecated product name `Control Center` must not be used. `Mission Control`
 | Content Gates                        | Content Gate Platform | News, Research, Knowledge Forge, Community Hub, Downloads                           |
 | Comments and reactions               | Interaction Platform  | News, Research, profiles and other approved content                                 |
 | Reputation                           | Gamification          | Profiles, Community Hub, ranking and moderation                                     |
-| Community Points and levels          | Gamification          | Members Directory, Command Deck and profiles                                        |
+| Community Points and levels          | Gamification          | Members Directory, Mission Control and profiles                                     |
 | Search                               | Search Platform       | All searchable domains                                                              |
 | Notifications                        | Notification Platform | All event-producing domains                                                         |
-| Audit                                | Audit Platform        | Mission Control, Security Deck and compliance                                       |
+| Audit                                | Audit Platform        | Command Deck, Security Deck and compliance                                          |
 | Events, outbox and jobs              | Platform Runtime      | Search, notifications, media, email, analytics and AI                               |
 | AI Core                              | AI Platform           | Feed, editors, search, Academy and administrative assistance                        |
 | Theme Engine                         | Theme Platform        | Entire Web application and CMS Builder                                              |
@@ -72,21 +79,21 @@ These are coordinated surfaces, not independent sources of business truth.
 
 | Surface            | Suggested route                | Responsibility                                                               |
 | ------------------ | ------------------------------ | ---------------------------------------------------------------------------- |
-| Mission Control    | `/mission-control`             | General administration, users, modules, queues and configuration             |
+| Command Deck       | `/mission-control`             | General administration, users, modules, queues and configuration             |
 | Security Deck      | `/mission-control/security`    | Sessions, sanctions, appeals, identity intelligence and abuse detection      |
 | CMS Builder        | `/mission-control/cms`         | Landing pages, navigation, content blocks, branding and SEO content          |
 | Media Library      | `/mission-control/media`       | Media inspection, moderation, references and lifecycle operations            |
 | Maintenance Center | `/mission-control/maintenance` | Health, cache, queues, storage, search, jobs and maintenance/read-only modes |
 | Analytics Builder  | `/mission-control/analytics`   | Approved metrics, widgets, reports and exports                               |
 
-Mission Control delegates domain actions to the owning module. It must not write directly to another module's tables.
+Command Deck delegates domain actions to the owning module. It must not write directly to another module's tables.
 
 ## Access Model
 
 - `USER` accesses normal user capabilities.
 - Custom groups grant only allowlisted user/content permissions.
 - `MODERATOR` accesses moderation capabilities in Security Deck.
-- `ADMIN` accesses Mission Control and may issue permanent sanctions according to policy.
+- `ADMIN` accesses Command Deck and may issue permanent sanctions according to policy.
 - Platform-owner or similarly elevated access may be introduced only as an explicit security decision; product naming must not depend on a hidden `SUPER_ADMIN` role.
 
 ## Terminology Compatibility
@@ -96,6 +103,6 @@ Internal code may retain stable technical nouns when useful:
 - `forum` can remain a domain/package name while the UI says Community Hub;
 - `wiki` can remain a technical content type while the UI says Knowledge Forge;
 - `media` is the domain noun while the complete platform name is DSS Media Platform;
-- `admin` may appear in permission names and routes, but the product surface is Mission Control.
+- `admin` may appear in permission names and routes, but the product surface is Command Deck.
 
 New user-facing copy, routes documentation and mockups must use canonical names.
