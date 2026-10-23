@@ -803,6 +803,28 @@ The raw log is retained outside Git at
 Tracked worktree remained clean after the attempt. D7 release acceptance is
 blocked; the separately requested dependency correction still needs approval.
 
+### Fresh identity atomicity DB checkpoint
+
+After command access recovered, selected three actual opt-in PostgreSQL suites
+with RUN_AUTH_DB_TESTS/RUN_IAM_DB_TESTS enabled and explicit disposable5434.
+All36 pass: email verification14, second factor15, protected-role revocation7;
+JSON success=true and zero failed/pending/todo/other assertion statuses. Evidence:
+`node_modules/.cache/d7-identity-atomicity-current.json`. Source is unchanged.
+
+These suites exercise production repositories in generated schemas, copied
+from the already migrated disposable public tables. They are not a fresh
+migration replay. Audit is doubled in Auth cases. IAM's synthetic storage-failure
+trigger intentionally emits a Prisma error, and its rollback assertion passes;
+that expected diagnostic is not a failing test. Fresh read-only namespace query
+after completion finds no factor*test*, verification*test* or iam*revoke* schemas.
+No public fixture rows, dev5433, service restart or migration/reset was involved.
+
+This strengthens042/046/068 beyond source inspection: actual lock-order,
+single-use/rollback and destination-proof schedules pass now. It does not solve
+047 administrator availability, certify HTTP metadata040 or turn the security-red
+consolidated gate green. The earlier command-limit rejection executed no work;
+it was not bypassed.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`
