@@ -253,6 +253,25 @@ passing redaction/search tests. Wall retraction ordering (067), Media physical
 containment (037), search performance and all remaining individual debt
 dispositions are still review work, not silently accepted risks.
 
+### Open-risk revalidation and decision queue — 2026-10-23
+
+| Debt | Current evidence                                                                                                                                                                                                                                                                                                                                          | Disposition at this checkpoint                                                                                                                                                                                                         |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 037  | Shared resolveStorageKey uses native resolve/relative after portable key validation; neither helper performs filesystem IO, realpath checks or handle-based containment.                                                                                                                                                                                  | OPEN threat-model decision. Asked owner whether uploads remain trusted/application-controlled or hostile local writers require pre-11 hardening. No inferred waiver.                                                                   |
+| 047  | Auth deactivateAccount updates ACTIVE subject eligibility and revokes sessions in its own transaction. IAM role revocation locks the role but counts all assignments without an ACTIVE filter. Permission repository update/delete and role-permission delete have no shared availability predicate; PermissionsGuard checks actual keys, not role names. | OPEN current source-level availability risk, not a reproduced total lockout. Asked for separate minimal pre-11 policy design versus explicit deferral. Future unique-owner requirements remain scheduled, not prematurely implemented. |
+| 067  | Current PostgresActivityProjector retraction is UPDATE-only by subject; create inserts with conflict handling only on sourceEventId. There is no persisted retraction when no create row exists.                                                                                                                                                          | OPEN ordering risk still consistent with the earlier migrated reproduction. Asked for separate durable ordering/tombstone design; schema/runtime implementation remains separately gated.                                              |
+
+Fresh pure tests pass: Storage 43/43 and Activity projector 3/3, no failed,
+pending or todo results. JSON retained at `node_modules/.cache/d7-storage-review.json`
+and `node_modules/.cache/d7-activity-projector-review.json`. Storage tests cover
+lexical key/path behavior, not hostile symlink/junction races. Activity's mocked
+query tests inspect allowlisted event values and update SQL, not durable
+retract-before-create behavior. Their passing status does not close 037 or 067.
+
+No filesystem link attack, privileged-account mutation, real queue reordering,
+production lockout or new DB reproduction was attempted in this checkpoint.
+The three owner questions are pending; review of other entries remains possible.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`
