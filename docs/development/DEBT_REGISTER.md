@@ -28,6 +28,11 @@ The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079.
 D6 acceptance does not
 automatically resolve unrelated OPEN findings.
 
+[D7 individual review routing](../audits/D7_DEBT_DISPOSITION_MATRIX.md) maps all79
+unique IDs exactly once, distinguishing accepted scoped corrections from partial
+evidence, remaining review and unresolved decisions. It is not a new status model
+or a declaration that every debt has been reviewed/closed.
+
 ### DEBT-013 — D7 host-mail readiness revalidation (High, OPEN readiness observation)
 
 2026-10-23: Mailpit container is running/healthy and its internal readyz invocation
@@ -1346,6 +1351,12 @@ the bounded guest Web entry check remain red. Full gates/review/CI remain open; 
 [the bounded correction plan](DEBT_056_NEWS_SECONDARY_AUDIENCE_PLAN.md).
 
 ### DEBT-057 — Valid comment tombstones break News GraphQL non-null body (Medium, OPEN, separate correction required)
+
+D7 revalidation (2026-10-23): current domain still permits null body while the
+presentation model/actual canonical SDL require it. Synthetic in-memory GraphQL
+execution returns the same non-null body error and null data; no DB/HTTP mutation
+or content disclosure is claimed. Separate compatibility/design/correction
+approval requested. This is not resolved by green secondary-audience tests.
 
 On 2026-10-14, an author tombstones a synthetic PUBLIC News comment through
 CommentsService.remove. Stored body/document become null with deletedAt set,

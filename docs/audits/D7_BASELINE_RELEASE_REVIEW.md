@@ -62,7 +62,9 @@ Reconcile historical/current descriptions without silently changing an ADR.
 
 All 78 original IDs DEBT-001 through DEBT-078 are present, with no missing IDs.
 D7 additionally records DEBT-079, bringing the current inventory to 79 entries.
-This is an identifier inventory, **not 79 completed reviews**. For each entry map
+This is an identifier inventory, **not 79 completed reviews**. The
+[individual review routing matrix](D7_DEBT_DISPOSITION_MATRIX.md) covers each ID
+exactly once and makes remaining source/decision work explicit. For each entry map
 its original scope, approved decision, current source, specific regression,
 migration/API implications, fresh evidence and disposition. Preserve old
 diagnostics; do not close OPEN entries merely because D6 is green.
@@ -442,6 +444,32 @@ JSON `node_modules/.cache/d7-config-review.json` and
 `node_modules/.cache/d7-worker-environment-review.json`. Bootstrap was inspected
 in part, not executed; no migrations/seed/env writes occurred. These tests do
 not certify every local secret, all production configuration or bootstrapping.
+
+### Individual inventory / tombstone / leaderboard checkpoint
+
+The new [routing matrix](D7_DEBT_DISPOSITION_MATRIX.md) independently verifies
+79 unique rows with no missing IDs. Categories describe review completeness,
+not automatic register closure. Its R entries are explicit next source/test
+work, and M entries retain their stated acceptance limits.
+
+For057, current NewsCommentItem permits nullable body/documentJson; presentation
+NewsCommentModel still declares required body. An in-memory GraphQL execution
+against the actual canonical SDL, with a synthetic tombstone root value, returns
+`Cannot return null for non-nullable field NewsComment.body` at
+`newsComments.items.0.body` and null data. This is current schema-serialization
+evidence, not a fresh HTTP/DB reproduction or deleted-content disclosure. The
+first shell probe had a quoting SyntaxError before execution; only the corrected
+probe establishes the result. Asked for a separate nullable-tombstone/client
+compatibility design and correction packet; no API/schema/UI change in D7.
+
+For060, inspected Leaderboards-owned population LEFT JOIN and root one-query
+reader: population total is independent of requested page rows, and root removes
+the technical null page row before allowlisted mapping. Accepted-main ownership
+E2E is30/30, including17 explicit DEBT-060 cases for missing/deactivated/banned/
+deleted viewers, all periods, empty populations and fresh subsequent counts.
+This maps the approved correction without adding an independent count query,
+changing rank order or claiming unauthenticated HTTP behavior. Not rerun as DB
+tests in this checkpoint; current dependency acceptance remains blocked.
 
 ### Entry-check checkpoint (2026-10-23)
 
