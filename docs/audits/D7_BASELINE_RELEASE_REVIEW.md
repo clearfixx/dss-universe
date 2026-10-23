@@ -825,6 +825,24 @@ single-use/rollback and destination-proof schedules pass now. It does not solve
 consolidated gate green. The earlier command-limit rejection executed no work;
 it was not bypassed.
 
+### Fresh registration / groups / assignment DB checkpoint
+
+Ran three opt-in suites on explicit disposable5434: registration atomicity8/8,
+access-group persistence15/15 and IAM assignment reads3/3. JSON success=true,
+26 passed, zero failed/pending/todo and zero non-passed assertions. Retained:
+`node_modules/.cache/d7-registration-groups-current.json`. Read-only namespace
+check afterwards finds no registration_, access_groups_ or iam_access_ schemas.
+
+Registration exercises actual shared-row transaction and application composition
+with downstream token/session/mail instrumentation, including injected failure
+boundaries; not HTTP E2E. Groups apply the actual additive migration inside a
+guarded owned schema, using actual audit writer/redactor, preserving capability-
+free Premium and immutable membership/revocation constraints. Assignment reads
+exercise ordered minimal fields and ordinary unique/FK-backed writes. This is
+not replay of all migrations or full Phase5/Auth/IAM acceptance. Expected Prisma
+errors from intentional rejection/constraint cases accompany passing assertions.
+No source, public fixture rows, dev5433 or service state was changed.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`
