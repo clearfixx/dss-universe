@@ -1,9 +1,10 @@
 # DEBT-057 — News tombstone transport compatibility
 
-Status: proposed exact contract; implementation not started.
+Status: exact contract approved; implementation and focused regressions verified;
+full quality/CI and acceptance remain open.
 Base: accepted main `f118d82`. Branch: `debt/debt-057-tombstone-contract`.
 Owner approved a separate compatibility-first package, then HTTP-backed correction.
-This document requests confirmation of the exact contract below.
+Owner confirmed the exact nullable contract below before runtime implementation.
 
 ## Evidence and ownership
 
@@ -18,7 +19,7 @@ strings. D7's actual-SDL synthetic execution demonstrated null bubbling breaks
 the page. Generated Web NewsCommentFieldsFragment and nested query currently
 assume strings, so source annotations alone are not sufficient correction.
 
-## Proposed exact output contract
+## Approved exact output contract
 
 | Field / behavior                             | Contract                                                                     |
 | -------------------------------------------- | ---------------------------------------------------------------------------- |
@@ -64,4 +65,37 @@ repository clients together; do not claim unknown external clients are safe.
 - Full quality/security/CI, current SDL diff review and owner acceptance. Current
   Next dependency blockers are not waived; no red merge or Phase11 entry.
 
-No runtime, SDL, generated client or UI file is changed by this design checkpoint.
+## Implementation evidence
+
+The News GraphQL model now declares only body/documentJson nullable. Generated
+SDL has exactly those two semantic changes; committed codegen regenerated the
+Web fragment and nested query nullability. No component UI implementation changed.
+
+HTTP regression also exposed JSON.stringify(null) in the Interactions delivery
+mapper. The mapper now preserves database null as null rather than the string
+"null"; its query, ordering, transaction and access policies remain unchanged.
+
+Three real migrated-schema HTTP regressions failed before correction with GraphQL
+non-null errors and pass after correction: guest/member tree and page retention,
+and MEMBERS audience denial. Reads preserve original revisions, deletion actor,
+reason and audit evidence. A generated-type Web component regression passes with
+a deleted null parent and live reply; only the live reply has reply/vote controls.
+Web/API typechecks pass; all Web tests pass (61/61). Four related HTTP suites
+pass (71/71), covering tombstones, secondary audience, interaction audience and
+owned response snapshots. Architecture checks pass (140/140; zero baseline
+findings, not a universal compliance certificate). Strict changed-source lint
+passes after applying the API package's formatter configuration. Production
+build passes (six tasks, four cached; API and Web rebuilt).
+
+Related HTTP evidence: `node_modules/.cache/debt057-related-http.json` (ignored).
+These results are not full release acceptance; full gates, security blockers
+and CI must be reported separately.
+
+Full-gate attempt (`%TEMP%/dss-debt057-quality-full.log`) passed format,
+architecture, Prisma validation/generation, empty schema drift, lint, typecheck
+and mandatory runner-policy checks, then stopped at security:check (exit 1).
+Blockers remain GHSA-2464-fhr4-w9xw (critical), GHSA-p3m5-59mp-jv5r (high),
+GHSA-673q-mjm6-r5xr (critical). The existing exact braces exception was verified
+with 14 passing regressions; no exception was added. Later full-gate coverage,
+E2E/build/smoke steps did not execute in that attempt; independent build and
+focused regressions above are not a substitute for those missing gates.
