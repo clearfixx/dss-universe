@@ -40,3 +40,25 @@ After agreement: explicit runtime DTO imports, constructor/validation assertions
 built-controller HTTP positive/negative regressions, real API regressions and full
 quality/security/CI. Current dependency security is still a separate blocker;
 this checkpoint is not a completed package, PR acceptance or permission to merge.
+
+## Regression scope before correction
+
+| Boundary         | Required evidence                                                                                                                                                                               |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Runtime metadata | Jest and fresh production build both identify the concrete request DTO constructor for each REST operation.                                                                                     |
+| Register         | Valid request reaches composition unchanged except normal whitelist filtering; required email/username/password validation rejects malformed inputs before it. displayName policy awaits owner. |
+| Login            | Valid email/password and omitted factor reach composition; malformed optional factor/type/short password are rejected. No change to factor ownership or authentication decisions.               |
+| Refresh          | String payload reaches composition; missing/non-string payload rejected. Do not add GraphQL's MinLength to REST implicitly: empty-string REST authentication denial remains a service concern.  |
+| Unknown fields   | Global whitelist filters undecorated fields without inventing forbidNonWhitelisted or changing global pipe settings.                                                                            |
+| Response         | Existing register/login/refresh success statuses, explicit profile/token fields and error ownership stay intact.                                                                                |
+| Failure ordering | Validation rejects before the controlled presentation boundary; production-controller diagnostic must also demonstrate valid calls reach it after correction.                                   |
+
+The downstream HTTP double can prove validation/dispatch, not token issuance,
+credential correctness or DB/session atomicity. Those remain real API integration
+regressions, not claims inferred from synthetic responses. Characterization tests
+pinning Object/Function must become corrected-contract tests before acceptance.
+
+Fresh characterization-branch checks: architecture140/140 with zero bounded
+findings, API lint and API typecheck all exit0. Formatting/diff checks pass for
+the authored diagnostic/tests/report. These checks do not substitute for the
+pending correction's full gate or remove the separate Next security blocker.
