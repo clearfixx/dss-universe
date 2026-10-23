@@ -20,8 +20,8 @@
  */
 import { Body, Controller, Post, Req } from '@nestjs/common';
 import type { AuthenticatedRequest } from '@api/core/auth';
-import type { LoginDto, RefreshTokenDto } from '@api/modules/auth/presentation';
-import type { RegisterDto } from './dto/register.dto';
+import { LoginDto, RefreshTokenDto } from '@api/modules/auth/presentation';
+import { RegisterDto } from './dto/register.dto';
 import { AuthenticationPresentationService } from '../application/authentication-presentation.service';
 
 @Controller('auth')

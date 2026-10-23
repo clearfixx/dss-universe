@@ -1,10 +1,16 @@
 /**
- * DSS Universe — Identity Compatibility Diagnostic
- * File: scripts/audit-auth-rest-metadata.cjs
- * Purpose: Characterizes built REST controller validation over loopback HTTP.
- * Architecture: Actual compiled controller/Nest pipe; presentation is a boundary double.
- * Important: No AppModule, database, credentials, sessions or mail are started.
- * This pins the pre-correction failure, not successful authentication acceptance.
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Identity Compatibility Diagnostic
+ * 📄 File: scripts/audit-auth-rest-metadata.cjs
+ * 🎯 Purpose: Verifies built REST DTO validation over loopback HTTP.
+ * 🧠 Responsibilities: checks concrete metadata, valid dispatch and invalid-input rejection.
+ * 🏗️ Architecture: Actual compiled controller/Nest pipe; downstream presentation is doubled.
+ * ⚠️ Important: No AppModule, database, credentials, sessions or mail are started.
+ * This proves validation/dispatch, not successful real authentication.
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 const assert = require("node:assert/strict");
 const { createRequire } = require("node:module");
@@ -41,8 +47,8 @@ async function main() {
     const presentation = Object.fromEntries(
       ["register", "login", "refresh"].map((method) => [
         method,
-        async () => {
-          calls.push(method);
+        async (input) => {
+          calls.push({ method, input });
           return { synthetic: true };
         },
       ]),
@@ -78,24 +84,32 @@ async function main() {
       },
       refresh: { refreshToken: "synthetic-not-a-real-token" },
     };
-    for (const [method, body] of Object.entries(samples)) {
-      const metadata = Reflect.getMetadata(
-        "design:paramtypes",
-        AuthenticationController.prototype,
-        method,
-      );
+    const expectedNames = {
+      register: "RegisterDto",
+      login: "LoginDto",
+      refresh: "RefreshTokenDto",
+    };
+    async function send(method, body) {
       const response = await fetch(`${base}/api/auth/${method}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(5000),
       });
-      const result = await response.json();
-      assert.equal(metadata[0], Function);
-      assert.equal(response.status, 400);
-      assert.deepEqual(result.message, [
-        "an unknown value was passed to the validate function",
-      ]);
+      return { status: response.status, body: await response.json() };
+    }
+    for (const [method, body] of Object.entries(samples)) {
+      const metadata = Reflect.getMetadata(
+        "design:paramtypes",
+        AuthenticationController.prototype,
+        method,
+      );
+      assert.equal(metadata[0].name, expectedNames[method]);
+      const response = await send(method, { ...body, unexpected: "discard" });
+      assert.equal(response.status, 201);
+      assert.deepEqual(response.body, { synthetic: true });
+      assert.deepEqual(JSON.parse(JSON.stringify(calls.at(-1).input)), body);
+      assert.equal(Object.hasOwn(calls.at(-1).input, "unexpected"), false);
       console.log(
         JSON.stringify({
           method,
@@ -104,9 +118,36 @@ async function main() {
         }),
       );
     }
-    assert.deepEqual(calls, []);
+    const { displayName: _omitted, ...withoutName } = samples.register;
+    assert.equal((await send("register", withoutName)).status, 201);
+    assert.deepEqual(
+      JSON.parse(JSON.stringify(calls.at(-1).input)),
+      withoutName,
+    );
+    assert.equal((await send("refresh", { refreshToken: "" })).status, 201);
+    const accepted = calls.length;
+    const invalid = [
+      ...[null, "", "   ", 42].map((displayName) => [
+        "register",
+        { ...samples.register, displayName },
+      ]),
+      ["register", { ...samples.register, email: "invalid" }],
+      ["register", { ...samples.register, username: "" }],
+      ["register", { ...samples.register, password: "short" }],
+      ["login", { ...samples.login, twoFactorCode: "invalid" }],
+      ["login", { ...samples.login, password: 42 }],
+      ["refresh", {}],
+      ["refresh", { refreshToken: 42 }],
+    ];
+    for (const [method, body] of invalid) {
+      assert.equal((await send(method, body)).status, 400);
+      assert.equal(calls.length, accepted);
+    }
     console.log(
-      "Confirmed: three built-controller requests fail before presentation.",
+      JSON.stringify({
+        validDispatches: accepted,
+        invalidRejectedBeforePresentation: invalid.length,
+      }),
     );
   } finally {
     await app?.close();
