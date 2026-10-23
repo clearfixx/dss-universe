@@ -1042,3 +1042,30 @@ local quality:full's retries0/report policy does not apply to this CI command.
 Record DEBT-080 separately; no clean-first-attempt Web acceptance or specific
 runtime root cause is claimed. The earlier green-check observation above refers
 only to GitHub status, not the stricter result policy.
+
+### Separate057 revised head — terminal CI and local full E2E
+
+PR81 revised head03a5937e21982de47348e2046046bb35c25872b0 replaces the obsolete
+characterization expectation of a GraphQL error with an intact exact nullable
+tombstone page; its old-body non-disclosure assertion remains. Both relevant
+HTTP suites pass9/9. No additional runtime change was required.
+
+Quality run39975686961 is terminal: quality job120489533013 succeeds, actual
+API units1298/1298 and E2E596/596 in56 suites; generated operations and production
+build pass. Web job120489532677 logs14 passed without a flaky result this run.
+Containment run39975687108 passes both OS. Dependency audit120489532481 fails;
+the candidate remains draft/unmerged. No red merge or full D7 acceptance.
+
+Downloaded CI E2E artifact independently passes strict no-skip/no-todo policy:
+`node_modules/.cache/debt057-ci-03a5937/api-e2e.json`, SHA256
+`80F38053D34BD0F9320BAD2D06AA6F8FE7C368AB8C3D42276A5DAA4FF28BA5C7`.
+Separate local full API E2E at the same head also passes596/596 in56 suites,
+exit0, with all four mandatory opt-ins and strict report validation. Retained
+report `node_modules/.cache/debt057-full-e2e.json`; raw log
+`%TEMP%/dss-debt057-full-e2e.log`. This does not turn the stopped full quality
+attempt into a complete gate or waive the dependency failure.
+
+Owner approved DEBT-080 as its own package: reproduce readiness/action ordering,
+test-only correction if proved, mandatory CI smoke without retries, unchanged
+runtime/UI/timeouts/assertion strength. One later clean run does not erase the
+earlier flaky evidence. No DEBT-080 implementation is included in PR81 or D7.

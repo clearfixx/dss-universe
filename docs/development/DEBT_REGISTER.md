@@ -33,7 +33,7 @@ unique IDs exactly once, distinguishing accepted scoped corrections from partial
 evidence, remaining review and unresolved decisions. It is not a new status model
 or a declaration that every debt has been reviewed/closed.
 
-### DEBT-080 — Green CI Web check can conceal a flaky smoke test (Medium, OPEN)
+### DEBT-080 — Green CI Web check can conceal a flaky smoke test (Medium, ACCEPTED, separate package)
 
 PR81 head ccc8f9c, Quality run39968841410/job120465792097 reports success, but
 actual job logs record one flaky test and13 passed: arrival.spec.ts106 fails
@@ -47,7 +47,10 @@ retried results. Its stronger guarantee must not be attributed to the plain CI
 Web job. Proposed separate package: reproduce real readiness/action ordering,
 retain assertions/timeouts and UI/runtime, and align mandatory CI smoke with
 the no-retry acceptance policy. No retry-to-green, timeout increase or speculative
-UI change. Implementation requires owner approval; D7 only records the evidence.
+UI change. Owner approved this separate package after the finding. D7 only
+records evidence; no runtime/test/CI implementation is included in this branch.
+The subsequent PR81 head03a5937 Web job passed14/14 without flaky results;
+that clean run does not establish the prior race's root cause or close the debt.
 
 ### DEBT-013 — D7 host-mail readiness revalidation (High, OPEN readiness observation)
 
