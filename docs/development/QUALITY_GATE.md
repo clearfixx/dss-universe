@@ -33,6 +33,23 @@ pnpm quality
 
 Run the isolated e2e commands from `docs/development/commands.md` when changing API composition, persistence, routing or the Web application shell.
 
+For consolidated full verification, use:
+
+```bash
+pnpm quality:full
+```
+
+This requires an explicit prepared loopback `dss_test` database on port5434 or
+5435 and test Redis6380. The runner rejects other coordinates, never provisions
+services or resets a database, and requires free Web port3100 without server
+reuse. It includes dependency security, forced full-profile coverage, no-skipped
+API E2E, GraphQL consistency, production build/entry and fresh zero-retry Web
+smoke. It stops at the first failed step; later steps must be reported as not
+executed, not passed. `pnpm quality` is the shorter gate, not equivalent coverage.
+
 ## Database safety
 
 Automated tests must never use developer or production databases. The committed test defaults are non-secret and point only to the ephemeral `docker-compose.test.yml` service.
+The CI job's PostgreSQL5433 is an isolated Actions service; this does not authorize
+local tests against the developer database on5433. Local full-gate policy accepts
+only disposable5434/5435.

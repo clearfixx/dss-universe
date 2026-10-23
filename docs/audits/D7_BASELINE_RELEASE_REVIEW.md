@@ -37,8 +37,9 @@ its own phase branch from accepted main. The owner checkout and its untracked
   in 55 suites, no skipped/todo/runtime errors. Retained in
   `node_modules/.cache/d7-main-f118d82`; SHA256:
   `F8C9EBDED392DC66DA14C6B61531D4841762596EFEE909CD146301035AB607DF`.
-- No new full D7 gate has run. Passing tests prove their covered behavior,
-  not all ownership rules, all untrusted inputs or all78 debt dispositions.
+- A fresh D7 `quality:full` attempt at source57db97e terminates at the security
+  step with exit1; details below. Passing steps prove their covered behavior,
+  not all ownership rules, all untrusted inputs or all79 debt dispositions.
 
 ## Architecture basis
 
@@ -771,6 +772,36 @@ the matrix description is corrected accordingly. Its accepted scope is a
 bounded scenario budget, not proven root cause of every historical stall.
 The current workflow concurrency cancels obsolete same-ref runs; Storage keeps
 both OS lanes with fail-fast false. No workflow/test budget or runtime changed.
+
+### Fresh consolidated gate attempt — source57db97e
+
+Ran `pnpm quality:full` with explicit committed non-production test coordinates:
+PostgreSQL localhost5434/dss_test and Redis6380, test-only JWT secrets and
+disabled periodic Outbox dispatch. Existing disposable services were healthy.
+No provisioning, migrate/deploy, seed, reset, dev5433 access or service restart
+was performed. Prisma generation changes ignored generated client artifacts,
+not tracked schema/source. The terminal process exited1, not an observation
+timeout; no second attempt or skip-to-green was started.
+
+Passed before failure: repository format, architecture140/140 with zero bounded
+findings, Prisma validate/generate, read-only drift (`No difference detected`),
+lint9/9 Turbo tasks, typecheck9/9, full-policy40/40, quality-policy5/5 and
+security-policy9/9. Task success does not imply every Turbo task was uncached.
+
+Security audit still reports2 critical,2 high,12 moderate. Exact braces patch,
+installed-copy verification and14/14 regressions pass under the previously
+approved single advisory exception. Blocking findings remain
+GHSA-2464-fhr4-w9xw (critical), GHSA-p3m5-59mp-jv5r (high) and
+GHSA-673q-mjm6-r5xr (critical). No exception was added.
+
+Coverage/full tests, API E2E, GraphQL check, production build/entry and fresh Web
+smoke follow security in the runner and therefore did not execute in this
+attempt. Earlier accepted D6 evidence is not relabelled fresh D7 evidence.
+The raw log is retained outside Git at
+`C:/Users/admin/AppData/Local/Temp/dss-d7-quality-full-current.log`, SHA256
+`18DE04C2056D5E27DB9D9C6EC20D5E2C76D724A810402EF2100FE48E2DC5886F`.
+Tracked worktree remained clean after the attempt. D7 release acceptance is
+blocked; the separately requested dependency correction still needs approval.
 
 ### Entry-check checkpoint (2026-10-23)
 
