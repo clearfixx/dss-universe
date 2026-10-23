@@ -272,6 +272,18 @@ No filesystem link attack, privileged-account mutation, real queue reordering,
 production lockout or new DB reproduction was attempted in this checkpoint.
 The three owner questions are pending; review of other entries remains possible.
 
+### Scoped registry closure reconciliation
+
+DEBT-044, 049 and 055 are now RESOLVED for their original accepted correction
+scopes, with explicit D7 reconciliation notes before the retained historical
+diagnostics. This is not blanket D7 acceptance. For 044, D6's generator baseline
+repair, consolidated clean regeneration and terminal CI prove the drift fix;
+not every generated export is thereby architecture-certified. For 049, the
+history/model inspection and fresh 14-test source contract complement accepted
+D6 drift/catalog/CRUD evidence. For 055, the current package command and fresh
+post-build entry check pass 1/1; actual HTTP readiness remains the separately
+recorded D6 production-mode smoke, not a fresh D7 server startup.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`

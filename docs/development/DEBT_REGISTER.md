@@ -792,7 +792,13 @@ E2E tests now pass, including GraphQL and fail-closed authority errors.
 See [request access evidence](../audits/D3_4_AUTHORITATIVE_REQUEST_ACCESS.md).
 This is a per-request snapshot, not cancellation of already running commands.
 
-### DEBT-044 — GraphQL generator barrel drift (Medium, OPEN, D6)
+### DEBT-044 — GraphQL generator barrel drift (Medium, RESOLVED for accepted generator consistency scope)
+
+D7 reconciliation (2026-10-23): the configured generator baseline was reconciled
+in the CI stabilization package; accepted D6 consolidated `graphql:check` and
+exact-head/main CI pass without a generated diff. Current SDL checksum remains
+unchanged. Historical failure below is retained, not a current red gate.
+This does not certify every generated export against every architecture rule.
 
 On the D3.4 IAM persistence tree, `pnpm graphql:check` successfully parses the
 unchanged API schema and Web operations, then exits 1 on its generated diff:
@@ -980,7 +986,14 @@ cleanup and diagnose the slow/failing operation; do not raise timeouts blindly.
 See [registration evidence](../audits/D3_REGISTRATION_POSTGRES_ATOMICITY.md).
 No out-of-scope E2E restructuring is implemented by this package.
 
-### DEBT-049 — Historical migrations and Prisma schema drift (Medium, IMPLEMENTED / acceptance open, separate D6 package)
+### DEBT-049 — Historical migrations and Prisma schema drift (Medium, RESOLVED for accepted schema alignment scope)
+
+D7 reconciliation (2026-10-23): D6 accepted/merged at f118d82 includes the approved
+alignment and green full gate/CI. D7 independently verifies unchanged 54-migration
+history versus accepted D5, exact annotation-only model diff, and fresh 14/14
+static schema-contract regressions. Live empty drift/catalog/CRUD evidence is
+the retained D6 verification, not a new D7 database run. See
+[D7 evidence](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 
 On 2026-10-13, after all 53 migrations were applied to the disposable test DB,
 `prisma migrate status` reported up-to-date but
@@ -1216,7 +1229,13 @@ Global format/audit/generated and Web smoke remain red with current evidence;
 no skip, timeout increase, trigger weakening or frontend fix. The finding is
 not yet accepted as closed for release/Phase 11 readiness.
 
-### DEBT-055 — API production start points at a missing local build entry (High, OPEN, D6)
+### DEBT-055 — API production start points at a missing local build entry (High, RESOLVED for accepted local production-entry scope)
+
+D7 reconciliation (2026-10-23): current command is `node dist/src/main`; fresh
+entry existence/syntax regression passes 1/1. Accepted D6 includes the recorded
+actual production-mode HTTP smoke and green consolidated gate/exact-head/main
+CI. Earlier pending/red observations below are historical. This is local entry
+and readiness evidence, not production deployment or Worker readiness acceptance.
 
 On 2026-10-14, inspecting the existing build output before a fresh build of the
 current storage increment found `apps/api/dist/src/main.js` but no
