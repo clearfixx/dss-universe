@@ -509,6 +509,41 @@ accepted, based on inspected code, exact regressions and accepted D6/main gates.
 This is not blanket D7 acceptance: current Next dependency and host-mail failures,
 unresolved Windows intermittent observation059 and remaining review still stand.
 
+### IAM groups / Premium / Guardian checkpoint
+
+For008/024, read ADR005/006 policy boundaries, current Authorization capability
+service and root IAM adapter, membership validity/public-display reads, group
+validation and grant/revoke persistence, and actual migration history/Premium
+triggers. Effective grants require enabled groups, unrevoked membership and
+inclusive start/exclusive expiry. The adapter derives Premium from kind, not
+role name; namespaced groups cannot impersonate legacy staff authority. Guardian
+is only the explicit non-Premium Knowledge Forge capability; it grants neither
+generic staff permissions nor a workflow/audience override.
+
+Current ContentGatesService checks every GROUP requirement before author or
+Premium numeric bypass. Existing ALL/ANY applies to numeric thresholds only.
+Management requires current eligibility plus permissions.manage, independently
+of Premium membership/display. Grant/mutation audit shares the transaction;
+database triggers retain grant/revocation identity and forbid Premium capability
+assignments, complementing application checks.
+
+Fresh selected policy units pass74/74 in three suites, zero pending/todo:
+`node_modules/.cache/d7-groups-gates-review.json`. Exact main artifact has
+access-groups HTTP5/5 and IAM subject transactions5/5. Read assertions include
+same-token Guardian changes, overlap/revocation, exact expiry, group disable,
+account state, protected metadata and audit-failure rollback. The opt-in database
+suite separately tests actual migration constraints; not rerun without its full
+disposable profile here. This moves008/024 from initial review to mapped
+implementation, not full Phase5 acceptance or new production inventory.
+
+No future resource ACL builders, platform-owner protection, Command Deck step-up
+or Phase14 sanction policy is claimed implemented. Those fences are intentional
+owner-approved scope, not missing behavior silently bypassed by Premium.
+
+The owner also approved the separate057 sequence after review: tombstone
+nullability/client compatibility design, then correction and HTTP regressions.
+No057 implementation, generated client or public SDL change is part of D7.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`

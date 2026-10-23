@@ -30,7 +30,7 @@ does not override the current dependency failure or missing risk decisions.
 | DEBT-005 | M      | Blocking architecture command passes140 tests/zero bounded findings;079 demonstrates an explicitly uncovered Domain/HTTP dependency.                       |
 | DEBT-006 | M      | Project Context now selects accepted D6/active D7 and fences historical checkpoints; remaining orientation sources need reconciliation.                    |
 | DEBT-007 | R      | Reconcile every Phase8 completion-audit requirement with present contracts, migrations and exact tests; no blanket phase acceptance.                       |
-| DEBT-008 | R      | Inspect full IAM group/Premium/Guardian policy, expiry/revocation and authority separation; foundational implementation exists.                            |
+| DEBT-008 | M      | Current groups/Premium/Guardian policy and migration guards inspected; fresh74 units/main HTTP5+5; full Phase5 acceptance separate.                        |
 | DEBT-009 | X      | Owner deferred Passport cleanup/classification to future GPT-5.6 work; excluded from D5/D7.                                                                |
 | DEBT-010 | M      | Legacy backend/role examples explicitly redirect to current rules; not every old guidance file has been reviewed.                                          |
 | DEBT-011 | M      | Current workflow/phase plan authority inspected and D7 resumption recorded; no new implementation authority inferred.                                      |
@@ -46,7 +46,7 @@ does not override the current dependency failure or missing risk decisions.
 | DEBT-021 | C      | Upstream shared builds, strict forced wrapper and actual Turbo controls reviewed; fresh40 policy tests and accepted D6 gates.                              |
 | DEBT-022 | M      | Fresh repository format check exits0; old41-file count is stale, registry closure still to reconcile explicitly.                                           |
 | DEBT-023 | C      | Buffer-backed Sharp metadata/source cleanup and fresh Worker13 tests; accepted cross-OS CI. No blanket Windows reliability claim.                          |
-| DEBT-024 | R      | Same group/Guardian policy review as008, preserving distinct ownership and sanctions precedence boundaries.                                                |
+| DEBT-024 | M      | IAM evidence/Authorization decisions/root translation reviewed; Premium non-staff and audience-first verified. Future ACL/sanctions not claimed.           |
 | DEBT-025 | M      | Canonical roadmap precedence and legacy-document warnings inspected; complete remaining source-index reconciliation.                                       |
 | DEBT-026 | R      | Accepted D6 reproduces broad gates; individually reconcile Phase9/10 completion contracts, not blanket completion.                                         |
 | DEBT-027 | M      | Auth/IAM named roots and private Nest providers inspected; remaining public roots/technical-entry consumers need mapping.                                  |
@@ -79,7 +79,7 @@ does not override the current dependency failure or missing risk decisions.
 | DEBT-054 | M      | Related target eligibility applied before projection/order; exact main E2E12/12.                                                                           |
 | DEBT-055 | C      | Correct package production entry, fresh1-test syntax/existence check and accepted D6 actual HTTP smoke.                                                    |
 | DEBT-056 | M      | Eligible target before secondary Interactions read with empty denied totals; exact main E2E21/21.                                                          |
-| DEBT-057 | O      | Current canonical SDL rejects null tombstone body; separate nullable/client compatibility correction approval requested.                                   |
+| DEBT-057 | O      | Current SDL rejects null tombstone body; owner approved separate post-review compatibility design, correction and HTTP regressions. Not implemented.       |
 | DEBT-058 | O      | Historical5s document-tool timeout not root-caused; accepted worker mitigation does not erase distinct observation.                                        |
 | DEBT-059 | O      | Windows schema-write intermittent failure not root-caused; later green gates are not a causal explanation.                                                 |
 | DEBT-060 | M      | One-SQL population total and null-row stripping inspected; main ownership30/30 includes17 explicit total/viewer regressions.                               |
