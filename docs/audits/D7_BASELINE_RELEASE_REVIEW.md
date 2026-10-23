@@ -205,6 +205,54 @@ This checksum verifies no SDL change here, not API behavioral equivalence.
 
 ## Remaining streams
 
+### News/Editor and Media/Outbox checkpoint — 2026-10-23
+
+The following maps current implementations to the original narrow defect, not
+to future category/group ACL, complete Media Platform or whole-product security.
+
+| Debt | Inspected current behavior                                                                                                                                                                                                                                                 | Exact main CI E2E evidence                                                               |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| 051  | Attachment projection unwraps canonical NEWS/doc and skips every contentGate subtree; metadata comes through an owned reader.                                                                                                                                              | `news-attachment-contracts`: 29/29.                                                      |
+| 052  | Full News asks Editor for viewer-safe JSON before attachment projection. Root adapter returns only projected JSON; no raw-document fallback on provider failure.                                                                                                           | `news-viewer-redaction`: 20/20.                                                          |
+| 053  | Public text evidence excludes denied gates; authenticated gated documents are projected in batches of 64. Matching relation is built before pins/count/page, with no result cap. Missing/stale projection or policy failure rejects rather than returning partial results. | `news-search-query`: 11/11; performance suite still needs separate mapping.              |
+| 054  | Related-link query applies current article eligibility to its target before returning metadata and preserves configured ordering.                                                                                                                                          | `news-related-audience`: 12/12.                                                          |
+| 056  | Root read unit asks News eligibleTarget before Interactions reads. Inaccessible pages return empty items and zero totals, with the requested page coordinates.                                                                                                             | `news-secondary-audience`: 21/21.                                                        |
+| 071  | News consumes explicit GUEST/AUTHENTICATED context, denies invalid contexts, and checks publication/audience/flags. Tests cover guest, invalid/revoked/expired credentials and disabled accounts, with no denied counter writes.                                           | `news-interaction-audience-characterization`: 31/31.                                     |
+| 065  | Dispatcher uses PID+UUID per claim and ID/PROCESSING/token CAS on both success and failure; recovery clears ownership.                                                                                                                                                     | `core-outbox-audit`: 11/11, actual PostgreSQL with controlled queue double.              |
+| 072  | Media assignment performs its owned conditional physical UPDATE without timestamp mutation. Root cleanup retains Serializable and defers the rolled-back batch only for known P2034.                                                                                       | `media-profile-cleanup-claim-audit`: 12/12; `media-profile-serialization-design`: 19/19. |
+
+These exact suite counts were extracted from the retained, hash-identified main
+artifact above, not rerun as HTTP/DB cases during this checkpoint. Each matched
+one suite with all assertions passed. Six News suites total 124 tests; the
+Outbox/Media entries are separate, not additional proof of unseen scenarios.
+
+Fresh focused tests also pass:
+
+- News/Editor: 112/112, seven explicit unit suites, zero failed/pending/todo.
+  JSON: `node_modules/.cache/d7-news-editor-unit-review.json`.
+- Worker: 21/21 in three explicit test files, zero failed/pending/todo. JSON:
+  `node_modules/.cache/d7-worker-unit-review.json`. This covers Media processing
+  orchestration and integration-event consumer/processor contracts, not live
+  PostgreSQL or BullMQ delivery.
+
+DEBT-063's implemented FAILED retry CAS occurs before scan/transform; a claim
+loser re-reads terminal state and otherwise fails outside the attempt catch, so
+it does not mark the winner FAILED. This remains the owner-approved narrow state
+CAS, not an exclusive whole-attempt lease. The actual SQL claim and migrated
+retry diagnostic need final evidence reconciliation before closing that entry.
+
+Consumer identity remains `dss.worker.integration-events.v1`; processor imports
+the Worker-owned constant. The focused test result is not proof of full live
+DLQ retry/history compatibility (061). Likewise Outbox fencing does not cancel
+late queue.add or promise exactly-once effects. Fresh access before a separate
+statistics transaction retains the explicitly approved 071 race boundary.
+No stronger atomic access guarantee is claimed.
+
+The Editor malformed/deep-input defect (066) remains open independently of
+passing redaction/search tests. Wall retraction ordering (067), Media physical
+containment (037), search performance and all remaining individual debt
+dispositions are still review work, not silently accepted risks.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`
