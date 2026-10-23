@@ -41,6 +41,31 @@ its own phase branch from accepted main. The owner checkout and its untracked
   step with exit1; details below. Passing steps prove their covered behavior,
   not all ownership rules, all untrusted inputs or all79 debt dispositions.
 
+## Decision checkpoint — not release acceptance
+
+At remote revalidation, main remains f118d82 and the D7 branch contains only
+documentation changes. No D7 PR/merge is claimed. Do not trigger another known-red
+full run merely to repeat the unchanged dependency result. Fresh scoped DB and
+Media evidence above/below does not remove these release decisions.
+
+| Item                            | Next bounded action                                                                               | Authority / limit                                                                         |
+| ------------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| 016 Next security               | Separate controlled dependency patch and complete gate/CI.                                        | Approval requested again at this consolidated checkpoint; not implemented.                |
+| 013 host mail                   | Establish host-port cause, then Mailpit-only recovery and protocol verification.                  | Separate approval requested; preserve data, DB/Redis, foreign processes and volumes.      |
+| 057 News tombstone              | Design nullable SDL/generated-client compatibility, then separate HTTP-backed correction.         | Owner approved this sequence; no implementation in D7.                                    |
+| 066 malformed Editor            | Agree an explicit depth/shape compatibility boundary, then controlled rejection/HTTP regressions. | Package approved; exact depth64/root0 not approved.                                       |
+| 007 gamification delivery       | Owner-safe consumer/replay design with actual producer-to-ledger acceptance.                      | Existing missing integration, not cured by foundation tests; no speculative queue wiring. |
+| 037 physical storage            | Decide trusted local writers versus hostile-writer hardening before selecting mechanism.          | No inferred threat-model waiver.                                                          |
+| 047 administrative availability | Minimal current-capability policy design or explicit deferral.                                    | Future unique-owner/Command Deck features are not implemented early.                      |
+| 067 Activity ordering           | Durable retraction-before-create design before schema/runtime change.                             | Current UPDATE-only projection remains unresolved.                                        |
+| 079 Domain/HTTP                 | Error-to-transport preserving boundary design.                                                    | Separate correction scope, not silently folded into D7.                                   |
+| 039 naming/product orientation  | Reconcile canonical sources to owner naming and Research Lab/Knowledge Forge scope.               | Existing owner override retained; no route/phase renumbering inferred.                    |
+| 040/058/059 and remaining M     | Finish bounded transport/stability and semantic dispositions, preserving unknown causes.          | Green tests are not an undocumented waiver or universal proof.                            |
+
+This is a dependency/decision queue, not a claim that only the first two items
+remain. Passport work and approved LOCAL/Search deferrals retain their separate
+status. Stack audit and Phase11 brainstorming remain downstream of D7 acceptance.
+
 ## Architecture basis
 
 Read [architecture rules](../architecture/ARCHITECTURE_RULES.md),
