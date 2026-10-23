@@ -75,7 +75,7 @@ does not override the current dependency failure or missing risk decisions.
 | DEBT-050 | C      | Explicit awaited shared React cleanup and actual disposal probe; fresh1/1 and accepted D6 coverage/CI.                                                                                    |
 | DEBT-051 | M      | Canonical attachment unwrap/gate exclusion inspected; exact main attachment E2E29/29; current gate acceptance separate.                                                                   |
 | DEBT-052 | M      | Viewer-safe JSON precedes attachment projection; no raw fallback; main redaction E2E20/20.                                                                                                |
-| DEBT-053 | M      | Match relation before count/pins/pages and request-local64-document batches inspected; main query11/11; finish performance mapping.                                                       |
+| DEBT-053 | M      | Hybrid performance assertions inspected:250/1000 corpora, batches64, concurrency4, pages beyond500, fail-closed; main5/5. Not fresh D7 load/SLO certification.                            |
 | DEBT-054 | M      | Related target eligibility applied before projection/order; exact main E2E12/12.                                                                                                          |
 | DEBT-055 | C      | Correct package production entry, fresh1-test syntax/existence check and accepted D6 actual HTTP smoke.                                                                                   |
 | DEBT-056 | M      | Eligible target before secondary Interactions read with empty denied totals; exact main E2E21/21.                                                                                         |
@@ -83,9 +83,9 @@ does not override the current dependency failure or missing risk decisions.
 | DEBT-058 | O      | Historical5s document-tool timeout not root-caused; accepted worker mitigation does not erase distinct observation.                                                                       |
 | DEBT-059 | O      | Windows schema-write intermittent failure not root-caused; later green gates are not a causal explanation.                                                                                |
 | DEBT-060 | M      | One-SQL population total and null-row stripping inspected; main ownership30/30 includes17 explicit total/viewer regressions.                                                              |
-| DEBT-061 | M      | Worker v1 constant/processor import and fresh contract tests pass; finish historical-marker/new-DLQ/live retry evidence mapping.                                                          |
+| DEBT-061 | M      | Actual Worker bridge, canonical v1 markers/new DLQ and historical v2 retry/dedup inspected; main3/3. Not exactly-once or gamification delivery.                                           |
 | DEBT-062 | M      | Event-before-quota lock/count/write inspected; main deterministic DB cap suite8/8; formal acceptance separate.                                                                            |
-| DEBT-063 | M      | FAILED CAS before scan and nonmutating claim-loser orchestration inspected; finish actual SQL and migrated retry diagnostic reconciliation.                                               |
+| DEBT-063 | M      | Actual FAILED/deletedAt CAS and READY/variant transaction inspected; fresh Worker16/16; full migrated diagnostic source read, not freshly executed D7.                                    |
 | DEBT-064 | M      | Shared user/title synchronization and post-lock rereads inspected; main DB schedules/rollback7/7.                                                                                         |
 | DEBT-065 | M      | PID+UUID token CAS and recovery invalidation inspected; main actual-DB/queue-double11/11; not exactly-once.                                                                               |
 | DEBT-066 | Q      | Malformed/deep TypeError/RangeError still reproduced; exact depth/compatibility policy remains unapproved.                                                                                |
@@ -96,7 +96,7 @@ does not override the current dependency failure or missing risk decisions.
 | DEBT-071 | M      | Explicit viewer policy and main engagement31/31; approved precheck/separate-transaction race boundary retained.                                                                           |
 | DEBT-072 | M      | Conditional physical assignment UPDATE and cleanup P2034 batch rollback inspected; main DB suites12/12+19/19.                                                                             |
 | DEBT-073 | C      | Full wrapper/env/hash/result processor inspected; fresh40 controls include actual skipped-Jest rejection; accepted D6 full profile.                                                       |
-| DEBT-074 | M      | Exact owner response/asynchronous-presence characterization belongs to reviewed social suite; finish deterministic fixture-specific source mapping.                                       |
+| DEBT-074 | M      | Controlled presence touch and gated late persistence preserve exact owner timestamps/privacy; main6/6. No sleep or relaxed assertions.                                                    |
 | DEBT-075 | C      | Accepted owned migrated fixture/repeat/no-reset full-suite verification; original assertions preserved.                                                                                   |
 | DEBT-076 | C      | Accepted bounded Web workers/config regression and unchanged timeout/coverage; scoped mitigation only.                                                                                    |
 | DEBT-077 | C      | Accepted actual-observer readiness correction and fresh/CI smoke; no runtime/UI or retry-to-green change.                                                                                 |

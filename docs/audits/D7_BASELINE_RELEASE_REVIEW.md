@@ -665,6 +665,22 @@ same suite passes6/6; no fresh D7 HTTP run is inferred. The earlier combined
 read output was truncated; the identity suite's omitted opening was subsequently
 read separately before these conclusions.
 
+### Media retry SQL checkpoint
+
+Read the complete Worker processor, PostgreSQL store and migrated diagnostic
+`scripts/audit-media-retry.mjs`. Retry UPDATE requires FAILED and null deletedAt;
+one affected row identifies the winner. Claim-loser failure stays outside the
+failure-writing catch. READY/variant writes share a transaction with rollback
+when the parent is no longer PROCESSING. This is not a global attempt lease.
+
+The diagnostic source asserts transient failure then automatic READY, two actual
+lock-blocked CAS contenders yielding one winner, preserved terminal states,
+deletedAt refusal, scanner quarantine/clean rescan and variant rollback. It owns
+a generated migrated schema guarded to localhost5434/dss_test; it was not run in
+this checkpoint. Fresh processor unit run:16/16 passed. No current DB, live
+scanner/filesystem or BullMQ guarantee is inferred. Matrix053/061/063/074 now
+reflect completed source mapping rather than requesting duplicate inspection.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`
