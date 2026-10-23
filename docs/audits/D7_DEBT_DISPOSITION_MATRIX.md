@@ -28,7 +28,7 @@ does not override the current dependency failure or missing risk decisions.
 | DEBT-003 | M      | Minimal Reputation/Points/Levels/Achievements ports, root adapters and private providers inspected; fresh composition16/16. Remaining semantic transactions not blanket-certified.        |
 | DEBT-004 | M      | No direct Prisma/database imports in bounded non-infrastructure feature scan; root enum/mapping composition inspected,16 tests pass. Alias/transitive semantics require remaining review. |
 | DEBT-005 | M      | Current mandatory frozen-baseline/file-graph enforcement verified140/140,zero bounded findings; stale D2 rollout doc clarified. Domain/HTTP079 remains outside guarantees.                |
-| DEBT-006 | M      | Project Context now selects accepted D6/active D7 and fences historical checkpoints; remaining orientation sources need reconciliation.                                                   |
+| DEBT-006 | M      | Root README stale Phase2 corrected to current context/plan/register; docs index and historical phase/workflow redirects checked. Naming039 remains open.                                  |
 | DEBT-007 | M      | Phase8 requirement assertions/main suites mapped; Activity-only Worker leaves automatic gamification007 unresolved. Not phase acceptance.                                                 |
 | DEBT-008 | M      | Current groups/Premium/Guardian policy and migration guards inspected; fresh74 units/main HTTP5+5; full Phase5 acceptance separate.                                                       |
 | DEBT-009 | X      | Owner deferred Passport cleanup/classification to future GPT-5.6 work; excluded from D5/D7.                                                                                               |
@@ -70,7 +70,7 @@ does not override the current dependency failure or missing risk decisions.
 | DEBT-045 | C      | Owned migrated News/leaderboard schemas and finally cleanup; real view0-to1/global rankings preserved; exact main workflow cases pass.                                                    |
 | DEBT-046 | M      | Role lock/count/pure policy/delete unit inspected; blocked concurrent-removal assertions reviewed;047 is not closed by it.                                                                |
 | DEBT-047 | Q      | Current eligibility/permission changes lack shared availability policy; minimal pre11 design versus explicit deferral question pending.                                                   |
-| DEBT-048 | M      | Accepted narrow workflow-budget rationale documented; confirm exact current long-workflow boundary before scoped closure.                                                                 |
+| DEBT-048 | M      | Actual87-HTTP scenario has30000ms per-test budget; exact main case passes2582ms. Distinct from30-minute CI job; historical stall root cause not certified.                                |
 | DEBT-049 | C      | Annotation-only schema alignment, unchanged54 migrations, fresh14-test source contract and accepted D6 catalog/drift evidence.                                                            |
 | DEBT-050 | C      | Explicit awaited shared React cleanup and actual disposal probe; fresh1/1 and accepted D6 coverage/CI.                                                                                    |
 | DEBT-051 | M      | Canonical attachment unwrap/gate exclusion inspected; exact main attachment E2E29/29; current gate acceptance separate.                                                                   |

@@ -755,6 +755,23 @@ suites:23/23 passed. This is source/unit evidence, not fresh SMTP, Redis runtime
 timing-enumeration or crash-durable security-alert delivery acceptance. No real
 mail, queue enqueue or production data write was performed.
 
+### Orientation / timeout scope checkpoint
+
+Root README still selected Platform Foundation Phase2 despite accepted D5/D6
+and active D7. Corrected only its current-status block to select the maintained
+context, plan and register, retaining open security/debt gates. The documentation
+index already selects current context/canonical roadmap; older phases and the
+compatibility workflow explicitly redirect. Naming conflict039 and remaining
+historical guides are not resolved by changing this entry point.
+
+For048, inspected the actual test wrapper: registeredViewerWorkflow is the
+87-sequential-HTTP feature workflow with an explicit30000ms budget. Main's exact
+case passes in2582ms. This is distinct from CI quality job's30-minute budget;
+the matrix description is corrected accordingly. Its accepted scope is a
+bounded scenario budget, not proven root cause of every historical stall.
+The current workflow concurrency cancels obsolete same-ref runs; Storage keeps
+both OS lanes with fail-fast false. No workflow/test budget or runtime changed.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`

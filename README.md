@@ -51,17 +51,17 @@ Code is the result of architecture — not the beginning of it.
 
 🚧 Active Development
 
-Current milestone:
+Current checkpoint: **pre-Phase-11 D7 baseline release review**.
 
-**Platform Foundation (Phase 2)**
+D5 and D6 have been accepted and merged. D7 is not yet accepted: current
+security findings and remaining debt dispositions still block release readiness.
+Phase 11 has not started.
 
-Current priorities:
-
-- backend platform architecture;
-- authentication & authorization;
-- shared architecture;
-- engineering standards;
-- users reference module.
+For the maintained implementation snapshot, approved sequence and unresolved
+findings, read [Project Context](docs/PROJECT_CONTEXT.md), the
+[pre-Phase-11 plan](docs/development/PRE_PHASE_11_EXECUTION_PLAN.md) and the
+[debt register](docs/development/DEBT_REGISTER.md). The separate stack audit and
+Phase 11 brainstorm follow D7 acceptance; this README is not a completion claim.
 
 ---
 
