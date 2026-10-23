@@ -843,6 +843,23 @@ not replay of all migrations or full Phase5/Auth/IAM acceptance. Expected Prisma
 errors from intentional rejection/constraint cases accompany passing assertions.
 No source, public fixture rows, dev5433 or service state was changed.
 
+### Fresh migrated Media retry checkpoint
+
+Verified the diagnostic and two Worker runtime sources have no diff from accepted
+f118d82; rebuilt Jobs and Worker successfully, then ran
+`node scripts/audit-media-retry.mjs` on explicit disposable5434. Terminal exit0.
+The script replayed committed migration SQL in its own generated schema and
+verified transient failure to FAILED then automatic READY, duplicate no-op,
+two observed lock-blocked CAS contenders/one winner, terminal/deleted predicates,
+scanner-unavailable/infected quarantine, clean rescan and transactional variant
+rollback when READY completion loses its eligible parent state.
+
+Post-run read-only catalog/activity checks show zero audit*media_retry* schemas
+and zero associated connections. No tracked build changes, dev5433 use, real
+filesystem transform/scanning, queue worker startup or service restart occurred.
+This supersedes the earlier source-only063 evidence for the diagnostic run,
+not its stated no-global-lease boundary or the consolidated security failure.
+
 ### Entry-check checkpoint (2026-10-23)
 
 - Both retained entry commands terminated with exit0: `pnpm format:check`
