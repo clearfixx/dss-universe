@@ -1,7 +1,7 @@
 # DEBT-080 — Academy demo readiness and strict CI smoke
 
-Status: owner-approved separate package; reproduction confirmed; correction not
-implemented. Branch: `debt/debt-080-smoke-readiness`, accepted base `f118d82`.
+Status: owner-approved test/CI correction implemented; full verification and
+acceptance open. Branch: `debt/debt-080-smoke-readiness`, accepted base `f118d82`.
 
 ## Confirmed finding and scope
 
@@ -40,13 +40,76 @@ package branch was fast-forwarded to origin/main f118d82, then the accepted-base
 probe above was performed. Earlier evidence is historical only, not substituted
 for accepted-base evidence. Its original traces/log remain preserved separately.
 
-## Next required evidence
+## Causal diagnostic and explicit residual boundary
 
-Inspect failed and successful trace ordering, including hydration, action
-dispatch and search timers. Establish a deterministic readiness condition from
-real behavior before changing the test. Compare bounded repetitions before/after
-without retries, then full smoke/quality and CI. The known dependency audit
-blocker is not waived. One clean later CI run does not close the earlier race.
+Failed snapshots show the TypeScript query and searching stage0: the click was
+dispatched. Temporary test-only instrumentation recorded actual550ms search timer
+scheduling/firing/cancellation. A higher-overhead10-repeat diagnostic passed10/10;
+it was not treated as correction. A lower-overhead20-repeat diagnostic failed2/20:
+sample11 scheduled1627.2ms, cancelled1648.7ms; sample12 scheduled1463.7ms,
+cancelled1481.9ms. Both had zero timer fires. Cancellation stacks point to
+UniverseArrival.useEffect through commitHookEffectListUnmount and
+commitHookPassiveUnmountEffects in the dev React bundle.
 
-No PR, runtime correction, no-retry CI change or package acceptance is claimed
-at this reproduction checkpoint.
+Ignored diagnostic logs: `%TEMP%/dss-debt080-timer-probe.log` and
+`%TEMP%/dss-debt080-light-timer-probe.log`. Temporary wrappers/console output were
+removed. This proves the observed dev passive-cleanup cancellation, not a universal
+production cause. Owner approved separate DEBT-081 research of early-interaction
+production behavior. The test-only correction does not fix or erase that risk.
+
+## Test/CI correction and controls
+
+The Academy scenario uses the existing native IntersectionObserver probe and
+waitForStationDemoReadiness before clicking. The helper forwards real visible
+entries, ignores disconnected observers and waits for ready arrival, visible
+document and completed native delivery. No fabricated entry, arbitrary sleep,
+weakened source-preview assertion or timeout increase is introduced.
+
+Mandatory CI smoke explicitly uses retries0/workers2/forbid-only; actual
+Playwright config also defaults to retries0. Existing policy suite adds two
+regressions: the CI command and actual Playwright --list JSON under CI=1 (no
+server/browser launched). Both fail before correction and pass after; existing
+Vitest controls remain green (4/4 total).
+
+Ready-state control:20/20 pass without retries (1.8m), same bounded workers,
+unchanged assertions and actual browser/server. Log:
+`%TEMP%/dss-debt080-ready-control.log`. The interrupted permission review lost the
+process handle; the retained terminal log confirms all20 passed, not a restart.
+
+Story: Academy click → local timer → static demo answer → topic-specific source
+preview. This demo has no API/database write. Production early-interaction
+behavior remains DEBT-081, not declared fixed by post-readiness verification.
+
+Full smoke, quality/build/CI and acceptance remain open. Known dependency blockers
+are not waived; no runtime correction is included.
+
+Full fresh Web smoke subsequently passes14/14 (59.4s), retries0/workers2,
+forbid-only, real server/browser and retained failure traces. Log:
+`%TEMP%/dss-debt080-full-smoke.log`. Exact workflow/config regressions pass4/4;
+the CI command assertion also rejects appended conflicting flags and literal
+continue-on-error:true. Full quality/build/CI are still separate pending gates.
+
+Independent Web lint/typecheck and production build pass (6 tasks,5 cached;
+Web rebuilt). Initial quality:full attempt stopped at db:check-drift with P1001,
+because Docker engine was not running. Log `%TEMP%/dss-debt080-quality-full.log`
+is preserved; no schema drift result is inferred from it. A normal Docker Desktop
+start restored engine29.8.2. Only declared postgres-test/redis-test services were
+explicitly started; existing54 migrations applied successfully to the empty
+disposable dss_test database on5434. No reset, orphan removal, historical migration
+edit or dev5433 migration was performed. Docker startup also resumes configured
+existing dev containers; that is not a claim that no other service starts.
+
+Full-gate retry log: `%TEMP%/dss-debt080-quality-after-services.log`, exit1 at
+security:check. Earlier steps pass: format, architecture140/140, Prisma validation
+and generation, empty drift, lint, types, runner-policy42/42 and security-policy.
+Later consolidated coverage/E2E/generated-check/build/smoke stages did not run;
+independent build/smoke above do not substitute for those missing stages.
+
+Current audit has seven blocking IDs: GHSA-2464-fhr4-w9xw (critical),
+GHSA-p3m5-59mp-jv5r (high), GHSA-673q-mjm6-r5xr (critical),
+GHSA-mrhx-c7xc-m3w5 (Zod/high), GHSA-27r3-jxmh-p828 (body-parser/high),
+GHSA-q7qp-rjg7-q26m (multer/high), GHSA-xjj6-f33q-929c (undici/high).
+The existing local braces patch integrity and14 regressions pass; no exception
+was added. The raw audit remains visible. Owner approved separate DEBT-016 to
+address all seven, including needed safe patch/minor/transitive updates after
+upstream verification. No dependency change belongs to DEBT-080.

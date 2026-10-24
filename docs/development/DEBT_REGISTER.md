@@ -2,7 +2,7 @@
 
 > Status: Active
 >
-> Updated: 2026-10-22
+> Updated: 2026-10-24
 
 ## Purpose
 
@@ -20,6 +20,31 @@ active package safe and buildable.
 - `REJECTED` — reviewed and determined not to be debt.
 
 ## Register
+
+### DEBT-080 — Mandatory CI smoke silently permits retries (Medium, ACCEPTED, verification open)
+
+PR81 initial Web job120465792097 was green with one flaky/13 passed. Accepted
+main f118d82 reproduces the Academy response failure2/10 without retries.
+Owner approved a separate test/CI-only packet. Native readiness synchronization
+passes20/20 controls and full smoke14/14; explicit CI retries0/workers2/forbid-only
+and actual Playwright config policy tests pass4/4. Full quality/CI and acceptance
+remain open; no runtime/UI correction is implied. See
+[DEBT-080 evidence](../audits/DEBT_080_SMOKE_READINESS.md).
+
+### DEBT-081 — Early demo interaction can lose its timer during dev passive cleanup (Medium, ACCEPTED research only)
+
+Lower-overhead browser instrumentation reproduces2/20 failures: search schedules
+its first550ms timer, then UniverseArrival passive-effect cleanup cancels it
+within approximately18–22ms, with no timer firing. The real page remains in
+searching stage0. This is a confirmed dev-runtime observation, not proof that
+production behaves identically. Temporary diagnostic wrappers were removed.
+
+Owner approved a separate production-behavior investigation first. No runtime
+fix, UI change, timer restart policy or production safety claim is authorized by
+that research approval. DEBT-080 verifies the settled post-readiness path and
+must not be presented as fixing this early-interaction risk. Production evidence
+and any subsequent correction require their own scoped decision. Diagnostic
+logs/timings and stack frames: [DEBT-080 report](../audits/DEBT_080_SMOKE_READINESS.md).
 
 ### DEBT-074 — Social privacy owner assertion races asynchronous presence (Medium, ACCEPTED, separate D6 package)
 
