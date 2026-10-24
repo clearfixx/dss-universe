@@ -16,9 +16,9 @@
   "dependencies": {
     "@dss/jobs": "workspace:*",
     "@dss/storage": "workspace:*",
-    "bullmq": "^5.81.5",
-    "ioredis": "^5.11.1",
-    "nodemailer": "^10.0.16",
+    "bullmq": "^6.3.19",
+    "ioredis": "^6.0.0",
+    "nodemailer": "^10.1.7",
     "pg": "^8.23.1",
     "pino": "^10.4.0",
     "sharp": "^0.35.5"
