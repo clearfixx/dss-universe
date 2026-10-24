@@ -128,7 +128,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @dss/web exec playwright install --with-deps chromium
-      - run: pnpm --filter @dss/web test:e2e
+      - run: pnpm --filter @dss/web test:e2e --retries=0 --workers=2 --forbid-only
 
   security:
     name: Dependency audit
