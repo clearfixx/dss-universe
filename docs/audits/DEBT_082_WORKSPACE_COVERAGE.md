@@ -81,3 +81,20 @@ Ignored evidence:
 
 Full quality/build/audit/CI on this branch is still required; no acceptance or
 merge is claimed. Disposable DB5434 and Redis6380 only; no dev5433 reset/migration.
+
+## Accepted no-retry baseline integration — 2026-10-25
+
+Owner accepted PR83 into maina35326a while the first local gate was running at
+9ccb6e1. That old-base attempt passed format, architecture, Prisma validation/
+generation/drift, lint/types, policies and security audit. Its actual preflight
+verified five test workspaces. It was intentionally stopped during API coverage
+to integrate the accepted final baseline before complete verification; it is not
+a successful full gate or evidence that the test assertions failed. Retained log:
+%TEMP%/dss-debt082-quality-full.log, terminal exit-1 from targeted termination.
+
+Only the verified gate process tree was stopped. No foreign process/service,
+dev5433 or database reset/migration was involved. Interrupted fixture cleanup is
+not certified. All old gate processes were confirmed absent before source changed.
+Accepted maina35326a was then merged normally without conflicts; the new complete
+gate must use a separate log and the integrated head. No timeout, retry policy,
+assertion or dependency version was changed to obtain a green result.
