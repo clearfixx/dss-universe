@@ -6,13 +6,20 @@
  * 📄 File: apps/api/src/composition/identity/presentation/dto/register.dto.ts
  *
  * 🎯 Purpose:
- * Defines the request contract for user registration.
+ * Defines REST registration input with optional, nonblank displayName.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  Matches,
+  MinLength,
+  ValidateIf,
+} from 'class-validator';
 
 export class RegisterDto {
   @IsEmail()
@@ -22,9 +29,11 @@ export class RegisterDto {
   @IsNotEmpty()
   username!: string;
 
+  @ValidateIf((_object: unknown, value: unknown) => value !== undefined)
   @IsString()
   @IsNotEmpty()
-  displayName!: string;
+  @Matches(/\S/)
+  displayName?: string;
 
   @IsString()
   @MinLength(8)
