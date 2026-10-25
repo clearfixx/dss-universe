@@ -20,7 +20,7 @@
     "test": "turbo test",
     "test:full": "node scripts/run-full-tests.mjs",
     "test:api-build-entry": "node --test scripts/api-build-entry.test.mjs",
-    "test:full-policy": "node --test scripts/full-api-test-policy.test.mjs scripts/turbo-test-environment.test.mjs scripts/full-api-test-processor.integration.test.mjs scripts/full-quality-policy.test.mjs scripts/web-test-concurrency.test.mjs",
+    "test:full-policy": "node --test scripts/full-api-test-policy.test.mjs scripts/turbo-test-environment.test.mjs scripts/full-api-test-processor.integration.test.mjs scripts/full-quality-policy.test.mjs scripts/web-test-concurrency.test.mjs scripts/workspace-coverage-policy.test.mjs",
     "test:unit": "turbo test:unit",
     "test:e2e": "turbo test:e2e",
     "test:cov": "turbo test:cov",
