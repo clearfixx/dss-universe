@@ -145,6 +145,38 @@ Editor typecheck and lint pass. No API runtime, DTO, Prisma, migration or UI
 change is included yet. API/HTTP/host rollback regressions, full quality gate,
 CI and acceptance remain required; do not mark DEBT-066 closed.
 
+### API verification and transport decision (2026-10-25)
+
+Actual API normalize/preview/delivery tests use the freshly built shared package,
+not a mocked validator. Fifteen tests across three suites pass, including seven
+new unsafe-input cases, depth12000 rejection before renderer/gate IO, depth64
+canonical input preservation and the existing UTF-8 byte limit.
+
+The first real AppModule HTTP suite in an owned migrated schema is **red**:
+15 failures, 2 passes. The two positive controls prove real depth64 preview,
+delivery and successful News create/update. Every invalid-input case reaches a
+controlled Editor BadRequest, but the assertion expecting BAD_USER_INPUT/400
+fails because the actual public extensions are `{code: INTERNAL_SERVER_ERROR}`.
+Post-denial persistence assertions in those failing tests have not been reached;
+do not claim their success. Log: `TEMP/dss-debt066-http-regressions.log`.
+
+A separate filtered characterization of the previously forbidden `html` node
+confirms the inherited mechanism: `BadRequestException.getStatus()` is400, but
+its custom response object lacks statusCode. The installed Nest Apollo adapter
+requires both response.statusCode and exception.status before transformation.
+Thus the existing formatter receives an internal-error code. This is not caused
+by the new depth policy. The filtered run passes1 case and skips17 by explicit
+name selection; it is **not** a full passing suite. Log:
+`TEMP/dss-debt066-inherited-mapping.log`.
+
+Owner decision requested before a compatibility change: add statusCode400 only
+to EditorService's structured validation exception, allowing the current adapter
+and unchanged formatter to produce BAD_USER_INPUT with extensions.statusCode400.
+HTTP200 and successful API responses remain unchanged. No global formatter or
+Domain exception refactor is proposed here. Until approval, production API
+service code and the strong failing HTTP assertions remain unchanged. No full
+quality gate or acceptance is claimed.
+
 | Layer              | Evidence required                                                                                                                                             |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Shared             | null/primitive/array node; object/string/null optional containers; non-record marks/attrs; no uncaught runtime error                                          |
