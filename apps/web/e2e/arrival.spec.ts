@@ -106,8 +106,10 @@ test("the guest page remains usable without JavaScript", async ({
 test("Core module opens a demo and source previews remain topic-specific", async ({
   page,
 }) => {
+  await installStationObserverProbe(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
+  await waitForStationDemoReadiness(page);
   await page.getByRole("button", { name: "Explore Academy demo" }).click();
   await expect(page.getByText(/Begin with inference/)).toBeVisible();
   const source = page.getByRole("button", { name: "Academy", exact: true });
