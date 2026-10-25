@@ -26,7 +26,7 @@
     "test:cov": "turbo test:cov",
     "test:dependency-patches": "node --test scripts/braces-patch.test.mjs",
     "security:check": "node scripts/check-dependency-security.mjs",
-    "test:security-policy": "node --test scripts/check-dependency-security.test.mjs",
+    "test:security-policy": "node --test scripts/check-dependency-security.test.mjs scripts/dependency-security-versions.test.mjs",
     "db:validate": "pnpm --filter @dss/api db:validate",
     "db:check-drift": "pnpm --filter @dss/api exec prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code",
     "db:generate": "pnpm --filter @dss/api db:generate",
