@@ -44,6 +44,24 @@ AchievementRule setup. This is not evidence that a running database has no
 configured rules; database configuration inventory remains open and must not
 read user content or mutate current rules.
 
+The migration `20260729093000_add_community_points_ledger` supplies six baseline
+rules (distinct from seed files):
+
+| Rule                        | Event                          | Value filter | Points | Daily count limit |
+| --------------------------- | ------------------------------ | ------------ | ------ | ----------------- |
+| comment.created             | comments.comment.created.v1    | none         | 1      | 50                |
+| forum.topic.created         | community.topic.created.v1     | none         | 5      | 10                |
+| news.published              | news.article.published.v1      | none         | 10     | 5                 |
+| knowledge.article.published | knowledge.article.published.v1 | none         | 50     | 2                 |
+| reputation.positive         | reputation.direct.changed.v1   | 1            | 10     | 25                |
+| reputation.negative         | reputation.direct.changed.v1   | -1           | -10    | 25                |
+
+These are migration defaults, not a fresh inventory of live configured values.
+News service supplies actionPUBLISHED, and both manual/scheduled repository
+paths therefore emit the matching published event name. Future Forum/Knowledge
+producer existence is not inferred from the presence of a baseline rule.
+No historical migration, formula or user-configured rule is edited here.
+
 ## Required design outputs
 
 1. Enumerate actual source event names/versions, payload ownership, transactional
