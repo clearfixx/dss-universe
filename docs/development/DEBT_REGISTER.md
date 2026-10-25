@@ -1579,3 +1579,17 @@ Architecture/lint/types/Prisma/build and adjacent suites pass. Format/audit,
 DEBT-044 generated drift and retained handles remain red/unresolved. CI and
 review acceptance remain pending; this entry is not marked resolved. See
 [correction evidence](../audits/DEBT_068_VERIFICATION_DESTINATION_FIX.md).
+
+### DEBT-016 — Approved security correction checkpoint (2026-10-25)
+
+Owner approved a separate package for all seven current high/critical advisories,
+including necessary safe patch/minor and transitive updates, without new audit
+exceptions or a stack/UI change. Branch `debt/debt-016-dependency-security` starts
+from accepted main `f118d82`; unrelated candidate PRs remain separate.
+
+After earlier ECONNRESET/timeouts, frozen installation succeeded. Actual consumer
+regressions pass13/13, unchanged braces regressions14/14; the real security check
+reports high0/critical0, moderate17/low2. These are scoped results, not closure of
+all dependency risk. Full quality/build/CI and owner acceptance remain open.
+The existing Apollo Playground server4-vs-server5 peer warning is unchanged.
+See [package evidence](../audits/DEBT_016_DEPENDENCY_SECURITY.md).
