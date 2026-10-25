@@ -113,3 +113,18 @@ The existing local braces patch integrity and14 regressions pass; no exception
 was added. The raw audit remains visible. Owner approved separate DEBT-016 to
 address all seven, including needed safe patch/minor/transitive updates after
 upstream verification. No dependency change belongs to DEBT-080.
+
+## Security baseline integration — 2026-10-25
+
+The preceding audit failure is historical evidence, not the current dependency
+status. Owner accepted DEBT-016 and PR84 was merged into main089c52f after all
+five exact-head CI checks and local quality:full passed (API593/593, fresh Web
+14/14 without retries, high0/critical0). Moderate17/low2 remain visible.
+This branch integrates that accepted main with a normal merge, no history rewrite
+and no conflict resolution. Dependency changes remain owned by PR84, not DEBT-080.
+
+PR83's prior headc49ec47 independently passed main quality (API1298 unit tests,
+E2E593/593), Web smoke and both containment platforms; its audit was blocked by
+the seven findings above. Those old results do not certify the newly integrated
+head. Full local gate and fresh exact-head CI must run again; DEBT-080 acceptance
+remains open. DEBT-081 production research is still a separate package.
