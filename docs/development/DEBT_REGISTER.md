@@ -22,7 +22,7 @@ active package safe and buildable.
 
 ## Register
 
-D7 review now integrates accepted main `a35326a`; the original baseline was
+D7 review now integrates accepted main `746d981`; the original baseline was
 `f118d82`. See
 [current evidence and limits](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079/080.
@@ -118,7 +118,16 @@ domain failure versus transport-adapter ownership before runtime correction.
 No implementation approval is implied by the D7 review.
 [Evidence and proposed scope](../audits/DEBT_079_DOMAIN_HTTP_COUPLING.md).
 
-### DEBT-081 — Early demo interaction can lose its timer during dev passive cleanup (Medium, ACCEPTED runtime package; verification open)
+### DEBT-081 — Early demo interaction can lose its timer during dev passive cleanup (Medium, RESOLVED scoped runtime package)
+
+Owner subsequently approved and accepted the isolated lifecycle correction.
+PR90 integration head29b0803 passed CI5/5 and local full gate0, E2E607/607,
+Web14/14 without retries; mergede26b0fc. Component/hook regressions6/6 include
+the controlled early-click red/green case, cancellation and stale generation.
+Normal corrected production flow passes without browser errors. This scoped
+acceptance does not attribute every historical natural flake to this schedule.
+See [design and evidence](DEBT_081_DEMO_SEARCH_LIFECYCLE.md).
+The research-only authority and observations below are historical.
 
 Lower-overhead browser instrumentation reproduces2/20 failures: search schedules
 its first550ms timer, then UniverseArrival passive-effect cleanup cancels it
@@ -133,13 +142,18 @@ must not be presented as fixing this early-interaction risk. Production evidence
 and any subsequent correction require their own scoped decision. Diagnostic
 logs/timings and stack frames: [DEBT-080 report](../audits/DEBT_080_SMOKE_READINESS.md).
 
-### DEBT-082 — Full coverage omits a registered test workspace (Medium, IMPLEMENTED candidate; acceptance pending)
+### DEBT-082 — Full coverage omits a registered test workspace (Medium, RESOLVED scoped verification package)
+
+Owner accepted PR85 after integration with accepted PR80: head8cc1e50 passed
+CI5/5 and local full gate0, coverage8/8 including Editor, E2E607/607 and Web14/14
+without retries. Merge05e177d preserves both built REST and coverage policies.
+The following candidate checkpoint is retained as historical evidence.
 
 PR85 head16147a7 implements the separately approved coverage completeness guard
 and Editor coverage. Exact-head CI5/5 and local full gate pass; API1298/1298,
 E2E593/593 and Web14/14 without retries. Its inventory found Editor alone has
-registered tests without test:cov; Jobs has no own registered tests. The owner
-has not accepted/merged PR85, so accepted main still lacks this correction.
+registered tests without test:cov; Jobs has no own registered tests. At that
+earlier checkpoint owner acceptance and merge were still pending.
 
 ### DEBT-083 — React demo no-retry smoke failure (Medium, OPEN; diagnostic package approved)
 
@@ -151,7 +165,8 @@ early-click evidence separately proves a DEBT-081 cleanup mechanism, not the
 exact natural CI failure schedule. No runtime/synchronization correction or
 acceptance is claimed. See [diagnostic PR87](https://github.com/clearfixx/dss-universe/pull/87).
 
-Owner subsequently approved a separate runtime package on2026-10-25: design,
+Historical DEBT-081 authorization checkpoint (not a DEBT-083 correction):
+owner subsequently approved a separate runtime package on2026-10-25: design,
 production verification, isolated lifecycle correction and deterministic tests,
 without UI changes, blocking early clicks, timeout increases or weaker smoke.
 Branch `debt/debt-081-demo-search-lifecycle` starts from accepted main `a35326a`;
