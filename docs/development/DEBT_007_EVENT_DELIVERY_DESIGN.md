@@ -113,6 +113,33 @@ Read-only post-run schema inventory reports zero `api_boundary_%` schemas.
 
 ## Runtime assembly decisions still requiring design
 
+The reviewed ADR-004 and ADR-0003 require source-transaction Outbox plus durable
+jobs for secondary effects, owner-local policy and narrow root composition.
+Existing queue documentation keeps `apps/worker` a separately deployable runtime;
+the current Activity consumer identity and retained jobs remain compatibility
+constraints, not disposable implementation details.
+
+| Candidate                                                        | Benefit                                                                            | Cost / acceptance requirement                                                                                                                      |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Additive headless consumer assembled from the API-owned artifact | Reuses existing owner policy/persistence without cross-app imports into ESM Worker | Explicit new process entrypoint, narrow Nest assembly, queue fan-out, deployment/health/DLQ lifecycle and ADR clarification required               |
+| Existing Worker calls a private API composition endpoint         | Keeps current Worker deployment shape and owner execution inside API               | New authenticated internal transport, availability coupling, payload replay protection and timeout/failure contract; not an ordinary user endpoint |
+| Move owner application/runtime into shared libraries             | Could support independent execution runtimes                                       | Broad packaging migration, decorators/aliases/build compatibility and ownership surface changes; disproportionate as an incidental wiring patch    |
+
+Design preference for further validation: additive headless root assembly, not
+an implementation decision. It must demonstrate minimal provider construction
+without starting HTTP listeners or unrelated schedulers. No broad service is
+exported merely to make this candidate convenient. Existing Activity processing
+stays in its original process/queue and retains v1 identity/history.
+
+A second consumer on the same BullMQ queue is not fan-out: it can compete for
+jobs. A proposed separate gamification queue therefore needs explicit dispatcher
+publication to both destinations, stable event IDs per queue, failure recovery
+when only one enqueue succeeds, and operational retry visibility. Original
+PUBLISHED cannot be redefined silently. Points and achievement transactions
+remain independently idempotent; Levels follows the durable Points event, not
+an assumed immediate balance update. These are required design constraints,
+not new queue configuration or an exactly-once promise.
+
 The existing Worker is an ESM process with direct PostgreSQL adapters; feature
 application services currently live in the Nest API. Importing entire API modules
 into Worker or copying scoring logic to Worker SQL is not an approved shortcut.
