@@ -2,7 +2,7 @@
 
 > Status: Active
 >
-> Updated: 2026-10-23
+> Updated: 2026-10-25
 
 ## Purpose
 
@@ -22,18 +22,25 @@ active package safe and buildable.
 
 ## Register
 
-D7 review is in progress from accepted main `f118d82`; see
+D7 review now integrates accepted main `a35326a`; the original baseline was
+`f118d82`. See
 [current evidence and limits](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079/080.
 D6 acceptance does not
 automatically resolve unrelated OPEN findings.
 
-[D7 individual review routing](../audits/D7_DEBT_DISPOSITION_MATRIX.md) maps all80
+[D7 individual review routing](../audits/D7_DEBT_DISPOSITION_MATRIX.md) maps all83
 unique IDs exactly once, distinguishing accepted scoped corrections from partial
 evidence, remaining review and unresolved decisions. It is not a new status model
 or a declaration that every debt has been reviewed/closed.
 
-### DEBT-080 — Green CI Web check can conceal a flaky smoke test (Medium, ACCEPTED, separate package)
+### DEBT-080 — Green CI Web check can conceal a flaky smoke test (Medium, RESOLVED scoped test/CI package)
+
+Owner accepted the bounded test/CI correction and merged PR83 as
+`a35326afdd4ebba484540a46f468c82d4bb586a9`. Its exact candidate bde1ad6 had
+five green CI checks and a complete local gate: API E2E593/593 and Web14/14,
+zero retries. This does not resolve DEBT-081 or DEBT-083 runtime/stability risks.
+The following finding and verification-open checkpoints are historical evidence.
 
 PR81 head ccc8f9c, Quality run39968841410/job120465792097 reports success, but
 actual job logs record one flaky test and13 passed: arrival.spec.ts106 fails
@@ -52,6 +59,13 @@ records evidence; no runtime/test/CI implementation is included in this branch.
 The subsequent PR81 head03a5937 Web job passed14/14 without flaky results;
 that clean run does not establish the prior race's root cause or close the debt.
 
+Accepted main f118d82 reproduced the Academy response failure2/10 without
+retries. The approved test/CI-only packet's native readiness synchronization
+passed20/20 controls and full smoke14/14; explicit CI retries0/workers2/forbid-only
+and actual Playwright config policy tests passed4/4. These results did not by
+themselves prove a runtime fix. See
+[DEBT-080 evidence](../audits/DEBT_080_SMOKE_READINESS.md).
+
 ### DEBT-013 — D7 host-mail readiness revalidation (High, OPEN readiness observation)
 
 2026-10-23: Mailpit container is running/healthy and its internal readyz invocation
@@ -69,7 +83,13 @@ requires scoped diagnosis/recovery and protocol verification. D7 performs no
 container restart/recreate, env edit or installation. See
 [D7 readiness evidence](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 
-### DEBT-016 — Fresh D7 dependency-security finding (Critical, OPEN)
+### DEBT-016 — Historical D7 dependency-security finding (Critical finding; scoped correction RESOLVED)
+
+Owner subsequently accepted PR84, merged089c52f. Exact candidate e62cc89 had
+CI5/5 and local full gate0; the refreshed D7 audit on2026-10-25 reports
+high0/critical0, moderate17/low2, security-policy13/13 and unchanged approved
+braces regressions14/14. No new exception or universal security claim. The
+following2026-10-23 finding is retained historical evidence, not current failure.
 
 2026-10-23: actual `pnpm security:check` exits1. Raw audit reports two critical,
 two high and twelve moderate findings. One high is the existing owner-approved
@@ -97,6 +117,39 @@ Separate design must preserve public HTTP/GraphQL error contracts and clarify
 domain failure versus transport-adapter ownership before runtime correction.
 No implementation approval is implied by the D7 review.
 [Evidence and proposed scope](../audits/DEBT_079_DOMAIN_HTTP_COUPLING.md).
+
+### DEBT-081 — Early demo interaction can lose its timer during dev passive cleanup (Medium, ACCEPTED research only)
+
+Lower-overhead browser instrumentation reproduces2/20 failures: search schedules
+its first550ms timer, then UniverseArrival passive-effect cleanup cancels it
+within approximately18–22ms, with no timer firing. The real page remains in
+searching stage0. This is a confirmed dev-runtime observation, not proof that
+production behaves identically. Temporary diagnostic wrappers were removed.
+
+Owner approved a separate production-behavior investigation first. No runtime
+fix, UI change, timer restart policy or production safety claim is authorized by
+that research approval. DEBT-080 verifies the settled post-readiness path and
+must not be presented as fixing this early-interaction risk. Production evidence
+and any subsequent correction require their own scoped decision. Diagnostic
+logs/timings and stack frames: [DEBT-080 report](../audits/DEBT_080_SMOKE_READINESS.md).
+
+### DEBT-082 — Full coverage omits a registered test workspace (Medium, IMPLEMENTED candidate; acceptance pending)
+
+PR85 head16147a7 implements the separately approved coverage completeness guard
+and Editor coverage. Exact-head CI5/5 and local full gate pass; API1298/1298,
+E2E593/593 and Web14/14 without retries. Its inventory found Editor alone has
+registered tests without test:cov; Jobs has no own registered tests. The owner
+has not accepted/merged PR85, so accepted main still lacks this correction.
+
+### DEBT-083 — React demo no-retry smoke failure (Medium, OPEN; diagnostic package approved)
+
+PR87 records a completed local full gate at77ea28d: API E2E593/593 and build
+pass, but React demo Web assertion fails at the existing5000ms,13/14 Web pass,
+zero retries. Trace/screenshot are retained. Candidate0fda41a adds documentation
+only; diagnostic infrastructure retains first-failure trace/screenshot. Controlled
+early-click evidence separately proves a DEBT-081 cleanup mechanism, not the
+exact natural CI failure schedule. No runtime/synchronization correction or
+acceptance is claimed. See [diagnostic PR87](https://github.com/clearfixx/dss-universe/pull/87).
 
 ### DEBT-074 — Social privacy owner assertion races asynchronous presence (Medium, ACCEPTED, separate D6 package)
 
@@ -1627,7 +1680,16 @@ GraphQL check remains red for DEBT-044; generated side effects restored exactly.
 No full-green, CI/review/owner acceptance or debt closure is claimed.
 Debt remains open. [Design and current evidence](DEBT_065_CLAIM_FENCING_DESIGN.md).
 
-### DEBT-066 — Editor malformed/deep document validation throws runtime errors (Medium, ACCEPTED for separate design; exact depth approval pending)
+### DEBT-066 — Editor malformed/deep document validation throws runtime errors (Medium, ACCEPTED correction; transport decision pending)
+
+Current2026-10-25 checkpoint: owner approved depth64 with root0 and compatibility
+assessment. Separate unmerged local branch1e07a06 has shared65/65, API Editor46/46
+and independent migrated host persistence5/5. Public local scans find no value
+beyond depth2; fixture/dynamic/non-public limits are explicit in that branch.
+Strong HTTP assertions remain red on inherited GraphQL validation mapping.
+Adding statusCode400 to the local Editor exception requires owner approval;
+global formatter and successful contracts remain unchanged. Main still lacks
+the shared correction. The following detection/design text is historical.
 
 Actual EditorService normalization of synthetic null child, object content and
 object marks throws TypeError instead of controlled validation rejection. A
@@ -1714,3 +1776,17 @@ Architecture/lint/types/Prisma/build and adjacent suites pass. Format/audit,
 DEBT-044 generated drift and retained handles remain red/unresolved. CI and
 review acceptance remain pending; this entry is not marked resolved. See
 [correction evidence](../audits/DEBT_068_VERIFICATION_DESTINATION_FIX.md).
+
+### DEBT-016 — Approved security correction checkpoint (2026-10-25)
+
+Owner approved a separate package for all seven current high/critical advisories,
+including necessary safe patch/minor and transitive updates, without new audit
+exceptions or a stack/UI change. Branch `debt/debt-016-dependency-security` starts
+from accepted main `f118d82`; unrelated candidate PRs remain separate.
+
+After earlier ECONNRESET/timeouts, frozen installation succeeded. Actual consumer
+regressions pass13/13, unchanged braces regressions14/14; the real security check
+reports high0/critical0, moderate17/low2. These are scoped results, not closure of
+all dependency risk. Full quality/build/CI and owner acceptance remain open.
+The existing Apollo Playground server4-vs-server5 peer warning is unchanged.
+See [package evidence](../audits/DEBT_016_DEPENDENCY_SECURITY.md).

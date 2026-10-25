@@ -1,8 +1,61 @@
 # D7 — Baseline release review
 
-Date: 2026-10-22. Updated: 2026-10-23. Branch: `debt/d7-release-gate`.
-Baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
+Date: 2026-10-22. Updated: 2026-10-25. Branch: `debt/d7-release-gate`.
+Current accepted baseline: `a35326afdd4ebba484540a46f468c82d4bb586a9`.
+Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
+
+## Current reconciliation checkpoint — 2026-10-25
+
+This checkpoint supersedes mutable status statements in the historical sections
+below, not their dated observations or retained failures. D7 integrates accepted
+main by normal merge; its authored net diff against that main remains documentation
+only. No unaccepted PR runtime is imported, no owner acceptance is inferred.
+
+| Package             | Authoritative current scope/evidence                                                                                                                                                         | Acceptance boundary                                                                                                                   |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| DEBT-016 / PR84     | Owner accepted; merge089c52f. Exact candidate e62cc89 had CI5/5, local full gate0, E2E593/593, Web14/14 and high0/critical0.                                                                 | Seven blocking advisories corrected; moderate17/low2 snapshot remains, no new exception.                                              |
+| DEBT-080 / PR83     | Owner accepted; mergea35326a. Exact bde1ad6 had CI5/5, local full gate0, E2E593/593, Web14/14 zero retries.                                                                                  | Test/CI-only Academy readiness correction; not a runtime fix for081/083.                                                              |
+| DEBT-040 / PR80     | Head0c4a5c8: CI5/5, local full gate0, API1315/1315, E2E607/607, Web14/14; real built REST validation passes.                                                                                 | Ready for owner acceptance, not merged. Accepted main still lacks this correction.                                                    |
+| DEBT-057 / PR81     | Head1343d5a: actual strict E2E596/596, main quality green, Web React no-retry failure.                                                                                                       | Unmerged and not accepted; the red083 result is not erased by historical green runs.                                                  |
+| DEBT-082 / PR85     | Head16147a7: CI5/5, local full gate0, actual8/8 coverage tasks including Editor23/23.                                                                                                        | Ready but unmerged; current main runner still omits Editor coverage.                                                                  |
+| DEBT-066            | Depth64/root0 approved. Local branch1e07a06: shared65/65, API Editor46/46, independent migrated host cases5/5.                                                                               | Strong HTTP assertions red on inherited GraphQL mapping. statusCode400 compatibility change requested, not authorized or implemented. |
+| DEBT-081 / DEBT-083 | PR87 preserves local exit1 at77ea28d: Web13/14, React stuck step0 at5000ms, trace/screenshot retained. A controlled dev schedule independently proves timer cancellation by passive cleanup. | Research only; natural-failure cause and production impact not fully established. Runtime correction requires approval.               |
+
+Exact-head artifacts remain in the managed checkout and corresponding PR bodies:
+PR80 current CI E2E SHA256 `20C7CA7756B41F83D14ED6E0898BBE779E72A64F0D28C25DA96370C5A7A0D870`,
+local `7475A51E2C5B697E03DCD939F157B8FB195DF17EE5C171119FEBBAD97FDEC65F`.
+PR85 CI E2E SHA256 `1F15D6C4515E800E3F22B3EB436BA720BFA867EF69843CA22B63A8FCD02281FF`.
+PR87 retained failing trace SHA256 `404A3AEE0EFD6127A53B4625E82C6F924FCBBD88454B49D91B3ACBE19DD67A93`;
+controlled timer report `714D09CE3A727C6C217EB2B2CBB5BE91EA8A1A77F054A367231917C07CA8CA28`.
+These distinct heads/packages are not one consolidated D7 acceptance run.
+
+The routing matrix now includes each ID001–083 exactly once. Passport remains
+excluded. Other policy/security/operational questions below remain open unless
+explicitly superseded here. Mailpit recovery is still unauthorized, and no
+foreign host listener or service was stopped. D7, stack audit and Phase11 are
+not accepted by this checkpoint.
+
+### Checkpoint verification and owner plan provenance
+
+Fresh D7 security check exits0: high0/critical0, moderate17/low2. Security policy
+tests pass13/13, exact braces patch verification and unchanged regressions14/14.
+No dependency version, exception, runtime or test configuration is authored by D7.
+
+Matrix verification checks all83 IDs exactly once with no missing/duplicate row.
+Local file-target validation checks195 links across12 net-changed Markdown files
+with no missing targets. Four external/anchor targets are excluded; existence
+does not prove anchor validity or document semantics. Formatting/diff checks
+pass. Helper/report: `node_modules/.cache/d7-current-links.cjs` and `.json`.
+These are scoped checks, not a new consolidated D7 full gate.
+
+Four links previously referenced the owner-only, untracked stack plan. Its
+actual source is `F:/Code/dss-universe/docs/audits/STACK_AUDIT_PLAN.md` (plural
+directory); the singular location does not exist in the observed primary
+checkout. D7 now includes a byte-identical snapshot at the canonical relative
+path, SHA256 `B1D657CFCEA43DF16636E9C79F4BB62BF4F94848B31780234C2364CBA557796A`.
+Source and snapshot hashes match; the primary file remains untracked and
+unmodified. No audit result files were created and the stack audit did not start.
 
 ## Approved boundary
 
