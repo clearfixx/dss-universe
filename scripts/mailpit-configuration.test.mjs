@@ -13,6 +13,20 @@ import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 
+test("mandatory quality CI runs the configuration regressions", () => {
+  const workflow = readFileSync(
+    new URL("../.github/workflows/ci.yml", import.meta.url),
+    "utf8",
+  );
+  const qualityJob = workflow.split("  quality:")[1]?.split("  web-e2e:")[0];
+  assert.ok(qualityJob);
+  assert.match(
+    qualityJob,
+    /- name: Quality policy regressions\r?\n\s+run: pnpm test:quality-policy\r?\n/,
+  );
+  assert.doesNotMatch(qualityJob, /continue-on-error:\s*true/);
+});
+
 test("effective Mailpit Compose uses persistent storage and loopback host ports", () => {
   const result = spawnSync(
     "docker",
