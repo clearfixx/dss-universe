@@ -133,8 +133,16 @@ describe('AchievementsService', () => {
     consume
       .mockResolvedValueOnce({ ruleId: rule.id, status: 'AWARDED', award })
       .mockRejectedValueOnce(new Error('synthetic second rule failure'))
-      .mockResolvedValueOnce({ ruleId: rule.id, status: 'DUPLICATE', award: null })
-      .mockResolvedValueOnce({ ruleId: secondRule.id, status: 'AWARDED', award });
+      .mockResolvedValueOnce({
+        ruleId: rule.id,
+        status: 'DUPLICATE',
+        award: null,
+      })
+      .mockResolvedValueOnce({
+        ruleId: secondRule.id,
+        status: 'AWARDED',
+        award,
+      });
 
     await expect(service.consume(event())).rejects.toThrow(
       'synthetic second rule failure',
