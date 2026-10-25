@@ -1,10 +1,14 @@
 # DEBT-066 — Editor validation safety design
 
-2026-10-19. Separate correction authorized; depth value below is proposed,
-not yet approved. Design branch based on `829b6ca` / draft PR #45; unaccepted
-stack. No runtime, schema, migration, UI or stored document changes in this packet.
+Initial design: 2026-10-19, historically based on `829b6ca` / draft PR #45.
+Owner subsequently approved depth 64, root depth 0, with compatibility checks
+before implementation. The separate implementation branch is now
+`debt/debt-066-editor-validation-safety`, from accepted main
+`a35326afdd4ebba484540a46f468c82d4bb586a9`. No schema, migration, UI or stored
+document rewrite is authorized. Earlier pending-approval statements below are
+historical checkpoints, superseded by this explicit approval.
 
-## Contract to approve
+## Approved contract
 
 - Maximum node depth **64**, root `content.type=doc` at depth **0**; every child
   increments depth, including inline text. Apply equally to all eight profiles.
@@ -88,6 +92,58 @@ enforced rule. Earlier 408108-byte depth fixture counted 12000 blockquotes plus
 its terminal text; these separately described probes are not identical depths.
 
 ## Required regression matrix
+
+### Refreshed compatibility checkpoint (2026-10-25, before correction)
+
+Prisma still declares exactly five persisted document columns. Read-only
+information-schema discovery in public schemas of dev 5433 and disposable 5434
+finds the same five. Each aggregate scan runs within `BEGIN READ ONLY` and
+`ROLLBACK`, follows only array-valued content and stops at depth 65. No document
+text, credentials or row IDs were emitted; no migration, reset or rewrite ran.
+
+Dev public tables are empty. Disposable public contains 15 non-null comment
+revisions and 10 comments, five with SQL-null documents; the other three owners
+are empty. All 20 non-null documents have maximum observed depth 2; no visited
+node exceeds depth 64. Other schemas, backups, production and unavailable port
+5435 are not certified by this observation.
+
+A literal-only TypeScript AST inventory scanned 272 tracked test/spec files and
+found 15 explicit object wrappers with assigned schemaVersion/profile/content:
+8 currently valid (COMMENT/FORUM_REPLY/WIKI), 3 invalid, 4 not statically
+resolvable. Maximum valid static depth is 4. This intentionally does not execute
+arbitrary fixture code or claim coverage of shorthand wrappers, dynamic factories
+or generated JSON. Manual inspection identifies shared content arrays in
+document-grade tests and parameterized public-search factories; these are also
+covered by the unchanged Editor baseline, 23/23 in three files. The baseline
+includes valid empty documents for all eight profiles. Later full API/E2E
+regressions remain required; this is not universal compatibility certification.
+
+Ignored reproducible observations: `node_modules/.cache/debt066-current-compat.sql`,
+`debt066-fixture-inventory.cjs` and `debt066-fixture-inventory.json` in the same
+directory. Baseline Editor build and tests pass before source correction.
+
+### Shared implementation checkpoint (2026-10-25, acceptance open)
+
+New safety tests initially produced 22 failures and 38 passes across four files;
+the original 23 tests remained passing. Log:
+`TEMP/dss-debt066-before-correction.log`. No validation implementation had been
+changed at that point.
+
+The shared validator now performs an iterative structural preflight before its
+existing semantic passes. A cursor frame advances one child at a time, bounding
+auxiliary stack growth by depth rather than array width. It rejects over-depth,
+over-node-budget and malformed node/content/marks/attrs shapes with a controlled
+validation result. Semantic traversal receives only structurally safe documents
+within depth 64 and the existing profile node limit. The recursive semantic
+rules, canonical valid-object identity and profile/character limits remain.
+
+Current shared tests pass **65/65 in four files**. They pin all eight profiles at
+depths 64/65, malformed values, the 12000-level parsed JSON, legal empty optional
+containers and exact node-budget acceptance. A test-only getter sentinel beyond
+the node budget proves early stopping without representing a JSON exploit.
+Editor typecheck and lint pass. No API runtime, DTO, Prisma, migration or UI
+change is included yet. API/HTTP/host rollback regressions, full quality gate,
+CI and acceptance remain required; do not mark DEBT-066 closed.
 
 | Layer              | Evidence required                                                                                                                                             |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
