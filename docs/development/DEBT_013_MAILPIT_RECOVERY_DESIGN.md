@@ -89,3 +89,25 @@ readiness or application delivery. Those acceptance steps remain open.
 No Compose/env edit, container stop/recreate, external mail or installation has
 been performed. Host readiness remains open. No Docker/WSL root cause is asserted.
 This separate package does not accept D7 or start the stack audit.
+
+## Operational recovery checkpoint
+
+After preserved-storage integrity and isolated restoration checks, Compose
+dry-run selected only Mailpit and its new volume. No remove-orphans flag was
+used: the warning about disposable test services did not authorize touching them.
+Only Mailpit was recreated, seeded before first start from the tested restored
+database, and started with persistent `dss-universe_dss_mailpit_data` storage.
+Effective bindings are127.0.0.1:2525 and127.0.0.1:18025. Host readyz returns200;
+API initially confirms the preserved historical message total1.
+
+Primary checkout local API/Worker MAIL_HOST/MAIL_PORT now agree on localhost2525;
+no credentials or unrelated environment values were changed. These ignored env
+edits are operational, not committed secrets or evidence that running processes
+automatically reloaded their environment.
+
+Using the existing Worker nodemailer dependency, a loopback-only verification
+and one synthetic `dss.invalid` message succeed. API confirms that exact synthetic
+marker once, with total2. No historical body, subject or recipient is emitted.
+Restarting only Mailpit preserves total2, proving this volume survives a service
+restart. No external SMTP delivery, dev database operation or PostgreSQL/Redis
+restart occurred. Full gate, CI and owner package acceptance remain open.
