@@ -286,6 +286,61 @@ This checksum verifies no SDL change here, not API behavioral equivalence.
 
 ## Remaining streams
 
+### Refreshed001/002/027 source-to-regression reconciliation — 2026-10-25
+
+Source point358f2d7 integrates accepted maina35326a. A Git comparison finds no
+changes in API source, Worker source or shared Editor source relative to accepted
+D6f118d82; dependency and smoke changes retain their separate accepted history.
+This continuity supports reuse of explicitly mapped source evidence, not all
+historical test outcomes or a universal behavior guarantee under new dependencies.
+
+The original001 finding concerned Auth importing Users repository/mapper internals
+and owning profile lifecycle. Current private AccountCredentials and repository
+contract contain credential/eligibility fields only; the Auth root publishes
+opaque contracts. Auth production profile-name matches are absent; README
+mentions Users only in the external root-composition diagram. Root
+AuthenticationPresentationService registers via a write-only credential store
+bound to Users-owned profile data, then explicitly allowlists profile and token
+responses. Account state commands remain Auth-owned under the approved subject
+boundary; last-administrator availability047 is not solved by this separation.
+
+For002, actual IAM services are user-access, safety, permissions, roles and
+access-groups. The first four use legacy paths outside application directories;
+the final source scan explicitly includes all five, rather than treating an
+empty application-only glob as whole-IAM evidence. Direct ORM patterns are
+absent there and in Auth application. IAM module assembly and infrastructure
+entry points legitimately import Prisma adapters and are not business-service
+violations. This does not waive Domain/Nest coupling079.
+
+For027, a literal TypeScript AST sweep covers16 feature-root index files with122
+export declarations (168 type-only symbols,100 value symbols), no parse errors,
+no wildcard/namespace exports and no direct application/infrastructure or flat
+service/repository/mapper value re-exports. It is a direct-root inventory, not
+proof about arbitrary transitive/dynamic modules. Auth/IAM module metadata exports
+four narrow capability tokens each. The selected metadata regressions additionally
+cover IAM and three other feature surfaces while retaining private providers.
+
+Fresh existing regressions pass **152/152 in17 suites**, with no pending/todo:
+Auth flows/session/token validation, credential allowlists, root presentation,
+legacy claims/current request access, IAM services and public surfaces. The
+registration PostgreSQL subset passes8/8 with RUN*AUTH_DB_TESTS enabled on5434.
+It uses owned schema tables cloned from migrated public definitions and injected
+failure triggers: this is real transaction/rollback evidence, not a full AppModule
+HTTP test or a new full-migration run. Audit, issuance and delivery doubles make
+failure ordering observable; they do not prove actual SMTP or Audit transport.
+Afterward a read-only schema count finds zero registration*\* schemas.
+
+Report: `node_modules/.cache/d7-identity-reconciliation-358f2d7.json`, SHA256
+`87609F0684DF248B66BC7A38BEFDCBCCAF5AA087B88636B6B0535296BB7D547E`.
+Log: `TEMP/dss-d7-identity-reconciliation-358f2d7.log`.
+AST helper/report: `node_modules/.cache/d7-public-root-inventory.cjs` and `.json`.
+Fresh architecture command passes140/140 and frozen inventory0 findings; log
+`TEMP/dss-d7-architecture-358f2d7.log`. It explicitly is not a compliance certificate.
+
+The register now records these three original technical corrections as IMPLEMENTED,
+not RESOLVED. Global/semantic residuals and final D7 owner acceptance remain open;
+no runtime, tests, schema, policy or provider export was changed by this review.
+
 ### Fresh dependency-security gate — BLOCKED (2026-10-23)
 
 `pnpm security:check` naturally exits1 on current accepted dependency baseline.
