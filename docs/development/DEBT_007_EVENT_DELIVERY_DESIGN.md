@@ -63,7 +63,17 @@ read user content or mutate current rules.
 
 ## Verification boundary
 
+Worker characterization now runs the actual integration processor with controlled
+marker adapters. Four new cases pass together with the existing processor case,
+5/5 across two suites: handler failure leaves no marker and retries; marker
+persistence failure repeats the completed handler; two controlled absent-marker
+reads both invoke the handler; distinct consumer names retain independent markers.
+The concurrency schedule uses promise barriers, not sleeps. Worker lint and
+typecheck pass. No real queue, PostgreSQL schedule or gamification ledger runs in
+these tests, so they do not prove duplicate domain awards. Domain-level dedup,
+partial multi-rule rollback and the second delivery hop still need evidence.
+
 No source runtime, queue consumer identity, database schema, scoring formula or
-Phase11 behavior changes in this design checkpoint. Characterization tests and
-full package quality/CI remain to be added and verified. No broad Phase8 or D7
+Phase11 behavior changes in this design checkpoint. Additional characterization
+and full package quality/CI remain open. No broad Phase8 or D7
 acceptance follows from this document.
