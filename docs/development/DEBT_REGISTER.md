@@ -53,8 +53,9 @@ Branch `debt/debt-081-demo-search-lifecycle` starts from accepted main `a35326a`
 it does not import pending066/057/082 candidates. One unchanged production React
 flow passes; an actual-component StrictMode early-click regression is red before
 the correction and green afterward. Search timer ownership is now isolated with
-generation/step guards; targeted component/hook suites pass6/6. Corrected
-production, full gate, CI and acceptance remain required. This supersedes the
+generation/step guards; targeted component/hook suites pass6/6. The corrected
+production search/cancel/restart observation also passes with no browser errors.
+Full gate, CI and acceptance remain required. This supersedes the
 research-only authority above, not its retained observations. See
 [design and evidence](DEBT_081_DEMO_SEARCH_LIFECYCLE.md).
 

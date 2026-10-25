@@ -3,8 +3,8 @@
 2026-10-25. Owner approved a separate runtime package, including design,
 production verification and deterministic regressions. Branch:
 `debt/debt-081-demo-search-lifecycle`, from accepted main `a35326a`.
-Status: isolated correction and targeted regressions implemented; corrected
-production/full quality/CI/owner acceptance remain open.
+Status: isolated correction, targeted regressions and corrected production
+observation verified; full quality/CI/owner acceptance remain open.
 
 ## Story and evidence boundary
 
@@ -103,6 +103,15 @@ and owns only timer synchronization; user matching/start/reset stays in event
 handlers. React best-practices review did not authorize unrelated UI refactors.
 
 Targeted lint/typecheck pass. Corrected production build succeeds with build ID
-`zF11IPrGs2SieWqHFpt3_`; browser verification remains pending. The generated Next
+`zF11IPrGs2SieWqHFpt3_`. The generated Next
 AGENTS heading matches the installed generator's H2 block, avoiding known dev
 documentation drift without changing application behavior or instructions.
+
+One corrected production observation at source `ba47662` passes the same React
+search/cancel/restart flow: HTTP200, pageErrors0, consoleErrors0 and only the same
+Link prefetch paths, with no timer instrumentation. Screenshot inspected, trace
+retained, owned server3102 stopped afterward. Report
+`node_modules/.cache/debt081-production-corrected.json`, SHA256
+`ED88CB65E137A5EE003329CE1887BC1ACF8014C9F35CC5AABABAD99BCE396FDD`.
+This is successful normal production behavior after correction, not proof that
+every historical natural CI failure had the controlled development schedule.
