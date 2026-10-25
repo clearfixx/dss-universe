@@ -1,9 +1,36 @@
 # D7 — Baseline release review
 
 Date: 2026-10-22. Updated: 2026-10-25. Branch: `debt/d7-release-gate`.
-Current accepted baseline: `a35326afdd4ebba484540a46f468c82d4bb586a9`.
+Current accepted baseline: `746d981c2657570ff2ae2f26c1bb38a365930b2e`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
+
+## Accepted integration checkpoint — 2026-10-25, 19:20 UTC
+
+This checkpoint supersedes the candidate/authority statuses in older dated
+sections below, without discarding their failures or limitations.
+
+- DEBT-040: owner accepted PR80, merged `d452cdd`; exact candidate `0c4a5c8`
+  passed CI5/5 and local full gate, E2E607/607 and Web14/14 without retries.
+- DEBT-082: owner accepted PR85 after integrating PR80; candidate `8cc1e50`
+  passed CI5/5 and local full gate, coverage8/8 including Editor, E2E607/607,
+  Web14/14 without retries. Merge `05e177d` retains both quality policies.
+- DEBT-081: owner approved runtime correction and conditional integration merge.
+  Candidate `29b0803` passed CI5/5 and local full gate, E2E607/607 and Web14/14
+  without retries; merged `e26b0fc`. Controlled early-click red/green evidence
+  supports the scoped lifecycle fix, not attribution of every historical flake.
+- DEBT-057: owner accepted PR81 candidate `a554f41`, merged `746d981`.
+  CI5/5, local full gate exit0, E2E610/610 in57 suites without pending/todo,
+  generated-client check and build pass, Web14/14 without retries. Local report
+  SHA256 `B597F19C4791A9731F14FE0DBD09AF127B60B9387E78F7343A65C5FF9176F85F`.
+- DEBT-066: local statusCode400 mapping was separately approved and implemented.
+  PR89 candidate `a528c90` has CI5/5, E2E630/630 without pending/todo and
+  API coverage1324/1324. Its local full gate remains active on the preceding
+  accepted baseline `e26b0fc`; it is not yet accepted or merged. New-main
+  integration verification remains required after that process terminates.
+
+These package acceptances do not accept D7, waive open decisions, start the
+stack audit or authorize Phase11. PR87 diagnostic history remains distinct.
 
 ## Current reconciliation checkpoint — 2026-10-25
 

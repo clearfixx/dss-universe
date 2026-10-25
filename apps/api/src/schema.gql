@@ -971,10 +971,10 @@ type NewsCategorySummary {
 
 type NewsComment {
   author: NewsAuthor!
-  body: String!
+  body: String
   children: [NewsComment!]!
   createdAt: DateTime!
-  documentJson: String!
+  documentJson: String
   editedAt: DateTime
   engagement: NewsCommentEngagement!
   id: ID!

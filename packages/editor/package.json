@@ -13,11 +13,13 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --max-warnings=0",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:cov": "vitest run --coverage --maxWorkers=2"
   },
   "devDependencies": {
     "@dss/eslint-config": "workspace:*",
     "@dss/tsconfig": "workspace:*",
+    "@vitest/coverage-v8": "^4.1.11",
     "eslint": "^9.39.5",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.71.1",

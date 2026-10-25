@@ -1,8 +1,15 @@
 # D7 — Individual debt review matrix
 
-Updated: 2026-10-25. Current accepted baseline: `a35326a`; initial review baseline
+Updated: 2026-10-25. Current accepted baseline: `746d981`; initial review baseline
 was `f118d82`.
 Status: **IN PROGRESS; not a release certificate**.
+
+Current acceptance override: DEBT-040/057/081/082 are scoped accepted packages
+(PR80/81/90/85 respectively). The dated routing rows below retain historical
+evidence and are being reconciled, not claims that these merges are pending.
+DEBT-066 mapping is approved and implemented in PR89 `a528c90`, CI5/5; local
+full gate and integration with accepted PR81 remain open. See the latest
+[acceptance checkpoint](D7_BASELINE_RELEASE_REVIEW.md) before older row text.
 
 This covers every unique register ID001–083 exactly once. It does not say all
 83 entries are resolved or fully reviewed. The [register](../development/DEBT_REGISTER.md)

@@ -201,8 +201,8 @@ export class NewsCommentModel {
   @Field(() => ID) id!: string;
   @Field(() => ID) reactionTargetId!: string;
   @Field(() => ID, { nullable: true }) parentId!: string | null;
-  @Field() body!: string;
-  @Field() documentJson!: string;
+  @Field(() => String, { nullable: true }) body!: string | null;
+  @Field(() => String, { nullable: true }) documentJson!: string | null;
   @Field() isDeleted!: boolean;
   @Field(() => GraphQLISODateTime, { nullable: true }) editedAt!: Date | null;
   @Field(() => GraphQLISODateTime) createdAt!: Date;

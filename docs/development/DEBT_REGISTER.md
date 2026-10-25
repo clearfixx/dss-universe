@@ -118,7 +118,7 @@ domain failure versus transport-adapter ownership before runtime correction.
 No implementation approval is implied by the D7 review.
 [Evidence and proposed scope](../audits/DEBT_079_DOMAIN_HTTP_COUPLING.md).
 
-### DEBT-081 — Early demo interaction can lose its timer during dev passive cleanup (Medium, ACCEPTED research only)
+### DEBT-081 — Early demo interaction can lose its timer during dev passive cleanup (Medium, ACCEPTED runtime package; verification open)
 
 Lower-overhead browser instrumentation reproduces2/20 failures: search schedules
 its first550ms timer, then UniverseArrival passive-effect cleanup cancels it
@@ -150,6 +150,19 @@ only; diagnostic infrastructure retains first-failure trace/screenshot. Controll
 early-click evidence separately proves a DEBT-081 cleanup mechanism, not the
 exact natural CI failure schedule. No runtime/synchronization correction or
 acceptance is claimed. See [diagnostic PR87](https://github.com/clearfixx/dss-universe/pull/87).
+
+Owner subsequently approved a separate runtime package on2026-10-25: design,
+production verification, isolated lifecycle correction and deterministic tests,
+without UI changes, blocking early clicks, timeout increases or weaker smoke.
+Branch `debt/debt-081-demo-search-lifecycle` starts from accepted main `a35326a`;
+it does not import pending066/057/082 candidates. One unchanged production React
+flow passes; an actual-component StrictMode early-click regression is red before
+the correction and green afterward. Search timer ownership is now isolated with
+generation/step guards; targeted component/hook suites pass6/6. The corrected
+production search/cancel/restart observation also passes with no browser errors.
+Full gate, CI and acceptance remain required. This supersedes the
+research-only authority above, not its retained observations. See
+[design and evidence](DEBT_081_DEMO_SEARCH_LIFECYCLE.md).
 
 ### DEBT-074 — Social privacy owner assertion races asynchronous presence (Medium, ACCEPTED, separate D6 package)
 
@@ -1790,3 +1803,17 @@ reports high0/critical0, moderate17/low2. These are scoped results, not closure 
 all dependency risk. Full quality/build/CI and owner acceptance remain open.
 The existing Apollo Playground server4-vs-server5 peer warning is unchanged.
 See [package evidence](../audits/DEBT_016_DEPENDENCY_SECURITY.md).
+
+### DEBT-082 — Shared Editor omitted by full coverage mode (Medium, ACCEPTED package; verification open)
+
+Date: 2026-10-25. Actual Turbo graphs and all ten app/package manifests confirm
+Editor has executable test but NONEXISTENT test:cov. Its three specs (23 tests)
+are omitted by the existing coverage-mode runner. Jobs has no own tests and is
+not a second omitted suite. This is a verification gap, not a proved runtime bug.
+
+Owner approved a separate correction with complete workspace inventory and
+fail-closed regressions. Branch debt/debt-082-workspace-test-coverage adds Editor
+V8 coverage using the existing provider version, actual task-plan preflight and
+real runner rejection tests. New regressions12/12 and Editor coverage23/23 pass;
+full quality/CI and acceptance remain open. No runtime/UI/assertion changes.
+See [scope and evidence](../audits/DEBT_082_WORKSPACE_COVERAGE.md).
