@@ -216,7 +216,8 @@ export class PrismaInteractionDeliveryReader {
         parentId: row.parentId,
         authorId: row.authorId,
         body: row.body,
-        documentJson: JSON.stringify(row.document),
+        documentJson:
+          row.document === null ? null : JSON.stringify(row.document),
         isDeleted: Boolean(row.deletedAt),
         editedAt: row.editedAt,
         createdAt: row.createdAt,
