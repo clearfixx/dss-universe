@@ -22,7 +22,7 @@ active package safe and buildable.
 
 ## Register
 
-D7 review now integrates accepted main `746d981`; the original baseline was
+D7 review now integrates accepted main `0bfbe2b`; the original baseline was
 `f118d82`. See
 [current evidence and limits](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079/080.
@@ -66,7 +66,15 @@ and actual Playwright config policy tests passed4/4. These results did not by
 themselves prove a runtime fix. See
 [DEBT-080 evidence](../audits/DEBT_080_SMOKE_READINESS.md).
 
-### DEBT-013 — D7 host-mail readiness revalidation (High, OPEN readiness observation)
+### DEBT-013 — D7 host-mail readiness revalidation (High, RESOLVED scoped mail recovery)
+
+Owner accepted PR91 head a881a1e, merged0bfbe2b. Persistent Mailpit recovery
+preserves historical mailbox data; host SMTP2525/HTTP18025, synthetic delivery
+and restart persistence pass. CI5/5 includes real configuration regressions;
+local full gate0, E2E610/610 and Web14/14 without retries. No PostgreSQL/Redis
+restart or foreign listener stop. This does not certify every optional service.
+See [recovery evidence](DEBT_013_MAILPIT_RECOVERY_DESIGN.md).
+The failed readiness observations below are historical.
 
 2026-10-23: Mailpit container is running/healthy and its internal readyz invocation
 completes, but host HTTP /readyz on127.0.0.1:8025 is unavailable (3s bound) and

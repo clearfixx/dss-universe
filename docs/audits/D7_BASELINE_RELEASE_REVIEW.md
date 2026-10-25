@@ -1,9 +1,32 @@
 # D7 — Baseline release review
 
 Date: 2026-10-22. Updated: 2026-10-25. Branch: `debt/d7-release-gate`.
-Current accepted baseline: `746d981c2657570ff2ae2f26c1bb38a365930b2e`.
+Current accepted baseline: `0bfbe2b5635391465b85f7e454c91064b238046c`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
+
+## Mail readiness acceptance and current candidates
+
+Owner accepted DEBT-013 PR91 exact head `a881a1e`, merged as `0bfbe2b`.
+Its CI5/5 includes actual Mailpit configuration regressions; local full gate
+exit0, strict E2E610/610 and Web14/14 without retries. Eight historical SQLite
+databases were preserved and integrity-checked; the one historical message was
+restored through an isolated Mailpit instance before operational recovery.
+Host SMTP2525, HTTP18025, synthetic delivery and persistence across restart were
+verified. Primary API/Worker local SMTP fields agree; PostgreSQL/Redis were not
+restarted. Earlier host-readiness failures below remain historical, not current
+Mailpit failures. Preserve ignored mailbox backup copies; they are not Git assets.
+
+DEBT-066 PR89 `b770e45` includes accepted PR81 and passed CI5/5 and local full
+gate0, E2E633/633 and Web14/14. Owner acceptance was requested and is still pending;
+it does not yet include the newly accepted Mailpit baseline. Do not treat older
+head proofs as verification of a future integration head.
+
+Owner approved DEBT-007 design/characterization only. PR92 `a69f9cf` contains
+tests and a runtime-options inventory, not automatic gamification dispatch.
+Its full local gate remains active. Runtime assembly and historical-event policy
+require separate approval; no retroactive award or Phase8 acceptance is implied.
+None of these checkpoints accepts D7 or starts the stack audit/Phase11.
 
 ## Accepted integration checkpoint — 2026-10-25, 19:20 UTC
 
