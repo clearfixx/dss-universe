@@ -19,7 +19,8 @@ Accepted source baseline: `746d981`.
 ## Intended boundary
 
 Keep container SMTP1025 and HTTP8025 unchanged. Publish SMTP on loopback2525
-and mailbox UI on loopback18025, with explicit configurable host-port defaults.
+and mailbox UI on loopback18025, with explicit Compose mappings. Custom topology
+uses a Compose override plus matching consumer env values, not silent defaults.
 API and Worker run on the host and must use the same MAIL_HOST/MAIL_PORT facts;
 container-internal addressing must not be confused with the host mapping.
 No application mail-provider behavior, credentials, product UI or dependency
