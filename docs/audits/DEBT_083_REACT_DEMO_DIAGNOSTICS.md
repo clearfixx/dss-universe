@@ -78,11 +78,35 @@ Unchanged-scenario log SHA256:
 The owned diagnostic server was stopped after this observation. Instrumentation
 can perturb timing; this evidence neither proves a fix nor excludes a race.
 
+## First-failure evidence correction
+
+The accepted configuration used `trace: on-first-retry` together with zero
+retries. The mandatory Web job also uploaded no Playwright results. Thus the
+first failure could not leave a CI trace artifact for diagnosis.
+
+This package now uses `retain-on-failure` and `screenshot: only-on-failure` and
+uploads `apps/web/test-results` with `if: always()` and three-day retention.
+Only the existing guest smoke suite runs; no secrets or authenticated test
+sessions are added. Trace recording itself may affect timing. This corrects
+evidence collection, not the React timing defect. Retries, worker count, smoke
+command, assertions, application files and timeouts remain unchanged.
+
+The added actual-config/workflow regression failed before correction (4/5
+policy tests passed) and all five pass afterwards. An isolated synthetic test
+then intentionally failed exactly once, with retries zero and no application
+server. Its results contained `trace.zip` (9903 bytes), a screenshot (6196 bytes)
+and error context. This is successful verification of failure recording, not
+an application failure or a passing full smoke suite. Harness/results:
+`node_modules/.cache/debt083-evidence-fixture/`; retained log:
+`TEMP/dss-debt083-evidence-fixture.log`.
+
 ## Next evidence required
 
 Capture timer scheduling, firing and cancellation together with readiness and
 the cancellation stack in a bounded diagnostic observation. Preserve failures
 and distinguish instrumentation from ordinary browser behavior. Do not rerun
 CI to obtain a green result, increase timeouts, add sleeps, or claim a fix from
-this single passing observation. No test correction, full quality gate, PR or
-acceptance is claimed at this checkpoint.
+these passing observations. No synchronization correction, full quality gate or
+acceptance is claimed at this checkpoint. Run the normal full gate on this
+evidence-collection change and preserve any first failure. A green run still
+does not close DEBT-083 or authorize merging the red PR #81.

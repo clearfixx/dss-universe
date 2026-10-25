@@ -1,3 +1,27 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Web verification infrastructure
+ * 📄 File: apps/web/playwright.config.ts
+ *
+ * 🎯 Purpose:
+ * Defines browser smoke execution and retains evidence of the first failure.
+ *
+ * 🧠 Responsibilities:
+ * • configure the Chromium project and local test server;
+ * • prohibit retries while preserving failure diagnostics;
+ * • keep application behavior outside test infrastructure.
+ *
+ * 🏗️ Architecture:
+ * Test-only Playwright configuration; not imported by application code.
+ *
+ * ⚠️ Important:
+ * Diagnostic recording must not turn a failed attempt into a passing retry.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
@@ -8,7 +32,8 @@ export default defineConfig({
   reporter: process.env.CI ? "github" : "list",
   use: {
     baseURL: "http://127.0.0.1:3100",
-    trace: "on-first-retry",
+    trace: "retain-on-failure",
+    screenshot: "only-on-failure",
   },
   projects: [
     {

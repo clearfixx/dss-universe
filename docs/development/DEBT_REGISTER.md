@@ -1603,6 +1603,10 @@ instrumented observation passed; neither resolves the retained CI failure.
 The instrumented search began before native visible delivery and completed all
 four timers without cancellation. Missing readiness is not yet a proven cause.
 No test synchronization correction or application change is implemented.
+First-failure trace/screenshot retention and mandatory CI artifact upload are
+implemented as diagnostic infrastructure only; five policy regressions and one
+intentionally failing isolated fixture verify this collection path. Full gate
+and CI verification remain pending; the original defect remains open.
 Preserve searching/answer/restart/error assertions and existing timeouts; a
 runtime cause belongs to DEBT-081 with separate correction approval. See
 [diagnostic evidence](../audits/DEBT_083_REACT_DEMO_DIAGNOSTICS.md).
