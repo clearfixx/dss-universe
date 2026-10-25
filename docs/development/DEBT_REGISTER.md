@@ -1606,3 +1606,17 @@ reports high0/critical0, moderate17/low2. These are scoped results, not closure 
 all dependency risk. Full quality/build/CI and owner acceptance remain open.
 The existing Apollo Playground server4-vs-server5 peer warning is unchanged.
 See [package evidence](../audits/DEBT_016_DEPENDENCY_SECURITY.md).
+
+### DEBT-082 — Shared Editor omitted by full coverage mode (Medium, ACCEPTED package; verification open)
+
+Date: 2026-10-25. Actual Turbo graphs and all ten app/package manifests confirm
+Editor has executable test but NONEXISTENT test:cov. Its three specs (23 tests)
+are omitted by the existing coverage-mode runner. Jobs has no own tests and is
+not a second omitted suite. This is a verification gap, not a proved runtime bug.
+
+Owner approved a separate correction with complete workspace inventory and
+fail-closed regressions. Branch debt/debt-082-workspace-test-coverage adds Editor
+V8 coverage using the existing provider version, actual task-plan preflight and
+real runner rejection tests. New regressions12/12 and Editor coverage23/23 pass;
+full quality/CI and acceptance remain open. No runtime/UI/assertion changes.
+See [scope and evidence](../audits/DEBT_082_WORKSPACE_COVERAGE.md).
