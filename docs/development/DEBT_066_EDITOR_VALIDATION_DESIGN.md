@@ -210,6 +210,34 @@ Actual gate effects, not mock-only HTTP assertions, are required for acceptance.
 
 ## Delivery
 
+### Approved local transport correction — 2026-10-25
+
+Owner approved adding `statusCode: 400` to EditorService's existing structured
+validation error. Only that local error response changes: the installed adapter
+can now map it to `BAD_USER_INPUT` with `extensions.statusCode: 400`. HTTP200,
+successful responses, structured validation errors and the global formatter
+remain unchanged. The previously inherited unsupported-node characterization
+now asserts this approved contract; the strong malformed/depth HTTP assertions
+remain intact. This supersedes the pending-decision statements above without
+erasing their observed failures.
+
+After switching from D7, the first diagnostic unit run used D7's older generated
+shared dist and therefore is not an error-mapping-only red proof. Rebuilding
+the current shared Editor removes that stale-artifact confounder: seven cases
+then fail specifically on missing response.statusCode, while two valid/size
+controls pass. No test retries, timeout increase or runtime workaround is used.
+Full corrected verification, CI and owner acceptance remain required.
+
+Corrected targeted verification now passes: shared65/65, all Editor API units
+46/46 in8 suites, and the complete HTTP/host suite23/23 with zero pending/todo.
+That suite retains exact error extensions, no internal stack disclosure, unchanged
+host counts/draft fields and the valid depth64 preview/delivery/create/save
+controls. JSON `node_modules/.cache/debt066-corrected-http.json`, SHA256
+`52AE5E20E0205B253CAA30FD99837F2ACEBC0A0F14BA82097854831AC2F9D23F`.
+Targeted formatting and lint pass; this is not the consolidated gate or CI.
+The installed Next generator's H2 heading is synchronized in its generated
+AGENTS block only, avoiding known build/dev documentation drift; no UI changes.
+
 Implementation receives its own branch/commit/PR after depth approval and
 compatibility assessment. Apply File Passport to materially touched/new source.
 Run changed format, full lint/types/tests/coverage, Prisma validation/migrations,

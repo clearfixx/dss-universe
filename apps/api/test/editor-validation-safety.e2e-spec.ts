@@ -186,7 +186,7 @@ describe('Editor validation HTTP and persistence safety (e2e)', () => {
     ]);
   }
 
-  it('characterizes the inherited unsupported-node error mapping independently of new safety cases', async () => {
+  it('maps an unsupported node to the approved controlled input error', async () => {
     const json = documentWith({ type: 'html' });
     let caught: unknown;
     try {
@@ -196,18 +196,15 @@ describe('Editor validation HTTP and persistence safety (e2e)', () => {
     }
     expect(caught).toBeInstanceOf(BadRequestException);
     expect((caught as BadRequestException).getStatus()).toBe(400);
-    expect((caught as BadRequestException).getResponse()).not.toHaveProperty(
-      'statusCode',
-    );
+    expect((caught as BadRequestException).getResponse()).toMatchObject({
+      statusCode: 400,
+      message: 'Editor document validation failed.',
+    });
     const body = await graphql(
       'query($input:PreviewEditorDocumentInput!){previewEditorDocument(input:$input){canonicalJson}}',
       { input: { documentJson: json } },
     );
-    expect(body.errors![0].message).toBe('Editor document validation failed.');
-    // Characterization, not acceptance: this is the compatibility decision blocking the new assertions.
-    expect(body.errors![0].extensions).toEqual({
-      code: 'INTERNAL_SERVER_ERROR',
-    });
+    denied(body);
   });
 
   it.each(invalidDocuments)(

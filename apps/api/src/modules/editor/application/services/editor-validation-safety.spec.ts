@@ -102,6 +102,7 @@ describe('Editor API unsafe JSON boundary', () => {
       const exception = caught as BadRequestException;
       expect(exception.getStatus()).toBe(400);
       expect(exception.getResponse()).toMatchObject({
+        statusCode: 400,
         message: 'Editor document validation failed.',
         errors: [{ code }],
       });
