@@ -75,6 +75,16 @@ seven have zero mailbox rows. Thus the empty active API mailbox must not be used
 to justify deleting historical storage. Message bodies, subjects and recipients
 were not selected. Restore-through-Mailpit verification remains open.
 
+Restore verification subsequently succeeds using another copy and the installed
+image `sha256:74d609a42ec279aa63c6b4622a6fa9b5408d1ad5b1d76a1c4be40a265ce0863d`.
+Isolated container `dss-mailpit-restore-probe` has network mode `none` and no
+published ports. Its API returns total1/unread1 from the historical database;
+no message content is emitted. The probe is stopped afterward and retained for
+recovery, not removed. Original Mailpit remains running/healthy. Backup,
+verification and restore working copies remain separate and ignored by Git.
+This proves this one historical mailbox can be read by Mailpit, not host SMTP
+readiness or application delivery. Those acceptance steps remain open.
+
 No Compose/env edit, container stop/recreate, external mail or installation has
 been performed. Host readiness remains open. No Docker/WSL root cause is asserted.
 This separate package does not accept D7 or start the stack audit.
