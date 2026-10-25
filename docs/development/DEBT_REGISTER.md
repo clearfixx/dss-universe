@@ -2,7 +2,7 @@
 
 > Status: Active
 >
-> Updated: 2026-10-24
+> Updated: 2026-10-25
 
 ## Purpose
 
@@ -31,7 +31,7 @@ and actual Playwright config policy tests pass4/4. Full quality/CI and acceptanc
 remain open; no runtime/UI correction is implied. See
 [DEBT-080 evidence](../audits/DEBT_080_SMOKE_READINESS.md).
 
-### DEBT-081 — Early demo interaction can lose its timer during dev passive cleanup (Medium, ACCEPTED research only)
+### DEBT-081 — Early demo interaction can lose its timer during dev passive cleanup (Medium, ACCEPTED runtime package; verification open)
 
 Lower-overhead browser instrumentation reproduces2/20 failures: search schedules
 its first550ms timer, then UniverseArrival passive-effect cleanup cancels it
@@ -45,6 +45,18 @@ that research approval. DEBT-080 verifies the settled post-readiness path and
 must not be presented as fixing this early-interaction risk. Production evidence
 and any subsequent correction require their own scoped decision. Diagnostic
 logs/timings and stack frames: [DEBT-080 report](../audits/DEBT_080_SMOKE_READINESS.md).
+
+Owner subsequently approved a separate runtime package on2026-10-25: design,
+production verification, isolated lifecycle correction and deterministic tests,
+without UI changes, blocking early clicks, timeout increases or weaker smoke.
+Branch `debt/debt-081-demo-search-lifecycle` starts from accepted main `a35326a`;
+it does not import pending066/057/082 candidates. One unchanged production React
+flow passes; an actual-component StrictMode early-click regression is red before
+the correction and green afterward. Search timer ownership is now isolated with
+generation/step guards; targeted component/hook suites pass6/6. Corrected
+production, full gate, CI and acceptance remain required. This supersedes the
+research-only authority above, not its retained observations. See
+[design and evidence](DEBT_081_DEMO_SEARCH_LIFECYCLE.md).
 
 ### DEBT-074 — Social privacy owner assertion races asynchronous presence (Medium, ACCEPTED, separate D6 package)
 
