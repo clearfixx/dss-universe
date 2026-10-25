@@ -1593,3 +1593,16 @@ reports high0/critical0, moderate17/low2. These are scoped results, not closure 
 all dependency risk. Full quality/build/CI and owner acceptance remain open.
 The existing Apollo Playground server4-vs-server5 peer warning is unchanged.
 See [package evidence](../audits/DEBT_016_DEPENDENCY_SECURITY.md).
+
+### DEBT-083 — React demo no-retry smoke failure (Medium, ACCEPTED investigation, OPEN)
+
+Owner approved a separate test-only package after diagnosis. PR #81 head
+`1343d5a` failed its React demo answer assertion at the unchanged 5000 ms
+deadline, with retries zero. A fresh local unchanged scenario and a separately
+instrumented observation passed; neither resolves the retained CI failure.
+The instrumented search began before native visible delivery and completed all
+four timers without cancellation. Missing readiness is not yet a proven cause.
+No test synchronization correction or application change is implemented.
+Preserve searching/answer/restart/error assertions and existing timeouts; a
+runtime cause belongs to DEBT-081 with separate correction approval. See
+[diagnostic evidence](../audits/DEBT_083_REACT_DEMO_DIAGNOSTICS.md).
