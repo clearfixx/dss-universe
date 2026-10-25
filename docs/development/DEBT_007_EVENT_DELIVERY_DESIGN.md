@@ -131,6 +131,21 @@ without starting HTTP listeners or unrelated schedulers. No broad service is
 exported merely to make this candidate convenient. Existing Activity processing
 stays in its original process/queue and retains v1 identity/history.
 
+Provider inventory shows current Points/Levels/Achievements modules register
+GraphQL resolvers together with application/persistence. Points exports only
+its balance-reader token; Levels and Achievements export no business services.
+These intentional boundaries must not be undone to bootstrap a consumer.
+`app.get(Service)` in an AppModule test bypasses neither Nest assembly nor the
+architectural public contract; it is test instrumentation, not the proposed API.
+
+The preferred candidate therefore requires separately reviewed owner runtime
+assembly that exposes only named event-consumption capabilities. Presentation
+may reuse that owned runtime, while the headless root binds recipient-existence
+and balance ports without importing foreign presentation modules. A compile-only
+provider graph and actual context shutdown test must prove there is no resolver
+authorization dependency, HTTP listener or incidental scheduler activation.
+This assembly split is a future implementation scope, not part of current tests.
+
 A second consumer on the same BullMQ queue is not fan-out: it can compete for
 jobs. A proposed separate gamification queue therefore needs explicit dispatcher
 publication to both destinations, stable event IDs per queue, failure recovery
