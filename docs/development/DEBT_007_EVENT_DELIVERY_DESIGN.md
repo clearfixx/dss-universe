@@ -101,6 +101,32 @@ event/rule marker. Points instead checks its consumer marker inside the award
 transaction and writes entry/marker/Audit/Outbox together. Existing DB suites
 must be reconciled with these distinct units before selecting a dispatcher design.
 
+At source `8facfb0`, a new actual-AppModule/private-migrated-schema cohort passes
+2/2, exit0, without pending/todo. Real Points entry/owned marker/Audit/Outbox
+counts all roll back when Outbox append throws, and retry succeeds. In the second
+case a controlled outer processor marker fails after real Points commit; replay
+returns Points DUPLICATE without a second entry/Audit/Outbox. The outer marker
+adapter is a test double; PostgreSQL Points persistence is real. No queue is
+started by this test. JSON SHA256:
+`A3D2DCC39C55D5DD17B22AC1154EEE08C354A3C22216AA10EA00F9AD87E6E7E6`.
+Read-only post-run schema inventory reports zero `api_boundary_%` schemas.
+
+## Runtime assembly decisions still requiring design
+
+The existing Worker is an ESM process with direct PostgreSQL adapters; feature
+application services currently live in the Nest API. Importing entire API modules
+into Worker or copying scoring logic to Worker SQL is not an approved shortcut.
+The design must compare an owner-assembled background consumer runtime against
+explicit internal delivery contracts and their authentication/failure boundaries.
+Any queue fan-out must preserve existing Activity v1 markers/history, avoid
+competing consumers accidentally splitting one event stream, and specify partial
+publish/retry semantics. No queue topology change is implemented here.
+
+Activation also needs an explicit historical-event policy: existing Activity
+markers cannot be treated as gamification completion, while blindly replaying
+all retained events could retroactively award points. Neither automatic backfill
+nor silent historical loss is authorized by this design checkpoint.
+
 No source runtime, queue consumer identity, database schema, scoring formula or
 Phase11 behavior changes in this design checkpoint. Additional characterization
 and full package quality/CI remain open. No broad Phase8 or D7
