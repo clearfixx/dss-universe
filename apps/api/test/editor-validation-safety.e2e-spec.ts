@@ -32,6 +32,7 @@ import { PrismaService } from '../src/core/database';
 import { AuthenticationPresentationService } from '../src/composition/identity/application/authentication-presentation.service';
 import { UserPresenceService } from '../src/modules/users/application/services/user-presence.service';
 import { EditorService } from '../src/modules/editor/application/services/editor.service';
+import { NewsService } from '../src/modules/news/application/services/news.service';
 import { createIsolatedApiSchemaFixture } from './helpers/migrated-api-schema.fixture';
 
 type GraphqlBody = {
@@ -258,6 +259,45 @@ describe('Editor validation HTTP and persistence safety (e2e)', () => {
           },
         }),
       );
+      expect(await counts()).toEqual(before);
+      expect(
+        await prisma.newsArticle.findUniqueOrThrow({
+          where: { id: existingId },
+        }),
+      ).toEqual(article);
+    },
+  );
+
+  it.each(invalidDocuments)(
+    'independent host persistence: rejects %s without changing content or evidence',
+    async (_label, json) => {
+      const news = app.get(NewsService);
+      const before = await counts();
+      const article = await prisma.newsArticle.findUniqueOrThrow({
+        where: { id: existingId },
+      });
+      await expect(
+        news.createDraft({
+          ...newsInput(json),
+          postType: 'STANDARD',
+          visibility: 'PUBLIC',
+          authorId: author.user.id,
+          coverMediaId: null,
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(await counts()).toEqual(before);
+      await expect(
+        news.saveDraft(author.user.id, {
+          ...existingInput,
+          postType: 'STANDARD',
+          visibility: 'PUBLIC',
+          documentJson: json,
+          articleId: existingId,
+          baseVersion: 1,
+          changeSummary: null,
+          coverMediaId: null,
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
       expect(await counts()).toEqual(before);
       expect(
         await prisma.newsArticle.findUniqueOrThrow({

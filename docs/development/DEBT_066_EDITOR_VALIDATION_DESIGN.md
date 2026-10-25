@@ -177,6 +177,24 @@ Domain exception refactor is proposed here. Until approval, production API
 service code and the strong failing HTTP assertions remain unchanged. No full
 quality gate or acceptance is claimed.
 
+### Independent persistence regressions while transport approval is pending
+
+Five additional cases call the actual NewsService create/save commands with the
+same malformed/depth65 documents in the owned migrated AppModule schema. Each
+asserts BadRequestException, unchanged News/revision/comment/interaction/media
+reference/Audit/Outbox counts after both rejected commands, and exact unchanged
+existing draft fields. These cases pass5/5. Log:
+`TEMP/dss-debt066-host-persistence.log`. The explicit filtered run skips18 other
+cases; it is not a complete green HTTP suite and does not replace its failing
+transport assertions. Actual GraphQL authentication remains exercised by fixture
+setup; the direct command checks make no claim about transport error codes.
+
+All Editor-owned API unit suites now pass46/46 in8 suites, including real shared
+validation and mocked downstream IO only. Targeted lint passes. The inherited
+GraphQL mapping decision is still pending; production EditorService and global
+formatter are unchanged. No skips were added to source tests, no assertions were
+weakened and no full gate/CI acceptance is claimed.
+
 | Layer              | Evidence required                                                                                                                                             |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Shared             | null/primitive/array node; object/string/null optional containers; non-record marks/attrs; no uncaught runtime error                                          |
