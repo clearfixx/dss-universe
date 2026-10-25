@@ -68,6 +68,13 @@ evidence or commit mailbox data. The original container and files are retained.
 After unpause the container is running/not paused; its transient unhealthy
 observation subsequently returns healthy. No other container was paused.
 
+A separate verification copy passes read-only SQLite `integrity_check` for all
+eight databases (each returns only `ok`). Aggregate-only counts find one
+historical database with one mailbox row and one mailbox_data row; the other
+seven have zero mailbox rows. Thus the empty active API mailbox must not be used
+to justify deleting historical storage. Message bodies, subjects and recipients
+were not selected. Restore-through-Mailpit verification remains open.
+
 No Compose/env edit, container stop/recreate, external mail or installation has
 been performed. Host readiness remains open. No Docker/WSL root cause is asserted.
 This separate package does not accept D7 or start the stack audit.
