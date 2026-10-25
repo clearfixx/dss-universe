@@ -59,7 +59,15 @@ SQLite files do not prove they contain messages, and this active-mailbox count
 does not certify older database files are empty. No existing content was printed.
 Preservation of the older container files remains required before recreation.
 
-No Compose/env edit, container stop/recreate, mailbox copy/export, external mail
-or service installation has been performed by this checkpoint. Readiness remains
-open. No Docker/WSL root cause is asserted. Existing D7 findings remain historical
-evidence; this separate package does not accept D7 or start the stack audit.
+A scoped pause/copy/unpause preserved `/tmp` as a frozen set in ignored local
+`node_modules/.cache/mailpit-preservation-20261025-01`: 24 files, 3,900,168 bytes,
+eight SQLite databases plus eight WAL and eight SHM files. SHA256 reading of all
+24 files succeeds. This proves capture/readability, not SQLite integrity or a
+successful restored mailbox; those checks remain required. Do not delete this
+evidence or commit mailbox data. The original container and files are retained.
+After unpause the container is running/not paused; its transient unhealthy
+observation subsequently returns healthy. No other container was paused.
+
+No Compose/env edit, container stop/recreate, external mail or installation has
+been performed. Host readiness remains open. No Docker/WSL root cause is asserted.
+This separate package does not accept D7 or start the stack audit.
