@@ -1605,8 +1605,26 @@ four timers without cancellation. Missing readiness is not yet a proven cause.
 No test synchronization correction or application change is implemented.
 First-failure trace/screenshot retention and mandatory CI artifact upload are
 implemented as diagnostic infrastructure only; five policy regressions and one
-intentionally failing isolated fixture verify this collection path. Full gate
-and CI verification remain pending; the original defect remains open.
+intentionally failing isolated fixture verify this collection path. Exact head
+77ea28d has green CI, but its completed local full gate is red on the original
+React smoke (13/14 Web, API E2E593/593). Trace/screenshot are retained. A
+controlled early-click experiment separately proves the DEBT-081 cleanup
+mechanism; it does not establish the exact original CI schedule. The original
+defect and acceptance remain open.
 Preserve searching/answer/restart/error assertions and existing timeouts; a
 runtime cause belongs to DEBT-081 with separate correction approval. See
 [diagnostic evidence](../audits/DEBT_083_REACT_DEMO_DIAGNOSTICS.md).
+
+### DEBT-081 — Controlled React early-click research checkpoint (2026-10-25)
+
+The approved research, without runtime correction, now observes a programmatic
+React-example click injected during the actual mount effect. Its native 550 ms
+timer is cleared about 2.2 ms later by `UniverseArrival.useEffect` passive cleanup;
+no callback fires and searching remains at step zero beyond 5000 ms. No page
+error occurred. This is a controlled development-runtime mechanism, not proof
+that every natural smoke failure has this cause, nor proof of production impact.
+Two earlier ordinary production Academy observations passed and do not answer
+this React controlled schedule. No runtime/UI fix is authorized or implemented.
+Agree lifecycle semantics and deterministic regression design separately; do
+not hide the early-interaction case with a test-only readiness wait. Evidence:
+[DEBT-083 diagnostic timeline](../audits/DEBT_083_REACT_DEMO_DIAGNOSTICS.md).
