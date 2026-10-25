@@ -16,6 +16,31 @@ fallback or caching. This selected unit cohort is not a full quality gate,
 HTTP/migrated-DB verification or automatic producer-to-Worker delivery proof.
 It does not close DEBT-007 or, on its own, accept DEBT-003/004.
 
+At source head `e7a57b7`, the corresponding existing migrated DB/HTTP cohort
+passes **24/24 in three suites**, exit0, zero pending/todo: content boundaries
+14, gamification boundaries4 and recipient transactions6. The fixture applies
+the migration directory in order to a generated owned schema on disposable
+DB5434; it does not clone dev data or disable immutable-history triggers.
+Read-only post-run observation finds zero `api_boundary_%` schemas remaining.
+Retained JSON: `node_modules/.cache/d7-composition-http-e7a57b7.json`, SHA256
+`D2BD41700C315A9B950416629FF7DC1E06F551C55ED4E3E79F5FA04103B2E5DF`.
+The recipient transaction tests intentionally inject a Users read failure and
+assert rollback; emitted transaction-closed Prisma diagnostics during those
+cases are not ignored failed assertions. Synthetic fixture accounts and direct
+event invocation are not login or Worker queue delivery evidence.
+
+A read-only TypeScript AST inventory at the same head covers **518 tracked
+feature files**, excluding infrastructure, module assembly, declarations and
+tests. There are zero parse errors and zero direct static imports, exports,
+import-types or external import-equals targeting Prisma or core/database.
+This includes legacy flat feature paths, but does not certify dynamic loading,
+arbitrary aliases, transitive types or every persistence-ownership behavior.
+The four gamification services consume owner-local contracts; Reputation's
+account evidence is only active/createdAt, its block decision is boolean and
+profile existence is ID-to-boolean. Root content presentation registers owner
+capabilities without making Editor and Content Access import one another.
+DEBT-003/004 remain under D7 reconciliation rather than blanket release closure.
+
 This checkpoint supersedes mutable status statements in the historical sections
 below, not their dated observations or retained failures. D7 integrates accepted
 main by normal merge; its authored net diff against that main remains documentation
