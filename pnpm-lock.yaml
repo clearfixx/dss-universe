@@ -466,6 +466,9 @@ importers:
       '@dss/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
+      '@vitest/coverage-v8':
+        specifier: ^4.1.11
+        version: 4.1.11(vitest@4.1.11)
       eslint:
         specifier: ^9.39.5
         version: 9.39.5(jiti@2.7.0)
