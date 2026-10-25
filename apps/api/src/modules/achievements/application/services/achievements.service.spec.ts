@@ -6,7 +6,7 @@
  * 📄 File: apps/api/src/modules/achievements/application/services/achievements.service.spec.ts
  *
  * 🎯 Purpose:
- * Verifies definition, rule, event routing, manual awards, and rollback policy.
+ * Verifies definition, rule, event routing, manual awards, rollback and replay boundaries.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -124,6 +124,35 @@ describe('AchievementsService', () => {
     repository.revoke.mockResolvedValue({ status: 'OK', award });
     repository.rollbackSource.mockResolvedValue([]);
     users.exists.mockResolvedValue(true);
+  });
+
+  it('revisits earlier rules after a later rule fails and delegates duplicate decisions', async () => {
+    const secondRule = { ...rule, id: 'rule-2' };
+    repository.matchingRules.mockResolvedValue([rule, secondRule]);
+    const consume = jest.spyOn(repository, 'consume');
+    consume
+      .mockResolvedValueOnce({ ruleId: rule.id, status: 'AWARDED', award })
+      .mockRejectedValueOnce(new Error('synthetic second rule failure'))
+      .mockResolvedValueOnce({ ruleId: rule.id, status: 'DUPLICATE', award: null })
+      .mockResolvedValueOnce({ ruleId: secondRule.id, status: 'AWARDED', award });
+
+    await expect(service.consume(event())).rejects.toThrow(
+      'synthetic second rule failure',
+    );
+    expect(consume.mock.calls.map(([matched]) => matched.id)).toEqual([
+      'rule-1',
+      'rule-2',
+    ]);
+    await expect(service.consume(event())).resolves.toMatchObject([
+      { ruleId: 'rule-1', status: 'DUPLICATE' },
+      { ruleId: 'rule-2', status: 'AWARDED' },
+    ]);
+    expect(consume.mock.calls.map(([matched]) => matched.id)).toEqual([
+      'rule-1',
+      'rule-2',
+      'rule-1',
+      'rule-2',
+    ]);
   });
 
   it('normalizes Ukrainian definition metadata without damaging its slug', async () => {

@@ -73,6 +73,16 @@ typecheck pass. No real queue, PostgreSQL schedule or gamification ledger runs i
 these tests, so they do not prove duplicate domain awards. Domain-level dedup,
 partial multi-rule rollback and the second delivery hop still need evidence.
 
+The existing Achievements service suite now includes a controlled two-rule
+failure/retry case and passes9/9. After rule2 rejects, retry revisits rule1 and
+delegates its DUPLICATE decision to the repository, then proceeds to rule2.
+This actual-service/repository-double test characterizes orchestration only;
+it does not establish that the first award committed in PostgreSQL. Source
+inspection places each repository.consume in its own transaction and scoped
+event/rule marker. Points instead checks its consumer marker inside the award
+transaction and writes entry/marker/Audit/Outbox together. Existing DB suites
+must be reconciled with these distinct units before selecting a dispatcher design.
+
 No source runtime, queue consumer identity, database schema, scoring formula or
 Phase11 behavior changes in this design checkpoint. Additional characterization
 and full package quality/CI remain open. No broad Phase8 or D7
