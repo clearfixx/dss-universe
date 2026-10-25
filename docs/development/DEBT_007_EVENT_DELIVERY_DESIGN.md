@@ -17,6 +17,33 @@ Branch: `debt/debt-007-event-delivery-design`, accepted baseline `746d981`.
 This is a bounded initial inventory, not a complete producer catalog or a newly
 reproduced runtime defect. Existing DEBT-007 remains open; no formulas change.
 
+## Producer and recipient checkpoint
+
+| Producer evidence                                 | Envelope category | Recipient/payload facts                                              | Current delivery limit                                                                           |
+| ------------------------------------------------- | ----------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| News workflow `news.article.${eventStem}.v1`      | domain            | authorId and actorId are distinct; stem derives from workflow action | Dispatcher does not filter category; gamification policy matching still needs explicit inventory |
+| Comment writer `comments.comment.${action}.v1`    | integration       | authorId, commentId, interactionTargetId, parentId                   | Do not infer that edit/delete should award the creation rule                                     |
+| Reputation writer `reputation.direct.changed.v1`  | integration       | recipientId, signed value; actorId in envelope                       | Recipient is not the voter; configured value filters matter                                      |
+| Reputation writer `reputation.direct.reversed.v1` | integration       | recipientId, value, reversesEntryId                                  | Points uses the explicit reversal branch, not a new award                                        |
+| Points repository awarded/reversed events         | integration       | userId, ruleKey, points, optional source coordinates                 | Levels consumes these names, requiring another Outbox/Worker hop                                 |
+
+`OutboxDispatcherService` currently selects due PENDING rows without a category
+predicate and forwards eventCategory as job.category. Therefore News `domain`
+category alone does not explain absent gamification delivery; the missing
+gamification handler wiring is a separate observed boundary. No category rewrite
+or new event naming convention is authorized by this finding.
+
+Points recipient precedence is userId, then authorId, then recipientId. Its
+matchingRules uses eventName and optional integer payload.value. Achievements
+uses each configured rule's recipientPayloadKey and optional source rollback
+coordinates. These are current semantics to characterize, not permission to
+silently normalize all recipients to actorId.
+
+The bounded Prisma seed-source search found no CommunityPointRule or
+AchievementRule setup. This is not evidence that a running database has no
+configured rules; database configuration inventory remains open and must not
+read user content or mutate current rules.
+
 ## Required design outputs
 
 1. Enumerate actual source event names/versions, payload ownership, transactional
