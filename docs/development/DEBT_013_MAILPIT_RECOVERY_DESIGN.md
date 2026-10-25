@@ -46,6 +46,19 @@ upgrade belongs to this package.
 
 ## Current result and limits
 
+Installed CLI help confirms `dump --http` and `ingest --smtp-addr` support.
+The [official export guide](https://mailpit.axllent.org/docs/usage/import-export/)
+documents API export for active instances; exported messages do not preserve
+every mailbox database attribute. The
+[storage guide](https://mailpit.axllent.org/docs/configuration/email-storage/)
+distinguishes default temporary databases from explicit persistent storage.
+
+A bounded internal API read returned total0/unread0. The attempted API dump
+returned exit1, `no messages found`; this is not a successful backup. Existing
+SQLite files do not prove they contain messages, and this active-mailbox count
+does not certify older database files are empty. No existing content was printed.
+Preservation of the older container files remains required before recreation.
+
 No Compose/env edit, container stop/recreate, mailbox copy/export, external mail
 or service installation has been performed by this checkpoint. Readiness remains
 open. No Docker/WSL root cause is asserted. Existing D7 findings remain historical
