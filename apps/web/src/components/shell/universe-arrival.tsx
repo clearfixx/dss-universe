@@ -1,3 +1,27 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Guest landing presentation
+ * 📄 File: apps/web/src/components/shell/universe-arrival.tsx
+ *
+ * 🎯 Purpose:
+ * Presents the existing arrival scene and local illustrative search experience.
+ *
+ * 🧠 Responsibilities:
+ * • owns arrival animation, query matching and prewritten answer presentation;
+ * • delegates search progression to its independent lifecycle owner;
+ * • preserves cancellation, source previews and keyboard focus behavior.
+ *
+ * 🏗️ Architecture:
+ * Client presentation; demo content is not a real API or Intelligence response.
+ *
+ * ⚠️ Important:
+ * Arrival cleanup must not cancel a search it does not own.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -7,6 +31,7 @@ import { ArrowRight, Orbit, RotateCcw, Search, Sparkles } from "lucide-react";
 import { CoreSphere } from "./core-sphere";
 import styles from "./universe-arrival.module.css";
 import { useStationDemo } from "./use-station-demo";
+import { useDemoSearchSequence } from "./use-demo-search-sequence";
 import { demoSources } from "./demo-sources";
 
 const visitKey = "dss:arrival:v1";
@@ -25,16 +50,15 @@ const answers = [
 export function UniverseArrival() {
   const root = useRef<HTMLDivElement>(null);
   const { tick, paused, setPaused, event } = useStationDemo(root);
-  const [stage, setStage] = useState<"idle" | "searching" | "answer">("idle");
+  const { stage, searchStep, startSearch, resetSearch } =
+    useDemoSearchSequence();
   const [query, setQuery] = useState("");
   const [answer, setAnswer] = useState(0);
-  const [searchStep, setSearchStep] = useState(0);
   const [unsupported, setUnsupported] = useState(false);
   const [selectedSource, setSelectedSource] = useState<number | null>(null);
   const consoleRef = useRef<HTMLDivElement>(null);
   const queryRef = useRef<HTMLInputElement>(null);
   const constructionRef = useRef<SVGSVGElement>(null);
-  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const element = root.current;
@@ -183,7 +207,6 @@ export function UniverseArrival() {
     return () => {
       clearTimeout(timer);
       cancelAnimationFrame(counterFrame);
-      if (searchTimer.current) clearTimeout(searchTimer.current);
       element.removeEventListener("replay-arrival", replay);
       element.removeEventListener("skip-arrival", skipArrival);
       element.removeEventListener("focusin", revealFocusedControl);
@@ -196,7 +219,6 @@ export function UniverseArrival() {
 
   function search(value: string) {
     if (!value.trim()) return;
-    if (searchTimer.current) clearTimeout(searchTimer.current);
     setQuery(value);
     setSelectedSource(null);
     const match = /react/i.test(value)
@@ -208,23 +230,11 @@ export function UniverseArrival() {
           : -1;
     setUnsupported(match < 0);
     if (match < 0) {
-      setStage("idle");
+      resetSearch();
       return;
     }
     setAnswer(match);
-    setSearchStep(0);
-    setStage("searching");
-    let step = 0;
-    const advance = () => {
-      step += 1;
-      setSearchStep(step);
-      if (step === 4) {
-        setStage("answer");
-        return;
-      }
-      searchTimer.current = setTimeout(advance, 550);
-    };
-    searchTimer.current = setTimeout(advance, 550);
+    startSearch();
   }
 
   return (
@@ -498,8 +508,7 @@ export function UniverseArrival() {
                 <button
                   className={styles.cancelSearch}
                   onClick={() => {
-                    if (searchTimer.current) clearTimeout(searchTimer.current);
-                    setStage("idle");
+                    resetSearch();
                     queryRef.current?.focus();
                   }}
                 >
@@ -543,7 +552,7 @@ export function UniverseArrival() {
                 )}
                 <button
                   onClick={() => {
-                    setStage("idle");
+                    resetSearch();
                     setQuery("");
                     queryRef.current?.focus();
                   }}
