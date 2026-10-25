@@ -17,7 +17,7 @@
  * Test-only AppModule over an owned migrated schema; no production implementation change.
  *
  * ⚠️ Important:
- * The remaining tombstone error expectation documents DEBT-057, not desired behavior.
+ * Tombstone transport follows the owner-approved nullable DEBT-057 contract.
  * Isolation probes establish DB behavior, not a migrated production read contract.
  *
  * 🚀 Build. Share. Grow.
@@ -190,7 +190,7 @@ describe('News delivery pre-transfer characterization (e2e)', () => {
     expect(response.data?.fullNews?.id).toBe(post.id);
     expect(response.data?.newsComments?.items[0].id).toBe(comment.id);
   });
-  it('characterizes the News GraphQL error for a valid author-tombstoned comment without disclosing its old body', async () => {
+  it('returns a nullable author-tombstoned comment without disclosing its old body', async () => {
     const post = await article();
     const marker = 'D4-SYNTHETIC-TOMBSTONE-' + randomUUID();
     const comment = await app
@@ -205,13 +205,14 @@ describe('News delivery pre-transfer characterization (e2e)', () => {
     expect(stored.deletedAt).not.toBeNull();
     expect(stored.body).toBeNull();
     const response = await guest(commentsQuery, post);
-    expect(
-      response.errors?.some(({ message }) =>
-        message.includes(
-          'Cannot return null for non-nullable field NewsComment.body',
-        ),
-      ),
-    ).toBe(true);
+    expect(response.errors).toBeUndefined();
+    expect(response.data?.fullNews?.id).toBe(post.id);
+    expect(response.data?.newsComments).toEqual({
+      total: 1,
+      items: [
+        { id: comment.id, body: null, documentJson: null, isDeleted: true },
+      ],
+    });
     expect(JSON.stringify(response)).not.toContain(marker);
   });
   it.each([
