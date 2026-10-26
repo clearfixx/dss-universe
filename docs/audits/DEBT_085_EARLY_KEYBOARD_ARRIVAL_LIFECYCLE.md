@@ -60,3 +60,13 @@ two workers,32.8s. Historical traces remain separate and unchanged.
 Fresh post-correction production verification and full quality gate remain
 pending. This is not acceptance or a claim that every historical failure shares
 the same cause. DEBT-084 diagnostic evidence is not relabeled as a fix.
+
+## Post-correction production checkpoint
+
+Fresh Web build passes. The same controlled scenario against isolated next start
+port3194 now passes1/1 with real cancellation and restored input focus, retries0.
+Actual trace payload: receivesPointer true, arrival ready, clipPath none. Trace
+SHA256 `69D0897AAD778B56DC39351BAA771AA60AAD43DAD2A56D2EF400D59C49E3F8A8`.
+Targeted ESLint and Web typecheck pass. Original pre-fix dev and production traces
+remain preserved; no cache or failure artifact was deleted. Full quality gate,
+CI and owner acceptance are still pending.
