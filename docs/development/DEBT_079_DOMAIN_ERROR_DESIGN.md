@@ -77,3 +77,20 @@ extensions `{code: UNAUTHENTICATED, statusCode: 401}`.
 No Auth service is mocked in these two cases. They exercise absent synthetic
 accounts; they do not establish rate-limit, two-factor, conflict, Users or Media
 transport behavior, production redaction, or full quality-gate acceptance.
+
+### Locked-account transport checkpoint
+
+The next real-AppModule fixture run passes 17/17. A newly registered synthetic
+account receives an explicit lock expiry of 2099-01-01 in its owned schema;
+correct-password login then returns REST429 with exactly `{statusCode: 429,
+message: "Login is temporarily unavailable. Please try again later."}` and no
+Retry-After header. GraphQL returns HTTP200, null data and one same-message error
+with exactly `{code: INTERNAL_SERVER_ERROR}` (no statusCode extension).
+Both requests preserve the lock and leave loginFailedAttempts at zero.
+
+This confirms that constructor string-vs-object shape matters at the current
+Apollo boundary: the formatter's 429 lookup alone does not prove RATE_LIMITED
+is emitted. Future correction must explicitly decide whether to preserve this
+inherited GraphQL contract or approve a targeted mapping change. This package
+records current behavior only; it does not silently fix it, prove production
+redaction, or characterize Redis-triggered rate limits.

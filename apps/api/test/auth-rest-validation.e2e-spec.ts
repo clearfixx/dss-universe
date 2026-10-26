@@ -140,6 +140,53 @@ describe('REST authentication validation (e2e)', () => {
       .expect(401);
   });
 
+  it('characterizes a locked account through real REST and GraphQL', async () => {
+    const input = credentials();
+    const registered = await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send(input)
+      .expect(201);
+    const { user } = registered.body as { user: { id: string } };
+    await fixture.prisma.user.update({
+      where: { id: user.id },
+      data: { loginLockedUntil: new Date('2099-01-01T00:00:00Z') },
+    });
+    const message = 'Login is temporarily unavailable. Please try again later.';
+    const rest = await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email: input.email, password: input.password })
+      .expect(429);
+    expect(rest.body).toEqual({ statusCode: 429, message });
+    expect(rest.headers['retry-after']).toBeUndefined();
+    const graphql = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .send({
+        query: `mutation Login($input: LoginInput!) {
+          login(input: $input) { tokens { accessToken } }
+        }`,
+        variables: { input: { email: input.email, password: input.password } },
+      })
+      .expect(200);
+    const body = graphql.body as {
+      data: unknown;
+      errors: { message: string; extensions: Record<string, unknown> }[];
+    };
+    expect(body.data).toBeNull();
+    expect(body.errors).toHaveLength(1);
+    expect(body.errors[0].message).toBe(message);
+    expect(body.errors[0].extensions).toEqual({
+      code: 'INTERNAL_SERVER_ERROR',
+    });
+    const account = await fixture.prisma.user.findUniqueOrThrow({
+      where: { id: user.id },
+      select: { loginFailedAttempts: true, loginLockedUntil: true },
+    });
+    expect(account).toEqual({
+      loginFailedAttempts: 0,
+      loginLockedUntil: new Date('2099-01-01T00:00:00Z'),
+    });
+  });
+
   it('characterizes invalid credentials through the real REST boundary', async () => {
     const input = credentials();
     const response = await request(app.getHttpServer())
