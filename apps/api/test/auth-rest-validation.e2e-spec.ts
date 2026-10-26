@@ -140,6 +140,46 @@ describe('REST authentication validation (e2e)', () => {
       .expect(401);
   });
 
+  it('characterizes duplicate email through real registration composition', async () => {
+    const input = credentials();
+    await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send(input)
+      .expect(201);
+    const before = await fixture.prisma.user.count();
+    const duplicate = { ...input, username: credentials().username };
+    const rest = await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send(duplicate)
+      .expect(409);
+    expect(rest.body).toEqual({
+      statusCode: 409,
+      message: 'User with this email already exists',
+      error: 'Conflict',
+    });
+    const graphql = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .send({
+        query: `mutation Register($input: RegisterInput!) {
+          register(input: $input) { user { id } }
+        }`,
+        variables: { input: { ...duplicate, displayName: 'Synthetic Pilot' } },
+      })
+      .expect(200);
+    const body = graphql.body as {
+      data: unknown;
+      errors: { message: string; extensions: Record<string, unknown> }[];
+    };
+    expect(body.data).toBeNull();
+    expect(body.errors).toHaveLength(1);
+    expect(body.errors[0].message).toBe('User with this email already exists');
+    expect(body.errors[0].extensions).toEqual({
+      code: 'CONFLICT',
+      statusCode: 409,
+    });
+    expect(await fixture.prisma.user.count()).toBe(before);
+  });
+
   it('characterizes a locked account through real REST and GraphQL', async () => {
     const input = credentials();
     const registered = await request(app.getHttpServer())

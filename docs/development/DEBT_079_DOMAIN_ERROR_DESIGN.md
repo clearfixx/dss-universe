@@ -94,3 +94,13 @@ is emitted. Future correction must explicitly decide whether to preserve this
 inherited GraphQL contract or approve a targeted mapping change. This package
 records current behavior only; it does not silently fix it, prove production
 redaction, or characterize Redis-triggered rate limits.
+
+### Duplicate-email composition checkpoint
+
+The subsequent real-AppModule fixture run passes 18/18. Re-registering an existing
+synthetic email through REST returns exactly statusCode409, message `User with
+this email already exists`, error `Conflict`. The same attempt through GraphQL
+returns HTTP200, null data, one same-message error with exactly extensions
+`{code: CONFLICT, statusCode: 409}`. Username is distinct to avoid testing a
+different uniqueness conflict. Neither rejected attempt adds a user row.
+This covers the pre-existing-email path, not a concurrent unique-constraint race.
