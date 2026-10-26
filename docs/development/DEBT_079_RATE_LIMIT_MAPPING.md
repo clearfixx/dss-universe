@@ -19,7 +19,12 @@ evidence in the design document describes the pre-correction behavior.
 
 ## Verification
 
-Constructor and existing formatter baseline: 14/14 pass. Real HTTP assertions
-were updated to the approved RATE_LIMITED/statusCode429 contract; their execution
-and the full quality gate remain pending until the other checkout's DB gate ends.
-No parallel DB gate or merge has been performed.
+Constructor and existing formatter baseline: 14/14 pass. Targeted ESLint passed.
+After the characterization gate terminated exit0, the real-AppModule Auth suite
+passed 19/19 on disposable DB5434. It confirms the unchanged REST429 body and
+GraphQL HTTP200 with RATE_LIMITED/statusCode429, unchanged public message and
+unchanged lock/counter assertions. No Auth service is mocked.
+
+The owner accepted characterization PR93, merged as `a8c71fa`; this separate
+runtime branch incorporates that main. Its own full quality gate remains pending.
+No concurrent DB gate or runtime-package acceptance/merge is claimed.
