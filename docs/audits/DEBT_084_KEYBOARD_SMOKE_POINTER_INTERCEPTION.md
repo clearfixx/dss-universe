@@ -77,3 +77,23 @@ pre-cancel snapshot the console has animation/clip-path/transform none; center
 hit-target is null (the probe does not scroll), so this does not reproduce hero
 interception. Next evidence must causally distinguish lifecycle readiness and
 viewport/animation hit-testing, rather than accepting this diagnostic pass as fix.
+
+## Controlled early-focus experiment
+
+One distinct experiment focuses the real React-question button at the first
+arrival-storage-read boundary, before the runtime listener is installed. It does
+not change the storage return value, CSS, clock or visibility. A real keyboard
+Enter starts the search without another focus event; the test scrolls the real
+Cancel button into view and observes browser hit-testing without forcing a click.
+
+The diagnostic passes1/1 because it characterizes the failure: arrival playing,
+Cancel present, receivesPointer false, elementFromPoint target Welcome to DSS
+Universe, console clip-path inset(0px 50%), assemble animation and translateY8px.
+Trace SHA256: `AF29F5E65E6B1145D8F8EAA71D3511B664298B26DDBD6E7F4A797A843225AE05`.
+All three diagnostic/test files pass targeted ESLint. This is controlled dev
+runtime evidence, not proof of the original smoke's precise event order, a
+production reproduction or a fix. Verification stops at the broken hit-test.
+
+Owner approved a separate DEBT-085 runtime package, starting with production
+verification and lifecycle design. DEBT-084 itself remains diagnostic/test-only;
+no readiness-only test fix or weakened interaction assertion is justified yet.

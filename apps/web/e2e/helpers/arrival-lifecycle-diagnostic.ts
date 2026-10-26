@@ -15,8 +15,11 @@ import type { Page, TestInfo } from "@playwright/test";
 
 type DiagnosticWindow = Window & { __arrivalDiagnostic?: unknown[] };
 
-export async function installArrivalLifecycleDiagnostic(page: Page) {
-  await page.addInitScript(() => {
+export async function installArrivalLifecycleDiagnostic(
+  page: Page,
+  focusBeforeSetup = false,
+) {
+  await page.addInitScript((earlyFocus) => {
     const events: unknown[] = [];
     (window as DiagnosticWindow).__arrivalDiagnostic = events;
     const record = (event: string, detail?: unknown) => {
@@ -47,8 +50,21 @@ export async function installArrivalLifecycleDiagnostic(page: Page) {
       true,
     );
     const original = Storage.prototype.getItem;
+    let focusedEarly = false;
     Storage.prototype.getItem = function (key: string) {
       const result = original.call(this, key);
+      if (earlyFocus && !focusedEarly && key === "dss:arrival:v1") {
+        const question = Array.from(document.querySelectorAll("button")).find(
+          (node) => node.textContent?.includes("React architecture"),
+        );
+        if (question) {
+          focusedEarly = true;
+          question.focus();
+          record("controlled-focus-before-setup", {
+            focused: document.activeElement === question,
+          });
+        }
+      }
       if (key === "dss:arrival:v1")
         record("arrival-storage-read", { seen: result === "seen" });
       return result;
@@ -72,7 +88,7 @@ export async function installArrivalLifecycleDiagnostic(page: Page) {
       attributeFilter: ["data-arrival"],
       attributeOldValue: true,
     });
-  });
+  }, focusBeforeSetup);
 }
 
 export async function attachArrivalLifecycleDiagnostic(
