@@ -1,6 +1,6 @@
 # DEBT-084 — Keyboard smoke cancellation intercepted by hero
 
-Date: 2026-10-26. Status: OPEN; separate diagnostic/test scope requested.
+Date: 2026-10-26. Status: OPEN; owner approved separate diagnostic/test scope.
 Observed during local PR94 exact head `17ebd01` quality:full.
 
 ## User story and first broken boundary
@@ -40,3 +40,19 @@ force-click, disable hit-testing, add sleeps/retries, increase deadlines or weak
 focus assertions. Runtime/UI correction requires separate approval if indicated.
 The verification skill stops at this confirmed broken boundary; no claim that
 the rest of the user story is verified. No implementation is included here.
+
+## Source-inspection hypothesis — not a reproduced root cause
+
+UniverseArrival renders its root with data-arrival ready before its passive
+effect. That effect reads visit storage and, for a first non-reduced-motion
+visit, writes playing before registering focusin. CSS assigns the console an
+assemble animation while playing. The failing test focuses the brand link,
+asserts ready once, starts search and immediately clicks Cancel search.
+
+An initial SSR-ready observation is therefore not by itself proof that the
+arrival effect and focus listener are installed. A controlled experiment must
+record the order of focus, storage read, playing/ready mutations, search start
+and elementFromPoint at the cancel button. It must distinguish that hypothesis
+from layout/stacking or ordinary animation geometry. No claim that changing the
+test readiness alone fixes this has been made; no click was forced and no
+runtime/UI/CSS was changed.
