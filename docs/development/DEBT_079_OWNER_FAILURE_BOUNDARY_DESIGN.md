@@ -98,3 +98,38 @@ their necessary presentation paths. MediaUploadPolicyException already extends
 Error and remains unchanged unless a concrete regression requires separate scope.
 Actual mapper names/files and exhaustive consumer inventory must be checked in
 the implementation plan. No runtime source has changed in this design package.
+
+## Consumer inventory checkpoint
+
+Bounded static scan of non-test API sources confirms the ten failures are thrown
+by AuthService, LoginAbuseProtectionService, TwoFactorService, UsersService,
+AvatarService, CoverService and MediaAccessService. This is not a dynamic-call
+or whole-repository proof; implementation must also run the existing module and
+composition boundary tests.
+
+- AuthService.enroll and completeRegistration feed root registration. Login and
+  reactivateAccount include abuse checks and two-factor error handling; their
+  private issueAuthResponse can also reject a subject. Preserve the whole awaited
+  use-case boundary rather than mapping only the initial credential lookup.
+- AuthService.refresh already catches failures and throws invalid credentials;
+  root refresh additionally normalizes profile-composition failures. Preserve
+  both existing denial semantics without making a generic rule for other flows.
+- Auth local changeEmail, changePassword and deactivateAccount can reach invalid
+  credentials; changeEmail additionally reaches email conflict. The private
+  requireActiveUserWithPassword path must remain covered by those entry points.
+- TwoFactorService.assertLogin is reached through login/reactivation, whereas
+  disable is reached through TwoFactorResolver. Mapping only root login would
+  miss the local disable mutation. Begin/confirm's pre-existing Nest bad-request
+  errors are not among the ten and must pass through unchanged.
+- Users requireUser feeds profile lookup and update. ProfileCompletionService
+  also calls UsersService.getById: include its resolver route in Users conversion,
+  not just userByUsername/viewer. No cross-owner consumer of getByEmail or
+  getByUsername was found by this bounded static call scan.
+- MediaProfileAssetCommands is assembled from AvatarService/CoverService and
+  consumed by root profile-assets. MediaAccessService.issue is reached through
+  MediaResolver.mediaAccessUrl. Existing NotFoundException for a missing asset
+  or variant is outside the ten and must retain its current behavior.
+
+These indirect paths are why tests must assert mapper placement as well as the
+ten constructor cases. Do not add conversion inside application orchestration
+merely to avoid covering the corresponding presentation operation.
