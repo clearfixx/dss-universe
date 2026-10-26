@@ -270,7 +270,8 @@ describe('REST authentication validation (e2e)', () => {
     expect(body.errors).toHaveLength(1);
     expect(body.errors[0].message).toBe(message);
     expect(body.errors[0].extensions).toEqual({
-      code: 'INTERNAL_SERVER_ERROR',
+      code: 'RATE_LIMITED',
+      statusCode: 429,
     });
     const account = await fixture.prisma.user.findUniqueOrThrow({
       where: { id: user.id },
