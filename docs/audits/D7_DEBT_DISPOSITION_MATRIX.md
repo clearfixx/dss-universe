@@ -121,9 +121,8 @@ does not override missing risk decisions or accept an unmerged candidate.
 | DEBT-081 | C      | Runtime package approved and accepted: PR90 head29b0803, mergede26b0fc; CI5/5, local gate0, E2E607/607 and Web14/14 without retries. Controlled lifecycle regression fixed; not attribution of every natural flake.                          |
 | DEBT-082 | C      | Owner accepted PR85 integration head8cc1e50, merged05e177d; CI5/5, local gate0, coverage8/8 including Editor, E2E607/607 and Web14/14. Both quality policies preserved.                                                                      |
 | DEBT-083 | O      | Approved diagnostic PR87: local gate at77ea28d red on React answer at5000ms,13/14 Web, zero retries; retained trace/screenshot. Docs-only0fda41a does not fix it. Controlled081 mechanism is separate from natural-failure attribution.      |
-
-| DEBT-084 | M | Approved diagnostic/test scope: local PR94 Web13/14 failure retained; controlled early-focus hero interception reproduced. No test-only fix or acceptance claimed. |
-| DEBT-085 | M | Approved runtime candidate PR96 head60105a4: initial focus-aware finish guard; units9/9, dev15/15, production interaction proof. Full gate/CI and owner acceptance pending. |
+| DEBT-084 | M      | Approved diagnostic/test scope: local PR94 Web13/14 failure retained; controlled early-focus hero interception reproduced. No test-only fix or acceptance claimed.                                                                           |
+| DEBT-085 | M      | Approved runtime candidate PR96 head60105a4: initial focus-aware finish guard; units9/9, dev15/15, production interaction proof. Full gate/CI and owner acceptance pending.                                                                  |
 
 ## Execution order from this checkpoint
 
