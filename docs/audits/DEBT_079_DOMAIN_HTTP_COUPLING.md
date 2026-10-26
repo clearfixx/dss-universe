@@ -1,7 +1,26 @@
 # DEBT-079 — Domain exceptions inherit Nest HTTP transport
 
 Date: 2026-10-23. Baseline: accepted main `f118d82`.
-Severity: Medium. Status: OPEN; design/correction not approved.
+Severity: Medium. Status: OPEN; characterization accepted, decoupling unimplemented.
+
+## 2026-10-26 acceptance checkpoint
+
+Owner accepted design/characterization PR93, merged into main as `a8c71fa`.
+The [design and evidence](../development/DEBT_079_DOMAIN_ERROR_DESIGN.md) record
+all ten constructor identities and actual public Auth/Users/Media failure paths.
+Exact head `7a86b91` passed CI5/5 and local quality:full exit0: API coverage
+1327/1327, strict E2E623/623, build6/6, post-build2/2, Web14/14 without retries.
+Local E2E SHA256: `6B59FA5D1DB9B0C937C5611F0D05F7DF135C22D96FC3D737A2300F90FE48A528`.
+
+Owner separately approved correcting locked-login GraphQL mapping to
+RATE_LIMITED/statusCode429, preserving HTTP200/message/abuse behavior. Separate
+runtime PR94 is still under verification and is not accepted or merged. This
+narrow mapping does not remove Nest inheritance from Domain.
+
+The original inventory below remains historical evidence. Its request for
+initial design authorization is superseded by the accepted characterization;
+the remaining Domain/presentation separation still requires detailed design and
+separate implementation approval. D7 and Phase11 are not accepted by this update.
 
 ## Current evidence
 
