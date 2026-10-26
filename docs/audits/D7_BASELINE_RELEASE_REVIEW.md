@@ -1,9 +1,24 @@
 # D7 — Baseline release review
 
-Date: 2026-10-22. Updated: 2026-10-25. Branch: `debt/d7-release-gate`.
-Current accepted baseline: `0bfbe2b5635391465b85f7e454c91064b238046c`.
+Date: 2026-10-22. Updated: 2026-10-26. Branch: `debt/d7-release-gate`.
+Current accepted baseline: `a8c71fa391db2ca17c43a9a724e1942121d9e38c`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
+
+## 2026-10-26 characterization acceptance override
+
+Owner accepted PR93 design/characterization, merged as `a8c71fa`. Exact source
+head `7a86b91` has CI5/5 and local full gate exit0, API coverage1327/1327,
+E2E623/623, build6/6 and Web14/14 without retries. DEBT-079 remains open because
+the ten Domain classes still depend on Nest. Separate explicitly approved
+rate-limit mapping PR94 is under verification and is not accepted or merged.
+
+DEBT-007 PR92 now includes accepted Mailpit main at integration head `b3eab76`;
+its CI is green and strict E2E612/612, including both new delivery tests. The
+old-head local gate terminated exit1 before browser execution with a Turbopack
+startup panic. No new-head local full gate has passed; this supersedes the older
+statement below that the local gate is active. No automatic gamification wiring
+or historical-event policy has been approved by this checkpoint.
 
 ## Mail readiness acceptance and current candidates
 

@@ -114,6 +114,14 @@ links: [D7 fresh dependency gate](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 
 ### DEBT-079 — Domain exceptions depend on Nest HTTP transport (Medium, OPEN, separate scope required)
 
+2026-10-26 checkpoint: owner accepted design/characterization PR93, merged as
+`a8c71fa`; exact head `7a86b91` passed CI5/5 and local quality:full exit0,
+API coverage1327/1327, E2E623/623, Web14/14 without retries. All ten inventoried
+failure classes have real public-operation characterization. This accepts tests
+and design evidence, not the removal of Nest from Domain. Owner separately
+approved rate-limit GraphQL mapping; runtime PR94 remains under verification,
+not accepted. Broader decoupling implementation is still separate.
+
 D7 source review at accepted main `f118d82` confirms ten files under feature
 domain/exceptions directly import Nest HTTP exceptions/statuses: Auth4, Users1,
 Media5. All three domain directories are unchanged from D5 `fcab53c`; this is

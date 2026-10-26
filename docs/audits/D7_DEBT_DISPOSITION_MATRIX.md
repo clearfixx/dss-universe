@@ -1,8 +1,15 @@
 # D7 — Individual debt review matrix
 
-Updated: 2026-10-25. Current accepted baseline: `0bfbe2b`; initial review baseline
+Updated: 2026-10-26. Current accepted baseline: `a8c71fa`; initial review baseline
 was `f118d82`.
 Status: **IN PROGRESS; not a release certificate**.
+
+Latest override: owner accepted DEBT-079 design/characterization PR93, merged as
+`a8c71fa`, with exact-head CI5/5 and local full gate0, E2E623/623, Web14/14.
+Domain decoupling remains unimplemented; separate rate-limit mapping PR94 is
+under verification, not accepted. DEBT-007 PR92 integration head `b3eab76` has
+green CI and strict E2E612/612; its earlier local Turbopack startup failure is
+unresolved, and no new-head local full-gate success is claimed.
 
 Current acceptance override: DEBT-040/057/081/082 are scoped accepted packages
 (PR80/81/90/85 respectively). The dated routing rows below retain historical
@@ -109,7 +116,7 @@ does not override missing risk decisions or accept an unmerged candidate.
 | DEBT-076 | C      | Accepted bounded Web workers/config regression and unchanged timeout/coverage; scoped mitigation only.                                                                                                                                       |
 | DEBT-077 | C      | Accepted actual-observer readiness correction and fresh/CI smoke; no runtime/UI or retry-to-green change.                                                                                                                                    |
 | DEBT-078 | C      | Accepted exact generated-path format exclusion and actual Prettier policy regression.                                                                                                                                                        |
-| DEBT-079 | Q      | Ten inherited Domain/Nest HTTP exception dependencies confirmed; separate error/transport-preserving design scope required.                                                                                                                  |
+| DEBT-079 | M      | Design/characterization accepted in PR93 with real transport coverage of ten failures; Domain decoupling remains open. Separate approved mapping PR94 is under verification, not accepted.                                                   |
 | DEBT-080 | C      | Owner accepted test/CI-only PR83, mergeda35326a. Exact headbde1ad6: CI5/5, local gate0, E2E593/593 and Web14/14 without retries. Does not fix early-interaction081 or React083.                                                              |
 | DEBT-081 | C      | Runtime package approved and accepted: PR90 head29b0803, mergede26b0fc; CI5/5, local gate0, E2E607/607 and Web14/14 without retries. Controlled lifecycle regression fixed; not attribution of every natural flake.                          |
 | DEBT-082 | C      | Owner accepted PR85 integration head8cc1e50, merged05e177d; CI5/5, local gate0, coverage8/8 including Editor, E2E607/607 and Web14/14. Both quality policies preserved.                                                                      |
