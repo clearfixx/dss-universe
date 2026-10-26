@@ -116,3 +116,27 @@ HTTP200, null data and one same-message error with UNAUTHENTICATED/statusCode401
 Neither request increments loginFailedAttempts. Invalid-code and recovery-code
 consumption paths remain outside this checkpoint. Reproducibility without the
 explicit launcher key and the full gate remain pending.
+
+Follow-up reproducibility run removed AUTH_2FA_ENCRYPTION_KEY from the launcher
+environment and passed the same 19/19 using existing test configuration defaults.
+No new environment requirement is introduced by this test. This does not replace
+production key requirements or the still-pending full gate.
+
+## Remaining owner entry points
+
+Source inspection confirms Users `userByUsername` delegates to
+UsersService.getPublicByUsername and profile projection reaches requireUser;
+missing-profile characterization belongs to a Users-focused test, not an Auth
+service stub. The authenticated viewer query also uses getById, but deleting its
+subject may cause the session guard to reject earlier, so it is not an equivalent
+missing-profile fixture.
+
+Root profile-assets GraphQL mutations `setViewerAvatar` and `setViewerCover`
+delegate through their presentation service and the Media capability. MediaModule
+constructs that capability from AvatarService/CoverService: their four failure
+classes are still reachable through real composition, not dead legacy code.
+Media's `mediaAccessUrl` query delegates directly to MediaAccessService.issue;
+its visibility check happens only after a READY delivery candidate is found.
+Tests must therefore distinguish absent/non-READY media from visibility denial.
+Existing media-profile cleanup fixtures demonstrate DB-only synthetic assets and
+variants; transport error tests need no physical file creation or deletion.
