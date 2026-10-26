@@ -140,3 +140,19 @@ its visibility check happens only after a READY delivery candidate is found.
 Tests must therefore distinguish absent/non-READY media from visibility denial.
 Existing media-profile cleanup fixtures demonstrate DB-only synthetic assets and
 variants; transport error tests need no physical file creation or deletion.
+
+## Users/Media transport checkpoint
+
+Separate real-AppModule private-schema suite passes 8/8. It covers guest missing
+profile lookup (NOT_FOUND/404), foreign avatar/cover ownership (FORBIDDEN/403),
+own PRIVATE asset ineligibility (BAD_USER_INPUT/400), missing processed variants
+(BAD_USER_INPUT/400 with exact custom text), and another subject's READY PRIVATE
+media access (FORBIDDEN/403). All return HTTP200, null data and one exact expected
+GraphQL error envelope. After each case the actor's avatarMediaId/coverMediaId
+remain null. Assets are DB-only fixtures; no physical storage operations occur.
+Targeted ESLint passed for both transport test files.
+
+Together with Auth cases these tests reach all ten inventoried classes through
+public operations. They do not cover every branch, production redaction,
+unknown-error controls or full quality-gate acceptance. Runtime decoupling is
+still unimplemented and requires separate approval.
