@@ -17,7 +17,7 @@ import {
   attachArrivalLifecycleDiagnostic,
 } from "./helpers/arrival-lifecycle-diagnostic";
 
-test("controlled early keyboard focus observes cancel hit-testing during arrival", async ({
+test("controlled early keyboard focus preserves cancellation hit-testing", async ({
   page,
 }, info) => {
   await installArrivalLifecycleDiagnostic(page, true);
@@ -27,7 +27,7 @@ test("controlled early keyboard focus observes cancel hit-testing during arrival
     await expect(question).toBeFocused();
     await expect(page.locator("[data-arrival]")).toHaveAttribute(
       "data-arrival",
-      "playing",
+      "ready",
     );
     await page.keyboard.press("Enter");
     const cancel = page.getByRole("button", { name: "Cancel search" });
@@ -55,9 +55,11 @@ test("controlled early keyboard focus observes cancel hit-testing during arrival
       body: JSON.stringify(hit),
       contentType: "application/json",
     });
-    expect(hit.arrival).toBe("playing");
-    expect(hit.receivesPointer).toBe(false);
-    expect(hit.target).toBe("Welcome to DSS Universe");
+    expect(hit.arrival).toBe("ready");
+    expect(hit.receivesPointer).toBe(true);
+    expect(hit.clipPath).toBe("none");
+    await cancel.click();
+    await expect(page.getByLabel("Explore a demo question")).toBeFocused();
   } finally {
     await attachArrivalLifecycleDiagnostic(page, info);
   }

@@ -13,10 +13,6 @@
  */
 import { expect, test } from "@playwright/test";
 import {
-  installArrivalLifecycleDiagnostic,
-  attachArrivalLifecycleDiagnostic,
-} from "./helpers/arrival-lifecycle-diagnostic";
-import {
   installStationObserverProbe,
   releaseStationObserver,
   waitForHeldStationObserver,
@@ -84,27 +80,19 @@ test("arrival only consumes visible time before marking the first visit seen", a
 
 test("keyboard interaction reveals the interface and search returns focus", async ({
   page,
-}, info) => {
-  await installArrivalLifecycleDiagnostic(page);
-  try {
-    await page.goto("/");
-    await page.getByRole("link", { name: /DSS UNIVERSE/ }).focus();
-    await expect(page.locator("[data-arrival]")).toHaveAttribute(
-      "data-arrival",
-      "ready",
-    );
-    await page.getByRole("button", { name: /React architecture/ }).click();
-    await attachArrivalLifecycleDiagnostic(page, info);
-    await page.getByRole("button", { name: "Cancel search" }).click();
-    await expect(page.getByLabel("Explore a demo question")).toBeFocused();
-    await page.getByRole("button", { name: /React architecture/ }).click();
-    await page
-      .getByRole("button", { name: "Explore another question" })
-      .click();
-    await expect(page.getByLabel("Explore a demo question")).toBeFocused();
-  } finally {
-    await attachArrivalLifecycleDiagnostic(page, info);
-  }
+}) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: /DSS UNIVERSE/ }).focus();
+  await expect(page.locator("[data-arrival]")).toHaveAttribute(
+    "data-arrival",
+    "ready",
+  );
+  await page.getByRole("button", { name: /React architecture/ }).click();
+  await page.getByRole("button", { name: "Cancel search" }).click();
+  await expect(page.getByLabel("Explore a demo question")).toBeFocused();
+  await page.getByRole("button", { name: /React architecture/ }).click();
+  await page.getByRole("button", { name: "Explore another question" }).click();
+  await expect(page.getByLabel("Explore a demo question")).toBeFocused();
 });
 
 test("the guest page remains usable without JavaScript", async ({

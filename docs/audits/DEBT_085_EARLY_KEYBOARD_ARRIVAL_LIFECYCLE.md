@@ -40,3 +40,23 @@ focus restoration in dev and fresh production. No CSS/hit-testing override,
 animation duration change, disabled early interaction or readiness delay in the
 application is required. The owner approved this scoped correction after
 production verification and design; implementation proof remains pending.
+
+## Runtime correction checkpoint
+
+Initial effect setup now uses the existing finish path when focus is already
+inside the scene (excluding its skip control). No CSS, durations, dependencies,
+search timer or replay callback changed. React review checked unchanged listener
+cleanup and effect dependencies; no additional framework or subscription added.
+
+Two new early-focus component cases first failed on the old runtime (normal and
+StrictMode both remained playing). After the guard, component/search suites pass
+9/9, including unfocused initial animation, explicit replay and cancellation.
+The controlled browser case now asserts ready, real Cancel pointer receipt,
+clip-path none, a real click and restored input focus. Original keyboard smoke
+was restored to its uninstrumented action order; no observation await remains
+before its Cancel click. Dev browser regression suite passes15/15, retries0,
+two workers,32.8s. Historical traces remain separate and unchanged.
+
+Fresh post-correction production verification and full quality gate remain
+pending. This is not acceptance or a claim that every historical failure shares
+the same cause. DEBT-084 diagnostic evidence is not relabeled as a fix.

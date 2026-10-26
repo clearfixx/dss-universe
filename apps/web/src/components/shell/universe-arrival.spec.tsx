@@ -78,6 +78,7 @@ describe("demo search lifecycle", () => {
   afterEach(async () => {
     await act(async () => cleanup());
     vi.useRealTimers();
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
 
@@ -96,6 +97,66 @@ describe("demo search lifecycle", () => {
       screen.queryByText("Exploring the Universe…"),
     ).not.toBeInTheDocument();
   }
+
+  it.each([false, true])(
+    "honors focus before arrival setup (StrictMode=%s)",
+    async (strict) => {
+      vi.stubGlobal("matchMedia", () => ({
+        matches: false,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      }));
+      const original = Storage.prototype.getItem;
+      let focused = false;
+      vi.spyOn(Storage.prototype, "getItem").mockImplementation(function (
+        this: Storage,
+        key: string,
+      ) {
+        if (key === "dss:arrival:v1" && !focused) {
+          focused = true;
+          screen.getByRole("button", { name: /React architecture/ }).focus();
+        }
+        return original.call(this, key);
+      });
+      await act(async () => {
+        render(
+          strict ? (
+            <StrictMode>
+              <UniverseArrival />
+            </StrictMode>
+          ) : (
+            <UniverseArrival />
+          ),
+        );
+      });
+      const scene = document.querySelector("[data-arrival]");
+      expect(focused).toBe(true);
+      expect(
+        screen.getByRole("button", { name: /React architecture/ }),
+      ).toHaveFocus();
+      expect(scene).toHaveAttribute("data-arrival", "ready");
+      expect(localStorage.getItem("dss:arrival:v1")).toBe("seen");
+      fireEvent.click(screen.getByRole("button", { name: "Replay arrival" }));
+      expect(scene).toHaveAttribute("data-arrival", "playing");
+      await act(async () => vi.advanceTimersByTime(3000));
+      expect(scene).toHaveAttribute("data-arrival", "ready");
+    },
+  );
+
+  it("keeps an unfocused first arrival animated", async () => {
+    vi.stubGlobal("matchMedia", () => ({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+    await act(async () => {
+      render(<UniverseArrival />);
+    });
+    const scene = document.querySelector("[data-arrival]");
+    expect(scene).toHaveAttribute("data-arrival", "playing");
+    await act(async () => vi.advanceTimersByTime(3000));
+    expect(scene).toHaveAttribute("data-arrival", "ready");
+  });
 
   it("completes an early search through real StrictMode effect replay", async () => {
     clickDuringFirstObservation = true;
