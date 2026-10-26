@@ -104,3 +104,15 @@ returns HTTP200, null data, one same-message error with exactly extensions
 `{code: CONFLICT, statusCode: 409}`. Username is distinct to avoid testing a
 different uniqueness conflict. Neither rejected attempt adds a user row.
 This covers the pre-existing-email path, not a concurrent unique-constraint race.
+
+### Missing-second-factor checkpoint
+
+Real-AppModule suite passes 19/19 with a synthetic process-local encryption key.
+The test calls the real TwoFactorService.begin and enables its generated encrypted
+credential in the owned fixture schema; it does not claim to test confirmation.
+Correct-password login without a code returns REST401 with Unauthorized and the
+exact message `A valid two-factor or recovery code is required.` GraphQL returns
+HTTP200, null data and one same-message error with UNAUTHENTICATED/statusCode401.
+Neither request increments loginFailedAttempts. Invalid-code and recovery-code
+consumption paths remain outside this checkpoint. Reproducibility without the
+explicit launcher key and the full gate remain pending.
