@@ -7,6 +7,16 @@ Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
 
 ## 2026-10-26 characterization acceptance override
 
+Later runtime-verification checkpoint: PR94 exact head `17ebd01` has green CI
+and strict local API623/623, build6/6, post-build2/2, but full local gate ended
+exit1 at Web13/14. Hero intercepted Cancel search in the keyboard interaction.
+Owner approved separate diagnostic DEBT-084 and runtime DEBT-085 after controlled
+dev and fresh production reproduction. Candidate PR96 head `60105a4` has focused
+unit9/9, dev15/15 and real production cancellation/focus proof; its full gate and
+CI remain active. D7 inventory now has85 entries, not85 completed corrections.
+No retry-to-green, force-click, timeout increase or UI redesign was used. This
+supersedes any older statement implying PR94's full gate is merely pending.
+
 Owner accepted PR93 design/characterization, merged as `a8c71fa`. Exact source
 head `7a86b91` has CI5/5 and local full gate exit0, API coverage1327/1327,
 E2E623/623, build6/6 and Web14/14 without retries. DEBT-079 remains open because

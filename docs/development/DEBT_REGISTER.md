@@ -2,7 +2,7 @@
 
 > Status: Active
 >
-> Updated: 2026-10-25
+> Updated: 2026-10-26
 
 ## Purpose
 
@@ -22,17 +22,44 @@ active package safe and buildable.
 
 ## Register
 
-D7 review now integrates accepted main `0bfbe2b`; the original baseline was
+D7 review now integrates accepted main `a8c71fa`; the original baseline was
 `f118d82`. See
 [current evidence and limits](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079/080.
 D6 acceptance does not
 automatically resolve unrelated OPEN findings.
 
-[D7 individual review routing](../audits/D7_DEBT_DISPOSITION_MATRIX.md) maps all83
+[D7 individual review routing](../audits/D7_DEBT_DISPOSITION_MATRIX.md) maps all85
 unique IDs exactly once, distinguishing accepted scoped corrections from partial
 evidence, remaining review and unresolved decisions. It is not a new status model
 or a declaration that every debt has been reviewed/closed.
+
+### DEBT-084 — Keyboard smoke cancellation pointer interception (Medium, ACCEPTED diagnostic/test scope)
+
+Local PR94 head `17ebd01` quality:full failed at Web13/14, no retries: hero
+intercepted Cancel search, then the button detached. API623/623, build6/6 and
+post-build2/2 passed; CI was green but does not waive the local failure.
+Owner approved separate diagnostic/test scope. One instrumented natural flow
+passed but was explicitly not treated as a fix. A distinct controlled early-focus
+experiment reproduced hero hit interception with console clip-path50percent.
+Original error context and separate trace evidence were preserved. No test-only
+readiness workaround is accepted as a root-cause correction. Runtime work is
+separate DEBT-085; [candidate evidence](https://github.com/clearfixx/dss-universe/pull/96)
+retains the diagnostic history. No scoped acceptance/closure yet.
+
+### DEBT-085 — Arrival setup can animate over early keyboard focus (Medium, IMPLEMENTED candidate; verification open)
+
+Owner approved a separate runtime package after production check and design.
+Controlled dev and fresh production both reproduced the mechanism: focus before
+arrival listener setup, real Enter starts search while playing, Cancel exists
+but hero wins pointer hit-testing. This is controlled scheduling evidence, not
+proof that every historical smoke failure has the same cause.
+PR96 head `60105a4` adds an initial focus-aware finish guard without CSS, duration,
+search timer, replay or UI redesign changes. Two early-focus unit cases failed
+on old runtime then passed; focused units9/9, dev browser15/15 without retries,
+fresh production actual cancellation/focus restoration pass. Lint/typecheck pass.
+Own full gate and CI are active; no acceptance or merge. Do not resolve PR94 or
+D7 from these focused proofs alone.
 
 ### DEBT-080 — Green CI Web check can conceal a flaky smoke test (Medium, RESOLVED scoped test/CI package)
 
