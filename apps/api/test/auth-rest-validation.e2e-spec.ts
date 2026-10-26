@@ -139,4 +139,42 @@ describe('REST authentication validation (e2e)', () => {
       .send({ refreshToken: '' })
       .expect(401);
   });
+
+  it('characterizes invalid credentials through the real REST boundary', async () => {
+    const input = credentials();
+    const response = await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email: input.email, password: input.password })
+      .expect(401);
+    expect(response.body).toEqual({
+      statusCode: 401,
+      message: 'Invalid email or password',
+      error: 'Unauthorized',
+    });
+    expect(response.headers['retry-after']).toBeUndefined();
+  });
+
+  it('characterizes invalid credentials through the real GraphQL boundary', async () => {
+    const input = credentials();
+    const response = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .send({
+        query: `mutation Login($input: LoginInput!) {
+          login(input: $input) { tokens { accessToken } }
+        }`,
+        variables: { input: { email: input.email, password: input.password } },
+      })
+      .expect(200);
+    const body = response.body as {
+      data: unknown;
+      errors: { message: string; extensions: Record<string, unknown> }[];
+    };
+    expect(body.data).toBeNull();
+    expect(body.errors).toHaveLength(1);
+    expect(body.errors[0].message).toBe('Invalid email or password');
+    expect(body.errors[0].extensions).toEqual({
+      code: 'UNAUTHENTICATED',
+      statusCode: 401,
+    });
+  });
 });

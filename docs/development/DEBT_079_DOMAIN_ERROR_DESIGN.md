@@ -60,3 +60,20 @@ the final HTTP boundary must be inspected before claiming header compatibility.
 
 No runtime source, schema or policy has changed in this checkpoint. This is an
 initial design inventory, not completed transport proof or debt acceptance.
+
+## Characterization checkpoint
+
+Constructor inventory: 12/12 cases pass (ten defaults and two explicit Media
+eligibility messages); existing formatter baseline adds 2/2. Rate-limit response
+is a string, unlike the other nine structured constructor responses.
+
+Real AppModule with the existing fully migrated private-schema fixture on
+disposable loopback DB5434: REST authentication suite passes 16/16, including two
+new invalid-credentials cases. REST returns exactly statusCode 401, message
+`Invalid email or password`, error `Unauthorized`, with no Retry-After header.
+GraphQL returns HTTP200, null data, one error with that same message and exactly
+extensions `{code: UNAUTHENTICATED, statusCode: 401}`.
+
+No Auth service is mocked in these two cases. They exercise absent synthetic
+accounts; they do not establish rate-limit, two-factor, conflict, Users or Media
+transport behavior, production redaction, or full quality-gate acceptance.
