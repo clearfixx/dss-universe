@@ -133,3 +133,14 @@ composition boundary tests.
 These indirect paths are why tests must assert mapper placement as well as the
 ten constructor cases. Do not add conversion inside application orchestration
 merely to avoid covering the corresponding presentation operation.
+
+## Existing behavior baseline
+
+On this accepted-main-based design branch, five existing unit suites pass28/28:
+identity authentication presentation, profile-asset presentation, avatar, cover
+and media access. They preserve missing/mismatched profile denial, no profile
+read after command denial, explicit output allowlists, identity propagation of
+profile infrastructure errors and uniform refresh denial. These use controlled
+dependencies and do not prove a new mapper implementation or real transport.
+No test or runtime source was changed for this baseline. The design Markdown
+passes formatting and diff checks; its own full gate remains pending.
