@@ -56,3 +56,24 @@ and elementFromPoint at the cancel button. It must distinguish that hypothesis
 from layout/stacking or ordinary animation geometry. No claim that changing the
 test readiness alone fixes this has been made; no click was forced and no
 runtime/UI/CSS was changed.
+
+## First instrumented experiment
+
+One diagnostic run of the same keyboard flow passed1/1 with retries0, trace on,
+one worker and a separate debt084-first-probe output directory. Original failure
+artifacts were retained. This is not a correction, original-gate pass or claim
+that the failure disappeared: instrumentation adds observation work and can
+change timing. Targeted ESLint passed for the test and probe.
+
+Trace SHA256: `4ABEDBAE4F9FFA54FCD23CD63E8742618BF64A8E9ED10ACC39A1B16B8C1822D2`.
+Actual probe events: brand focus at934.6ms observes ready; first arrival storage
+read at1403.7ms still observes ready; playing mutation at1417.7ms; second brand
+focus at1449.6ms observes playing; ready mutation at1454.4ms. Search-button focus
+at1860.9ms then observes ready. Cancel at2217.5ms returns focus to input.
+
+Thus an early ready/focus observation can precede effect setup in the real
+browser. The later second focus successfully reveals this attempt. At the
+pre-cancel snapshot the console has animation/clip-path/transform none; center
+hit-target is null (the probe does not scroll), so this does not reproduce hero
+interception. Next evidence must causally distinguish lifecycle readiness and
+viewport/animation hit-testing, rather than accepting this diagnostic pass as fix.
