@@ -62,6 +62,7 @@ export class EditorService {
     const result = validateEditorDocument(this.parse(documentJson));
     if (!result.valid) {
       throw new BadRequestException({
+        statusCode: 400,
         message: 'Editor document validation failed.',
         errors: result.errors,
       });

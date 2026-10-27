@@ -1607,6 +1607,20 @@ all dependency risk. Full quality/build/CI and owner acceptance remain open.
 The existing Apollo Playground server4-vs-server5 peer warning is unchanged.
 See [package evidence](../audits/DEBT_016_DEPENDENCY_SECURITY.md).
 
+### DEBT-066 — Approved depth-64 shared correction checkpoint (2026-10-25)
+
+Owner approved root-zero maximum depth64 and compatibility checks before code.
+Separate branch `debt/debt-066-editor-validation-safety` starts from accepted
+main `a35326a`, not unaccepted PR85/87. Read-only public-schema scans on5433/5434
+find no document beyond depth2; tracked literal fixture inventory finds valid
+static depth at most4, with dynamic/non-public/production limitations recorded.
+Baseline Editor23/23 passed; new safety tests initially failed22/60 before
+correction. Iterative structural preflight now protects existing semantic walks;
+shared tests65/65, Editor lint/typecheck pass. API/HTTP and actual host-mutation
+rollback regressions, full quality gate, CI and owner acceptance remain open.
+No migration, stored-data rewrite or UI change. See
+[design and compatibility evidence](DEBT_066_EDITOR_VALIDATION_DESIGN.md).
+
 ### DEBT-082 — Shared Editor omitted by full coverage mode (Medium, ACCEPTED package; verification open)
 
 Date: 2026-10-25. Actual Turbo graphs and all ten app/package manifests confirm
