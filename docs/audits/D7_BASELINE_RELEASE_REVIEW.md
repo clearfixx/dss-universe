@@ -1,9 +1,22 @@
 # D7 — Baseline release review
 
 Date: 2026-10-22. Updated: 2026-10-27. Branch: `debt/d7-release-gate`.
-Current accepted baseline: `4ad31b96a30dc77d78dfbf8834415903c000dffd`.
+Current accepted baseline: `f9ddeeb233779940ba753b5e901f1f15c3c6fa45`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
+
+## 2026-10-27 delivery design acceptance
+
+Owner explicitly accepted DEBT-007 design/characterization PR92 `4da51b6`,
+merged `f9ddeeb` at14:53:44UTC. Exact-head CI5/5 and local full gate0 below
+are accepted only for that design/test scope: API1337/1337, E2E648/648 without
+skips, both migrated Points cases and Web15/15 without retries. No automatic
+gamification consumer, formula, historical replay policy or broad DEBT-007
+completion is implemented or implied. D7 remains in progress.
+
+The next DEBT-079 runtime package still requires explicit approval: the accepted
+PR95 detailed design says implementation was not authorized. Accepted PR94
+already establishes the RATE_LIMITED/statusCode429 compatibility baseline.
 
 ## 2026-10-27 Editor validation acceptance
 
@@ -21,7 +34,7 @@ suites with no skips, GraphQL, build6/6, post-build2/2 and Web15/15 on3195 witho
 retries (25.9s). Both migrated Points rollback/replay cases executed and passed.
 Local API SHA256 `59e9a2cc785be6219eb164069b40f1170066771212c22cc293ecc6b1bff3fe2e`;
 CI SHA256 `8c5b3199f0cd66bfbb98f1f5265d43bec67aa76c9589041623e1f0e5e812f97d`.
-Owner acceptance of this design/characterization remains pending. Automatic
+Owner acceptance of this design/characterization is recorded above. Automatic
 gamification delivery, formula changes and historical replay are not implemented
 or approved. The older Turbopack startup panic stays recorded; this successful
 new integration is not proof of its historical root cause or a runtime repair.

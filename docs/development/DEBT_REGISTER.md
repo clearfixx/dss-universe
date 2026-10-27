@@ -22,7 +22,7 @@ active package safe and buildable.
 
 ## Register
 
-D7 review now integrates accepted main `4ad31b9`; the original baseline was
+D7 review now integrates accepted main `f9ddeeb`; the original baseline was
 `f118d82`. See
 [current evidence and limits](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079/080.
@@ -43,9 +43,10 @@ Earlier PR94-pending references below are retained as historical checkpoints.
 DEBT-007 verification override: design/characterization PR92 `4da51b6` has
 exact-head CI5/5 and local quality:full exit0, coverage8/8/API1337/1337,
 E2E648/648 without skips, build6/6, post-build2/2 and Web15/15 without retries.
-Both migrated Points rollback/replay cases pass. Design-package owner acceptance
-is pending; automatic delivery, historical replay and broader DEBT-007 closure
-are not implemented or implied. Earlier gate-pending references are historical.
+Both migrated Points rollback/replay cases pass. Owner accepted that design-only
+package at `4da51b6`, merged `f9ddeeb` at14:53:44UTC. Automatic delivery,
+historical replay and broader DEBT-007 closure are not implemented or implied.
+Earlier gate/acceptance-pending references are historical.
 
 ### DEBT-087 — Reserved Web smoke port blocks local quality gate (Medium, RESOLVED scoped test-infrastructure package)
 
