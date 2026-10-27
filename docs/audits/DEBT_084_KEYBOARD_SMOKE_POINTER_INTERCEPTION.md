@@ -3,6 +3,30 @@
 Date: 2026-10-26. Status: OPEN; owner approved separate diagnostic/test scope.
 Observed during local PR94 exact head `17ebd01` quality:full.
 
+## Evidence availability errata — 2026-10-27
+
+The original local error-context and four DEBT-084/085 trace ZIPs are no longer
+present in D6 `apps/web/test-results`; only the latest `.last-run.json` remains.
+No matching trace hashes were found in the checked D5/D6 cache archives.
+These ignored artifacts cannot be restored from Git. No recovered originals
+or replacement traces are claimed by this errata.
+
+Installed Playwright1.64.0 `createRemoveOutputDirsTask` removes project output
+directories at the next ordinary run. Placing diagnostic subdirectories under
+the default `test-results` therefore did not preserve them across later smoke
+runs. The exact deleting invocation was not independently recorded. This is
+an evidence-retention mistake, not a newly demonstrated DSS runtime defect.
+
+The dated observations and recorded hashes below remain historical records,
+not currently available raw artifacts. The failed Web summary and strict API
+JSON remain available separately, but neither replaces the missing traces or
+the original page snapshot. Current re-verifiability is reduced accordingly.
+
+Future evidence must be copied or written to a unique directory outside the
+Playwright output root, such as `node_modules/.cache`, before another run.
+Keep future re-productions distinct from missing October26 originals; do not
+claim a new trace is the original evidence or silently waive PR94's failure.
+
 ## User story and first broken boundary
 
 A visitor reveals the arrival interface using keyboard focus, starts the React
@@ -20,8 +44,9 @@ root cause, duration of interception, or a production reproduction.
 ## Evidence and limits
 
 - Test: apps/web/e2e/arrival.spec.ts, keyboard interaction test, cancellation click.
-- Error context retained in D6 apps/web/test-results under the corresponding
-  arrival-keyboard-interacti-4ce4b-ce-and-search-returns-focus-chromium directory.
+- Error context was initially captured in D6 apps/web/test-results under the
+  arrival-keyboard-interacti-4ce4b-ce-and-search-returns-focus-chromium directory;
+  it is now unavailable as described in the evidence errata above.
 - Local full gate exec session53823 terminated exit1: Web13/14 without retries.
   Web report node_modules/.cache/quality-full-LEE8A3/web-smoke.json is failed/tests14.
 - The same run's strict API report passes623/623 across58 suites, pending0;

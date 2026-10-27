@@ -3,6 +3,20 @@
 Date: 2026-10-26. Status: OPEN; separate runtime scope approved, production check
 and lifecycle design required before implementation.
 
+## Evidence availability errata — 2026-10-27
+
+The four local October26 DEBT-084/085 trace ZIPs and original failure page
+context are no longer available under D6 `apps/web/test-results`. No matching
+cache backup was located in the checked D5/D6 archives; Git does not contain
+these ignored artifacts. See the [retention errata](DEBT_084_KEYBOARD_SMOKE_POINTER_INTERCEPTION.md#evidence-availability-errata--2026-10-27).
+
+The previously stated preservation is not a current availability guarantee:
+normal Playwright output cleanup invalidated that storage arrangement. Recorded
+hashes, observations, committed regressions and separate quality reports remain,
+but they do not replace the unavailable raw traces. No original recovery or new
+production re-verification is claimed here. Future browser evidence must be
+written or copied outside the output root before another Playwright invocation.
+
 DEBT-084's controlled dev experiment focuses a real question before arrival
 effect setup, then uses real Enter. Search starts while arrival remains playing;
 the visible Cancel control is clipped and hero wins browser hit-testing. See
@@ -55,7 +69,7 @@ The controlled browser case now asserts ready, real Cancel pointer receipt,
 clip-path none, a real click and restored input focus. Original keyboard smoke
 was restored to its uninstrumented action order; no observation await remains
 before its Cancel click. Dev browser regression suite passes15/15, retries0,
-two workers,32.8s. Historical traces remain separate and unchanged.
+two workers,32.8s. Historical trace availability is superseded by the errata above.
 
 Fresh post-correction production verification and full quality gate remain
 pending. This is not acceptance or a claim that every historical failure shares
@@ -68,5 +82,5 @@ port3194 now passes1/1 with real cancellation and restored input focus, retries0
 Actual trace payload: receivesPointer true, arrival ready, clipPath none. Trace
 SHA256 `69D0897AAD778B56DC39351BAA771AA60AAD43DAD2A56D2EF400D59C49E3F8A8`.
 Targeted ESLint and Web typecheck pass. Original pre-fix dev and production traces
-remain preserved; no cache or failure artifact was deleted. Full quality gate,
+were present at this checkpoint; their later loss is recorded above. Full quality gate,
 CI and owner acceptance are still pending.
