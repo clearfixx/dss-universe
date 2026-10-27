@@ -1,10 +1,28 @@
 /**
- * DSS Universe — Full Quality Gate
- * File: scripts/full-quality-policy.mjs
- * Purpose: Fail-closed service guards, ordered checks and report validation.
- * Important: No provisioning, database reset or inherited browser secrets.
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Full Quality Gate
+ * 📄 File: scripts/full-quality-policy.mjs
+ *
+ * 🎯 Purpose:
+ * Defines safe service environments and complete verification requirements.
+ *
+ * 🧠 Responsibilities:
+ * • guards disposable endpoints and the explicit browser port;
+ * • strips browser secrets and validates complete test reports.
+ *
+ * 🏗️ Architecture:
+ * Test orchestration policy, separate from socket and process side effects.
+ *
+ * ⚠️ Important:
+ * No provisioning, database reset or inherited browser secrets.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 import policy from "./full-api-test-policy.cjs";
+import { resolveWebSmokeEndpoint } from "./web-smoke-endpoint.mjs";
 
 export function createQualityEnvironment(source) {
   const env = policy.createFullTestEnvironment(source);
@@ -21,7 +39,12 @@ export function createQualityEnvironment(source) {
   ) {
     throw new Error("Full quality requires loopback test Redis on port 6380.");
   }
-  return { ...env, REDIS_HOST: "127.0.0.1", REDIS_PORT: "6380" };
+  return {
+    ...env,
+    REDIS_HOST: "127.0.0.1",
+    REDIS_PORT: "6380",
+    DSS_WEB_TEST_PORT: String(resolveWebSmokeEndpoint(source).port),
+  };
 }
 
 export function createBrowserEnvironment(source) {
@@ -48,6 +71,7 @@ export function createBrowserEnvironment(source) {
     ),
     CI: "1",
     NODE_ENV: "development",
+    DSS_WEB_TEST_PORT: String(resolveWebSmokeEndpoint(source).port),
   };
 }
 
