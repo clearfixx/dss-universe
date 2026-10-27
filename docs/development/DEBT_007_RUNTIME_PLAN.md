@@ -39,6 +39,27 @@ GraphQL schema generation, mail worker or unrelated scheduled task. Verify clean
 Redis/Prisma/queue shutdown and failed-start cleanup. This feasibility proof has
 not yet been executed.
 
+### Constructor dependency inventory
+
+The following is source inspection, not a successful Nest bootstrap:
+
+| Existing provider                     | Direct requirements                                                               | Headless implication                                                                    |
+| ------------------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| CommunityPointsService                | Points repository; recipient existence                                            | Owner-local consumption facade can reuse the service                                    |
+| LevelsService                         | Levels repository; Points balance; recipient existence                            | Root supplies the existing scalar balance adapter                                       |
+| AchievementsService                   | Achievements repository; recipient existence                                      | No title service is required by this constructor                                        |
+| Points and Levels Prisma repositories | PrismaService; AuditWriterService; OutboxWriterService                            | Share core infrastructure without importing queue runners                               |
+| PrismaAchievementsRepository          | Same infrastructure; MANUAL_AWARD_TRANSACTION                                     | Automatic consumption still needs this constructor dependency satisfied                 |
+| PrismaManualAwardTransaction          | PrismaService; PrismaManualAwardWriter; PrismaTransactionalProfileExistenceReader | Existing narrow root unit of work can satisfy the dependency without CustomTitlesModule |
+| PrismaManualAwardWriter               | AuditWriterService; OutboxWriterService                                           | No additional feature service dependency in its constructor                             |
+| Prisma client options provider        | ConfigService with DATABASE_URL                                                   | Explicit minimal configuration and real lifecycle verification remain necessary         |
+
+Do not satisfy MANUAL_AWARD_TRANSACTION with a no-op implementation merely because
+automatic jobs do not call manual award. Preserve the real composition or
+separately justify an owner-local repository split. No such split is authorized
+by this inventory. Existing recipient and balance adapters forward failures and
+do not cache; the future runtime assembly must retain those properties.
+
 ## Durable routing protocol
 
 Introduce additive destination-owned routing storage, uniquely keyed by original
