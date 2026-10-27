@@ -22,6 +22,17 @@ active package safe and buildable.
 
 ## Register
 
+2026-10-28 current-state reconciliation: detailed DEBT-007 plan PR100846dd94 is
+verified but unaccepted/unmerged. The owner approved the persisted UTC createdAt
+admission cutoff, equality included, no automatic historical replay/backfill;
+runtime package A still awaits approval. Current Mailpit host2525/18025 return
+ECONNREFUSED with empty effective Docker port arrays despite healthy container
+and declared bindings. Accepted013 recovery remains historical; current readiness
+must be restored. PR87 diagnostic code/report remain outside main, including
+first-failure trace/screenshot and CI upload changes. Accepted081/085 runtime
+packages do not implicitly integrate that evidence policy or prove the exact
+natural-failure cause. No runtime/service changes or D7 acceptance are made here.
+
 D7 review now integrates accepted main `a715ece`; the original baseline was
 `f118d82`. See
 [current evidence and limits](../audits/D7_BASELINE_RELEASE_REVIEW.md).

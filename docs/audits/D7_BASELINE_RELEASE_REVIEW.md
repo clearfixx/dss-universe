@@ -5,6 +5,40 @@ Current accepted baseline: `a715ece34ce3a7346fa9810d6c9621459da486cc`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
 
+## 2026-10-28 pending delivery plan and current readiness reconciliation
+
+Accepted main remains `a715ece`. Design-only PR100 `846dd94` is ready for owner
+review, not merged or accepted: current-head CI5/5 and downloaded E2E658/658 across
+60 suites with zero skips; local full gate0 on identical runtime/test sources,
+coverage8/8/API1450/1450, build6/6 cached and Web15/15 without retries. Later
+documentation-only changes were separately formatted and diff-checked. These are
+PR100 proofs, not a current D7 full gate or automatic delivery proof.
+
+The owner explicitly approved the persisted UTC admission cutoff against
+Outbox.createdAt, equality admitted, with no automatic historical replay/backfill.
+Pre-cutoff rows committed late stay excluded; post-cutoff rows remain discoverable
+after late commit. API-owned headless consumer, independent routing and separate
+queue were approved for detailed design only. Runtime package A and plan merge
+await separate owner decisions. Historical statements that no historical-event
+policy was approved are superseded for this exact decision, not for runtime.
+
+Fresh local readiness checks found Mailpit healthy but effective published port
+arrays empty despite HostConfig loopback2525/18025 declarations. Both bounded host
+TCP probes returned ECONNREFUSED. The accepted PR91 recovery evidence remains
+historical; current host SMTP/UI readiness is open again. No Mailpit, mailbox,
+mount or other service was changed by this review. Observation is documented in
+PR100's DEBT-013 recovery note and must not be hidden by green configuration tests.
+
+Open diagnostic PR87 remains distinct from accepted DEBT-081 runtime PR90 and
+DEBT-085 PR96. Neither code commit77ea28d nor report0fda41a is an ancestor of
+accepted main. Current Playwright config still uses trace on-first-retry while
+mandatory smoke retries are zero; current CI lacks the PR87 Web failure artifact
+upload. The approved first-failure evidence correction therefore still needs
+integration and verification. Prior red diagnostic evidence and uncertainty about
+the exact natural failure schedule are preserved, not silently marked fixed by
+the controlled runtime correction. No source/test/workflow correction is made
+by this documentation review.
+
 ## 2026-10-28 owner failure runtime acceptance
 
 Owner explicitly accepted DEBT-079 runtime PR99 `ae1b516`, merged `a715ece`
