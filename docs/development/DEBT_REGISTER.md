@@ -22,7 +22,7 @@ active package safe and buildable.
 
 ## Register
 
-D7 review now integrates accepted main `393e359`; the original baseline was
+D7 review now integrates accepted main `4ad31b9`; the original baseline was
 `f118d82`. See
 [current evidence and limits](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079/080.
@@ -39,6 +39,13 @@ Scoped acceptance override: owner accepted narrow rate-limit mapping PR94
 gate0, E2E623/623, Web15/15. This resolves only the approved GraphQL429 mapping;
 DEBT-079 Domain/Nest decoupling remains open and unauthorised for implementation.
 Earlier PR94-pending references below are retained as historical checkpoints.
+
+DEBT-007 verification override: design/characterization PR92 `4da51b6` has
+exact-head CI5/5 and local quality:full exit0, coverage8/8/API1337/1337,
+E2E648/648 without skips, build6/6, post-build2/2 and Web15/15 without retries.
+Both migrated Points rollback/replay cases pass. Design-package owner acceptance
+is pending; automatic delivery, historical replay and broader DEBT-007 closure
+are not implemented or implied. Earlier gate-pending references are historical.
 
 ### DEBT-087 — Reserved Web smoke port blocks local quality gate (Medium, RESOLVED scoped test-infrastructure package)
 
@@ -1827,7 +1834,15 @@ GraphQL check remains red for DEBT-044; generated side effects restored exactly.
 No full-green, CI/review/owner acceptance or debt closure is claimed.
 Debt remains open. [Design and current evidence](DEBT_065_CLAIM_FENCING_DESIGN.md).
 
-### DEBT-066 — Editor malformed/deep document validation throws runtime errors (Medium, ACCEPTED correction; transport decision pending)
+### DEBT-066 — Editor malformed/deep document validation throws runtime errors (Medium, RESOLVED scoped validation package)
+
+Owner explicitly accepted PR89 `d8ab9c9`, merged `4ad31b9` at11:38:56UTC.
+Exact-head CI5/5 and local quality:full exit0: coverage8/8/API1336/1336,
+E2E646/646 with zero skips, GraphQL, build6/6, post-build2/2 and Web15/15
+without retries. Depth64 and malformed/depth65 controls plus approved local
+BAD_USER_INPUT/statusCode400 mapping pass real HTTP/host regressions.
+Historical pending/depth/transport checkpoints below are retained as evidence,
+not current acceptance requirements. D7 and broader Domain decoupling stay open.
 
 Current2026-10-25 checkpoint: owner approved depth64 with root0 and compatibility
 assessment. Separate unmerged local branch1e07a06 has shared65/65, API Editor46/46

@@ -1,9 +1,30 @@
 # D7 — Baseline release review
 
 Date: 2026-10-22. Updated: 2026-10-27. Branch: `debt/d7-release-gate`.
-Current accepted baseline: `393e3594a96efc1618a39899109654c3c617a0d5`.
+Current accepted baseline: `4ad31b96a30dc77d78dfbf8834415903c000dffd`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
+
+## 2026-10-27 Editor validation acceptance
+
+Owner explicitly accepted DEBT-066 PR89 `d8ab9c9`; merged `4ad31b9`
+at11:38:56UTC. Exact-head CI5/5 and full local gate0 below support scoped
+acceptance: malformed node/content/marks are controlled validation failures,
+root-zero depth64 remains valid, depth65 is rejected, and the approved local
+GraphQL BAD_USER_INPUT/statusCode400 mapping is preserved. Coverage8/8 with
+API1336/1336, E2E646/646 without skips and Web15/15 without retries are verified.
+No migration, UI, global formatter or broad D7 acceptance is included.
+
+PR92 integration `4da51b6` includes this accepted main. Exact-head CI5/5 and
+local quality:full exit0 now pass: coverage8/8/API1337/1337, E2E648/648 across60
+suites with no skips, GraphQL, build6/6, post-build2/2 and Web15/15 on3195 without
+retries (25.9s). Both migrated Points rollback/replay cases executed and passed.
+Local API SHA256 `59e9a2cc785be6219eb164069b40f1170066771212c22cc293ecc6b1bff3fe2e`;
+CI SHA256 `8c5b3199f0cd66bfbb98f1f5265d43bec67aa76c9589041623e1f0e5e812f97d`.
+Owner acceptance of this design/characterization remains pending. Automatic
+gamification delivery, formula changes and historical replay are not implemented
+or approved. The older Turbopack startup panic stays recorded; this successful
+new integration is not proof of its historical root cause or a runtime repair.
 
 ## 2026-10-27 narrow rate-limit mapping acceptance
 
@@ -18,7 +39,8 @@ coverage8/8/API1336/1336, E2E646/646 across59 suites without skips, GraphQL,
 build6/6, post-build2/2 and Web15/15 on3195 without retries (23.8s).
 Local API SHA256 `fff185ce00ab5ef891470e7a5c3a53ad8e307475facdb90a6e800ae28b8c0cb4`;
 CI SHA256 `34a25085d3b3c03dc0a6f8d5d1899580b97277a0b165bf76065bd08aef6c35f9`.
-This is ready for explicit owner acceptance; no PR89 merge or D7 closure follows.
+The later explicit acceptance override above supersedes this checkpoint's
+previously pending PR89 status; D7 closure does not follow.
 
 ## 2026-10-27 arrival acceptance override
 
