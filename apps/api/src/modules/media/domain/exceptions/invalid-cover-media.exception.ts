@@ -12,12 +12,11 @@
  * ===============================================================
  */
 
-import { BadRequestException } from '@nestjs/common';
-
-export class InvalidCoverMediaException extends BadRequestException {
+export class InvalidCoverMediaException extends Error {
   constructor(
     message = 'The selected media cannot be used as a profile cover.',
   ) {
     super(message);
+    this.name = InvalidCoverMediaException.name;
   }
 }

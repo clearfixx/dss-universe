@@ -4,14 +4,23 @@
  * ---------------------------------------------------------------
  * 📦 Module: Root Error Contract Characterization
  * 📄 File: apps/api/src/core/graphql/errors/domain-exception-constructor.characterization.spec.ts
- * 🎯 Purpose: Records inherited owner failure envelopes before decoupling Nest.
- * 🧠 Responsibilities: checks exact constructor status, message and response.
+ * 🎯 Purpose: Protects pure owner failure identities during presentation decoupling.
+ * 🧠 Responsibilities: checks stable messages and absence of transport methods.
  * 🏗️ Architecture: Test-only cross-owner inventory; no production composition.
  * ⚠️ Important: Does not prove actual REST/Apollo handling or authorization.
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 import { InvalidCredentialsException } from '../../../modules/auth/domain/exceptions/invalid-credentials.exception';
+import { HttpException } from '@nestjs/common';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import {
+  createSourceFile,
+  isImportDeclaration,
+  isStringLiteral,
+  ScriptTarget,
+} from 'typescript';
 import { EmailAlreadyExistsException } from '../../../modules/auth/domain/exceptions/email-already-exists.exception';
 import { TwoFactorRequiredException } from '../../../modules/auth/domain/exceptions/two-factor-required.exception';
 import { LoginRateLimitedException } from '../../../modules/auth/domain/exceptions/login-rate-limited.exception';
@@ -22,73 +31,85 @@ import { InvalidAvatarMediaException } from '../../../modules/media/domain/excep
 import { InvalidCoverMediaException } from '../../../modules/media/domain/exceptions/invalid-cover-media.exception';
 import { MediaAccessForbiddenException } from '../../../modules/media/domain/exceptions/media-access-forbidden.exception';
 
-describe('DEBT-079 inherited constructor envelopes', () => {
+describe('DEBT-079 pure owner failure identities', () => {
+  it('keeps all ten owner source files free of Nest imports', () => {
+    const files = [
+      'auth/domain/exceptions/invalid-credentials.exception.ts',
+      'auth/domain/exceptions/email-already-exists.exception.ts',
+      'auth/domain/exceptions/two-factor-required.exception.ts',
+      'auth/domain/exceptions/login-rate-limited.exception.ts',
+      'users/domain/exceptions/user-not-found.exception.ts',
+      'media/domain/exceptions/avatar-media-forbidden.exception.ts',
+      'media/domain/exceptions/cover-media-forbidden.exception.ts',
+      'media/domain/exceptions/invalid-avatar-media.exception.ts',
+      'media/domain/exceptions/invalid-cover-media.exception.ts',
+      'media/domain/exceptions/media-access-forbidden.exception.ts',
+    ];
+    for (const file of files) {
+      const source = createSourceFile(
+        file,
+        readFileSync(resolve(__dirname, '../../../modules', file), 'utf8'),
+        ScriptTarget.Latest,
+        true,
+      );
+      const imports = source.statements
+        .filter(isImportDeclaration)
+        .flatMap((entry) =>
+          isStringLiteral(entry.moduleSpecifier)
+            ? [entry.moduleSpecifier.text]
+            : [],
+        );
+      expect({
+        file,
+        frameworkImports: imports.filter((name) => name.startsWith('@nestjs/')),
+      }).toEqual({ file, frameworkImports: [] });
+    }
+  });
   it.each([
-    [
-      InvalidCredentialsException,
-      401,
-      'Invalid email or password',
-      'Unauthorized',
-    ],
-    [
-      EmailAlreadyExistsException,
-      409,
-      'User with this email already exists',
-      'Conflict',
-    ],
+    [InvalidCredentialsException, 'Invalid email or password'],
+    [EmailAlreadyExistsException, 'User with this email already exists'],
     [
       TwoFactorRequiredException,
-      401,
       'A valid two-factor or recovery code is required.',
-      'Unauthorized',
     ],
-    [UserNotFoundException, 404, 'User not found', 'Not Found'],
+    [UserNotFoundException, 'User not found'],
     [
       AvatarMediaForbiddenException,
-      403,
       'You can only use your own media as an avatar.',
-      'Forbidden',
     ],
     [
       CoverMediaForbiddenException,
-      403,
       'You can only use your own media as a profile cover.',
-      'Forbidden',
     ],
     [
       InvalidAvatarMediaException,
-      400,
       'The selected media cannot be used as an avatar.',
-      'Bad Request',
     ],
     [
       InvalidCoverMediaException,
-      400,
       'The selected media cannot be used as a profile cover.',
-      'Bad Request',
     ],
-    [
-      MediaAccessForbiddenException,
-      403,
-      'You do not have access to this media.',
-      'Forbidden',
-    ],
+    [MediaAccessForbiddenException, 'You do not have access to this media.'],
   ] as const)(
-    '%p preserves its structured envelope',
-    (Failure, statusCode, message, error) => {
+    '%p preserves its message without inheriting transport',
+    (Failure, message) => {
       const failure = new Failure();
-      expect(failure.getStatus()).toBe(statusCode);
+      expect(failure).toBeInstanceOf(Error);
+      expect(failure).toBeInstanceOf(Failure);
+      expect(failure).not.toBeInstanceOf(HttpException);
       expect(failure.message).toBe(message);
-      expect(failure.getResponse()).toEqual({ statusCode, message, error });
+      expect(failure).not.toHaveProperty('getStatus');
+      expect(failure).not.toHaveProperty('getResponse');
     },
   );
 
-  it('carries explicit rate-limit status for the approved Apollo mapping', () => {
+  it('keeps rate-limit identity and message without a transport envelope', () => {
     const failure = new LoginRateLimitedException();
     const message = 'Login is temporarily unavailable. Please try again later.';
-    expect(failure.getStatus()).toBe(429);
+    expect(failure).not.toBeInstanceOf(HttpException);
     expect(failure.message).toBe(message);
-    expect(failure.getResponse()).toEqual({ message, statusCode: 429 });
+    expect(failure).not.toHaveProperty('getStatus');
+    expect(failure).not.toHaveProperty('getResponse');
   });
 
   it.each([
@@ -104,11 +125,9 @@ describe('DEBT-079 inherited constructor envelopes', () => {
     '%p preserves its eligibility-specific message',
     (Failure, message) => {
       const failure = new Failure(message);
-      expect(failure.getResponse()).toEqual({
-        statusCode: 400,
-        message,
-        error: 'Bad Request',
-      });
+      expect(failure).toBeInstanceOf(Failure);
+      expect(failure.message).toBe(message);
+      expect(failure).not.toBeInstanceOf(HttpException);
     },
   );
 });

@@ -21,6 +21,18 @@ active package safe and buildable.
 
 ## Register
 
+### DEBT-079 — Domain failures coupled to Nest transport (Medium, ACCEPTED runtime correction; verification open)
+
+After accepted design/characterization PR93 and detailed design PR95, the owner
+approved a separate ten-error Auth/Users/Media runtime correction. Private errors
+become ordinary Error subclasses; owner-local mappers are invoked only at local
+or root presentation boundaries. Existing REST/GraphQL envelopes, accepted
+RATE_LIMITED429, unknown identity, refresh401 and application side-effect ordering
+remain protected. Focused units198/198 and expanded transport18/18 pass; complete
+quality/CI and owner acceptance remain open. See
+[runtime scope/evidence](DEBT_079_OWNER_FAILURE_RUNTIME.md). This does not migrate
+all application Nest usage or close D7/Phase11 preparation.
+
 ### DEBT-080 — Mandatory CI smoke silently permits retries (Medium, ACCEPTED, verification open)
 
 PR81 initial Web job120465792097 was green with one flaky/13 passed. Accepted

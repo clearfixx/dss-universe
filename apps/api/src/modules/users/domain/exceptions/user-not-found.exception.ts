@@ -15,12 +15,10 @@
  *
  * 🏗️ Architecture:
  * Domain exception.
- * Currently implemented using NestJS exception types.
+ * Framework-independent owner failure; presentation chooses its transport.
  *
  * ⚠️ Important:
- * This implementation is temporary.
- * A future architecture phase may replace framework-specific exceptions
- * with framework-agnostic domain errors.
+ * Keep HTTP statuses and Nest exceptions in Users presentation.
  *
  * 💡 Notes:
  * 🚧 Architecture evolves.
@@ -30,19 +28,17 @@
  * ===============================================================
  */
 
-import { NotFoundException } from '@nestjs/common';
-
 import { USER_ERRORS } from '../constants/user-errors.constant';
 
-export class UserNotFoundException extends NotFoundException {
+export class UserNotFoundException extends Error {
   constructor() {
     super(USER_ERRORS.NOT_FOUND);
+    this.name = UserNotFoundException.name;
   }
 }
 
 /**
  * -----------------------------------------------------------------------------
- * Today this is a Nest exception.
- * Tomorrow it may become a pure Domain Error.
+ * The profile may be missing; its transport passport belongs at the airlock.
  * -----------------------------------------------------------------------------
  */

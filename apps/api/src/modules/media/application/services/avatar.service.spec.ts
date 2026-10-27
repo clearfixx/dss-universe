@@ -17,6 +17,8 @@ import { MediaKind } from '../../domain/enums/media-kind.enum';
 import { MediaStatus } from '../../domain/enums/media-status.enum';
 import { MediaVisibility } from '../../domain/enums/media-visibility.enum';
 import { AvatarService } from './avatar.service';
+import { AvatarMediaForbiddenException } from '../../domain/exceptions/avatar-media-forbidden.exception';
+import { InvalidAvatarMediaException } from '../../domain/exceptions/invalid-avatar-media.exception';
 
 const candidate = {
   id: 'media-1',
@@ -66,9 +68,9 @@ describe('AvatarService', () => {
       ownerId: 'user-2',
     });
 
-    await expect(service.assign('user-1', 'media-1')).rejects.toMatchObject({
-      status: 403,
-    });
+    await expect(service.assign('user-1', 'media-1')).rejects.toBeInstanceOf(
+      AvatarMediaForbiddenException,
+    );
     expect(assign).not.toHaveBeenCalled();
   });
 
@@ -78,9 +80,10 @@ describe('AvatarService', () => {
       variants: [],
     });
 
-    await expect(service.assign('user-1', 'media-1')).rejects.toMatchObject({
-      status: 400,
-    });
+    await expect(service.assign('user-1', 'media-1')).rejects.toBeInstanceOf(
+      InvalidAvatarMediaException,
+    );
+    expect(assign).not.toHaveBeenCalled();
   });
 
   it('delegates avatar removal for the authenticated owner', async () => {
