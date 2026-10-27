@@ -2,7 +2,7 @@
 
 > Status: Active
 >
-> Updated: 2026-10-27
+> Updated: 2026-10-28
 
 ## Purpose
 
@@ -216,7 +216,21 @@ UI/UX changes or new exception. D7 changes no dependency or runtime. Old D6
 green audit evidence is historical, not a current waiver. Details and primary
 links: [D7 fresh dependency gate](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 
-### DEBT-079 — Domain exceptions depend on Nest HTTP transport (Medium, OPEN, separate scope required)
+### DEBT-079 — Domain exceptions depend on Nest HTTP transport (Medium, ACCEPTED runtime correction; verification open)
+
+The owner explicitly authorized runtime implementation after accepted PR95.
+Candidate PR99 `ae1b516` makes the ten Auth/Users/Media failures ordinary private
+Error subclasses and adds only owner-local presentation mapping capabilities.
+Application flows/transactions/ports and global formatter remain unchanged.
+Focused198/198 and expanded HTTP18/18 pass. Exact-head CI5/5 and separate
+uninterrupted quality:full exit0 now pass: coverage8/8/API1450/1450, all three
+mappers100%, E2E658/658 without skips, build6/6, post-build2/2 and Web15/15
+without retries. Owner runtime acceptance remains required. The first local
+attempt ended656/658 after a system-confirmed seven-hour sleep; failed artifacts
+and the additional post-resume Media timing observation are retained in D7,
+not claimed fixed. Accepted PR94 establishes RATE_LIMITED429; refresh401
+and unknown identity remain protected. The earlier pending-approval statements
+below are historical. This does not authorize broad application Nest cleanup.
 
 2026-10-27: owner accepted the detailed owner-local failure-boundary design in
 PR95, head `82ebba0`, merged `46395a7`. Exact-head local quality:full exit0,

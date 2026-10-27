@@ -1,6 +1,6 @@
 # D7 — Baseline release review
 
-Date: 2026-10-22. Updated: 2026-10-27. Branch: `debt/d7-release-gate`.
+Date: 2026-10-22. Updated: 2026-10-28. Branch: `debt/d7-release-gate`.
 Current accepted baseline: `f9ddeeb233779940ba753b5e901f1f15c3c6fa45`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
@@ -14,9 +14,39 @@ skips, both migrated Points cases and Web15/15 without retries. No automatic
 gamification consumer, formula, historical replay policy or broad DEBT-007
 completion is implemented or implied. D7 remains in progress.
 
-The next DEBT-079 runtime package still requires explicit approval: the accepted
-PR95 detailed design says implementation was not authorized. Accepted PR94
-already establishes the RATE_LIMITED/statusCode429 compatibility baseline.
+Later owner approval explicitly authorizes the separate DEBT-079 runtime package
+after PR95 design acceptance. Candidate PR99 `ae1b516` replaces ten private Nest
+domain errors with ordinary Error and applies owner-local mappers at actual
+root/local presentation entry points. No application service, transaction,
+business-port binding, global formatter, DTO, schema or UI change. Accepted PR94
+RATE_LIMITED429 and refresh uniform401 remain compatibility constraints.
+Focused units198/198 and expanded HTTP18/18 pass, including explicit unknown-error
+production formatter faults. RED domain12/12 and transport8/8 reports are retained.
+Mapper coverage thresholds are100%; full integration gate/CI and owner acceptance
+remain open. The older design-only/no-runtime-authority statements are historical.
+
+PR99 CI5/5 is verified with strict E2E658/658 across60 suites, zero skips,
+including all expanded transport/production-redaction cases. CI API SHA256
+`1c72e8366b34fcb466ead5ec9738f4142e1c4bc9316b0bb342403143b77f77e7`.
+The first local gate passed coverage8/8/API1450/1450 and all three new mappers
+had zero uncovered statements/functions/branches. It then encountered Windows
+sleep15:27:38UTC–22:44:20UTC on October27 (Power-Troubleshooter event1,
+Kernel-Power42 Button or Lid), and ended exit1 at E2E656/658 on October28.
+Interaction-owner timeout crossed the interruption; a Media platform timeout
+also occurred after resume, whose individual cause is not proven. Build/Web
+were not reached. Failed report SHA256
+`676718227df7758b07e588e38b5cbad9ba7d748361e2bbae2eff91538fc27bbc`;
+system-event XML SHA256 `e0f6ab1c4e8c6faa8130a1eecc4626e8c3f321453f7bb85b04013fea7a9f106f`.
+After the process terminated, owner explicitly confirmed a fresh no-sleep window.
+A separate exact-code full gate completed exit0 in that confirmed window:
+coverage8/8/API1450/1450, all three mappers100%, E2E658/658 without skips,
+GraphQL, build6/6, post-build2/2 and fresh Web15/15 on3195 without retries
+(39.7s). No new system sleep event was found during this gate. Formerly timed-out
+interaction-owner and Media cases pass62ms/139ms; this does not prove the
+individual Media timing cause or represent a runtime timing repair.
+Local API SHA256 `6ab348d2c7d8289603b3b595947971738a8bad211a626ac81302326466d7f2c5`.
+PR99 `ae1b516` is ready for owner runtime acceptance, not merged. Historical
+interruptions, DEBT-086 and remaining D7 decisions are not waived.
 
 ## 2026-10-27 Editor validation acceptance
 

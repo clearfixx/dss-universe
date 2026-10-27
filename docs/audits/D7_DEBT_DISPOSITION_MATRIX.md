@@ -1,6 +1,6 @@
 # D7 — Individual debt review matrix
 
-Updated: 2026-10-27. Current accepted baseline: `f9ddeeb`; initial review baseline
+Updated: 2026-10-28. Current accepted baseline: `f9ddeeb`; initial review baseline
 was `f118d82`.
 Status: **IN PROGRESS; not a release certificate**.
 
@@ -142,7 +142,7 @@ does not override missing risk decisions or accept an unmerged candidate.
 | DEBT-076 | C      | Accepted bounded Web workers/config regression and unchanged timeout/coverage; scoped mitigation only.                                                                                                                                  |
 | DEBT-077 | C      | Accepted actual-observer readiness correction and fresh/CI smoke; no runtime/UI or retry-to-green change.                                                                                                                               |
 | DEBT-078 | C      | Accepted exact generated-path format exclusion and actual Prettier policy regression.                                                                                                                                                   |
-| DEBT-079 | M      | Characterization PR93 and detailed design PR95 are accepted; final design head82ebba0 has CI5/5 and local full gate0, merged46395a7. Domain decoupling implementation remains unauthorised; separate mapping PR94 is unaccepted.        |
+| DEBT-079 | M      | Approved runtime PR99 ae1b516: CI5/5, uninterrupted full gate0, API1450/1450, E2E658/658 without skips, Web15/15; all three mappers100%. Interrupted656/658 and sleep evidence retained. Owner runtime acceptance pending.              |
 | DEBT-080 | C      | Owner accepted test/CI-only PR83, mergeda35326a. Exact headbde1ad6: CI5/5, local gate0, E2E593/593 and Web14/14 without retries. Does not fix early-interaction081 or React083.                                                         |
 | DEBT-081 | C      | Runtime package approved and accepted: PR90 head29b0803, mergede26b0fc; CI5/5, local gate0, E2E607/607 and Web14/14 without retries. Controlled lifecycle regression fixed; not attribution of every natural flake.                     |
 | DEBT-082 | C      | Owner accepted PR85 integration head8cc1e50, merged05e177d; CI5/5, local gate0, coverage8/8 including Editor, E2E607/607 and Web14/14. Both quality policies preserved.                                                                 |
