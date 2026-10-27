@@ -1,12 +1,28 @@
 /**
- * DSS Universe — Full Quality Gate
- * File: scripts/run-full-quality.mjs
- * Purpose: Sequential verification against already prepared disposable services.
- * Important: Never installs services, resets databases or reuses a Web server.
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Full Quality Gate
+ * 📄 File: scripts/run-full-quality.mjs
+ *
+ * 🎯 Purpose:
+ * Runs complete sequential verification against prepared disposable services.
+ *
+ * 🧠 Responsibilities:
+ * • checks one resolved Web endpoint before checks and browser startup;
+ * • enforces full API reports and fresh no-retry browser verification.
+ *
+ * 🏗️ Architecture:
+ * Node-only orchestration using explicit environment and preflight policies.
+ *
+ * ⚠️ Important:
+ * Never installs services, resets databases or reuses another Web server.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync } from "node:fs";
-import { createServer } from "node:net";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -15,6 +31,8 @@ import {
   createQualityEnvironment,
   qualitySteps,
 } from "./full-quality-policy.mjs";
+import { resolveWebSmokeEndpoint } from "./web-smoke-endpoint.mjs";
+import { assertWebSmokePortFree } from "./web-smoke-preflight.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 if (process.argv.length !== 2 || !process.env.npm_execpath) {
@@ -23,6 +41,7 @@ if (process.argv.length !== 2 || !process.env.npm_execpath) {
   );
 }
 const env = createQualityEnvironment(process.env);
+const webEndpoint = resolveWebSmokeEndpoint(env);
 const cache = resolve(root, "node_modules/.cache");
 mkdirSync(cache, { recursive: true });
 const evidence = mkdtempSync(resolve(cache, "quality-full-"));
@@ -47,27 +66,14 @@ function run(args, childEnv) {
     );
 }
 
-async function assertWebPortFree() {
-  await new Promise((resolvePort, reject) => {
-    const server = createServer();
-    server.once("error", () =>
-      reject(
-        new Error(
-          "Web smoke requires free port 3100; existing servers are never reused or stopped.",
-        ),
-      ),
-    );
-    server.listen(3100, "127.0.0.1", () => server.close(resolvePort));
-  });
-}
-
-await assertWebPortFree();
+console.log(`[quality:full] Web smoke endpoint: ${webEndpoint.baseURL}`);
+await assertWebSmokePortFree(webEndpoint);
 for (const args of qualitySteps(apiReport)) {
   run(args, env);
   if (args.includes("test:e2e"))
     assertApiReport(JSON.parse(readFileSync(apiReport, "utf8")), env);
 }
-await assertWebPortFree();
+await assertWebSmokePortFree(webEndpoint);
 run(
   [
     "--filter",
@@ -79,7 +85,7 @@ run(
     `--reporter=list,${resolve(root, "scripts/full-quality-web-reporter.mjs")}`,
   ],
   {
-    ...createBrowserEnvironment(process.env),
+    ...createBrowserEnvironment(env),
     DSS_QUALITY_WEB_REPORT: resolve(evidence, "web-smoke.json"),
   },
 );

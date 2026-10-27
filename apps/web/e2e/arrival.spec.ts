@@ -1,3 +1,26 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Guest Arrival Smoke Tests
+ * 📄 File: apps/web/e2e/arrival.spec.ts
+ *
+ * 🎯 Purpose:
+ * Verifies the guest arrival and local demo interaction lifecycle.
+ *
+ * 🧠 Responsibilities:
+ * • checks visibility, keyboard focus and demo progression;
+ * • verifies the no-JavaScript path on the configured test endpoint.
+ *
+ * 🏗️ Architecture:
+ * Browser-only regressions; no application or backend ownership.
+ *
+ * ⚠️ Important:
+ * Preserve existing interaction, visibility, focus and console assertions.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { expect, test } from "@playwright/test";
 import {
   installStationObserverProbe,
@@ -84,10 +107,14 @@ test("keyboard interaction reveals the interface and search returns focus", asyn
 
 test("the guest page remains usable without JavaScript", async ({
   browser,
+  baseURL,
 }) => {
-  const context = await browser.newContext({ javaScriptEnabled: false });
+  const context = await browser.newContext({
+    javaScriptEnabled: false,
+    baseURL,
+  });
   const page = await context.newPage();
-  await page.goto("http://127.0.0.1:3100/");
+  await page.goto("/");
   await expect(
     page.getByRole("heading", { name: /DSS Universe/ }),
   ).toBeVisible();
