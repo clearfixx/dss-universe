@@ -10,6 +10,10 @@
  * including registration failure boundaries, credential transaction rollback
  * and authoritative state guards.
  *
+ * ⚠️ Important:
+ * Optional credential-rotation diagnostics emit timings only, never secrets.
+ * Real authentication, assertions and the default test deadline stay intact.
+ *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
@@ -3969,6 +3973,21 @@ describe('DSS API (e2e)', () => {
   });
 
   it('rotates authentication immediately after email and password changes', async () => {
+    // Opt-in stage timings contain no credentials, subject IDs or response bodies.
+    const diagnostic = process.env.DSS_AUTH_ROTATION_DIAGNOSTIC === '1';
+    const startedAt = performance.now();
+    let previousStageAt = startedAt;
+    const checkpoint = (stage: string) => {
+      if (!diagnostic) return;
+      const now = performance.now();
+      console.info('[DEBT-086]', {
+        stage,
+        elapsedMs: Math.round(now - startedAt),
+        stageMs: Math.round(now - previousStageAt),
+      });
+      previousStageAt = now;
+    };
+    checkpoint('start');
     const suffix = `${Date.now()}${Math.random().toString(16).slice(2)}`;
     const username = `credentials-${suffix}`;
     const oldEmail = `${username}@dss.test`;
@@ -3994,6 +4013,7 @@ describe('DSS API (e2e)', () => {
     const registered = registration.body as RegisterResponse;
     const userId = registered.data.register.user.id;
     const registrationToken = registered.data.register.tokens.accessToken;
+    checkpoint('registration');
 
     await request(app.getHttpServer())
       .post('/api/graphql')
@@ -4011,6 +4031,7 @@ describe('DSS API (e2e)', () => {
       })
       .expect(200)
       .expect({ data: { changeViewerEmail: { success: true } } });
+    checkpoint('email-change');
 
     const expiredRegistrationToken = await request(app.getHttpServer())
       .post('/api/graphql')
@@ -4022,6 +4043,7 @@ describe('DSS API (e2e)', () => {
         ?.extensions.code,
     ).toBe('UNAUTHENTICATED');
 
+    checkpoint('registration-token-rejected');
     const emailLogin = await request(app.getHttpServer())
       .post('/api/graphql')
       .send({
@@ -4037,6 +4059,7 @@ describe('DSS API (e2e)', () => {
     const loggedInAfterEmail = emailLogin.body as LoginResponse;
     expect(loggedInAfterEmail.errors).toBeUndefined();
     expect(loggedInAfterEmail.data.login.user.email).toBe(newEmail);
+    checkpoint('email-login');
 
     const emailToken = loggedInAfterEmail.data.login.tokens.accessToken;
     await request(app.getHttpServer())
@@ -4055,6 +4078,7 @@ describe('DSS API (e2e)', () => {
       })
       .expect(200)
       .expect({ data: { changeViewerPassword: { success: true } } });
+    checkpoint('password-change');
 
     const expiredEmailToken = await request(app.getHttpServer())
       .post('/api/graphql')
@@ -4066,6 +4090,7 @@ describe('DSS API (e2e)', () => {
         .code,
     ).toBe('UNAUTHENTICATED');
 
+    checkpoint('email-token-rejected');
     const finalLogin = await request(app.getHttpServer())
       .post('/api/graphql')
       .send({
@@ -4081,6 +4106,7 @@ describe('DSS API (e2e)', () => {
     const loggedInAfterPassword = finalLogin.body as LoginResponse;
     expect(loggedInAfterPassword.errors).toBeUndefined();
     expect(loggedInAfterPassword.data.login.user.id).toBe(userId);
+    checkpoint('password-login');
     await expect(
       app.get(PrismaService).auditRecord.count({
         where: {
@@ -4091,6 +4117,7 @@ describe('DSS API (e2e)', () => {
         },
       }),
     ).resolves.toBe(2);
+    checkpoint('audit-verified');
   });
 
   it('lists device sessions and revokes other or current sessions immediately', async () => {

@@ -96,6 +96,37 @@
         "DSS_REQUIRE_FULL_API_TESTS"
       ]
     },
+    "@dss/web#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/scripts/web-smoke-endpoint.mjs"
+      ]
+    },
+    "@dss/web#lint": {
+      "dependsOn": ["^build", "^lint"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/scripts/web-smoke-endpoint.mjs"
+      ]
+    },
+    "@dss/web#typecheck": {
+      "dependsOn": ["^build", "^typecheck"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/scripts/web-smoke-endpoint.mjs"
+      ]
+    },
+    "@dss/web#test:e2e": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "env": ["DSS_WEB_TEST_PORT"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/scripts/web-smoke-endpoint.mjs"
+      ]
+    },
     "clean": {
       "cache": false
     }

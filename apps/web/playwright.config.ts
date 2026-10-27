@@ -1,4 +1,30 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Web Test Infrastructure
+ * 📄 File: apps/web/playwright.config.ts
+ *
+ * 🎯 Purpose:
+ * Configures browser smoke tests against one resolved loopback endpoint.
+ *
+ * 🧠 Responsibilities:
+ * • keeps browser navigation and the isolated server endpoint aligned;
+ * • preserves no-retry CI checks and the existing startup deadline.
+ *
+ * 🏗️ Architecture:
+ * Test-only configuration; imports only the pure endpoint resolver.
+ *
+ * ⚠️ Important:
+ * No application endpoint changes or reuse of another server under CI.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { defineConfig, devices } from "@playwright/test";
+import { resolveWebSmokeEndpoint } from "../../scripts/web-smoke-endpoint.mjs";
+
+const endpoint = resolveWebSmokeEndpoint();
 
 export default defineConfig({
   testDir: "./e2e",
@@ -7,7 +33,7 @@ export default defineConfig({
   retries: 0,
   reporter: process.env.CI ? "github" : "list",
   use: {
-    baseURL: "http://127.0.0.1:3100",
+    baseURL: endpoint.baseURL,
     trace: "on-first-retry",
   },
   projects: [
@@ -17,8 +43,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "pnpm dev --port 3100",
-    url: "http://127.0.0.1:3100",
+    command: `pnpm dev --hostname ${endpoint.hostname} --port ${endpoint.port}`,
+    url: endpoint.baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },
