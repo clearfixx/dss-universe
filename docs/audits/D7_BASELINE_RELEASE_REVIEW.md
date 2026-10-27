@@ -1,9 +1,40 @@
 # D7 — Baseline release review
 
 Date: 2026-10-22. Updated: 2026-10-27. Branch: `debt/d7-release-gate`.
-Current accepted baseline: `8e3c4c7d229f3a6112c9e427aaf2d5f1c64c5fed`.
+Current accepted baseline: `46395a747a3d8d00162b97e5074e1661ffa77fc9`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
+
+## 2026-10-27 detailed design acceptance and evidence-retention exception
+
+Owner accepted design-only PR95 at `82ebba0`, merged `46395a7` at06:47:08UTC.
+Exact-head local quality:full exit0: coverage8/8 with API1327/1327, strict
+E2E623/623 in58 suites, build6/6, post-build2/2, Web14/14 without retries;
+CI5/5, downloaded API623/623 with pending0. Local API SHA256
+`feea17b3afe2f21d6d2148d59d5ab170d4ec886f413325f5caf5049d56b18c16`;
+CI SHA256 `17714447b359e3c4537721e8976a65daac75af6b9e8420559b5b27967604e361`.
+DEBT-079 remains open: this accepts the detailed design, not Domain decoupling
+implementation or the separate PR94 runtime mapping.
+
+Revalidation found that four local October26 DEBT-084/085 trace ZIPs and the
+original failure page context are unavailable in the Playwright output tree;
+no matching checked cache backup was found. Playwright1.64.0 clears that output
+root on subsequent ordinary runs. This is an agent evidence-retention mistake,
+not a new demonstrated DSS runtime defect. Git cannot recover those ignored
+files. Older preservation statements below are historical, not current raw-file
+availability claims. Recorded observations/hashes and separate quality reports
+remain, but do not substitute for the missing originals.
+
+PR96 `1d6f3c9` records the exception and new controlled production evidence at
+pre-fix `c5966e4` versus corrected `c83150c`: hero interception/playing/clip50percent
+versus pointer receipt/ready/clip none, with real cancellation and restored focus
+on corrected code. New traces are outside the output root, SHA256
+`535db4ff15349dac9872f73e2cd8eaf02db9076a0bd583ce6b91d5af0af349db` and
+`5485a899671289aeae72f18bd6ebdd555b9b532d7a9e5193231eac93c5788b42`.
+Each control ran once with no retries; hashes and report provenance were verified.
+These are new experiments, not recovered October26 artifacts or precise
+natural-failure attribution. New PR96 full-gate/CI verification and owner review
+remain open. No D7 acceptance or risk waiver follows this reconciliation.
 
 ## 2026-10-27 diagnostic acceptance override
 

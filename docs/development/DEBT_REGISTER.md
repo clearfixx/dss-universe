@@ -22,7 +22,7 @@ active package safe and buildable.
 
 ## Register
 
-D7 review now integrates accepted main `8e3c4c7`; the original baseline was
+D7 review now integrates accepted main `46395a7`; the original baseline was
 `f118d82`. See
 [current evidence and limits](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079/080.
@@ -42,7 +42,11 @@ post-build2/2 passed; CI was green but does not waive the local failure.
 Owner approved separate diagnostic/test scope. One instrumented natural flow
 passed but was explicitly not treated as a fix. A distinct controlled early-focus
 experiment reproduced hero hit interception with console clip-path50percent.
-Original error context and separate trace evidence were preserved. No test-only
+Original error context and separate trace evidence were initially captured, but
+their local raw files are now unavailable after ordinary Playwright output
+cleanup. PR96 records that retention mistake and a new controlled production
+comparison, archived outside the output root; it does not recreate the missing
+natural-failure snapshot. No test-only
 readiness workaround is accepted as a root-cause correction. Runtime work is
 separate DEBT-085; [candidate evidence](https://github.com/clearfixx/dss-universe/pull/96)
 retains the diagnostic history. No scoped acceptance/closure yet.
@@ -63,6 +67,14 @@ The local full gate terminated exit1 at API622/623: credential rotation exceeded
 5000ms (reported5003ms), before full-gate build/Web. The same CI case took2247ms.
 Separate approved DEBT-086 investigates that difference; no acceptance or merge.
 Do not resolve PR94 or D7 from focused proofs or CI alone.
+
+Current PR96 `1d6f3c9` integrates accepted main `46395a7` and records the missing
+October26 raw traces honestly. New production controls at pre-fix `c5966e4` and
+corrected `c83150c` reproduce broken versus working hit-testing; the corrected
+case also clicks Cancel and verifies restored input focus. Both new trace ZIPs
+and reports are archived outside `test-results`, with verified hashes and
+provenance. This is new controlled evidence, not recovery of old artifacts or
+attribution of every historical flake. New-head full gate/CI and acceptance remain open.
 
 ### DEBT-086 — Local credential-rotation E2E deadline (Medium, ACCEPTED diagnostic/test scope; cause open)
 
@@ -163,6 +175,13 @@ green audit evidence is historical, not a current waiver. Details and primary
 links: [D7 fresh dependency gate](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 
 ### DEBT-079 — Domain exceptions depend on Nest HTTP transport (Medium, OPEN, separate scope required)
+
+2026-10-27: owner accepted the detailed owner-local failure-boundary design in
+PR95, head `82ebba0`, merged `46395a7`. Exact-head local quality:full exit0,
+CI5/5, coverage8/8 with API1327/1327, E2E623/623, build6/6, post-build2/2 and
+Web14/14 without retries. This accepts one design document, not runtime code.
+The ten Domain classes still depend on Nest; actual decoupling needs separate
+implementation authorization. The separately approved PR94 mapping remains unaccepted.
 
 2026-10-26 checkpoint: owner accepted design/characterization PR93, merged as
 `a8c71fa`; exact head `7a86b91` passed CI5/5 and local quality:full exit0,

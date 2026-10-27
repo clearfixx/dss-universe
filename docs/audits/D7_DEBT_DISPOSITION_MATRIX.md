@@ -1,10 +1,14 @@
 # D7 — Individual debt review matrix
 
-Updated: 2026-10-27. Current accepted baseline: `8e3c4c7`; initial review baseline
+Updated: 2026-10-27. Current accepted baseline: `46395a7`; initial review baseline
 was `f118d82`.
 Status: **IN PROGRESS; not a release certificate**.
 
-Latest override: owner accepted diagnostic PR97 `0a7594e`, merged `8e3c4c7`.
+Latest override: owner accepted detailed design-only PR95 `82ebba0`, merged
+`46395a7`: CI5/5 and local full gate0, E2E623/623, Web14/14 without retries.
+DEBT-079 actual Domain decoupling remains open and is not implemented.
+
+Earlier scoped acceptance: owner accepted diagnostic PR97 `0a7594e`, merged `8e3c4c7`.
 Final CI5/5, API623/623, Web14/14 without retries; identical code had local full
 gate0. This accepts diagnostics only; the timeout cause remains open (route O).
 
@@ -120,13 +124,13 @@ does not override missing risk decisions or accept an unmerged candidate.
 | DEBT-076 | C      | Accepted bounded Web workers/config regression and unchanged timeout/coverage; scoped mitigation only.                                                                                                                                       |
 | DEBT-077 | C      | Accepted actual-observer readiness correction and fresh/CI smoke; no runtime/UI or retry-to-green change.                                                                                                                                    |
 | DEBT-078 | C      | Accepted exact generated-path format exclusion and actual Prettier policy regression.                                                                                                                                                        |
-| DEBT-079 | M      | Design/characterization accepted in PR93 with real transport coverage of ten failures; Domain decoupling remains open. Separate approved mapping PR94 is under verification, not accepted.                                                   |
+| DEBT-079 | M      | Characterization PR93 and detailed design PR95 are accepted; final design head82ebba0 has CI5/5 and local full gate0, merged46395a7. Domain decoupling implementation remains unauthorised; separate mapping PR94 is unaccepted.             |
 | DEBT-080 | C      | Owner accepted test/CI-only PR83, mergeda35326a. Exact headbde1ad6: CI5/5, local gate0, E2E593/593 and Web14/14 without retries. Does not fix early-interaction081 or React083.                                                              |
 | DEBT-081 | C      | Runtime package approved and accepted: PR90 head29b0803, mergede26b0fc; CI5/5, local gate0, E2E607/607 and Web14/14 without retries. Controlled lifecycle regression fixed; not attribution of every natural flake.                          |
 | DEBT-082 | C      | Owner accepted PR85 integration head8cc1e50, merged05e177d; CI5/5, local gate0, coverage8/8 including Editor, E2E607/607 and Web14/14. Both quality policies preserved.                                                                      |
 | DEBT-083 | O      | Approved diagnostic PR87: local gate at77ea28d red on React answer at5000ms,13/14 Web, zero retries; retained trace/screenshot. Docs-only0fda41a does not fix it. Controlled081 mechanism is separate from natural-failure attribution.      |
-| DEBT-084 | M      | Approved diagnostic/test scope: local PR94 Web13/14 failure retained; controlled early-focus hero interception reproduced. No test-only fix or acceptance claimed.                                                                           |
-| DEBT-085 | M      | PR96 head60105a4: focus-aware finish guard; focused/production proof and CI5/5 green. Local full gate failed at API622/623 due rotation deadline; full acceptance remains open.                                                              |
+| DEBT-084 | M      | Historical failure summary/observations remain; original local raw traces/context are unavailable (retention errata). New controlled production comparison is archived outside output cleanup. No test-only fix or acceptance claimed.       |
+| DEBT-085 | M      | PR96 head1d6f3c9: accepted-main integration and newly archived pre/post production controls. Historical60105a4 gate failure remains. New-head full gate/CI and owner acceptance are open; old trace loss is explicit.                        |
 | DEBT-086 | O      | Owner accepted diagnostic PR97 head0a7594e, merged8e3c4c7: CI5/5, API623/623, Web14/14; identical code local full gate0. AgentReporter explains suppressed passing logs, not the original timeout. Cause/correction remain open.             |
 
 ## Execution order from this checkpoint
