@@ -26,10 +26,20 @@ no skips). PR94 includes accepted arrival/main and remains unaccepted. Its local
 gate reached API E2E after successful coverage8/8/API1327/1327, but Windows slept
 from10:38:40UTC to10:58:24UTC (Power-Troubleshooter event1; Kernel-Power42 says
 Button or Lid). A Community Points afterEach cleanup hook then timed out.
-The process continued after resume; no complete successful local gate is claimed.
-Original log and exported system-event XML are preserved. Owner confirmed a
-fresh uninterrupted execution window; any later gate must use separate evidence,
-not erase this externally interrupted run or increase test timeouts.
+The process continued after resume and ended exit1 with622/623, one failed
+afterEach cleanup hook. Build/Web were not reached. Original log/JSON and
+system-event XML are preserved; failed API SHA256
+`01b1d83ce7118e25e49b8abf01a22d5db4c965e16a3f2097d74b67d782a94870`.
+
+After that process terminated, owner confirmed an uninterrupted execution
+window. A new exact-head `9672731` full gate completed exit0 with unchanged
+code/assertions/timeouts: coverage8/8/API1327/1327, E2E623/623 without skips,
+GraphQL, build6/6, post-build2/2, Web15/15 on3195 without retries (26.6s).
+No new system sleep event was found during this successful run. Local API
+SHA256 `aa287b2818366d5c961f9b01108dd94e83965b30aed1df8504a2b8f9cdc3761b`;
+CI API SHA256 `bd06d41ab166e04bc9e1b90e54c35bd34b6b9d9c64c735f37e964a0dae0fcb05`.
+PR94 is ready for owner acceptance, not merged; broader Domain decoupling,
+DEBT-086 and D7 remain open. The separate interrupted attempt is not erased.
 
 ## 2026-10-27 smoke endpoint acceptance and arrival integration
 
