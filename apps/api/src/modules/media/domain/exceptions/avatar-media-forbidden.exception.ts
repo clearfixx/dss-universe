@@ -12,10 +12,9 @@
  * ===============================================================
  */
 
-import { ForbiddenException } from '@nestjs/common';
-
-export class AvatarMediaForbiddenException extends ForbiddenException {
+export class AvatarMediaForbiddenException extends Error {
   constructor() {
     super('You can only use your own media as an avatar.');
+    this.name = AvatarMediaForbiddenException.name;
   }
 }

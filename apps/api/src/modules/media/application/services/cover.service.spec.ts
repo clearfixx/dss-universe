@@ -17,6 +17,8 @@ import { MediaStatus } from '../../domain/enums/media-status.enum';
 import { MediaVisibility } from '../../domain/enums/media-visibility.enum';
 import type { CoverRepository } from '../../domain/repositories/cover.repository.interface';
 import { CoverService } from './cover.service';
+import { CoverMediaForbiddenException } from '../../domain/exceptions/cover-media-forbidden.exception';
+import { InvalidCoverMediaException } from '../../domain/exceptions/invalid-cover-media.exception';
 
 const candidate = {
   id: 'media-1',
@@ -63,18 +65,19 @@ describe('CoverService', () => {
   it('rejects media owned by another user', async () => {
     findCandidate.mockResolvedValue({ ...candidate, ownerId: 'user-2' });
 
-    await expect(service.assign('user-1', 'media-1')).rejects.toMatchObject({
-      status: 403,
-    });
+    await expect(service.assign('user-1', 'media-1')).rejects.toBeInstanceOf(
+      CoverMediaForbiddenException,
+    );
     expect(assign).not.toHaveBeenCalled();
   });
 
   it('rejects media without the canonical cover variant', async () => {
     findCandidate.mockResolvedValue({ ...candidate, variants: [] });
 
-    await expect(service.assign('user-1', 'media-1')).rejects.toMatchObject({
-      status: 400,
-    });
+    await expect(service.assign('user-1', 'media-1')).rejects.toBeInstanceOf(
+      InvalidCoverMediaException,
+    );
+    expect(assign).not.toHaveBeenCalled();
   });
 
   it('delegates cover removal for the authenticated owner', async () => {

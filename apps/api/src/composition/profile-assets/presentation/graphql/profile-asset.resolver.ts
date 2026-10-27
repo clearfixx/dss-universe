@@ -12,6 +12,7 @@
  * • preserves existing mutation names, arguments and Viewer transport;
  * • derives the target subject from authenticated self context;
  * • delegates composition and uses the published Users presenter.
+ * • maps known Media failures while preserving unknown rejection identities.
  *
  * 🏗️ Architecture:
  * Thin GraphQL composition resolver; no foreign service or mapper injection.
@@ -25,6 +26,7 @@
 import { UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Resolver } from '@nestjs/graphql';
 import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
+import { mapMediaFailure } from '@api/modules/media/presentation';
 import {
   ViewerModel,
   presentViewerProfile,
@@ -39,29 +41,49 @@ export class ProfileAssetResolver {
     @AuthUser() actor: AuthenticatedUser,
     @Args('mediaId', { type: () => ID }) mediaId: string,
   ): Promise<ViewerModel> {
-    return presentViewerProfile(
-      await this.presentation.assignAvatar(actor.id, mediaId),
-    );
+    try {
+      return presentViewerProfile(
+        await this.presentation.assignAvatar(actor.id, mediaId),
+      );
+    } catch (failure) {
+      throw mapMediaFailure(failure);
+    }
   }
   @Mutation(() => ViewerModel)
   async removeViewerAvatar(
     @AuthUser() actor: AuthenticatedUser,
   ): Promise<ViewerModel> {
-    return presentViewerProfile(await this.presentation.removeAvatar(actor.id));
+    try {
+      return presentViewerProfile(
+        await this.presentation.removeAvatar(actor.id),
+      );
+    } catch (failure) {
+      throw mapMediaFailure(failure);
+    }
   }
   @Mutation(() => ViewerModel)
   async setViewerCover(
     @AuthUser() actor: AuthenticatedUser,
     @Args('mediaId', { type: () => ID }) mediaId: string,
   ): Promise<ViewerModel> {
-    return presentViewerProfile(
-      await this.presentation.assignCover(actor.id, mediaId),
-    );
+    try {
+      return presentViewerProfile(
+        await this.presentation.assignCover(actor.id, mediaId),
+      );
+    } catch (failure) {
+      throw mapMediaFailure(failure);
+    }
   }
   @Mutation(() => ViewerModel)
   async removeViewerCover(
     @AuthUser() actor: AuthenticatedUser,
   ): Promise<ViewerModel> {
-    return presentViewerProfile(await this.presentation.removeCover(actor.id));
+    try {
+      return presentViewerProfile(
+        await this.presentation.removeCover(actor.id),
+      );
+    } catch (failure) {
+      throw mapMediaFailure(failure);
+    }
   }
 }
