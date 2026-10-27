@@ -1,9 +1,19 @@
 # D7 — Baseline release review
 
 Date: 2026-10-22. Updated: 2026-10-28. Branch: `debt/d7-release-gate`.
-Current accepted baseline: `f9ddeeb233779940ba753b5e901f1f15c3c6fa45`.
+Current accepted baseline: `a715ece34ce3a7346fa9810d6c9621459da486cc`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
+
+## 2026-10-28 owner failure runtime acceptance
+
+Owner explicitly accepted DEBT-079 runtime PR99 `ae1b516`, merged `a715ece`
+at2026-10-27T23:05:36UTC (October28 local time). Exact-head CI5/5 and separate
+uninterrupted full gate0 below support scoped closure of the ten private Domain
+dependencies and their necessary presentation mapping: API1450/1450, mapper100%,
+E2E658/658 without skips, build6/6, post-build2/2 and Web15/15 without retries.
+No broad application Nest migration, D7 acceptance, DEBT-086 waiver or historical
+Media timing correction is implied. Failed sleep-interrupted evidence is retained.
 
 ## 2026-10-27 delivery design acceptance
 
@@ -45,8 +55,8 @@ GraphQL, build6/6, post-build2/2 and fresh Web15/15 on3195 without retries
 interaction-owner and Media cases pass62ms/139ms; this does not prove the
 individual Media timing cause or represent a runtime timing repair.
 Local API SHA256 `6ab348d2c7d8289603b3b595947971738a8bad211a626ac81302326466d7f2c5`.
-PR99 `ae1b516` is ready for owner runtime acceptance, not merged. Historical
-interruptions, DEBT-086 and remaining D7 decisions are not waived.
+PR99 `ae1b516` owner runtime acceptance/merge is recorded in the override above.
+Historical interruptions, DEBT-086 and remaining D7 decisions are not waived.
 
 ## 2026-10-27 Editor validation acceptance
 

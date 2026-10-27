@@ -37,7 +37,8 @@ or a declaration that every debt has been reviewed/closed.
 Scoped acceptance override: owner accepted narrow rate-limit mapping PR94
 `9672731`, merged `393e359`: exact-head CI5/5 and uninterrupted local full
 gate0, E2E623/623, Web15/15. This resolves only the approved GraphQL429 mapping;
-DEBT-079 Domain/Nest decoupling remains open and unauthorised for implementation.
+DEBT-079's later ten-error runtime correction is accepted below; this does not
+authorize broader application Nest cleanup.
 Earlier PR94-pending references below are retained as historical checkpoints.
 
 DEBT-007 verification override: design/characterization PR92 `4da51b6` has
@@ -216,7 +217,13 @@ UI/UX changes or new exception. D7 changes no dependency or runtime. Old D6
 green audit evidence is historical, not a current waiver. Details and primary
 links: [D7 fresh dependency gate](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 
-### DEBT-079 — Domain exceptions depend on Nest HTTP transport (Medium, ACCEPTED runtime correction; verification open)
+### DEBT-079 — Domain exceptions depend on Nest HTTP transport (Medium, RESOLVED scoped runtime package)
+
+Owner explicitly accepted PR99 `ae1b516`, merged `a715ece` at
+2026-10-27T23:05:36UTC. The exact-head full gate/CI evidence below is now accepted
+for the ten errors and their required local/root presentation boundaries. See
+[runtime scope](DEBT_079_OWNER_FAILURE_RUNTIME.md). Historical failed artifacts
+and unrelated timing questions remain explicit; D7 is not accepted.
 
 The owner explicitly authorized runtime implementation after accepted PR95.
 Candidate PR99 `ae1b516` makes the ten Auth/Users/Media failures ordinary private
@@ -225,7 +232,7 @@ Application flows/transactions/ports and global formatter remain unchanged.
 Focused198/198 and expanded HTTP18/18 pass. Exact-head CI5/5 and separate
 uninterrupted quality:full exit0 now pass: coverage8/8/API1450/1450, all three
 mappers100%, E2E658/658 without skips, build6/6, post-build2/2 and Web15/15
-without retries. Owner runtime acceptance remains required. The first local
+without retries. Owner runtime acceptance is recorded above. The first local
 attempt ended656/658 after a system-confirmed seven-hour sleep; failed artifacts
 and the additional post-resume Media timing observation are retained in D7,
 not claimed fixed. Accepted PR94 establishes RATE_LIMITED429; refresh401
