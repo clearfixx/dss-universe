@@ -1,10 +1,15 @@
 # D7 — Individual debt review matrix
 
-Updated: 2026-10-27. Current accepted baseline: `46395a7`; initial review baseline
+Updated: 2026-10-27. Current accepted baseline: `b63d555`; initial review baseline
 was `f118d82`.
 Status: **IN PROGRESS; not a release certificate**.
 
-Latest override: owner accepted detailed design-only PR95 `82ebba0`, merged
+Latest override: owner accepted DEBT-087 PR98 `b65df03`, merged `b63d555`:
+CI5/5 and local full gate0, strict E2E623/623, Web14/14 on3195 without retries.
+PR96 integration `6b1c6ca` also has CI5/5 and local full gate0, E2E623/623,
+Web15/15; acceptance remains pending. DEBT-086 is not resolved by either package.
+
+Earlier override: owner accepted detailed design-only PR95 `82ebba0`, merged
 `46395a7`: CI5/5 and local full gate0, E2E623/623, Web14/14 without retries.
 DEBT-079 actual Domain decoupling remains open and is not implemented.
 
@@ -26,8 +31,8 @@ DEBT-066 mapping is approved and implemented in PR89 `a528c90`, CI5/5; local
 full gate and integration with accepted PR81 remain open. See the latest
 [acceptance checkpoint](D7_BASELINE_RELEASE_REVIEW.md) before older row text.
 
-This covers every unique register ID001–086 exactly once. It does not say all
-86 entries are resolved or fully reviewed. The [register](../development/DEBT_REGISTER.md)
+This covers every unique register ID001–087 exactly once. It does not say all
+87 entries are resolved or fully reviewed. The [register](../development/DEBT_REGISTER.md)
 retains authoritative implementation/decision status; the categories below are
 review routing, not new debt statuses. Detailed inspected evidence and limitations
 are in the [D7 review](D7_BASELINE_RELEASE_REVIEW.md). A historical green D6 gate
@@ -130,8 +135,9 @@ does not override missing risk decisions or accept an unmerged candidate.
 | DEBT-082 | C      | Owner accepted PR85 integration head8cc1e50, merged05e177d; CI5/5, local gate0, coverage8/8 including Editor, E2E607/607 and Web14/14. Both quality policies preserved.                                                                      |
 | DEBT-083 | O      | Approved diagnostic PR87: local gate at77ea28d red on React answer at5000ms,13/14 Web, zero retries; retained trace/screenshot. Docs-only0fda41a does not fix it. Controlled081 mechanism is separate from natural-failure attribution.      |
 | DEBT-084 | M      | Historical failure summary/observations remain; original local raw traces/context are unavailable (retention errata). New controlled production comparison is archived outside output cleanup. No test-only fix or acceptance claimed.       |
-| DEBT-085 | M      | PR96 head1d6f3c9: accepted-main integration and newly archived pre/post production controls. Historical60105a4 gate failure remains. New-head full gate/CI and owner acceptance are open; old trace loss is explicit.                        |
+| DEBT-085 | M      | PR96 integration6b1c6ca: CI5/5 and local full gate0, E2E623/623, Web15/15 without retries. New production archive hashes verified after cleanup; old trace loss and historical gate failures remain explicit. Owner acceptance pending.      |
 | DEBT-086 | O      | Owner accepted diagnostic PR97 head0a7594e, merged8e3c4c7: CI5/5, API623/623, Web14/14; identical code local full gate0. AgentReporter explains suppressed passing logs, not the original timeout. Cause/correction remain open.             |
+| DEBT-087 | C      | Owner accepted PR98 b65df03, merged b63d555: shared validated smoke port, fail-closed bind guard, actual config/Turbo controls; CI5/5 and local full gate0, E2E623/623, Web14/14 on3195. No Windows/runtime/timeout/assertion change.        |
 
 ## Execution order from this checkpoint
 

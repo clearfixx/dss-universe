@@ -22,17 +22,33 @@ active package safe and buildable.
 
 ## Register
 
-D7 review now integrates accepted main `46395a7`; the original baseline was
+D7 review now integrates accepted main `b63d555`; the original baseline was
 `f118d82`. See
 [current evidence and limits](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079/080.
 D6 acceptance does not
 automatically resolve unrelated OPEN findings.
 
-[D7 individual review routing](../audits/D7_DEBT_DISPOSITION_MATRIX.md) maps all86
+[D7 individual review routing](../audits/D7_DEBT_DISPOSITION_MATRIX.md) maps all87
 unique IDs exactly once, distinguishing accepted scoped corrections from partial
 evidence, remaining review and unresolved decisions. It is not a new status model
 or a declaration that every debt has been reviewed/closed.
+
+### DEBT-087 — Reserved Web smoke port blocks local quality gate (Medium, RESOLVED scoped test-infrastructure package)
+
+Windows excludes3028–3127: binding3100 gives EACCES without a listener. Owner
+approved one shared configurable smoke endpoint, default3100 with explicit
+validated DSS_WEB_TEST_PORT override and fail-closed bind errors. Owner accepted
+PR98 `b65df03`, merged as `b63d555`. CI5/5 and local quality:full exit0:
+coverage8/8, API1327/1327, E2E623/623 with no skips, build6/6, post-build2/2,
+Web14/14 on3195 without retries. Scoped policy controls21/21 and67/67 include
+actual Playwright/Turbo configuration and an occupied socket owner preserved.
+No Windows/Docker configuration, runtime/UI, timeout, retry or assertion change.
+The separate initial P1001 attempt is retained; test DB5434/Redis6380 were
+started and the empty tmpfs test DB migrated before the successful full gate.
+See [design and implementation](../audits/DEBT_087_WEB_SMOKE_ENDPOINT.md) and
+[accepted evidence](https://github.com/clearfixx/dss-universe/pull/98).
+This does not resolve DEBT-085/086 or accept D7.
 
 ### DEBT-084 — Keyboard smoke cancellation pointer interception (Medium, ACCEPTED diagnostic/test scope)
 
@@ -51,7 +67,14 @@ readiness workaround is accepted as a root-cause correction. Runtime work is
 separate DEBT-085; [candidate evidence](https://github.com/clearfixx/dss-universe/pull/96)
 retains the diagnostic history. No scoped acceptance/closure yet.
 
-### DEBT-085 — Arrival setup can animate over early keyboard focus (Medium, IMPLEMENTED candidate; verification open)
+### DEBT-085 — Arrival setup can animate over early keyboard focus (Medium, IMPLEMENTED candidate; owner acceptance pending)
+
+Latest integration PR96 `6b1c6ca` includes accepted main `b63d555`: exact-head
+CI5/5 and local quality:full exit0, coverage8/8, API1327/1327, E2E623/623
+without skips, GraphQL, build6/6, post-build2/2 and Web15/15 without retries.
+New production archive hashes remain intact after smoke cleanup. Owner acceptance
+and merge remain pending. Historical failures and missing original traces below
+are preserved; DEBT-086 remains open.
 
 Owner approved a separate runtime package after production check and design.
 Controlled dev and fresh production both reproduced the mechanism: focus before

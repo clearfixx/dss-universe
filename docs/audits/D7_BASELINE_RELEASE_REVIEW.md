@@ -1,9 +1,36 @@
 # D7 — Baseline release review
 
 Date: 2026-10-22. Updated: 2026-10-27. Branch: `debt/d7-release-gate`.
-Current accepted baseline: `46395a747a3d8d00162b97e5074e1661ffa77fc9`.
+Current accepted baseline: `b63d555bb58365a7090eaa7bc0d7ae7c9a78e4a8`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
+
+## 2026-10-27 smoke endpoint acceptance and arrival integration
+
+Owner explicitly accepted DEBT-087 PR98 at `b65df03`; merged as `b63d555`
+at10:09:51UTC. Exact-head CI5/5 and local quality:full exit0: coverage8/8,
+API1327/1327, strict E2E623/623 across58 suites, build6/6, post-build2/2,
+Web14/14 without retries on configured loopback3195. Default3100 remains for
+CI; malformed/unavailable overrides fail closed. Windows reservations, runtime,
+UI, timeouts and assertions are unchanged. The original P1001 gate failure was
+retained; existing stopped disposable DB5434/Redis6380 were started and migrations
+deployed to the empty tmpfs test DB before the successful gate. Dev DB5433 was
+not changed. No service provisioning or reset is hidden in the runner.
+
+Local PR98 API SHA256 `702fbb17f79420653a11ad53790477cb56fd7e41c0a56aa1777361036487479e`;
+CI API SHA256 `5b2b32190d28c2fa9ca023accb25c8181ddc379628832c67485e1c41e99c9fa4`.
+This closes the scoped smoke-port correction, not D7 or DEBT-086.
+
+PR96 now integrates accepted main at `6b1c6ca`: CI5/5 and local quality:full
+exit0, coverage8/8 with API1327/1327, strict E2E623/623 with no skips,
+GraphQL, build6/6, post-build2/2 and Web15/15 without retries on3195.
+Local API SHA256 `a61235b2ec75689380e0bef36e02ba51a2fec8a342126ed61477ea8e2756c5ff`;
+CI API SHA256 `dfc132eea6e4ba872c14b16efbf11dd56f78f63513bee45a8005e1656457743c`.
+The four new controlled production trace/report hashes still match after Web
+smoke cleanup. Missing October26 originals remain missing; DEBT-086 remains
+open. PR96 owner acceptance and merge are pending, not implied by this evidence.
+
+The current inventory is87 unique IDs, not87 completed corrections.
 
 ## 2026-10-27 detailed design acceptance and evidence-retention exception
 
