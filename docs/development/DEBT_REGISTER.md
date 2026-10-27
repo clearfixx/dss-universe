@@ -22,7 +22,7 @@ active package safe and buildable.
 
 ## Register
 
-D7 review now integrates accepted main `a8c71fa`; the original baseline was
+D7 review now integrates accepted main `8e3c4c7`; the original baseline was
 `f118d82`. See
 [current evidence and limits](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079/080.
@@ -79,8 +79,10 @@ API1327/1327, E2E623/623 without pending tests, rotation2371ms once, build6/6,
 post-build2/2 and Web14/14 without retries. Same-head CI5/5, rotation1540ms.
 Passing buffered logs were hidden by Jest30.5.2's automatic AgentReporter;
 explicit default-reporter diagnostics expose stages without changing the gate.
-This explains logging, not the original timeout. Latest `0a7594e` only updates
-that evidence document; no source correction or owner acceptance is claimed.
+This explains logging, not the original timeout. Owner accepted diagnostics at
+final docs-only head `0a7594e`, CI5/5, E2E623/623 with rotation2238ms once,
+Web14/14 without retries. PR97 merged as `8e3c4c7`; the acceptance explicitly
+leaves DEBT-086 open. No source correction or timeout closure is claimed.
 
 ### DEBT-080 — Green CI Web check can conceal a flaky smoke test (Medium, RESOLVED scoped test/CI package)
 

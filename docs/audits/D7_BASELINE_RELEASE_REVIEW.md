@@ -1,9 +1,20 @@
 # D7 — Baseline release review
 
 Date: 2026-10-22. Updated: 2026-10-27. Branch: `debt/d7-release-gate`.
-Current accepted baseline: `a8c71fa391db2ca17c43a9a724e1942121d9e38c`.
+Current accepted baseline: `8e3c4c7d229f3a6112c9e427aaf2d5f1c64c5fed`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
+
+## 2026-10-27 diagnostic acceptance override
+
+Owner explicitly accepted diagnostic PR97 at final head `0a7594e`, merged as
+`8e3c4c7` at03:41:33UTC. Final-head CI5/5, strict API623/623 in58 suites,
+pending0, rotation2238ms once, and Web14/14 without retries. Downloaded API
+SHA256 `5510c0685877f3bc2870da0e60443a35fe218a4e97e5859fcffd2daef4ea9be4`.
+Its code is identical to locally full-gated `e264907`; the final commit updates
+only the evidence document. This accepts instrumentation/research, explicitly
+not a timeout correction. DEBT-086 remains open and PR96's original failed
+local gate remains part of the evidence. No D7 or Phase11 acceptance follows.
 
 ## 2026-10-26 characterization acceptance override
 
@@ -22,7 +33,8 @@ No cause or correction is proven. The strict full gate at code `e264907` complet
 exit0: API1327/1327, E2E623/623 with rotation2371ms once, build6/6, post-build2/2,
 Web14/14 without retries; same-head CI5/5. Latest PR97 `0a7594e` only records that
 evidence and explains missing passing logs via Jest's automatic AgentReporter.
-This is not a timeout fix or new acceptance/merge. D7 inventory now has86 entries,
+This was not a timeout fix; later scoped acceptance is recorded above.
+D7 inventory now has86 entries,
 not86 completed corrections.
 No retry-to-green, force-click, timeout increase or UI redesign was used. This
 supersedes any older statement implying PR94's full gate is merely pending.

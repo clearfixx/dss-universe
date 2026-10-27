@@ -1,10 +1,14 @@
 # D7 — Individual debt review matrix
 
-Updated: 2026-10-27. Current accepted baseline: `a8c71fa`; initial review baseline
+Updated: 2026-10-27. Current accepted baseline: `8e3c4c7`; initial review baseline
 was `f118d82`.
 Status: **IN PROGRESS; not a release certificate**.
 
-Latest override: owner accepted DEBT-079 design/characterization PR93, merged as
+Latest override: owner accepted diagnostic PR97 `0a7594e`, merged `8e3c4c7`.
+Final CI5/5, API623/623, Web14/14 without retries; identical code had local full
+gate0. This accepts diagnostics only; the timeout cause remains open (route O).
+
+Earlier scoped acceptance: owner accepted DEBT-079 design/characterization PR93, merged as
 `a8c71fa`, with exact-head CI5/5 and local full gate0, E2E623/623, Web14/14.
 Domain decoupling remains unimplemented; separate rate-limit mapping PR94 is
 under verification, not accepted. DEBT-007 PR92 integration head `b3eab76` has
@@ -123,7 +127,7 @@ does not override missing risk decisions or accept an unmerged candidate.
 | DEBT-083 | O      | Approved diagnostic PR87: local gate at77ea28d red on React answer at5000ms,13/14 Web, zero retries; retained trace/screenshot. Docs-only0fda41a does not fix it. Controlled081 mechanism is separate from natural-failure attribution.      |
 | DEBT-084 | M      | Approved diagnostic/test scope: local PR94 Web13/14 failure retained; controlled early-focus hero interception reproduced. No test-only fix or acceptance claimed.                                                                           |
 | DEBT-085 | M      | PR96 head60105a4: focus-aware finish guard; focused/production proof and CI5/5 green. Local full gate failed at API622/623 due rotation deadline; full acceptance remains open.                                                              |
-| DEBT-086 | O      | PR97 codee264907: full gate0, API623/623, rotation2371ms once, Web14/14; CI5/5. Docs-only0a7594e records AgentReporter suppression of passing logs, not the timeout cause. No correction or owner acceptance.                                |
+| DEBT-086 | O      | Owner accepted diagnostic PR97 head0a7594e, merged8e3c4c7: CI5/5, API623/623, Web14/14; identical code local full gate0. AgentReporter explains suppressed passing logs, not the original timeout. Cause/correction remain open.             |
 
 ## Execution order from this checkpoint
 
