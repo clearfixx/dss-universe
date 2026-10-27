@@ -53,3 +53,24 @@ historical failure remain separate; this package does not fix DEBT-086.
 
 Implementation and verification results will be recorded after they occur;
 this design alone is not implementation acceptance or permission to merge.
+
+## Implementation checkpoint
+
+The resolver and separate socket preflight are wired into the runner. Browser
+configuration explicitly binds loopback and the manually created no-JavaScript
+context inherits baseURL; existing assertions remain. Only Web E2E forwards/hashes
+the override, while relevant Web cache inputs include the external helper.
+
+Before wiring, new integration controls exposed missing browser forwarding and
+the old fixed Playwright endpoint. After wiring, `pnpm test:quality-policy`
+passes21/21, including13 new controls and the actual runner's occupied-port
+negative control. That control proves rejection before quality commands while
+the socket owner remains listening; no DB is contacted. Web typecheck and
+targeted config/smoke ESLint also pass. Candidate loopback3195 bound successfully.
+The complete mandatory `pnpm test:full-policy` cohort passes67/67, including
+existing API env-hash, real skipped-Jest rejection and coverage completeness controls.
+
+These are scoped results, not full-gate or CI acceptance. The original PR96
+preflight failure remains recorded. No Windows reservation, Docker or runtime
+setting has changed. Full quality/build/API E2E/browser verification and owner
+acceptance remain required for this separate package.

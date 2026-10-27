@@ -1,7 +1,25 @@
 /**
- * DSS Universe — Full Quality Gate tests
- * File: scripts/full-quality-policy.test.mjs
- * Purpose: Guard disposable endpoints and keep browser credentials isolated.
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Full Quality Gate Verification
+ * 📄 File: scripts/full-quality-policy.test.mjs
+ *
+ * 🎯 Purpose:
+ * Guards disposable endpoints, complete results and browser environment isolation.
+ *
+ * 🧠 Responsibilities:
+ * • rejects incomplete browser reports and unsafe database endpoints;
+ * • preserves the safe browser allowlist and ordered verification plan.
+ *
+ * 🏗️ Architecture:
+ * Test-only policy regressions; no service provisioning or runtime changes.
+ *
+ * ⚠️ Important:
+ * Never relax retry/skip handling or expose API credentials to browser tasks.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 import assert from "node:assert/strict";
 import test from "node:test";
@@ -89,7 +107,12 @@ test("browser environment excludes inherited secrets and disables reuse", () => 
     CI: "",
     NEXT_PUBLIC_SECRET: "unexpected",
   });
-  assert.deepEqual(env, { Path: "runtime", CI: "1", NODE_ENV: "development" });
+  assert.deepEqual(env, {
+    Path: "runtime",
+    CI: "1",
+    NODE_ENV: "development",
+    DSS_WEB_TEST_PORT: "3100",
+  });
 });
 test("full plan includes coverage, E2E and generation but never provisioning/reset", () => {
   const steps = qualitySteps("unique.json");
