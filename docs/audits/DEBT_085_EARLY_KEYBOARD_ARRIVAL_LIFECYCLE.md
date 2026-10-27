@@ -84,3 +84,46 @@ SHA256 `69D0897AAD778B56DC39351BAA771AA60AAD43DAD2A56D2EF400D59C49E3F8A8`.
 Targeted ESLint and Web typecheck pass. Original pre-fix dev and production traces
 were present at this checkpoint; their later loss is recorded above. Full quality gate,
 CI and owner acceptance are still pending.
+
+## New controlled production comparison — 2026-10-27
+
+This is new verification after the retention loss, not recovery of the missing
+October26 traces or attribution of the original natural smoke timing.
+
+Both revisions received their own successful production build before one
+controlled Chromium scenario each, with one worker, retries0, server reuse off
+and isolated port3194. The server/browser environment was sanitized with the
+existing browser-environment helper and NODE_ENV production. No application,
+CSS, assertion or deadline was edited during this comparison.
+
+| Boundary                                   | Pre-fix `c5966e4fa012dd87cef1a315776bd6190f7abc43` | Corrected `c83150c8827f569bdb84a1eb1a3e5a711407cf68` |
+| ------------------------------------------ | -------------------------------------------------- | ---------------------------------------------------- |
+| Arrival after controlled early focus       | playing                                            | ready                                                |
+| Cancel receives pointer                    | false; hero receives pointer                       | true                                                 |
+| Console clip-path                          | inset(0px 50%)                                     | none                                                 |
+| Real Cancel click and restored input focus | Not attempted after broken hit-test                | Both verified                                        |
+| Diagnostic result                          | 1/1 expected characterization, no retries          | 1/1 regression, no retries                           |
+
+The pre-fix scenario intentionally asserts the broken hit-test; its passing
+characterization does not mean that revision is safe. The corrected scenario
+also performs the real click and verifies the question input is focused.
+There are no DB or AI-provider operations in this local demo story.
+
+New raw evidence is outside the default Playwright output root under
+`node_modules/.cache/debt085-reverification-20261027/`:
+
+- Pre-fix trace: `pre-fix-production/arrival-keyboard-lifecycle-b7c37--hit-testing-during-arrival-chromium/trace.zip`;
+  SHA256 `535db4ff15349dac9872f73e2cd8eaf02db9076a0bd583ce6b91d5af0af349db`.
+- Corrected trace: `post-fix-production/arrival-keyboard-lifecycle-beeda-es-cancellation-hit-testing-chromium/trace.zip`;
+  SHA256 `5485a899671289aeae72f18bd6ebdd555b9b532d7a9e5193231eac93c5788b42`.
+- Pre-fix JSON report: `pre-fix-production-report.json`;
+  SHA256 `c30e83c86da579845c4bcb03de753d592fbe080b87136c62e2ada1d185ba0079`.
+- Corrected JSON report: `post-fix-production-report.json`;
+  SHA256 `4626392fff2c340a808535ced91b0ace8a6a3a6c83f2bbe21442bfcf3d3f185e`.
+
+Each report has expected1, skipped0, unexpected0, flaky0 and retry0. The pre-fix
+ZIP hash was rechecked unchanged after the corrected run. Logs and a provenance
+manifest are retained separately in the cache; no default output-folder snapshot
+is represented as a durable archive. The old missing originals remain missing.
+This restores current controlled production evidence, not full package acceptance.
+The exact integration full gate/CI and owner review remain required.

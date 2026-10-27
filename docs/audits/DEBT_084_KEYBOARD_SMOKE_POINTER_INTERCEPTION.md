@@ -122,3 +122,14 @@ production reproduction or a fix. Verification stops at the broken hit-test.
 Owner approved a separate DEBT-085 runtime package, starting with production
 verification and lifecycle design. DEBT-084 itself remains diagnostic/test-only;
 no readiness-only test fix or weakened interaction assertion is justified yet.
+
+## New evidence after retention errata
+
+On2026-10-27, the separate runtime package performed a new controlled production
+comparison at immutable pre-fix `c5966e4` and corrected `c83150c`. The first
+reproduced hero interception and stopped at the broken hit-test; the second
+verified pointer receipt, a real cancellation click and restored input focus.
+Both new ZIPs and JSON reports are stored outside `test-results`, with hashes
+and provenance in the [new comparison record](DEBT_085_EARLY_KEYBOARD_ARRIVAL_LIFECYCLE.md#new-controlled-production-comparison--2026-10-27).
+They are not recovered October26 originals, a reconstruction of the missing
+natural failure page snapshot, or a waiver of PR94's failed gate.
