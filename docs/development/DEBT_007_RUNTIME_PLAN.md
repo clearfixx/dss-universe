@@ -36,8 +36,10 @@ GamificationIntegrationModule and UsersModule are not suitable headless imports.
 Before implementation acceptance, prove the minimal provider graph with a
 bootstrap/shutdown characterization: no HTTP listener, existing queue runner,
 GraphQL schema generation, mail worker or unrelated scheduled task. Verify clean
-Redis/Prisma/queue shutdown and failed-start cleanup. This feasibility proof has
-not yet been executed.
+Redis/Prisma/queue shutdown and failed-start cleanup. The bounded diagnostic below
+proves only current constructor composition and successful Prisma lifecycle;
+production runtime assembly, Redis/queue lifecycle and failed-start cleanup
+remain unproven.
 
 ### Constructor dependency inventory
 
@@ -59,6 +61,34 @@ automatic jobs do not call manual award. Preserve the real composition or
 separately justify an owner-local repository split. No such split is authorized
 by this inventory. Existing recipient and balance adapters forward failures and
 do not cache; the future runtime assembly must retain those properties.
+
+### Bounded constructor/lifecycle diagnostic
+
+On 2026-10-28, a local diagnostic loaded current source through ts-node and built
+three test-only owner modules from existing module provider metadata, excluding
+their resolvers. Root bindings used the real manual-award transaction/writer and
+transactional Users existence reader, plus the existing scalar adapters. No
+production module metadata or exports were modified.
+
+Nest createApplicationContext succeeded against disposable loopback dss_test on
+5434, Prisma healthCheck returned up, context.close completed and the process
+exited 0. The inspected module container had 54 provider entries and no AppModule,
+QueueModule, UsersModule, CustomTitlesModule, GraphQLModule or ScheduleModule;
+provider checks excluded resolvers, dispatcher, registry and processors. The
+three owner services and real manual-award transaction were present. No consume
+method, queue connection or domain effect was invoked.
+
+This is not the future named-capability assembly, a production build test,
+queue-shutdown proof or event-delivery regression. The local ignored diagnostic
+is retained outside Playwright cleanup:
+
+- `node_modules/.cache/debt007-provider-probe.cjs`, SHA256
+  `6050dc923344a051aeeb049f4bb68f64fadbdb36f7445073202ff2341799a9cb`;
+- `node_modules/.cache/debt007-provider-probe.log`, SHA256
+  `94507cc7f43e0b5aa21d8f194f5954887d22aae950468f54ef965fef54b45f5a`.
+
+These ignored artifacts are local evidence, not Git-recoverable deliverables.
+Permanent bootstrap/isolation tests belong to the reviewed runtime package.
 
 ## Durable routing protocol
 
@@ -91,12 +121,13 @@ no migration has been authored or executed by this package.
 ## Activation boundary and rollback
 
 Use one persisted activation record, not a timestamp regenerated on startup.
-Separate preparation, activation and pause. Recommend an explicit UTC database
+Separate preparation, activation and pause. The owner approved an explicit UTC database
 cutoff against canonical Outbox.createdAt, with equality admitted; occurredAt
 continues to describe business time and is not an admission coordinate. Under this
 definition, a pre-cutoff row committed late remains excluded; a post-cutoff row
-committed late remains discoverable. Obtain acceptance of this exact coordinate
-before implementation: the approved policy establishes a boundary, not its SQL.
+committed late remains discoverable. The comparison is createdAt >= persisted
+cutoff; this exact coordinate and late-commit behavior were explicitly accepted
+on 2026-10-28. Persistence and operational activation are not implemented here.
 
 Record the cutoff, destination version and operator decision durably. Preflight
 must report excluded historical counts, pending new counts, configured matching
@@ -184,9 +215,9 @@ CI and local evidence; this document does not inherit a green gate from main.
 
 ## Decisions still required before runtime
 
-Accept the exact cutoff coordinate and transaction-boundary semantics; finalize
-the additive schema and scanner performance budget; prove the minimal provider
-graph; agree on configured-event admission and cycle handling; finalize isolated
+Finalize the additive schema and scanner performance budget; prove the actual
+named-capability runtime graph and failure lifecycle; agree on configured-event
+admission and cycle handling; finalize isolated
 retry/retention semantics. These are bounded implementation decisions, not a
 request to change the stack, scoring formulas or Phase 11 scope. DEBT-007 and D7
 remain open.
