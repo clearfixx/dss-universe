@@ -18,8 +18,11 @@ credential rotation exceeded5000ms. Full-gate build/Web were not reached.
 Owner approved separate DEBT-086 diagnostic/test scope. PR97 `e264907` adds
 stage-only timings: focused/file/all-file runs pass; all API623/623 with the
 rotation case2254ms versus the previous failed5003ms and same-head CI2247ms.
-No cause or correction is proven. Strict full-gate diagnostics are under
-verification; no new acceptance or merge. D7 inventory now has86 entries,
+No cause or correction is proven. The strict full gate at code `e264907` completed
+exit0: API1327/1327, E2E623/623 with rotation2371ms once, build6/6, post-build2/2,
+Web14/14 without retries; same-head CI5/5. Latest PR97 `0a7594e` only records that
+evidence and explains missing passing logs via Jest's automatic AgentReporter.
+This is not a timeout fix or new acceptance/merge. D7 inventory now has86 entries,
 not86 completed corrections.
 No retry-to-green, force-click, timeout increase or UI redesign was used. This
 supersedes any older statement implying PR94's full gate is merely pending.

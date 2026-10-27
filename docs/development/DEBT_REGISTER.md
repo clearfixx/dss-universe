@@ -74,8 +74,13 @@ Focused rotation passed in2704ms, whole file27/27 with rotation2555ms, all API
 E2E623/623 across58 suites without pending tests with rotation2254ms. These runs
 did not reproduce the timeout and do not supersede PR96's failed local gate.
 No fixture defect or runtime cause is proven; no correction or closure claimed.
-Strict quality:full with diagnostics is now being verified on this exact source;
-its terminal result and CI/owner acceptance remain open.
+One strict quality:full at code head `e264907` completed exit0: coverage8/8 tasks,
+API1327/1327, E2E623/623 without pending tests, rotation2371ms once, build6/6,
+post-build2/2 and Web14/14 without retries. Same-head CI5/5, rotation1540ms.
+Passing buffered logs were hidden by Jest30.5.2's automatic AgentReporter;
+explicit default-reporter diagnostics expose stages without changing the gate.
+This explains logging, not the original timeout. Latest `0a7594e` only updates
+that evidence document; no source correction or owner acceptance is claimed.
 
 ### DEBT-080 — Green CI Web check can conceal a flaky smoke test (Medium, RESOLVED scoped test/CI package)
 

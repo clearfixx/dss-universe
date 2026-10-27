@@ -123,7 +123,7 @@ does not override missing risk decisions or accept an unmerged candidate.
 | DEBT-083 | O      | Approved diagnostic PR87: local gate at77ea28d red on React answer at5000ms,13/14 Web, zero retries; retained trace/screenshot. Docs-only0fda41a does not fix it. Controlled081 mechanism is separate from natural-failure attribution.      |
 | DEBT-084 | M      | Approved diagnostic/test scope: local PR94 Web13/14 failure retained; controlled early-focus hero interception reproduced. No test-only fix or acceptance claimed.                                                                           |
 | DEBT-085 | M      | PR96 head60105a4: focus-aware finish guard; focused/production proof and CI5/5 green. Local full gate failed at API622/623 due rotation deadline; full acceptance remains open.                                                              |
-| DEBT-086 | O      | Approved diagnostic PR97 heade264907: timing-only instrumentation; API623/623, rotation2254ms without reproduction. No proven cause/correction; strict full-gate verification and acceptance open.                                           |
+| DEBT-086 | O      | PR97 codee264907: full gate0, API623/623, rotation2371ms once, Web14/14; CI5/5. Docs-only0a7594e records AgentReporter suppression of passing logs, not the timeout cause. No correction or owner acceptance.                                |
 
 ## Execution order from this checkpoint
 
