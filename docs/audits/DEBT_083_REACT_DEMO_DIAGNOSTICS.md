@@ -16,6 +16,43 @@ passing real gate/CI before owner review. This checkpoint is not closure or
 acceptance. Historical approval/pending statements below retain their dates and
 are superseded by this scope only where they describe now-accepted runtime work.
 
+### Fresh integration evidence before full gate
+
+Integration code head `df0394d` preserves the shared endpoint resolver and
+all existing runtime/test assertions. The actual configuration/workflow policy
+passes5/5. A temporary mutation back to on-first-retry makes the targeted policy
+fail with the expected trace-mode assertion; restoring the reviewed config
+returns5/5. Logs are retained at root `node_modules/.cache/` as
+`debt083-integration-policy-red.log` and `debt083-integration-policy-green.log`.
+
+A fresh isolated fixture imports the actual Playwright config, retains its
+Chromium project/trace/screenshot policy and overrides only synthetic test/output
+locations and webServer=[]; config preflight confirms no DSS server and retries0.
+The fixture sets synthetic page content and deliberately fails one visibility
+assertion. JSON confirms one unexpected failure, no skips/flaky results, one
+result at retry0 and intentional exit1. All three evidence attachments exist:
+
+| Attachment        | SHA256                                                           |
+| ----------------- | ---------------------------------------------------------------- |
+| trace.zip         | eb915edd8e054bb1b1f1cc38a61322ec20902cc1ebeaad1a4cb95105b559b1f5 |
+| test-failed-1.png | d56c54598bc8ed6d1ff9b5edb1c6d80820da8fcbfc16a2f7e65f73e226a237fc |
+| error-context.md  | b5e981b8cae4604ddf415c20020a157ef9807dbf8099f622cbe4d623b4ac1ba6 |
+
+Root manifest `node_modules/.cache/debt083-fixture-verified-manifest-20261028.json`
+records exact local paths and source head. Fixture/config and evidence reside
+under `apps/web/node_modules/.cache/debt083-evidence-20261028/`, outside ordinary
+Web test-results cleanup; ignored artifacts are not recoverable from Git.
+
+Two initial diagnostic setup limits remain recorded rather than presented as
+passing evidence: Node rejected the temporary TS config inside node_modules;
+the first JS control loaded a CommonJS interop wrapper, not the actual base
+project, and captured only context. The verified control explicitly normalizes
+that loader wrapper and asserts actual Chromium, retries0 and inherited trace/
+screenshot policy before running. Its output is in a separate verified-evidence
+directory. This is not a retry of a failing DSS test or natural-failure attribution.
+No real DSS assertion, retry count or timeout was changed. Current integration
+full gate, CI and owner acceptance remain pending.
+
 ## Approved boundary
 
 Investigate the no-retry React demo failure observed on PR #81. Change only
