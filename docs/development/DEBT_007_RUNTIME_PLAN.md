@@ -1,0 +1,171 @@
+# DEBT-007 — Detailed delivery implementation plan
+
+Status: design proposal; runtime implementation and activation require separate acceptance.
+Source checkpoint: accepted main `a715ece`; prepared on 2026-10-28.
+
+## Approved decisions
+
+The owner approved detailing an API-owned headless Nest consumer, a separate
+gamification queue and independent durable routing accounting. Existing owners
+retain their rules and effect idempotency. Activity consumer identity
+`dss.worker.integration-events.v1` and existing Outbox.PUBLISHED semantics remain
+unchanged. Only new events from an explicit activation boundary are admitted;
+historical replay/backfill is a separate controlled package. Existing balances
+and markers are not recalculated.
+
+This plan extends `DEBT_007_EVENT_DELIVERY_DESIGN.md`; its historical proofs remain
+historical. Neither document constitutes evidence that automatic delivery works.
+
+## Process and ownership
+
+Add a separate entrypoint to the API-owned build artifact using a Nest application
+context, without an HTTP listener. Do not bootstrap AppModule: it starts unrelated
+presentation and infrastructure. Do not import QueueModule wholesale: its runner
+would start the existing dispatcher. Do not move scoring rules into the ESM
+Worker or duplicate them in SQL.
+
+Points, Levels and Achievements need owner-local runtime assemblies exposing only
+named consumption capabilities. Their current modules include GraphQL resolvers;
+extracting a reusable provider assembly must preserve the existing API bindings
+and avoid creating duplicate repository/service instances. Root composition binds
+recipient existence and authoritative Points balance through narrow ports. An
+ID-only Users reader must preserve existence for every existing account state;
+it must not introduce ACTIVE filtering. The current broad
+GamificationIntegrationModule and UsersModule are not suitable headless imports.
+
+Before implementation acceptance, prove the minimal provider graph with a
+bootstrap/shutdown characterization: no HTTP listener, existing queue runner,
+GraphQL schema generation, mail worker or unrelated scheduled task. Verify clean
+Redis/Prisma/queue shutdown and failed-start cleanup. This feasibility proof has
+not yet been executed.
+
+## Durable routing protocol
+
+Introduce additive destination-owned routing storage, uniquely keyed by original
+Outbox event ID and destination. Keep canonical source envelopes and IDs. Routing
+state describes destination admission/publication, not completed domain effects.
+Use independent pending/claimed/published state, attempts, availability, failure
+details and unique claim tokens. Completion and failure updates must compare the
+current claim; recovery invalidates old tokens. Queue submission can still happen
+twice after an uncertain acknowledgement: delivery remains at least once.
+
+The existing dispatcher continues publishing to its existing integration queue.
+Its PUBLISHED value still means that queue submission succeeded. Gamification
+must not require Activity delivery to succeed, nor reinterpret PUBLISHED as
+completion of both destinations. Reconcile eligible committed canonical Outbox
+rows regardless of their legacy publication state.
+
+Admission uses an indexed anti-join against existing routing rows, with bounded
+batches and deterministic ordering. Do not advance a sole createdAt/ID high-water
+cursor: a long transaction can commit an older row after the cursor advanced.
+Do not conceal that loss behind a bounded lookback. Prove the chosen index/query
+plan and reconciliation cost with representative retained history before enabling
+the scanner. Batch size limits work per pass, not the eventual result set.
+
+Proposed schema responsibilities are activation configuration, destination routing
+and destination failure records. Exact Prisma models, indexes, claim SQL,
+retention and referential deletion behavior remain implementation design outputs;
+no migration has been authored or executed by this package.
+
+## Activation boundary and rollback
+
+Use one persisted activation record, not a timestamp regenerated on startup.
+Separate preparation, activation and pause. Recommend an explicit UTC database
+cutoff against canonical Outbox.createdAt, with equality admitted; occurredAt
+continues to describe business time and is not an admission coordinate. Under this
+definition, a pre-cutoff row committed late remains excluded; a post-cutoff row
+committed late remains discoverable. Obtain acceptance of this exact coordinate
+before implementation: the approved policy establishes a boundary, not its SQL.
+
+Record the cutoff, destination version and operator decision durably. Preflight
+must report excluded historical counts, pending new counts, configured matching
+rules and enabled producers without reading content into logs. Do not rewrite
+source rows, balances or historical markers. Restart/redeploy cannot move the
+cutoff. Pausing stops new processing and preserves backlog; already committed
+effects stay committed. A code rollback is not an economic rollback. Resuming
+uses the same boundary. Backfill requires its own reviewed manifest and package.
+
+## Consumption and derived events
+
+One event is offered to the explicit Points/Levels/Achievements capabilities under
+a versioned gamification consumer identity. Owners decide applicability; a routing
+allowlist must include their actual supported input events and emitted second
+hops. Inventory rule-configurable inputs before choosing an allowlist: silently
+dropping a configured event is unacceptable. Validate configuration cycles before
+activation; do not invent a hop limit that discards effects.
+
+Preserve Points recipient precedence, value matching, first non-IGNORED rule
+behavior, daily caps, source reversal handling and atomic effect/Audit/Outbox
+transactions. Levels consumes the durable Points awarded/reversed events on a
+second Outbox-to-queue hop and reads authoritative balance. Achievements retains
+per-rule transactions and idempotency. A failure after one owner or rule commits
+replays the envelope; prior owner effects must deduplicate. An outer processed
+marker is not a substitute for these owner guarantees and does not make the
+sequence atomic.
+
+A new reputation reversal can reference an excluded historical source. Current
+Points reverseSource records the revoked source and reverses existing matching
+entries; absent originals produce no synthetic debit or award. Preserve that
+behavior and characterize both existing and absent historical entries. Excluding
+historical event delivery must not bypass a valid new reversal. Also verify
+reversal-before-original behavior for each owner rather than assuming that a
+Points marker proves Achievements ordering.
+
+Envelope validation failures and owner failures must be observable, with bounded
+attempts and isolated failed delivery. Unsupported events need an explicit
+successful no-op classification; malformed supported inputs must not be silently
+acknowledged. Do not cache authorization/account facts across jobs or alter
+existing formulas and rule configuration as part of wiring.
+
+## Failure and retry isolation
+
+The existing QueueOperationsService retries the Activity queue and resolves
+legacy dead-letter rows by eventId alone. Therefore new gamification failures
+must not be written into that legacy resolution scope. Prefer additive
+destination-owned failure records and separate queue/DLQ operations. Preserve
+historical v1/v2 Activity markers and dead letters without renaming or deleting.
+
+Provide an operational CLI or service boundary, not a new Command Deck screen:
+inspect destination failure, retry its original immutable envelope and resolve
+only the corresponding destination record after the defined successful action.
+Specify whether resolution means resubmission or successful consumption; do not
+label resubmission as a completed award. Stable BullMQ IDs are destination-local;
+retained failed/completed jobs require an explicit retry protocol, not blind add.
+
+Negative controls must prove that Activity retry cannot resolve, requeue or mark
+gamification delivery, and the inverse. Queue/DLQ publication failure must leave a
+durable recoverable record. Never log credentials, unrestricted payloads or user
+content as failure diagnostics.
+
+## Implementation packages and acceptance
+
+| Package | Scope                                                   | Required evidence                                                                                     |
+| ------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| A       | Minimal owner runtime assemblies and headless lifecycle | Provider graph, API provider identity, shutdown and no unrelated startup                              |
+| B       | Activation and destination routing persistence          | Fresh migration and zero drift; claim/recovery races; late commits; scanner query plan                |
+| C       | Queue consumer and real owner effects                   | Producer→routing→queue→Points→derived event→Levels; Achievements; rollback/replay and partial success |
+| D       | Destination operations and activation runbook           | Independent failure/retry controls, pause/resume, immutable cutoff and historical exclusions          |
+
+These are reviewable stages of one proposed implementation, not permission to
+start them. No activation before all required stages and owner acceptance.
+
+Use disposable migrated PostgreSQL and Redis. Deterministic regressions must
+cover concurrent duplicate delivery, stale claim completion, enqueue uncertainty,
+restart between owner commit and outer marker, daily cap contention, source
+reversal ordering, missing recipient, unsupported/malformed input, isolated retry
+and second-hop delivery. Preserve existing Activity regressions and API contracts.
+No sleep, timeout inflation, hidden result cap or retry-to-green.
+
+Each runtime package requires format, lint, typecheck, tests, Prisma validation and
+drift checks, architecture checks, generated API consistency, build and the full
+quality gate including coverage, unskipped E2E and Web smoke. Record exact head,
+CI and local evidence; this document does not inherit a green gate from main.
+
+## Decisions still required before runtime
+
+Accept the exact cutoff coordinate and transaction-boundary semantics; finalize
+the additive schema and scanner performance budget; prove the minimal provider
+graph; agree on configured-event admission and cycle handling; finalize isolated
+retry/retention semantics. These are bounded implementation decisions, not a
+request to change the stack, scoring formulas or Phase 11 scope. DEBT-007 and D7
+remain open.
