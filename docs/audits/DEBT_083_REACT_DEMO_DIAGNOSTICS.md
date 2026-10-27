@@ -10,10 +10,10 @@ No new application, synchronization, timeout or retry correction is proposed.
 
 The earlier local gate at77ea28d remains red and its raw evidence is retained;
 later runtime acceptance does not prove the exact original natural schedule.
-The new integration needs policy verification, a fresh deliberately failing
+The new integration required policy verification, a fresh deliberately failing
 isolated fixture proving trace/screenshot/context on attempt0, and a complete
-passing real gate/CI before owner review. This checkpoint is not closure or
-acceptance. Historical approval/pending statements below retain their dates and
+passing real gate/CI before owner review. Results are recorded below; this is not
+owner acceptance. Historical approval/pending statements below retain their dates and
 are superseded by this scope only where they describe now-accepted runtime work.
 
 ### Fresh integration evidence before full gate
@@ -50,8 +50,31 @@ project, and captured only context. The verified control explicitly normalizes
 that loader wrapper and asserts actual Chromium, retries0 and inherited trace/
 screenshot policy before running. Its output is in a separate verified-evidence
 directory. This is not a retry of a failing DSS test or natural-failure attribution.
-No real DSS assertion, retry count or timeout was changed. Current integration
-full gate, CI and owner acceptance remain pending.
+No real DSS assertion, retry count or timeout was changed.
+
+### Completed integration verification at code head4419aff
+
+Local full gate session17926 terminated exit0: coverage8/8, API1450/1450 across176
+suites, E2E658/658 across60 suites with no skipped/failed tests, generated API
+checks, build6/6 (five cached), post-build entry checks and Web15/15 without
+retries (30.4s). Log and terminal marker are
+`node_modules/.cache/debt083-integration-quality.log` and `.exit.txt`; report is
+`node_modules/.cache/quality-full-4bitlU/api-e2e.json`, SHA256
+`09a44fbc49c89591b6ea45a994d1e71b86329e746863c1e6c80436c5a4cb8dc3`.
+
+Exact-code CI5/5 passed: Quality40604160257 and containment40604160360.
+Downloaded CI report confirms658/658 across60 suites, zero pending/failed,
+SHA256 `2732216b19126f9ea8168e0345d4135a7b8519b0e3eb160d2ec412496cf7b049`.
+The Web job's new Upload Web failure evidence step succeeded; this passing CI
+run had no real failure artifacts. The isolated intentional failure above is
+the direct proof of first-attempt trace/screenshot/context production. All three
+synthetic artifact hashes still match after ordinary full Web smoke cleanup.
+The old red77ea28d trace hash was also freshly rechecked and remains unchanged.
+
+The following commit records these results in documentation only; any new-head
+CI result must be checked separately. Owner acceptance/merge remains pending.
+This accepts neither the exact cause of every historical natural failure nor
+D7/Phase11 readiness; the earlier red reports are not erased by this green gate.
 
 ## Approved boundary
 
