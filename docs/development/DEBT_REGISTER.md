@@ -2,7 +2,7 @@
 
 > Status: Active
 >
-> Updated: 2026-10-26
+> Updated: 2026-10-27
 
 ## Purpose
 
@@ -29,7 +29,7 @@ The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079/08
 D6 acceptance does not
 automatically resolve unrelated OPEN findings.
 
-[D7 individual review routing](../audits/D7_DEBT_DISPOSITION_MATRIX.md) maps all85
+[D7 individual review routing](../audits/D7_DEBT_DISPOSITION_MATRIX.md) maps all86
 unique IDs exactly once, distinguishing accepted scoped corrections from partial
 evidence, remaining review and unresolved decisions. It is not a new status model
 or a declaration that every debt has been reviewed/closed.
@@ -58,8 +58,24 @@ PR96 head `60105a4` adds an initial focus-aware finish guard without CSS, durati
 search timer, replay or UI redesign changes. Two early-focus unit cases failed
 on old runtime then passed; focused units9/9, dev browser15/15 without retries,
 fresh production actual cancellation/focus restoration pass. Lint/typecheck pass.
-Own full gate and CI are active; no acceptance or merge. Do not resolve PR94 or
-D7 from these focused proofs alone.
+Exact-head CI completed 5/5 green, API623/623 and Web15/15 without retries.
+The local full gate terminated exit1 at API622/623: credential rotation exceeded
+5000ms (reported5003ms), before full-gate build/Web. The same CI case took2247ms.
+Separate approved DEBT-086 investigates that difference; no acceptance or merge.
+Do not resolve PR94 or D7 from focused proofs or CI alone.
+
+### DEBT-086 — Local credential-rotation E2E deadline (Medium, ACCEPTED diagnostic/test scope; cause open)
+
+Owner approved timing diagnostics and only a demonstrated test/fixture correction,
+without runtime/Auth/crypto changes, mocks, increased deadlines, sleep, retries
+or weakened assertions. [PR97](https://github.com/clearfixx/dss-universe/pull/97)
+head `e264907` adds opt-in stage-only timings; no credentials or subject data.
+Focused rotation passed in2704ms, whole file27/27 with rotation2555ms, all API
+E2E623/623 across58 suites without pending tests with rotation2254ms. These runs
+did not reproduce the timeout and do not supersede PR96's failed local gate.
+No fixture defect or runtime cause is proven; no correction or closure claimed.
+Strict quality:full with diagnostics is now being verified on this exact source;
+its terminal result and CI/owner acceptance remain open.
 
 ### DEBT-080 — Green CI Web check can conceal a flaky smoke test (Medium, RESOLVED scoped test/CI package)
 

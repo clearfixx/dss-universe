@@ -1,6 +1,6 @@
 # D7 — Individual debt review matrix
 
-Updated: 2026-10-26. Current accepted baseline: `a8c71fa`; initial review baseline
+Updated: 2026-10-27. Current accepted baseline: `a8c71fa`; initial review baseline
 was `f118d82`.
 Status: **IN PROGRESS; not a release certificate**.
 
@@ -18,8 +18,8 @@ DEBT-066 mapping is approved and implemented in PR89 `a528c90`, CI5/5; local
 full gate and integration with accepted PR81 remain open. See the latest
 [acceptance checkpoint](D7_BASELINE_RELEASE_REVIEW.md) before older row text.
 
-This covers every unique register ID001–085 exactly once. It does not say all
-85 entries are resolved or fully reviewed. The [register](../development/DEBT_REGISTER.md)
+This covers every unique register ID001–086 exactly once. It does not say all
+86 entries are resolved or fully reviewed. The [register](../development/DEBT_REGISTER.md)
 retains authoritative implementation/decision status; the categories below are
 review routing, not new debt statuses. Detailed inspected evidence and limitations
 are in the [D7 review](D7_BASELINE_RELEASE_REVIEW.md). A historical green D6 gate
@@ -122,14 +122,17 @@ does not override missing risk decisions or accept an unmerged candidate.
 | DEBT-082 | C      | Owner accepted PR85 integration head8cc1e50, merged05e177d; CI5/5, local gate0, coverage8/8 including Editor, E2E607/607 and Web14/14. Both quality policies preserved.                                                                      |
 | DEBT-083 | O      | Approved diagnostic PR87: local gate at77ea28d red on React answer at5000ms,13/14 Web, zero retries; retained trace/screenshot. Docs-only0fda41a does not fix it. Controlled081 mechanism is separate from natural-failure attribution.      |
 | DEBT-084 | M      | Approved diagnostic/test scope: local PR94 Web13/14 failure retained; controlled early-focus hero interception reproduced. No test-only fix or acceptance claimed.                                                                           |
-| DEBT-085 | M      | Approved runtime candidate PR96 head60105a4: initial focus-aware finish guard; units9/9, dev15/15, production interaction proof. Full gate/CI and owner acceptance pending.                                                                  |
+| DEBT-085 | M      | PR96 head60105a4: focus-aware finish guard; focused/production proof and CI5/5 green. Local full gate failed at API622/623 due rotation deadline; full acceptance remains open.                                                              |
+| DEBT-086 | O      | Approved diagnostic PR97 heade264907: timing-only instrumentation; API623/623, rotation2254ms without reproduction. No proven cause/correction; strict full-gate verification and acceptance open.                                           |
 
 ## Execution order from this checkpoint
 
 DEBT-084 is routed M: approved diagnostic/test scope reproduced controlled
 pointer interception, with preserved original failure/trace; not a test-only fix.
 DEBT-085 is routed M: approved runtime candidate PR96 `60105a4`, focused unit/dev/
-production proof; full gate and acceptance pending. Neither is a release waiver.
+production proof and green CI; local full gate failed at API rotation timeout.
+DEBT-086 is routed O: approved diagnostics did not reproduce that deadline;
+there is no proven test/fixture correction. None is a release waiver.
 
 1. Finish R entries by original acceptance contract, starting with runtime
    security paths and fixture/gate enforcement. M entries still need their

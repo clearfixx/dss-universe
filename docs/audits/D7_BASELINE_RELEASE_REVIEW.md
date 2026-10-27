@@ -1,6 +1,6 @@
 # D7 — Baseline release review
 
-Date: 2026-10-22. Updated: 2026-10-26. Branch: `debt/d7-release-gate`.
+Date: 2026-10-22. Updated: 2026-10-27. Branch: `debt/d7-release-gate`.
 Current accepted baseline: `a8c71fa391db2ca17c43a9a724e1942121d9e38c`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
@@ -12,8 +12,15 @@ and strict local API623/623, build6/6, post-build2/2, but full local gate ended
 exit1 at Web13/14. Hero intercepted Cancel search in the keyboard interaction.
 Owner approved separate diagnostic DEBT-084 and runtime DEBT-085 after controlled
 dev and fresh production reproduction. Candidate PR96 head `60105a4` has focused
-unit9/9, dev15/15 and real production cancellation/focus proof; its full gate and
-CI remain active. D7 inventory now has85 entries, not85 completed corrections.
+unit9/9, dev15/15 and real production cancellation/focus proof. CI completed5/5,
+API623/623 and Web15/15; local full gate terminated exit1 at API622/623 because
+credential rotation exceeded5000ms. Full-gate build/Web were not reached.
+Owner approved separate DEBT-086 diagnostic/test scope. PR97 `e264907` adds
+stage-only timings: focused/file/all-file runs pass; all API623/623 with the
+rotation case2254ms versus the previous failed5003ms and same-head CI2247ms.
+No cause or correction is proven. Strict full-gate diagnostics are under
+verification; no new acceptance or merge. D7 inventory now has86 entries,
+not86 completed corrections.
 No retry-to-green, force-click, timeout increase or UI redesign was used. This
 supersedes any older statement implying PR94's full gate is merely pending.
 
