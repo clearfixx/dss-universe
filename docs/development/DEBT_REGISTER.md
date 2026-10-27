@@ -22,7 +22,7 @@ active package safe and buildable.
 
 ## Register
 
-D7 review now integrates accepted main `f9ddeeb`; the original baseline was
+D7 review now integrates accepted main `a715ece`; the original baseline was
 `f118d82`. See
 [current evidence and limits](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079/080.

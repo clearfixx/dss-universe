@@ -12,10 +12,9 @@
  * ===============================================================
  */
 
-import { ForbiddenException } from '@nestjs/common';
-
-export class MediaAccessForbiddenException extends ForbiddenException {
+export class MediaAccessForbiddenException extends Error {
   constructor() {
     super('You do not have access to this media.');
+    this.name = MediaAccessForbiddenException.name;
   }
 }

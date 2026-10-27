@@ -127,6 +127,24 @@
     ],
     "coverageDirectory": "../coverage",
     "coverageThreshold": {
+      "src/modules/auth/presentation/mappers/map-auth-failure.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/media/presentation/mappers/map-media-failure.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
+      "src/modules/users/presentation/mappers/map-users-failure.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
       "src/composition/leaderboards/infrastructure/prisma-leaderboard-ranking.reader.ts": {
         "branches": 100,
         "functions": 100,

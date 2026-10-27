@@ -12,10 +12,9 @@
  * ===============================================================
  */
 
-import { ForbiddenException } from '@nestjs/common';
-
-export class CoverMediaForbiddenException extends ForbiddenException {
+export class CoverMediaForbiddenException extends Error {
   constructor() {
     super('You can only use your own media as a profile cover.');
+    this.name = CoverMediaForbiddenException.name;
   }
 }

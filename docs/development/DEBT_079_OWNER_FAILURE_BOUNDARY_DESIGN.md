@@ -4,6 +4,11 @@ Date: 2026-10-26. Accepted baseline: main `a8c71fa` (characterization PR93).
 Owner approved detailing this direction, not implementation. Rate-limit mapping
 is separately approved in PR94; its acceptance remains independent.
 
+Later approval (2026-10-27): the owner explicitly authorized the separate
+[runtime implementation](DEBT_079_OWNER_FAILURE_RUNTIME.md) after design
+acceptance. The original design-only status below is historical; implementation
+acceptance still requires its own complete gate, CI and owner review.
+
 ## Required outcome
 
 The ten inventoried classes become owner-local ordinary Error subclasses with

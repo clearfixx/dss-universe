@@ -1,7 +1,24 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Authentication
+ * 📄 File: apps/api/src/modules/auth/presentation/graphql/resolvers/two-factor.resolver.ts
+ *
+ * 🎯 Purpose:
+ * Presents owned two-factor operations and maps private proof failures.
+ *
+ * ⚠️ Important:
+ * Proof verification and credential transactions remain in the application.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
 import { TwoFactorService } from '../../../application/services/two-factor.service';
+import { mapAuthFailure } from '../../mappers/map-auth-failure';
 import { LogoutResultModel } from '../models/logout-result.model';
 import { ConfirmTwoFactorInput } from '../inputs/confirm-two-factor.input';
 import { DisableTwoFactorInput } from '../inputs/disable-two-factor.input';
@@ -38,10 +55,14 @@ export class TwoFactorResolver {
 
   @Mutation(() => LogoutResultModel)
   @UseGuards(JwtAuthGuard)
-  disableViewerTwoFactor(
+  async disableViewerTwoFactor(
     @AuthUser() user: AuthenticatedUser,
     @Args('input') input: DisableTwoFactorInput,
   ) {
-    return this.twoFactor.disable(user.id, input.password, input.code);
+    try {
+      return await this.twoFactor.disable(user.id, input.password, input.code);
+    } catch (failure) {
+      throw mapAuthFailure(failure);
+    }
   }
 }

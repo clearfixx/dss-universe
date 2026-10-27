@@ -12,10 +12,9 @@
  * ===============================================================
  */
 
-import { BadRequestException } from '@nestjs/common';
-
-export class InvalidAvatarMediaException extends BadRequestException {
+export class InvalidAvatarMediaException extends Error {
   constructor(message = 'The selected media cannot be used as an avatar.') {
     super(message);
+    this.name = InvalidAvatarMediaException.name;
   }
 }

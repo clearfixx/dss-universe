@@ -11,6 +11,7 @@
  * 🧠 Responsibilities:
  * • delegates profile/directory/social use cases through owned services;
  * • maps immutable role display into transport-owned arrays without granting authority.
+ * • converts private not-found failures only at affected GraphQL entry points.
  *
  * 🏗️ Architecture:
  * Users presentation boundary; cross-owner persistence remains in root composition.
@@ -43,6 +44,7 @@ import {
 } from '@api/core/authorization';
 
 import { UsersService } from '../../../application/services/users.service';
+import { mapUsersFailure } from '../../mappers/map-users-failure';
 import { UsersPageInput } from '../inputs/users-page.input';
 import { UserGraphqlMapper } from '../mappers/user-graphql.mapper';
 import { UserModel } from '../models/user.model';
@@ -101,9 +103,12 @@ export class UsersResolver {
   @Query(() => ViewerModel)
   @UseGuards(JwtAuthGuard)
   async viewer(@AuthUser() authenticated: AuthenticatedUser) {
-    const user = await this.usersService.getById(authenticated.id);
-
-    return UserGraphqlMapper.viewerFromResponse(user);
+    try {
+      const user = await this.usersService.getById(authenticated.id);
+      return UserGraphqlMapper.viewerFromResponse(user);
+    } catch (failure) {
+      throw mapUsersFailure(failure);
+    }
   }
 
   @Mutation(() => ViewerModel)
@@ -112,8 +117,15 @@ export class UsersResolver {
     @AuthUser() authenticated: AuthenticatedUser,
     @Args('input') input: UpdateViewerProfileInput,
   ): Promise<ViewerModel> {
-    const user = await this.usersService.updateProfile(authenticated.id, input);
-    return UserGraphqlMapper.viewerFromResponse(user);
+    try {
+      const user = await this.usersService.updateProfile(
+        authenticated.id,
+        input,
+      );
+      return UserGraphqlMapper.viewerFromResponse(user);
+    } catch (failure) {
+      throw mapUsersFailure(failure);
+    }
   }
 
   @Mutation(() => [UserSocialLinkModel])
@@ -274,8 +286,15 @@ export class UsersResolver {
     @Args('id', { type: () => ID }) id: string,
     @AuthUser() authenticated: AuthenticatedUser,
   ) {
-    const result = await this.usersService.getPublicById(id, authenticated.id);
-    return UserGraphqlMapper.fromResponse(result);
+    try {
+      const result = await this.usersService.getPublicById(
+        id,
+        authenticated.id,
+      );
+      return UserGraphqlMapper.fromResponse(result);
+    } catch (failure) {
+      throw mapUsersFailure(failure);
+    }
   }
 
   @Query(() => UserModel)
@@ -284,12 +303,15 @@ export class UsersResolver {
     @Args('username') username: string,
     @AuthUser() authenticated?: AuthenticatedUser,
   ) {
-    const user = await this.usersService.getPublicByUsername(
-      username,
-      authenticated?.id,
-    );
-
-    return UserGraphqlMapper.fromResponse(user);
+    try {
+      const user = await this.usersService.getPublicByUsername(
+        username,
+        authenticated?.id,
+      );
+      return UserGraphqlMapper.fromResponse(user);
+    } catch (failure) {
+      throw mapUsersFailure(failure);
+    }
   }
 
   @Query(() => UsersPageModel)
@@ -353,10 +375,14 @@ export class UsersResolver {
 
   @Query(() => ProfileCompletionModel)
   @UseGuards(JwtAuthGuard)
-  viewerProfileCompletion(
+  async viewerProfileCompletion(
     @AuthUser() authenticated: AuthenticatedUser,
   ): Promise<ProfileCompletionModel> {
-    return this.profileCompletion.getForUser(authenticated.id);
+    try {
+      return await this.profileCompletion.getForUser(authenticated.id);
+    } catch (failure) {
+      throw mapUsersFailure(failure);
+    }
   }
 
   @Query(() => UserActivityPageModel)
