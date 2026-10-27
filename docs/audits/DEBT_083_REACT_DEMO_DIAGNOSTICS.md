@@ -1,5 +1,21 @@
 # DEBT-083 — React demo smoke diagnostics
 
+## 2026-10-28 integration checkpoint
+
+PR87 remains an unaccepted diagnostic/test-only package. Integrate accepted main
+`a715ece`, preserving accepted runtime081/085, shared smoke endpoint087 and all
+existing assertions/deadlines. The first-failure recording/upload policy is still
+needed: accepted main uses on-first-retry tracing despite mandatory retries0.
+No new application, synchronization, timeout or retry correction is proposed.
+
+The earlier local gate at77ea28d remains red and its raw evidence is retained;
+later runtime acceptance does not prove the exact original natural schedule.
+The new integration needs policy verification, a fresh deliberately failing
+isolated fixture proving trace/screenshot/context on attempt0, and a complete
+passing real gate/CI before owner review. This checkpoint is not closure or
+acceptance. Historical approval/pending statements below retain their dates and
+are superseded by this scope only where they describe now-accepted runtime work.
+
 ## Approved boundary
 
 Investigate the no-retry React demo failure observed on PR #81. Change only

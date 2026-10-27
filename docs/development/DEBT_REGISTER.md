@@ -2,7 +2,7 @@
 
 > Status: Active
 >
-> Updated: 2026-10-24
+> Updated: 2026-10-25
 
 ## Purpose
 
@@ -21,6 +21,18 @@ active package safe and buildable.
 
 ## Register
 
+### DEBT-079 — Domain failures coupled to Nest transport (Medium, ACCEPTED runtime correction; verification open)
+
+After accepted design/characterization PR93 and detailed design PR95, the owner
+approved a separate ten-error Auth/Users/Media runtime correction. Private errors
+become ordinary Error subclasses; owner-local mappers are invoked only at local
+or root presentation boundaries. Existing REST/GraphQL envelopes, accepted
+RATE_LIMITED429, unknown identity, refresh401 and application side-effect ordering
+remain protected. Focused units198/198 and expanded transport18/18 pass; complete
+quality/CI and owner acceptance remain open. See
+[runtime scope/evidence](DEBT_079_OWNER_FAILURE_RUNTIME.md). This does not migrate
+all application Nest usage or close D7/Phase11 preparation.
+
 ### DEBT-080 — Mandatory CI smoke silently permits retries (Medium, ACCEPTED, verification open)
 
 PR81 initial Web job120465792097 was green with one flaky/13 passed. Accepted
@@ -31,7 +43,7 @@ and actual Playwright config policy tests pass4/4. Full quality/CI and acceptanc
 remain open; no runtime/UI correction is implied. See
 [DEBT-080 evidence](../audits/DEBT_080_SMOKE_READINESS.md).
 
-### DEBT-081 — Early demo interaction can lose its timer during dev passive cleanup (Medium, ACCEPTED research only)
+### DEBT-081 — Early demo interaction can lose its timer during dev passive cleanup (Medium, ACCEPTED runtime package; verification open)
 
 Lower-overhead browser instrumentation reproduces2/20 failures: search schedules
 its first550ms timer, then UniverseArrival passive-effect cleanup cancels it
@@ -45,6 +57,19 @@ that research approval. DEBT-080 verifies the settled post-readiness path and
 must not be presented as fixing this early-interaction risk. Production evidence
 and any subsequent correction require their own scoped decision. Diagnostic
 logs/timings and stack frames: [DEBT-080 report](../audits/DEBT_080_SMOKE_READINESS.md).
+
+Owner subsequently approved a separate runtime package on2026-10-25: design,
+production verification, isolated lifecycle correction and deterministic tests,
+without UI changes, blocking early clicks, timeout increases or weaker smoke.
+Branch `debt/debt-081-demo-search-lifecycle` starts from accepted main `a35326a`;
+it does not import pending066/057/082 candidates. One unchanged production React
+flow passes; an actual-component StrictMode early-click regression is red before
+the correction and green afterward. Search timer ownership is now isolated with
+generation/step guards; targeted component/hook suites pass6/6. The corrected
+production search/cancel/restart observation also passes with no browser errors.
+Full gate, CI and acceptance remain required. This supersedes the
+research-only authority above, not its retained observations. See
+[design and evidence](DEBT_081_DEMO_SEARCH_LIFECYCLE.md).
 
 ### DEBT-074 — Social privacy owner assertion races asynchronous presence (Medium, ACCEPTED, separate D6 package)
 
@@ -1596,6 +1621,15 @@ See [package evidence](../audits/DEBT_016_DEPENDENCY_SECURITY.md).
 
 ### DEBT-083 — React demo no-retry smoke failure (Medium, ACCEPTED investigation, OPEN)
 
+2026-10-28 integration checkpoint: the approved diagnostic infrastructure is being
+updated against accepted maina715ece, including accepted runtime081/085 and the
+validated smoke-port override087. First-failure trace/screenshot retention and
+CI upload remain test-only; no new runtime or synchronization correction is
+claimed. Historical red77ea28d and controlled research below stay preserved.
+Current integration policy, synthetic failure artifacts, full gate and CI require
+new verification. Earlier statements that081 awaits runtime approval are history,
+not its current accepted status. Natural-failure attribution remains limited.
+
 Owner approved a separate test-only package after diagnosis. PR #81 head
 `1343d5a` failed its React demo answer assertion at the unchanged 5000 ms
 deadline, with retries zero. A fresh local unchanged scenario and a separately
@@ -1628,3 +1662,31 @@ this React controlled schedule. No runtime/UI fix is authorized or implemented.
 Agree lifecycle semantics and deterministic regression design separately; do
 not hide the early-interaction case with a test-only readiness wait. Evidence:
 [DEBT-083 diagnostic timeline](../audits/DEBT_083_REACT_DEMO_DIAGNOSTICS.md).
+
+### DEBT-066 — Approved depth-64 shared correction checkpoint (2026-10-25)
+
+Owner approved root-zero maximum depth64 and compatibility checks before code.
+Separate branch `debt/debt-066-editor-validation-safety` starts from accepted
+main `a35326a`, not unaccepted PR85/87. Read-only public-schema scans on5433/5434
+find no document beyond depth2; tracked literal fixture inventory finds valid
+static depth at most4, with dynamic/non-public/production limitations recorded.
+Baseline Editor23/23 passed; new safety tests initially failed22/60 before
+correction. Iterative structural preflight now protects existing semantic walks;
+shared tests65/65, Editor lint/typecheck pass. API/HTTP and actual host-mutation
+rollback regressions, full quality gate, CI and owner acceptance remain open.
+No migration, stored-data rewrite or UI change. See
+[design and compatibility evidence](DEBT_066_EDITOR_VALIDATION_DESIGN.md).
+
+### DEBT-082 — Shared Editor omitted by full coverage mode (Medium, ACCEPTED package; verification open)
+
+Date: 2026-10-25. Actual Turbo graphs and all ten app/package manifests confirm
+Editor has executable test but NONEXISTENT test:cov. Its three specs (23 tests)
+are omitted by the existing coverage-mode runner. Jobs has no own tests and is
+not a second omitted suite. This is a verification gap, not a proved runtime bug.
+
+Owner approved a separate correction with complete workspace inventory and
+fail-closed regressions. Branch debt/debt-082-workspace-test-coverage adds Editor
+V8 coverage using the existing provider version, actual task-plan preflight and
+real runner rejection tests. New regressions12/12 and Editor coverage23/23 pass;
+full quality/CI and acceptance remain open. No runtime/UI/assertion changes.
+See [scope and evidence](../audits/DEBT_082_WORKSPACE_COVERAGE.md).

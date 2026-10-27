@@ -8,6 +8,18 @@
  * 🎯 Purpose:
  * Validates untrusted editor JSON against versioned profile allowlists.
  *
+ * 🧠 Responsibilities:
+ * • reject malformed structure before semantic traversal;
+ * • enforce root-zero depth and existing profile node budgets;
+ * • preserve canonical valid input and profile-specific semantic rules.
+ *
+ * 🏗️ Architecture:
+ * Shared validation boundary; no transport, persistence or rendering ownership.
+ *
+ * ⚠️ Important:
+ * Recursive semantic checks receive only structurally safe, depth-bounded input.
+ * Invalid documents are rejected, never repaired or silently truncated.
+ *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
@@ -37,6 +49,7 @@ const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SAFE_LINK_PROTOCOLS = new Set(["https:", "http:", "mailto:"]);
 const FOOTNOTE_ID_PATTERN = /^[a-z0-9](?:[a-z0-9_-]{0,63})$/i;
+const MAX_EDITOR_NODE_DEPTH = 64;
 
 export function validateEditorDocument(value: unknown): EditorValidationResult {
   const errors: EditorValidationError[] = [];
@@ -61,6 +74,11 @@ export function validateEditorDocument(value: unknown): EditorValidationResult {
   }
 
   const definition = getEditorProfileDefinition(value.profile);
+  const structureError = validateDocumentStructure(
+    value.content,
+    definition.maxNodes,
+  );
+  if (structureError) return { valid: false, errors: [structureError] };
   const counters = { characters: 0, nodes: 0 };
   validateNode(
     value.content as EditorNode,
@@ -103,6 +121,101 @@ export function assertEditorDocument(value: unknown): EditorDocument {
     );
   }
   return result.document;
+}
+
+function validateDocumentStructure(
+  root: unknown,
+  maxNodes: number,
+): EditorValidationError | undefined {
+  type Frame = {
+    node: unknown;
+    path: string;
+    depth: number;
+    entered: boolean;
+    nextChild: number;
+  };
+  const frames: Frame[] = [
+    { node: root, path: "content", depth: 0, entered: false, nextChild: 0 },
+  ];
+  let nodes = 0;
+  while (frames.length > 0) {
+    const frame = frames[frames.length - 1]!;
+    const node = frame.node;
+    if (!frame.entered) {
+      if (frame.depth > MAX_EDITOR_NODE_DEPTH) {
+        return error(
+          frame.path,
+          "DEPTH_LIMIT",
+          `Document exceeds the ${MAX_EDITOR_NODE_DEPTH} node depth limit.`,
+        );
+      }
+      if (++nodes > maxNodes) {
+        return error(
+          "content",
+          "NODE_LIMIT",
+          `Document exceeds the ${maxNodes} node limit.`,
+        );
+      }
+      if (!isRecord(node) || typeof node.type !== "string") {
+        return error(frame.path, "NODE_TYPE", "Node must declare a type.");
+      }
+      if (node.attrs !== undefined && !isRecord(node.attrs)) {
+        return error(
+          `${frame.path}.attrs`,
+          "ATTRIBUTES_TYPE",
+          "Node attributes must be an object.",
+        );
+      }
+      if (node.marks !== undefined) {
+        if (!Array.isArray(node.marks)) {
+          return error(
+            `${frame.path}.marks`,
+            "MARKS_TYPE",
+            "Node marks must be an array.",
+          );
+        }
+        for (const [index, mark] of node.marks.entries()) {
+          if (!isRecord(mark)) {
+            return error(
+              `${frame.path}.marks[${index}]`,
+              "MARK_NOT_ALLOWED",
+              "Mark is not allowed.",
+            );
+          }
+          if (mark.attrs !== undefined && !isRecord(mark.attrs)) {
+            return error(
+              `${frame.path}.marks[${index}].attrs`,
+              "MARK_ATTRIBUTES_TYPE",
+              "Mark attributes must be an object.",
+            );
+          }
+        }
+      }
+      if (node.content !== undefined && !Array.isArray(node.content)) {
+        return error(
+          `${frame.path}.content`,
+          "CONTENT_TYPE",
+          "Node content must be an array.",
+        );
+      }
+      frame.entered = true;
+    }
+    // Advance one child at a time: a wide array must not create an unbounded stack.
+    const children = (node as Record<string, unknown>).content as
+      | unknown[]
+      | undefined;
+    if (children && frame.nextChild < children.length) {
+      const index = frame.nextChild++;
+      frames.push({
+        node: children[index],
+        path: `${frame.path}.content[${index}]`,
+        depth: frame.depth + 1,
+        entered: false,
+        nextChild: 0,
+      });
+    } else frames.pop();
+  }
+  return undefined;
 }
 
 function validateNode(

@@ -2,27 +2,30 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: Web verification infrastructure
+ * 📦 Module: Web Test Infrastructure
  * 📄 File: apps/web/playwright.config.ts
  *
  * 🎯 Purpose:
- * Defines browser smoke execution and retains evidence of the first failure.
+ * Configures browser smoke tests against one resolved loopback endpoint.
  *
  * 🧠 Responsibilities:
- * • configure the Chromium project and local test server;
- * • prohibit retries while preserving failure diagnostics;
- * • keep application behavior outside test infrastructure.
+ * • keeps browser navigation and the isolated server endpoint aligned;
+ * • preserves no-retry CI checks and the existing startup deadline.
+ * • retains trace and screenshot evidence from the first failed attempt.
  *
  * 🏗️ Architecture:
- * Test-only Playwright configuration; not imported by application code.
+ * Test-only configuration; imports only the pure endpoint resolver.
  *
  * ⚠️ Important:
- * Diagnostic recording must not turn a failed attempt into a passing retry.
+ * No application endpoint changes or reuse of another server under CI.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 import { defineConfig, devices } from "@playwright/test";
+import { resolveWebSmokeEndpoint } from "../../scripts/web-smoke-endpoint.mjs";
+
+const endpoint = resolveWebSmokeEndpoint();
 
 export default defineConfig({
   testDir: "./e2e",
@@ -31,7 +34,7 @@ export default defineConfig({
   retries: 0,
   reporter: process.env.CI ? "github" : "list",
   use: {
-    baseURL: "http://127.0.0.1:3100",
+    baseURL: endpoint.baseURL,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
@@ -42,8 +45,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "pnpm dev --port 3100",
-    url: "http://127.0.0.1:3100",
+    command: `pnpm dev --hostname ${endpoint.hostname} --port ${endpoint.port}`,
+    url: endpoint.baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

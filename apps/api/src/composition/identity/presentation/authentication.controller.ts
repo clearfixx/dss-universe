@@ -11,6 +11,7 @@
  * 🧠 Responsibilities:
  * • receives the existing register/login/refresh requests;
  * • delegates combined responses to the named presentation use case.
+ * • translates private Auth failures through its published presentation mapper.
  *
  * 🏗️ Architecture:
  * Thin composition controller; no credential, token or persistence logic.
@@ -20,8 +21,12 @@
  */
 import { Body, Controller, Post, Req } from '@nestjs/common';
 import type { AuthenticatedRequest } from '@api/core/auth';
-import type { LoginDto, RefreshTokenDto } from '@api/modules/auth/presentation';
-import type { RegisterDto } from './dto/register.dto';
+import {
+  LoginDto,
+  RefreshTokenDto,
+  mapAuthFailure,
+} from '@api/modules/auth/presentation';
+import { RegisterDto } from './dto/register.dto';
 import { AuthenticationPresentationService } from '../application/authentication-presentation.service';
 
 @Controller('auth')
@@ -30,12 +35,23 @@ export class AuthenticationController {
     private readonly presentation: AuthenticationPresentationService,
   ) {}
   @Post('register')
-  register(@Body() input: RegisterDto, @Req() request: AuthenticatedRequest) {
-    return this.presentation.register(input, this.client(request));
+  async register(
+    @Body() input: RegisterDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    try {
+      return await this.presentation.register(input, this.client(request));
+    } catch (failure) {
+      throw mapAuthFailure(failure);
+    }
   }
   @Post('login')
-  login(@Body() input: LoginDto, @Req() request: AuthenticatedRequest) {
-    return this.presentation.login(input, this.client(request));
+  async login(@Body() input: LoginDto, @Req() request: AuthenticatedRequest) {
+    try {
+      return await this.presentation.login(input, this.client(request));
+    } catch (failure) {
+      throw mapAuthFailure(failure);
+    }
   }
   @Post('refresh')
   refresh(@Body() input: RefreshTokenDto) {

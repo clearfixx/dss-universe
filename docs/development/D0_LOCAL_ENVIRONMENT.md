@@ -6,7 +6,7 @@
 | ---------------------------------------- | ----------------------------- | -------------------------------------------------- |
 | Root `.env`                              | Docker Compose                | PostgreSQL 5433, Redis 6379, pgAdmin 5050          |
 | `apps/api/.env`, optionally `.env.local` | Nest configuration and Prisma | API 3001, prefix `/api`                            |
-| `apps/worker/.env`                       | Node environment loader       | Same database/Redis as API, SMTP 1025, ClamAV 3310 |
+| `apps/worker/.env`                       | Node environment loader       | Same database/Redis as API, SMTP 2525, ClamAV 3310 |
 | `apps/web/.env`                          | Next.js                       | Web 3000, API/GraphQL 3001                         |
 | `docker-compose.test.yml`                | Disposable test services      | PostgreSQL 5434, Redis 6380                        |
 
@@ -48,8 +48,13 @@ are for a local disposable environment, never a production deployment.
 
 ## Required infrastructure
 
-Compose publishes services on loopback only. Mailpit catches SMTP on 1025 and
-has a mailbox UI at `http://localhost:8025`. ClamAV listens on 3310 and preserves
+Compose publishes services on loopback only. Mailpit catches host SMTP on 2525
+and has a mailbox UI at `http://localhost:18025`; container ports remain1025/8025.
+Its SQLite database persists in the `dss_mailpit_data` volume. Existing API/Worker
+env files are not rewritten by bootstrap: align MAIL_PORT=2525 in both before
+starting them. Preserve existing temporary mailbox storage before recreating an
+older Mailpit container; see [recovery design](DEBT_013_MAILPIT_RECOVERY_DESIGN.md).
+ClamAV listens on 3310 and preserves
 signature databases in its named volume. First startup may take several minutes.
 PostgreSQL, Redis, Mailpit and ClamAV have healthchecks; pgAdmin does not.
 

@@ -19,6 +19,7 @@ import { MediaStatus } from '../../domain/enums/media-status.enum';
 import { MediaVisibility } from '../../domain/enums/media-visibility.enum';
 import type { MediaRepository } from '../../domain/repositories/media.repository.interface';
 import { MediaAccessService } from './media-access.service';
+import { MediaAccessForbiddenException } from '../../domain/exceptions/media-access-forbidden.exception';
 import type { MediaUrlSignerService } from './media-url-signer.service';
 
 const user: AuthenticatedUser = {
@@ -72,7 +73,7 @@ describe('MediaAccessService', () => {
   it('denies private media to another authenticated user', async () => {
     await expect(
       service.issue(user, 'media-1', 'document'),
-    ).rejects.toMatchObject({ status: 403 });
+    ).rejects.toBeInstanceOf(MediaAccessForbiddenException);
     expect(issue).not.toHaveBeenCalled();
   });
 

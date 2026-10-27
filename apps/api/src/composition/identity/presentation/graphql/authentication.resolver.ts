@@ -11,6 +11,7 @@
  * 🧠 Responsibilities:
  * • delegates authentication and registration composition;
  * • projects the existing Users viewer and explicit token transport.
+ * • maps known Auth rejections after awaiting the complete composition use case.
  *
  * 🏗️ Architecture:
  * Thin GraphQL composition resolver using published owner presentation contracts.
@@ -20,7 +21,11 @@
  */
 import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
 import type { GraphqlContext } from '@api/core/graphql';
-import { LoginInput, RefreshTokenInput } from '@api/modules/auth/presentation';
+import {
+  LoginInput,
+  RefreshTokenInput,
+  mapAuthFailure,
+} from '@api/modules/auth/presentation';
 import { presentViewerProfile } from '@api/modules/users/presentation';
 import { AuthenticationPresentationService } from '../../application/authentication-presentation.service';
 import { RegisterInput } from './inputs/register.input';
@@ -36,18 +41,26 @@ export class AuthenticationResolver {
     @Args('input') input: RegisterInput,
     @Context() context: GraphqlContext,
   ): Promise<AuthPayloadModel> {
-    return this.payload(
-      await this.presentation.register(input, this.client(context)),
-    );
+    try {
+      return this.payload(
+        await this.presentation.register(input, this.client(context)),
+      );
+    } catch (failure) {
+      throw mapAuthFailure(failure);
+    }
   }
   @Mutation(() => AuthPayloadModel)
   async login(
     @Args('input') input: LoginInput,
     @Context() context: GraphqlContext,
   ): Promise<AuthPayloadModel> {
-    return this.payload(
-      await this.presentation.login(input, this.client(context)),
-    );
+    try {
+      return this.payload(
+        await this.presentation.login(input, this.client(context)),
+      );
+    } catch (failure) {
+      throw mapAuthFailure(failure);
+    }
   }
   @Mutation(() => AuthPayloadModel)
   async refreshTokens(
@@ -60,9 +73,13 @@ export class AuthenticationResolver {
     @Args('input') input: LoginInput,
     @Context() context: GraphqlContext,
   ): Promise<AuthPayloadModel> {
-    return this.payload(
-      await this.presentation.reactivateAccount(input, this.client(context)),
-    );
+    try {
+      return this.payload(
+        await this.presentation.reactivateAccount(input, this.client(context)),
+      );
+    } catch (failure) {
+      throw mapAuthFailure(failure);
+    }
   }
   private payload(
     result: Awaited<ReturnType<AuthenticationPresentationService['login']>>,

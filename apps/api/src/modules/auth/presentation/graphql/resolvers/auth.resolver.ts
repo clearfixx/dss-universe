@@ -7,6 +7,7 @@
  *
  * 🎯 Purpose:
  * Exposes authentication application use cases through GraphQL mutations.
+ * Maps private credential failures without changing application accounting.
  *
  * ⚠️ Important:
  * Only Auth-owned account/session operations belong here.
@@ -22,6 +23,7 @@ import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
 
 import { AuthService } from '../../../application/services/auth.service';
+import { mapAuthFailure } from '../../mappers/map-auth-failure';
 import { LogoutResultModel } from '../models/logout-result.model';
 import { DeactivateAccountInput } from '../inputs/deactivate-account.input';
 import { ChangeEmailInput } from '../inputs/change-email.input';
@@ -41,37 +43,49 @@ export class AuthResolver {
 
   @Mutation(() => LogoutResultModel)
   @UseGuards(JwtAuthGuard)
-  deactivateAccount(
+  async deactivateAccount(
     @AuthUser() user: AuthenticatedUser,
     @Args('input') input: DeactivateAccountInput,
   ): Promise<{ success: boolean }> {
-    return this.authService.deactivateAccount(user.id, input.password);
+    try {
+      return await this.authService.deactivateAccount(user.id, input.password);
+    } catch (failure) {
+      throw mapAuthFailure(failure);
+    }
   }
 
   @Mutation(() => LogoutResultModel)
   @UseGuards(JwtAuthGuard)
-  changeViewerEmail(
+  async changeViewerEmail(
     @AuthUser() user: AuthenticatedUser,
     @Args('input') input: ChangeEmailInput,
   ): Promise<{ success: boolean }> {
-    return this.authService.changeEmail(
-      user.id,
-      input.email,
-      input.currentPassword,
-    );
+    try {
+      return await this.authService.changeEmail(
+        user.id,
+        input.email,
+        input.currentPassword,
+      );
+    } catch (failure) {
+      throw mapAuthFailure(failure);
+    }
   }
 
   @Mutation(() => LogoutResultModel)
   @UseGuards(JwtAuthGuard)
-  changeViewerPassword(
+  async changeViewerPassword(
     @AuthUser() user: AuthenticatedUser,
     @Args('input') input: ChangePasswordInput,
   ): Promise<{ success: boolean }> {
-    return this.authService.changePassword(
-      user.id,
-      input.currentPassword,
-      input.newPassword,
-    );
+    try {
+      return await this.authService.changePassword(
+        user.id,
+        input.currentPassword,
+        input.newPassword,
+      );
+    } catch (failure) {
+      throw mapAuthFailure(failure);
+    }
   }
 
   @Query(() => [AuthSessionModel])

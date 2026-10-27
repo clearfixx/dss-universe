@@ -55,9 +55,13 @@ services:
   mailpit:
     image: axllent/mailpit:v1.31.2
     restart: unless-stopped
+    environment:
+      MP_DATABASE: /data/mailpit.db
     ports:
-      - "127.0.0.1:1025:1025"
-      - "127.0.0.1:8025:8025"
+      - "127.0.0.1:2525:1025"
+      - "127.0.0.1:18025:8025"
+    volumes:
+      - dss_mailpit_data:/data
     healthcheck:
       test: ["CMD", "/mailpit", "readyz"]
       interval: 5s
@@ -94,6 +98,7 @@ services:
       - dss_network
 
 volumes:
+  dss_mailpit_data:
   dss_clamav_data:
   dss_postgres_data:
   dss_redis_data:

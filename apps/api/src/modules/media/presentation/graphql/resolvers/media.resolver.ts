@@ -7,6 +7,7 @@
  *
  * 🎯 Purpose:
  * Exposes authenticated Media upload-session use cases through GraphQL.
+ * Maps private Media access failures at the transport boundary.
  *
  * ⚠️ Important:
  * Binary transfer remains a REST responsibility in the processing package.
@@ -25,6 +26,7 @@ import { InitiateMediaUploadInput } from '../inputs/initiate-media-upload.input'
 import { MediaUploadSessionGraphqlMapper } from '../mappers/media-upload-session-graphql.mapper';
 import { MediaUploadSessionModel } from '../models/media-upload-session.model';
 import { MediaAccessService } from '../../../application/services/media-access.service';
+import { mapMediaFailure } from '../../mappers/map-media-failure';
 import { MediaAccessModel } from '../models/media-access.model';
 import { MediaQuarantineService } from '../../../application/services/media-quarantine.service';
 import { MediaQuarantineModel } from '../models/media-quarantine.model';
@@ -78,12 +80,16 @@ export class MediaResolver {
   }
 
   @Query(() => MediaAccessModel)
-  mediaAccessUrl(
+  async mediaAccessUrl(
     @AuthUser() user: AuthenticatedUser,
     @Args('mediaId', { type: () => ID }) mediaId: string,
     @Args('variantName') variantName: string,
   ): Promise<MediaAccessModel> {
-    return this.access.issue(user, mediaId, variantName);
+    try {
+      return await this.access.issue(user, mediaId, variantName);
+    } catch (failure) {
+      throw mapMediaFailure(failure);
+    }
   }
 
   @Query(() => [MediaQuarantineModel])

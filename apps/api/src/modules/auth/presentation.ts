@@ -16,3 +16,4 @@ export { LoginInput } from './presentation/graphql/inputs/login.input';
 export { RefreshTokenInput } from './presentation/graphql/inputs/refresh-token.input';
 export { LoginDto } from './application/dto/login.dto';
 export { RefreshTokenDto } from './application/dto/refresh-token.dto';
+export { mapAuthFailure } from './presentation/mappers/map-auth-failure';
