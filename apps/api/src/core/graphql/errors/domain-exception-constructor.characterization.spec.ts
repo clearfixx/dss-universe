@@ -83,12 +83,12 @@ describe('DEBT-079 inherited constructor envelopes', () => {
     },
   );
 
-  it('keeps the rate-limit constructor response as a string, not an object', () => {
+  it('carries explicit rate-limit status for the approved Apollo mapping', () => {
     const failure = new LoginRateLimitedException();
     const message = 'Login is temporarily unavailable. Please try again later.';
     expect(failure.getStatus()).toBe(429);
     expect(failure.message).toBe(message);
-    expect(failure.getResponse()).toBe(message);
+    expect(failure.getResponse()).toEqual({ message, statusCode: 429 });
   });
 
   it.each([
