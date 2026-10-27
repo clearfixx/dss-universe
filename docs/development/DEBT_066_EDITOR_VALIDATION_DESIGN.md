@@ -238,6 +238,23 @@ Targeted formatting and lint pass; this is not the consolidated gate or CI.
 The installed Next generator's H2 heading is synchronized in its generated
 AGENTS block only, avoiding known build/dev documentation drift; no UI changes.
 
+### Accepted-main compatibility checkpoint — 2026-10-27
+
+Integration `6c0d788` merges accepted main `b63d555` (including DEBT-087) into
+PR89 without conflicts or new application changes. On this integration, shared
+Editor65/65, targeted API validation units9/9 and real authenticated HTTP/host
+regressions23/23 pass, with no pending tests. Current shared dist was built before
+API verification, avoiding the previously documented stale-artifact confounder.
+The HTTP suite retains malformed/depth65 rejection, valid depth64 requests and
+unchanged host state/evidence assertions. Report
+`node_modules/.cache/debt066-http-6c0d788.json`, SHA256
+`67c420a895cdca78f37609205d2982bb71f35fcb58261dcf2f2f6acc0cad727f`.
+
+These are compatibility checks, not a current full-gate certificate or owner
+acceptance. PR96 arrival integration is independently verified but awaits owner
+acceptance; do not silently absorb that unaccepted runtime package or use its
+green gate as PR89 evidence. The complete PR89 integration gate/CI remains open.
+
 Implementation receives its own branch/commit/PR after depth approval and
 compatibility assessment. Apply File Passport to materially touched/new source.
 Run changed format, full lint/types/tests/coverage, Prisma validation/migrations,
