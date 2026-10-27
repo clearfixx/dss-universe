@@ -1,9 +1,35 @@
 # D7 — Baseline release review
 
 Date: 2026-10-22. Updated: 2026-10-27. Branch: `debt/d7-release-gate`.
-Current accepted baseline: `b63d555bb58365a7090eaa7bc0d7ae7c9a78e4a8`.
+Current accepted baseline: `b41dd9ec080e321ab708d8edf399d56afd72d45d`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
+
+## 2026-10-27 arrival acceptance override
+
+Owner explicitly accepted DEBT-085 PR96 at `6b1c6ca`; merged as `b41dd9e`
+at10:30:24UTC. Exact-head CI5/5 and local full-gate results below are now accepted
+for this scoped early-focus correction. Missing October26 raw artifacts remain
+missing; new controlled production evidence is not their recovery. DEBT-086
+remains open. This does not accept D7 or Phase11.
+
+PR89 compatibility head `c72b523` integrates earlier accepted `b63d555`:
+shared Editor65/65, focused API validation9/9 and real HTTP regressions23/23 pass.
+PR92 `f996455` integrates current accepted `b41dd9e`; preceding integration
+`9956ff5` passes Worker delivery4/4, Achievements9/9 and Points rollback/replay2/2.
+These are scoped compatibility proofs, not current full-gate certificates or
+owner acceptance. Automatic event delivery and historical replay remain unimplemented.
+
+Independent exact-head CI subsequently passes5/5 for PR89 `c72b523` (API646/646,
+no skips), PR92 `f996455` (API625/625, no skips), and PR94 `9672731` (API623/623,
+no skips). PR94 includes accepted arrival/main and remains unaccepted. Its local
+gate reached API E2E after successful coverage8/8/API1327/1327, but Windows slept
+from10:38:40UTC to10:58:24UTC (Power-Troubleshooter event1; Kernel-Power42 says
+Button or Lid). A Community Points afterEach cleanup hook then timed out.
+The process continued after resume; no complete successful local gate is claimed.
+Original log and exported system-event XML are preserved. Owner confirmed a
+fresh uninterrupted execution window; any later gate must use separate evidence,
+not erase this externally interrupted run or increase test timeouts.
 
 ## 2026-10-27 smoke endpoint acceptance and arrival integration
 
@@ -28,7 +54,8 @@ Local API SHA256 `a61235b2ec75689380e0bef36e02ba51a2fec8a342126ed61477ea8e2756c5
 CI API SHA256 `dfc132eea6e4ba872c14b16efbf11dd56f78f63513bee45a8005e1656457743c`.
 The four new controlled production trace/report hashes still match after Web
 smoke cleanup. Missing October26 originals remain missing; DEBT-086 remains
-open. PR96 owner acceptance and merge are pending, not implied by this evidence.
+open. PR96 acceptance was pending at this checkpoint; the later explicit
+acceptance override above supersedes only that status.
 
 The current inventory is87 unique IDs, not87 completed corrections.
 

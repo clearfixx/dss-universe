@@ -22,7 +22,7 @@ active package safe and buildable.
 
 ## Register
 
-D7 review now integrates accepted main `b63d555`; the original baseline was
+D7 review now integrates accepted main `b41dd9e`; the original baseline was
 `f118d82`. See
 [current evidence and limits](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079/080.
@@ -67,13 +67,18 @@ readiness workaround is accepted as a root-cause correction. Runtime work is
 separate DEBT-085; [candidate evidence](https://github.com/clearfixx/dss-universe/pull/96)
 retains the diagnostic history. No scoped acceptance/closure yet.
 
-### DEBT-085 — Arrival setup can animate over early keyboard focus (Medium, IMPLEMENTED candidate; owner acceptance pending)
+### DEBT-085 — Arrival setup can animate over early keyboard focus (Medium, RESOLVED scoped runtime package)
+
+Owner explicitly accepted PR96 `6b1c6ca`, merged as `b41dd9e` at10:30:24UTC.
+Complete integration results below support this scoped early-focus fix. Missing
+older artifacts remain an evidence-retention exception; DEBT-086 and D7 acceptance
+remain open. Older pending checkpoints are retained as history.
 
 Latest integration PR96 `6b1c6ca` includes accepted main `b63d555`: exact-head
 CI5/5 and local quality:full exit0, coverage8/8, API1327/1327, E2E623/623
 without skips, GraphQL, build6/6, post-build2/2 and Web15/15 without retries.
 New production archive hashes remain intact after smoke cleanup. Owner acceptance
-and merge remain pending. Historical failures and missing original traces below
+and merge are recorded above. Historical failures and missing original traces below
 are preserved; DEBT-086 remains open.
 
 Owner approved a separate runtime package after production check and design.
