@@ -22,7 +22,7 @@ active package safe and buildable.
 
 ## Register
 
-D7 review now integrates accepted main `b41dd9e`; the original baseline was
+D7 review now integrates accepted main `393e359`; the original baseline was
 `f118d82`. See
 [current evidence and limits](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079/080.
@@ -33,6 +33,12 @@ automatically resolve unrelated OPEN findings.
 unique IDs exactly once, distinguishing accepted scoped corrections from partial
 evidence, remaining review and unresolved decisions. It is not a new status model
 or a declaration that every debt has been reviewed/closed.
+
+Scoped acceptance override: owner accepted narrow rate-limit mapping PR94
+`9672731`, merged `393e359`: exact-head CI5/5 and uninterrupted local full
+gate0, E2E623/623, Web15/15. This resolves only the approved GraphQL429 mapping;
+DEBT-079 Domain/Nest decoupling remains open and unauthorised for implementation.
+Earlier PR94-pending references below are retained as historical checkpoints.
 
 ### DEBT-087 — Reserved Web smoke port blocks local quality gate (Medium, RESOLVED scoped test-infrastructure package)
 

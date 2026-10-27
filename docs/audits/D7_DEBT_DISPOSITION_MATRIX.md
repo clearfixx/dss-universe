@@ -1,8 +1,13 @@
 # D7 — Individual debt review matrix
 
-Updated: 2026-10-27. Current accepted baseline: `b41dd9e`; initial review baseline
+Updated: 2026-10-27. Current accepted baseline: `393e359`; initial review baseline
 was `f118d82`.
 Status: **IN PROGRESS; not a release certificate**.
+
+Latest scoped acceptance: owner accepted PR94 `9672731`, merged `393e359`,
+with CI5/5 and uninterrupted local full gate0, E2E623/623 and Web15/15.
+DEBT-079 remains route M for unimplemented Domain decoupling; earlier pending
+PR94 references below are historical, superseded only for that narrow mapping.
 
 Latest override: owner accepted DEBT-087 PR98 `b65df03`, merged `b63d555`:
 CI5/5 and local full gate0, strict E2E623/623, Web14/14 on3195 without retries.

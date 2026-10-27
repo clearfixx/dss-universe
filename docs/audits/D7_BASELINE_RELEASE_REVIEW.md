@@ -1,9 +1,24 @@
 # D7 — Baseline release review
 
 Date: 2026-10-22. Updated: 2026-10-27. Branch: `debt/d7-release-gate`.
-Current accepted baseline: `b41dd9ec080e321ab708d8edf399d56afd72d45d`.
+Current accepted baseline: `393e3594a96efc1618a39899109654c3c617a0d5`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
+
+## 2026-10-27 narrow rate-limit mapping acceptance
+
+Owner explicitly accepted PR94 `9672731`, merged `393e359` at11:19:42UTC.
+The completed exact-head CI5/5 and uninterrupted local full gate0 below now
+support scoped acceptance of GraphQL RATE_LIMITED/statusCode429. Historical
+sleep-interrupted and pre-arrival failed gates remain recorded. This does not
+authorize or close the separate ten-error Domain/Nest decoupling implementation,
+DEBT-086, D7 or Phase11. PR89 integration `d8ab9c9` now includes this accepted
+base. Its exact-head CI5/5 and local quality:full exit0 are now verified:
+coverage8/8/API1336/1336, E2E646/646 across59 suites without skips, GraphQL,
+build6/6, post-build2/2 and Web15/15 on3195 without retries (23.8s).
+Local API SHA256 `fff185ce00ab5ef891470e7a5c3a53ad8e307475facdb90a6e800ae28b8c0cb4`;
+CI SHA256 `34a25085d3b3c03dc0a6f8d5d1899580b97277a0b165bf76065bd08aef6c35f9`.
+This is ready for explicit owner acceptance; no PR89 merge or D7 closure follows.
 
 ## 2026-10-27 arrival acceptance override
 
