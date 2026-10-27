@@ -18,6 +18,7 @@
  *
  * ⚠️ Important:
  * Arrival cleanup must not cancel a search it does not own.
+ * Initial setup must honor focus that arrived before its listener was installed.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -156,9 +157,17 @@ export function UniverseArrival() {
       /* Play once per mount when storage is unavailable. */
     }
     if (!seen && !motion.matches) {
-      measureConstruction();
-      element.dataset.arrival = "playing";
-      syncVisibility();
+      if (
+        element.contains(document.activeElement) &&
+        !document.activeElement?.classList.contains(styles.skip)
+      ) {
+        // Focus may precede passive effect setup; never animate over that action.
+        finish();
+      } else {
+        measureConstruction();
+        element.dataset.arrival = "playing";
+        syncVisibility();
+      }
     }
     const replay = () => {
       clearTimeout(timer);
