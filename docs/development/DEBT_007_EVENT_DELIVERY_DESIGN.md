@@ -111,6 +111,24 @@ started by this test. JSON SHA256:
 `A3D2DCC39C55D5DD17B22AC1154EEE08C354A3C22216AA10EA00F9AD87E6E7E6`.
 Read-only post-run schema inventory reports zero `api_boundary_%` schemas.
 
+## Accepted-main compatibility checkpoint — 2026-10-27
+
+Integration `9956ff5` merges accepted main `b63d555` without changing the
+four-file design/characterization scope. Current shared Editor/Jobs artifacts
+were built before API verification. Worker delivery controls pass4/4,
+Achievements units9/9 and real Points rollback/replay characterization2/2
+on an owned migrated schema in disposable DB5434. Report
+`node_modules/.cache/debt007-http-9956ff5.json`, SHA256
+`2e54b08e1e25735eb6d680993f1ac2ceaef4438502f84df096044068f00b7794`.
+
+After owner acceptance of arrival PR96, integration `770fe46` also merges the
+new accepted main `b41dd9e`. That merge adds only the accepted arrival package;
+the delivery characterization code is unchanged. No automatic consumer wiring,
+formula, backfill, queue identity or delivery guarantee has been implemented.
+The targeted results above concern `9956ff5`; they are not a new-head full-gate
+certificate. Current full quality/CI and explicit design-package acceptance
+remain required. The historical Turbopack startup failure is not waived.
+
 ## Runtime assembly decisions still requiring design
 
 The reviewed ADR-004 and ADR-0003 require source-transaction Outbox plus durable
