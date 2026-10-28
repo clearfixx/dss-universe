@@ -1,7 +1,25 @@
 # DEBT-007 — Runtime assemblies, package A/A.1
 
-Status: owner-approved implementation candidate; full verification and acceptance open.
+Status: owner-accepted A/A.1; PR101 merged as `2c42e89` on 2026-10-28.
 Accepted source baseline: `ebd77b8` (PR87), following design PR100/merge625d1b9.
+
+## Accepted verification checkpoint
+
+Owner accepted exact code `7a8abbe`, merged `2c42e89` at04:40:00UTC. CI5/5
+passed (Quality40631239710, containment40631239801), with downloaded strict API
+report661/661 across61 suites, zero failed/pending, SHA256
+`83a12062a8b9bf01561a88ee98638c7c249b88d7d9138f73020f228773978bfc`.
+Local quality:full session97622 terminated exit0 on identical code: coverage8/8,
+API1463/1463 across178 suites, E2E661/661 without skips, generated API checks,
+build6/6 (five cached), build-entry checks and Web15/15 without retries (43.6s).
+Local API SHA256
+`988ba7c7bc047e2ee7ec60e19423fc00b41204d77a66eefc3d4324c9aa26504b`;
+raw log/exit marker are in d6-quality-baseline at
+`node_modules/.cache/debt007-a-quality-7a8abbe.log` and `.exit.txt`, report at
+`node_modules/.cache/quality-full-FysSZ0/api-e2e.json`.
+
+This accepts assemblies and the narrow connection cleanup only. Automatic
+delivery, routing/activation, SMTP readiness, D7 and Phase11 remain separate.
 
 ## Approved scope
 
@@ -95,7 +113,6 @@ that observed limitation prompted A.1. The permanent regression invokes
 the real PrismaService hook with mocked connect/disconnect and checks cleanup
 before framework close, rather than pretending close calls a missing hook.
 
-Complete format/lint/types/schema/drift/coverage/E2E/generated API/build/Web smoke
-and current-head CI remain the acceptance gate. Focused evidence alone does not
-accept this package, finish automatic delivery, waive current Mailpit readiness
-or authorize Phase11.
+The accepted full gate and CI above supplement the focused evidence; focused
+checks alone were not acceptance. This package does not finish automatic
+delivery, waive current Mailpit readiness or authorize Phase11.

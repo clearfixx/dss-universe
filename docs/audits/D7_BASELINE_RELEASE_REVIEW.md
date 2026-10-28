@@ -1,9 +1,26 @@
 # D7 — Baseline release review
 
 Date: 2026-10-22. Updated: 2026-10-28. Branch: `debt/d7-release-gate`.
-Current accepted baseline: `ebd77b8cb1af4ace6c43f5035844decd52496e57`.
+Current accepted baseline: `2c42e89ce70d035d687c24fcd84f716cc089eb43`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
+
+## 2026-10-28 owner runtime assemblies acceptance
+
+Owner accepted A/A.1 PR101 `7a8abbe`, merged `2c42e89` at04:40:00UTC.
+Private owner service/repository assemblies, narrow named consume commands and
+minimal Users existence preserve API behavior and identity/freshness contracts.
+The separately authorized Prisma failed-connect cleanup preserves original error
+identity and emits no driver details on cleanup failure; no actual TCP leak was
+claimed. API/runtime singleton, isolation, lifecycle and migrated explicit-call
+checks are supported by exact-head CI5/5 and local quality:full exit0:
+coverage8/8/API1463/1463, E2E661/661 in61 suites without skips, generated API,
+build6/6 (five cached), entry checks and Web15/15 without retries (43.6s).
+CI API SHA256 `83a12062a8b9bf01561a88ee98638c7c249b88d7d9138f73020f228773978bfc`;
+local `988ba7c7bc047e2ee7ec60e19423fc00b41204d77a66eefc3d4324c9aa26504b`.
+Full implementation/evidence is in
+[the A/A.1 record](../development/DEBT_007_RUNTIME_ASSEMBLIES.md).
+This is not automatic delivery, routing/activation, SMTP readiness or D7 acceptance.
 
 ## 2026-10-28 delivery plan acceptance and current readiness reconciliation
 

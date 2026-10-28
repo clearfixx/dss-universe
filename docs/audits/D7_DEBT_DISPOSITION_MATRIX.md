@@ -1,6 +1,6 @@
 # D7 — Individual debt review matrix
 
-Updated: 2026-10-28. Current accepted baseline: `ebd77b8`; initial review baseline
+Updated: 2026-10-28. Current accepted baseline: `2c42e89`; initial review baseline
 was `f118d82`.
 Status: **IN PROGRESS; not a release certificate**.
 
@@ -16,7 +16,9 @@ bindings, so current013 readiness is route M, without erasing accepted PR91.
 Owner accepted PR87e6c4e44/mergeebd77b8: CI5/5, E2E658/658 without skips and
 local full gate0 on identical code, Web15/15. First-failure evidence policy is
 integrated; historical natural-failure attribution remains separate. Package A.1
-cleanup is additionally approved; candidate PR101 full gate/acceptance is open.
+cleanup is additionally accepted in PR1017a8abbe/merge2c42e89: CI5/5 and full
+gate0, API1463/1463, E2E661/661, Web15/15 without retries. Only A/A.1 is accepted;
+automatic delivery and routing/activation remain open.
 D7 has no new full gate.
 
 Owner accepted DEBT-079 runtime PR99 `ae1b516`, merged `a715ece`:
@@ -90,7 +92,7 @@ does not override missing risk decisions or accept an unmerged candidate.
 | DEBT-004 | M      | AST inventory518 feature files: zero direct static Prisma/database imports/exports/import-types; composition47/47 and DB/HTTP24/24. Dynamic/alias/transitive semantics are not universally certified.                                                     |
 | DEBT-005 | M      | Current mandatory frozen-baseline/file-graph enforcement verified140/140,zero bounded findings; stale D2 rollout doc clarified. Domain/HTTP079 remains outside guarantees.                                                                                |
 | DEBT-006 | M      | Root README stale Phase2 corrected to current context/plan/register; docs index and historical phase/workflow redirects checked. Naming039 remains open.                                                                                                  |
-| DEBT-007 | M      | Accepted PR100 design/cutoff; A/A.1 approved, candidate PR101 7a8abbe has focused15 units/3 migrated E2E. Full gate/acceptance, routing/queue activation and automatic delivery remain open.                                                              |
+| DEBT-007 | M      | Accepted design PR100 and A/A.1 PR1017a8abbe/merge2c42e89, CI5/5/full gate0, API1463/1463, E2E661/661, Web15/15. Durable routing, activation and automatic delivery remain unimplemented/unapproved.                                                      |
 | DEBT-008 | M      | Current groups/Premium/Guardian policy and migration guards inspected; fresh74 units/main HTTP5+5; full Phase5 acceptance separate.                                                                                                                       |
 | DEBT-009 | X      | Owner deferred Passport cleanup/classification to future GPT-5.6 work; excluded from D5/D7.                                                                                                                                                               |
 | DEBT-010 | M      | Legacy backend/role examples explicitly redirect to current rules; not every old guidance file has been reviewed.                                                                                                                                         |
