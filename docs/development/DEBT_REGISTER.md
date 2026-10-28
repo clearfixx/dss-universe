@@ -2,7 +2,7 @@
 
 > Status: Active
 >
-> Updated: 2026-10-25
+> Updated: 2026-10-28
 
 ## Purpose
 
@@ -16,34 +16,283 @@ active package safe and buildable.
 - `OPEN` — confirmed and awaiting decision.
 - `ACCEPTED` — approved for a named package.
 - `DEFERRED` — intentionally postponed with an owner or target phase.
+- `IMPLEMENTED` — scoped correction exists; remaining review/acceptance is explicit.
 - `RESOLVED` — implemented and verified.
 - `REJECTED` — reviewed and determined not to be debt.
 
 ## Register
 
-### DEBT-079 — Domain failures coupled to Nest transport (Medium, ACCEPTED runtime correction; verification open)
+2026-10-28 current-state reconciliation: owner accepted DEBT-007 plan PR100846dd94,
+merged625d1b9. The owner approved the persisted UTC createdAt
+admission cutoff, equality included, no automatic historical replay/backfill;
+runtime package A is separately approved for owner assemblies/narrow consumers,
+plus A.1 failed-connect cleanup, not queue/routing activation. Owner accepted
+PR1017a8abbe/merge2c42e89: CI5/5, full gate0, API1463/1463, E2E661/661 without
+skips, Web15/15 without retries. Automatic delivery remains unimplemented.
+Scoped022 formatting and029 Worker configuration
+verification are resolved with bounded D7 evidence; no delivery proof is implied.
+Current Mailpit host2525/18025 return
+ECONNREFUSED with empty effective Docker port arrays despite healthy container
+and declared bindings. Accepted013 recovery remains historical; current readiness
+must be restored. Owner accepted PR87e6c4e44/mergeebd77b8: CI5/5 and full gate0
+on identical code, E2E658/658, Web15/15. First-failure trace/screenshot/CI upload
+are now integrated; original red evidence and natural-failure attribution limits
+remain. No unaccepted runtime/service change or D7 acceptance is authored here.
 
-After accepted design/characterization PR93 and detailed design PR95, the owner
-approved a separate ten-error Auth/Users/Media runtime correction. Private errors
-become ordinary Error subclasses; owner-local mappers are invoked only at local
-or root presentation boundaries. Existing REST/GraphQL envelopes, accepted
-RATE_LIMITED429, unknown identity, refresh401 and application side-effect ordering
-remain protected. Focused units198/198 and expanded transport18/18 pass; complete
-quality/CI and owner acceptance remain open. See
-[runtime scope/evidence](DEBT_079_OWNER_FAILURE_RUNTIME.md). This does not migrate
-all application Nest usage or close D7/Phase11 preparation.
+D7 review now integrates accepted main `2c42e89`; the original baseline was
+`f118d82`. See
+[current evidence and limits](../audits/D7_BASELINE_RELEASE_REVIEW.md).
+The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079/080.
+D6 acceptance does not
+automatically resolve unrelated OPEN findings.
 
-### DEBT-080 — Mandatory CI smoke silently permits retries (Medium, ACCEPTED, verification open)
+[D7 individual review routing](../audits/D7_DEBT_DISPOSITION_MATRIX.md) maps all87
+unique IDs exactly once, distinguishing accepted scoped corrections from partial
+evidence, remaining review and unresolved decisions. It is not a new status model
+or a declaration that every debt has been reviewed/closed.
 
-PR81 initial Web job120465792097 was green with one flaky/13 passed. Accepted
-main f118d82 reproduces the Academy response failure2/10 without retries.
-Owner approved a separate test/CI-only packet. Native readiness synchronization
-passes20/20 controls and full smoke14/14; explicit CI retries0/workers2/forbid-only
-and actual Playwright config policy tests pass4/4. Full quality/CI and acceptance
-remain open; no runtime/UI correction is implied. See
+Scoped acceptance override: owner accepted narrow rate-limit mapping PR94
+`9672731`, merged `393e359`: exact-head CI5/5 and uninterrupted local full
+gate0, E2E623/623, Web15/15. This resolves only the approved GraphQL429 mapping;
+DEBT-079's later ten-error runtime correction is accepted below; this does not
+authorize broader application Nest cleanup.
+Earlier PR94-pending references below are retained as historical checkpoints.
+
+DEBT-007 verification override: design/characterization PR92 `4da51b6` has
+exact-head CI5/5 and local quality:full exit0, coverage8/8/API1337/1337,
+E2E648/648 without skips, build6/6, post-build2/2 and Web15/15 without retries.
+Both migrated Points rollback/replay cases pass. Owner accepted that design-only
+package at `4da51b6`, merged `f9ddeeb` at14:53:44UTC. Automatic delivery,
+historical replay and broader DEBT-007 closure are not implemented or implied.
+Earlier gate/acceptance-pending references are historical.
+
+### DEBT-087 — Reserved Web smoke port blocks local quality gate (Medium, RESOLVED scoped test-infrastructure package)
+
+Windows excludes3028–3127: binding3100 gives EACCES without a listener. Owner
+approved one shared configurable smoke endpoint, default3100 with explicit
+validated DSS_WEB_TEST_PORT override and fail-closed bind errors. Owner accepted
+PR98 `b65df03`, merged as `b63d555`. CI5/5 and local quality:full exit0:
+coverage8/8, API1327/1327, E2E623/623 with no skips, build6/6, post-build2/2,
+Web14/14 on3195 without retries. Scoped policy controls21/21 and67/67 include
+actual Playwright/Turbo configuration and an occupied socket owner preserved.
+No Windows/Docker configuration, runtime/UI, timeout, retry or assertion change.
+The separate initial P1001 attempt is retained; test DB5434/Redis6380 were
+started and the empty tmpfs test DB migrated before the successful full gate.
+See [design and implementation](../audits/DEBT_087_WEB_SMOKE_ENDPOINT.md) and
+[accepted evidence](https://github.com/clearfixx/dss-universe/pull/98).
+This does not resolve DEBT-085/086 or accept D7.
+
+### DEBT-084 — Keyboard smoke cancellation pointer interception (Medium, ACCEPTED diagnostic/test scope)
+
+Local PR94 head `17ebd01` quality:full failed at Web13/14, no retries: hero
+intercepted Cancel search, then the button detached. API623/623, build6/6 and
+post-build2/2 passed; CI was green but does not waive the local failure.
+Owner approved separate diagnostic/test scope. One instrumented natural flow
+passed but was explicitly not treated as a fix. A distinct controlled early-focus
+experiment reproduced hero hit interception with console clip-path50percent.
+Original error context and separate trace evidence were initially captured, but
+their local raw files are now unavailable after ordinary Playwright output
+cleanup. PR96 records that retention mistake and a new controlled production
+comparison, archived outside the output root; it does not recreate the missing
+natural-failure snapshot. No test-only
+readiness workaround is accepted as a root-cause correction. Runtime work is
+separate DEBT-085; [candidate evidence](https://github.com/clearfixx/dss-universe/pull/96)
+retains the diagnostic history. No scoped acceptance/closure yet.
+
+### DEBT-085 — Arrival setup can animate over early keyboard focus (Medium, RESOLVED scoped runtime package)
+
+Owner explicitly accepted PR96 `6b1c6ca`, merged as `b41dd9e` at10:30:24UTC.
+Complete integration results below support this scoped early-focus fix. Missing
+older artifacts remain an evidence-retention exception; DEBT-086 and D7 acceptance
+remain open. Older pending checkpoints are retained as history.
+
+Latest integration PR96 `6b1c6ca` includes accepted main `b63d555`: exact-head
+CI5/5 and local quality:full exit0, coverage8/8, API1327/1327, E2E623/623
+without skips, GraphQL, build6/6, post-build2/2 and Web15/15 without retries.
+New production archive hashes remain intact after smoke cleanup. Owner acceptance
+and merge are recorded above. Historical failures and missing original traces below
+are preserved; DEBT-086 remains open.
+
+Owner approved a separate runtime package after production check and design.
+Controlled dev and fresh production both reproduced the mechanism: focus before
+arrival listener setup, real Enter starts search while playing, Cancel exists
+but hero wins pointer hit-testing. This is controlled scheduling evidence, not
+proof that every historical smoke failure has the same cause.
+PR96 head `60105a4` adds an initial focus-aware finish guard without CSS, duration,
+search timer, replay or UI redesign changes. Two early-focus unit cases failed
+on old runtime then passed; focused units9/9, dev browser15/15 without retries,
+fresh production actual cancellation/focus restoration pass. Lint/typecheck pass.
+Exact-head CI completed 5/5 green, API623/623 and Web15/15 without retries.
+The local full gate terminated exit1 at API622/623: credential rotation exceeded
+5000ms (reported5003ms), before full-gate build/Web. The same CI case took2247ms.
+Separate approved DEBT-086 investigates that difference; no acceptance or merge.
+Do not resolve PR94 or D7 from focused proofs or CI alone.
+
+Current PR96 `1d6f3c9` integrates accepted main `46395a7` and records the missing
+October26 raw traces honestly. New production controls at pre-fix `c5966e4` and
+corrected `c83150c` reproduce broken versus working hit-testing; the corrected
+case also clicks Cancel and verifies restored input focus. Both new trace ZIPs
+and reports are archived outside `test-results`, with verified hashes and
+provenance. This is new controlled evidence, not recovery of old artifacts or
+attribution of every historical flake. New-head full gate/CI and acceptance remain open.
+
+### DEBT-086 — Local credential-rotation E2E deadline (Medium, ACCEPTED diagnostic/test scope; cause open)
+
+Owner approved timing diagnostics and only a demonstrated test/fixture correction,
+without runtime/Auth/crypto changes, mocks, increased deadlines, sleep, retries
+or weakened assertions. [PR97](https://github.com/clearfixx/dss-universe/pull/97)
+head `e264907` adds opt-in stage-only timings; no credentials or subject data.
+Focused rotation passed in2704ms, whole file27/27 with rotation2555ms, all API
+E2E623/623 across58 suites without pending tests with rotation2254ms. These runs
+did not reproduce the timeout and do not supersede PR96's failed local gate.
+No fixture defect or runtime cause is proven; no correction or closure claimed.
+One strict quality:full at code head `e264907` completed exit0: coverage8/8 tasks,
+API1327/1327, E2E623/623 without pending tests, rotation2371ms once, build6/6,
+post-build2/2 and Web14/14 without retries. Same-head CI5/5, rotation1540ms.
+Passing buffered logs were hidden by Jest30.5.2's automatic AgentReporter;
+explicit default-reporter diagnostics expose stages without changing the gate.
+This explains logging, not the original timeout. Owner accepted diagnostics at
+final docs-only head `0a7594e`, CI5/5, E2E623/623 with rotation2238ms once,
+Web14/14 without retries. PR97 merged as `8e3c4c7`; the acceptance explicitly
+leaves DEBT-086 open. No source correction or timeout closure is claimed.
+
+### DEBT-080 — Green CI Web check can conceal a flaky smoke test (Medium, RESOLVED scoped test/CI package)
+
+Owner accepted the bounded test/CI correction and merged PR83 as
+`a35326afdd4ebba484540a46f468c82d4bb586a9`. Its exact candidate bde1ad6 had
+five green CI checks and a complete local gate: API E2E593/593 and Web14/14,
+zero retries. This does not resolve DEBT-081 or DEBT-083 runtime/stability risks.
+The following finding and verification-open checkpoints are historical evidence.
+
+PR81 head ccc8f9c, Quality run39968841410/job120465792097 reports success, but
+actual job logs record one flaky test and13 passed: arrival.spec.ts106 fails
+the Begin with inference visibility assertion at line112 (5000ms), then succeeds
+on retry. Playwright config enables two retries under CI; ci.yml invokes the
+plain Web test:e2e command. This is not a clean14/14 first-attempt pass. No
+runtime defect or precise hydration/readiness cause is established by this log.
+
+The separate local quality:full runner already forces retries0 and rejects
+retried results. Its stronger guarantee must not be attributed to the plain CI
+Web job. Proposed separate package: reproduce real readiness/action ordering,
+retain assertions/timeouts and UI/runtime, and align mandatory CI smoke with
+the no-retry acceptance policy. No retry-to-green, timeout increase or speculative
+UI change. Owner approved this separate package after the finding. D7 only
+records evidence; no runtime/test/CI implementation is included in this branch.
+The subsequent PR81 head03a5937 Web job passed14/14 without flaky results;
+that clean run does not establish the prior race's root cause or close the debt.
+
+Accepted main f118d82 reproduced the Academy response failure2/10 without
+retries. The approved test/CI-only packet's native readiness synchronization
+passed20/20 controls and full smoke14/14; explicit CI retries0/workers2/forbid-only
+and actual Playwright config policy tests passed4/4. These results did not by
+themselves prove a runtime fix. See
 [DEBT-080 evidence](../audits/DEBT_080_SMOKE_READINESS.md).
 
-### DEBT-081 — Early demo interaction can lose its timer during dev passive cleanup (Medium, ACCEPTED runtime package; verification open)
+### DEBT-013 — D7 host-mail readiness revalidation (High, RESOLVED scoped mail recovery)
+
+Owner accepted PR91 head a881a1e, merged0bfbe2b. Persistent Mailpit recovery
+preserves historical mailbox data; host SMTP2525/HTTP18025, synthetic delivery
+and restart persistence pass. CI5/5 includes real configuration regressions;
+local full gate0, E2E610/610 and Web14/14 without retries. No PostgreSQL/Redis
+restart or foreign listener stop. This does not certify every optional service.
+See [recovery evidence](DEBT_013_MAILPIT_RECOVERY_DESIGN.md).
+The failed readiness observations below are historical.
+
+2026-10-23: Mailpit container is running/healthy and its internal readyz invocation
+completes, but host HTTP /readyz on127.0.0.1:8025 is unavailable (3s bound) and
+no8025 listener is found. Host TCP1025 accepts a connection, but the read does not
+produce an SMTP220 greeting within2s. Container HostConfig declares loopback
+bindings1025/8025, whereas NetworkSettings lists empty port mappings. Host1025
+has an unrelated-to-this-check listener PID1432; its ownership/root cause was
+not established and nothing was stopped. No email was sent.
+
+This does not prove a Mailpit-internal failure or a particular Docker/WSL cause.
+It means current host-to-Mailpit readiness is not established by container health.
+Retain earlier D0 delivery evidence as historical; fresh operational acceptance
+requires scoped diagnosis/recovery and protocol verification. D7 performs no
+container restart/recreate, env edit or installation. See
+[D7 readiness evidence](../audits/D7_BASELINE_RELEASE_REVIEW.md).
+
+### DEBT-016 — Historical D7 dependency-security finding (Critical finding; scoped correction RESOLVED)
+
+Owner subsequently accepted PR84, merged089c52f. Exact candidate e62cc89 had
+CI5/5 and local full gate0; the refreshed D7 audit on2026-10-25 reports
+high0/critical0, moderate17/low2, security-policy13/13 and unchanged approved
+braces regressions14/14. No new exception or universal security claim. The
+following2026-10-23 finding is retained historical evidence, not current failure.
+
+2026-10-23: actual `pnpm security:check` exits1. Raw audit reports two critical,
+two high and twelve moderate findings. One high is the existing owner-approved
+braces exception; its exact patch/installed digest check and14 regressions pass.
+The three new blocking findings are Next16.3.8 advisories GHSA-2464-fhr4-w9xw,
+GHSA-p3m5-59mp-jv5r and GHSA-673q-mjm6-r5xr. The primary advisories and npm metadata
+identify available Next16.4.1 as patched; matching eslint-config-next exists and
+the Node engine is compatible with Node24. No DSS exploit is demonstrated.
+
+Separate dependency correction requested, with full quality/security/CI and no
+UI/UX changes or new exception. D7 changes no dependency or runtime. Old D6
+green audit evidence is historical, not a current waiver. Details and primary
+links: [D7 fresh dependency gate](../audits/D7_BASELINE_RELEASE_REVIEW.md).
+
+### DEBT-079 — Domain exceptions depend on Nest HTTP transport (Medium, RESOLVED scoped runtime package)
+
+Owner explicitly accepted PR99 `ae1b516`, merged `a715ece` at
+2026-10-27T23:05:36UTC. The exact-head full gate/CI evidence below is now accepted
+for the ten errors and their required local/root presentation boundaries. See
+[runtime scope](DEBT_079_OWNER_FAILURE_RUNTIME.md). Historical failed artifacts
+and unrelated timing questions remain explicit; D7 is not accepted.
+
+The owner explicitly authorized runtime implementation after accepted PR95.
+Candidate PR99 `ae1b516` makes the ten Auth/Users/Media failures ordinary private
+Error subclasses and adds only owner-local presentation mapping capabilities.
+Application flows/transactions/ports and global formatter remain unchanged.
+Focused198/198 and expanded HTTP18/18 pass. Exact-head CI5/5 and separate
+uninterrupted quality:full exit0 now pass: coverage8/8/API1450/1450, all three
+mappers100%, E2E658/658 without skips, build6/6, post-build2/2 and Web15/15
+without retries. Owner runtime acceptance is recorded above. The first local
+attempt ended656/658 after a system-confirmed seven-hour sleep; failed artifacts
+and the additional post-resume Media timing observation are retained in D7,
+not claimed fixed. Accepted PR94 establishes RATE_LIMITED429; refresh401
+and unknown identity remain protected. The earlier pending-approval statements
+below are historical. This does not authorize broad application Nest cleanup.
+
+2026-10-27: owner accepted the detailed owner-local failure-boundary design in
+PR95, head `82ebba0`, merged `46395a7`. Exact-head local quality:full exit0,
+CI5/5, coverage8/8 with API1327/1327, E2E623/623, build6/6, post-build2/2 and
+Web14/14 without retries. This accepts one design document, not runtime code.
+The ten Domain classes still depend on Nest; actual decoupling needs separate
+implementation authorization. The separately approved PR94 mapping remains unaccepted.
+
+2026-10-26 checkpoint: owner accepted design/characterization PR93, merged as
+`a8c71fa`; exact head `7a86b91` passed CI5/5 and local quality:full exit0,
+API coverage1327/1327, E2E623/623, Web14/14 without retries. All ten inventoried
+failure classes have real public-operation characterization. This accepts tests
+and design evidence, not the removal of Nest from Domain. Owner separately
+approved rate-limit GraphQL mapping; runtime PR94 remains under verification,
+not accepted. Broader decoupling implementation is still separate.
+
+D7 source review at accepted main `f118d82` confirms ten files under feature
+domain/exceptions directly import Nest HTTP exceptions/statuses: Auth4, Users1,
+Media5. All three domain directories are unchanged from D5 `fcab53c`; this is
+inherited coupling, not a D6 runtime regression. The approved architecture rules
+require Domain independent of NestJS/HTTP. The bounded architecture inventory
+does not certify this property, so zero findings do not resolve this debt.
+No exploit, disclosure or incorrect current HTTP behavior is claimed.
+Separate design must preserve public HTTP/GraphQL error contracts and clarify
+domain failure versus transport-adapter ownership before runtime correction.
+No implementation approval is implied by the D7 review.
+[Evidence and proposed scope](../audits/DEBT_079_DOMAIN_HTTP_COUPLING.md).
+
+### DEBT-081 — Early demo interaction can lose its timer during dev passive cleanup (Medium, RESOLVED scoped runtime package)
+
+Owner subsequently approved and accepted the isolated lifecycle correction.
+PR90 integration head29b0803 passed CI5/5 and local full gate0, E2E607/607,
+Web14/14 without retries; mergede26b0fc. Component/hook regressions6/6 include
+the controlled early-click red/green case, cancellation and stale generation.
+Normal corrected production flow passes without browser errors. This scoped
+acceptance does not attribute every historical natural flake to this schedule.
+See [design and evidence](DEBT_081_DEMO_SEARCH_LIFECYCLE.md).
+The research-only authority and observations below are historical.
 
 Lower-overhead browser instrumentation reproduces2/20 failures: search schedules
 its first550ms timer, then UniverseArrival passive-effect cleanup cancels it
@@ -58,7 +307,31 @@ must not be presented as fixing this early-interaction risk. Production evidence
 and any subsequent correction require their own scoped decision. Diagnostic
 logs/timings and stack frames: [DEBT-080 report](../audits/DEBT_080_SMOKE_READINESS.md).
 
-Owner subsequently approved a separate runtime package on2026-10-25: design,
+### DEBT-082 — Full coverage omits a registered test workspace (Medium, RESOLVED scoped verification package)
+
+Owner accepted PR85 after integration with accepted PR80: head8cc1e50 passed
+CI5/5 and local full gate0, coverage8/8 including Editor, E2E607/607 and Web14/14
+without retries. Merge05e177d preserves both built REST and coverage policies.
+The following candidate checkpoint is retained as historical evidence.
+
+PR85 head16147a7 implements the separately approved coverage completeness guard
+and Editor coverage. Exact-head CI5/5 and local full gate pass; API1298/1298,
+E2E593/593 and Web14/14 without retries. Its inventory found Editor alone has
+registered tests without test:cov; Jobs has no own registered tests. At that
+earlier checkpoint owner acceptance and merge were still pending.
+
+### DEBT-083 — React demo no-retry smoke failure (Medium, OPEN; diagnostic package approved)
+
+PR87 records a completed local full gate at77ea28d: API E2E593/593 and build
+pass, but React demo Web assertion fails at the existing5000ms,13/14 Web pass,
+zero retries. Trace/screenshot are retained. Candidate0fda41a adds documentation
+only; diagnostic infrastructure retains first-failure trace/screenshot. Controlled
+early-click evidence separately proves a DEBT-081 cleanup mechanism, not the
+exact natural CI failure schedule. No runtime/synchronization correction or
+acceptance is claimed. See [diagnostic PR87](https://github.com/clearfixx/dss-universe/pull/87).
+
+Historical DEBT-081 authorization checkpoint (not a DEBT-083 correction):
+owner subsequently approved a separate runtime package on2026-10-25: design,
 production verification, isolated lifecycle correction and deterministic tests,
 without UI changes, blocking early clicks, timeout increases or weaker smoke.
 Branch `debt/debt-081-demo-search-lifecycle` starts from accepted main `a35326a`;
@@ -96,7 +369,13 @@ Focused6/6 cases pass without sleep, timeout changes or runtime changes.
 Full gates/remote acceptance remain open; see
 [test synchronization evidence](../audits/DEBT_074_SOCIAL_PRIVACY_PRESENCE.md).
 
-### DEBT-073 — Workspace quality does not execute requested DB/Redis opt-ins (Medium, ACCEPTED, separate D6 package)
+### DEBT-073 — Workspace quality does not execute requested DB/Redis opt-ins (Medium, RESOLVED for accepted full-profile enforcement)
+
+D7 revalidation reads the complete policy/wrapper, exact task env/input hashing,
+actual Turbo dry-run controls and real Jest negative test. Fresh policy40/40
+passes; skipped mandatory child test is rejected as expected. Accepted D6 full
+profile/CI proves delivered execution, not just a configuration claim. No test
+cache/skip exception was introduced; current unrelated security failure remains.
 
 Date: 2026-10-22. D5 worktree based on43d9562. With `DATABASE_URL` targeting
 disposable5434, `REDIS_PORT=6380` and all four existing `RUN_*` opt-ins explicitly
@@ -510,45 +789,45 @@ CI/review acceptance tracked independently. Full gate/CI acceptance, D4.4,
 D4.5 and exhaustive inventory remain open; no broad debt is marked resolved by
 this transfer. See [runtime checkpoint](../audits/D4_LEADERBOARD_RUNTIME_OWNERSHIP.md).
 
-| ID       | Priority | Status      | Area                    | Finding                                                                                                                                                                   | Proposed owner/package                       |
-| -------- | -------- | ----------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| DEBT-001 | Critical | OPEN        | Auth/Users              | Auth imports Users repository/mapper internals and owns user lifecycle decisions.                                                                                         | D2–D3                                        |
-| DEBT-002 | High     | OPEN        | Layering                | Auth and IAM application services access Prisma directly.                                                                                                                 | D3                                           |
-| DEBT-003 | High     | OPEN        | Module boundaries       | Reputation, Achievements, Community Points and Levels depend on broad foreign services.                                                                                   | D4                                           |
-| DEBT-004 | High     | OPEN        | Domain isolation        | Prisma enums/types leak into domain, application and presentation layers.                                                                                                 | D4                                           |
-| DEBT-005 | High     | OPEN        | Architecture tooling    | Boundary checker passes despite known ownership and layering violations.                                                                                                  | D2–D4                                        |
-| DEBT-006 | High     | ACCEPTED    | Roadmap                 | Current Position and Project Context reconciled in D1; owner PR review pending.                                                                                           | D1                                           |
-| DEBT-007 | High     | ACCEPTED    | Phase 8                 | Phase 8 classified implemented with completion audit; runtime/owner acceptance remains pending.                                                                           | D1/D6                                        |
-| DEBT-008 | High     | ACCEPTED    | Phase 5                 | D3.5 groups/Premium implemented with explicit approval; review/CI/full baseline acceptance pending.                                                                       | D3.5 / D6                                    |
-| DEBT-009 | Medium   | OPEN        | File Passport           | Preliminary scan reports 247 potentially non-compliant source-like files; classification is required.                                                                     | D5                                           |
-| DEBT-010 | Medium   | OPEN        | Standards               | Older Auth/Authorization and role-based guidance conflicts with newer permission-based boundaries.                                                                        | D1–D2                                        |
-| DEBT-011 | Medium   | ACCEPTED    | Workflow docs           | Canonical phase/workflow fencing repaired in D1; documentation checks pass, review pending.                                                                               | D1                                           |
-| DEBT-012 | High     | ACCEPTED    | Environment             | D0 env inventory and local alignment implemented; acceptance awaits the full quality gate.                                                                                | D0                                           |
-| DEBT-013 | High     | ACCEPTED    | Local services          | Mailpit, ClamAV and optional OTLP verified; S3 deferred to DEBT-017, persistent observability not claimed.                                                                | D0                                           |
-| DEBT-014 | Medium   | RESOLVED    | Developer tooling       | GitHub CLI installed and authenticated; repository PR and Actions access verified in D0.                                                                                  | D0                                           |
-| DEBT-015 | Medium   | IMPLEMENTED | Quality gate            | Consolidated `quality:full` exits0 at2837644: API1298, E2E593, fresh Web14, all required local steps pass. See `../audits/DEBT_015_FULL_QUALITY_GATE.md`.                 | D6 / remote and phase acceptance open        |
-| DEBT-075 | Medium   | IMPLEMENTED | E2E isolation           | Isolated migrated fixture passes twice focused and in full API E2E593/593, without reset. See `../audits/DEBT_075_ACHIEVEMENTS_FIXTURE_ISOLATION.md`.                     | D6 / remote acceptance open                  |
-| DEBT-076 | Medium   | IMPLEMENTED | Web test reliability    | Owner-approved two-worker bound and real-config regression pass; full-gate coverage60/60. See `../audits/DEBT_076_WEB_COVERAGE_TIMEOUTS.md`.                              | D6 / remote acceptance open                  |
-| DEBT-077 | Medium   | IMPLEMENTED | Web smoke readiness     | Owner-approved native-observer readiness control and test-only correction pass focused2/2 and fresh full smoke14/14. See `../audits/DEBT_077_ARRIVAL_SMOKE_READINESS.md`. | D6 / consolidated and remote acceptance open |
-| DEBT-078 | Medium   | IMPLEMENTED | Generated format policy | Exact-path Next generated declaration exclusion; real Prettier policy regression and root format pass. See `../audits/DEBT_078_GENERATED_NEXT_FORMAT_POLICY.md`.          | D6 / consolidated and remote acceptance open |
-| DEBT-016 | Critical | OPEN        | Dependencies            | Audit 2026-10-21: 0 critical / 2 high / 12 moderate; local mitigations are not accepted audit exceptions.                                                                 | D0.5/D6                                      |
-| DEBT-017 | High     | DEFERRED    | Media/storage           | LOCAL scope approved; operational MinIO/S3 adapters absent, separate debt not blocking Phase 11.                                                                          | Storage package                              |
-| DEBT-018 | High     | DEFERRED    | Search                  | News-local search clarified; shared Search/indexing contract remains future work, not Phase 11 prerequisite.                                                              | D2/future Search                             |
-| DEBT-019 | High     | ACCEPTED    | File Passport           | Passport v3.1 rendering repaired in D1; generated/config/schema classification remains D5 work.                                                                           | D1/D5                                        |
-| DEBT-020 | Critical | OPEN        | Media security          | Windows separators bypass upload-root containment in API storage and two Worker consumers.                                                                                | D0.6                                         |
-| DEBT-021 | High     | ACCEPTED    | Quality orchestration   | D0 adds shared-package build ordering; local lint/typecheck pass, clean CI evidence remains required.                                                                     | D0/D6                                        |
-| DEBT-022 | Medium   | OPEN        | Formatting              | D2 repository Prettier check reports 41 legacy non-compliant files (initial audit: 52).                                                                                   | D5/D6                                        |
-| DEBT-023 | Medium   | OPEN        | Worker tests            | Sharp output cleanup fails with `EBUSY` on Windows in the current diagnostic run.                                                                                         | D0.6/D6                                      |
-| DEBT-024 | Critical | ACCEPTED    | IAM/product ownership   | Isolated IAM groups and Authorization Guardian decisions implemented; review/full baseline acceptance pending.                                                            | D3.5 / D6                                    |
-| DEBT-025 | High     | ACCEPTED    | Roadmap sources         | Legacy phases/milestones marked historical and linked to canonical roadmap; review pending.                                                                               | D1                                           |
-| DEBT-026 | High     | OPEN        | Completion evidence     | Phase 9/10 completion gates are not currently reproducible from the red repository baseline.                                                                              | D1/D6                                        |
-| DEBT-027 | High     | OPEN        | Public APIs             | Module roots broadly export concrete services and wildcard surfaces, enabling structural coupling.                                                                        | D2/D4                                        |
-| DEBT-028 | High     | OPEN        | Architecture rules      | Approved documents conflict on whether application services may access database services directly.                                                                        | D1/D2                                        |
-| DEBT-029 | High     | ACCEPTED    | Worker environment      | D0 adds env loading, template and fail-fast validation; readiness verified, acceptance gate remains red.                                                                  | D0                                           |
-| DEBT-030 | High     | ACCEPTED    | Endpoint contract       | D0 aligns Web API/GraphQL defaults and examples to 3001; root/application ownership documented.                                                                           | D0                                           |
-| DEBT-031 | High     | ACCEPTED    | Bootstrap               | Node bootstrap verified on Windows with DB alignment guard; existing env files preserved.                                                                                 | D0                                           |
-| DEBT-032 | Medium   | ACCEPTED    | Compose                 | Dev/test healthchecks verified; original pgAdmin image pinned by digest; acceptance gate remains red.                                                                     | D0                                           |
-| DEBT-033 | Medium   | ACCEPTED    | Observability           | Explicit telemetry startup and optional collector verified; no persistent monitoring backend claimed.                                                                     | D0                                           |
+| ID       | Priority | Status      | Area                    | Finding                                                                                                                                                                                                | Proposed owner/package                   |
+| -------- | -------- | ----------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
+| DEBT-001 | Critical | IMPLEMENTED | Auth/Users              | Original Users repository/mapper coupling replaced by Auth-owned credential ports and root profile composition; fresh D7 scoped evidence152/152 includes8 DB cases. Formal D7 acceptance remains open. | D2–D3 / D7 review                        |
+| DEBT-002 | High     | IMPLEMENTED | Layering                | Original direct application Prisma access removed from Auth and all five actual IAM services; module assembly/infrastructure remain owned. Domain HTTP079 and formal D7 acceptance are separate.       | D3 / D7 review                           |
+| DEBT-003 | High     | OPEN        | Module boundaries       | Reputation, Achievements, Community Points and Levels depend on broad foreign services.                                                                                                                | D4                                       |
+| DEBT-004 | High     | OPEN        | Domain isolation        | Prisma enums/types leak into domain, application and presentation layers.                                                                                                                              | D4                                       |
+| DEBT-005 | High     | OPEN        | Architecture tooling    | Boundary checker passes despite known ownership and layering violations.                                                                                                                               | D2–D4                                    |
+| DEBT-006 | High     | ACCEPTED    | Roadmap                 | Current Position and Project Context reconciled in D1; owner PR review pending.                                                                                                                        | D1                                       |
+| DEBT-007 | High     | ACCEPTED    | Phase 8                 | Phase 8 classified implemented with completion audit; runtime/owner acceptance remains pending.                                                                                                        | D1/D6                                    |
+| DEBT-008 | High     | IMPLEMENTED | Phase 5                 | D7 maps current group/Premium/Guardian source, migration safeguards, fresh74 units and main HTTP evidence. Full phase acceptance separate.                                                             | D3.5 / D7 review                         |
+| DEBT-009 | Medium   | DEFERRED    | File Passport           | Owner removed cleanup/classification from D5 and D7, assigning a later GPT-5.6 workstream. Historical scan247 is not a current compliance count.                                                       | Owner / future Passport workstream       |
+| DEBT-010 | Medium   | OPEN        | Standards               | Older Auth/Authorization and role-based guidance conflicts with newer permission-based boundaries.                                                                                                     | D1–D2                                    |
+| DEBT-011 | Medium   | ACCEPTED    | Workflow docs           | Canonical phase/workflow fencing repaired in D1; documentation checks pass, review pending.                                                                                                            | D1                                       |
+| DEBT-012 | High     | ACCEPTED    | Environment             | D0 env inventory and local alignment implemented; acceptance awaits the full quality gate.                                                                                                             | D0                                       |
+| DEBT-013 | High     | OPEN        | Local services          | D7 host-mail readiness fails despite internal Mailpit health; scoped diagnosis/recovery requested. ClamAV healthy; OTLP optional; S3 deferred017.                                                      | D0 / separate operational packet         |
+| DEBT-014 | Medium   | RESOLVED    | Developer tooling       | GitHub CLI installed and authenticated; repository PR and Actions access verified in D0.                                                                                                               | D0                                       |
+| DEBT-015 | Medium   | RESOLVED    | Quality gate            | Consolidated full gate exits0; PR79 head2287d92 CI5/5, owner accepted D6 and merged f118d82. See `../audits/DEBT_015_FULL_QUALITY_GATE.md`.                                                            | Accepted D6 / scoped contract only       |
+| DEBT-075 | Medium   | RESOLVED    | E2E isolation           | Owned migrated fixture passes twice focused and full E2E593/593 without reset; accepted in D6 PR79. See `../audits/DEBT_075_ACHIEVEMENTS_FIXTURE_ISOLATION.md`.                                        | Accepted D6                              |
+| DEBT-076 | Medium   | RESOLVED    | Web test reliability    | Approved worker bound/regression, unchanged timeout and coverage60/60; accepted in D6 PR79. No universal contention/root-cause claim. See `../audits/DEBT_076_WEB_COVERAGE_TIMEOUTS.md`.               | Accepted D6 / scoped mitigation          |
+| DEBT-077 | Medium   | RESOLVED    | Web smoke readiness     | Native-observer characterization and test-only correction pass focused2/2 and fresh smoke14/14, including CI; accepted in D6 PR79. See `../audits/DEBT_077_ARRIVAL_SMOKE_READINESS.md`.                | Accepted D6                              |
+| DEBT-078 | Medium   | RESOLVED    | Generated format policy | Exact generated-path exclusion and actual Prettier policy regression pass; full gate/CI and owner acceptance in D6 PR79. See `../audits/DEBT_078_GENERATED_NEXT_FORMAT_POLICY.md`.                     | Accepted D6                              |
+| DEBT-016 | Critical | OPEN        | Dependencies            | D7 audit 2026-10-23: 2 critical / 2 high / 12 moderate; three blocking Next advisories. Only the exact verified braces advisory has an approved exception.                                             | Separate dependency correction requested |
+| DEBT-017 | High     | DEFERRED    | Media/storage           | LOCAL scope approved; operational MinIO/S3 adapters absent, separate debt not blocking Phase 11.                                                                                                       | Storage package                          |
+| DEBT-018 | High     | DEFERRED    | Search                  | News-local search clarified; shared Search/indexing contract remains future work, not Phase 11 prerequisite.                                                                                           | D2/future Search                         |
+| DEBT-019 | High     | DEFERRED    | File Passport           | Historical D1 rendering repair retained; remaining Passport classification/cleanup explicitly deferred outside D5/D7 to future GPT-5.6 work. No compliance closure claimed.                            | Owner / future Passport workstream       |
+| DEBT-020 | Critical | RESOLVED    | Media security          | Portable guards verified in API and both Worker consumers; fresh15+13 regressions and accepted cross-OS CI. Physical threat model remains037.                                                          | Accepted D0.6/D6 scoped correction       |
+| DEBT-021 | High     | RESOLVED    | Quality orchestration   | Shared upstream builds and strict forced profile verified; accepted D6 tasks/CI and fresh40 policy controls.                                                                                           | Accepted D0/D6 ordering scope            |
+| DEBT-022 | Medium   | RESOLVED    | Formatting              | Accepted D6 formatting verified again by D7 repository-wide Prettier exit0 and generated-path policy1/1; historical41-file count superseded. Passport cleanup remains deferred009/019.                 | Accepted D6 / D7 reconciliation          |
+| DEBT-023 | Medium   | RESOLVED    | Worker tests            | Buffer-backed Sharp metadata and owned source cleanup verified; current Worker storage/scanner13 tests and accepted Windows/Linux CI.                                                                  | Scoped handle correction                 |
+| DEBT-024 | Critical | IMPLEMENTED | IAM/product ownership   | IAM evidence/Authorization decisions remain isolated; Premium non-staff and mandatory audience verified. New ACL/owner/sanction phases not claimed.                                                    | D3.5 / D7 review                         |
+| DEBT-025 | High     | ACCEPTED    | Roadmap sources         | Legacy phases/milestones marked historical and linked to canonical roadmap; review pending.                                                                                                            | D1                                       |
+| DEBT-026 | High     | OPEN        | Completion evidence     | Phase 9/10 completion gates are not currently reproducible from the red repository baseline.                                                                                                           | D1/D6                                    |
+| DEBT-027 | High     | IMPLEMENTED | Public APIs             | Sixteen feature-root ASTs have named exports with no direct implementation value exports; reviewed Nest metadata keeps providers private. Transitive/semantic and final D7 acceptance remain explicit. | D2/D4 / D7 review                        |
+| DEBT-028 | High     | OPEN        | Architecture rules      | Approved documents conflict on whether application services may access database services directly.                                                                                                     | D1/D2                                    |
+| DEBT-029 | High     | RESOLVED    | Worker environment      | Env-file start/dev flags and template reviewed; fresh environment5/5 and built-entry missing-config exit1 before any TCP attempt. Runtime delivery007 and host-mail readiness013 remain separate.      | Accepted D0/D6 / D7 scoped verification  |
+| DEBT-030 | High     | ACCEPTED    | Endpoint contract       | D0 aligns Web API/GraphQL defaults and examples to 3001; root/application ownership documented.                                                                                                        | D0                                       |
+| DEBT-031 | High     | ACCEPTED    | Bootstrap               | Node bootstrap verified on Windows with DB alignment guard; existing env files preserved.                                                                                                              | D0                                       |
+| DEBT-032 | Medium   | ACCEPTED    | Compose                 | Dev/test healthchecks verified; original pgAdmin image pinned by digest; acceptance gate remains red.                                                                                                  | D0                                       |
+| DEBT-033 | Medium   | ACCEPTED    | Observability           | Explicit telemetry startup and optional collector verified; no persistent monitoring backend claimed.                                                                                                  | D0                                       |
 
 ## Additional D0 verification findings
 
@@ -635,7 +914,7 @@ scheduled after D3 and before final D6/D7 readiness. No implementation authoriza
 or Phase 14 sanction completion is implied. DEBT-037 remains an unresolved physical
 storage threat-model decision, not a promise of sandbox isolation.
 
-The current formatting count after D2 is 41 legacy files (43 after D1, 50 after
+The historical formatting count after D2 was 41 legacy files (43 after D1, 50 after
 D0.6). Two touched historical ADRs were formatted while marking their status;
 D2 does not mechanically reformat unrelated source.
 
@@ -671,7 +950,12 @@ the upstream result/error behavior. No affected application path is established.
 Review supported pattern policy if such expansion is introduced; do not silently
 absorb an upstream behavior rewrite into D0.5.
 
-### DEBT-034 — Web smoke selectors drift (High, OPEN, D6 / frontend owner)
+### DEBT-034 — Web smoke selectors drift (High, RESOLVED for accepted smoke journey)
+
+D7 reconciliation: current arrival/home tests use the actual Sign in control and
+home verifies /login. Accepted D6 fresh Web smoke is14/14, including exact-head
+and main CI, with no runtime/UI rewrite. Earlier Enter Station failures below
+are historical; future unrelated browser flakes are not waived.
 
 CI run `38064940272` fails Web smoke; the earlier run's logs explicitly wait
 for `getByRole('link', { name: 'Enter Station' })` in `arrival.spec.ts:96`.
@@ -723,7 +1007,12 @@ Decide whether hostile local writers are in scope; if so, design OS-specific phy
 containment and TOCTOU defenses. Do not silently expand this package or describe
 lexical checks as sandbox isolation.
 
-### DEBT-038 — API E2E exceeds CI job limit (High, OPEN, D6)
+### DEBT-038 — API E2E exceeds CI job limit (High, RESOLVED for accepted bounded CI workflow)
+
+D7 reconciliation: current quality job has an explicit30-minute bound; accepted
+D6 completes593/593 E2E and all five checks, including terminal main CI. This
+closes the original unbounded/red baseline delivery scope, not a guarantee that
+every future workload or runner will finish in that budget.
 
 D2 Quality Gate run `38083005484` started API E2E at 20:17:17 UTC on 2026-10-10
 and cancelled it at 02:15:22 UTC on 2026-10-11 after the six-hour job limit.
@@ -757,7 +1046,13 @@ Review required/optional fields and invalid-input compatibility, then switch to
 runtime DTO imports with explicit regression tests. Do not silently turn this
 boundary refactor into an API validation behavior change; no exemption is granted.
 
-### DEBT-041 — Nondeterministic TOTP envelope tamper assertion (Medium, IMPLEMENTED / acceptance open, D6 / Auth test owner)
+### DEBT-041 — Nondeterministic TOTP envelope tamper assertion (Medium, RESOLVED for accepted test correction)
+
+D7 revalidation: current tests flip an actual decoded byte independently in IV,
+tag and ciphertext, prove changed bytes/envelope and require authenticated
+decryption failure. Fresh TOTP/2FA/JWT selection passes24/24; accepted D6 full
+profile and CI include this correction. No cryptographic runtime change or
+universal security certification is implied.
 
 A sequential D3.2 coverage run fails the unchanged TotpService test at line 23:
 `decrypt(first.slice(0, -1) + 'x')` does not throw. The ciphertext is random and
@@ -821,7 +1116,13 @@ E2E tests now pass, including GraphQL and fail-closed authority errors.
 See [request access evidence](../audits/D3_4_AUTHORITATIVE_REQUEST_ACCESS.md).
 This is a per-request snapshot, not cancellation of already running commands.
 
-### DEBT-044 — GraphQL generator barrel drift (Medium, OPEN, D6)
+### DEBT-044 — GraphQL generator barrel drift (Medium, RESOLVED for accepted generator consistency scope)
+
+D7 reconciliation (2026-10-23): the configured generator baseline was reconciled
+in the CI stabilization package; accepted D6 consolidated `graphql:check` and
+exact-head/main CI pass without a generated diff. Current SDL checksum remains
+unchanged. Historical failure below is retained, not a current red gate.
+This does not certify every generated export against every architecture rule.
 
 On the D3.4 IAM persistence tree, `pnpm graphql:check` successfully parses the
 unchanged API schema and Web operations, then exits 1 on its generated diff:
@@ -832,7 +1133,13 @@ implementation. Reconcile the checked-in output and configured generator in D6,
 coordinated with the Web workstream, then prove clean regeneration. Do not waive
 the consistency gate or claim it passes from successful generation alone.
 
-### DEBT-045 — API E2E shared fixtures and News cleanup drift (Medium, OPEN, D6)
+### DEBT-045 — API E2E shared fixtures and News cleanup drift (Medium, RESOLVED for accepted foundation fixture/count scope)
+
+D7 revalidation confirms owned migrated News/Leaderboards schemas, finally app/
+fixture cleanup, exact global ranking assertions and persisted view0-to1. Both
+main workflow cases pass in the accepted full593-test artifact. Historical
+failures below remain evidence; separate intermittent schema-write059 is not
+closed by this scoped fixture/count correction.
 
 The full D3.4 API E2E run finished in 114.253 seconds with 44 passed and two
 failed tests. Leaderboards assumes its own 10-point subject ranks first, but an
@@ -1009,7 +1316,14 @@ cleanup and diagnose the slow/failing operation; do not raise timeouts blindly.
 See [registration evidence](../audits/D3_REGISTRATION_POSTGRES_ATOMICITY.md).
 No out-of-scope E2E restructuring is implemented by this package.
 
-### DEBT-049 — Historical migrations and Prisma schema drift (Medium, IMPLEMENTED / acceptance open, separate D6 package)
+### DEBT-049 — Historical migrations and Prisma schema drift (Medium, RESOLVED for accepted schema alignment scope)
+
+D7 reconciliation (2026-10-23): D6 accepted/merged at f118d82 includes the approved
+alignment and green full gate/CI. D7 independently verifies unchanged 54-migration
+history versus accepted D5, exact annotation-only model diff, and fresh 14/14
+static schema-contract regressions. Live empty drift/catalog/CRUD evidence is
+the retained D6 verification, not a new D7 database run. See
+[D7 evidence](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 
 On 2026-10-13, after all 53 migrations were applied to the disposable test DB,
 `prisma migrate status` reported up-to-date but
@@ -1041,7 +1355,14 @@ stops the wrapper after E2E; a bounded network recheck passes the unchanged
 security gate, then GraphQL consistency passes. New-head remote CI and phase
 review remain required; no production schema repair or red merge is performed.
 
-### DEBT-050 — Web coverage reports an unhandled React scheduler error (Medium, OPEN, D6)
+### DEBT-050 — Web coverage reports an unhandled React scheduler error (Medium, RESOLVED for accepted teardown correction)
+
+D7 revalidation: shared setup explicitly awaits act/cleanup because Vitest
+globals are disabled. The lifecycle regression requires root effect disposal
+after shared teardown; fresh selected test passes1/1. Accepted D6 includes the
+negative-control investigation, Web coverage60/60 and green exact-head/main CI.
+This closes the investigated teardown defect, not all possible scheduler issues
+or DEBT-058's separate intermittent timeout observation.
 
 CI run `38446264899`, job `115465567069`, head `f9784af`, failed on coverage
 before API E2E/generated validation/build. All 25 Web suites / 59 tests passed,
@@ -1245,7 +1566,13 @@ Global format/audit/generated and Web smoke remain red with current evidence;
 no skip, timeout increase, trigger weakening or frontend fix. The finding is
 not yet accepted as closed for release/Phase 11 readiness.
 
-### DEBT-055 — API production start points at a missing local build entry (High, OPEN, D6)
+### DEBT-055 — API production start points at a missing local build entry (High, RESOLVED for accepted local production-entry scope)
+
+D7 reconciliation (2026-10-23): current command is `node dist/src/main`; fresh
+entry existence/syntax regression passes 1/1. Accepted D6 includes the recorded
+actual production-mode HTTP smoke and green consolidated gate/exact-head/main
+CI. Earlier pending/red observations below are historical. This is local entry
+and readiness evidence, not production deployment or Worker readiness acceptance.
 
 On 2026-10-14, inspecting the existing build output before a fresh build of the
 current storage increment found `apps/api/dist/src/main.js` but no
@@ -1301,6 +1628,18 @@ the bounded guest Web entry check remain red. Full gates/review/CI remain open; 
 [the bounded correction plan](DEBT_056_NEWS_SECONDARY_AUDIENCE_PLAN.md).
 
 ### DEBT-057 — Valid comment tombstones break News GraphQL non-null body (Medium, OPEN, separate correction required)
+
+D7 revalidation (2026-10-23): current domain still permits null body while the
+presentation model/actual canonical SDL require it. Synthetic in-memory GraphQL
+execution returns the same non-null body error and null data; no DB/HTTP mutation
+or content disclosure is claimed. Separate compatibility/design/correction
+approval requested. This is not resolved by green secondary-audience tests.
+
+Owner subsequently approved a separate post-review packet: first design the
+nullable tombstone contract and generated Web client compatibility, then correct
+it with HTTP regressions. No fabricated replacement body or weakened immutable
+history; no runtime/schema change in D7. The approval is for that sequence,
+not evidence that the compatibility design or correction is already complete.
 
 On 2026-10-14, an author tombstones a synthetic PUBLIC News comment through
 CommentsService.remove. Stored body/document become null with deletedAt set,
@@ -1414,7 +1753,12 @@ DB/live Redis regressions pass locally, with isolated resources cleaned up.
 Full gates and remote review remain open; see
 [approved design and evidence](../audits/DEBT_061_CONSUMER_IDENTITY_DESIGN.md).
 
-### DEBT-062 — Distinct events exceed Community Points UTC-day cap (High, ACCEPTED, separate correction approved)
+### DEBT-062 — Distinct events exceed Community Points UTC-day cap (High, IMPLEMENTED, D7 acceptance review)
+
+D7 revalidation confirms current event-then-quota transaction locks and the
+accepted-main eight-case DB suite, including observed final-slot serialization
+and rollback. Historical reproduction/approval below is retained. Broader
+release acceptance is not implied; see [D7 mapping](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 
 `PrismaCommunityPointsRepository.award` locks eventId, but dailyAwardCount scopes
 user/rule/UTC-day. Two distinct events can both read zero and atomically commit
@@ -1453,7 +1797,13 @@ scan quarantine and variant rollback; Worker 46 tests/coverage and lint/types pa
 This is not a global lease. Full quality gate/CI/review/owner acceptance pending;
 debt remains open. [Design and evidence](DEBT_063_RETRY_DESIGN.md).
 
-### DEBT-064 — Revoked Custom Title grant remains selected after concurrent select (Medium, OPEN, separate correction approved)
+### DEBT-064 — Revoked Custom Title grant remains selected after concurrent select (Medium, IMPLEMENTED, D7 acceptance review)
+
+D7 revalidation confirms shared user/title synchronization and eligibility
+rereads in current source; accepted-main seven-case DB suite covers both lock
+orders and evidence rollback. This correction exists; historical OPEN/pending
+checkpoints below are not current implementation status. Final release acceptance
+remains separate; see [D7 mapping](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 
 Fully migrated isolated PostgreSQL and actual repository reproduce: select's
 eligible-grant query completes, revoke commits under its different grant lock,
@@ -1523,7 +1873,24 @@ GraphQL check remains red for DEBT-044; generated side effects restored exactly.
 No full-green, CI/review/owner acceptance or debt closure is claimed.
 Debt remains open. [Design and current evidence](DEBT_065_CLAIM_FENCING_DESIGN.md).
 
-### DEBT-066 — Editor malformed/deep document validation throws runtime errors (Medium, ACCEPTED for separate design; exact depth approval pending)
+### DEBT-066 — Editor malformed/deep document validation throws runtime errors (Medium, RESOLVED scoped validation package)
+
+Owner explicitly accepted PR89 `d8ab9c9`, merged `4ad31b9` at11:38:56UTC.
+Exact-head CI5/5 and local quality:full exit0: coverage8/8/API1336/1336,
+E2E646/646 with zero skips, GraphQL, build6/6, post-build2/2 and Web15/15
+without retries. Depth64 and malformed/depth65 controls plus approved local
+BAD_USER_INPUT/statusCode400 mapping pass real HTTP/host regressions.
+Historical pending/depth/transport checkpoints below are retained as evidence,
+not current acceptance requirements. D7 and broader Domain decoupling stay open.
+
+Current2026-10-25 checkpoint: owner approved depth64 with root0 and compatibility
+assessment. Separate unmerged local branch1e07a06 has shared65/65, API Editor46/46
+and independent migrated host persistence5/5. Public local scans find no value
+beyond depth2; fixture/dynamic/non-public limits are explicit in that branch.
+Strong HTTP assertions remain red on inherited GraphQL validation mapping.
+Adding statusCode400 to the local Editor exception requires owner approval;
+global formatter and successful contracts remain unchanged. Main still lacks
+the shared correction. The following detection/design text is historical.
 
 Actual EditorService normalization of synthetic null child, object content and
 object marks throws TypeError instead of controlled validation rejection. A
@@ -1558,7 +1925,13 @@ reads. Possible tombstone projection/migration needs approval before correction;
 current audit implements nothing. See
 [consumer lifecycle evidence](../audits/D4_EVENT_DATA_RETENTION_REVIEW.md).
 
-### DEBT-069 — Shared E2E ledger fixtures contaminate Leaderboards expectations (Medium, OPEN, D6)
+### DEBT-069 — Shared E2E ledger fixtures contaminate Leaderboards expectations (Medium, RESOLVED for accepted leaderboard fixture isolation)
+
+D7 revalidation confirms the leaderboard suite now owns its fully migrated
+schema and app teardown, preserving global population/tie behavior. Its accepted
+main workflow passes without a production ranking filter/rewrite. The earlier
+Community Points fixture cannot populate that private schema. This does not
+claim every other suite has complete isolation or exception-proof teardown.
 
 Date: 2026-10-20. Full E2E on a freshly migrated disposable PostgreSQL completes
 505/509, including a Leaderboards first-month-page mismatch. Actual safe-field

@@ -53,6 +53,16 @@ and full local verification, then merged asfcab53c. Main is available for owner
 testing. D6 proceeds separately on `debt/d6-quality-baseline`; DEBT-073 is the
 first owner-approved bounded package. File Passport work remains excluded.
 
+Owner acceptance/resumption (2026-10-22/23): D6 PR#79 was accepted with five green
+checks and consolidated full verification, then merged as `f118d82`. D7 review
+was explicitly approved from that main baseline on `debt/d7-release-gate`.
+Its scope is evidence/debt reconciliation, architecture/migration/secret/security
+review and an outstanding decision list. No runtime/UI, Passport cleanup or
+stack audit is authorized within D7. New fixes require separate packets and
+approval; the fresh Next advisory blocker is recorded in DEBT-016. See
+[D7 current evidence](../audits/D7_BASELINE_RELEASE_REVIEW.md). D7 acceptance,
+the later stack audit and Phase11 brainstorm remain open.
+
 1. Each phase uses a dedicated branch, review and PR; logical packages are
    checkpointed there. Separately approved security corrections may use their
    own branches. Do not create a PR per file or audit note.

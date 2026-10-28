@@ -17,6 +17,8 @@ product naming: Mission Control is the user dashboard; Command Deck is
 administration. See [Product Vision 1.0](../development/PRODUCT_VISION_1_0.md).
 Full scope/module naming reconciliation remains tracked as DEBT-039; this note
 does not rename existing routes or claim newly described features are delivered.
+Dashboard/administration product labels below follow that clarification. Existing
+code/UI labels and compatibility URLs are not renamed by this documentation edit.
 
 This document is the canonical working roadmap for DSS Universe 1.0.
 
@@ -55,7 +57,7 @@ The platform allows users to:
 - receive support and follow feature/release progress;
 - use AI assistance throughout the product.
 
-Administrators operate the platform through Mission Control, Security Deck, CMS Builder, Media Library and Maintenance Center.
+Administrators operate the platform through Command Deck, Security Deck, CMS Builder, Media Library and Maintenance Center.
 
 ---
 
@@ -65,7 +67,7 @@ Administrators operate the platform through Mission Control, Security Deck, CMS 
 
 - Universe Landing — guest presentation and acquisition;
 - Universe Feed — authenticated summary of activity since the last visit;
-- Command Deck — personal progress, work and recommendations;
+- Mission Control — personal progress, work and recommendations;
 - Astronaut Profile — public social profile;
 - Account Settings — private account and privacy management;
 - Members Directory — searchable community and leaderboards.
@@ -111,7 +113,7 @@ Administrators operate the platform through Mission Control, Security Deck, CMS 
 
 ### Administrative surfaces
 
-- Mission Control — general platform administration;
+- Command Deck — general platform administration;
 - Security Deck — identity, sessions, sanctions and security intelligence;
 - CMS Builder — pages, navigation, public content and branding;
 - Media Library — media operations;
@@ -538,7 +540,7 @@ Delivered in the Media v1 foundation package:
 - aggregate original/variant storage usage and failed/quarantined/orphan counters.
 - `media.jobs.manage` permission and GraphQL retry for failed processing;
 - atomic FAILED-to-PROCESSING claims, immutable job-contract reuse, audit and queue-failure compensation.
-- Mission Control Media Library route with authenticated server-side GraphQL;
+- administrative Media Library route with authenticated server-side GraphQL (historical Mission Control label);
 - storage metric cards, lifecycle/visibility/kind/search/orphan filters and forward cursor navigation;
 - permission-aware failure states and operator retry action.
 
@@ -1115,7 +1117,7 @@ Delivered Activity Feed completion:
 - bilateral block filtering and retracted-event exclusion;
 - normalized, bounded module filters;
 - explicit per-user “since last visit” cursor and unread markers;
-- Command Deck integration with a failure-safe deterministic briefing;
+- Mission Control integration with a failure-safe deterministic briefing (legacy dashboard route retained);
 - dedicated integration coverage for visibility, ranking and visit state.
 
 ## Definition of Done
@@ -1517,7 +1519,7 @@ Admin notifications include:
 - continue learning;
 - bookmarks;
 - completed courses;
-- Command Deck integration.
+- Mission Control integration.
 
 ## Assessment
 
@@ -1606,7 +1608,7 @@ Allowed statuses depend on request type.
 
 ---
 
-# Phase 19 — Command Deck, Universe Feed and Personalization
+# Phase 19 — Mission Control, Universe Feed and Personalization
 
 ## Universe Landing
 
@@ -1627,7 +1629,7 @@ Allowed statuses depend on request type.
 - deterministic recommendations;
 - AI-generated summary as optional enhancement.
 
-## Command Deck
+## Mission Control
 
 - level, XP/Community Points, selected title and streak;
 - achievements and certificates;
@@ -1650,7 +1652,7 @@ Allowed statuses depend on request type.
 ## Definition of Done
 
 - guest and signed-in `/` experiences differ correctly;
-- Feed and Command Deck do not duplicate responsibilities;
+- Feed and Mission Control do not duplicate responsibilities;
 - optional AI failure does not break the dashboard.
 
 ---
@@ -1762,9 +1764,9 @@ cross-feature audit, redaction policy and the remaining product integrations.
 
 ---
 
-# Phase 22 — Mission Control, Analytics and Operations
+# Phase 22 — Command Deck, Analytics and Operations
 
-## Mission Control
+## Command Deck
 
 - platform dashboard;
 - user and module administration;
@@ -1905,8 +1907,8 @@ DSS Universe 1.0 is complete when:
 - Media Platform is the only file lifecycle boundary;
 - profiles, social graph, reputation, points, levels and titles work;
 - News, Knowledge Forge, Research Lab, Community Hub, Academy, Downloads, Communications and Support provide their approved 1.0 core flows;
-- Universe Feed and Command Deck are functional and distinct;
-- Mission Control, Security Deck, CMS Builder, Media Library and Maintenance Center can operate the platform;
+- Universe Feed and Mission Control are functional and distinct;
+- Command Deck, Security Deck, CMS Builder, Media Library and Maintenance Center can operate the platform;
 - CMS, Themes and SEO work;
 - AI integrations are safe, optional and observable;
 - critical scenarios are tested;

@@ -1,6 +1,6 @@
 # DEBT-007 — Detailed delivery implementation plan
 
-Status: design proposal; runtime implementation and activation require separate acceptance.
+Status: owner-accepted design (PR100), with A/A.1 accepted in PR101; routing implementation and activation require separate approval.
 Source checkpoint: accepted main `a715ece`; prepared on 2026-10-28.
 
 ## Approved decisions
@@ -19,7 +19,7 @@ historical. Neither document constitutes evidence that automatic delivery works.
 Later owner decisions accepted this plan in PR100/merge625d1b9 and separately
 authorized package A (owner runtime assemblies) and A.1 (failed Prisma connect
 cleanup). Their [implementation boundary and evidence](DEBT_007_RUNTIME_ASSEMBLIES.md)
-remain a separate candidate awaiting full verification/acceptance. Routing,
+were accepted in PR101/merge2c42e89 after full gate/CI. Routing,
 queue activation and historical backfill are not authorized by A/A.1.
 
 ## Process and ownership

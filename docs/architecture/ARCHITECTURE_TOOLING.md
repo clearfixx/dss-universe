@@ -2,6 +2,29 @@
 
 Status: report-only review inventory, 2026-10-10; not release acceptance.
 
+## Current enforcement clarification — 2026-10-23
+
+The D2 status and initial counts below are historical, not the current mandatory
+command contract. D4.5/D6 promote the frozen baseline comparison into
+`pnpm architecture:check`, used by quality and CI. The current command runs the
+existing blocking subset/licenses, analyzer fixtures and `--check-baseline`;
+added or removed inventory identities fail until reviewed. The CLI never
+rewrites or enlarges the baseline. Technical-entry business imports also fail
+independently of ordinary report mode. Report-only output cannot accept a red
+mandatory gate.
+
+The current report CLI walks API src TypeScript, combining feature/Core/root
+composition boundary analysis with a compiler-resolved local API file graph.
+This expands the older feature graph's cycle/parse/computed-loader visibility,
+not a whole TypeScript type program, semantic ownership proof or Nest runtime
+graph. Other apps/packages, secret flow, framework-free Domain and physical
+containment need separate review. D7's DEBT-079 is a concrete Domain/HTTP
+dependency outside the inventory's guarantees.
+
+See [D7 evidence](../audits/D7_BASELINE_RELEASE_REVIEW.md). The following D2
+inventory/rationale is retained as history; its "not yet CI"/report-only rollout
+statements do not override this current clarification.
+
 ## Files and responsibilities
 
 - `scripts/architecture/analyze-boundaries.mjs`: pure TypeScript AST inventory.
@@ -82,8 +105,9 @@ the complete application/Nest graph. Type-only cycles can be reported even when
 they do not cause runtime DI cycles. Shared-layer rules, framework-free domain,
 application-to-presentation edges, DTO responsibility, secret flow, physical IO
 containment, Passport compliance and event idempotency still need deeper checks
-and manual/integration review. Other apps/packages and the composition root are
-not covered by this inventory. Do not equate a zero parser count with completeness.
+and manual/integration review. Other apps/packages remain outside this API
+inventory. Root composition is now included syntactically as described above,
+not certified semantically. Do not equate zero parser findings with completeness.
 
 ## Closure policy
 

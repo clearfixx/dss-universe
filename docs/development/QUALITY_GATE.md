@@ -54,6 +54,15 @@ server command share one resolver. There is no automatic fallback, new host,
 timeout increase or retry. The normal application dev/production ports do not
 change. Preflight reports EACCES separately from EADDRINUSE.
 
+The full gate includes dependency security, forced full-profile coverage,
+no-skipped API E2E, GraphQL consistency, production build/entry and fresh
+zero-retry Web smoke. It stops at the first failed step; later steps must be
+reported as not executed, not passed. `pnpm quality` is the shorter gate,
+not equivalent coverage.
+
 ## Database safety
 
 Automated tests must never use developer or production databases. The committed test defaults are non-secret and point only to the ephemeral `docker-compose.test.yml` service.
+The CI job's PostgreSQL5433 is an isolated Actions service; this does not authorize
+local tests against the developer database on5433. Local full-gate policy accepts
+only disposable5434/5435.
