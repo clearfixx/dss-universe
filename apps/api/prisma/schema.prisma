@@ -1301,33 +1301,127 @@ model Session {
 }
 
 model OutboxEvent {
-  id            String       @id @default(uuid()) @db.Uuid
-  eventName     String
-  eventVersion  Int
-  eventCategory String
-  producer      String
-  aggregateType String?
-  aggregateId   String?
-  correlationId String?
-  causationId   String?
-  actorId       String?
-  payload       Json
-  metadata      Json?
-  status        OutboxStatus @default(PENDING)
-  occurredAt    DateTime
-  availableAt   DateTime     @default(now())
-  lockedAt      DateTime?
-  lockedBy      String?
-  publishedAt   DateTime?
-  attempts      Int          @default(0)
-  lastError     String?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  id                     String                 @id @default(uuid()) @db.Uuid
+  eventName              String
+  eventVersion           Int
+  eventCategory          String
+  producer               String
+  aggregateType          String?
+  aggregateId            String?
+  correlationId          String?
+  causationId            String?
+  actorId                String?
+  payload                Json
+  metadata               Json?
+  status                 OutboxStatus           @default(PENDING)
+  occurredAt             DateTime
+  availableAt            DateTime               @default(now())
+  lockedAt               DateTime?
+  lockedBy               String?
+  publishedAt            DateTime?
+  attempts               Int                    @default(0)
+  lastError              String?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  gamificationDeliveries GamificationDelivery[]
 
+  @@index([createdAt, id], map: "outbox_routing_coordinate_idx")
   @@index([status, availableAt])
   @@index([aggregateType, aggregateId])
   @@index([correlationId])
   @@map("outbox_events")
+}
+
+// DSS File Passport: destination-owned routing persistence; no automatic activation.
+enum GamificationActivationState {
+  PREPARED
+  ACTIVE
+  PAUSED
+}
+
+enum GamificationPublicationState {
+  WAITING
+  CLAIMED
+  QUEUED
+  BLOCKED
+}
+
+enum GamificationPublicationFailureCode {
+  QUEUE_ADD_FAILED
+  CLAIM_EXPIRED
+}
+
+model GamificationActivation {
+  destination String                      @id @db.VarChar(64)
+  state       GamificationActivationState @default(PREPARED)
+  cutoff      DateTime?                   @db.Timestamp(3)
+  activatedBy String?                     @db.VarChar(200)
+  changedBy   String                      @db.VarChar(200)
+  revision    BigInt                      @default(0)
+  createdAt   DateTime                    @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @db.Timestamp(3)
+  updatedAt   DateTime                    @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @updatedAt @db.Timestamp(3)
+  discovery   GamificationDiscovery?
+  deliveries  GamificationDelivery[]
+
+  @@map("gamification_activations")
+}
+
+model GamificationDiscovery {
+  destination    String                 @id @db.VarChar(64)
+  forwardAt      DateTime?              @db.Timestamp(3)
+  forwardId      String?                @db.Uuid
+  sweepAt        DateTime?              @db.Timestamp(3)
+  sweepId        String?                @db.Uuid
+  upperAt        DateTime?              @db.Timestamp(3)
+  upperId        String?                @db.Uuid
+  epochOpen      Boolean                @default(false)
+  epoch          BigInt                 @default(0)
+  examined       BigInt                 @default(0)
+  epochStartedAt DateTime?              @db.Timestamp(3)
+  lastProgressAt DateTime?              @db.Timestamp(3)
+  updatedAt      DateTime               @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @updatedAt @db.Timestamp(3)
+  activation     GamificationActivation @relation(fields: [destination], references: [destination], onDelete: Restrict, onUpdate: Restrict)
+
+  @@map("gamification_discovery")
+}
+
+model GamificationDelivery {
+  destination   String                           @db.VarChar(64)
+  eventId       String                           @db.Uuid
+  state         GamificationPublicationState     @default(WAITING)
+  availableAt   DateTime                         @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @db.Timestamp(3)
+  claimToken    String?                          @db.Uuid
+  claimedAt     DateTime?                        @db.Timestamp(3)
+  leaseUntil    DateTime?                        @db.Timestamp(3)
+  claimCount    BigInt                           @default(0)
+  cycle         Int                              @default(0)
+  cycleAttempts Int                              @default(0)
+  queuedAt      DateTime?                        @db.Timestamp(3)
+  createdAt     DateTime                         @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @db.Timestamp(3)
+  updatedAt     DateTime                         @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @updatedAt @db.Timestamp(3)
+  activation    GamificationActivation           @relation(fields: [destination], references: [destination], onDelete: Restrict, onUpdate: Restrict)
+  source        OutboxEvent                      @relation(fields: [eventId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  failures      GamificationPublicationFailure[]
+
+  @@id([destination, eventId])
+  @@index([destination, state, availableAt, eventId], map: "gamification_delivery_due_idx")
+  @@index([destination, state, leaseUntil, eventId], map: "gamification_delivery_lease_idx")
+  @@map("gamification_deliveries")
+}
+
+model GamificationPublicationFailure {
+  id           String                             @id @db.Uuid
+  destination  String                             @db.VarChar(64)
+  eventId      String                             @db.Uuid
+  claimToken   String                             @unique @db.Uuid
+  cycle        Int
+  cycleAttempt Int
+  code         GamificationPublicationFailureCode
+  failedAt     DateTime                           @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @db.Timestamp(3)
+  delivery     GamificationDelivery               @relation(fields: [destination, eventId], references: [destination, eventId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([destination, failedAt, id], map: "gamification_publication_failure_time_idx")
+  @@map("gamification_publication_failures")
 }
 
 model ProcessedEvent {

@@ -1,9 +1,42 @@
 # D7 — Baseline release review
 
 Date: 2026-10-22. Updated: 2026-10-28. Branch: `debt/d7-release-gate`.
-Current accepted baseline: `2c42e89ce70d035d687c24fcd84f716cc089eb43`.
+Current accepted baseline: `c6b541727a8ce2d53ae5b71867ab6508d0804256`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
+
+## 2026-10-28 routing B acceptance and Mailpit port preflight
+
+Owner accepted PR104 exact headc146c60, mergedc6b5417 at16:44:09UTC after
+the usage-limit review failure was resolved through normal approval review.
+CI5/5 and completed local full gate0: coverage8/8, API1466/1466, E2E686/686 in64
+suites without skips, GraphQL/build/entry checks and Web15/15 without retries.
+The [accepted B record](../development/DEBT_007_ROUTING_PERSISTENCE.md) retains
+exact hashes, earlier684/685 catalog failure and the incomplete tool-interrupted
+attempt. Accepted PR102/103 supplied the discovery/schema protocol. B adds only
+explicit routing persistence and claims: no queue, runner, consumer, owner effects
+or operational activation. C/D and all DEBT-007 acceptance remain open.
+
+Fresh Mailpit preflight confirmed healthy own container f113724b, Compose
+project/service dss-universe/mailpit, volume dss-universe_dss_mailpit_data at/data.
+Effective port arrays remain empty despite declared loopback2525/18025. A real
+loopback bind to2525 fails AccessDenied: Windows IPv4 TCP exclusion2428–2527
+contains it.18025,12525 and18026 bind successfully. No Windows reservation was
+changed, and the container/other services were not restarted. Restarting with
+the same forbidden2525 cannot establish readiness safely.
+
+Two retained messages/unread2 were fingerprinted internally without logging
+headers/content. Complete sorted opaque-ID set SHA256:
+`65fe82afffd97b8c0849791c9dc71dd138cfbae0daf3d7be7718eb1c807b787a`.
+Raw metadata `node_modules/.cache/mailpit-recovery-before-20261028.json` in D6
+records readyToRestart=false. The first shell preflight continued after a socket
+exception and incorrectly labeled port availability; the metadata was corrected
+with per-port try/catch before any recovery action. No mailbox mutation occurred.
+Next narrow013 recovery needs a configurable loopback SMTP host port plus matching
+local MAIL_PORT, then Mailpit-only recreation and fingerprint/protocol checks.
+Default/current readiness must not be inferred from configuration tests alone.
+
+This is an updated D7 review checkpoint, not a new D7 full gate or acceptance.
 
 ## 2026-10-28 owner runtime assemblies acceptance
 

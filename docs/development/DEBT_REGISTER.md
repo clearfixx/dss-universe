@@ -31,15 +31,17 @@ PR1017a8abbe/merge2c42e89: CI5/5, full gate0, API1463/1463, E2E661/661 without
 skips, Web15/15 without retries. Automatic delivery remains unimplemented.
 Scoped022 formatting and029 Worker configuration
 verification are resolved with bounded D7 evidence; no delivery proof is implied.
-Current Mailpit host2525/18025 return
-ECONNREFUSED with empty effective Docker port arrays despite healthy container
-and declared bindings. Accepted013 recovery remains historical; current readiness
-must be restored. Owner accepted PR87e6c4e44/mergeebd77b8: CI5/5 and full gate0
+Current Mailpit has empty effective Docker port arrays despite healthy container
+and declared bindings. Fresh preflight proves2525 is blocked by Windows TCP
+exclusion2428–2527;12525/18025 bind successfully. Two messages/unread2 are
+fingerprinted and no service restarted. Accepted013 recovery remains historical;
+current readiness needs a configurable-port recovery. Owner accepted
+PR87e6c4e44/mergeebd77b8: CI5/5 and full gate0
 on identical code, E2E658/658, Web15/15. First-failure trace/screenshot/CI upload
 are now integrated; original red evidence and natural-failure attribution limits
 remain. No unaccepted runtime/service change or D7 acceptance is authored here.
 
-D7 review now integrates accepted main `2c42e89`; the original baseline was
+D7 review now integrates accepted main `c6b5417`; the original baseline was
 `f118d82`. See
 [current evidence and limits](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079/080.
@@ -65,6 +67,17 @@ Both migrated Points rollback/replay cases pass. Owner accepted that design-only
 package at `4da51b6`, merged `f9ddeeb` at14:53:44UTC. Automatic delivery,
 historical replay and broader DEBT-007 closure are not implemented or implied.
 Earlier gate/acceptance-pending references are historical.
+
+### DEBT-007 — Automatic gamification delivery (High, A/A.1/B accepted; C/D open)
+
+Owner accepted routing design/protocol PR102/103 and runtime B PR104 headc146c60,
+mergedc6b5417 at16:44:09UTC. CI5/5 and local quality:full exit0: coverage8/8,
+API1466/1466, E2E686/686 in64 suites without skips, Web15/15 without retries.
+The [B implementation/evidence](DEBT_007_ROUTING_PERSISTENCE.md) is accepted for
+four additive tables, atomic discovery and fenced publication persistence only.
+No queue, runner, public activation, owner effect or historical replay is enabled.
+C/D and UTC/configuration/retention preflight remain open. This is not completion
+of automatic delivery, all DEBT-007 or D7.
 
 ### DEBT-087 — Reserved Web smoke port blocks local quality gate (Medium, RESOLVED scoped test-infrastructure package)
 

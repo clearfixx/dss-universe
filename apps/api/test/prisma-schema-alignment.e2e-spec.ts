@@ -12,7 +12,7 @@
  * Full historical migrations in an owned disposable schema; no repair DDL.
  *
  * ⚠️ Important:
- * Catalog checks cover all twelve defaults; CRUD checks are representative,
+ * Catalog checks cover twelve legacy and three routing defaults; CRUD checks are representative,
  * not a claim that every model/business use case was exercised here.
  *
  * 🚀 Build. Share. Grow.
@@ -30,31 +30,46 @@ describe('Prisma and historical migration alignment (e2e)', () => {
     await fixture?.close();
   });
 
-  it('preserves all twelve SQL defaults and both Users indexes', async () => {
+  it('preserves twelve legacy defaults, three routing defaults and both Users indexes', async () => {
     const columns = await fixture.prisma.$queryRaw<
       { table_name: string; column_default: string }[]
     >`
       SELECT table_name, column_default FROM information_schema.columns
       WHERE table_schema = ${fixture.schema} AND column_name = 'updatedAt'
         AND column_default IS NOT NULL ORDER BY table_name`;
+    const legacyDefaults = [
+      'achievement_definitions',
+      'achievement_rules',
+      'comments',
+      'community_point_rules',
+      'custom_title_settings',
+      'custom_titles',
+      'interaction_targets',
+      'level_definitions',
+      'reaction_aggregates',
+      'reactions',
+      'reputation_policy',
+      'user_title_selections',
+    ].map((table_name) => ({
+      table_name,
+      column_default: 'CURRENT_TIMESTAMP',
+    }));
+    const routingDefaults = [
+      'gamification_activations',
+      'gamification_deliveries',
+      'gamification_discovery',
+    ].map((table_name) => ({
+      table_name,
+      column_default: "timezone('UTC'::text, clock_timestamp())",
+    }));
     expect(columns).toEqual(
-      [
-        'achievement_definitions',
-        'achievement_rules',
-        'comments',
-        'community_point_rules',
-        'custom_title_settings',
-        'custom_titles',
-        'interaction_targets',
-        'level_definitions',
-        'reaction_aggregates',
-        'reactions',
-        'reputation_policy',
-        'user_title_selections',
-      ].map((table_name) => ({
-        table_name,
-        column_default: 'CURRENT_TIMESTAMP',
-      })),
+      [...legacyDefaults, ...routingDefaults].sort((left, right) =>
+        left.table_name < right.table_name
+          ? -1
+          : left.table_name > right.table_name
+            ? 1
+            : 0,
+      ),
     );
     const indexes = await fixture.prisma.$queryRaw<
       { indexname: string; indexdef: string }[]
