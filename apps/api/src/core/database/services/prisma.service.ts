@@ -11,6 +11,7 @@
  *
  * 🧠 Responsibilities:
  * • connects Prisma during module initialization;
+ * • cleans failed connection setup without replacing the original failure;
  * • disconnects Prisma during module shutdown;
  * • exposes transaction and health-check helpers;
  * • logs Prisma query, info, warning, and error events.
@@ -78,7 +79,16 @@ export class PrismaService
   }
 
   public async onModuleInit(): Promise<void> {
-    await this.$connect();
+    try {
+      await this.$connect();
+    } catch (error) {
+      try {
+        await this.$disconnect();
+      } catch {
+        this.logger.warn('Database initialization cleanup failed.');
+      }
+      throw error;
+    }
     this.logger.log('Database connected');
   }
 

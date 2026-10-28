@@ -34,7 +34,10 @@ import { PrismaUserActivityContextReader } from './infrastructure/repositories/p
 import { USER_BLOCK_DECISIONS } from './contracts/block-decision.contract';
 import type { UserBlockRepository } from './domain/repositories/user-block.repository.interface';
 import { PROFILE_EXISTENCE_READER } from './contracts/profile-existence.contract';
-import { PrismaProfileExistenceReader } from './infrastructure/repositories/prisma-profile-existence.reader';
+import {
+  ProfileExistenceProvidersModule,
+  USERS_INTERNAL_PROFILE_EXISTENCE_READER,
+} from './profile-existence-providers.module';
 import { ProfileGroupsService } from './application/services/profile-groups.service';
 import { VIEWER_PROFILE_READER } from './contracts/viewer-profile.contract';
 import { PrismaViewerProfileReader } from './infrastructure/repositories/prisma-viewer-profile.reader';
@@ -74,7 +77,7 @@ import { PROFILE_WALL_INTERACTION_DECISIONS } from './contracts/profile-wall-int
 import { ProfileWallInteractionPolicy } from './application/services/profile-wall-interaction.policy';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, ProfileExistenceProvidersModule],
   controllers: [UsersController],
   providers: [
     {
@@ -92,7 +95,7 @@ import { ProfileWallInteractionPolicy } from './application/services/profile-wal
     },
     {
       provide: PROFILE_EXISTENCE_READER,
-      useClass: PrismaProfileExistenceReader,
+      useExisting: USERS_INTERNAL_PROFILE_EXISTENCE_READER,
     },
     { provide: VIEWER_PROFILE_READER, useClass: PrismaViewerProfileReader },
     { provide: PROFILE_DISPLAY_READER, useClass: PrismaProfileDisplayReader },

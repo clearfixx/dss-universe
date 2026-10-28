@@ -27,6 +27,7 @@
  */
 
 export { UsersModule } from './users.module';
+export { UsersExistenceModule } from './users-existence.module';
 export {
   USERS_PROFILE_PERSISTENCE,
   type UsersProfilePersistence,

@@ -14,36 +14,21 @@
 
 import { Module } from '@nestjs/common';
 
-import { AuditModule } from '@api/core/audit';
-import { PrismaModule } from '@api/core/database';
-import { EventsModule } from '@api/core/events';
-
-import { CommunityPointsService } from './application/services/community-points.service';
 import {
-  COMMUNITY_POINTS_REPOSITORY,
-  type CommunityPointsRepository,
-} from './domain/repositories/community-points.repository.interface';
+  CommunityPointsProvidersModule,
+  COMMUNITY_POINTS_INTERNAL_BALANCE_READER,
+} from './community-points-providers.module';
 import { COMMUNITY_POINTS_BALANCE_READER } from './contracts/balance-reader.contract';
-import { PrismaCommunityPointsRepository } from './infrastructure/repositories/prisma-community-points.repository';
 import { CommunityPointsResolver } from './presentation/graphql/resolvers/community-points.resolver';
 
 @Module({
-  imports: [PrismaModule, AuditModule, EventsModule],
+  imports: [CommunityPointsProvidersModule],
   providers: [
     {
       provide: COMMUNITY_POINTS_BALANCE_READER,
-      inject: [COMMUNITY_POINTS_REPOSITORY],
-      useFactory: (repository: CommunityPointsRepository) =>
-        Object.freeze({
-          balance: (subjectId: string) => repository.balance(subjectId),
-        }),
+      useExisting: COMMUNITY_POINTS_INTERNAL_BALANCE_READER,
     },
-    CommunityPointsService,
     CommunityPointsResolver,
-    {
-      provide: COMMUNITY_POINTS_REPOSITORY,
-      useClass: PrismaCommunityPointsRepository,
-    },
   ],
   exports: [COMMUNITY_POINTS_BALANCE_READER],
 })
