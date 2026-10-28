@@ -21,6 +21,17 @@ active package safe and buildable.
 
 ## Register
 
+### DEBT-007 — Automatic gamification delivery (High, runtime B approved; verification open)
+
+After accepted A/A.1 PR101 and routing design/protocol PR102/103, the owner approved
+an isolated B persistence package: additive destination storage, atomic discovery,
+fenced publication claims/recovery and audited explicit control transitions.
+The [B implementation/evidence](DEBT_007_ROUTING_PERSISTENCE.md) is a candidate,
+not accepted automatic delivery. No queue, runner, public activation, owner effect
+or historical replay is enabled. C/D, UTC/configuration/retention preflight and
+complete DEBT-007/D7 acceptance remain open. Historical register dispositions below
+are not replaced by a claim that Phase8 delivery is complete.
+
 ### DEBT-079 — Domain failures coupled to Nest transport (Medium, ACCEPTED runtime correction; verification open)
 
 After accepted design/characterization PR93 and detailed design PR95, the owner

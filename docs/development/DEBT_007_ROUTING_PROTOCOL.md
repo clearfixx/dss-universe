@@ -1,6 +1,6 @@
 # DEBT-007 — Package B schema and transaction protocol
 
-Status: implementation proposal; no runtime B authorization or activation.
+Status: owner-accepted design PR103/merged992de6; runtime B separately authorized, activation not authorized.
 Baseline: main `c2a242b`, owner-accepted routing design PR102.
 
 This makes the [accepted discovery design](DEBT_007_ROUTING_DESIGN.md) concrete.
@@ -235,7 +235,8 @@ historical replay or scoring changes. Full quality/coverage, migration/drift,
 architecture, generated API, build, unskipped E2E and no-retry Web smoke are
 mandatory before its own acceptance.
 
-Owner approval is still required for that runtime scope, the four-state bounded
-publication protocol, proposed parameters and soft-pause semantics. Approval of
-PR102 covered design/characterization only. Operational activation remains a
+The owner subsequently approved that runtime scope, the four-state bounded
+publication protocol, proposed parameters and soft-pause semantics. Its
+[implementation/evidence](DEBT_007_ROUTING_PERSISTENCE.md) remains a separately
+verified package, not inherited acceptance from this design. Operational activation remains a
 later separate decision after C/D and producer/configuration/retention review.
