@@ -10,10 +10,13 @@ successfully. Do not remove reservations or kill unrelated listeners.
 Next reads its listener port before normal dotenv loading. The installed Next
 CLI/environment guides and [official CLI reference](https://nextjs.org/docs/app/api-reference/cli/next)
 confirm that PORT in an ordinary .env is insufficient. Web's dev command now
-uses the already-approved Node24 native optional env-file flag, matching Worker's
-existing launch style, to read a dedicated ignored .env.dev-port before Next.
-This file is only for listener configuration (PORT=3200). No custom launcher or
-global PORT shared with API is introduced. Without that file defaults stay3000;
+uses a thin Node24 CLI launcher to read only PORT from a dedicated ignored
+.env.dev-port before Next. A direct Node env-file CLI flag was tested first,
+but Next forwards it into restart NODE_OPTIONS where Node rejects it; the raw
+failed startup log is retained. The launcher passes PORT through the child env,
+without forwarding that flag or preloading unrelated dotenv values.
+This file is only for listener configuration (PORT=3200). No global PORT shared
+with API is introduced. Without that file defaults stay3000;
 explicit Next CLI --port still works, including isolated quality smoke3195.
 Normal Next dotenv ordering/expansion remains intact for all other app variables.
 
