@@ -103,7 +103,7 @@ jobs:
 
       - name: Upload coverage
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage
           path: |
@@ -113,7 +113,7 @@ jobs:
 
       - name: Upload API E2E report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: api-e2e-report
           path: apps/api/test-results/api-e2e.json
@@ -134,7 +134,7 @@ jobs:
       - run: pnpm --filter @dss/web test:e2e --retries=0 --workers=2 --forbid-only
       - name: Upload Web failure evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: web-smoke-evidence
           path: apps/web/test-results
