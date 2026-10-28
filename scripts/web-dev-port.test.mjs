@@ -1,4 +1,26 @@
-/** DSS File Passport — verifies isolated dev listener configuration, no server or OS mutations. */
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Web Development Infrastructure Verification
+ * 📄 File: scripts/web-dev-port.test.mjs
+ *
+ * 🎯 Purpose:
+ * Verifies isolated listener configuration before Next starts.
+ *
+ * 🧠 Responsibilities:
+ * • checks explicit CLI/environment priority and optional file loading;
+ * • rejects invalid ports and prevents unrelated dotenv preloading.
+ *
+ * 🏗️ Architecture:
+ * Pure launcher contract tests with isolated temporary file fixtures.
+ *
+ * ⚠️ Important:
+ * Never starts a server or changes host networking or application env files.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
