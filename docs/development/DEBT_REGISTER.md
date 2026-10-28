@@ -26,17 +26,19 @@ active package safe and buildable.
 merged625d1b9. The owner approved the persisted UTC createdAt
 admission cutoff, equality included, no automatic historical replay/backfill;
 runtime package A is separately approved for owner assemblies/narrow consumers,
-not queue/routing activation. Scoped022 formatting and029 Worker configuration
+plus A.1 failed-connect cleanup, not queue/routing activation. Candidate PR101
+has focused15 units/3 migrated E2E but full gate/acceptance is open.
+Scoped022 formatting and029 Worker configuration
 verification are resolved with bounded D7 evidence; no delivery proof is implied.
 Current Mailpit host2525/18025 return
 ECONNREFUSED with empty effective Docker port arrays despite healthy container
 and declared bindings. Accepted013 recovery remains historical; current readiness
-must be restored. PR87 diagnostic code/report remain outside main, including
-first-failure trace/screenshot and CI upload changes. Accepted081/085 runtime
-packages do not implicitly integrate that evidence policy or prove the exact
-natural-failure cause. No runtime/service changes or D7 acceptance are made here.
+must be restored. Owner accepted PR87e6c4e44/mergeebd77b8: CI5/5 and full gate0
+on identical code, E2E658/658, Web15/15. First-failure trace/screenshot/CI upload
+are now integrated; original red evidence and natural-failure attribution limits
+remain. No unaccepted runtime/service change or D7 acceptance is authored here.
 
-D7 review now integrates accepted main `625d1b9`; the original baseline was
+D7 review now integrates accepted main `ebd77b8`; the original baseline was
 `f118d82`. See
 [current evidence and limits](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079/080.

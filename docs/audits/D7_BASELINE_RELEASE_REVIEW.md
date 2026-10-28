@@ -1,7 +1,7 @@
 # D7 — Baseline release review
 
 Date: 2026-10-22. Updated: 2026-10-28. Branch: `debt/d7-release-gate`.
-Current accepted baseline: `625d1b965991fa500d4b75f2aff5a6bb530af23f`.
+Current accepted baseline: `ebd77b8cb1af4ace6c43f5035844decd52496e57`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
 
@@ -21,7 +21,11 @@ after late commit. API-owned headless consumer, independent routing and separate
 queue were initially approved for detailed design only. The owner now separately
 authorized runtime package A: reusable owner providers, narrow consumers, minimal
 Users existence and lifecycle/isolation verification; no queue, routing migration
-or automatic activation. Implementation is separate. Historical statements that no historical-event
+or automatic activation. The owner also authorized A.1: cleanup of a failed
+Prisma connect attempt without replacing the original failure. Separate PR101
+`7a8abbe` implements this candidate with focused units15/15, owned-schema E2E3/3,
+types/lint and architecture140/140/frozen0; full gate/CI and acceptance remain
+open. No unaccepted runtime is imported into D7. Historical statements that no historical-event
 policy was approved are superseded for this exact decision, not for runtime.
 
 Fresh local readiness checks found Mailpit healthy but effective published port
@@ -31,15 +35,18 @@ historical; current host SMTP/UI readiness is open again. No Mailpit, mailbox,
 mount or other service was changed by this review. Observation is documented in
 PR100's DEBT-013 recovery note and must not be hidden by green configuration tests.
 
-Open diagnostic PR87 remains distinct from accepted DEBT-081 runtime PR90 and
-DEBT-085 PR96. Neither code commit77ea28d nor report0fda41a is an ancestor of
-accepted main. Current Playwright config still uses trace on-first-retry while
-mandatory smoke retries are zero; current CI lacks the PR87 Web failure artifact
-upload. The approved first-failure evidence correction therefore still needs
-integration and verification. Prior red diagnostic evidence and uncertainty about
-the exact natural failure schedule are preserved, not silently marked fixed by
-the controlled runtime correction. No source/test/workflow correction is made
-by this documentation review.
+Owner accepted diagnostic PR87 `e6c4e44`, merged `ebd77b8` at00:18:16UTC on
+October28. Exact-head CI5/5, downloaded E2E658/658 across60 suites with zero
+pending/failed and local full gate0 on identical runtime/test/config sources are
+verified: coverage8/8/API1450/1450, build6/6 (five cached), Web15/15 without retries.
+CI API SHA256 `1f33bc25ad6a01fa64081a74da19e532486ef928ec398d0aecde7797a8b7c64d`;
+local `09a44fbc49c89591b6ea45a994d1e71b86329e746863c1e6c80436c5a4cb8dc3`.
+First-failure trace/screenshot/context and CI upload policy are now in accepted
+main. The isolated retry0 intentional failure proves collection; actual passing
+CI upload ran successfully without real failure files. Original red77ea28d trace
+hash was rechecked unchanged. This accepts diagnostics, not the exact cause of
+every historical natural failure;083 attribution and086 remain visible. No
+source/test/workflow correction is authored by this documentation review.
 
 ## Scoped formatting and Worker environment reconciliation
 

@@ -1,6 +1,6 @@
 # D7 — Individual debt review matrix
 
-Updated: 2026-10-28. Current accepted baseline: `625d1b9`; initial review baseline
+Updated: 2026-10-28. Current accepted baseline: `ebd77b8`; initial review baseline
 was `f118d82`.
 Status: **IN PROGRESS; not a release certificate**.
 
@@ -13,8 +13,11 @@ It is not implemented by D7. Scoped022 formatting and029 environment verificatio
 are now route C, with exact evidence/limits in the review.
 Fresh Mailpit host2525/18025 probes fail despite healthy container/configured
 bindings, so current013 readiness is route M, without erasing accepted PR91.
-PR87 first-failure evidence changes remain outside main; accepted081/085 runtime
-corrections do not supply those missing diagnostics. D7 has no new full gate.
+Owner accepted PR87e6c4e44/mergeebd77b8: CI5/5, E2E658/658 without skips and
+local full gate0 on identical code, Web15/15. First-failure evidence policy is
+integrated; historical natural-failure attribution remains separate. Package A.1
+cleanup is additionally approved; candidate PR101 full gate/acceptance is open.
+D7 has no new full gate.
 
 Owner accepted DEBT-079 runtime PR99 `ae1b516`, merged `a715ece`:
 CI5/5 and uninterrupted full gate0, API1450/1450, E2E658/658, Web15/15.
@@ -87,7 +90,7 @@ does not override missing risk decisions or accept an unmerged candidate.
 | DEBT-004 | M      | AST inventory518 feature files: zero direct static Prisma/database imports/exports/import-types; composition47/47 and DB/HTTP24/24. Dynamic/alias/transitive semantics are not universally certified.                                                     |
 | DEBT-005 | M      | Current mandatory frozen-baseline/file-graph enforcement verified140/140,zero bounded findings; stale D2 rollout doc clarified. Domain/HTTP079 remains outside guarantees.                                                                                |
 | DEBT-006 | M      | Root README stale Phase2 corrected to current context/plan/register; docs index and historical phase/workflow redirects checked. Naming039 remains open.                                                                                                  |
-| DEBT-007 | M      | Owner accepted PR100846dd94/merge625d1b9 and UTC createdAt cutoff/no replay. Runtime A is approved for assemblies/narrow consumers only; implementation, routing/queue activation and full delivery remain open.                                          |
+| DEBT-007 | M      | Accepted PR100 design/cutoff; A/A.1 approved, candidate PR101 7a8abbe has focused15 units/3 migrated E2E. Full gate/acceptance, routing/queue activation and automatic delivery remain open.                                                              |
 | DEBT-008 | M      | Current groups/Premium/Guardian policy and migration guards inspected; fresh74 units/main HTTP5+5; full Phase5 acceptance separate.                                                                                                                       |
 | DEBT-009 | X      | Owner deferred Passport cleanup/classification to future GPT-5.6 work; excluded from D5/D7.                                                                                                                                                               |
 | DEBT-010 | M      | Legacy backend/role examples explicitly redirect to current rules; not every old guidance file has been reviewed.                                                                                                                                         |
@@ -163,7 +166,7 @@ does not override missing risk decisions or accept an unmerged candidate.
 | DEBT-080 | C      | Owner accepted test/CI-only PR83, mergeda35326a. Exact headbde1ad6: CI5/5, local gate0, E2E593/593 and Web14/14 without retries. Does not fix early-interaction081 or React083.                                                                           |
 | DEBT-081 | C      | Runtime package approved and accepted: PR90 head29b0803, mergede26b0fc; CI5/5, local gate0, E2E607/607 and Web14/14 without retries. Controlled lifecycle regression fixed; not attribution of every natural flake.                                       |
 | DEBT-082 | C      | Owner accepted PR85 integration head8cc1e50, merged05e177d; CI5/5, local gate0, coverage8/8 including Editor, E2E607/607 and Web14/14. Both quality policies preserved.                                                                                   |
-| DEBT-083 | O      | PR87 remains unmerged: red77ea28d and controlled research retained. Main still uses on-first-retry trace with retries0 and lacks its Web failure upload. Integrate/verify approved diagnostic correction; accepted081 is not natural-failure attribution. |
+| DEBT-083 | O      | Owner accepted diagnostic PR87e6c4e44/mergeebd77b8, CI5/5/full gate0 on identical code, E2E658/658/Web15/15. First-failure evidence is integrated; red77ea28d and exact natural-failure attribution remain unwaived.                                      |
 | DEBT-084 | M      | Historical failure summary/observations remain; original local raw traces/context are unavailable (retention errata). New controlled production comparison is archived outside output cleanup. No test-only fix or acceptance claimed.                    |
 | DEBT-085 | C      | Owner accepted PR96 integration6b1c6ca, merged b41dd9e: CI5/5 and local full gate0, E2E623/623, Web15/15 without retries. New production hashes verified after cleanup; missing old traces and historical failures remain explicit.                       |
 | DEBT-086 | O      | Owner accepted diagnostic PR97 head0a7594e, merged8e3c4c7: CI5/5, API623/623, Web14/14; identical code local full gate0. AgentReporter explains suppressed passing logs, not the original timeout. Cause/correction remain open.                          |
