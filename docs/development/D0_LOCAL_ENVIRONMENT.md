@@ -52,7 +52,12 @@ Compose publishes services on loopback only. Mailpit catches host SMTP on 2525
 and has a mailbox UI at `http://localhost:18025`; container ports remain1025/8025.
 Its SQLite database persists in the `dss_mailpit_data` volume. Existing API/Worker
 env files are not rewritten by bootstrap: align MAIL_PORT=2525 in both before
-starting them. Preserve existing temporary mailbox storage before recreating an
+starting them. If the host reserves2525, set DSS_MAILPIT_SMTP_PORT to an available
+fixed port in the root Compose env (for example12525), and set MAIL_PORT to the
+same value in both app env files. The UI stays18025, bindings stay loopback and
+container ports/storage stay unchanged. Do not remove Windows port reservations
+or stop an unrelated listener. See [override recovery](DEBT_013_MAILPIT_PORT_OVERRIDE.md).
+Preserve existing temporary mailbox storage before recreating an
 older Mailpit container; see [recovery design](DEBT_013_MAILPIT_RECOVERY_DESIGN.md).
 ClamAV listens on 3310 and preserves
 signature databases in its named volume. First startup may take several minutes.
