@@ -1,6 +1,6 @@
 # DEBT-007 — Routing persistence design, package B
 
-Status: design/characterization candidate, not runtime authorization.
+Status: owner-accepted design/characterization in PR102/mergec2a242b; not runtime authorization.
 Source: accepted main `2c42e89`, following owner-accepted PR101 (A/A.1).
 
 ## Boundary and evidence
@@ -10,6 +10,9 @@ Prisma-connect cleanup; it does not start routing, queues or automatic awards.
 This document refines the [accepted delivery plan](DEBT_007_RUNTIME_PLAN.md).
 No production schema, migration, dispatcher or activation command is changed.
 DEBT-007, D7 and operational activation remain open.
+
+The [concrete package B schema and protocol](DEBT_007_ROUTING_PROTOCOL.md) is a
+separate implementation proposal; its approval boundary is explicit.
 
 `apps/api/test/gamification-routing-characterization.e2e-spec.ts` contains four
 experiments using a private schema populated by the existing migrations. They
