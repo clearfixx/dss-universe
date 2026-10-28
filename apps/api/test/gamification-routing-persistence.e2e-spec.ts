@@ -201,6 +201,26 @@ describe('Gamification routing persistence (explicit fixture commands)', () => {
       }),
     ).toBe(1);
   });
+  it('uses database defaults for preparation timestamps rather than an ORM-supplied clock', async () => {
+    // Controlled defaults in this owned fixture make the clock source observable without fake timers.
+    await pool.query(
+      `ALTER TABLE gamification_activations ALTER COLUMN "updatedAt" SET DEFAULT timestamp '2001-01-01 00:00:00'`,
+    );
+    await pool.query(
+      `ALTER TABLE gamification_discovery ALTER COLUMN "updatedAt" SET DEFAULT timestamp '2002-01-01 00:00:00'`,
+    );
+    await control.prepare(operator);
+    expect(
+      await fixture.prisma.gamificationActivation.findUnique({
+        where: { destination },
+      }),
+    ).toMatchObject({ updatedAt: new Date('2001-01-01T00:00:00.000Z') });
+    expect(
+      await fixture.prisma.gamificationDiscovery.findUnique({
+        where: { destination },
+      }),
+    ).toMatchObject({ updatedAt: new Date('2002-01-01T00:00:00.000Z') });
+  });
   it('rolls activation back if the atomic audit fails and retains unknown error identity', async () => {
     const failure = new Error('synthetic audit unavailable');
     const append = jest.spyOn(audit, 'append').mockRejectedValueOnce(failure);

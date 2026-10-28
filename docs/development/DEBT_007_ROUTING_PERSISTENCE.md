@@ -107,6 +107,32 @@ deployment or establish that production's reconciliation budget is acceptable.
 
 ## Acceptance boundary
 
+### First complete gate and candidate corrections
+
+CI at d7330ab and the completed local gate both reported684/685 E2E, zero skips.
+The only failing case was the inherited strict catalog expectation listing the
+twelve pre-B updatedAt defaults. Its expectation now explicitly includes the
+three new UTC clock defaults, preserving all original twelve values, exact
+catalog equality and both Users index checks. Raw CI report:
+`node_modules/.cache/debt007-b-runtime-ci-red-d7330ab/api-e2e.json`, SHA256
+`75b514aecfe24c4a4c0ace927c5329a68d4c30bf85adbc564a3a9df36ae8727f`.
+The matching local report is `quality-full-RVlmoW/api-e2e.json`; the earlier
+tool-interrupted attempt was not a complete gate and its log is preserved
+separately. No failed result is relabeled green.
+
+Review of actual preparation SQL also confirmed that Prisma supplied updatedAt
+parameters despite the new database defaults. Preparation now omits those fields
+through parameterized inserts, using database UTC defaults and retaining the same
+transaction/idempotency/audit boundary. A controlled-default fixture regression
+distinguishes the database clock source without sleeps or fake timers. The old
+SQL-shape diagnostic remains `node_modules/.cache/debt007-b-prepare-clock-before.log`.
+This aligns B's implementation with the accepted operational-clock contract;
+it changes no existing owner's timestamp behavior or historical migration.
+The corrected focused run passes24/24 in three suites (routing, query work and
+catalog alignment), including the controlled-default clock case; scoped lint
+passes. Raw report/log: `node_modules/.cache/debt007-b-corrected-focused.*`.
+These targeted results do not replace the next exact-head full gate and CI.
+
 Full format/lint/typecheck/schema/drift/architecture/coverage/E2E/generated API/
 build/production entrypoint/Web smoke and current-head CI remain mandatory.
 No package acceptance, DEBT-007 completion, D7 acceptance or Phase11 readiness is

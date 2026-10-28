@@ -34,17 +34,12 @@ export class PrismaRoutingControlRepository implements RoutingControl {
   async prepare(operator: RoutingOperator): Promise<ActivationView> {
     assertOperator(operator);
     return this.prisma.$transaction(async (tx) => {
-      const inserted = await tx.gamificationActivation.createMany({
-        data: {
-          destination: GAMIFICATION_DESTINATION,
-          changedBy: operator.actorId,
-        },
-        skipDuplicates: true,
-      });
-      if (inserted.count) {
-        await tx.gamificationDiscovery.create({
-          data: { destination: GAMIFICATION_DESTINATION },
-        });
+      // Let the database supply UTC wall-clock defaults, including updatedAt.
+      const inserted = await tx.$executeRaw`
+        INSERT INTO gamification_activations (destination,"changedBy")
+        VALUES (${GAMIFICATION_DESTINATION},${operator.actorId}) ON CONFLICT DO NOTHING`;
+      if (inserted) {
+        await tx.$executeRaw`INSERT INTO gamification_discovery (destination) VALUES (${GAMIFICATION_DESTINATION})`;
         await this.appendAudit(tx, 'prepared', operator, 0n);
       }
       return tx.gamificationActivation.findUniqueOrThrow({
