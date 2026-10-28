@@ -1,6 +1,8 @@
 # DEBT-007 — Runtime assemblies, package A/A.1
 
-Status: owner-approved implementation candidate; full verification and acceptance open.
+Status: owner-accepted and merged in PR101/merge2c42e89 on 2026-10-28.
+Accepted head: `7a8abbe`; CI 5/5, local quality:full exit 0, coverage 8/8
+(API 1463/1463), E2E 661/661 without skips, Web 15/15 without retries.
 Accepted source baseline: `ebd77b8` (PR87), following design PR100/merge625d1b9.
 
 ## Approved scope
