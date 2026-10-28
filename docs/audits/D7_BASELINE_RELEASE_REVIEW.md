@@ -1,14 +1,14 @@
 # D7 — Baseline release review
 
 Date: 2026-10-22. Updated: 2026-10-28. Branch: `debt/d7-release-gate`.
-Current accepted baseline: `a715ece34ce3a7346fa9810d6c9621459da486cc`.
+Current accepted baseline: `625d1b965991fa500d4b75f2aff5a6bb530af23f`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
 
-## 2026-10-28 pending delivery plan and current readiness reconciliation
+## 2026-10-28 delivery plan acceptance and current readiness reconciliation
 
-Accepted main remains `a715ece`. Design-only PR100 `846dd94` is ready for owner
-review, not merged or accepted: current-head CI5/5 and downloaded E2E658/658 across
+Owner accepted design-only PR100 `846dd94`, merged as `625d1b9` at00:01:28UTC
+on October28: exact-head CI5/5 and downloaded E2E658/658 across
 60 suites with zero skips; local full gate0 on identical runtime/test sources,
 coverage8/8/API1450/1450, build6/6 cached and Web15/15 without retries. Later
 documentation-only changes were separately formatted and diff-checked. These are
@@ -18,8 +18,10 @@ The owner explicitly approved the persisted UTC admission cutoff against
 Outbox.createdAt, equality admitted, with no automatic historical replay/backfill.
 Pre-cutoff rows committed late stay excluded; post-cutoff rows remain discoverable
 after late commit. API-owned headless consumer, independent routing and separate
-queue were approved for detailed design only. Runtime package A and plan merge
-await separate owner decisions. Historical statements that no historical-event
+queue were initially approved for detailed design only. The owner now separately
+authorized runtime package A: reusable owner providers, narrow consumers, minimal
+Users existence and lifecycle/isolation verification; no queue, routing migration
+or automatic activation. Implementation is separate. Historical statements that no historical-event
 policy was approved are superseded for this exact decision, not for runtime.
 
 Fresh local readiness checks found Mailpit healthy but effective published port
@@ -38,6 +40,36 @@ integration and verification. Prior red diagnostic evidence and uncertainty abou
 the exact natural failure schedule are preserved, not silently marked fixed by
 the controlled runtime correction. No source/test/workflow correction is made
 by this documentation review.
+
+## Scoped formatting and Worker environment reconciliation
+
+DEBT-022 is scoped resolved by accepted D6 formatting plus a fresh D7
+repository-wide Prettier check at review code d497b2e (exit0). The generated Next
+path guard passes1/1 and keeps ordinary source/tests included. Raw formatter log
+is in the d5-file-responsibilities checkout at
+`node_modules/.cache/d7-format-reconciliation.log`. The old41-file count describes
+D2, not current source. Deferred Passport content/classification009/019 is not
+part of this formatting closure.
+
+DEBT-029 is scoped resolved for the accepted D0/D6 environment contract. Current
+Worker dev/start commands explicitly use Node env-file-if-exists; template and
+pre-connection validation were inspected. Fresh environment unit suite5/5 passes.
+A sanitized, empty-directory child invokes the compiled Worker with the same
+env-file option and no DATABASE_URL; it exits1 at the expected configuration
+error. A preload guard records0 net.Socket.connect attempts. This proves missing
+configuration fails before attempted TCP, not successful Worker delivery,
+all forms of IO absence, mail readiness or arbitrary deployment configuration.
+
+Worker raw diagnostic artifacts live in d6-quality-baseline under
+`node_modules/.cache/debt029-failfast-probe/`; the initial Windows path-versus-file
+URL harness error remains in stderr.log, separate from verified-stderr.log and
+verified-network-report.json. Verified stderr SHA256
+`6e3a6435f3bba72e8e0e1130e84a7110d621903ba73c2edc1fd9811e8bd7e6fa`;
+network result SHA256
+`85028f206e6fe49de9367cdcafb61205185f3fafd851b447fbfc957e9df160ae`.
+Fresh unit log is `node_modules/.cache/d7-worker-environment-reconciliation.log`.
+These are scoped read-only/negative-startup proofs; delivery007, current SMTP013
+and complete D7 acceptance remain open. No production/test source was changed.
 
 ## 2026-10-28 owner failure runtime acceptance
 

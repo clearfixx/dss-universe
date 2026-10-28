@@ -22,10 +22,13 @@ active package safe and buildable.
 
 ## Register
 
-2026-10-28 current-state reconciliation: detailed DEBT-007 plan PR100846dd94 is
-verified but unaccepted/unmerged. The owner approved the persisted UTC createdAt
+2026-10-28 current-state reconciliation: owner accepted DEBT-007 plan PR100846dd94,
+merged625d1b9. The owner approved the persisted UTC createdAt
 admission cutoff, equality included, no automatic historical replay/backfill;
-runtime package A still awaits approval. Current Mailpit host2525/18025 return
+runtime package A is separately approved for owner assemblies/narrow consumers,
+not queue/routing activation. Scoped022 formatting and029 Worker configuration
+verification are resolved with bounded D7 evidence; no delivery proof is implied.
+Current Mailpit host2525/18025 return
 ECONNREFUSED with empty effective Docker port arrays despite healthy container
 and declared bindings. Accepted013 recovery remains historical; current readiness
 must be restored. PR87 diagnostic code/report remain outside main, including
@@ -33,7 +36,7 @@ first-failure trace/screenshot and CI upload changes. Accepted081/085 runtime
 packages do not implicitly integrate that evidence policy or prove the exact
 natural-failure cause. No runtime/service changes or D7 acceptance are made here.
 
-D7 review now integrates accepted main `a715ece`; the original baseline was
+D7 review now integrates accepted main `625d1b9`; the original baseline was
 `f118d82`. See
 [current evidence and limits](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079/080.
@@ -810,14 +813,14 @@ this transfer. See [runtime checkpoint](../audits/D4_LEADERBOARD_RUNTIME_OWNERSH
 | DEBT-019 | High     | DEFERRED    | File Passport           | Historical D1 rendering repair retained; remaining Passport classification/cleanup explicitly deferred outside D5/D7 to future GPT-5.6 work. No compliance closure claimed.                            | Owner / future Passport workstream       |
 | DEBT-020 | Critical | RESOLVED    | Media security          | Portable guards verified in API and both Worker consumers; fresh15+13 regressions and accepted cross-OS CI. Physical threat model remains037.                                                          | Accepted D0.6/D6 scoped correction       |
 | DEBT-021 | High     | RESOLVED    | Quality orchestration   | Shared upstream builds and strict forced profile verified; accepted D6 tasks/CI and fresh40 policy controls.                                                                                           | Accepted D0/D6 ordering scope            |
-| DEBT-022 | Medium   | OPEN        | Formatting              | D2 repository Prettier check reports 41 legacy non-compliant files (initial audit: 52).                                                                                                                | D5/D6                                    |
+| DEBT-022 | Medium   | RESOLVED    | Formatting              | Accepted D6 formatting verified again by D7 repository-wide Prettier exit0 and generated-path policy1/1; historical41-file count superseded. Passport cleanup remains deferred009/019.                 | Accepted D6 / D7 reconciliation          |
 | DEBT-023 | Medium   | RESOLVED    | Worker tests            | Buffer-backed Sharp metadata and owned source cleanup verified; current Worker storage/scanner13 tests and accepted Windows/Linux CI.                                                                  | Scoped handle correction                 |
 | DEBT-024 | Critical | IMPLEMENTED | IAM/product ownership   | IAM evidence/Authorization decisions remain isolated; Premium non-staff and mandatory audience verified. New ACL/owner/sanction phases not claimed.                                                    | D3.5 / D7 review                         |
 | DEBT-025 | High     | ACCEPTED    | Roadmap sources         | Legacy phases/milestones marked historical and linked to canonical roadmap; review pending.                                                                                                            | D1                                       |
 | DEBT-026 | High     | OPEN        | Completion evidence     | Phase 9/10 completion gates are not currently reproducible from the red repository baseline.                                                                                                           | D1/D6                                    |
 | DEBT-027 | High     | IMPLEMENTED | Public APIs             | Sixteen feature-root ASTs have named exports with no direct implementation value exports; reviewed Nest metadata keeps providers private. Transitive/semantic and final D7 acceptance remain explicit. | D2/D4 / D7 review                        |
 | DEBT-028 | High     | OPEN        | Architecture rules      | Approved documents conflict on whether application services may access database services directly.                                                                                                     | D1/D2                                    |
-| DEBT-029 | High     | ACCEPTED    | Worker environment      | D0 adds env loading, template and fail-fast validation; readiness verified, acceptance gate remains red.                                                                                               | D0                                       |
+| DEBT-029 | High     | RESOLVED    | Worker environment      | Env-file start/dev flags and template reviewed; fresh environment5/5 and built-entry missing-config exit1 before any TCP attempt. Runtime delivery007 and host-mail readiness013 remain separate.      | Accepted D0/D6 / D7 scoped verification  |
 | DEBT-030 | High     | ACCEPTED    | Endpoint contract       | D0 aligns Web API/GraphQL defaults and examples to 3001; root/application ownership documented.                                                                                                        | D0                                       |
 | DEBT-031 | High     | ACCEPTED    | Bootstrap               | Node bootstrap verified on Windows with DB alignment guard; existing env files preserved.                                                                                                              | D0                                       |
 | DEBT-032 | Medium   | ACCEPTED    | Compose                 | Dev/test healthchecks verified; original pgAdmin image pinned by digest; acceptance gate remains red.                                                                                                  | D0                                       |
@@ -908,7 +911,7 @@ scheduled after D3 and before final D6/D7 readiness. No implementation authoriza
 or Phase 14 sanction completion is implied. DEBT-037 remains an unresolved physical
 storage threat-model decision, not a promise of sandbox isolation.
 
-The current formatting count after D2 is 41 legacy files (43 after D1, 50 after
+The historical formatting count after D2 was 41 legacy files (43 after D1, 50 after
 D0.6). Two touched historical ADRs were formatted while marking their status;
 D2 does not mechanically reformat unrelated source.
 

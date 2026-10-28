@@ -1,13 +1,16 @@
 # D7 — Individual debt review matrix
 
-Updated: 2026-10-28. Current accepted baseline: `a715ece`; initial review baseline
+Updated: 2026-10-28. Current accepted baseline: `625d1b9`; initial review baseline
 was `f118d82`.
 Status: **IN PROGRESS; not a release certificate**.
 
-Current reconciliation: PR100 design head846dd94 has CI5/5 and local full gate0
-on identical runtime/test sources, but owner acceptance/merge is pending. The
+Current reconciliation: owner accepted PR100 design head846dd94, merged625d1b9,
+with CI5/5 and local full gate0 on identical runtime/test sources. The
 owner approved a persisted UTC cutoff with Outbox.createdAt >= cutoff and no
-automatic historical replay; delivery runtime and package A remain unapproved.
+automatic historical replay. Package A is separately approved for owner-local
+assemblies/narrow consumers and lifecycle isolation, not queue/routing activation.
+It is not implemented by D7. Scoped022 formatting and029 environment verification
+are now route C, with exact evidence/limits in the review.
 Fresh Mailpit host2525/18025 probes fail despite healthy container/configured
 bindings, so current013 readiness is route M, without erasing accepted PR91.
 PR87 first-failure evidence changes remain outside main; accepted081/085 runtime
@@ -84,7 +87,7 @@ does not override missing risk decisions or accept an unmerged candidate.
 | DEBT-004 | M      | AST inventory518 feature files: zero direct static Prisma/database imports/exports/import-types; composition47/47 and DB/HTTP24/24. Dynamic/alias/transitive semantics are not universally certified.                                                     |
 | DEBT-005 | M      | Current mandatory frozen-baseline/file-graph enforcement verified140/140,zero bounded findings; stale D2 rollout doc clarified. Domain/HTTP079 remains outside guarantees.                                                                                |
 | DEBT-006 | M      | Root README stale Phase2 corrected to current context/plan/register; docs index and historical phase/workflow redirects checked. Naming039 remains open.                                                                                                  |
-| DEBT-007 | M      | Accepted PR92 design retained. Owner approved persisted UTC createdAt cutoff and no historical replay; detailed PR100 846dd94 has CI5/5/local gate0 but awaits acceptance. Automatic delivery/runtime A remain unapproved/unimplemented.                  |
+| DEBT-007 | M      | Owner accepted PR100846dd94/merge625d1b9 and UTC createdAt cutoff/no replay. Runtime A is approved for assemblies/narrow consumers only; implementation, routing/queue activation and full delivery remain open.                                          |
 | DEBT-008 | M      | Current groups/Premium/Guardian policy and migration guards inspected; fresh74 units/main HTTP5+5; full Phase5 acceptance separate.                                                                                                                       |
 | DEBT-009 | X      | Owner deferred Passport cleanup/classification to future GPT-5.6 work; excluded from D5/D7.                                                                                                                                                               |
 | DEBT-010 | M      | Legacy backend/role examples explicitly redirect to current rules; not every old guidance file has been reviewed.                                                                                                                                         |
@@ -99,14 +102,14 @@ does not override missing risk decisions or accept an unmerged candidate.
 | DEBT-019 | X      | Historical Passport rendering repair retained; remaining cleanup/classification deferred outside D7.                                                                                                                                                      |
 | DEBT-020 | C      | Exact API/two Worker portable guards and pre-IO variant validation inspected; fresh15+13 tests and accepted cross-OS CI. Physical037 separate.                                                                                                            |
 | DEBT-021 | C      | Upstream shared builds, strict forced wrapper and actual Turbo controls reviewed; fresh40 policy tests and accepted D6 gates.                                                                                                                             |
-| DEBT-022 | M      | Fresh repository format check exits0; old41-file count is stale, registry closure still to reconcile explicitly.                                                                                                                                          |
+| DEBT-022 | C      | D7 repository-wide Prettier exit0 and generated-path guard1/1 confirm accepted D6 formatting; historical41-file count superseded. No bulk Passport compliance claimed.                                                                                    |
 | DEBT-023 | C      | Buffer-backed Sharp metadata/source cleanup and fresh Worker13 tests; accepted cross-OS CI. No blanket Windows reliability claim.                                                                                                                         |
 | DEBT-024 | M      | IAM evidence/Authorization decisions/root translation reviewed; Premium non-staff and audience-first verified. Future ACL/sanctions not claimed.                                                                                                          |
 | DEBT-025 | M      | Canonical roadmap precedence and legacy-document warnings inspected; complete remaining source-index reconciliation.                                                                                                                                      |
 | DEBT-026 | M      | Phase9/10 completion rows mapped to exact suites/source;057/066/067 and scheduler/SEO scope limits retained. Not blanket completion.                                                                                                                      |
 | DEBT-027 | M      | Auth/Users/IAM roots, Nest tokens and enrollment consumers inspected; fresh17 boundary/registration +24 allowlist/DB tests. Remaining roots/technical consumers need mapping.                                                                             |
 | DEBT-028 | M      | Current Architecture Rules/ADR003/004 separate persistence from services; reviewed older drafts are marked historical.                                                                                                                                    |
-| DEBT-029 | M      | Current Worker fail-fast source and fresh5-test environment suite pass; no new Worker start/delivery proof.                                                                                                                                               |
+| DEBT-029 | C      | Env-file scripts/template inspected; fresh environment5/5; compiled entry with missing DATABASE_URL exits1 with0 guarded TCP attempts. Scoped environment acceptance, not valid Worker delivery007 or Mailpit013 readiness.                               |
 | DEBT-030 | M      | API/Web defaults/examples and primary Web public endpoints agree on3001/api/graphql and /api; boolean-only env check, no app start.                                                                                                                       |
 | DEBT-031 | M      | Full bootstrap read: preserve/exclusive-create env, pinned runtimes, coordinate guard before committed deploy/seed. Not executed or certified for arbitrary process overrides.                                                                            |
 | DEBT-032 | M      | Full dev/test Compose read; actual pgAdmin digest matches source, loopback/health/profile scope checked. Current Mailpit host readiness remains013.                                                                                                       |
