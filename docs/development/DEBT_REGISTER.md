@@ -1989,6 +1989,50 @@ all dependency risk. Full quality/build/CI and owner acceptance remain open.
 The existing Apollo Playground server4-vs-server5 peer warning is unchanged.
 See [package evidence](../audits/DEBT_016_DEPENDENCY_SECURITY.md).
 
+### DEBT-083 — React demo no-retry smoke failure (Medium, ACCEPTED investigation, OPEN)
+
+2026-10-28 integration checkpoint: the approved diagnostic infrastructure is being
+updated against accepted maina715ece, including accepted runtime081/085 and the
+validated smoke-port override087. First-failure trace/screenshot retention and
+CI upload remain test-only; no new runtime or synchronization correction is
+claimed. Historical red77ea28d and controlled research below stay preserved.
+Current integration policy, synthetic failure artifacts, full gate and CI require
+new verification. Earlier statements that081 awaits runtime approval are history,
+not its current accepted status. Natural-failure attribution remains limited.
+
+Owner approved a separate test-only package after diagnosis. PR #81 head
+`1343d5a` failed its React demo answer assertion at the unchanged 5000 ms
+deadline, with retries zero. A fresh local unchanged scenario and a separately
+instrumented observation passed; neither resolves the retained CI failure.
+The instrumented search began before native visible delivery and completed all
+four timers without cancellation. Missing readiness is not yet a proven cause.
+No test synchronization correction or application change is implemented.
+First-failure trace/screenshot retention and mandatory CI artifact upload are
+implemented as diagnostic infrastructure only; five policy regressions and one
+intentionally failing isolated fixture verify this collection path. Exact head
+77ea28d has green CI, but its completed local full gate is red on the original
+React smoke (13/14 Web, API E2E593/593). Trace/screenshot are retained. A
+controlled early-click experiment separately proves the DEBT-081 cleanup
+mechanism; it does not establish the exact original CI schedule. The original
+defect and acceptance remain open.
+Preserve searching/answer/restart/error assertions and existing timeouts; a
+runtime cause belongs to DEBT-081 with separate correction approval. See
+[diagnostic evidence](../audits/DEBT_083_REACT_DEMO_DIAGNOSTICS.md).
+
+### DEBT-081 — Controlled React early-click research checkpoint (2026-10-25)
+
+The approved research, without runtime correction, now observes a programmatic
+React-example click injected during the actual mount effect. Its native 550 ms
+timer is cleared about 2.2 ms later by `UniverseArrival.useEffect` passive cleanup;
+no callback fires and searching remains at step zero beyond 5000 ms. No page
+error occurred. This is a controlled development-runtime mechanism, not proof
+that every natural smoke failure has this cause, nor proof of production impact.
+Two earlier ordinary production Academy observations passed and do not answer
+this React controlled schedule. No runtime/UI fix is authorized or implemented.
+Agree lifecycle semantics and deterministic regression design separately; do
+not hide the early-interaction case with a test-only readiness wait. Evidence:
+[DEBT-083 diagnostic timeline](../audits/DEBT_083_REACT_DEMO_DIAGNOSTICS.md).
+
 ### DEBT-066 — Approved depth-64 shared correction checkpoint (2026-10-25)
 
 Owner approved root-zero maximum depth64 and compatibility checks before code.

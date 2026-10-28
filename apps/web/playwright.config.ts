@@ -11,6 +11,7 @@
  * 🧠 Responsibilities:
  * • keeps browser navigation and the isolated server endpoint aligned;
  * • preserves no-retry CI checks and the existing startup deadline.
+ * • retains trace and screenshot evidence from the first failed attempt.
  *
  * 🏗️ Architecture:
  * Test-only configuration; imports only the pure endpoint resolver.
@@ -34,7 +35,8 @@ export default defineConfig({
   reporter: process.env.CI ? "github" : "list",
   use: {
     baseURL: endpoint.baseURL,
-    trace: "on-first-retry",
+    trace: "retain-on-failure",
+    screenshot: "only-on-failure",
   },
   projects: [
     {
