@@ -1,0 +1,235 @@
+# DEBT-083 — React demo smoke diagnostics
+
+## 2026-10-28 integration checkpoint
+
+PR87 remains an unaccepted diagnostic/test-only package. Integrate accepted main
+`a715ece`, preserving accepted runtime081/085, shared smoke endpoint087 and all
+existing assertions/deadlines. The first-failure recording/upload policy is still
+needed: accepted main uses on-first-retry tracing despite mandatory retries0.
+No new application, synchronization, timeout or retry correction is proposed.
+
+The earlier local gate at77ea28d remains red and its raw evidence is retained;
+later runtime acceptance does not prove the exact original natural schedule.
+The new integration required policy verification, a fresh deliberately failing
+isolated fixture proving trace/screenshot/context on attempt0, and a complete
+passing real gate/CI before owner review. Results are recorded below; this is not
+owner acceptance. Historical approval/pending statements below retain their dates and
+are superseded by this scope only where they describe now-accepted runtime work.
+
+### Fresh integration evidence before full gate
+
+Integration code head `df0394d` preserves the shared endpoint resolver and
+all existing runtime/test assertions. The actual configuration/workflow policy
+passes5/5. A temporary mutation back to on-first-retry makes the targeted policy
+fail with the expected trace-mode assertion; restoring the reviewed config
+returns5/5. Logs are retained at root `node_modules/.cache/` as
+`debt083-integration-policy-red.log` and `debt083-integration-policy-green.log`.
+
+A fresh isolated fixture imports the actual Playwright config, retains its
+Chromium project/trace/screenshot policy and overrides only synthetic test/output
+locations and webServer=[]; config preflight confirms no DSS server and retries0.
+The fixture sets synthetic page content and deliberately fails one visibility
+assertion. JSON confirms one unexpected failure, no skips/flaky results, one
+result at retry0 and intentional exit1. All three evidence attachments exist:
+
+| Attachment        | SHA256                                                           |
+| ----------------- | ---------------------------------------------------------------- |
+| trace.zip         | eb915edd8e054bb1b1f1cc38a61322ec20902cc1ebeaad1a4cb95105b559b1f5 |
+| test-failed-1.png | d56c54598bc8ed6d1ff9b5edb1c6d80820da8fcbfc16a2f7e65f73e226a237fc |
+| error-context.md  | b5e981b8cae4604ddf415c20020a157ef9807dbf8099f622cbe4d623b4ac1ba6 |
+
+Root manifest `node_modules/.cache/debt083-fixture-verified-manifest-20261028.json`
+records exact local paths and source head. Fixture/config and evidence reside
+under `apps/web/node_modules/.cache/debt083-evidence-20261028/`, outside ordinary
+Web test-results cleanup; ignored artifacts are not recoverable from Git.
+
+Two initial diagnostic setup limits remain recorded rather than presented as
+passing evidence: Node rejected the temporary TS config inside node_modules;
+the first JS control loaded a CommonJS interop wrapper, not the actual base
+project, and captured only context. The verified control explicitly normalizes
+that loader wrapper and asserts actual Chromium, retries0 and inherited trace/
+screenshot policy before running. Its output is in a separate verified-evidence
+directory. This is not a retry of a failing DSS test or natural-failure attribution.
+No real DSS assertion, retry count or timeout was changed.
+
+### Completed integration verification at code head4419aff
+
+Local full gate session17926 terminated exit0: coverage8/8, API1450/1450 across176
+suites, E2E658/658 across60 suites with no skipped/failed tests, generated API
+checks, build6/6 (five cached), post-build entry checks and Web15/15 without
+retries (30.4s). Log and terminal marker are
+`node_modules/.cache/debt083-integration-quality.log` and `.exit.txt`; report is
+`node_modules/.cache/quality-full-4bitlU/api-e2e.json`, SHA256
+`09a44fbc49c89591b6ea45a994d1e71b86329e746863c1e6c80436c5a4cb8dc3`.
+
+Exact-code CI5/5 passed: Quality40604160257 and containment40604160360.
+Downloaded CI report confirms658/658 across60 suites, zero pending/failed,
+SHA256 `2732216b19126f9ea8168e0345d4135a7b8519b0e3eb160d2ec412496cf7b049`.
+The Web job's new Upload Web failure evidence step succeeded; this passing CI
+run had no real failure artifacts. The isolated intentional failure above is
+the direct proof of first-attempt trace/screenshot/context production. All three
+synthetic artifact hashes still match after ordinary full Web smoke cleanup.
+The old red77ea28d trace hash was also freshly rechecked and remains unchanged.
+
+The following commit records these results in documentation only; any new-head
+CI result must be checked separately. Owner acceptance/merge remains pending.
+This accepts neither the exact cause of every historical natural failure nor
+D7/Phase11 readiness; the earlier red reports are not erased by this green gate.
+
+## Approved boundary
+
+Investigate the no-retry React demo failure observed on PR #81. Change only
+proven test synchronization, preserving the searching state, exact answer,
+restart, browser-error assertions and the existing 5000 ms expectation timeout.
+No application runtime or UI changes are authorized by this package. A runtime
+cause must instead be recorded under DEBT-081 and separately approved.
+
+## Baseline and retained failure
+
+Diagnostic branch: `debt/debt-083-react-demo-diagnostics`, from accepted main
+`a35326afdd4ebba484540a46f468c82d4bb586a9`. PR #85 is separate and remains
+unmerged pending owner acceptance.
+
+PR #81 head `1343d5a583234f1663e6de8eb136060288724d39`, Quality run
+`40176117650`, Web job `121117051433` failed the scenario
+`demo search completes locally and can start again`. The searching assertion
+passed; the React answer was absent at the existing 5000 ms deadline. Thirteen
+other scenarios passed. Retries were zero. This is not a passing package.
+
+Retained raw job log: `TEMP/dss-debt057-ci-1343d5a-web-failure.log`.
+SHA256: `9145517B06173E5A92C4B341C5DE1F807F14769B60F56FAE3ACA79C9699F16F6`.
+
+The test and `universe-arrival.tsx` are unchanged between the failing PR and
+accepted main. The tombstone changes therefore did not introduce a source diff
+in these files; this observation alone does not establish the failure cause.
+
+## Source observations, not a diagnosis
+
+The click starts four chained 550 ms timers. The mount effect cleanup can clear
+the current search timer. The failing scenario does not install or await the
+existing native-observer readiness helper. Neither fact proves that cleanup
+occurred during the failed CI run. In particular, do not copy the Academy
+readiness change merely because its symptom looks similar.
+
+The story is entirely local: React example click → local timer progression →
+prepared answer → reset to an empty input and disabled search button. No API or
+database operation is required by this story.
+
+## First local observation
+
+One unchanged scenario was executed on a fresh development server with
+`CI=1`, one worker, zero retries, `--forbid-only` and `--trace=on`.
+Result: **1/1 passed**, total command report 15.1 seconds. This does not
+reproduce or resolve the retained CI failure. Tracing itself may affect timing.
+
+Log: `TEMP/dss-debt083-original-selected.log`.
+Trace directory: `node_modules/.cache/debt083-original-trace/`.
+An earlier anchored grep selected zero tests; its terminal exit 1 is a command
+selection error, not an application failure or an executed regression.
+Log: `TEMP/dss-debt083-original.log`.
+
+Next dev regenerated the existing Web AGENTS heading from H1 to H2. This
+generated instruction-file change is not an application or test correction.
+The fresh server stopped after the test; no listener on port 3100 remained.
+
+## Instrumented observation
+
+One further observation used the same React flow and expectations with wrappers
+around real 550 ms timers and the real native IntersectionObserver. No fabricated
+visibility, fake clock, sleep, retry or application modification was introduced.
+It passed with HTTP 200, no page errors and no fetch/XHR requests observed.
+
+The observer disconnected at approximately 4157 ms. Search scheduled its first
+timer at 4179.4 ms; native visible delivery followed at 4327.2 ms. All four timers
+fired, the last at 6415.7 ms: about 2236.3 ms after initial scheduling. No tracked
+timer cancellation occurred. Search therefore began before native delivery and
+still completed in this observation. Missing observer readiness alone is not a
+proven explanation for the CI failure.
+
+Report: `node_modules/.cache/debt083-timer-probe.json`.
+SHA256: `75F6C00CB308F10FCAB5F08B484CF0286CEE4072C9E89E927BFC977981450D0F`.
+Ignored harness and screenshot share the `debt083-timer-probe` basename.
+Unchanged-scenario log SHA256:
+`09F118B6A4C2EE242DC49C8996E62E18699F642EBF395BE5B93072438ECD6D1A`.
+The owned diagnostic server was stopped after this observation. Instrumentation
+can perturb timing; this evidence neither proves a fix nor excludes a race.
+
+## First-failure evidence correction
+
+The accepted configuration used `trace: on-first-retry` together with zero
+retries. The mandatory Web job also uploaded no Playwright results. Thus the
+first failure could not leave a CI trace artifact for diagnosis.
+
+This package now uses `retain-on-failure` and `screenshot: only-on-failure` and
+uploads `apps/web/test-results` with `if: always()` and three-day retention.
+Only the existing guest smoke suite runs; no secrets or authenticated test
+sessions are added. Trace recording itself may affect timing. This corrects
+evidence collection, not the React timing defect. Retries, worker count, smoke
+command, assertions, application files and timeouts remain unchanged.
+
+The added actual-config/workflow regression failed before correction (4/5
+policy tests passed) and all five pass afterwards. An isolated synthetic test
+then intentionally failed exactly once, with retries zero and no application
+server. Its results contained `trace.zip` (9903 bytes), a screenshot (6196 bytes)
+and error context. This is successful verification of failure recording, not
+an application failure or a passing full smoke suite. Harness/results:
+`node_modules/.cache/debt083-evidence-fixture/`; retained log:
+`TEMP/dss-debt083-evidence-fixture.log`.
+
+## Terminal local gate: failure retained
+
+The independent launcher completed on exact head `77ea28d2bf834296c85d86f810bf6b07fc9b7b57`
+with **exit 1**. API coverage passed 1298/1298, strict E2E passed 593/593,
+GraphQL/build/production entry passed; final Web smoke failed the original
+React scenario with 13/14 passing and zero retries. Its unchanged 5000 ms answer
+expectation expired. The error context shows searching at step zero, still
+`Opening module connections…`. No synchronization fix is implemented.
+
+Terminal status: `node_modules/.cache/debt083-quality-durable-result.json`.
+Log: `TEMP/dss-debt083-quality-durable.log`.
+E2E: `node_modules/.cache/quality-full-9VPE9Y/api-e2e.json`, independently passed
+the actual strict report policy with full-profile context.
+Preserved failure: `node_modules/.cache/debt083-failure-77ea28d/`.
+Trace SHA256: `404A3AEE0EFD6127A53B4625E82C6F924FCBBD88454B49D91B3ACBE19DD67A93`.
+The screenshot was visually inspected. Trace confirms the click and searching
+assertion succeeded, then no answer appeared; it records no timer-clear stack.
+Do not treat green CI at this head as overriding this local red gate.
+
+## Further bounded diagnostics
+
+An isolated copy of the 14 smoke scenarios changed imports only, adding a
+timer-observer fixture to the React case. One actual run passed 14/14 with two
+workers, zero retries, no readiness wait or assertion/timeout changes. Its
+in-memory attachment was not persisted by the passing GitHub reporter; there is
+therefore no retained timer timeline for that observation. Do not infer absence
+of cancellation from missing evidence. Log:
+`TEMP/dss-debt083-full-probe-selected.log`. The initial harness under
+`node_modules` selected no tests because Node rejected TypeScript stripping
+there; that setup failure is separate from the actual run. No rerun-to-green
+or application fix is claimed by this diagnostic result.
+
+One additional, explicitly **controlled** experiment injected a programmatic
+React-example click during `UniverseArrival.useEffect` setup. It observed a
+timer scheduled at 2712.5 ms, cleared at 2714.7 ms, with no firing or replacement;
+the answer stayed absent at 5000 ms. The clear stack identifies
+`UniverseArrival.useEffect` and React passive-effect disconnection. This proves
+the cleanup mechanism under the injected development schedule, not that the
+original natural CI failure followed the same schedule. No application source
+was changed. The runtime finding is tracked under DEBT-081; runtime correction
+requires separate approval, not a silent test-readiness workaround.
+
+Controlled report: `node_modules/.cache/debt083-controlled-mount.json`.
+SHA256: `714D09CE3A727C6C217EB2B2CBB5BE91EA8A1A77F054A367231917C07CA8CA28`.
+Harness/screenshot share this basename. The owned dev server was stopped.
+
+## Next evidence required
+
+Capture timer scheduling, firing and cancellation together with readiness and
+the cancellation stack in a bounded diagnostic observation. Preserve failures
+and distinguish instrumentation from ordinary browser behavior. Do not rerun
+CI to obtain a green result, increase timeouts, add sleeps, or claim a fix from
+these passing observations. The local gate is now terminal red as recorded
+above. No synchronization correction, successful full local gate or acceptance
+is claimed. Runtime policy/design must be agreed separately under DEBT-081;
+do not suppress the legitimate early-interaction case by merely delaying this
+test. DEBT-083 and acceptance of PR #81 remain open.

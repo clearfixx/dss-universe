@@ -1,8 +1,26 @@
 /**
- * DSS Universe — Web Verification Policy
- * File: scripts/web-test-concurrency.test.mjs
- * Purpose: Resolve actual test configs, bounded workers and no-retry CI smoke.
- * Important: Playwright lists tests only; no browser, server or database is started.
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Web verification policy
+ * 📄 File: scripts/web-test-concurrency.test.mjs
+ *
+ * 🎯 Purpose:
+ * Protect bounded no-retry verification and retained first-failure evidence.
+ *
+ * 🧠 Responsibilities:
+ * • resolve actual Playwright and Vitest configuration;
+ * • verify the mandatory CI smoke command and artifact upload;
+ * • reject retry-dependent diagnostic recording.
+ *
+ * 🏗️ Architecture:
+ * Root tooling policy tests; no application runtime dependencies.
+ *
+ * ⚠️ Important:
+ * Playwright lists tests only; no browser, server or database is started.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -59,6 +77,30 @@ test("real Playwright CI config never retries a failed smoke", () => {
   for (const project of report.config.projects)
     assert.equal(project.retries, 0);
   assert.equal(report.config.forbidOnly, true);
+});
+
+test("first failed Web attempt retains diagnostics without requiring a retry", async () => {
+  const { default: config } = await import(
+    new URL("../apps/web/playwright.config.ts", import.meta.url).href
+  );
+  assert.equal(config.retries, 0);
+  assert.equal(config.use.trace, "retain-on-failure");
+  assert.equal(config.use.screenshot, "only-on-failure");
+  const workflow = readFileSync(
+    new URL("../.github/workflows/ci.yml", import.meta.url),
+    "utf8",
+  );
+  const webJob = workflow.split("  web-e2e:")[1]?.split("  security:")[0];
+  assert.ok(webJob);
+  assert.match(
+    webJob,
+    /- name: Upload Web failure evidence\r?\n        if: always\(\)/,
+  );
+  assert.match(webJob, /uses: actions\/upload-artifact@v4/);
+  assert.match(webJob, /name: web-smoke-evidence/);
+  assert.match(webJob, /path: apps\/web\/test-results/);
+  assert.match(webJob, /retention-days: 3/);
+  assert.doesNotMatch(webJob, /continue-on-error:\s*true/);
 });
 
 for (const enabled of [false, true]) {

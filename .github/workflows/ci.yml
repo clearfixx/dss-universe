@@ -132,6 +132,14 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @dss/web exec playwright install --with-deps chromium
       - run: pnpm --filter @dss/web test:e2e --retries=0 --workers=2 --forbid-only
+      - name: Upload Web failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-smoke-evidence
+          path: apps/web/test-results
+          if-no-files-found: ignore
+          retention-days: 3
 
   security:
     name: Dependency audit
