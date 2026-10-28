@@ -13,6 +13,11 @@
  */
 
 export { AchievementsModule } from './achievements.module';
+export { AchievementsRuntimeModule } from './achievements-runtime.module';
+export {
+  ACHIEVEMENT_EVENT_CONSUMER,
+  type AchievementEventConsumer,
+} from './contracts/event-consumer.contract';
 export {
   MANUAL_AWARD_TRANSACTION,
   type ManualAwardTransaction,

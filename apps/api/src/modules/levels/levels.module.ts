@@ -14,25 +14,12 @@
 
 import { Module } from '@nestjs/common';
 
-import { AuditModule } from '@api/core/audit';
-import { PrismaModule } from '@api/core/database';
-import { EventsModule } from '@api/core/events';
-
-import { LevelsService } from './application/services/levels.service';
-import { LEVELS_REPOSITORY } from './domain/repositories/levels.repository.interface';
-import { PrismaLevelsRepository } from './infrastructure/repositories/prisma-levels.repository';
+import { LevelsProvidersModule } from './levels-providers.module';
 import { LevelsResolver } from './presentation/graphql/resolvers/levels.resolver';
 
 @Module({
-  imports: [PrismaModule, AuditModule, EventsModule],
-  providers: [
-    LevelsService,
-    LevelsResolver,
-    {
-      provide: LEVELS_REPOSITORY,
-      useClass: PrismaLevelsRepository,
-    },
-  ],
+  imports: [LevelsProvidersModule],
+  providers: [LevelsResolver],
   exports: [],
 })
 export class LevelsModule {}

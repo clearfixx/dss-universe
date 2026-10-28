@@ -16,6 +16,12 @@ and markers are not recalculated.
 This plan extends `DEBT_007_EVENT_DELIVERY_DESIGN.md`; its historical proofs remain
 historical. Neither document constitutes evidence that automatic delivery works.
 
+Later owner decisions accepted this plan in PR100/merge625d1b9 and separately
+authorized package A (owner runtime assemblies) and A.1 (failed Prisma connect
+cleanup). Their [implementation boundary and evidence](DEBT_007_RUNTIME_ASSEMBLIES.md)
+remain a separate candidate awaiting full verification/acceptance. Routing,
+queue activation and historical backfill are not authorized by A/A.1.
+
 ## Process and ownership
 
 Add a separate entrypoint to the API-owned build artifact using a Nest application
