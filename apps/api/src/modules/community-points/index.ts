@@ -13,6 +13,11 @@
  */
 
 export { CommunityPointsModule } from './community-points.module';
+export { CommunityPointsRuntimeModule } from './community-points-runtime.module';
+export {
+  COMMUNITY_POINTS_EVENT_CONSUMER,
+  type CommunityPointsEventConsumer,
+} from './contracts/event-consumer.contract';
 export {
   COMMUNITY_POINTS_BALANCE_READER,
   type CommunityPointsBalanceReader,

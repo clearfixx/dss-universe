@@ -13,6 +13,11 @@
  */
 
 export { LevelsModule } from './levels.module';
+export { LevelsRuntimeModule } from './levels-runtime.module';
+export {
+  LEVEL_EVENT_CONSUMER,
+  type LevelEventConsumer,
+} from './contracts/event-consumer.contract';
 export {
   LEVEL_RECIPIENT_EXISTENCE,
   type LevelRecipientExistence,

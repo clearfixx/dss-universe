@@ -688,6 +688,7 @@ for (const [moduleName, expected] of [
     "users",
     [
       "UsersModule",
+      "UsersExistenceModule",
       "USERS_PROFILE_PERSISTENCE",
       "UsersProfilePersistence",
       "PROFILE_ROLE_NAMES_READER",
@@ -731,6 +732,9 @@ for (const [moduleName, expected] of [
     "community-points",
     [
       "CommunityPointsModule",
+      "CommunityPointsRuntimeModule",
+      "COMMUNITY_POINTS_EVENT_CONSUMER",
+      "CommunityPointsEventConsumer",
       "COMMUNITY_POINTS_BALANCE_READER",
       "CommunityPointsBalanceReader",
       "POINTS_RECIPIENT_EXISTENCE",
@@ -741,6 +745,9 @@ for (const [moduleName, expected] of [
     "levels",
     [
       "LevelsModule",
+      "LevelsRuntimeModule",
+      "LEVEL_EVENT_CONSUMER",
+      "LevelEventConsumer",
       "LEVEL_RECIPIENT_EXISTENCE",
       "LevelRecipientExistence",
       "LEVEL_POINTS_BALANCE_READER",
@@ -751,6 +758,9 @@ for (const [moduleName, expected] of [
     "achievements",
     [
       "AchievementsModule",
+      "AchievementsRuntimeModule",
+      "ACHIEVEMENT_EVENT_CONSUMER",
+      "AchievementEventConsumer",
       "ACHIEVEMENT_RECIPIENT_EXISTENCE",
       "AchievementRecipientExistence",
       "MANUAL_AWARD_TRANSACTION",
