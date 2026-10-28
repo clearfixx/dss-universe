@@ -6,6 +6,20 @@ Accepted source baseline: `746d981`.
 
 ## Confirmed observations
 
+### Later environment observation — 2026-10-28
+
+During DEBT-007 design verification (2026-10-27 23:21 UTC), the currently running
+Mailpit container was healthy, and HostConfig still declared loopback2525/18025,
+but NetworkSettings.Ports had empty arrays. Bounded TCP probes to both host ports
+returned ECONNREFUSED; no listeners were reported. This is a new local readiness
+observation, not a reversal of the previously accepted recovery evidence or proof
+of its cause. Host SMTP/UI readiness must be re-established before claiming the
+current environment is ready. No container, mailbox, mount or other service was
+changed. Raw probe result is retained locally at
+`node_modules/.cache/mailpit-port-observation-20261028.json`.
+
+### Initial recovery observations
+
 - Compose declares loopback host1025/8025 to container1025/8025.
 - Running Mailpit is healthy, but NetworkSettings has empty published mappings.
 - Host1025 belongs to PID1432 (`services.exe`); host1026 is also occupied.
