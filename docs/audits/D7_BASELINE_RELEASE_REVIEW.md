@@ -1,11 +1,42 @@
 # D7 — Baseline release review
 
 Date: 2026-10-22. Updated: 2026-10-29. Branch: `debt/d7-release-gate`.
-Current accepted baseline: `701cb870dbe96ec32e824b2076fa5a17bca1d857`.
+Current accepted baseline: `cc39080fe339ad1ca4699d3fa83122b94f46daba`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
 
-## 2026-10-29 accepted security patch and Mailpit integration
+## 2026-10-29 accepted Mailpit and C characterization checkpoint
+
+Owner accepted PR106a24bb2a, mergedcc39080 at03:16:43UTC. Exact-head CI5/5
+and separate full gate0: coverage8/8/API1466/1466, E2E686/686 across64 suites
+without skips, build6/6 and Web15/15 without retries. Local gate02:54:22Z–
+03:08:49Z had no Windows wake event. CI E2E SHA256:
+2486cb888e9a99b2f8c8b30ec610b5e34bfd181f146d93bc54b7ee379b38bef9.
+Local E2E SHA256a45e9e6f0c0118e3a18d3817b47c68b02386732fef8d033f906acaadea505f8a.
+Working SMTP12525/UI18025 and Nodemailer.verify, same volume/image, two original
+messages/unread2 and unchanged other-container timestamps support scoped013
+closure. Primary is synchronized to maincc39080; Web/API/Worker/Mailpit readiness
+and unchanged owner audit-plan SHA256 were rechecked. The initial security-failed
+gate remains preserved; accepted107 is included. No global service uptime or
+new D7 release gate is inferred from the scoped accepted package.
+
+[C design/characterization PR108](https://github.com/clearfixx/dss-universe/pull/108),
+head0d51145, proposes identifier-only queue references, immutable safe admissions,
+separate consumption receipts, mutable-rule revision guards and real second-hop
+proof. It is not runtime C permission or automatic award activation. Two added
+actual-owner migrated tests pass with the original two (focused4/4). They prove
+Points suppresses a late original after absent-source revocation, but Achievements
+empty rollback allows a late active award until explicit rollback replay. The
+configured beneficiaryId and synthetic rollback name exercise real current
+semantics; no production automatic-delivery incident or concurrency proof is
+claimed. Candidate DEBT-090 requires owner policy/correction design. PR108 full
+gate/CI and owner acceptance remain pending. No unaccepted source is imported.
+
+Current inventory90 means accepted-register IDs001–089 plus confirmed candidate090.
+DEBT-007 C/D,090 policy, remaining Q/O/M/R reviews, final D7 gate, stack audit and
+Phase11 brainstorm remain open. This checkpoint is documentation-only.
+
+## Earlier 2026-10-29 checkpoint before Mailpit acceptance
 
 Owner accepted DEBT-089 PR107 head56ed7da, merged701cb87 at02:51:59UTC.
 The exact head's CI5/5 and full local gate0 are verified: coverage8/8,
