@@ -100,18 +100,18 @@ function GlobalNavigation({
 }
 
 function ModuleSidebar({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
-  const module = currentModule(pathname);
+  const activeModule = currentModule(pathname);
   const links = moduleSidebarItems(pathname);
-  if (!module) return null;
+  if (!activeModule) return null;
 
-  const Icon = module.icon;
+  const Icon = activeModule.icon;
   return (
     <div className="p-3">
       <div className="mb-5 flex items-center gap-3 px-2 py-3">
         <Icon className="size-5 text-violet-300" aria-hidden="true" />
-        <p className="text-sm font-semibold text-slate-100">{module.label}</p>
+        <p className="text-sm font-semibold text-slate-100">{activeModule.label}</p>
       </div>
-      <nav aria-label={`Розділи: ${module.label}`} className="space-y-1.5">
+      <nav aria-label={`Розділи: ${activeModule.label}`} className="space-y-1.5">
         {links.map(({ href, label, icon: LinkIcon }) => (
           <Link
             key={href}
