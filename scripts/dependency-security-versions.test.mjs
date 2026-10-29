@@ -79,6 +79,25 @@ test("actual Apollo and Nest Express paths use patched parsers", () => {
   atLeast(resolvedPackage(platform.require, "multer").version, "2.5.0");
 });
 
+test("actual host metrics and CLI paths use patched systeminformation 5", () => {
+  const instrumentation = resolvedPackage(
+    api,
+    "@opentelemetry/auto-instrumentations-node",
+  );
+  const hostMetrics = resolvedPackage(
+    instrumentation.require,
+    "@opentelemetry/instrumentation-host-metrics",
+  );
+  const cli = resolvedPackage(web, "shadcn");
+  const registry = resolvedPackage(cli.require, "@shadcn/registry");
+  for (const consumer of [
+    hostMetrics.require,
+    resolvedPackage(cli.require, "@dotenvx/dotenvx").require,
+    resolvedPackage(registry.require, "@dotenvx/dotenvx").require,
+  ])
+    atLeast(resolvedPackage(consumer, "systeminformation").version, "5.33.16");
+});
+
 test("actual CLI and jsdom paths use patched undici 7", () => {
   const cli = resolvedPackage(web, "shadcn");
   const jsdom = resolvedPackage(web, "jsdom");
