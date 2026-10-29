@@ -33,6 +33,7 @@ export type ModuleNavigation = ModuleNavigationItem & {
   featured?: boolean;
   /** Presentation only. Server-side route guards remain authoritative. */
   requiresSession?: boolean;
+  requiresAdminDeck?: boolean;
 };
 
 /**
@@ -43,10 +44,10 @@ export type ModuleNavigation = ModuleNavigationItem & {
 export const MODULE_NAVIGATION: readonly ModuleNavigation[] = [
   {
     href: "/command-deck",
-    label: "Mission Control",
+    label: "Адмінпанель",
     icon: LayoutDashboard,
     requiresSession: true,
-    featured: true,
+    requiresAdminDeck: true,
     children: [],
   },
   {
@@ -120,6 +121,13 @@ export function breadcrumbsForPath(pathname: string): readonly { href: string; l
 }
 
 /** Reduces dead-end links for guests, without substituting for API/route authorization. */
-export function visibleModules(hasSession: boolean): readonly ModuleNavigation[] {
-  return MODULE_NAVIGATION.filter((item) => hasSession || !item.requiresSession);
+export function visibleModules(
+  hasSession: boolean,
+  canAccessAdminDeck = false,
+): readonly ModuleNavigation[] {
+  return MODULE_NAVIGATION.filter(
+    (item) =>
+      (hasSession || !item.requiresSession) &&
+      (!item.requiresAdminDeck || canAccessAdminDeck),
+  );
 }
