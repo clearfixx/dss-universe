@@ -9,6 +9,7 @@ import {
   isShellVariant,
   moduleSidebarItems,
   routeMatches,
+  visibleModules,
 } from "./shell-navigation";
 
 describe("application shell navigation contracts", () => {
@@ -45,6 +46,15 @@ describe("application shell navigation contracts", () => {
     ]);
     expect(moduleSidebarItems("/media")).toHaveLength(1);
     expect(moduleSidebarItems("/unknown")).toEqual([]);
+  });
+
+  it("keeps private destinations out of guest navigation", () => {
+    const guestRoutes = visibleModules(false).map((entry) => entry.href);
+    expect(guestRoutes).toContain("/news");
+    expect(guestRoutes).not.toContain("/command-deck");
+    expect(guestRoutes).not.toContain("/newsroom");
+    expect(guestRoutes).not.toContain("/settings/profile");
+    expect(visibleModules(true)).toHaveLength(MODULE_NAVIGATION.length);
   });
 
   it("uses declared labels for known breadcrumbs", () => {
