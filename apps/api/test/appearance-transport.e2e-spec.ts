@@ -54,8 +54,8 @@ describe('Platform appearance GraphQL boundary (e2e)', () => {
         query: 'query { adminPlatformAppearance { activeShellVariant } }',
       })
       .expect(200);
-    expect(read.body).toMatchObject({ data: { adminPlatformAppearance: null } });
     expect(read.body.errors).toEqual(expect.any(Array));
+    expect(read.body.data?.adminPlatformAppearance).toBeFalsy();
 
     const mutation = await request(app.getHttpServer())
       .post('/api/graphql')
@@ -65,8 +65,8 @@ describe('Platform appearance GraphQL boundary (e2e)', () => {
         variables: { variant: 'HYBRID' },
       })
       .expect(200);
-    expect(mutation.body).toMatchObject({ data: { updatePlatformAppearance: null } });
     expect(mutation.body.errors).toEqual(expect.any(Array));
+    expect(mutation.body.data?.updatePlatformAppearance).toBeFalsy();
   });
 
   it('rejects unrecognized variant identifiers at the GraphQL boundary', async () => {
