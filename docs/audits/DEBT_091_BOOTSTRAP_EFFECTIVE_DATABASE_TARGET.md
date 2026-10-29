@@ -1,6 +1,6 @@
 # DEBT-091 — Bootstrap effective database target guard
 
-Date: 2026-10-29. Status: OPEN; separate correction not authorized.
+Date: 2026-10-29. Status: owner-approved separate correction; candidate verification/acceptance open.
 Scope: development bootstrap safety, discovered during DEBT-031 D7 review.
 
 ## Confirmed evidence
@@ -37,7 +37,7 @@ primary effective coordinates were independently verified local. Prisma migrate
 engine URL interpretation and real deploy/seed were deliberately not executed;
 do not claim that migration itself reached an external database.
 
-## Proposed separate package
+## Approved separate package
 
 Review a strict URL query policy before install/up/deploy/seed, preserving the
 generated schema=public URL and reviewed legitimate local options. Fail closed
@@ -46,7 +46,11 @@ changing user configuration. Characterize API and Worker file/process layers,
 encoded/duplicate query keys and supported connection options. Use virtual or
 stubbed commands and driver metadata; no remote connection is required.
 
-Runtime/script changes, regressions and full quality acceptance require a
-separate owner-approved package. DEBT-031 remains open routeM; DEBT-012/030/032
+Owner approved the separate package and exact policy: no query or only literal
+?schema=public; other parameters, duplicates and fragments are rejected.
+Candidate [PR110](https://github.com/clearfixx/dss-universe/pull/110), head503a6ae,
+implements the pure policy and six passing isolated regressions in its own branch.
+Full local gate and CI are running; acceptance remains open. Candidate source is
+not imported into this D7 review branch. DEBT-031 remains open routeM; DEBT-012/030/032
 scoped readiness does not waive arbitrary override safety. No production UI,
 scoring rule, database migration or service restart is included here.
