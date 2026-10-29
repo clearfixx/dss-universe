@@ -1,11 +1,32 @@
 # D7 — Baseline release review
 
 Date: 2026-10-22. Updated: 2026-10-29. Branch: `debt/d7-release-gate`.
-Current accepted baseline: `5d6db1daa4492d641a46b432c76eb8cc727c9734`.
+Current accepted baseline: `701cb870dbe96ec32e824b2076fa5a17bca1d857`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
 
-## 2026-10-29 dev startup acceptance and current Mailpit/security checkpoint
+## 2026-10-29 accepted security patch and Mailpit integration
+
+Owner accepted DEBT-089 PR107 head56ed7da, merged701cb87 at02:51:59UTC.
+The exact head's CI5/5 and full local gate0 are verified: coverage8/8,
+API1466/1466, E2E686/686 across64 suites without skips, build6/6, Web15/15
+without retries, strict audit0 high/critical. The patch changes only vulnerable
+systeminformation5.x resolution to5.33.16 plus actual-path regressions/docs;
+the earlier negative floor assertion and failed Mailpit audit are retained.
+Local evidence D6 node_modules/.cache/debt089-gate-proof.json records hashes
+listed in the earlier checkpoint below. No new exception or remote exploit
+claim, architecture/runtime-ownership change, migration or UI change.
+
+Accepted main701cb87 is now integrated into this D7 branch. Mailpit PR106
+integration heada24bb2a includes accepted107; primary frozen dependencies were
+updated and the own dev process restarted. Its own full gate/CI is running;
+neither accepted107's gate nor working host protocols substitute for that gate.
+The current inventory is89 IDs001–089 in accepted-register history; this is not
+89 resolved debts. Mailpit acceptance, all007 C/D, remaining Q/O/M/R decisions,
+final D7 full gate and stack audit remain open. This documentation reconciliation
+does not authorize Phase11 or import unaccepted Mailpit candidate source.
+
+## Earlier 2026-10-29 checkpoint before PR107 acceptance
 
 Owner accepted DEBT-088 PR105 headb0aabaa, merged5d6db1d at01:07:40UTC.
 Actual primary root pnpm dev works on3200/3201: Web200, API readiness200,

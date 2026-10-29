@@ -22,6 +22,26 @@ active package safe and buildable.
 
 ## Register
 
+2026-10-29 latest override: owner accepted security PR10756ed7da, merged701cb87
+at02:51:59UTC. CI5/5, local full gate0, audit0 high/critical, E2E686/686 and
+Web15/15 support this scoped patch. Accepted main now includes the new089 entry.
+Mailpit host recovery remains operationally verified; PR106 integration head
+a24bb2a includes accepted107 and is undergoing its own new full gate/CI.
+Its earlier31b8e1c security failure remains preserved. D7 acceptance remains
+open; no unaccepted Mailpit implementation is imported into this review branch.
+
+### DEBT-089 — systeminformation Windows command injection (High, RESOLVED scoped patch)
+
+Mailpit PR106's gate and GitHub audit identify GHSA-3f7j-7jwc-fxfj in resolved
+systeminformation5.33.15. Upstream fixes it in5.33.16. A separate patch-only
+dependency package uses the owner's safe patch/minor authorization; audit rules
+and the existing braces exception remain unchanged. See
+[scope and evidence](DEBT_089_SYSTEMINFORMATION_SECURITY.md). Owner accepted PR10756ed7da, merged701cb87 at02:51:59UTC: CI5/5, strict
+audit0 high/critical and local full gate0, E2E686/686, Web15/15 without retries.
+Mailpit integration head a24bb2a still needs its own full verification/acceptance.
+
+Earlier October29 checkpoint before PR107 acceptance:
+
 2026-10-29 current override: accepted main5d6db1d includes DEBT-088 PR105.
 Mailpit host SMTP/UI is now operationally recovered on loopback12525/18025;
 same image/volume, two original messages/unread2 and ID fingerprint retained.
@@ -67,14 +87,14 @@ on identical code, E2E658/658, Web15/15. First-failure trace/screenshot/CI uploa
 are now integrated; original red evidence and natural-failure attribution limits
 remain. No unaccepted runtime/service change or D7 acceptance is authored here.
 
-D7 review now integrates accepted main `5d6db1d`; the original baseline was
+D7 review now integrates accepted main `701cb87`; the original baseline was
 `f118d82`. See
 [current evidence and limits](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079/080.
 D6 acceptance does not
 automatically resolve unrelated OPEN findings.
 
-[D7 individual review routing](../audits/D7_DEBT_DISPOSITION_MATRIX.md) maps all88 accepted-register IDs plus confirmed candidate089
+[D7 individual review routing](../audits/D7_DEBT_DISPOSITION_MATRIX.md) maps all89 accepted-register IDs
 exactly once, distinguishing accepted scoped corrections from partial
 evidence, remaining review and unresolved decisions. It is not a new status model
 or a declaration that every debt has been reviewed/closed.
