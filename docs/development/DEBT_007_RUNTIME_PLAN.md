@@ -198,6 +198,11 @@ content as failure diagnostics.
 
 ## Implementation packages and acceptance
 
+Current C design/ordering characterization is in
+[the consumer proposal](DEBT_007_CONSUMER_DESIGN.md), based on accepted maincc39080.
+It separates queue publication from consumption and records DEBT-090 as an open
+owner-policy prerequisite. Proposed sub-stages do not authorize runtime changes.
+
 | Package | Scope                                                   | Required evidence                                                                                     |
 | ------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | A       | Minimal owner runtime assemblies and headless lifecycle | Provider graph, API provider identity, shutdown and no unrelated startup                              |

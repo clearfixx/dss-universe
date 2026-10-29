@@ -1,9 +1,14 @@
 /**
- * DSS Universe — Gamification Delivery Characterization
- * File: apps/api/test/gamification-delivery-characterization.e2e-spec.ts
- * Purpose: Verify existing Points rollback and replay on a migrated owned schema.
- * Ownership: test-only AppModule assembly, not production event dispatch.
- * Invariants: disposable DB, real ledger/Audit/Outbox, no queue or formula changes.
+ * ===============================================================
+ * 🚀 DSS Universe
+ * 📦 Module: Gamification Delivery Characterization
+ * 📄 File: apps/api/test/gamification-delivery-characterization.e2e-spec.ts
+ * 🎯 Purpose: Records existing owner rollback, ordering and replay boundaries.
+ * 🧠 Responsibilities: Exercises real Points/Achievements evidence in a migrated owned schema.
+ * 🏗️ Architecture: Test-only AppModule assembly; no automatic event dispatch.
+ * ⚠️ Important: Characterized legacy behavior is not the desired consumer contract.
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
@@ -16,12 +21,14 @@ import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/core/database';
 import { OutboxWriterService } from '../src/core/events';
 import { CommunityPointsService } from '../src/modules/community-points/application/services/community-points.service';
+import { AchievementsService } from '../src/modules/achievements/application/services/achievements.service';
 import { createIsolatedApiSchemaFixture } from './helpers/migrated-api-schema.fixture';
 
 describe('Gamification delivery boundaries (characterization, not automatic wiring)', () => {
   let fixture: Awaited<ReturnType<typeof createIsolatedApiSchemaFixture>>;
   let app: INestApplication;
   let points: CommunityPointsService;
+  let achievements: AchievementsService;
   let outbox: OutboxWriterService;
   beforeAll(async () => {
     fixture = await createIsolatedApiSchemaFixture();
@@ -32,6 +39,7 @@ describe('Gamification delivery boundaries (characterization, not automatic wiri
     app = module.createNestApplication();
     await app.init();
     points = app.get(CommunityPointsService);
+    achievements = app.get(AchievementsService);
     outbox = app.get(OutboxWriterService);
   }, 60000);
   afterEach(() => jest.restoreAllMocks());
@@ -136,5 +144,113 @@ describe('Gamification delivery boundaries (characterization, not automatic wiri
       duplicate: true,
     });
     expect(statuses).toHaveLength(2);
+  });
+
+  it('retains Points source revocation before a late original without a synthetic debit', async () => {
+    const input = await event();
+    const sourceId = randomUUID();
+    const original = {
+      ...input,
+      aggregateType: 'ReputationEntry',
+      aggregateId: sourceId,
+    };
+    const reversal: IntegrationEventJob = {
+      ...input,
+      eventId: randomUUID(),
+      eventName: 'reputation.direct.reversed.v1',
+      payload: { reversesEntryId: sourceId },
+    };
+    const userId = (input.payload as { authorId: string }).authorId;
+    await expect(points.consume(reversal)).resolves.toMatchObject({
+      status: 'AWARDED',
+      entry: null,
+    });
+    expect(
+      await fixture.prisma.communityPointEntry.count({ where: { userId } }),
+    ).toBe(0);
+    expect(
+      await fixture.prisma.communityPointRevokedSource.findUnique({
+        where: {
+          sourceType_sourceId: { sourceType: 'ReputationEntry', sourceId },
+        },
+      }),
+    ).toMatchObject({ sourceEventId: reversal.eventId });
+    await expect(points.consume(original)).resolves.toMatchObject({
+      status: 'IGNORED',
+      entry: null,
+    });
+    await expect(points.consume(original)).resolves.toMatchObject({
+      status: 'DUPLICATE',
+      entry: null,
+    });
+    expect(
+      await fixture.prisma.communityPointEntry.count({ where: { userId } }),
+    ).toBe(0);
+  });
+
+  it('characterizes Achievements late-original award after empty rollback, then explicit rollback replay', async () => {
+    const input = await event();
+    const userId = (input.payload as { authorId: string }).authorId;
+    const key = randomUUID();
+    const definition = await fixture.prisma.achievementDefinition.create({
+      data: {
+        key,
+        name: key,
+        slug: key,
+        color: '#123456',
+        badge: 'synthetic',
+        createdById: userId,
+        updatedById: userId,
+      },
+    });
+    const rule = await fixture.prisma.achievementRule.create({
+      data: {
+        achievementId: definition.id,
+        eventName: input.eventName,
+        recipientPayloadKey: 'beneficiaryId',
+        createdById: userId,
+        updatedById: userId,
+      },
+    });
+    const original = { ...input, payload: { beneficiaryId: userId } };
+    const rollback: IntegrationEventJob = {
+      ...input,
+      eventId: randomUUID(),
+      eventName: 'synthetic.source.reversed.v1',
+      payload: {
+        reversedSourceType: input.aggregateType,
+        reversedSourceId: input.aggregateId,
+      },
+    };
+    await expect(achievements.consume(rollback)).resolves.toEqual([]);
+    await expect(achievements.consume(original)).resolves.toMatchObject([
+      { ruleId: rule.id, status: 'AWARDED', award: { revocation: null } },
+    ]);
+    const awarded = await fixture.prisma.achievementAward.findUniqueOrThrow({
+      where: {
+        achievementId_sourceEventId: {
+          achievementId: definition.id,
+          sourceEventId: original.eventId,
+        },
+      },
+      include: { revocation: true },
+    });
+    expect(awarded.revocation).toBeNull();
+    await expect(achievements.consume(rollback)).resolves.toMatchObject([
+      { ruleId: rule.id, status: 'IGNORED', award: { id: awarded.id } },
+    ]);
+    await expect(achievements.consume(original)).resolves.toMatchObject([
+      { ruleId: rule.id, status: 'DUPLICATE', award: null },
+    ]);
+    expect(
+      await fixture.prisma.achievementAward.count({
+        where: { achievementId: definition.id },
+      }),
+    ).toBe(1);
+    expect(
+      await fixture.prisma.achievementAwardRevocation.count({
+        where: { awardId: awarded.id },
+      }),
+    ).toBe(1);
   });
 });

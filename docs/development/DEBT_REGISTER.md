@@ -21,6 +21,16 @@ active package safe and buildable.
 
 ## Register
 
+### DEBT-090 — Achievements rollback before late original (High, OPEN policy gap)
+
+DEBT-007 C characterization on migrated owned schema confirms empty source
+rollback followed by a matching original produces an active Achievement until
+rollback is replayed. This does not prove a current automatic-delivery incident.
+Points already retains an absent source's revocation; Achievements must not inherit
+that guarantee by assumption. Separate owner-local policy/correction approval is
+required before reliable out-of-order consumer acceptance; no runtime fix here.
+[Evidence and scope](DEBT_090_ACHIEVEMENT_ROLLBACK_ORDER.md).
+
 ### DEBT-089 — systeminformation Windows command injection (High, correction candidate)
 
 Mailpit PR106's gate and GitHub audit identify GHSA-3f7j-7jwc-fxfj in resolved
