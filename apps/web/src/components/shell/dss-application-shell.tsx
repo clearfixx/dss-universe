@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
 
 import {
   DEFAULT_SHELL_VARIANT,
-  MODULE_NAVIGATION,
+  visibleModules,
   breadcrumbsForPath,
   currentModule,
   moduleSidebarItems,
@@ -36,10 +36,10 @@ import {
   type ShellVariant,
 } from "./shell-navigation";
 
-function ModuleLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+function ModuleLinks({ pathname, hasSession, onNavigate }: { pathname: string; hasSession: boolean; onNavigate?: () => void }) {
   return (
     <nav aria-label="Модулі DSS Universe" className="space-y-1">
-      {MODULE_NAVIGATION.map(({ href, label, icon: Icon }) => (
+      {visibleModules(hasSession).map(({ href, label, icon: Icon }) => (
         <Link
           key={href}
           href={href}
@@ -61,14 +61,17 @@ function ModuleLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: 
 function GlobalNavigation({
   pathname,
   variant,
+  hasSession,
   onOpenLauncher,
 }: {
   pathname: string;
   variant: ShellVariant;
+  hasSession: boolean;
   onOpenLauncher: () => void;
 }) {
-  const featured = MODULE_NAVIGATION.filter((item) => item.featured);
-  const inline = variant === "HORIZONTAL_NAVIGATION" ? MODULE_NAVIGATION : featured;
+  const modules = visibleModules(hasSession);
+  const featured = modules.filter((item) => item.featured);
+  const inline = variant === "HORIZONTAL_NAVIGATION" ? modules : featured;
 
   return (
     <div className="hidden min-w-0 items-center gap-1 lg:flex">
@@ -182,7 +185,7 @@ export function DssApplicationShell({
         <Link href="/" className="shrink-0 text-sm font-semibold tracking-[0.12em] text-slate-100 sm:text-base">
           DSS UNIVERSE
         </Link>
-        <GlobalNavigation pathname={pathname} variant={variant} onOpenLauncher={() => setOpen(true)} />
+        <GlobalNavigation pathname={pathname} variant={variant} hasSession={Boolean(viewer)} onOpenLauncher={() => setOpen(true)} />
         <div className="ml-auto flex items-center gap-2">
           {viewer ? (
             <>
@@ -248,7 +251,7 @@ export function DssApplicationShell({
             <SheetDescription className="text-left text-xs">Оберіть доступний розділ платформи.</SheetDescription>
           </SheetHeader>
           <div className="max-h-[calc(100dvh-5rem)] overflow-y-auto px-3 py-4">
-            <ModuleLinks pathname={pathname} onNavigate={() => setOpen(false)} />
+            <ModuleLinks pathname={pathname} hasSession={Boolean(viewer)} onNavigate={() => setOpen(false)} />
             {hasSidebar && (
               <div className="mt-5 border-t border-[color:var(--shell-divider)] pt-2">
                 <ModuleSidebar pathname={pathname} onNavigate={() => setOpen(false)} />
