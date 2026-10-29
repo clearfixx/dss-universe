@@ -76,6 +76,7 @@ const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     Permission.PermissionsRead,
     Permission.PermissionsManage,
 
+    Permission.AdminCommandDeckAccess,
     Permission.SystemSettingsRead,
     Permission.SystemSettingsUpdate,
     Permission.MediaQuarantineManage,
