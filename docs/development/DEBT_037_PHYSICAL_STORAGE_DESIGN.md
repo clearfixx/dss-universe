@@ -384,6 +384,62 @@ describes the two access checks and privilege disabling. This probe is evidence
 for the candidate ACL boundary only, not a ready backend or claim about every
 Windows token, filesystem or reparse tag. No production binding is selected.
 
+### Directory sharing cannot simply replace ACL admission
+
+A follow-up native mutation probe reduced directory-handle requested access from
+0x1000e3 to0x100081 (synchronize, read-attributes and list-directory). With only
+READ sharing, root-relative creation and writing of the staged file succeeded,
+but publishing that same source handle failed with NTSTATUS C0000043
+(sharing violation). This failed candidate must not be presented as a working
+drop-in confinement mechanism or hidden behind a retry loop.
+
+Keeping the minimal requested directory access and restoring READ|WRITE sharing
+made the complete existing mutation assertions pass: hardlink read rejection,
+source binding protection, source-handle publication, outside-alias preservation,
+junction-destination rejection, failed-publication cleanup and regular deletion.
+The unsafe-ACL reparse counterexample above therefore remains relevant. This
+supports least-privilege requested handles plus explicit ACL admission, not
+confinement from sharing flags alone.
+
+Probe sources/report in system temp: dss037-read-anchor.cs/.ps1/.json.
+Successful report time2026-10-29T10:20:55.4539111Z; raw report SHA256:
+e956d2546f7f0898e66b10c2a7bdb42c32bf58291f434436da3ed4b11591ae32.
+The read-only-share failure is retained as a separate observed outcome, not
+counted as a pass. These are flat-leaf primitives, not an integrated hierarchical
+backend or proof of cross-process concurrency, root bootstrap or durability.
+
+## Maintained Linux hierarchy characterization
+
+`scripts/characterization/storage-linux-hierarchy.py` now preserves the
+different-UID scenario as reproducible source with a File Passport. Its controller
+requires an explicit disposable-probe flag, Docker marker, read-only rootfs and
+a tmpfs mounted at /tmp before creating fixtures. Python optimization is rejected
+explicitly, so disabled assertions cannot turn missing checks into a pass.
+
+It ran successfully using the same cached image digest recorded above, with
+`--pull=never --network none --read-only --user 0:0`, a private noexec/nosuid16MiB
+tmpfs and only the script bind-mounted read-only at /probe.py. Environment:
+`DSS_DISPOSABLE_STORAGE_PROBE=1`, `PYTHONDONTWRITEBYTECODE=1`.
+Entrypoint: `/usr/bin/python3 /probe.py`. No application data was mounted.
+Source SHA256:
+a7ec0ed37de7f0ba3181f2c294aceff62af10e62cf90dba71b54eaadea3457ec.
+
+Both child roles verified zero effective capabilities after dropping supplementary
+groups, GID and UID. UID65534 proved real namespace write access; relocation of
+both service-owned directory levels failed with EPERM1, while the nonsticky
+control allowed relocation. UID5050 rejected an attacker-owned prefix, a
+service-owned nonsticky writable directory and a preexisting symlink, then
+successfully created the expected bytes through the already-held nested directory
+descriptor. The attack ran after descriptors were acquired. A separate `-O`
+negative control exited1 before fixture setup with the explicit optimization
+guard. No runtime containment correction or new CI coverage is claimed.
+
+The directory-admission predicate is characterization of owner/mode/sticky
+semantics only. It is not the complete production policy: trusted-root bootstrap,
+mount transitions, open capabilities, file/hardlink admission, snapshots and
+platform/filesystem support still need their own proofs. The current CI workflow
+does not automatically run these new opt-in native characterization scripts.
+
 ## Next proofs and acceptance
 
 1. Prove the chosen root-relative primitives in Windows and Linux synthetic
