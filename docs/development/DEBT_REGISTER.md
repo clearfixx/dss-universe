@@ -21,6 +21,15 @@ active package safe and buildable.
 
 ## Register
 
+### DEBT-089 — systeminformation Windows command injection (High, correction candidate)
+
+Mailpit PR106's gate and GitHub audit identify GHSA-3f7j-7jwc-fxfj in resolved
+systeminformation5.33.15. Upstream fixes it in5.33.16. A separate patch-only
+dependency package uses the owner's safe patch/minor authorization; audit rules
+and the existing braces exception remain unchanged. See
+[scope and evidence](DEBT_089_SYSTEMINFORMATION_SECURITY.md). Full quality/CI,
+owner acceptance and downstream Mailpit integration remain open.
+
 ### DEBT-088 — Host-reserved dev listener ports (Medium, user-requested correction)
 
 User's root pnpm dev fails with Web EACCES3000; both3000/3001 fall inside current
