@@ -1,9 +1,10 @@
-import { ShellVariant } from '@prisma/client';
+import { SHELL_VARIANTS as ShellVariant } from './domain/appearance.types';
+import type { ShellVariant as ShellVariantType } from './domain/appearance.types';
 
 import type { AuditWriterService } from '@api/core/audit';
 import type { PrismaService } from '@api/core/database';
 
-import { AppearanceRepository } from './appearance.repository';
+import { AppearanceRepository } from './infrastructure/appearance.repository';
 
 describe('AppearanceRepository', () => {
   it('falls back to launcher when the singleton does not exist', async () => {
