@@ -19,6 +19,13 @@ coverage; do not silently exclude them from the selected mechanism's claim.
 Process/kernel compromise cannot be solved by a path helper. The implementation
 must state the actual attacker permissions and supported local filesystems.
 
+Owner clarification2026-10-29: the local attacker is a different OS user with
+write access to uploads, not another process using the DSS service UID/token.
+This does not waive physical containment or assume uploads has only trusted
+writers. A dedicated service identity and enforceable private control/staging
+permissions are part of the candidate boundary. Root/admin-equivalent compromise
+and theft of the service identity are not certified by these probes.
+
 ## Current IO inventory
 
 | Owner/adapter                          | Actual operations                                                                                                  | Current gap                                                                                     |
@@ -119,6 +126,73 @@ the actual produced object, hard-link handling and protected staging identity.
 Root initialization, data migration and logical-key/file-manager compatibility
 remain separate review gates. No layout or migration is selected by these probes.
 
+## Mutation and private-staging characterizations
+
+### Linux different-identity writer
+
+A disposable tmpfs probe used service uid5050 and attacker uid65534. Data-root
+mode0777 allowed real attacker-created destination symlinks. Staging mode0700
+and a mode0755 root-owned anchor parent prevented the attacker from unlinking/
+replacing staged files or moving either protected root (EACCES13).
+
+Directory-relative rename from protected staging replaced destination symlink
+and hardlink entries without modifying the outside sentinel. The reader rejected
+hard links/nonregular objects before payload reads. Direct unlink removed a
+symlink entry without following its target. This proves those primitives under
+the tested permission model; it does not certify root bootstrap, other filesystems,
+snapshot/checksum semantics, durability or the production binding.
+
+System-temp source/captured report: dss-037-linux-vault.py and
+dss-037-linux-vault-result.json. Canonical report SHA256 (sorted-key Python JSON
+of its report field):
+ba19152e692ad359bba74735645fa4aa4788625f2fc06690d00bb199812a9064.
+No image download, external network, host mutation or DSS data access occurred.
+The cached Python's unnecessary file capability and default noexec runtime tmpfs
+initially blocked probe startup; a private disposable runtime copy fixed that.
+Fixture chmod/chown ordering and fixture reads were corrected without adding
+CAP_FOWNER/DAC_OVERRIDE or relaxing assertions. Root only prepared fixtures and
+dropped to the actual unprivileged service/attacker UIDs for tested operations.
+
+### Windows source-handle publication and cleanup
+
+The x64 temp-only native probe created a staged file by directory-relative
+NtCreateFile, wrote/flushed it and published the same source handle into the
+destination root. A hostile staged-name rename attempt failed with32 while the
+source was held. A hardlinked destination was replaced without changing its
+outside alias; reading that hardlink before replacement was rejected before bytes.
+Publication over a directory junction failed; its staged object was removed by
+its owned handle. A normal published file was likewise deleted by handle. The
+outside sentinel stayed unchanged. ACL provisioning, root initialization,
+snapshots, other builds/filesystems and crash durability remain unproved.
+
+The initial Win32 SetFileInformationByHandle call returned error87; that exact
+wrapper-call failure is retained, not declared a universal API limitation. The
+successful probe uses direct
+[NtSetInformationFile](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntsetinformationfile)
+FileRenameInformation10 and FileDispositionInformation13. Source identity and
+outside-byte assertions were unchanged. Linux replacement semantics are described
+in the [rename contract](https://man7.org/linux/man-pages/man2/rename.2.html);
+atomic publication is not a claim of power-loss durability.
+
+System-temp sources/report: dss-037-windows-publish.cs/.ps1/.json.
+Report checkedAt2026-10-29T09:49:13.8958210Z; file SHA256:
+4239692fddfacc42664cf3bd89073439619c4f4ce5fc7cc19d794b1f3e21c610.
+
+### Layout selection remains open
+
+These flat-leaf probes do not approve a physical layout migration. With the
+owner-confirmed different-identity threat model, investigate whether enforced
+service ownership/sticky-directory rules and native no-follow IO can protect the
+existing hierarchy. That could avoid relocating every object. Verify actual
+attacker rename rights, fail-closed ownership/mode checks and Windows ACL/handle
+behavior first; do not just assume protected namespace metadata.
+If preserving hierarchy cannot satisfy the required guarantees, review the flat
+mapping, migration and file-manager compatibility explicitly before implementation.
+Existing cross-platform development support must not be silently narrowed:
+Darwin/macOS requires corresponding proof or an explicit owner disposition before
+selecting a backend that would make it unsupported. Current local probes cover
+Windows and Linux only.
+
 ## Documented platform constraints
 
 [Pinned Node24 filesystem documentation](https://nodejs.org/download/release/v24.18.0/docs/api/fs.html)
@@ -178,6 +252,64 @@ even though it need not replace the Node/Nest stack. Before selecting one,
 verify compiler/runtime availability, pinned artifacts, startup readiness,
 cleanup, worker sharing and supported filesystems. No new dependency or binary
 has been installed in this package. Native runtime implementation is not started.
+
+## Different-UID hierarchical relocation characterization
+
+On 2026-10-29 a disposable Linux tmpfs probe used the cached image
+`sha256:5d9624a93634d1c5e595619cc57b1d330758120d1baf445fa97300c0c1fc3c0a`,
+with no network, project mount or writable container root filesystem. A root
+fixture controller created service-owned directories (UID5050, mode1777), then
+forked an attacker with UID65534, empty supplementary groups and verified
+`CapEff=0000000000000000`. The attacker successfully created a file and symlink
+in uploads, proving actual namespace write access. Renaming both a service-owned
+parent and its service-owned nested directory failed with EPERM (errno1).
+The same attacker successfully moved a service-owned child under a mode0777
+nonsticky control directory. All assertions passed; kernel was
+`6.18.54.1-microsoft-standard-WSL2`.
+
+This supports investigating the existing hierarchical layout with enforced
+service ownership and sticky protection on writable ancestors. It does not
+select that mechanism or certify root initialization, metadata verification,
+attacker-owned prefixes, Windows ACLs, macOS, other filesystems, source snapshots,
+publication, deletion or crash durability. A held directory descriptor alone
+remains insufficient: the earlier relocation counterexample still applies to
+unprotected ancestors. Startup and each admitted chain must enforce the actual
+ownership/mutation boundary rather than infer it from a pathname.
+
+The first unprivileged Docker access was denied by the local named-pipe ACL;
+the authorized isolated invocation completed with exit0. No DSS runtime, dev
+database, host filesystem permissions or existing service was changed.
+
+## Windows ACL admission requirements to prove
+
+The [Windows file security contract](https://learn.microsoft.com/en-us/windows/win32/fileio/file-security-and-access-rights)
+maps generic write to write-data, append-data, write-EA and write-attributes.
+Consequently, granting ordinary generic Write to a namespace writer is not the
+same as granting only permission to add entries. The
+[specific rights contract](https://learn.microsoft.com/en-us/windows/win32/fileio/file-access-rights-constants)
+distinguishes directory FILE_ADD_FILE/FILE_ADD_SUBDIRECTORY from FILE_DELETE_CHILD,
+FILE_WRITE_ATTRIBUTES, WRITE_DAC and WRITE_OWNER. Existing handle rename barriers
+do not constitute proof that every metadata/reparse mutation is blocked.
+
+Candidate admission must inspect the opened directory's owner and effective
+security boundary, including inherited ACEs and all attacker token groups.
+Untrusted principals may have entry-creation rights, while service-owned anchors
+must exclude untrusted owner/DACL changes, destructive child rights and metadata
+mutation rights needed for redirection. Do not equate a matching service owner
+SID with a safe DACL. A parent-only ACL inspection is insufficient: Windows
+documents per-object authorization and that rename/move does not automatically
+assign a new default security descriptor. Private staging therefore needs an
+explicit descriptor carried through publication; public object permissions and
+API/Worker service identity sharing must be designed together.
+
+These are design requirements derived from documented rights, not completed ACL
+runtime tests. A Windows characterization must exercise actual restricted writer
+tokens against synthetic directories, including generic-write and destructive
+rights controls, inherited grants, attacker-owned prefixes and reparse mutation
+while service handles remain open. It must not create host users, modify project
+uploads ACLs or silently grant broader privileges merely to make a probe pass.
+Production provisioning, existing-data permission repair and any new native
+distribution/build dependency require a reviewable implementation plan first.
 
 ## Next proofs and acceptance
 
