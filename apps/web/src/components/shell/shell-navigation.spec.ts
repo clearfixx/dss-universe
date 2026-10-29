@@ -26,6 +26,8 @@ describe("application shell navigation contracts", () => {
   it("keeps module routes unique and identifies nested routes", () => {
     const hrefs = MODULE_NAVIGATION.map((item) => item.href);
     expect(new Set(hrefs).size).toBe(hrefs.length);
+    expect(hrefs).not.toContain("/research");
+    expect(hrefs).not.toContain("/academy");
     expect(currentModule("/newsroom/new")?.href).toBe("/newsroom");
     expect(currentModule("/news/en/article")?.href).toBe("/news");
     expect(currentModule("/unknown")).toBeNull();
@@ -37,7 +39,7 @@ describe("application shell navigation contracts", () => {
       "/newsroom",
       "/newsroom/new",
     ]);
-    expect(moduleSidebarItems("/research")).toHaveLength(1);
+    expect(moduleSidebarItems("/media")).toHaveLength(1);
     expect(moduleSidebarItems("/unknown")).toEqual([]);
   });
 
