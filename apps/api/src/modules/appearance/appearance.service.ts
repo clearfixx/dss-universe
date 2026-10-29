@@ -1,4 +1,9 @@
-import { BadRequestException, ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 
 import { Permission, PermissionsService } from '@api/core/authorization';
 
@@ -24,7 +29,10 @@ export class AppearanceService {
     return this.repository.get();
   }
 
-  async update(actorId: string, variant: ShellVariant): Promise<AppearanceSettings> {
+  async update(
+    actorId: string,
+    variant: ShellVariant,
+  ): Promise<AppearanceSettings> {
     if (!Object.values(SHELL_VARIANTS).includes(variant)) {
       throw new BadRequestException('Unsupported Shell Variant.');
     }
