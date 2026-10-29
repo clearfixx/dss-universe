@@ -22,6 +22,15 @@ active package safe and buildable.
 
 ## Register
 
+### DEBT-091 — Bootstrap effective database target overrides (High, OPEN)
+
+Isolated current-source bootstrap control flow accepts local URL authority with
+query host/port overrides and reaches stubbed deploy/seed; installed pg metadata
+resolves a different effective target. Seed uses PrismaPg. No real command,
+connection, migration or seed ran; migrate-engine interpretation is untested and
+current primary effective coordinates remain local. Separate guard-policy and
+test package requires approval. [Evidence and limits](../audits/DEBT_091_BOOTSTRAP_EFFECTIVE_DATABASE_TARGET.md).
+
 2026-10-29 current checkpoint: owner accepted design/characterization PR108
 cd40325, merged as ddb685d. CI5/5 and local full gate0 cover E2E688/688
 and Web15/15 without retries. The owner approved the DEBT-090 new-cycle

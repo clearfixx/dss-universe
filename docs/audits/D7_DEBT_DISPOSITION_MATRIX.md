@@ -99,8 +99,8 @@ DEBT-066 mapping is approved and implemented in PR89 `a528c90`, CI5/5; local
 full gate and integration with accepted PR81 remain open. See the latest
 [acceptance checkpoint](D7_BASELINE_RELEASE_REVIEW.md) before older row text.
 
-This covers accepted-register IDs001–090 exactly once.
-It does not say all90 entries are resolved or fully reviewed. The [register](../development/DEBT_REGISTER.md)
+This covers accepted-register IDs001–090 plus confirmed review finding091 exactly once.
+It does not say all91 entries are resolved or fully reviewed. The [register](../development/DEBT_REGISTER.md)
 retains authoritative implementation/decision status; the categories below are
 review routing, not new debt statuses. Detailed inspected evidence and limitations
 are in the [D7 review](D7_BASELINE_RELEASE_REVIEW.md). A historical green D6 gate
@@ -209,6 +209,7 @@ does not override missing risk decisions or accept an unmerged candidate.
 | DEBT-088 | C      | Owner accepted PR105b0aabaa, merge5d6db1d; actual startup/readiness/GraphQL/CORS verified, CI5/5 and local full gate0, E2E686/686, Web15/15. Earlier sleep-interrupted raw log retained; no broad stability waiver.                                                                                       |
 | DEBT-089 | C      | Owner accepted PR10756ed7da/merge701cb87: patch-only dependency, audit0 high/critical, CI5/5/full gate0, E2E686/686, Web15/15. Mailpit integration subsequently accepted separately in PR106.                                                                                                             |
 | DEBT-090 | M      | Accepted PR108 characterization confirms legacy rollback ordering gap. Owner approved new legitimate cycles under current rules and rejecting late old-cycle restoration. Detailed C1 protocol PR109 and runtime correction remain unaccepted/unimplemented; no production incident or concurrency claim. |
+| DEBT-091 | O      | Isolated bootstrap guard accepts query host/port overrides while pg resolves a different target; stubbed deploy/seed reached, no real connection/migration. Separate correction approval required; see DEBT_091_BOOTSTRAP_EFFECTIVE_DATABASE_TARGET.md.                                                   |
 
 ## Execution order from this checkpoint
 
