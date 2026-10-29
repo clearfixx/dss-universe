@@ -3,6 +3,8 @@
 Date: 2026-10-29. Source baseline: accepted main289b24c.
 Status: WORKING DESIGN; inventory and Windows/Linux primitive characterization.
 No physical runtime correction, migration or final mechanism acceptance is claimed.
+The [implementation proposal](DEBT_037_IMPLEMENTATION_PLAN.md) separates physical
+capabilities, attempt-local snapshots, rollout and remaining acceptance proofs.
 
 ## Required outcome
 
