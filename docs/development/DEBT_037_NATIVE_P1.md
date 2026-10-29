@@ -92,3 +92,12 @@ was checked before selecting3.14.10; it lists Windows x64, macOS arm64 and Linux
 x64 artifacts for the current runner families. Only the CI build interpreter
 changes; the local existing3.12.14 remains. No platform/test skip or warning
 exception was added. The first failed run remains available as evidence.
+
+The first local full gate on3a68ee9 passed native13/13 but failed at storage
+coverage: Vitest also discovered the Node-runner suite and reported no Vitest
+tests in that file. Portable-key tests passed43/43. Storage's Vitest configuration
+now retains all defaults and excludes only native-probe/probe.test.cjs from that
+runner; the same native suite remains mandatory through native:verify before
+coverage and the three-platform CI matrix. This is runner ownership, not a test
+skip, reduced assertion or coverage waiver. The original failed full-gate log and
+result remain in system temp; a new full gate is required after the wiring fix.
