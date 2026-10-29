@@ -1,9 +1,49 @@
 # D7 — Baseline release review
 
-Date: 2026-10-22. Updated: 2026-10-28. Branch: `debt/d7-release-gate`.
-Current accepted baseline: `c6b541727a8ce2d53ae5b71867ab6508d0804256`.
+Date: 2026-10-22. Updated: 2026-10-29. Branch: `debt/d7-release-gate`.
+Current accepted baseline: `5d6db1daa4492d641a46b432c76eb8cc727c9734`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
+
+## 2026-10-29 dev startup acceptance and current Mailpit/security checkpoint
+
+Owner accepted DEBT-088 PR105 headb0aabaa, merged5d6db1d at01:07:40UTC.
+Actual primary root pnpm dev works on3200/3201: Web200, API readiness200,
+database/Redis/queues/Worker up, GraphQL and credentialed CORS verified. CI5/5;
+uninterrupted local quality:full exit0, coverage8/8/API1466/1466, E2E686/686
+without skips, build6/6, Web15/15 without retries. The gate began on632589a;
+only the test's leading Passport comment changed later, with executable body
+identity verified. Final b0aabaa CI E2E SHA256:
+18e9a8ffe11edb9a605f7af5bc7aa9cfcd43015392b245c8f3b8468d1f337128.
+Local E2E SHA256584945759a4344d18d91c72964775c2e581fda3fa331daa8e018ac00e33197a7.
+The failed prior run and Windows sleep17:41:41Z→20:32:24Z remain preserved;
+not every earlier Media teardown timeout is attributed to sleep. No new D7
+release gate or broad stability waiver follows from this scoped acceptance.
+
+OnOctober29 Mailpit-only recovery retained the same image and persistent volume,
+all two messages/unread2 and ID fingerprint65fe82afffd97b8c0849791c9dc71dd138cfbae0daf3d7be7718eb1c807b787a.
+Host loopback12525/18025 readyz200 and SMTP220/EHLO250/QUIT221 work without DATA;
+Worker-configured Nodemailer.verify succeeds. All other container IDs/exact
+StartedAt strings are unchanged. An initial PowerShell JSON date-conversion
+comparison error was corrected using exact ISO strings; no unrelated service
+was restarted. Named ignored SMTP env keys were aligned; the own dev process
+was restarted and readiness verified. The owner's untracked audit plan retains
+its original SHA256. Earlier empty-binding observations below are historical.
+
+[Mailpit PR106](https://github.com/clearfixx/dss-universe/pull/106), head31b8e1c,
+is operationally verified but NOT accepted: local full gate exits1 at security
+audit, also confirmed by CI. New high GHSA-3f7j-7jwc-fxfj affects resolved
+systeminformation5.33.15. [Separate PR107](https://github.com/clearfixx/dss-universe/pull/107),
+head56ed7da, changes only the vulnerable transitive dependency to5.33.16,
+actual consumer-path regressions and documentation. CI5/5, strict audit0 high/
+critical and local full gate0 (coverage8/8/API1466/1466, E2E686/686, Web15/15)
+support it; owner acceptance is still pending. CI E2E SHA256:
+a45fb624dc0ff37fe7bab844e45d3554de9094e98ca83f6e996722331874d537.
+Local E2E SHA2569a2b06a25c5e9d97c0228ea6de0882cd4de31621ddd7e6600d3a1982e0d90ce3.
+After acceptance and merge, PR106 needs integration and its own new full gate.
+No unaccepted candidate code is merged into this D7 review branch. Current
+inventory is89 known IDs:88 in accepted-register history plus candidate089.
+All remaining C/D, Q/O/M/R review and stack-audit/Phase11 boundaries remain.
 
 ## 2026-10-28 routing B acceptance and Mailpit port preflight
 
@@ -280,7 +320,7 @@ smoke cleanup. Missing October26 originals remain missing; DEBT-086 remains
 open. PR96 acceptance was pending at this checkpoint; the later explicit
 acceptance override above supersedes only that status.
 
-The current inventory is87 unique IDs, not87 completed corrections.
+At this earlier checkpoint the inventory was87 unique IDs, not87 completed corrections; the current89-ID inventory is stated above.
 
 ## 2026-10-27 detailed design acceptance and evidence-retention exception
 

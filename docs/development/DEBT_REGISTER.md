@@ -2,7 +2,7 @@
 
 > Status: Active
 >
-> Updated: 2026-10-28
+> Updated: 2026-10-29
 
 ## Purpose
 
@@ -21,6 +21,32 @@ active package safe and buildable.
 - `REJECTED` — reviewed and determined not to be debt.
 
 ## Register
+
+2026-10-29 current override: accepted main5d6db1d includes DEBT-088 PR105.
+Mailpit host SMTP/UI is now operationally recovered on loopback12525/18025;
+same image/volume, two original messages/unread2 and ID fingerprint retained.
+Other container IDs/StartedAt are unchanged; own dev process restarted and
+Worker-configured Nodemailer.verify passed without DATA. PR10631b8e1c remains
+unaccepted: its full gate exited1 on new high advisory GHSA-3f7j-7jwc-fxfj.
+Separate patch-only PR10756ed7da fixes systeminformation5.33.15→5.33.16 under
+the existing safe patch/minor permission. CI5/5 and local full gate0 support
+the candidate, but owner acceptance/merge is pending. After acceptance, PR106
+needs integration and its own new full gate. Neither candidate is imported
+into this documentation-only D7 branch. DEBT-089 is mapped via the candidate
+PR, not falsely described as an already merged register entry.
+
+### DEBT-088 — Host-reserved dev listener ports (Medium, RESOLVED scoped correction)
+
+User's root pnpm dev fails with Web EACCES3000; both3000/3001 fall inside current
+Windows exclusion2928–3027.3200/3201 are available. A thin Node launcher reads an isolated listener file
+before Next boots, permitting a local Web listener override without changing default ports,
+Next's normal dotenv precedence or UI. Local origins/API/email URLs must agree;
+no Windows reservation or dev DB is changed. See
+[scope and evidence](DEBT_088_DEV_PORT_READINESS.md). Owner accepted PR105b0aabaa, merged5d6db1d: actual
+startup/readiness/CORS verified, CI5/5, local full gate0, E2E686/686 and
+Web15/15 without retries. This is scoped acceptance; this does not fold the separate Mailpit task into B/C.
+
+Earlier 2026-10-28 checkpoint (superseded only by the current evidence below):
 
 2026-10-28 current-state reconciliation: owner accepted DEBT-007 plan PR100846dd94,
 merged625d1b9. The owner approved the persisted UTC createdAt
@@ -41,15 +67,15 @@ on identical code, E2E658/658, Web15/15. First-failure trace/screenshot/CI uploa
 are now integrated; original red evidence and natural-failure attribution limits
 remain. No unaccepted runtime/service change or D7 acceptance is authored here.
 
-D7 review now integrates accepted main `c6b5417`; the original baseline was
+D7 review now integrates accepted main `5d6db1d`; the original baseline was
 `f118d82`. See
 [current evidence and limits](../audits/D7_BASELINE_RELEASE_REVIEW.md).
 The original 78-entry inventory is not 78 completed reviews; D7 adds DEBT-079/080.
 D6 acceptance does not
 automatically resolve unrelated OPEN findings.
 
-[D7 individual review routing](../audits/D7_DEBT_DISPOSITION_MATRIX.md) maps all87
-unique IDs exactly once, distinguishing accepted scoped corrections from partial
+[D7 individual review routing](../audits/D7_DEBT_DISPOSITION_MATRIX.md) maps all88 accepted-register IDs plus confirmed candidate089
+exactly once, distinguishing accepted scoped corrections from partial
 evidence, remaining review and unresolved decisions. It is not a new status model
 or a declaration that every debt has been reviewed/closed.
 
