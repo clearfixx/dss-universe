@@ -31,6 +31,8 @@ export type ModuleNavigationItem = {
 export type ModuleNavigation = ModuleNavigationItem & {
   children: readonly ModuleNavigationItem[];
   featured?: boolean;
+  /** Presentation only. Server-side route guards remain authoritative. */
+  requiresSession?: boolean;
 };
 
 /**
@@ -43,6 +45,7 @@ export const MODULE_NAVIGATION: readonly ModuleNavigation[] = [
     href: "/command-deck",
     label: "Mission Control",
     icon: LayoutDashboard,
+    requiresSession: true,
     featured: true,
     children: [],
   },
@@ -57,6 +60,7 @@ export const MODULE_NAVIGATION: readonly ModuleNavigation[] = [
     href: "/newsroom",
     label: "Newsroom",
     icon: PenLine,
+    requiresSession: true,
     children: [{ href: "/newsroom/new", label: "Нова стаття", icon: PenLine }],
   },
   {
@@ -76,6 +80,7 @@ export const MODULE_NAVIGATION: readonly ModuleNavigation[] = [
     href: "/settings/profile",
     label: "Налаштування",
     icon: Settings,
+    requiresSession: true,
     children: [],
   },
 ] as const;
@@ -112,4 +117,9 @@ export function breadcrumbsForPath(pathname: string): readonly { href: string; l
     { href: activeModule.href, label: activeModule.label },
     ...(child ? [{ href: child.href, label: child.label }] : []),
   ];
+}
+
+/** Reduces dead-end links for guests, without substituting for API/route authorization. */
+export function visibleModules(hasSession: boolean): readonly ModuleNavigation[] {
+  return MODULE_NAVIGATION.filter((item) => hasSession || !item.requiresSession);
 }
