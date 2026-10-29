@@ -1,9 +1,13 @@
 import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
-import { ShellVariant, type PlatformAppearanceSettings } from '@prisma/client';
 
 import { Permission, PermissionsService } from '@api/core/authorization';
 
-import { AppearanceRepository } from './appearance.repository';
+import { AppearanceRepository } from './infrastructure/appearance.repository';
+import {
+  SHELL_VARIANTS,
+  type AppearanceSettings,
+  type ShellVariant,
+} from './domain/appearance.types';
 
 @Injectable()
 export class AppearanceService {
@@ -12,12 +16,12 @@ export class AppearanceService {
     private readonly permissions: PermissionsService,
   ) {}
 
-  get(): Promise<PlatformAppearanceSettings> {
+  get(): Promise<AppearanceSettings> {
     return this.repository.get();
   }
 
-  async update(actorId: string, variant: ShellVariant): Promise<PlatformAppearanceSettings> {
-    if (!Object.values(ShellVariant).includes(variant)) {
+  async update(actorId: string, variant: ShellVariant): Promise<AppearanceSettings> {
+    if (!Object.values(SHELL_VARIANTS).includes(variant)) {
       throw new BadRequestException('Unsupported Shell Variant.');
     }
     const access = await this.permissions.getAccessProfileByUserId(actorId);
