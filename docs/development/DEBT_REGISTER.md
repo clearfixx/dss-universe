@@ -766,6 +766,12 @@ Evidence: `docs/audits/D0_6_STORAGE_SECURITY_2026-10-10.md`.
 
 ### DEBT-037 — Physical storage containment threat model (Medium, OPEN, D2/D6)
 
+Owner decision2026-10-29: physical containment against hostile local symlink/
+junction substitution is required before Phase11; trusted-writers-only deferral
+is rejected. Separate design inventory and synthetic Windows characterization
+are recorded in [working physical storage design](DEBT_037_PHYSICAL_STORAGE_DESIGN.md).
+No native mechanism or runtime correction is selected/implemented yet.
+
 Lexical key validation cannot prevent a pre-existing symlink/junction or a local
 filesystem race from redirecting IO outside uploads. D0.6 assumes directories are
 application-controlled. There is no established remote exploit under this assumption.
