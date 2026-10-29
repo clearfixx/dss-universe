@@ -111,13 +111,23 @@ try {
   const infrastructure = parseEnv(readFileSync(resolve(root, ".env"), "utf8"));
   for (const folder of ["apps/api", "apps/worker"]) {
     const local = resolve(root, folder, ".env.local");
+    const fileEnvironment = parseEnv(
+      readFileSync(resolve(root, folder, ".env"), "utf8"),
+    );
     const env = {
-      ...parseEnv(readFileSync(resolve(root, folder, ".env"), "utf8")),
+      ...fileEnvironment,
       ...(folder === "apps/api" && existsSync(local)
         ? parseEnv(readFileSync(local, "utf8"))
         : {}),
       ...process.env,
     };
+    // Prisma CLI reads .env; the API also reads .env.local. Neither may mask
+    // an unsafe target in the other configuration used by bootstrap commands.
+    assertLocalBootstrapEnvironment(
+      { ...fileEnvironment, ...process.env },
+      infrastructure,
+      folder,
+    );
     assertLocalBootstrapEnvironment(env, infrastructure, folder);
   }
   run("corepack", ["pnpm", "install", "--frozen-lockfile"]);

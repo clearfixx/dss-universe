@@ -271,6 +271,7 @@ test("actual bootstrap rejects API/Worker/local/process overrides before every m
     { local: hostile },
     { inherited: { DATABASE_URL: hostile } },
     { local: `${base}?schema=public&port=6543` },
+    { api: hostile, local: `${base}?schema=public` },
   ]) {
     const result = runBootstrap(options);
     assert.equal(result.exitCode, 1);

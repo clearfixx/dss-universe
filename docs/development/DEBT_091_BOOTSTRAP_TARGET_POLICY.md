@@ -34,6 +34,10 @@ not restrict runtime URLs or unrelated database commands outside bootstrap.
 Bootstrap invokes it for API and Worker after its existing file/local/process
 environment composition and before install, Compose up, deploy or seed. Runtime
 version checks and read-only Docker info remain before the guard as previously.
+Both the CLI file/process view and API local-override view are validated: a safe
+API .env.local cannot hide an unsafe .env still consumed by Prisma CLI. The
+isolated regression first failed against the initial candidate and its red log
+is retained; checking both views fixes it without rewriting environment files.
 
 Six regression tests cover accepted generated/query-free URLs, authority and
 Redis mismatches, malformed/encoded/duplicate queries, fragments, secret-safe
