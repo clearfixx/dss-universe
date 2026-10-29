@@ -206,6 +206,28 @@ describe('Platform appearance GraphQL boundary (e2e)', () => {
         ?.adminCommandDeckAccess,
     ).toBe(true);
 
+    // The same signed JWT must lose access immediately when IAM revokes its grant.
+    await prisma.userPermission.delete({
+      where: {
+        userId_permissionId: {
+          userId: actorId,
+          permissionId: deckPermission.id,
+        },
+      },
+    });
+    const deckRevoked = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ query: deckQuery })
+      .expect(200);
+    expect(
+      (deckRevoked.body as AppearanceGraphQLResponse).errors?.length,
+    ).toBeGreaterThan(0);
+
+    await prisma.userPermission.create({
+      data: { userId: actorId, permissionId: deckPermission.id },
+    });
+
     const before = await prisma.platformAppearanceSettings.findUnique({
       where: { id: 'global' },
     });
