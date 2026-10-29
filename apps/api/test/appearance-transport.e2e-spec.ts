@@ -224,7 +224,7 @@ describe('Platform appearance GraphQL boundary (e2e)', () => {
       });
     // Current GraphQL transport returns HTTP 500 for invalid enum values.
     // Validate that the mutation is rejected; the transport status needs a separate fix.
-    expect(response.status).toBe(500);
+    expect(response.status).toBeGreaterThanOrEqual(400);
     const invalid = response.body as AppearanceGraphQLResponse;
     expect(invalid.data?.updatePlatformAppearance).toBeUndefined();
   });
