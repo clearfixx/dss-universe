@@ -1,7 +1,7 @@
 # DEBT-037 — Physical local storage design and evidence
 
 Date: 2026-10-29. Source baseline: accepted main289b24c.
-Status: WORKING DESIGN; inventory and Windows characterization only.
+Status: WORKING DESIGN; inventory and Windows/Linux primitive characterization.
 No physical runtime correction, migration or final mechanism acceptance is claimed.
 
 ## Required outcome
@@ -64,6 +64,60 @@ native replacement's concurrent security test. Synthetic evidence is retained.
 System-temp probe/report: dss-037-junction-characterization.cjs/.json.
 Report checkedAt2026-10-29T09:22:55.049Z; SHA256:
 56106a970806c331633190127f9861c0184895be56a1db90bbbab41b922799d4.
+
+## Native primitive characterizations
+
+These are isolated probes, not a selected runtime implementation or a complete
+set of physical containment regressions.
+
+### Windows handle-relative read and rename barrier
+
+On Windows NT10.0.26300, a temp-only C# P/Invoke probe called NtCreateFile with
+RootDirectory, one relative component and FILE_OPEN_REPARSE_POINT, then inspected
+the opened object's attributes. Safe file read returned the inside sentinel;
+an existing junction was rejected before content reading.
+
+Held root/parent directory handles omit FILE_SHARE_DELETE. Moving either held
+directory failed with error32; the same moves succeeded after closing the
+relevant handles. This closed-handle control distinguishes the barrier from
+unrelated fixture permissions. Outside sentinel bytes remained unchanged.
+Root ancestor initialization, leaf symlinks, writes, publication, deletion,
+hard-link cases and other filesystems/Windows versions are not certified here.
+
+System-temp sources/report: dss-037-windows-handles.cs/.ps1/.json.
+Report checkedAt2026-10-29T09:30:53.8973770Z; file SHA256:
+2bf082ed0847d4d2ca51320d1ef709a6a1bd2be591d3468cac55c6cd11882cba.
+
+### Linux openat2 read and parent-relocation counterexample
+
+An already cached pgAdmin image supplied Python/ctypes for a disposable probe;
+no package installation or application dependency was added. Container isolation:
+pull=never, network=none, readonly rootfs, readonly probe mount, tmpfs fixtures,
+uid5050. Actual kernel: Linux6.18.54.1-microsoft-standard-WSL2 x86_64.
+Image ID: sha256:5d9624a93634d1c5e595619cc57b1d330758120d1baf445fa97300c0c1fc3c0a.
+
+Root-relative openat2 with BENEATH/NO_SYMLINKS/NO_MAGICLINKS/NO_XDEV admitted a
+safe file. A preexisting symlink and deterministic post-check ancestor swap were
+both rejected with ELOOP40. The probe also deliberately composed an unsafe
+mutation: securely open a parent directory, move that directory outside uploads
+within the synthetic arena, then create through the held parent fd. Creation
+succeeded in the moved directory. This is a counterexample to that composition,
+not an openat2 vulnerability or evidence that all descriptor-relative IO is safe.
+
+Outside sentinel bytes were unchanged; no DSS upload, DB or network was touched.
+System-temp source/captured result: dss-037-linux-openat2.py and
+dss-037-linux-openat2-result.json. Canonical report SHA256 (Python sorted-key JSON
+of its report field, not the surrounding capture file):
+87edbc36e579ab57d742ce24b0602b2853e378c9f3b67e2e07d8949cdcd46d6c.
+
+### Consequence for mechanism selection
+
+The hierarchical candidate cannot rely on a verified parent fd for later
+namespace mutations. Its Linux proof gap is now concrete. Characterize the
+flat-object/private-staging alternative next, including atomic publication of
+the actual produced object, hard-link handling and protected staging identity.
+Root initialization, data migration and logical-key/file-manager compatibility
+remain separate review gates. No layout or migration is selected by these probes.
 
 ## Documented platform constraints
 
