@@ -34,17 +34,16 @@ const variants: Record<ShellVariant, { name: string; description: string }> = {
 export function PlatformAppearanceForm({ activeVariant }: { activeVariant: ShellVariant }) {
   const router = useRouter();
   const [selected, setSelected] = useState<ShellVariant>(activeVariant);
-  const [saved, setSaved] = useState<ShellVariant>(activeVariant);
   const [state, action, pending] = useActionState(savePlatformShellVariant, initialState);
+  const saved = state.status === "success" && state.savedVariant
+    ? (state.savedVariant as ShellVariant)
+    : activeVariant;
 
   useEffect(() => {
     if (state.status === "success") {
-      setSaved(selected);
       router.refresh();
     }
-    // A successful action is the only reason to refresh. Selection is not a network operation.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, router]);
+  }, [state.status, state.savedVariant, router]);
 
   return (
     <section className="max-w-4xl space-y-6">
