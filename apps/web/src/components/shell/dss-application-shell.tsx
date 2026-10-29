@@ -36,10 +36,10 @@ import {
   type ShellVariant,
 } from "./shell-navigation";
 
-function ModuleLinks({ pathname, hasSession, onNavigate }: { pathname: string; hasSession: boolean; onNavigate?: () => void }) {
+function ModuleLinks({ pathname, hasSession, canAccessAdminDeck, onNavigate }: { pathname: string; hasSession: boolean; canAccessAdminDeck: boolean; onNavigate?: () => void }) {
   return (
     <nav aria-label="Модулі DSS Universe" className="space-y-1">
-      {visibleModules(hasSession).map(({ href, label, icon: Icon }) => (
+      {visibleModules(hasSession, canAccessAdminDeck).map(({ href, label, icon: Icon }) => (
         <Link
           key={href}
           href={href}
@@ -62,14 +62,16 @@ function GlobalNavigation({
   pathname,
   variant,
   hasSession,
+  canAccessAdminDeck,
   onOpenLauncher,
 }: {
   pathname: string;
   variant: ShellVariant;
   hasSession: boolean;
+  canAccessAdminDeck: boolean;
   onOpenLauncher: () => void;
 }) {
-  const modules = visibleModules(hasSession);
+  const modules = visibleModules(hasSession, canAccessAdminDeck);
   const featured = modules.filter((item) => item.featured);
   const inline = variant === "HORIZONTAL_NAVIGATION" ? modules : featured;
 
@@ -162,7 +164,8 @@ export function DssApplicationShell({
   viewer,
   variant = DEFAULT_SHELL_VARIANT,
   toolbar,
-}: PropsWithChildren<{ viewer: SessionViewer | null; variant?: ShellVariant; toolbar?: ReactNode }>) {
+  canAccessAdminDeck = false,
+}: PropsWithChildren<{ viewer: SessionViewer | null; variant?: ShellVariant; toolbar?: ReactNode; canAccessAdminDeck?: boolean }>) {
   const pathname = usePathname();
   // Drawer visibility is local presentation state, never shared product state.
   const [open, setOpen] = useState(false);
@@ -185,7 +188,7 @@ export function DssApplicationShell({
         <Link href="/" className="shrink-0 text-sm font-semibold tracking-[0.12em] text-slate-100 sm:text-base">
           DSS UNIVERSE
         </Link>
-        <GlobalNavigation pathname={pathname} variant={variant} hasSession={Boolean(viewer)} onOpenLauncher={() => setOpen(true)} />
+        <GlobalNavigation pathname={pathname} variant={variant} hasSession={Boolean(viewer)} canAccessAdminDeck={canAccessAdminDeck} onOpenLauncher={() => setOpen(true)} />
         <div className="ml-auto flex items-center gap-2">
           {viewer ? (
             <>
@@ -214,9 +217,11 @@ export function DssApplicationShell({
                   <DropdownMenuItem asChild>
                     <Link href={`/profile/${encodeURIComponent(viewer.username)}`}><UserRound aria-hidden="true" />Мій профіль</Link>
                   </DropdownMenuItem>
+                  {canAccessAdminDeck ? (
                   <DropdownMenuItem asChild>
-                    <Link href="/command-deck"><LayoutDashboard aria-hidden="true" />Mission Control</Link>
+                    <Link href="/command-deck"><LayoutDashboard aria-hidden="true" />Адмінпанель</Link>
                   </DropdownMenuItem>
+                ) : null}
                   <DropdownMenuItem asChild>
                     <Link href="/settings/profile"><Settings aria-hidden="true" />Налаштування</Link>
                   </DropdownMenuItem>
@@ -251,7 +256,7 @@ export function DssApplicationShell({
             <SheetDescription className="text-left text-xs">Оберіть доступний розділ платформи.</SheetDescription>
           </SheetHeader>
           <div className="max-h-[calc(100dvh-5rem)] overflow-y-auto px-3 py-4">
-            <ModuleLinks pathname={pathname} hasSession={Boolean(viewer)} onNavigate={() => setOpen(false)} />
+            <ModuleLinks pathname={pathname} hasSession={Boolean(viewer)} canAccessAdminDeck={canAccessAdminDeck} onNavigate={() => setOpen(false)} />
             {hasSidebar && (
               <div className="mt-5 border-t border-[color:var(--shell-divider)] pt-2">
                 <ModuleSidebar pathname={pathname} onNavigate={() => setOpen(false)} />
