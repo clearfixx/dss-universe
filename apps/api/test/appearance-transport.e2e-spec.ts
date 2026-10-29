@@ -9,7 +9,10 @@ import { PrismaService } from '../src/core/database';
 
 type AppearanceGraphQLResponse = {
   data?: {
-    platformAppearance?: { activeShellVariant: string; updatedAt: string } | null;
+    platformAppearance?: {
+      activeShellVariant: string;
+      updatedAt: string;
+    } | null;
     adminPlatformAppearance?: { activeShellVariant: string } | null;
     updatePlatformAppearance?: { activeShellVariant: string } | null;
   } | null;
@@ -104,7 +107,9 @@ describe('Platform appearance GraphQL boundary (e2e)', () => {
             tokens { accessToken }
           }
         }`,
-        variables: { input: { username, email, password, displayName: 'Appearance Test' } },
+        variables: {
+          input: { username, email, password, displayName: 'Appearance Test' },
+        },
       })
       .expect(200);
     const created = register.body as {
@@ -130,7 +135,9 @@ describe('Platform appearance GraphQL boundary (e2e)', () => {
       .set('Authorization', `Bearer ${identity.tokens.accessToken}`)
       .send({ query })
       .expect(200);
-    expect((denied.body as AppearanceGraphQLResponse).errors?.length).toBeGreaterThan(0);
+    expect(
+      (denied.body as AppearanceGraphQLResponse).errors?.length,
+    ).toBeGreaterThan(0);
 
     const permission = await prisma.permission.findUniqueOrThrow({
       where: { key: 'system.settings.update' },
@@ -166,7 +173,9 @@ describe('Platform appearance GraphQL boundary (e2e)', () => {
         .expect(200);
       const body = updated.body as AppearanceGraphQLResponse;
       expect(body.errors).toBeUndefined();
-      expect(body.data?.updatePlatformAppearance?.activeShellVariant).toBe('HYBRID');
+      expect(body.data?.updatePlatformAppearance?.activeShellVariant).toBe(
+        'HYBRID',
+      );
 
       const loaded = await request(app.getHttpServer())
         .post('/api/graphql')
