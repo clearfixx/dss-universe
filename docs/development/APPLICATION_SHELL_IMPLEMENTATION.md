@@ -82,3 +82,10 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - `proxy.ts` remains responsible only for authentication/session renewal; it does not infer administrator rights from JWT contents.
 - Role/permission changes must propagate through the existing authoritative IAM reader. GraphQL denies anonymous/unauthorized access; SSR fails closed on API errors.
 - A future dedicated user Mission Control must receive a **different user route** and is outside this focused security correction.
+
+## Access revocation regression
+
+- Quality Gate run 40924901550 passed for commit 24b6976 after adding Command Deck IAM protection and browser smoke coverage.
+- Added a real GraphQL E2E regression verifying that revocation of `admin.command-deck.access` denies access using the **same unexpired JWT**, without requiring a new login. This relies on existing authoritative request-time access reads.
+- Added isolated Next.js SSR tests: explicit `true` grants access; permission errors, malformed responses, false values, network failures and non-2xx responses fail closed.
+- These new regression tests require green CI before being considered verified.
