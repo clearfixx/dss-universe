@@ -42,7 +42,7 @@ Branch: `feature/application-shell-v1`
 
 ## Important boundaries
 
-The branch now includes the end-to-end implementation for server-owned variant persistence; it remains **unverified** until Prisma migration, API GraphQL and browser tests pass. Without a valid API response, Shell falls back to `MODULE_LAUNCHER`. Avoid building a parallel permission engine, custom React router or client-only source of truth.
+The branch includes tested server-owned variant persistence, request-scoped SSR reads, and GraphQL appearance authorization. Quality Gate run 40917724836 passed for commit 2ec900c, including API E2E, Web Smoke, Prisma, lint, typecheck, unit tests and build. Later commits require a fresh CI result before promotion. Without a valid API response, Shell falls back to `MODULE_LAUNCHER`. Avoid building a parallel permission engine, custom React router or client-only source of truth.
 
 The old product documents use conflicting Mission Control / Command Deck terminology. Route `/command-deck` remains unchanged for compatibility; the user-facing label is Mission Control pending route migration decision.
 
@@ -56,8 +56,8 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - New real-database Appearance atomicity E2E checks no-write default, committed audit history, and transaction rollback on audit failure.
 - Local Shell navigation drawer visibility is component-local React state, not globally shared Zustand state. Closing is performed by navigation handlers and the dialog itself; no mount/route effect can override an open gesture.
 - Contextual Sidebar children remain visible on sibling routes (stable module navigation).
-- Browser regression spec covers the launcher and mobile drawer, but its **new tests failed on the previous head**: neither test could find the navigation after clicking. Corrective UI-state code is committed; a green repeat run is still required before acceptance.
-- Previous CI was blocked by Prettier on the new Appearance E2E; formatting was corrected. No success is claimed until the current head's CI finishes.
+- Browser regression spec covers the launcher and mobile drawer; Web Smoke passed on commit 2ec900c.
+- Appearance transport and database E2E passed together on commit 2ec900c (Quality Gate run 40917724836). A malformed GraphQL enum currently produces a rejection with HTTP 5xx; transport status normalization is outside this Shell change and should be tracked separately.
 - The feature branch is not synchronized with the latest main; reconcile upstream changes and re-run the entire quality gate before eventual merge. No merge has been performed.
 
 ## Guest navigation boundary
@@ -65,3 +65,10 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - All three global variants use a single `visibleModules(hasSession)` projection. Session-only destinations are suppressed for guests; this is presentation logic, not authorization.
 - The web E2E scenario verifies public News remains navigable and protected Mission Control does not appear in the guest launcher. The previous test incorrectly asserted the opposite and was updated.
 - Full permission-aware module visibility (beyond session presence) must consume a trusted server-computed capability set when the corresponding module contracts are available. Do **not** infer permissions from frontend role names.
+
+## Data integrity — Mission Control
+
+- Removed hard-coded level, mission, points and streak metrics, along with invented fallback activity entries. The dashboard now displays only actual feed items, or explicit empty/unavailable states.
+- AI Core briefing remains a deterministic summary of feed counts, not an AI-generated response or an operational chat action.
+- The user-facing dashboard now uses **Mission Control** while retaining `/command-deck` for route compatibility.
+- These latest dashboard changes require a new green CI run before merge.
