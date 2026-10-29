@@ -59,3 +59,9 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - Browser regression spec covers the launcher and mobile drawer, but its **new tests failed on the previous head**: neither test could find the navigation after clicking. Corrective UI-state code is committed; a green repeat run is still required before acceptance.
 - Previous CI was blocked by Prettier on the new Appearance E2E; formatting was corrected. No success is claimed until the current head's CI finishes.
 - The feature branch is not synchronized with the latest main; reconcile upstream changes and re-run the entire quality gate before eventual merge. No merge has been performed.
+
+## Guest navigation boundary
+
+- All three global variants use a single `visibleModules(hasSession)` projection. Session-only destinations are suppressed for guests; this is presentation logic, not authorization.
+- The web E2E scenario verifies public News remains navigable and protected Mission Control does not appear in the guest launcher. The previous test incorrectly asserted the opposite and was updated.
+- Full permission-aware module visibility (beyond session presence) must consume a trusted server-computed capability set when the corresponding module contracts are available. Do **not** infer permissions from frontend role names.
