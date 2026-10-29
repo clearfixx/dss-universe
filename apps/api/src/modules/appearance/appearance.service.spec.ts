@@ -5,7 +5,7 @@ import type { ShellVariant as ShellVariantType } from './domain/appearance.types
 import type { PermissionsService } from '@api/core/authorization';
 
 import { AppearanceService } from './appearance.service';
-import type { AppearanceRepository } from './infrastructure/appearance.repository';
+import type { AppearanceRepositoryPort } from './domain/appearance.repository.port';
 
 describe('AppearanceService', () => {
   const defaultSettings = {
@@ -24,7 +24,7 @@ describe('AppearanceService', () => {
     update = jest.fn().mockResolvedValue(defaultSettings);
     access = jest.fn().mockResolvedValue({ roles: [], permissions: [] });
     service = new AppearanceService(
-      { get, update } as unknown as AppearanceRepository,
+      { get, update } as AppearanceRepositoryPort,
       { getAccessProfileByUserId: access } as unknown as PermissionsService,
     );
   });
