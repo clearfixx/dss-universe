@@ -9,6 +9,7 @@ import { ACCESS_COOKIE } from "@/features/auth/session-contract";
 export type AppearanceActionState = {
   status: "idle" | "success" | "error";
   message: string;
+  savedVariant?: string;
 };
 
 export async function savePlatformShellVariant(
@@ -51,7 +52,7 @@ export async function savePlatformShellVariant(
         payload.data?.updatePlatformAppearance?.activeShellVariant !== selected) {
       return { status: "error", message: "Зміни відхилено. Перевірте права доступу." };
     }
-    return { status: "success", message: "Варіант навігації збережено." };
+    return { status: "success", message: "Варіант навігації збережено.", savedVariant: selected };
   } catch {
     return { status: "error", message: "Немає зв’язку з API. Повторіть збереження." };
   }
