@@ -1,11 +1,13 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
-import { SHELL_VARIANTS as ShellVariant } from './domain/appearance.types';
-import type { ShellVariant as ShellVariantType } from './domain/appearance.types';
 
 import type { PermissionsService } from '@api/core/authorization';
 
 import { AppearanceService } from './appearance.service';
 import type { AppearanceRepositoryPort } from './domain/appearance.repository.port';
+import {
+  SHELL_VARIANTS as ShellVariant,
+  type ShellVariant as ShellVariantType,
+} from './domain/appearance.types';
 
 describe('AppearanceService', () => {
   const defaultSettings = {
@@ -24,7 +26,7 @@ describe('AppearanceService', () => {
     update = jest.fn().mockResolvedValue(defaultSettings);
     access = jest.fn().mockResolvedValue({ roles: [], permissions: [] });
     service = new AppearanceService(
-      { get, update } as AppearanceRepositoryPort,
+      { get, update },
       { getAccessProfileByUserId: access } as unknown as PermissionsService,
     );
   });
@@ -53,6 +55,9 @@ describe('AppearanceService', () => {
       permissions: ['system.settings.update'],
     });
     await service.update('u1', ShellVariant.HORIZONTAL_NAVIGATION);
-    expect(update).toHaveBeenCalledWith('u1', ShellVariant.HORIZONTAL_NAVIGATION);
+    expect(update).toHaveBeenCalledWith(
+      'u1',
+      ShellVariant.HORIZONTAL_NAVIGATION,
+    );
   });
 });
