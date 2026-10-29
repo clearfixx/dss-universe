@@ -1,10 +1,16 @@
 # D7 — Individual debt review matrix
 
-Updated: 2026-10-29. Current accepted baseline: `ddb685d`; initial review baseline
+Updated: 2026-10-29. Current accepted baseline: `289b24c`; initial review baseline
 was `f118d82`.
 Status: **IN PROGRESS; not a release certificate**.
 
-Latest checkpoint: PR108cd40325 is accepted and merged as ddb685d; CI5/5,
+Latest checkpoint: PR110834ea0b is accepted and merged289b24c: CI5/5, local
+full gate0, E2E688/688, build6/6, Web15/15 without retries. Scoped091 is routeC.
+Confirmed sleep during the successful local gate is disclosed in the review;
+no uninterrupted/performance claim. Inventory001–091 is in accepted history.
+D7 remains open; PR109 is not accepted or imported.
+
+Earlier checkpoint: PR108cd40325 is accepted and merged as ddb685d; CI5/5,
 local full gate0, E2E688/688 and Web15/15 without retries. DEBT-090 policy is
 approved: new legitimate qualification cycles may qualify under current rules;
 late old-cycle events must not restore revoked awards. Detailed C1 protocol
@@ -99,7 +105,7 @@ DEBT-066 mapping is approved and implemented in PR89 `a528c90`, CI5/5; local
 full gate and integration with accepted PR81 remain open. See the latest
 [acceptance checkpoint](D7_BASELINE_RELEASE_REVIEW.md) before older row text.
 
-This covers accepted-register IDs001–090 plus confirmed review finding091 exactly once.
+This covers accepted-register IDs001–091 exactly once.
 It does not say all91 entries are resolved or fully reviewed. The [register](../development/DEBT_REGISTER.md)
 retains authoritative implementation/decision status; the categories below are
 review routing, not new debt statuses. Detailed inspected evidence and limitations
@@ -209,7 +215,7 @@ does not override missing risk decisions or accept an unmerged candidate.
 | DEBT-088 | C      | Owner accepted PR105b0aabaa, merge5d6db1d; actual startup/readiness/GraphQL/CORS verified, CI5/5 and local full gate0, E2E686/686, Web15/15. Earlier sleep-interrupted raw log retained; no broad stability waiver.                                                                                       |
 | DEBT-089 | C      | Owner accepted PR10756ed7da/merge701cb87: patch-only dependency, audit0 high/critical, CI5/5/full gate0, E2E686/686, Web15/15. Mailpit integration subsequently accepted separately in PR106.                                                                                                             |
 | DEBT-090 | M      | Accepted PR108 characterization confirms legacy rollback ordering gap. Owner approved new legitimate cycles under current rules and rejecting late old-cycle restoration. Detailed C1 protocol PR109 and runtime correction remain unaccepted/unimplemented; no production incident or concurrency claim. |
-| DEBT-091 | O      | Bootstrap query target and CLI/local-env masking defects characterized. Owner approved exact query policy; PR110834ea0b has CI5/5, E2E688/688 and passing isolated regressions. Exact-head local gate/acceptance remain open; no candidate source imported.                                               |
+| DEBT-091 | C      | Owner accepted PR110834ea0b/merge289b24c. Exact query policy and separate CLI/API-local views verified: CI5/5, full gate0, E2E688/688, Web15/15. Confirmed sleep disclosed; scoped guard closure only.                                                                                                    |
 
 ## Execution order from this checkpoint
 

@@ -38,7 +38,7 @@
     "graphql:check": "pnpm --filter @dss/web graphql:check && git diff --exit-code -- apps/api/src/schema.gql apps/web/src/gql",
     "quality": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm db:validate && pnpm db:check-drift && pnpm test:full-policy && pnpm test:full && pnpm build && pnpm test:api-build-entry && pnpm architecture:check",
     "quality:full": "node scripts/run-full-quality.mjs",
-    "test:quality-policy": "node --test scripts/full-quality-policy.test.mjs scripts/mailpit-configuration.test.mjs scripts/web-smoke-endpoint.test.mjs scripts/web-dev-port.test.mjs",
+    "test:quality-policy": "node --test scripts/full-quality-policy.test.mjs scripts/mailpit-configuration.test.mjs scripts/web-smoke-endpoint.test.mjs scripts/web-dev-port.test.mjs scripts/bootstrap-environment-policy.test.mjs",
     "clean": "turbo clean && rm -rf node_modules",
     "api:db:generate": "pnpm --filter @dss/api db:generate",
     "api:db:migrate": "pnpm --filter @dss/api db:migrate",

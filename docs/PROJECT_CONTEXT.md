@@ -2,7 +2,7 @@
 
 > Status: Living orientation snapshot, not release acceptance
 >
-> Updated: 2026-10-29 — accepted baseline ddb685d; D7 and consumer preparation open
+> Updated: 2026-10-29 — accepted baseline 289b24c; D7 and consumer preparation open
 
 ## Product and authority
 
@@ -29,7 +29,7 @@ approved ADRs or recorded owner decisions.
 
 ## Current position
 
-Accepted main is `ddb685d9df9cabc0e9f54ca70dcb2c45ed02dfea`, including the
+Accepted main is `289b24cf78be3e960458a04285d724e8f2a9eb63`, including PR110 and the
 owner-accepted PR108 consumer design/characterization. Its exact-head CI5/5 and
 local full gate0 include E2E688/688 and Web15/15 without retries. Accepted
 security and Mailpit corrections supersede the older dependency-blocked snapshot
@@ -39,8 +39,9 @@ PR10910c09eb contains the detailed C1 qualification/admission protocol and
 characterization, CI5/5 and local full gate0 (E2E689/689, Web15/15); owner
 acceptance remains pending. Consumer C runtime, DEBT-090 correction and automatic
 activation remain separate work. Owner approved the separate DEBT-091 bootstrap
-URL guard package and exact no-query/schema=public policy; PR110834ea0b is an
-unaccepted correction candidate undergoing full verification. D7 reconciliation,
+URL guard package and exact no-query/schema=public policy; PR110834ea0b is accepted and merged289b24c: CI5/5, full gate0, E2E688/688
+and Web15/15 without retries. The local gate includes documented Windows sleep;
+no uninterrupted/performance claim is made. D7 reconciliation,
 remaining owner decisions, the later stack audit and Phase11 brainstorm are open.
 Use the [D7 review](audits/D7_BASELINE_RELEASE_REVIEW.md) and
 [debt register](development/DEBT_REGISTER.md) for scoped status and limitations.

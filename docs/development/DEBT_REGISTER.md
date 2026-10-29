@@ -22,16 +22,20 @@ active package safe and buildable.
 
 ## Register
 
-### DEBT-091 — Bootstrap effective database target overrides (High, OPEN)
+### DEBT-091 — Bootstrap effective database target overrides (High, RESOLVED scoped bootstrap guard)
 
-Isolated current-source bootstrap control flow accepts local URL authority with
-query host/port overrides and reaches stubbed deploy/seed; installed pg metadata
-resolves a different effective target. Seed uses PrismaPg. No real command,
-connection, migration or seed ran; migrate-engine interpretation is untested and
-current primary effective coordinates remain local. Owner approved the separate guard-policy/test package and exact no-query or
-schema=public policy. Candidate PR110834ea0b checks CLI and API-local environment views; six isolated
-regression groups and CI5/5 pass, E2E688/688 without skips. Exact-head local full
-gate and scoped acceptance remain open. [Evidence and limits](../audits/DEBT_091_BOOTSTRAP_EFFECTIVE_DATABASE_TARGET.md).
+Owner accepted PR110834ea0b, merged289b24c at2026-10-29T08:45:25UTC.
+The approved no-query or exact schema=public policy rejects target overrides,
+duplicates and fragments before mutating commands. CLI and API-local environment
+views are validated separately, preserving safe errors and existing coordinates.
+CI5/5, full local gate0, coverage8/8/API1466/1466, E2E688/688 without skips,
+build6/6 and Web15/15 without retries support this scoped correction. The local
+gate includes confirmed Windows sleep; it resumed and passed, not an uninterrupted
+or performance-baseline claim. No real bootstrap deploy/seed was executed for
+the isolated fixtures. [Policy](DEBT_091_BOOTSTRAP_TARGET_POLICY.md) and
+[review evidence/limits](../audits/DEBT_091_BOOTSTRAP_EFFECTIVE_DATABASE_TARGET.md).
+
+Earlier checkpoint before PR110 acceptance:
 
 2026-10-29 current checkpoint: owner accepted design/characterization PR108
 cd40325, merged as ddb685d. CI5/5 and local full gate0 cover E2E688/688

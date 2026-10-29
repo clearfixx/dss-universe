@@ -1,9 +1,28 @@
 # D7 — Baseline release review
 
 Date: 2026-10-22. Updated: 2026-10-29. Branch: `debt/d7-release-gate`.
-Current accepted baseline: `ddb685d9df9cabc0e9f54ca70dcb2c45ed02dfea`.
+Current accepted baseline: `289b24cf78be3e960458a04285d724e8f2a9eb63`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
+
+## 2026-10-29 accepted bootstrap correction
+
+Owner accepted [PR110](https://github.com/clearfixx/dss-universe/pull/110),
+head834ea0b, merged289b24c at08:45:25UTC. Scoped DEBT-091 is resolved:
+bootstrap checks both CLI and API-local environment views and only permits no
+query or exactly schema=public before install/up/deploy/seed. Six isolated
+regression groups ran in CI; current primary local file views also pass.
+CI5/5 and exact-head full gate0: coverage8/8/API1466/1466, E2E688/688 without
+skips, build6/6 and Web15/15 without retries. The successful local gate contains
+confirmed sleep and is not uninterrupted/performance evidence. Hashes, red/green
+history and limits are in the [091 review](DEBT_091_BOOTSTRAP_EFFECTIVE_DATABASE_TARGET.md).
+Primary main is synchronized with env and owner audit-plan hashes preserved.
+
+Accepted main is integrated into this review branch; its net diff remains
+Markdown only. Inventory001–091 is accepted-register history, not91 closed
+debts. PR109 acceptance remains pending; its source is not imported here.
+DEBT-031 broader bootstrap review,007 C/D,090 runtime, remaining individual
+review/decisions, final D7 gate, stack audit and Phase11 remain open.
 
 ## 2026-10-29 implementation-status reconciliation
 
