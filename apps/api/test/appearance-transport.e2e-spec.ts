@@ -5,6 +5,15 @@ import type { App } from 'supertest/types';
 
 import { AppModule } from '../src/app.module';
 
+type AppearanceGraphQLResponse = {
+  data?: {
+    platformAppearance?: { activeShellVariant: string; updatedAt: string } | null;
+    adminPlatformAppearance?: { activeShellVariant: string } | null;
+    updatePlatformAppearance?: { activeShellVariant: string } | null;
+  } | null;
+  errors?: Array<{ message: string }>;
+};
+
 describe('Platform appearance GraphQL boundary (e2e)', () => {
   let app: INestApplication<App>;
 
@@ -35,16 +44,11 @@ describe('Platform appearance GraphQL boundary (e2e)', () => {
         query: 'query { platformAppearance { activeShellVariant updatedAt } }',
       })
       .expect(200);
-    expect(result.body).toMatchObject({
-      data: {
-        platformAppearance: {
-          activeShellVariant: expect.stringMatching(
-            /^(MODULE_LAUNCHER|HORIZONTAL_NAVIGATION|HYBRID)$/,
-          ),
-          updatedAt: expect.any(String),
-        },
-      },
-    });
+    const body = result.body as AppearanceGraphQLResponse;
+    expect(body.data?.platformAppearance?.activeShellVariant).toMatch(
+      /^(MODULE_LAUNCHER|HORIZONTAL_NAVIGATION|HYBRID)$/,
+    );
+    expect(typeof body.data?.platformAppearance?.updatedAt).toBe('string');
   });
 
   it('denies anonymous administrative reads and writes', async () => {
@@ -54,8 +58,9 @@ describe('Platform appearance GraphQL boundary (e2e)', () => {
         query: 'query { adminPlatformAppearance { activeShellVariant } }',
       })
       .expect(200);
-    expect(read.body.errors).toEqual(expect.any(Array));
-    expect(read.body.data?.adminPlatformAppearance).toBeFalsy();
+    const deniedRead = read.body as AppearanceGraphQLResponse;
+    expect(deniedRead.errors?.length).toBeGreaterThan(0);
+    expect(deniedRead.data?.adminPlatformAppearance).toBeFalsy();
 
     const mutation = await request(app.getHttpServer())
       .post('/api/graphql')
@@ -65,8 +70,9 @@ describe('Platform appearance GraphQL boundary (e2e)', () => {
         variables: { variant: 'HYBRID' },
       })
       .expect(200);
-    expect(mutation.body.errors).toEqual(expect.any(Array));
-    expect(mutation.body.data?.updatePlatformAppearance).toBeFalsy();
+    const deniedWrite = mutation.body as AppearanceGraphQLResponse;
+    expect(deniedWrite.errors?.length).toBeGreaterThan(0);
+    expect(deniedWrite.data?.updatePlatformAppearance).toBeFalsy();
   });
 
   it('rejects unrecognized variant identifiers at the GraphQL boundary', async () => {
@@ -78,7 +84,8 @@ describe('Platform appearance GraphQL boundary (e2e)', () => {
         variables: { variant: '#FFFFFF' },
       })
       .expect(200);
-    expect(response.body.errors).toEqual(expect.any(Array));
-    expect(response.body.data?.updatePlatformAppearance).toBeUndefined();
+    const invalid = response.body as AppearanceGraphQLResponse;
+    expect(invalid.errors?.length).toBeGreaterThan(0);
+    expect(invalid.data?.updatePlatformAppearance).toBeUndefined();
   });
 });
