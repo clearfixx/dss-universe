@@ -1,7 +1,7 @@
 # DEBT-013 — Configurable SMTP host port
 
 Status: implementation/recovery candidate; full gate and acceptance open.
-Baseline: accepted main5d6db1d (including PR105). No application/API or Windows settings change.
+Baseline: accepted main701cb87 (including PR105/107). No application/API or Windows settings change.
 
 ## Evidence and change
 
@@ -68,3 +68,17 @@ synthetic message was added to the preserved mailbox in this check.
 Local evidence is retained in node_modules/.cache/mailpit-recovery-before-20261029.json,
 mailpit-recovery-after-20261029.json and the other-container snapshots. Full
 quality/CI and package acceptance remain open at this recovery checkpoint.
+
+## Accepted security integration — 2026-10-29
+
+The initial PR106 head31b8e1c gate exited1 at security:check because of newly
+reported high GHSA-3f7j-7jwc-fxfj; its raw log is retained. Separate patch-only
+DEBT-089 PR107 head56ed7da was owner-accepted and merged as701cb87, supported
+by CI5/5 and local full gate0 (coverage8/8, E2E686/686, Web15/15). This branch
+now integrates that accepted main; no dependency waiver or unrelated upgrade.
+The primary checkout's frozen installation was updated to this accepted patch.
+
+Worker-configured Nodemailer.verify also succeeds against loopback12525 with
+its configured authentication and no DATA. The own dev process is restarted
+after dependency installation. Mailpit's new integration head requires its own
+full quality/CI before package acceptance; PR107's gate is not substituted for it.
