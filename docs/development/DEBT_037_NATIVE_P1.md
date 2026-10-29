@@ -9,7 +9,8 @@ Base: accepted design PR112, main6eba412. See the
 - Node24.18.0, matching the repository pin.
 - node-gyp13.1.0, exact development dependency of @dss/storage. Its published
   engines include Node^24.15.0;24.18.0 is supported.
-- Python3.12.14: existing bundled local runtime; CI will select this version.
+- Python3.12.14: existing bundled local runtime. CI now pins Python3.14.10,
+  selected from the official runner manifest before its installation (see below).
 - Local Visual Studio2022 Community/MSVC installation17.14.37806.7 already exists.
   POSIX CI uses the runner's compiler and records its actual version.
 - Standard Node-API C interface, version8; no node-addon-api wrapper dependency.
@@ -81,3 +82,13 @@ Dependency audit currently reports0 high/critical,3 low and18 moderate findings.
 None of the advisory paths include the new node-gyp graph. These existing
 nonblocking findings are not resolved or waived by P1 and remain relevant to
 the stack/security audit. The approved braces patch regression still passes.
+
+The first native CI run40881616093 proved Linux build/load/lifecycle behavior,
+but Windows/macOS stopped before compilation: setup-python had no3.12.14 binary
+for Windows x64 or macOS arm64. This was an invalid cross-platform toolchain pin,
+not a native test failure. The
+[official versions manifest](https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json)
+was checked before selecting3.14.10; it lists Windows x64, macOS arm64 and Linux
+x64 artifacts for the current runner families. Only the CI build interpreter
+changes; the local existing3.12.14 remains. No platform/test skip or warning
+exception was added. The first failed run remains available as evidence.
