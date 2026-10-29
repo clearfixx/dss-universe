@@ -19,7 +19,7 @@ test("public content Shell exposes only implemented navigation and a working lau
     launcher.getByRole("link", { name: "Новини" }),
   ).toHaveAttribute("href", "/news");
   await expect(
-    launcher.getByRole("link", { name: "Mission Control" }),
+    launcher.getByRole("link", { name: "Адмінпанель" }),
   ).toHaveCount(0);
   await expect(
     page.getByRole("navigation", { name: "Модулі DSS Universe" }).getByRole("link", { name: "Academy" }),
@@ -44,4 +44,11 @@ test("mobile Shell remains keyboard-accessible and closes its drawer", async ({
     page.getByRole("navigation", { name: "Модулі DSS Universe" }),
   ).not.toBeVisible();
   await expect(page.locator("body")).toHaveJSProperty("scrollWidth", 375);
+});
+
+
+test("anonymous visitors cannot open administrator Command Deck", async ({ page }) => {
+  await page.goto("/command-deck");
+  await expect(page).toHaveURL(/\/login\?returnTo=%2Fcommand-deck/);
+  await expect(page.getByText("Панель адміністратора")).toHaveCount(0);
 });
