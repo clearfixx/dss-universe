@@ -49,3 +49,13 @@ The old product documents use conflicting Mission Control / Command Deck termino
 ### Verification notes
 
 Direct GitHub content edits do not execute local commands. GitHub CI status and resulting test evidence must be checked before promotion. Nothing in this file implies that build or runtime verification has passed.
+
+## Architecture corrections — 29 October 2026
+
+- Historical Prisma-defaults E2E query now enumerates the fifteen historical tables under test instead of accidentally asserting that newer tables may not define an `updatedAt` default.
+- New real-database Appearance atomicity E2E checks no-write default, committed audit history, and transaction rollback on audit failure.
+- Local Shell navigation drawer visibility is component-local React state, not globally shared Zustand state. Closing is performed by navigation handlers and the dialog itself; no mount/route effect can override an open gesture.
+- Contextual Sidebar children remain visible on sibling routes (stable module navigation).
+- Browser regression spec covers the launcher and mobile drawer, but its **new tests failed on the previous head**: neither test could find the navigation after clicking. Corrective UI-state code is committed; a green repeat run is still required before acceptance.
+- Previous CI was blocked by Prettier on the new Appearance E2E; formatting was corrected. No success is claimed until the current head's CI finishes.
+- The feature branch is not synchronized with the latest main; reconcile upstream changes and re-run the entire quality gate before eventual merge. No merge has been performed.
