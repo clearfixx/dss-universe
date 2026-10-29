@@ -202,8 +202,8 @@ describe('Platform appearance GraphQL boundary (e2e)', () => {
       .send({ query: deckQuery })
       .expect(200);
     expect(
-      (deckGranted.body as { data?: { adminCommandDeckAccess?: boolean } })
-        .data?.adminCommandDeckAccess,
+      (deckGranted.body as { data?: { adminCommandDeckAccess?: boolean } }).data
+        ?.adminCommandDeckAccess,
     ).toBe(true);
 
     const before = await prisma.platformAppearanceSettings.findUnique({
