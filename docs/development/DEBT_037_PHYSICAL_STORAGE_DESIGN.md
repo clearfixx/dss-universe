@@ -333,6 +333,57 @@ explicitly distinguishes a SID-only context from a more complete actual token.
 No safe-production-ACL conclusion follows until those additional cases and
 actual IO operations are verified.
 
+### Real Windows restricted-token IO and held-handle counterexample
+
+The maintained opt-in probe is
+`scripts/characterization/storage-windows-restricted-token.ps1`.
+Run it with PowerShell7 on Windows outside an already restricted sandbox token:
+
+```powershell
+pwsh -NoProfile -File scripts/characterization/storage-windows-restricted-token.ps1
+```
+
+It creates a fresh system-temp arena, retains fixtures and changes only their
+DACLs. It never creates OS users, changes project ACLs or touches DSS data.
+CreateRestrictedToken disables maximum privileges and adds a synthetic restricting
+SID; the tested calls run under impersonation, with guaranteed RevertToSelf
+cleanup. This is a real kernel/filesystem check, but still a restricted version
+of the current user's token, not a distinct user logon. It does not replace the
+required eventual two-identity Windows regression.
+
+The maintained probe ran successfully at2026-10-29T10:19:25.3960796Z:
+new-file creation succeeded; WRITE_ATTRIBUTES, DELETE_CHILD, WRITE_DAC,
+WRITE_OWNER, directory rename and private-staging read returned access-denied5.
+The candidate ACL blocked installing a junction on an empty service directory.
+The unsafe control (mapped generic Write plus read-attributes/traverse) allowed
+both attribute access and successful FSCTL_SET_REPARSE_POINT. Its directory
+actually acquired the reparse attribute, while the protected directory did not.
+Both service directory handles remained open with READ|WRITE sharing and without
+DELETE sharing throughout the attack. Private sentinel bytes stayed unchanged.
+Source SHA256:
+1f1e799bcc7929aa1673a1d6571e0ef7c21cc82a246682d6fcd27994927d651f.
+The final script asserts sentinel and namespace invariants as well as access
+codes; PowerShell parser diagnostics were empty. This is not a full quality gate.
+
+This is a concrete counterexample to treating the existing handle rename barrier
+as a complete metadata/namespace barrier: an unsafe DACL still permits conversion
+to a junction while that handle is held. Ownership and effective metadata rights
+must be admitted before relying on the directory, alongside native relative IO.
+Snapshotting and complete-chain/root admission remain separate obligations.
+
+Earlier attempts are not silently counted as successes. Inside the existing
+sandbox restriction, even positive-control creation failed; the external
+temp-only execution proved actual write access. The first unsafe control granted
+only mapped generic Write and could not pass the CreateFile open used by the
+harness. Adding read-attributes/traverse to that deliberately unsafe control
+made the attack succeed; the candidate safe ACL and rejection assertions were
+unchanged. No broad rights were added to the safe configuration.
+
+The [restricted-token contract](https://learn.microsoft.com/en-us/windows/win32/api/securitybaseapi/nf-securitybaseapi-createrestrictedtoken)
+describes the two access checks and privilege disabling. This probe is evidence
+for the candidate ACL boundary only, not a ready backend or claim about every
+Windows token, filesystem or reparse tag. No production binding is selected.
+
 ## Next proofs and acceptance
 
 1. Prove the chosen root-relative primitives in Windows and Linux synthetic
