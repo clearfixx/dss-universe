@@ -1,14 +1,13 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BookOpen,
-  Bot,
-  Boxes,
-  GraduationCap,
   LayoutDashboard,
-  MessageSquare,
   Newspaper,
   PenLine,
+  Settings,
   Users,
+  Boxes,
+  UserRound,
 } from "lucide-react";
 
 export const SHELL_VARIANTS = [
@@ -33,14 +32,13 @@ export type ModuleNavigationItem = {
 
 export type ModuleNavigation = ModuleNavigationItem & {
   children: readonly ModuleNavigationItem[];
-  /** Prioritized only in the horizontal and hybrid compositions. */
   featured?: boolean;
 };
 
 /**
- * A single registry powers every global navigation composition.
- * The route prefixes are intentionally limited to routes already present in the web app.
- * Links are not an authorization boundary; protected routes remain server-enforced.
+ * Only verified implemented routes are navigable.
+ * This registry is a presentation contract, never an authorization boundary.
+ * Future Academy, Community and AI routes must be added when their actual pages ship.
  */
 export const MODULE_NAVIGATION: readonly ModuleNavigation[] = [
   {
@@ -67,38 +65,25 @@ export const MODULE_NAVIGATION: readonly ModuleNavigation[] = [
     href: "/members",
     label: "Учасники",
     icon: Users,
-    children: [],
-  },
-  {
-    href: "/research",
-    label: "Research Lab",
-    icon: BookOpen,
     featured: true,
-    children: [],
-  },
-  {
-    href: "/community",
-    label: "Community Hub",
-    icon: MessageSquare,
-    featured: true,
-    children: [],
-  },
-  {
-    href: "/academy",
-    label: "Academy",
-    icon: GraduationCap,
     children: [],
   },
   {
     href: "/media",
-    label: "Media Platform",
+    label: "Медіатека",
     icon: Boxes,
     children: [],
   },
   {
-    href: "/ai",
-    label: "AI Core",
-    icon: Bot,
+    href: "/settings/profile",
+    label: "Налаштування",
+    icon: Settings,
+    children: [],
+  },
+  {
+    href: "/profile",
+    label: "Профілі",
+    icon: UserRound,
     children: [],
   },
 ] as const;
@@ -108,26 +93,30 @@ export function routeMatches(pathname: string, href: string): boolean {
 }
 
 export function currentModule(pathname: string): ModuleNavigation | null {
-  return (
-    MODULE_NAVIGATION.filter((module) => routeMatches(pathname, module.href))
-      .sort((a, b) => b.href.length - a.href.length)[0] ?? null
-  );
+  return MODULE_NAVIGATION
+    .filter((module) => routeMatches(pathname, module.href))
+    .sort((a, b) => b.href.length - a.href.length)[0] ?? null;
 }
 
-/** Contextual sidebar entries, never the complete cross-module registry. */
 export function moduleSidebarItems(pathname: string): readonly ModuleNavigationItem[] {
   const module = currentModule(pathname);
   if (!module) return [];
-  return [{ href: module.href, label: "Огляд", icon: module.icon }, ...module.children];
+
+  const overview = module.href === "/profile" ? pathname : module.href;
+  const children = module.children.filter((item) => routeMatches(pathname, item.href));
+  return [
+    { href: overview, label: "Огляд", icon: module.icon },
+    ...children,
+  ];
 }
 
-/** Root routes do not imply content or permissions for placeholder modules. */
 export function breadcrumbsForPath(pathname: string): readonly { href: string; label: string }[] {
   const module = currentModule(pathname);
   if (!module) return [];
+
   const child = module.children.find((item) => routeMatches(pathname, item.href));
   return [
-    { href: module.href, label: module.label },
+    { href: module.href === "/profile" ? pathname : module.href, label: module.label },
     ...(child ? [{ href: child.href, label: child.label }] : []),
   ];
 }
