@@ -28,6 +28,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomBytes } from "node:crypto";
 import { parseEnv } from "node:util";
+import { assertLocalBootstrapEnvironment } from "./bootstrap-environment-policy.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const manifest = JSON.parse(
@@ -117,23 +118,7 @@ try {
         : {}),
       ...process.env,
     };
-    const database = new URL(env.DATABASE_URL);
-    if (
-      !["postgresql:", "postgres:"].includes(database.protocol) ||
-      !["localhost", "127.0.0.1"].includes(database.hostname) ||
-      database.port !== infrastructure.POSTGRES_PORT ||
-      decodeURIComponent(database.username) !== infrastructure.POSTGRES_USER ||
-      decodeURIComponent(database.password) !==
-        infrastructure.POSTGRES_PASSWORD ||
-      decodeURIComponent(database.pathname.slice(1)) !==
-        infrastructure.POSTGRES_DB ||
-      (env.REDIS_HOST ?? "localhost") !== "localhost" ||
-      env.REDIS_PORT !== infrastructure.REDIS_PORT
-    ) {
-      throw new Error(
-        `${folder}: database/Redis configuration must match local Compose before bootstrap can migrate or seed.`,
-      );
-    }
+    assertLocalBootstrapEnvironment(env, infrastructure, folder);
   }
   run("corepack", ["pnpm", "install", "--frozen-lockfile"]);
   run("docker", ["compose", "up", "-d", "--wait", "--wait-timeout", "600"]);
