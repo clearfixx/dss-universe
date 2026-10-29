@@ -196,6 +196,24 @@ describe('Platform appearance GraphQL boundary (e2e)', () => {
     await prisma.userPermission.create({
       data: { userId: actorId, permissionId: deckPermission.id },
     });
+    // Explicit permission alone must not turn a regular user into an administrator.
+    const nonAdmin = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ query: deckQuery })
+      .expect(200);
+    expect(
+      (nonAdmin.body as AppearanceGraphQLResponse).errors?.length,
+    ).toBeGreaterThan(0);
+
+    const adminRole = await prisma.role.upsert({
+      where: { name: 'admin' },
+      update: {},
+      create: { name: 'admin', label: 'Administrator', isSystem: true },
+    });
+    await prisma.userRole.create({
+      data: { userId: actorId, roleId: adminRole.id },
+    });
     const deckGranted = await request(app.getHttpServer())
       .post('/api/graphql')
       .set('Authorization', `Bearer ${token}`)
@@ -227,6 +245,21 @@ describe('Platform appearance GraphQL boundary (e2e)', () => {
     await prisma.userPermission.create({
       data: { userId: actorId, permissionId: deckPermission.id },
     });
+
+    // Permission restoration grants access only while the admin role remains.
+    await prisma.userRole.delete({
+      where: {
+        userId_roleId: { userId: actorId, roleId: adminRole.id },
+      },
+    });
+    const roleRevoked = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ query: deckQuery })
+      .expect(200);
+    expect(
+      (roleRevoked.body as AppearanceGraphQLResponse).errors?.length,
+    ).toBeGreaterThan(0);
 
     const before = await prisma.platformAppearanceSettings.findUnique({
       where: { id: 'global' },
