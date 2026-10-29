@@ -1,10 +1,11 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
-import { ShellVariant } from '@prisma/client';
+import { SHELL_VARIANTS as ShellVariant } from './domain/appearance.types';
+import type { ShellVariant as ShellVariantType } from './domain/appearance.types';
 
 import type { PermissionsService } from '@api/core/authorization';
 
 import { AppearanceService } from './appearance.service';
-import type { AppearanceRepository } from './appearance.repository';
+import type { AppearanceRepository } from './infrastructure/appearance.repository';
 
 describe('AppearanceService', () => {
   const defaultSettings = {
@@ -41,7 +42,7 @@ describe('AppearanceService', () => {
 
   it('accepts only supported enum variants', async () => {
     await expect(
-      service.update('u1', '#FF00FF' as ShellVariant),
+      service.update('u1', '#FF00FF' as ShellVariantType),
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(update).not.toHaveBeenCalled();
   });
