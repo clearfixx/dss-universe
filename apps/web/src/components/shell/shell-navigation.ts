@@ -86,7 +86,7 @@ export function routeMatches(pathname: string, href: string): boolean {
 
 export function currentModule(pathname: string): ModuleNavigation | null {
   return MODULE_NAVIGATION
-    .filter((module) => routeMatches(pathname, activeModule.href))
+    .filter((entry) => routeMatches(pathname, entry.href))
     .sort((a, b) => b.href.length - a.href.length)[0] ?? null;
 }
 
