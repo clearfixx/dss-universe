@@ -1301,6 +1301,7 @@ type Query {
   achievementRules: [AchievementRule!]!
   achievements: [Achievement!]!
   achievementsAdmin: [Achievement!]!
+  adminCommandDeckAccess: Boolean!
   adminPlatformAppearance: PlatformAppearance!
   apiInfo: ApiInfo!
   blockedUsers(pagination: UsersPageInput): UsersPageModel!
