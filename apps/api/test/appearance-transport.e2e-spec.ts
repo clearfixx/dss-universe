@@ -221,8 +221,7 @@ describe('Platform appearance GraphQL boundary (e2e)', () => {
         query:
           'mutation ($variant: ShellVariant!) { updatePlatformAppearance(activeShellVariant: $variant) { activeShellVariant } }',
         variables: { variant: '#FFFFFF' },
-      })
-      ;
+      });
     // Current GraphQL transport returns HTTP 500 for invalid enum values.
     // Validate that the mutation is rejected; the transport status needs a separate fix.
     expect(response.status).toBe(500);
