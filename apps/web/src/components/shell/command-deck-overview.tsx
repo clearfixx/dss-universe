@@ -38,11 +38,11 @@ export function CommandDeckOverview({ feed }: { feed?: ActivityFeed | null }) {
       {feed ? <ActivityVisitMarker /> : null}
       <div>
         <Badge className="mb-3 bg-violet-500/15 text-violet-200">
-          Mission Control
+          Command Deck · Адміністрування
         </Badge>
-        <h1 className="text-3xl font-bold">Welcome back, Commander.</h1>
+        <h1 className="text-3xl font-bold">Панель адміністратора</h1>
         <p className="mt-2 text-slate-400">
-          Here is what changed across the universe while you were away.
+          Огляд доступних подій платформи.
         </p>
         <p className="mt-2 text-xs">
           <GraphqlPlatformStatus />
