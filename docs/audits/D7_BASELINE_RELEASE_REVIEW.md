@@ -5,6 +5,31 @@ Current accepted baseline: `289b24cf78be3e960458a04285d724e8f2a9eb63`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
 
+## 2026-10-29 compiler-resolved persistence inventory
+
+Read-only TypeScript AST inventory on accepted PR110 source834ea0b examined537
+tracked feature files and18 explicit Core/composition domain/application/
+presentation files:555 total,1478 literal static references. Infrastructure,
+module assemblies, test/declaration files are excluded. API source is identical
+to accepted main289b24c; D7's net changes are Markdown only.
+
+Imports, exports, import-types and external import-equals are checked with the
+project compiler's module resolution, including @api aliases. There are zero
+parse errors and zero direct references to Prisma or core/database. The selected
+source also has no dynamic import/require calls. This is a bounded static
+inventory, not a proof about arbitrary unselected code, runtime behavior,
+transitive/inferred type exposure or every persistence-ownership decision.
+
+Metadata report SHA256:
+6454814539f46617bc12a8f11c9174ca7249526d4ebe5b2cd7b747b969ebd9bb.
+Temporary probe/report: system temp dss-d7-persistence-inventory.cjs/.json;
+no helper was created inside node_modules. Initial report write failed EPERM;
+the explicit metadata-only temp-write retry completed successfully. No API,
+environment, DB, checker rule or baseline change occurred. DEBT-004 now says
+IMPLEMENTED for the original direct-dependency correction; final D7 acceptance
+and broader type/ownership review remain open. Existing full-gate/transport
+evidence remains scoped to its accepted packages, not a new D7 certificate.
+
 ## 2026-10-29 accepted bootstrap correction
 
 Owner accepted [PR110](https://github.com/clearfixx/dss-universe/pull/110),
