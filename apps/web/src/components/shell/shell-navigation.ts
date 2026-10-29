@@ -95,7 +95,8 @@ export function moduleSidebarItems(pathname: string): readonly ModuleNavigationI
   if (!activeModule) return [];
 
   const overview = activeModule.href;
-  const children = activeModule.children.filter((item) => routeMatches(pathname, item.href));
+  // Contextual navigation is stable across sibling routes, not filtered to the current page.
+  const children = activeModule.children;
   return [
     { href: overview, label: "Огляд", icon: activeModule.icon },
     ...children,
