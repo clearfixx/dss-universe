@@ -24,11 +24,17 @@ Branch: `feature/application-shell-v1`
 - Optional contextual Toolbar slot, skip-to-content link, active-link accessibility states.
 - Shell-specific surface and divider tokens, without changing the global component palette.
 - Unit tests for the pure navigation contract.
+- Platform appearance Prisma enum and migration, domain repository port and infrastructure adapter.
+- GraphQL public and guarded administrative queries and guarded mutation using existing `system.settings.update` permission.
+- Transactional audit of configuration updates.
+- SSR retrieval with per-request fallback to the default Shell Variant.
+- Protected administration page with local preview and explicit save; link visible from profile settings only to permitted viewers.
+- Backend service and repository unit tests.
 
 ## Required before merge
 
 1. **Design parity:** canonical production logo asset; improved responsive layouts; reviewed Sidebar and Personal Hub states; route metadata for dynamic breadcrumbs.
-2. **Server-owned admin configuration:** inspect existing Settings and IAM contracts, introduce typed persistent setting (prefer an established settings store if present), guarded GraphQL update, transactional audit, cache invalidation and admin UI preview/apply.
+2. **Server-owned admin configuration:** review the implemented Settings / IAM integration, run migrations and verify update/query/re-render workflows end-to-end. The current read policy uses request-scoped memoization and `no-store` (no cross-request cache to invalidate).
 3. **No auth bypass:** administrative mutations require a dedicated effective permission. UI visibility alone is insufficient.
 4. **Testing:** run `pnpm --filter @dss/web lint`, `typecheck`, `test`, `build`; run relevant API tests and desktop/mobile Playwright; verify no hydration mismatch or accidental private/public route changes.
 5. **Manual UX approval:** test all variants on representative modules with real content. Compare UI against approved reference mockups.
@@ -36,7 +42,7 @@ Branch: `feature/application-shell-v1`
 
 ## Important boundaries
 
-The first frontend increment does **not** claim completion of the server-side variant persistence. It currently defaults to `MODULE_LAUNCHER` and supports selection through the Shell component contract only. Avoid building a parallel permission engine, custom React router or client-only source of truth.
+The branch now includes the end-to-end implementation for server-owned variant persistence; it remains **unverified** until Prisma migration, API GraphQL and browser tests pass. Without a valid API response, Shell falls back to `MODULE_LAUNCHER`. Avoid building a parallel permission engine, custom React router or client-only source of truth.
 
 The old product documents use conflicting Mission Control / Command Deck terminology. Route `/command-deck` remains unchanged for compatibility; the user-facing label is Mission Control pending route migration decision.
 
