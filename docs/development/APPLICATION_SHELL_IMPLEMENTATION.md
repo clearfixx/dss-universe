@@ -72,3 +72,13 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - AI Core briefing remains a deterministic summary of feed counts, not an AI-generated response or an operational chat action.
 - The user-facing dashboard now uses **Mission Control** while retaining `/command-deck` for route compatibility.
 - These latest dashboard changes require a new green CI run before merge.
+
+## Command Deck administrative boundary — 29 October 2026
+
+- `/command-deck` is a restricted administrator dashboard, **not** the regular-user Mission Control. No regular-user link points to this route.
+- IAM capability `admin.command-deck.access` is seeded for the `admin` role; `owner` inherits all registered permissions. Ordinary `user`/`moderator` roles do not receive it.
+- The GraphQL query `adminCommandDeckAccess` is protected by JWT and `PermissionsGuard`; a Next.js server component checks it before loading any dashboard data and returns 404 for unauthorized sessions.
+- The shared Shell hides this admin destination in every navigation variant, the mobile launcher and the personal menu unless the server-side capability check returns true. Visibility is **not** a security guard.
+- `proxy.ts` remains responsible only for authentication/session renewal; it does not infer administrator rights from JWT contents.
+- Role/permission changes must propagate through the existing authoritative IAM reader. GraphQL denies anonymous/unauthorized access; SSR fails closed on API errors.
+- A future dedicated user Mission Control must receive a **different user route** and is outside this focused security correction.
