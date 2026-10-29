@@ -39,6 +39,10 @@ describe("application shell navigation contracts", () => {
       "/newsroom",
       "/newsroom/new",
     ]);
+    expect(moduleSidebarItems("/newsroom").map((item) => item.href)).toEqual([
+      "/newsroom",
+      "/newsroom/new",
+    ]);
     expect(moduleSidebarItems("/media")).toHaveLength(1);
     expect(moduleSidebarItems("/unknown")).toEqual([]);
   });
