@@ -86,29 +86,29 @@ export function routeMatches(pathname: string, href: string): boolean {
 
 export function currentModule(pathname: string): ModuleNavigation | null {
   return MODULE_NAVIGATION
-    .filter((module) => routeMatches(pathname, module.href))
+    .filter((module) => routeMatches(pathname, activeModule.href))
     .sort((a, b) => b.href.length - a.href.length)[0] ?? null;
 }
 
 export function moduleSidebarItems(pathname: string): readonly ModuleNavigationItem[] {
-  const module = currentModule(pathname);
-  if (!module) return [];
+  const activeModule = currentModule(pathname);
+  if (!activeModule) return [];
 
-  const overview = module.href;
-  const children = module.children.filter((item) => routeMatches(pathname, item.href));
+  const overview = activeModule.href;
+  const children = activeModule.children.filter((item) => routeMatches(pathname, item.href));
   return [
-    { href: overview, label: "Огляд", icon: module.icon },
+    { href: overview, label: "Огляд", icon: activeModule.icon },
     ...children,
   ];
 }
 
 export function breadcrumbsForPath(pathname: string): readonly { href: string; label: string }[] {
-  const module = currentModule(pathname);
-  if (!module) return [];
+  const activeModule = currentModule(pathname);
+  if (!activeModule) return [];
 
-  const child = module.children.find((item) => routeMatches(pathname, item.href));
+  const child = activeModule.children.find((item) => routeMatches(pathname, item.href));
   return [
-    { href: module.href, label: module.label },
+    { href: activeModule.href, label: activeModule.label },
     ...(child ? [{ href: child.href, label: child.label }] : []),
   ];
 }
