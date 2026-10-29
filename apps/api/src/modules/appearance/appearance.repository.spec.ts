@@ -40,8 +40,9 @@ describe('AppearanceRepository', () => {
       },
     } as unknown as TransactionClient;
     const prisma = {
-      transaction: async <T>(callback: (client: TransactionClient) => Promise<T>) =>
-        callback(tx),
+      transaction: async <T>(
+        callback: (client: TransactionClient) => Promise<T>,
+      ) => callback(tx),
     } as unknown as PrismaService;
     const audit = {
       append: async (_client: TransactionClient, entry: { action: string }) => {
@@ -68,8 +69,9 @@ describe('AppearanceRepository', () => {
       },
     } as unknown as TransactionClient;
     const prisma = {
-      transaction: async <T>(callback: (client: TransactionClient) => Promise<T>) =>
-        callback(tx),
+      transaction: async <T>(
+        callback: (client: TransactionClient) => Promise<T>,
+      ) => callback(tx),
     } as unknown as PrismaService;
     const audit = {
       append: async () => {
