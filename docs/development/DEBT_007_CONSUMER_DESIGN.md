@@ -91,8 +91,14 @@ the immutable capsule, while keeping numerical rules live in their owners.
 Validate relevant configuration mutations against registered safe facts and the
 derived-event dependency graph under a shared configuration revision protocol.
 This requires explicit owner integration; preflight alone is insufficient if
-rules can change after activation. Unsupported existing configuration blocks
+rules can change after activation. Unsafe or unknown live configuration blocks
 activation with a content-free report; it must not be silently disabled.
+Distinguish that case from declared dormant rules for not-yet-installed Forum/
+Knowledge producers: migration defaults do not prove producer availability.
+The detailed inventory must report those dormant dependencies explicitly, retain
+their rules unchanged, and require the producer's approved fact contract before
+admitting its actual events. Do not make the existence of legitimate future
+defaults alone an implicit requirement to implement all future modules first.
 Do not silently freeze all scoring rules, add a hop cap or change valid formulas.
 Exact mutation guards, receipts, unknown-event classification and revision races
 are decisions for the next detailed protocol, not runtime authorized here.
@@ -129,6 +135,10 @@ No current automatic-delivery production incident or concurrent race is claimed.
 Resolve the owner policy and prove its serialization/replay contract separately;
 do not patch Achievements secretly as part of root queue wiring. C acceptance
 must include this gap's disposition and the real source-order tests.
+The policy must also distinguish terminal withdrawal from a later legitimate
+qualification or reinstatement. No permanent source ban or automatic restoration
+is inferred here; source revision/qualification coordinates require an explicit
+owner decision before a durable revocation design is implemented.
 
 ## Reviewable implementation order
 

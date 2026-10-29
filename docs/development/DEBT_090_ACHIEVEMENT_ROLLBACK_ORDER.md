@@ -33,6 +33,11 @@ existing awards, lock order and concurrent attempts require separate design and
 approval. Do not create a root-owned Achievements table or silently rewrite history.
 No historical replay/backfill is authorized by this gap.
 
+The policy must explicitly cover later legitimate source qualification or
+reinstatement, such as a new publication after withdrawal. Neither a permanent
+ban by source ID nor automatic restoration is assumed. Agree on the source
+lifecycle/revision boundary before implementing durable revocation state.
+
 Evidence: [migrated characterization](../../apps/api/test/gamification-delivery-characterization.e2e-spec.ts),
 focused4/4 including the two existing Points replay/atomicity tests. Raw focused
 output is retained at node_modules/.cache/debt007-c-characterization.log.
