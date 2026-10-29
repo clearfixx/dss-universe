@@ -1,11 +1,48 @@
 # D7 — Baseline release review
 
 Date: 2026-10-22. Updated: 2026-10-29. Branch: `debt/d7-release-gate`.
-Current accepted baseline: `cc39080fe339ad1ca4699d3fa83122b94f46daba`.
+Current accepted baseline: `ddb685d9df9cabc0e9f54ca70dcb2c45ed02dfea`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
 
-## 2026-10-29 accepted Mailpit and C characterization checkpoint
+## 2026-10-29 accepted C design and scoped development readiness
+
+Owner accepted PR108 head cd40325, merged ddb685d. Exact-head CI5/5 and
+local full gate0 cover E2E688/688 without skips, coverage8/8 and Web15/15
+without retries. CI E2E SHA256:
+ba279c3e154a2cca603c6f8b1f56d3e495670086a9fc8da02a167cd43d0b5ced.
+Owner approved the DEBT-090 policy: late old-cycle events cannot restore a
+revoked award; a new legitimate qualification cycle may qualify under current
+rules. Detailed protocol PR10910c09eb is not accepted runtime implementation.
+DEBT-007 C/D and DEBT-090 correction remain open. Inventory001–090 is now in
+accepted register history; this does not mean90 closed debts.
+
+Read-only local development probe at 2026-10-29T04:36:21.389Z verifies effective
+API/Worker DB and Redis coordinates against root Compose, required Auth key
+presence, documented development Media signing fallback, Web3200/API3201
+public endpoints, exact credentialed CORS, GraphQL Query response and matching
+reset/verification links. Web200, API readinessok, Workerup, pgAdmin200 and
+Mailpit readyz200 were observed. No credential values are recorded here.
+
+Running dev PostgreSQL/Redis/pgAdmin/Mailpit/ClamAV and disposable test
+PostgreSQL/Redis match configured image references and exact loopback port
+bindings. Every configured healthcheck is healthy. pgAdmin has no configured
+healthcheck: its evidence is running state, matching pinned source image and
+HTTP200, not a Docker health assertion. Its source digest is
+dpage/pgadmin4@sha256:c332c5f6dfba995d9ebc4af261d93506d6876085d712eaaa3defc8dd1a3f26de.
+Host ClamAV PING returned PONG; this is daemon readiness, not a complete
+malware/upload-path certification. Probe SHA256: 64419457047536424607c391b8e94a29ad8237b123bf155fa9f4ca55ee86f98e.
+Ignored local evidence: D6 node_modules/.cache/d7-dev-scope-probe.json.
+
+This maps original development-only DEBT-012/030/032 to scoped routeC together
+with accepted dev-port PR105, security PR107 and Mailpit PR106 full gates.
+No environment mutation, DB migration/reset, mail DATA, upload or unrelated
+service restart occurred in the probe. This does not certify production,
+all Auth flows, arbitrary process/URL overrides (DEBT-031), optional persistent
+observability (DEBT-033), global uptime or a new D7 full gate. D7 acceptance
+remains open. Earlier checkpoint statements below retain their historical date.
+
+## Earlier 2026-10-29 Mailpit and C characterization checkpoint
 
 Owner accepted PR106a24bb2a, mergedcc39080 at03:16:43UTC. Exact-head CI5/5
 and separate full gate0: coverage8/8/API1466/1466, E2E686/686 across64 suites
