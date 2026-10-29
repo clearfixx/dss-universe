@@ -61,9 +61,10 @@ describe('Platform appearance persistence and audit (e2e)', () => {
 
   it('rolls back variant updates when audit append fails', async () => {
     await repository.update(actorId, SHELL_VARIANTS.HYBRID);
-    const before = await fixture.prisma.platformAppearanceSettings.findUniqueOrThrow({
-      where: { id: 'global' },
-    });
+    const before =
+      await fixture.prisma.platformAppearanceSettings.findUniqueOrThrow({
+        where: { id: 'global' },
+      });
     const appendFailure = jest
       .spyOn(audit, 'append')
       .mockRejectedValueOnce(new Error('synthetic appearance audit failure'));
