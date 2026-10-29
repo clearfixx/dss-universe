@@ -1,8 +1,11 @@
-import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Inject, Injectable } from '@nestjs/common';
 
 import { Permission, PermissionsService } from '@api/core/authorization';
 
-import { AppearanceRepository } from './infrastructure/appearance.repository';
+import {
+  APPEARANCE_REPOSITORY,
+  type AppearanceRepositoryPort,
+} from './domain/appearance.repository.port';
 import {
   SHELL_VARIANTS,
   type AppearanceSettings,
@@ -12,7 +15,8 @@ import {
 @Injectable()
 export class AppearanceService {
   constructor(
-    private readonly repository: AppearanceRepository,
+    @Inject(APPEARANCE_REPOSITORY)
+    private readonly repository: AppearanceRepositoryPort,
     private readonly permissions: PermissionsService,
   ) {}
 
