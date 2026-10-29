@@ -40,9 +40,8 @@ describe('AppearanceRepository', () => {
       },
     } as unknown as TransactionClient;
     const prisma = {
-      transaction: <T>(
-        callback: (client: TransactionClient) => Promise<T>,
-      ) => callback(tx),
+      transaction: <T>(callback: (client: TransactionClient) => Promise<T>) =>
+        callback(tx),
     } as unknown as PrismaService;
     const audit = {
       append: (_client: TransactionClient, entry: { action: string }) => {
@@ -63,15 +62,15 @@ describe('AppearanceRepository', () => {
     const tx = {
       platformAppearanceSettings: {
         findUnique: () => Promise.resolve(null),
-        upsert: () => Promise.resolve({
-          activeShellVariant: SHELL_VARIANTS.HYBRID,
-        }),
+        upsert: () =>
+          Promise.resolve({
+            activeShellVariant: SHELL_VARIANTS.HYBRID,
+          }),
       },
     } as unknown as TransactionClient;
     const prisma = {
-      transaction: <T>(
-        callback: (client: TransactionClient) => Promise<T>,
-      ) => callback(tx),
+      transaction: <T>(callback: (client: TransactionClient) => Promise<T>) =>
+        callback(tx),
     } as unknown as PrismaService;
     const audit = {
       append: () => {
