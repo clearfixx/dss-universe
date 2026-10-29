@@ -21,6 +21,16 @@ active package safe and buildable.
 
 ## Register
 
+### DEBT-088 — Host-reserved dev listener ports (Medium, user-requested correction)
+
+User's root pnpm dev fails with Web EACCES3000; both3000/3001 fall inside current
+Windows exclusion2928–3027.3200/3201 are available. A narrow native Node env-file
+launch permits a local Web listener override without changing default ports,
+Next's normal dotenv precedence or UI. Local origins/API/email URLs must agree;
+no Windows reservation or dev DB is changed. See
+[scope and evidence](DEBT_088_DEV_PORT_READINESS.md). Full startup/quality/CI and
+acceptance remain open; this does not fold the separate Mailpit task into B/C.
+
 ### DEBT-007 — Automatic gamification delivery (High, runtime B approved; verification open)
 
 After accepted A/A.1 PR101 and routing design/protocol PR102/103, the owner approved
