@@ -128,6 +128,6 @@ export function visibleModules(
   return MODULE_NAVIGATION.filter(
     (item) =>
       (hasSession || !item.requiresSession) &&
-      (!item.requiresAdminDeck || canAccessAdminDeck),
+      (!item.requiresAdminDeck || (hasSession && canAccessAdminDeck)),
   );
 }
