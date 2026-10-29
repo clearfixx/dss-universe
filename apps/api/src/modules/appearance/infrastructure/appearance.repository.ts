@@ -9,10 +9,12 @@ import {
   type ShellVariant,
 } from '../domain/appearance.types';
 
+import type { AppearanceRepositoryPort } from '../domain/appearance.repository.port';
+
 const GLOBAL_APPEARANCE_ID = 'global';
 
 @Injectable()
-export class AppearanceRepository {
+export class AppearanceRepository implements AppearanceRepositoryPort {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditWriterService,
