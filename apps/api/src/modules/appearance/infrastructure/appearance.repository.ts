@@ -3,13 +3,12 @@ import { Injectable } from '@nestjs/common';
 import { AuditWriterService } from '@api/core/audit';
 import { PrismaService } from '@api/core/database';
 
+import type { AppearanceRepositoryPort } from '../domain/appearance.repository.port';
 import {
   SHELL_VARIANTS,
   type AppearanceSettings,
   type ShellVariant,
 } from '../domain/appearance.types';
-
-import type { AppearanceRepositoryPort } from '../domain/appearance.repository.port';
 
 const GLOBAL_APPEARANCE_ID = 'global';
 
@@ -24,15 +23,20 @@ export class AppearanceRepository implements AppearanceRepositoryPort {
     const settings = await this.prisma.platformAppearanceSettings.findUnique({
       where: { id: GLOBAL_APPEARANCE_ID },
     });
-    return settings ?? {
-      id: GLOBAL_APPEARANCE_ID,
-      activeShellVariant: SHELL_VARIANTS.MODULE_LAUNCHER,
-      updatedById: null,
-      updatedAt: new Date(0),
-    };
+    return (
+      settings ?? {
+        id: GLOBAL_APPEARANCE_ID,
+        activeShellVariant: SHELL_VARIANTS.MODULE_LAUNCHER,
+        updatedById: null,
+        updatedAt: new Date(0),
+      }
+    );
   }
 
-  async update(actorId: string, variant: ShellVariant): Promise<AppearanceSettings> {
+  async update(
+    actorId: string,
+    variant: ShellVariant,
+  ): Promise<AppearanceSettings> {
     return this.prisma.transaction(async (tx) => {
       const before = await tx.platformAppearanceSettings.findUnique({
         where: { id: GLOBAL_APPEARANCE_ID },
@@ -56,7 +60,8 @@ export class AppearanceRepository implements AppearanceRepositoryPort {
         targetType: 'AppearanceSettings',
         targetId: GLOBAL_APPEARANCE_ID,
         metadata: {
-          previousVariant: before?.activeShellVariant ?? SHELL_VARIANTS.MODULE_LAUNCHER,
+          previousVariant:
+            before?.activeShellVariant ?? SHELL_VARIANTS.MODULE_LAUNCHER,
           activeShellVariant: variant,
         },
       });
