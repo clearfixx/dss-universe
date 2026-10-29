@@ -1,11 +1,19 @@
 "use client";
 
-import { ChevronDown, LogIn, LogOut, Menu, Settings } from "lucide-react";
+import { ChevronDown, LayoutDashboard, LogIn, LogOut, Menu, Settings, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, type PropsWithChildren, type ReactNode } from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -190,10 +198,31 @@ export function DssApplicationShell({
                   <LogOut aria-hidden="true" />
                 </Button>
               </form>
-              <Link href={`/profile/${encodeURIComponent(viewer.username)}`} className="flex items-center gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-violet-400">
-                <Avatar><AvatarFallback>{viewerInitials(viewer)}</AvatarFallback></Avatar>
-                <span className="hidden text-sm text-slate-200 sm:block">{viewer.displayName || viewer.username}</span>
-              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" type="button" className="h-auto gap-2 px-2" aria-label="Відкрити меню користувача">
+                    <Avatar><AvatarFallback>{viewerInitials(viewer)}</AvatarFallback></Avatar>
+                    <span className="hidden max-w-36 truncate text-sm text-slate-200 sm:block">{viewer.displayName || viewer.username}</span>
+                    <ChevronDown className="size-4 text-slate-400" aria-hidden="true" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-60 border border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)]">
+                  <DropdownMenuLabel>
+                    <span className="block truncate text-sm">{viewer.displayName || viewer.username}</span>
+                    <span className="block truncate text-xs font-normal text-slate-400">@{viewer.username}</span>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href={`/profile/${encodeURIComponent(viewer.username)}`}><UserRound aria-hidden="true" />Мій профіль</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/command-deck"><LayoutDashboard aria-hidden="true" />Mission Control</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings/profile"><Settings aria-hidden="true" />Налаштування</Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <Button asChild variant="outline" size="sm">
