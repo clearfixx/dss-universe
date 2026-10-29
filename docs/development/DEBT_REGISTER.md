@@ -22,6 +22,25 @@ active package safe and buildable.
 
 ## Register
 
+2026-10-29 current checkpoint: owner accepted design/characterization PR108
+cd40325, merged as ddb685d. CI5/5 and local full gate0 cover E2E688/688
+and Web15/15 without retries. The owner approved the DEBT-090 new-cycle
+policy; runtime correction and consumer activation remain unimplemented.
+PR10910c09eb proposes the detailed C1 protocol with characterization only;
+its CI5/5 is green, local full gate and acceptance remain pending.
+D7 acceptance remains open. The following checkpoints are historical.
+
+### DEBT-090 — Achievements rollback before late original (High, OPEN policy gap)
+
+DEBT-007 C characterization on migrated owned schema confirms empty source
+rollback followed by a matching original produces an active Achievement until
+rollback is replayed. This does not prove a current automatic-delivery incident.
+Points already retains an absent source's revocation; Achievements must not inherit
+that guarantee by assumption. The owner approved a new legitimate qualification cycle under current rules;
+late events from an old cycle must not restore a revoked award. Detailed protocol
+and runtime correction remain separate work; no runtime fix here.
+[Evidence and scope](DEBT_090_ACHIEVEMENT_ROLLBACK_ORDER.md).
+
 2026-10-29 latest override: owner accepted DEBT-013 PR106a24bb2a, mergedcc39080
 at03:16:43UTC. Exact-head CI5/5 and fresh full gate0: coverage8/8, E2E686/686,
 Web15/15 without retries. SMTP12525/UI18025, Worker-configured Nodemailer.verify,
