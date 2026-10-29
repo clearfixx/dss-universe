@@ -48,9 +48,16 @@ stubbed commands and driver metadata; no remote connection is required.
 
 Owner approved the separate package and exact policy: no query or only literal
 ?schema=public; other parameters, duplicates and fragments are rejected.
-Candidate [PR110](https://github.com/clearfixx/dss-universe/pull/110), head503a6ae,
+Candidate [PR110](https://github.com/clearfixx/dss-universe/pull/110), head834ea0b,
 implements the pure policy and six passing isolated regressions in its own branch.
-Full local gate and CI are running; acceptance remains open. Candidate source is
+CI5/5 and its downloaded E2E688/688 across64 suites without skips are verified.
+The actual CI quality-policy step ran the six new regression groups. A masking
+case first failed on503a6ae: safe API .env.local hid an unsafe .env used by CLI.
+The updated guard checks CLI file/process and API local/process views separately;
+that focused case now passes and its red/green logs are retained.
+A new exact-head full local gate is running sequentially after the prior exit0
+run. That prior run changed source mid-flight and is superseded evidence, not
+current-head acceptance. Scoped acceptance remains open. Candidate source is
 not imported into this D7 review branch. DEBT-031 remains open routeM; DEBT-012/030/032
 scoped readiness does not waive arbitrary override safety. No production UI,
 scoring rule, database migration or service restart is included here.

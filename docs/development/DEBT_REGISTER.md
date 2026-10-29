@@ -29,8 +29,9 @@ query host/port overrides and reaches stubbed deploy/seed; installed pg metadata
 resolves a different effective target. Seed uses PrismaPg. No real command,
 connection, migration or seed ran; migrate-engine interpretation is untested and
 current primary effective coordinates remain local. Owner approved the separate guard-policy/test package and exact no-query or
-schema=public policy. Candidate PR110503a6ae has six passing isolated regressions;
-full gate/CI and scoped acceptance remain open. [Evidence and limits](../audits/DEBT_091_BOOTSTRAP_EFFECTIVE_DATABASE_TARGET.md).
+schema=public policy. Candidate PR110834ea0b checks CLI and API-local environment views; six isolated
+regression groups and CI5/5 pass, E2E688/688 without skips. Exact-head local full
+gate and scoped acceptance remain open. [Evidence and limits](../audits/DEBT_091_BOOTSTRAP_EFFECTIVE_DATABASE_TARGET.md).
 
 2026-10-29 current checkpoint: owner accepted design/characterization PR108
 cd40325, merged as ddb685d. CI5/5 and local full gate0 cover E2E688/688

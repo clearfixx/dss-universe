@@ -209,7 +209,7 @@ does not override missing risk decisions or accept an unmerged candidate.
 | DEBT-088 | C      | Owner accepted PR105b0aabaa, merge5d6db1d; actual startup/readiness/GraphQL/CORS verified, CI5/5 and local full gate0, E2E686/686, Web15/15. Earlier sleep-interrupted raw log retained; no broad stability waiver.                                                                                       |
 | DEBT-089 | C      | Owner accepted PR10756ed7da/merge701cb87: patch-only dependency, audit0 high/critical, CI5/5/full gate0, E2E686/686, Web15/15. Mailpit integration subsequently accepted separately in PR106.                                                                                                             |
 | DEBT-090 | M      | Accepted PR108 characterization confirms legacy rollback ordering gap. Owner approved new legitimate cycles under current rules and rejecting late old-cycle restoration. Detailed C1 protocol PR109 and runtime correction remain unaccepted/unimplemented; no production incident or concurrency claim. |
-| DEBT-091 | O      | Isolated bootstrap guard accepts query host/port overrides while pg resolves a different target; stubbed deploy/seed reached, no real connection/migration. Separate correction approval required; see DEBT_091_BOOTSTRAP_EFFECTIVE_DATABASE_TARGET.md.                                                   |
+| DEBT-091 | O      | Bootstrap query target and CLI/local-env masking defects characterized. Owner approved exact query policy; PR110834ea0b has CI5/5, E2E688/688 and passing isolated regressions. Exact-head local gate/acceptance remain open; no candidate source imported.                                               |
 
 ## Execution order from this checkpoint
 
