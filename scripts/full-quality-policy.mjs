@@ -78,6 +78,7 @@ export function createBrowserEnvironment(source) {
 export function qualitySteps(apiReport) {
   return [
     ["format:check"],
+    ["helpers:verify"],
     ["architecture:check"],
     ["db:validate"],
     ["db:generate"],

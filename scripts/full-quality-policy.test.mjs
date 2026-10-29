@@ -116,6 +116,7 @@ test("browser environment excludes inherited secrets and disables reuse", () => 
 });
 test("full plan includes coverage, E2E and generation but never provisioning/reset", () => {
   const steps = qualitySteps("unique.json");
+  assert.ok(steps.some((step) => step.join(" ") === "helpers:verify"));
   const native = steps.findIndex(
     (step) => step.join(" ") === "--filter @dss/storage native:verify",
   );
