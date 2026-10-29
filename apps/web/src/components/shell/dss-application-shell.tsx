@@ -3,7 +3,7 @@
 import { ChevronDown, LogIn, LogOut, Menu, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, type PropsWithChildren } from "react";
+import { useEffect, type PropsWithChildren, type ReactNode } from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,7 @@ function ModuleLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: 
         <Link
           key={href}
           href={href}
-          aria-current={routeMatches(pathname, href) ? "page" : undefined}
+          aria-current={pathname === href ? "page" : undefined}
           onClick={onNavigate}
           className={cn(
             "flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-slate-300 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400",
@@ -150,7 +150,8 @@ export function DssApplicationShell({
   children,
   viewer,
   variant = DEFAULT_SHELL_VARIANT,
-}: PropsWithChildren<{ viewer: SessionViewer | null; variant?: ShellVariant }>) {
+  toolbar,
+}: PropsWithChildren<{ viewer: SessionViewer | null; variant?: ShellVariant; toolbar?: ReactNode }>) {
   const pathname = usePathname();
   const open = useShellStore((state) => state.mobileNavigationOpen);
   const setOpen = useShellStore((state) => state.setMobileNavigationOpen);
@@ -162,6 +163,7 @@ export function DssApplicationShell({
 
   return (
     <div data-shell-variant={variant} className="min-h-screen bg-background text-foreground">
+      <a href="#main-content" className="sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:not-sr-only focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground">Перейти до вмісту</a>
       <header className="sticky top-0 z-40 flex min-h-16 items-center gap-3 border-b border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)] px-4 sm:px-6">
         <Button
           variant="ghost"
@@ -209,6 +211,7 @@ export function DssApplicationShell({
       <div className={hasSidebar ? "lg:pl-60" : undefined}>
         <main id="main-content" className="mx-auto max-w-[1600px] p-4 sm:p-6 lg:p-8">
           <Breadcrumbs pathname={pathname} />
+          {toolbar ? <div role="toolbar" aria-label="Дії сторінки" className="mb-5 flex flex-wrap items-center gap-2">{toolbar}</div> : null}
           {children}
         </main>
       </div>
