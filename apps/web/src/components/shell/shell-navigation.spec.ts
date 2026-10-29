@@ -54,7 +54,13 @@ describe("application shell navigation contracts", () => {
     expect(guestRoutes).not.toContain("/command-deck");
     expect(guestRoutes).not.toContain("/newsroom");
     expect(guestRoutes).not.toContain("/settings/profile");
-    expect(visibleModules(true)).toHaveLength(MODULE_NAVIGATION.length);
+    expect(visibleModules(true).map((entry) => entry.href)).not.toContain(
+      "/command-deck",
+    );
+    expect(visibleModules(true, true).map((entry) => entry.href)).toContain(
+      "/command-deck",
+    );
+    expect(visibleModules(true, true)).toHaveLength(MODULE_NAVIGATION.length);
   });
 
   it("uses declared labels for known breadcrumbs", () => {
