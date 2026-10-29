@@ -27,7 +27,7 @@ test("mandatory quality CI runs the configuration regressions", () => {
   assert.doesNotMatch(qualityJob, /continue-on-error:\s*true/);
 });
 
-test("effective Mailpit Compose uses persistent storage and loopback host ports", () => {
+function resolveCompose(smtpPort = "") {
   const result = spawnSync(
     "docker",
     [
@@ -50,11 +50,16 @@ test("effective Mailpit Compose uses persistent storage and loopback host ports"
         POSTGRES_DB: "synthetic",
         POSTGRES_PORT: "5433",
         REDIS_PORT: "6379",
+        DSS_MAILPIT_SMTP_PORT: smtpPort,
       },
     },
   );
   assert.equal(result.status, 0, "Docker Compose configuration must resolve");
-  const config = JSON.parse(result.stdout);
+  return JSON.parse(result.stdout);
+}
+
+test("effective Mailpit Compose uses persistent storage and loopback host ports", () => {
+  const config = resolveCompose();
   const mail = config.services.mailpit;
   assert.equal(mail.image, "axllent/mailpit:v1.31.2");
   assert.equal(mail.environment.MP_DATABASE, "/data/mailpit.db");
@@ -75,6 +80,26 @@ test("effective Mailpit Compose uses persistent storage and loopback host ports"
   assert.equal(mail.volumes[0].target, "/data");
   assert.ok(config.volumes.dss_mailpit_data);
   assert.deepEqual(mail.healthcheck.test, ["CMD", "/mailpit", "readyz"]);
+});
+
+test("explicit SMTP override changes only the loopback published SMTP port", () => {
+  const baseline = resolveCompose().services.mailpit;
+  const overridden = resolveCompose("12525").services.mailpit;
+  assert.deepEqual(overridden, {
+    ...baseline,
+    ports: baseline.ports.map((port) =>
+      port.target === 1025 ? { ...port, published: "12525" } : port,
+    ),
+  });
+  assert.equal(overridden.ports.length, 2);
+  assert.equal(
+    overridden.ports.find((port) => port.target === 1025).host_ip,
+    "127.0.0.1",
+  );
+  assert.equal(
+    overridden.ports.find((port) => port.target === 8025).published,
+    "18025",
+  );
 });
 
 test("API and Worker host examples agree on SMTP2525 without external relay", () => {
