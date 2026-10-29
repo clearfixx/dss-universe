@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -77,7 +78,7 @@ function GlobalNavigation({
             <Link
               key={href}
               href={href}
-              aria-current={routeMatches(pathname, href) ? "page" : undefined}
+              aria-current={pathname === href ? "page" : undefined}
               className={cn(
                 "inline-flex h-9 shrink-0 items-center gap-2 rounded-lg px-2.5 text-xs text-slate-300 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-violet-400",
                 routeMatches(pathname, href) && "bg-violet-500/15 text-violet-200",
@@ -244,6 +245,7 @@ export function DssApplicationShell({
         <SheetContent side="left" className="border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)] p-0">
           <SheetHeader className="border-b border-[color:var(--shell-divider)] px-5 py-4">
             <SheetTitle className="text-left text-sm text-slate-100">Навігація DSS Universe</SheetTitle>
+            <SheetDescription className="text-left text-xs">Оберіть доступний розділ платформи.</SheetDescription>
           </SheetHeader>
           <div className="max-h-[calc(100dvh-5rem)] overflow-y-auto px-3 py-4">
             <ModuleLinks pathname={pathname} onNavigate={() => setOpen(false)} />
