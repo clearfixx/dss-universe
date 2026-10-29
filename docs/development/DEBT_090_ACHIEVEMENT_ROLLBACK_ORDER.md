@@ -51,6 +51,17 @@ C1 must now specify qualification identity, withdrawal/reinstatement coordinates
 legacy unversioned handling and serialization without guessing an ordering from
 wall time. Schema/migration and owner-runtime approval remain separate gates.
 
+## Successor ordering characterization
+
+The expanded migrated fixture also proves: original award→successor event while
+that award is active→source rollback→successor replay results in IGNORED then
+DUPLICATE for the successor, with no active award. This is current non-repeatable
+service behavior, not proof that a real producer supplied a new qualification.
+The [C1 proposal](DEBT_007_CONSUMER_PROTOCOL.md) therefore requires retirement
+coverage before new-cycle eligibility, not only a remembered old tombstone.
+Focused characterization now passes5/5 with unique synthetic event names; the
+initial fixture-rule collision is retained separately. No runtime fix is claimed.
+
 Evidence: [migrated characterization](../../apps/api/test/gamification-delivery-characterization.e2e-spec.ts),
 focused4/4 including the two existing Points replay/atomicity tests. Raw focused
 output is retained at node_modules/.cache/debt007-c-characterization.log.
