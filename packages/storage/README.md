@@ -16,3 +16,23 @@ This is **lexical containment**, not symlink/junction isolation. The uploads roo
 its directories must be application-controlled; untrusted local filesystem writers
 are outside this contract. Physical containment and TOCTOU defenses require a separate
 design. This helper does not provide authorization, MIME policy, or malware scanning.
+
+## Experimental native P1
+
+The owner-authorized `native-probe/` proves a minimal Node-API resource bridge.
+It is not exported by the package or loaded by API/Worker. Existing key helpers
+retain the lexical contract above; the prototype does not establish physical
+containment, root/ACL admission, mount policy or a production adapter.
+
+`pnpm --filter @dss/storage native:verify` builds and tests actual OS resources.
+The full quality gate now requires this verification. It needs pinned Node24.18.0,
+node-gyp13.1.0, an installed compatible Python (local3.12.14; CI3.14.10) and an existing native compiler: Visual Studio2022
+C++ tools locally on Windows, or the platform compiler on Linux/macOS. Set PYTHON
+to an installed interpreter path when it is not discoverable. No compiler is
+installed automatically. node-gyp obtains headers/lib for the pinned Node release;
+generated build/cache artifacts are separate from authored source files.
+
+The three-platform CI matrix records actual toolchain/architecture. Native tests
+use fresh system-temp fixtures, retained for inspection, and no application data.
+POSIX tests also use the standard mkfifo utility to verify nonblocking rejection.
+See [P1 scope and evidence](../../docs/development/DEBT_037_NATIVE_P1.md).
