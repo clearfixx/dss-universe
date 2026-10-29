@@ -3,7 +3,7 @@
 import { ChevronDown, LayoutDashboard, LogIn, LogOut, Menu, Settings, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, type PropsWithChildren, type ReactNode } from "react";
+import { useEffect, useState, type PropsWithChildren, type ReactNode } from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -24,7 +24,6 @@ import {
 import { logoutAction } from "@/features/auth/auth-actions";
 import type { SessionViewer } from "@/features/auth/session-contract";
 import { cn } from "@/lib/utils";
-import { useShellStore } from "@/stores/shell.store";
 
 import {
   DEFAULT_SHELL_VARIANT,
@@ -161,8 +160,8 @@ export function DssApplicationShell({
   toolbar,
 }: PropsWithChildren<{ viewer: SessionViewer | null; variant?: ShellVariant; toolbar?: ReactNode }>) {
   const pathname = usePathname();
-  const open = useShellStore((state) => state.mobileNavigationOpen);
-  const setOpen = useShellStore((state) => state.setMobileNavigationOpen);
+  // Drawer visibility is local presentation state, never shared product state.
+  const [open, setOpen] = useState(false);
   const hasSidebar = Boolean(currentModule(pathname));
 
   useEffect(() => {
