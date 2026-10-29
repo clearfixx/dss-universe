@@ -11,11 +11,6 @@ export type AppearanceActionState = {
   message: string;
 };
 
-export const initialAppearanceActionState: AppearanceActionState = {
-  status: "idle",
-  message: "",
-};
-
 export async function savePlatformShellVariant(
   _previous: AppearanceActionState,
   formData: FormData,
