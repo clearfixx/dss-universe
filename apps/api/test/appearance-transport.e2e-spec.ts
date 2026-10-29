@@ -127,6 +127,7 @@ describe('Platform appearance GraphQL boundary (e2e)', () => {
     createdUserIds.push(actorId);
 
     const query = 'query { adminPlatformAppearance { activeShellVariant } }';
+    const deckQuery = 'query { adminCommandDeckAccess }';
     const mutation = `mutation ($variant: ShellVariant!) {
       updatePlatformAppearance(activeShellVariant: $variant) { activeShellVariant }
     }`;
@@ -138,6 +139,12 @@ describe('Platform appearance GraphQL boundary (e2e)', () => {
     expect(
       (denied.body as AppearanceGraphQLResponse).errors?.length,
     ).toBeGreaterThan(0);
+    const deckDenied = await request(app.getHttpServer())
+      .post("/api/graphql")
+      .set("Authorization", `Bearer ${identity.tokens.accessToken}`)
+      .send({ query: deckQuery })
+      .expect(200);
+    expect((deckDenied.body as AppearanceGraphQLResponse).errors?.length).toBeGreaterThan(0);
 
     const permission = await prisma.permission.upsert({
       where: { key: 'system.settings.update' },
@@ -166,6 +173,31 @@ describe('Platform appearance GraphQL boundary (e2e)', () => {
     const token = authenticated.data?.login?.tokens.accessToken;
     expect(token).toBeDefined();
     if (!token) throw new Error('Login fixture failed');
+
+    const noDeckAccess = await request(app.getHttpServer())
+      .post("/api/graphql")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ query: deckQuery })
+      .expect(200);
+    expect((noDeckAccess.body as AppearanceGraphQLResponse).errors?.length).toBeGreaterThan(0);
+
+    const deckPermission = await prisma.permission.upsert({
+      where: { key: "admin.command-deck.access" },
+      update: {},
+      create: {
+        key: "admin.command-deck.access",
+        label: "Access administrative Command Deck",
+      },
+    });
+    await prisma.userPermission.create({
+      data: { userId: actorId, permissionId: deckPermission.id },
+    });
+    const deckGranted = await request(app.getHttpServer())
+      .post("/api/graphql")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ query: deckQuery })
+      .expect(200);
+    expect((deckGranted.body as { data?: { adminCommandDeckAccess?: boolean } }).data?.adminCommandDeckAccess).toBe(true);
 
     const before = await prisma.platformAppearanceSettings.findUnique({
       where: { id: 'global' },
