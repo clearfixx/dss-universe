@@ -5,6 +5,25 @@ Current accepted baseline: `ddb685d9df9cabc0e9f54ca70dcb2c45ed02dfea`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
 
+## 2026-10-29 implementation-status reconciliation
+
+The central register's original OPEN text for003/005 lagged implementation.
+Reputation, Achievements, Community Points and Levels module/service assemblies
+were re-inspected at accepted source baseline ddb685d (the bootstrap candidate
+changes no apps/api source). They consume owned contracts; public feature modules
+export narrow reader tokens or no broad service, while private provider modules
+remain owner-internal. Accepted A/A.1 shares private graphs rather than opening
+them to foreign modules. The earlier47/47 composition and migrated24/24 DB/HTTP
+cohorts remain retained scoped evidence; accepted108 also has full E2E688/688.
+
+For005, architecture:check mandates the AST/frozen-baseline report as well as the
+legacy subset and regression suites. Existing reviewed140/140 and zero bounded
+findings establish implementation of that tooling rollout. They do not prove
+every dynamic/transitive semantic ownership rule. Register003/005 now truthfully
+say IMPLEMENTED pending D7 acceptance, not RESOLVED. DEBT-004 transitive/source
+scope,007 automatic delivery and remaining individual review are not waived.
+No application, checker, baseline identity or test was changed by this checkpoint.
+
 ## 2026-10-29 accepted C design and scoped development readiness
 
 Owner accepted PR108 head cd40325, merged ddb685d. Exact-head CI5/5 and
