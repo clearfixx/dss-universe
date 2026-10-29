@@ -8,7 +8,7 @@ describe('AppearanceRepository', () => {
   it('falls back to launcher when the singleton does not exist', async () => {
     const prisma = {
       platformAppearanceSettings: {
-        findUnique: async () => null,
+        findUnique: () => Promise.resolve(null),
       },
     } as unknown as PrismaService;
     const repository = new AppearanceRepository(
@@ -35,19 +35,19 @@ describe('AppearanceRepository', () => {
     const upsert = jest.fn().mockResolvedValue(stored);
     const tx = {
       platformAppearanceSettings: {
-        findUnique: async () => null,
+        findUnique: () => Promise.resolve(null),
         upsert,
       },
     } as unknown as TransactionClient;
     const prisma = {
-      transaction: async <T>(
+      transaction: <T>(
         callback: (client: TransactionClient) => Promise<T>,
       ) => callback(tx),
     } as unknown as PrismaService;
     const audit = {
-      append: async (_client: TransactionClient, entry: { action: string }) => {
+      append: (_client: TransactionClient, entry: { action: string }) => {
         auditAction = entry.action;
-        return 'audit-1';
+        return Promise.resolve('audit-1');
       },
     } as unknown as AuditWriterService;
     const repository = new AppearanceRepository(prisma, audit);
@@ -62,20 +62,20 @@ describe('AppearanceRepository', () => {
   it('propagates audit failures so transactions cannot silently succeed', async () => {
     const tx = {
       platformAppearanceSettings: {
-        findUnique: async () => null,
-        upsert: async () => ({
+        findUnique: () => Promise.resolve(null),
+        upsert: () => Promise.resolve({
           activeShellVariant: SHELL_VARIANTS.HYBRID,
         }),
       },
     } as unknown as TransactionClient;
     const prisma = {
-      transaction: async <T>(
+      transaction: <T>(
         callback: (client: TransactionClient) => Promise<T>,
       ) => callback(tx),
     } as unknown as PrismaService;
     const audit = {
-      append: async () => {
-        throw new Error('audit unavailable');
+      append: () => {
+        return Promise.reject(new Error('audit unavailable'));
       },
     } as unknown as AuditWriterService;
     const repository = new AppearanceRepository(prisma, audit);
