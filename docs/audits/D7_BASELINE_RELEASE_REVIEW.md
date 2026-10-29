@@ -5,6 +5,45 @@ Current accepted baseline: `289b24cf78be3e960458a04285d724e8f2a9eb63`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
 
+## 2026-10-29 Auth/Users lifecycle source-to-evidence map
+
+Source834ea0b is identical in apps/api to accepted main289b24c. Auth's private
+AccountCredentials exposes only ID/email/hash/status/access-version/login-lock
+facts. Its repository has ID/email reads and deactivate/reactivate/change-email/
+change-password commands; no profile object or Prisma transaction crosses the
+business contract. Root registration binds Users profile fields to a trusted
+write-only credential store, and presentation explicitly copies profile/token
+fields. Auth account mutations return success rather than a profile response.
+
+| Lifecycle path            | Inspected boundary and existing assertion evidence                                                                                                                                                                                                                                                |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Registration              | Root shared-row transaction and IAM-owned assignment; conflict and injected assignment failure leave no new account/session. Post-commit session failure preserves the committed account but denies token success.                                                                                |
+| Deactivation/reactivation | Auth credentials/password and state guards; deactivation atomically changes state, revokes sessions and appends Audit. Reactivation guards DEACTIVATED and appends Audit. HTTP tests deny stale blocked-account deactivation and exercise credentialed reactivation.                              |
+| Email/password            | Auth-owned transaction changes credentials/access version, revokes sessions and appends Audit. Email change invalidates prior verification proof under subject lock. Tests reject old tokens/proof, accept the new destination and prove Audit-failure rollback of hash/version/session snapshot. |
+| Session/recovery/2FA      | Owned session/proof services; app HTTP/GraphQL scenarios exercise revocation, recovery and proof consumption. No profile ownership is inferred from token issuance.                                                                                                                               |
+| Profile persistence       | Users shared-row tests assert exact safe keys, inspect actual SELECT projections for excluded credential fields and verify requested profile updates do not change Auth state. Public/social privacy remains a separate projection contract.                                                      |
+
+These statements were checked against assertions, not only scenario titles.
+Explicit suite basenames in accepted PR110 local full-gate JSON select90 passing
+cases: app.e2e-spec.ts27, auth-rest-validation.e2e-spec.ts19,
+owner-failure-transport.characterization.e2e-spec.ts18 and
+users-shared-row-ownership.e2e-spec.ts26. The cohort is reused evidence within
+688/688, not a new test run. Report SHA256:
+e38e043548a101c9d5f4c9fd9ab21e4c2c501bd9f36344451a79b9376d2ffa2e.
+The accepted run's disclosed Windows sleep is retained; no uninterrupted or
+new production-flow certification is inferred. Registration rollback cases mix
+real DB/HTTP with intentional failure injection; they are not actual SMTP proof.
+
+For002, the five actual IAM service paths are user-access, permissions, safety,
+roles and access-groups/application. They are included in the fresh537-feature
+compiler-resolved inventory rather than an empty application-only glob. No direct
+Prisma/database reference is present in selected Auth/IAM business source.
+Infrastructure remains allowed to own ORM access. This does not prove every
+semantic persistence decision or replace the separate last-administrator047
+policy, old rotation-timeout086 diagnosis, or final D7 acceptance. Register001/002
+remain IMPLEMENTED; the remaining boundary is stated explicitly, not a vague
+claim that inspected lifecycle paths have never been reviewed.
+
 ## 2026-10-29 compiler-resolved persistence inventory
 
 Read-only TypeScript AST inventory on accepted PR110 source834ea0b examined537
