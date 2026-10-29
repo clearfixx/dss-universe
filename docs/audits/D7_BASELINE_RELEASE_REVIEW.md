@@ -5,6 +5,39 @@ Current accepted baseline: `289b24cf78be3e960458a04285d724e8f2a9eb63`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
 
+## 2026-10-29 IAM/Authorization capability source-to-evidence map
+
+At accepted source834ea0b/main289b24c, IAM owns membership persistence and
+Authorization owns decisions. effectiveMemberships selects enabled groups with
+unrevoked membership, validFrom <= at and validUntil > at (or no end). Root
+IamMembershipAdapter translates only key, Premium fact and capability keys;
+Auth eligibility adapter forwards only ACTIVE-state evidence. Generic permission
+facts retain their separate role/direct-grant contract and no new ACTIVE filter.
+
+| Decision            | Inspected rule and assertion boundary                                                                                                                                                                                                                                                |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Premium             | A real Premium-kind membership is required; display-like roles do not imply it. It adds no generic permissions. Guardian rejects even a forged capability on Premium facts. Independently granted staff permission still works for a Premium member.                                 |
+| Guardian            | Only explicit KNOWLEDGE_FORGE_GUARDIAN on non-Premium current membership qualifies after eligibility. Overlap, revoke, group disable, capability removal and account state are exercised without re-login. This is a capability seam, not a complete Phase11 feature.                |
+| Management          | Current eligible subject plus permissions.manage; Premium and Guardian alone do not imply management. HTTP tests deny ordinary members and observe explicit permission removal on a fresh request.                                                                                   |
+| Content Gate        | GROUP requirements are mandatory before author/Premium numeric bypass, regardless of ALL/ANY threshold operator. HTTP document delivery remains redacted before audience membership, permits numeric bypass afterward and denies again after revocation.                             |
+| Persistence/history | Migration guards preserve group identity and membership grant/revocation history and reject Premium delegated capabilities; application also rejects invalid grants. Failure-injected HTTP mutations roll back writes and unavailable membership evidence never manufactures grants. |
+
+Assertions were read in access-groups and content-boundaries HTTP fixtures,
+Authorization unit policy cases and authorization-read-ownership DB cases.
+Four explicit suite basenames from accepted PR110 full-gate JSON select52 passing
+cases: access-groups5, authorization-read-ownership9, content-boundaries14 and
+gate-wall-owner-evidence24. These are reused passing cases within688/688, not a
+new run or52 newly authored tests. JSON SHA256:
+e38e043548a101c9d5f4c9fd9ab21e4c2c501bd9f36344451a79b9376d2ffa2e.
+The successful gate's recorded Windows sleep remains disclosed.
+
+Fresh sequential requests observe withdrawal; this does not prove an atomic
+eligibility/membership/permission snapshot across separate reads or prevent all
+mid-request revocation races. No cross-request positive cache was introduced.
+Future per-category/content ACL, owner/Command Deck policy and sanctions remain
+their planned-phase work. DEBT-008/024 remain IMPLEMENTED pending D7/phase
+acceptance. No source, SQL, permissions, frontend or tests changed in this review.
+
 ## 2026-10-29 Auth/Users lifecycle source-to-evidence map
 
 Source834ea0b is identical in apps/api to accepted main289b24c. Auth's private
