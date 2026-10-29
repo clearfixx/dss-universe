@@ -38,6 +38,19 @@ reinstatement, such as a new publication after withdrawal. Neither a permanent
 ban by source ID nor automatic restoration is assumed. Agree on the source
 lifecycle/revision boundary before implementing durable revocation state.
 
+## Owner decision — 2026-10-29
+
+The owner approved the new-cycle policy: late events from an old qualification
+must not restore its revoked award, while a new legitimate producer-approved
+qualification of the same material may earn an award under the current rules.
+This does not automatically restore a badge or bypass repeatability, cooldown,
+caps or eligibility. The owner also accepted design/characterization PR108,
+merged asddb685d; that acceptance does not authorize a runtime correction.
+
+C1 must now specify qualification identity, withdrawal/reinstatement coordinates,
+legacy unversioned handling and serialization without guessing an ordering from
+wall time. Schema/migration and owner-runtime approval remain separate gates.
+
 Evidence: [migrated characterization](../../apps/api/test/gamification-delivery-characterization.e2e-spec.ts),
 focused4/4 including the two existing Points replay/atomicity tests. Raw focused
 output is retained at node_modules/.cache/debt007-c-characterization.log.
