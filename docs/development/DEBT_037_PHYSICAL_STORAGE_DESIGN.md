@@ -311,6 +311,28 @@ uploads ACLs or silently grant broader privileges merely to make a probe pass.
 Production provisioning, existing-data permission repair and any new native
 distribution/build dependency require a reviewable implementation plan first.
 
+### Synthetic Windows Authz descriptor characterization
+
+At 2026-10-29T10:11:10.2950894Z, system-temp `dss037-authz.ps1` evaluated
+explicit synthetic service/writer SIDs using Windows AuthzAccessCheck.
+Probe source SHA256:
+21f7605299b1421508db8a1da4b7fd7873c981e13b59bcf0708e039fad0da2cc.
+AUTHZ_SKIP_TOKEN_GROUPS prevented account/group lookup; no host accounts or
+filesystem ACLs were changed. The candidate concrete mask0x001200a7 granted
+FILE_ADD_FILE and FILE_ADD_SUBDIRECTORY while denying WRITE_ATTRIBUTES,
+DELETE_CHILD, DELETE, WRITE_DAC and WRITE_OWNER. Two unsafe controls passed:
+the mapped generic-write mask0x00120116 allowed WRITE_ATTRIBUTES, and an
+additional inherited WRITE_DAC ACE allowed DACL mutation despite the otherwise
+limited grant. All assertions completed with exit0.
+
+This evaluates descriptor semantics only. It is not a real writer-token
+filesystem/reparse test and deliberately omits real token groups, privileges,
+integrity levels, owner rights and filesystem-specific enforcement. The
+[Authz context contract](https://learn.microsoft.com/en-us/windows/win32/api/authz/nf-authz-authzinitializecontextfromsid)
+explicitly distinguishes a SID-only context from a more complete actual token.
+No safe-production-ACL conclusion follows until those additional cases and
+actual IO operations are verified.
+
 ## Next proofs and acceptance
 
 1. Prove the chosen root-relative primitives in Windows and Linux synthetic
