@@ -14,9 +14,13 @@ test("public content Shell exposes only implemented navigation and a working lau
   await expect(
     page.getByRole("navigation", { name: "Модулі DSS Universe" }),
   ).toBeVisible();
+  const launcher = page.getByRole("navigation", { name: "Модулі DSS Universe" });
   await expect(
-    page.getByRole("link", { name: "Mission Control" }).last(),
-  ).toHaveAttribute("href", "/command-deck");
+    launcher.getByRole("link", { name: "Новини" }),
+  ).toHaveAttribute("href", "/news");
+  await expect(
+    launcher.getByRole("link", { name: "Mission Control" }),
+  ).toHaveCount(0);
   await expect(
     page.getByRole("navigation", { name: "Модулі DSS Universe" }).getByRole("link", { name: "Academy" }),
   ).toHaveCount(0);
