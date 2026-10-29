@@ -1,13 +1,11 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  BookOpen,
   LayoutDashboard,
   Newspaper,
   PenLine,
   Settings,
   Users,
   Boxes,
-  UserRound,
 } from "lucide-react";
 
 export const SHELL_VARIANTS = [
@@ -80,12 +78,6 @@ export const MODULE_NAVIGATION: readonly ModuleNavigation[] = [
     icon: Settings,
     children: [],
   },
-  {
-    href: "/profile",
-    label: "Профілі",
-    icon: UserRound,
-    children: [],
-  },
 ] as const;
 
 export function routeMatches(pathname: string, href: string): boolean {
@@ -102,7 +94,7 @@ export function moduleSidebarItems(pathname: string): readonly ModuleNavigationI
   const module = currentModule(pathname);
   if (!module) return [];
 
-  const overview = module.href === "/profile" ? pathname : module.href;
+  const overview = module.href;
   const children = module.children.filter((item) => routeMatches(pathname, item.href));
   return [
     { href: overview, label: "Огляд", icon: module.icon },
@@ -116,7 +108,7 @@ export function breadcrumbsForPath(pathname: string): readonly { href: string; l
 
   const child = module.children.find((item) => routeMatches(pathname, item.href));
   return [
-    { href: module.href === "/profile" ? pathname : module.href, label: module.label },
+    { href: module.href, label: module.label },
     ...(child ? [{ href: child.href, label: child.label }] : []),
   ];
 }
