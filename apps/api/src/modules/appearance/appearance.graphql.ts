@@ -36,6 +36,13 @@ export class AppearanceResolver {
     return this.appearance.get();
   }
 
+  @Query(() => PlatformAppearanceModel)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions(Permission.SystemSettingsUpdate)
+  adminPlatformAppearance(): Promise<PlatformAppearanceSettings> {
+    return this.appearance.get();
+  }
+
   @Mutation(() => PlatformAppearanceModel)
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions(Permission.SystemSettingsUpdate)
