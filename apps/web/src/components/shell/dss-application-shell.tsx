@@ -3,7 +3,7 @@
 import { ChevronDown, LayoutDashboard, LogIn, LogOut, Menu, Settings, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, type PropsWithChildren, type ReactNode } from "react";
+import { useState, type PropsWithChildren, type ReactNode } from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -163,10 +163,6 @@ export function DssApplicationShell({
   // Drawer visibility is local presentation state, never shared product state.
   const [open, setOpen] = useState(false);
   const hasSidebar = Boolean(currentModule(pathname));
-
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname, setOpen]);
 
   return (
     <div data-shell-variant={variant} className="min-h-screen bg-background text-foreground">
