@@ -28,6 +28,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomBytes } from "node:crypto";
 import { parseEnv } from "node:util";
+import { assertLocalBootstrapEnvironment } from "./bootstrap-environment-policy.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const manifest = JSON.parse(
@@ -110,30 +111,24 @@ try {
   const infrastructure = parseEnv(readFileSync(resolve(root, ".env"), "utf8"));
   for (const folder of ["apps/api", "apps/worker"]) {
     const local = resolve(root, folder, ".env.local");
+    const fileEnvironment = parseEnv(
+      readFileSync(resolve(root, folder, ".env"), "utf8"),
+    );
     const env = {
-      ...parseEnv(readFileSync(resolve(root, folder, ".env"), "utf8")),
+      ...fileEnvironment,
       ...(folder === "apps/api" && existsSync(local)
         ? parseEnv(readFileSync(local, "utf8"))
         : {}),
       ...process.env,
     };
-    const database = new URL(env.DATABASE_URL);
-    if (
-      !["postgresql:", "postgres:"].includes(database.protocol) ||
-      !["localhost", "127.0.0.1"].includes(database.hostname) ||
-      database.port !== infrastructure.POSTGRES_PORT ||
-      decodeURIComponent(database.username) !== infrastructure.POSTGRES_USER ||
-      decodeURIComponent(database.password) !==
-        infrastructure.POSTGRES_PASSWORD ||
-      decodeURIComponent(database.pathname.slice(1)) !==
-        infrastructure.POSTGRES_DB ||
-      (env.REDIS_HOST ?? "localhost") !== "localhost" ||
-      env.REDIS_PORT !== infrastructure.REDIS_PORT
-    ) {
-      throw new Error(
-        `${folder}: database/Redis configuration must match local Compose before bootstrap can migrate or seed.`,
-      );
-    }
+    // Prisma CLI reads .env; the API also reads .env.local. Neither may mask
+    // an unsafe target in the other configuration used by bootstrap commands.
+    assertLocalBootstrapEnvironment(
+      { ...fileEnvironment, ...process.env },
+      infrastructure,
+      folder,
+    );
+    assertLocalBootstrapEnvironment(env, infrastructure, folder);
   }
   run("corepack", ["pnpm", "install", "--frozen-lockfile"]);
   run("docker", ["compose", "up", "-d", "--wait", "--wait-timeout", "600"]);

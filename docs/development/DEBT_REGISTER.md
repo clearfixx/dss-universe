@@ -21,6 +21,16 @@ active package safe and buildable.
 
 ## Register
 
+### DEBT-091 — Bootstrap effective database target overrides (High, IMPLEMENTED candidate)
+
+The prior bootstrap guard accepted query host/port overrides while pg resolved
+a different effective target. Isolated virtual-source execution reached only
+stubbed deploy/seed; no real connection or migration was performed. Owner approved
+a separate correction and exact bootstrap policy: no query or schema=public,
+no fragments or other parameters. Pure validation preserves authority/Redis
+guards and safe errors; six isolated regressions pass. Full gate/CI and acceptance
+remain pending. [Policy, evidence and limits](DEBT_091_BOOTSTRAP_TARGET_POLICY.md).
+
 ### DEBT-090 — Achievements rollback before late original (High, OPEN policy gap)
 
 DEBT-007 C characterization on migrated owned schema confirms empty source
