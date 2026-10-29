@@ -1,7 +1,7 @@
 # DEBT-013 — Configurable SMTP host port
 
 Status: implementation/recovery candidate; full gate and acceptance open.
-Baseline: accepted main c6b5417. No application/API or Windows settings change.
+Baseline: accepted main5d6db1d (including PR105). No application/API or Windows settings change.
 
 ## Evidence and change
 
@@ -42,3 +42,29 @@ socket exception and incorrectly labeled availability; that record was corrected
 before any restart. Recovery is not established by a healthy container or green
 configuration tests alone. Full quality/CI and real host readiness evidence will
 be recorded separately; earlier accepted PR91 remains historical preservation proof.
+
+## Recovery evidence — 2026-10-29
+
+Recreated only Mailpit with no dependencies and no image pull. The same image
+sha256:74d609a42ec279aa63c6b4622a6fa9b5408d1ad5b1d76a1c4be40a265ce0863d
+and persistent dss-universe_dss_mailpit_data volume are retained. Effective host
+bindings are127.0.0.1:12525→1025 and127.0.0.1:18025→8025. Host readyz returns200;
+SMTP greeting220, EHLO250 and QUIT221 succeed without DATA.
+
+All two message IDs, total2 and unread2 are unchanged; the ID-set fingerprint
+above still matches. All other containers retain identical IDs and exact
+StartedAt strings, including PostgreSQL/Redis/ClamAV and test services. An initial
+comparison incorrectly treated JSON dates as local DateTime values; rechecking
+the original ISO strings proved equality. No other container was restarted.
+The Compose orphan warning referred to existing disposable test containers;
+they were preserved and no remove-orphans operation was used.
+
+Only DSS_MAILPIT_SMTP_PORT in the primary root env and MAIL_PORT in API/Worker
+env were set to12525. The guarded updater preserves all other text, encoding
+and credentials. The own dev process is restarted separately to load this env.
+Protocol verification does not assert an application email was sent; no
+synthetic message was added to the preserved mailbox in this check.
+
+Local evidence is retained in node_modules/.cache/mailpit-recovery-before-20261029.json,
+mailpit-recovery-after-20261029.json and the other-container snapshots. Full
+quality/CI and package acceptance remain open at this recovery checkpoint.
