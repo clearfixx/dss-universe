@@ -3,7 +3,6 @@ import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import type { PermissionsService } from '@api/core/authorization';
 
 import { AppearanceService } from './appearance.service';
-import type { AppearanceRepositoryPort } from './domain/appearance.repository.port';
 import {
   SHELL_VARIANTS as ShellVariant,
   type ShellVariant as ShellVariantType,
@@ -25,10 +24,9 @@ describe('AppearanceService', () => {
     get = jest.fn().mockResolvedValue(defaultSettings);
     update = jest.fn().mockResolvedValue(defaultSettings);
     access = jest.fn().mockResolvedValue({ roles: [], permissions: [] });
-    service = new AppearanceService(
-      { get, update },
-      { getAccessProfileByUserId: access } as unknown as PermissionsService,
-    );
+    service = new AppearanceService({ get, update }, {
+      getAccessProfileByUserId: access,
+    } as unknown as PermissionsService);
   });
 
   it('returns the configured shell variant', async () => {
