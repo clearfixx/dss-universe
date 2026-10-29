@@ -1,84 +1,48 @@
-/**
- * ===============================================================
- * 🚀 DSS Universe
- * ---------------------------------------------------------------
- * 📦 Module: Web Application Shell
- * 📄 File: apps/web/src/components/shell/dss-application-shell.tsx
- *
- * 🎯 Purpose:
- * Provides shared authenticated navigation and module composition.
- *
- * 🚀 Build. Share. Grow.
- * ===============================================================
- */
-
 "use client";
 
-import {
-  Bell,
-  BookOpen,
-  Bot,
-  Boxes,
-  GraduationCap,
-  LayoutDashboard,
-  LogIn,
-  LogOut,
-  Menu,
-  MessageSquare,
-  Newspaper,
-  PenLine,
-  Orbit,
-  Search,
-  Settings,
-  Users,
-} from "lucide-react";
+import { ChevronDown, LogIn, LogOut, Menu, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { PropsWithChildren } from "react";
+import { useEffect, type PropsWithChildren } from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
-import { useShellStore } from "@/stores/shell.store";
 import { logoutAction } from "@/features/auth/auth-actions";
 import type { SessionViewer } from "@/features/auth/session-contract";
+import { cn } from "@/lib/utils";
+import { useShellStore } from "@/stores/shell.store";
 
-const navigation = [
-  { href: "/command-deck", label: "Command Deck", icon: LayoutDashboard },
-  { href: "/news", label: "News", icon: Newspaper },
-  { href: "/newsroom", label: "Newsroom", icon: PenLine },
-  { href: "/members", label: "Astronauts", icon: Users },
-  { href: "/research", label: "Research Lab", icon: BookOpen },
-  { href: "/community", label: "Community Hub", icon: MessageSquare },
-  { href: "/knowledge", label: "Knowledge Forge", icon: Orbit },
-  { href: "/academy", label: "Academy", icon: GraduationCap },
-  { href: "/media", label: "DSS Media Platform", icon: Boxes },
-  { href: "/ai", label: "AI Core", icon: Bot },
-];
+import {
+  DEFAULT_SHELL_VARIANT,
+  MODULE_NAVIGATION,
+  breadcrumbsForPath,
+  currentModule,
+  moduleSidebarItems,
+  routeMatches,
+  type ShellVariant,
+} from "./shell-navigation";
 
-function Navigation() {
-  const pathname = usePathname();
-
+function ModuleLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
   return (
-    <nav className="space-y-1 p-3">
-      {navigation.map(({ href, label, icon: Icon }) => (
+    <nav aria-label="Модулі DSS Universe" className="space-y-1">
+      {MODULE_NAVIGATION.map(({ href, label, icon: Icon }) => (
         <Link
           key={href}
           href={href}
+          aria-current={routeMatches(pathname, href) ? "page" : undefined}
+          onClick={onNavigate}
           className={cn(
-            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white",
-            (pathname === href || pathname.startsWith(`${href}/`)) &&
-              "bg-violet-500/15 text-violet-200",
+            "flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-slate-300 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400",
+            routeMatches(pathname, href) && "bg-violet-500/15 text-violet-200",
           )}
         >
-          <Icon className="size-4" />
+          <Icon className="size-4 shrink-0" aria-hidden="true" />
           {label}
         </Link>
       ))}
@@ -86,109 +50,182 @@ function Navigation() {
   );
 }
 
+function GlobalNavigation({
+  pathname,
+  variant,
+  onOpenLauncher,
+}: {
+  pathname: string;
+  variant: ShellVariant;
+  onOpenLauncher: () => void;
+}) {
+  const featured = MODULE_NAVIGATION.filter((item) => item.featured);
+  const inline = variant === "HORIZONTAL_NAVIGATION" ? MODULE_NAVIGATION : featured;
+
+  return (
+    <div className="hidden min-w-0 items-center gap-1 lg:flex">
+      {variant !== "MODULE_LAUNCHER" && (
+        <nav aria-label="Глобальна навігація" className="flex min-w-0 items-center gap-1">
+          {inline.map(({ href, label, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              aria-current={routeMatches(pathname, href) ? "page" : undefined}
+              className={cn(
+                "inline-flex h-9 shrink-0 items-center gap-2 rounded-lg px-2.5 text-xs text-slate-300 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-violet-400",
+                routeMatches(pathname, href) && "bg-violet-500/15 text-violet-200",
+              )}
+            >
+              <Icon aria-hidden="true" className="size-4" />
+              <span className="hidden xl:inline">{label}</span>
+            </Link>
+          ))}
+        </nav>
+      )}
+      <Button type="button" variant="outline" size="sm" onClick={onOpenLauncher}>
+        <Menu aria-hidden="true" />
+        {variant === "MODULE_LAUNCHER" ? "Модулі" : "Усі модулі"}
+        <ChevronDown aria-hidden="true" className="size-3" />
+      </Button>
+    </div>
+  );
+}
+
+function ModuleSidebar({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+  const module = currentModule(pathname);
+  const links = moduleSidebarItems(pathname);
+  if (!module) return null;
+
+  const Icon = module.icon;
+  return (
+    <div className="p-3">
+      <div className="mb-5 flex items-center gap-3 px-2 py-3">
+        <Icon className="size-5 text-violet-300" aria-hidden="true" />
+        <p className="text-sm font-semibold text-slate-100">{module.label}</p>
+      </div>
+      <nav aria-label={`Розділи: ${module.label}`} className="space-y-1.5">
+        {links.map(({ href, label, icon: LinkIcon }) => (
+          <Link
+            key={href}
+            href={href}
+            onClick={onNavigate}
+            aria-current={pathname === href ? "page" : undefined}
+            className={cn(
+              "flex min-h-10 items-center gap-3 rounded-lg bg-white/[0.035] px-3 text-sm text-slate-300 transition-colors hover:bg-white/[0.07] hover:text-white focus-visible:outline-2 focus-visible:outline-violet-400",
+              pathname === href && "bg-violet-500/15 text-violet-200",
+            )}
+          >
+            <LinkIcon aria-hidden="true" className="size-4 shrink-0" />
+            {label}
+          </Link>
+        ))}
+      </nav>
+    </div>
+  );
+}
+
+function Breadcrumbs({ pathname }: { pathname: string }) {
+  const parts = breadcrumbsForPath(pathname);
+  if (!parts.length) return null;
+  return (
+    <nav aria-label="Навігаційний шлях" className="mb-5 text-xs text-slate-400">
+      <ol className="flex flex-wrap items-center gap-2">
+        <li><Link href="/" className="hover:text-white">DSS Universe</Link></li>
+        {parts.map((part, index) => (
+          <li key={part.href} className="flex items-center gap-2">
+            <span aria-hidden="true">/</span>
+            {index === parts.length - 1 ? (
+              <span aria-current="page" className="text-slate-200">{part.label}</span>
+            ) : (
+              <Link href={part.href} className="hover:text-white">{part.label}</Link>
+            )}
+          </li>
+        ))}
+      </ol>
+    </nav>
+  );
+}
+
 export function DssApplicationShell({
   children,
   viewer,
-}: PropsWithChildren<{ viewer: SessionViewer | null }>) {
+  variant = DEFAULT_SHELL_VARIANT,
+}: PropsWithChildren<{ viewer: SessionViewer | null; variant?: ShellVariant }>) {
   const pathname = usePathname();
   const open = useShellStore((state) => state.mobileNavigationOpen);
   const setOpen = useShellStore((state) => state.setMobileNavigationOpen);
+  const hasSidebar = Boolean(currentModule(pathname));
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname, setOpen]);
 
   return (
-    <div className="min-h-screen bg-[#040713] text-white">
-      <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-white/10 bg-slate-950/80 backdrop-blur-xl lg:block">
-        <Link
-          href="/"
-          className="flex h-20 items-center gap-3 px-6 font-semibold"
+    <div data-shell-variant={variant} className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-40 flex min-h-16 items-center gap-3 border-b border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)] px-4 sm:px-6">
+        <Button
+          variant="ghost"
+          size="icon"
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Відкрити навігацію"
+          className="lg:hidden"
         >
-          <span className="grid size-10 place-items-center rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600">
-            <Orbit className="size-6" />
-          </span>
-          DSS Universe
+          <Menu aria-hidden="true" />
+        </Button>
+        <Link href="/" className="shrink-0 text-sm font-semibold tracking-[0.12em] text-slate-100 sm:text-base">
+          DSS UNIVERSE
         </Link>
-        <Navigation />
-        <div className="absolute inset-x-3 bottom-4 rounded-xl border border-emerald-400/20 bg-emerald-500/5 p-4 text-xs text-emerald-300">
-          ● All systems operational
-        </div>
-      </aside>
-
-      <div className="lg:pl-64">
-        <header className="sticky top-0 z-40 flex h-20 items-center gap-4 border-b border-white/10 bg-[#040713]/85 px-4 backdrop-blur-xl sm:px-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden"
-            onClick={() => setOpen(true)}
-            aria-label="Open navigation"
-          >
-            <Menu />
-          </Button>
-          <div className="relative hidden max-w-xl flex-1 md:block">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
-            <Input
-              className="border-white/10 bg-white/[0.04] pl-10"
-              placeholder="Search in DSS Universe..."
-              aria-label="Global search"
-            />
-          </div>
-          <div className="ml-auto flex items-center gap-2">
-            <Button variant="ghost" size="icon" aria-label="Notifications">
-              <Bell />
-            </Button>
-            {viewer ? (
-              <>
-                <Button
-                  asChild
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Settings"
-                >
-                  <Link href="/settings/profile">
-                    <Settings />
-                  </Link>
-                </Button>
-                <form action={logoutAction}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    type="submit"
-                    aria-label="Sign out"
-                  >
-                    <LogOut />
-                  </Button>
-                </form>
-                <div className="ml-2 flex items-center gap-3 border-l border-white/10 pl-4">
-                  <Avatar>
-                    <AvatarFallback>{viewerInitials(viewer)}</AvatarFallback>
-                  </Avatar>
-                  <div className="hidden text-sm sm:block">
-                    <p className="font-medium">
-                      {viewer.displayName || viewer.username}
-                    </p>
-                    <p className="text-xs text-slate-500">@{viewer.username}</p>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <Button asChild variant="outline" size="sm">
-                <Link href={`/login?returnTo=${encodeURIComponent(pathname)}`}>
-                  <LogIn /> Sign in
-                </Link>
+        <GlobalNavigation pathname={pathname} variant={variant} onOpenLauncher={() => setOpen(true)} />
+        <div className="ml-auto flex items-center gap-2">
+          {viewer ? (
+            <>
+              <Button asChild variant="ghost" size="icon" aria-label="Налаштування">
+                <Link href="/settings/profile"><Settings aria-hidden="true" /></Link>
               </Button>
-            )}
-          </div>
-        </header>
-        <main className="p-4 sm:p-6 lg:p-8">{children}</main>
+              <form action={logoutAction}>
+                <Button variant="ghost" size="icon" type="submit" aria-label="Вийти">
+                  <LogOut aria-hidden="true" />
+                </Button>
+              </form>
+              <Link href={`/profile/${encodeURIComponent(viewer.username)}`} className="flex items-center gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-violet-400">
+                <Avatar><AvatarFallback>{viewerInitials(viewer)}</AvatarFallback></Avatar>
+                <span className="hidden text-sm text-slate-200 sm:block">{viewer.displayName || viewer.username}</span>
+              </Link>
+            </>
+          ) : (
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/login?returnTo=${encodeURIComponent(pathname)}`}><LogIn aria-hidden="true" />Увійти</Link>
+            </Button>
+          )}
+        </div>
+      </header>
+
+      {hasSidebar && (
+        <aside className="fixed bottom-0 left-0 top-16 hidden w-60 overflow-y-auto border-r border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)] lg:block">
+          <ModuleSidebar pathname={pathname} />
+        </aside>
+      )}
+      <div className={hasSidebar ? "lg:pl-60" : undefined}>
+        <main id="main-content" className="mx-auto max-w-[1600px] p-4 sm:p-6 lg:p-8">
+          <Breadcrumbs pathname={pathname} />
+          {children}
+        </main>
       </div>
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="left" className="border-white/10 bg-slate-950 p-0">
-          <SheetHeader className="h-20 justify-center border-b border-white/10 px-6">
-            <SheetTitle className="flex items-center gap-3 text-white">
-              <Orbit className="text-violet-400" /> DSS Universe
-            </SheetTitle>
+        <SheetContent side="left" className="border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)] p-0">
+          <SheetHeader className="border-b border-[color:var(--shell-divider)] px-5 py-4">
+            <SheetTitle className="text-left text-sm text-slate-100">Навігація DSS Universe</SheetTitle>
           </SheetHeader>
-          <Navigation />
+          <div className="max-h-[calc(100dvh-5rem)] overflow-y-auto px-3 py-4">
+            <ModuleLinks pathname={pathname} onNavigate={() => setOpen(false)} />
+            {hasSidebar && (
+              <div className="mt-5 border-t border-[color:var(--shell-divider)] pt-2">
+                <ModuleSidebar pathname={pathname} onNavigate={() => setOpen(false)} />
+              </div>
+            )}
+          </div>
         </SheetContent>
       </Sheet>
     </div>
@@ -197,9 +234,5 @@ export function DssApplicationShell({
 
 function viewerInitials(viewer: SessionViewer | null) {
   const value = viewer?.displayName?.trim() || viewer?.username || "DSS";
-  return value
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
+  return value.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("");
 }
