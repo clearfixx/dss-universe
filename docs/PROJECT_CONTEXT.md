@@ -9,12 +9,14 @@
 DSS Universe is a modular developer community and learning platform:
 Build. Share. Learn. Grow. Together.
 
-News, Knowledge Forge, Research Lab, Community Hub, Academy and Downloads are
+News, Research Lab (the single Wiki), Community Hub, Academy and Downloads are
 owned content modules within one product. Shared Media, Editor, interactions, authorization, events
 and gamification support them without owning their content lifecycles.
 Mission Control is the user's dashboard; Command Deck is administration.
 The [owner's product vision](development/PRODUCT_VISION_1_0.md) corrects historical
-naming and records 1.0 scope; roadmap/module naming reconciliation remains open.
+naming and records1.0 scope. On2026-10-29 the owner confirmed Research Lab is
+one Wiki, formerly planned as Knowledge Forge. Technical identifiers/routes and
+the historical Phase12 feature inventory still require compatibility planning.
 
 Read these sources before selecting work:
 

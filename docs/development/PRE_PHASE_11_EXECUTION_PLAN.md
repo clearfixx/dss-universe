@@ -8,6 +8,16 @@
 
 ## Objective
 
+Owner decisions2026-10-29: Phase11 is the single Research Lab Wiki (historical
+Knowledge Forge); reconcile technical identifiers/routes and the old Phase12
+feature inventory in its brainstorm. No second Wiki/research module is implied.
+DEBT-037 physical containment against hostile local symlink/junction substitution
+is required before Phase11. The trusted-local-writer assumption is not accepted
+as its disposition. Inventory every API/Worker file operation and review a
+platform-specific race-safe design before implementing the corrective package.
+Lexical checks and a one-time realpath/lstat precheck are not proof of that
+stronger physical guarantee. No frontend work or Phase11 runtime starts here.
+
 Owner vision and corrected product names are recorded in
 [Product Vision 1.0](PRODUCT_VISION_1_0.md). Reconcile historical module naming and
 scope before Phase 11; this does not authorize unrelated implementation in D3.

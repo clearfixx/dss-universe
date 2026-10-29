@@ -5,6 +5,30 @@ Current accepted baseline: `289b24cf78be3e960458a04285d724e8f2a9eb63`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).
 Status: **IN PROGRESS — not release acceptance or Phase11 readiness**.
 
+## 2026-10-29 owner decisions and concrete remaining actions
+
+Owner resolved039's product boundary: one Wiki named Research Lab; Knowledge
+Forge is its historical alias. Canonical roadmap/module labels are reconciled;
+the old Phase12 analytical features are preserved as scope inventory for the
+Phase11 brainstorm, not a second content owner. Technical identifiers, routes
+and phase allocation still need compatibility planning before implementation.
+
+Owner rejected trusted-local-writer-only disposition for037. Physical storage
+containment against hostile symlink/junction substitution is a pre11 requirement.
+Current lexical checks do not implement it. Next work is the API/Worker IO
+inventory and race-safe Windows/Linux design, followed by its separately reviewed
+implementation/regressions. A check-then-open realpath precheck is insufficient.
+
+Remaining execution is explicit:007 consumer C/D and090 correction after their
+applicable approvals;037 physical security;039 compatibility/phase planning;
+047 administrator-availability and067 retraction-order scope decisions;058/059/
+083/086 stability diagnosis or explicit owner disposition. M routes are mapped
+evidence/review boundaries, not all missing implementations. Finish each original
+scope's review rather than requiring an impossible universal certificate.
+Final D7 gate/review PR acceptance, the separate stack audit, and Phase11
+brainstorm remain in that order. These owner decisions do not authorize Phase11.
+No source, permissions, storage IO, API or frontend was changed in this checkpoint.
+
 ## 2026-10-29 IAM/Authorization capability source-to-evidence map
 
 At accepted source834ea0b/main289b24c, IAM owns membership persistence and

@@ -1108,6 +1108,11 @@ Evidence: `docs/audits/D0_6_STORAGE_SECURITY_2026-10-10.md`.
 
 ### DEBT-037 — Physical storage containment threat model (Medium, OPEN, D2/D6)
 
+Owner decision2026-10-29: hostile local symlink/junction substitution is in scope;
+physical containment is required before Phase11. Trusted-writer-only deferral is
+rejected. Begin a separate API/Worker IO inventory and platform-specific race-safe
+design; current lexical helpers remain insufficient and no runtime fix is claimed.
+
 Lexical key validation cannot prevent a pre-existing symlink/junction or a local
 filesystem race from redirecting IO outside uploads. D0.6 assumes directories are
 application-controlled. There is no established remote exploit under this assumption.
@@ -1130,6 +1135,12 @@ failure with force-exit or skipped assertions. D3.1's six selected real API E2E
 tests pass locally in 40.952 seconds, but do not reproduce the complete CI suite.
 
 ### DEBT-039 — Owner vision and historical product naming (Medium, OPEN, D1 follow-up)
+
+Owner decision2026-10-29: one Wiki module named Research Lab; Knowledge Forge is
+its legacy planning/technical alias. Canonical product names/module map are
+reconciled, and historical Phase12 features are retained for consolidation at the
+Phase11 brainstorm. Technical identifiers/routes and scheduling remain explicit
+compatibility decisions. No second module, runtime rename or frontend edit here.
 
 The owner explicitly names Mission Control as the user dashboard and Command Deck
 as administration. Historical documents and the existing dashboard route disagree.

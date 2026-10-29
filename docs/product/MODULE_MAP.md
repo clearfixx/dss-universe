@@ -2,31 +2,32 @@
 
 > Status: Canonical for 1.0
 >
-> Naming reconciled: 2026-10-23 (owner clarification)
+> Naming reconciled: 2026-10-29 (single Research Lab Wiki)
 
 This document fixes the approved product names, boundaries and primary routes. Generic names may appear in code as domain terms, but user-facing navigation and product documentation use the branded names below.
 
 ## Naming Rules
 
-| Generic concept               | Canonical DSS name | Responsibility                                               |
-| ----------------------------- | ------------------ | ------------------------------------------------------------ |
-| Forum                         | Community Hub      | Topics, replies, voting, curators and community discussions  |
-| Articles / analytical content | Research Lab       | Long-form research, guides and analytical publications       |
-| Wiki                          | Knowledge Forge    | Collaborative, versioned manuals and knowledge articles      |
-| Admin Panel                   | Command Deck       | General administration and platform operations               |
-| Personal dashboard            | Mission Control    | Personal progress, tasks, recommendations and activity       |
-| Learning                      | Academy            | Courses, lessons, enrollment and progress                    |
-| Media                         | DSS Media Platform | Upload, processing, metadata, access and file lifecycle      |
-| AI                            | AI Core            | Cross-platform AI capabilities and orchestration             |
-| Support                       | Support Center     | Tickets, feature requests, bugs and release information      |
-| Maintenance                   | Maintenance Center | Health, queues, cache, storage, search and maintenance modes |
+| Generic concept           | Canonical DSS name | Responsibility                                               |
+| ------------------------- | ------------------ | ------------------------------------------------------------ |
+| Forum                     | Community Hub      | Topics, replies, voting, curators and community discussions  |
+| Wiki / knowledge articles | Research Lab       | Collaborative, versioned manuals and knowledge articles      |
+| Admin Panel               | Command Deck       | General administration and platform operations               |
+| Personal dashboard        | Mission Control    | Personal progress, tasks, recommendations and activity       |
+| Learning                  | Academy            | Courses, lessons, enrollment and progress                    |
+| Media                     | DSS Media Platform | Upload, processing, metadata, access and file lifecycle      |
+| AI                        | AI Core            | Cross-platform AI capabilities and orchestration             |
+| Support                   | Support Center     | Tickets, feature requests, bugs and release information      |
+| Maintenance               | Maintenance Center | Health, queues, cache, storage, search and maintenance modes |
 
 The deprecated product name `Control Center` must not be used. `Command Deck` is the administrative platform. `Mission Control` is the authenticated user's personal dashboard.
 
 The [owner product vision](../development/PRODUCT_VISION_1_0.md) and
 [administrative decisions](../development/COMMAND_DECK_OWNER_DECISIONS.md)
 take precedence over historical scope/access wording below. This naming update
-does not implement those features or resolve Research Lab/Knowledge Forge scope.
+does not implement those features. Owner clarified on2026-10-29 that Research Lab
+is the single Wiki; Knowledge Forge is its legacy alias, not a second owner.
+The historical Phase12 feature inventory still needs scheduling reconciliation.
 Existing/suggested legacy route strings are retained for compatibility review;
 they are not authority to rename URLs or infer permissions from a path.
 
@@ -43,35 +44,34 @@ they are not authority to rename URLs or infer permissions from a path.
 
 ## Content and Community Modules
 
-| Module          | Suggested route | Owns                                                                 | Does not own                                    |
-| --------------- | --------------- | -------------------------------------------------------------------- | ----------------------------------------------- |
-| News            | `/news`         | News records, editorial workflow, pinning, galleries and publication | Research papers, wiki revisions or forum topics |
-| Research Lab    | `/research`     | Analytical articles, guides, collections and research publishing     | News or collaborative wiki history              |
-| Knowledge Forge | `/knowledge`    | Versioned documents, revisions, review and rollback                  | Newsroom/editorial news                         |
-| Community Hub   | `/community`    | Categories, forums, topics, replies, polls and curators              | News or private messages                        |
-| Academy         | `/academy`      | Courses, lessons, enrollment, progress and assessments               | AI mentoring beyond the 1.0 boundary            |
-| Downloads       | `/downloads`    | Public download catalog, releases, versions and download policy      | Raw platform media administration               |
-| Communications  | `/messages`     | One-to-one private messages, text, code and attachments              | Group rooms in 1.0                              |
-| Support Center  | `/support`      | Tickets, suggestions, bug reports, statuses and releases             | Community discussions                           |
+| Module         | Suggested route                                       | Owns                                                                                                              | Does not own                                    |
+| -------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| News           | `/news`                                               | News records, editorial workflow, pinning, galleries and publication                                              | Research papers, wiki revisions or forum topics |
+| Research Lab   | Pending compatibility review: /research or /knowledge | One Wiki: versioned documents, revisions, review and rollback; analytical-feature inventory retained for planning | Newsroom editorial records or forum topics      |
+| Community Hub  | `/community`                                          | Categories, forums, topics, replies, polls and curators                                                           | News or private messages                        |
+| Academy        | `/academy`                                            | Courses, lessons, enrollment, progress and assessments                                                            | AI mentoring beyond the 1.0 boundary            |
+| Downloads      | `/downloads`                                          | Public download catalog, releases, versions and download policy                                                   | Raw platform media administration               |
+| Communications | `/messages`                                           | One-to-one private messages, text, code and attachments                                                           | Group rooms in 1.0                              |
+| Support Center | `/support`                                            | Tickets, suggestions, bug reports, statuses and releases                                                          | Community discussions                           |
 
 ## Shared Platform Capabilities
 
-| Capability                           | Owner                 | Main consumers                                                                      |
-| ------------------------------------ | --------------------- | ----------------------------------------------------------------------------------- |
-| Identity and sessions                | Authentication / IAM  | Every authenticated module                                                          |
-| Roles, permissions and custom groups | Authorization / IAM   | Every protected module                                                              |
-| DSS Media Platform                   | Media                 | Users, News, Research, Knowledge Forge, Community Hub, Academy, Downloads, Messages |
-| DSS Editor                           | Editor Platform       | News, Research, Knowledge Forge, Community Hub and comments                         |
-| Content Gates                        | Content Gate Platform | News, Research, Knowledge Forge, Community Hub, Downloads                           |
-| Comments and reactions               | Interaction Platform  | News, Research, profiles and other approved content                                 |
-| Reputation                           | Gamification          | Profiles, Community Hub, ranking and moderation                                     |
-| Community Points and levels          | Gamification          | Members Directory, Mission Control and profiles                                     |
-| Search                               | Search Platform       | All searchable domains                                                              |
-| Notifications                        | Notification Platform | All event-producing domains                                                         |
-| Audit                                | Audit Platform        | Command Deck, Security Deck and compliance                                          |
-| Events, outbox and jobs              | Platform Runtime      | Search, notifications, media, email, analytics and AI                               |
-| AI Core                              | AI Platform           | Feed, editors, search, Academy and administrative assistance                        |
-| Theme Engine                         | Theme Platform        | Entire Web application and CMS Builder                                              |
+| Capability                           | Owner                 | Main consumers                                                         |
+| ------------------------------------ | --------------------- | ---------------------------------------------------------------------- |
+| Identity and sessions                | Authentication / IAM  | Every authenticated module                                             |
+| Roles, permissions and custom groups | Authorization / IAM   | Every protected module                                                 |
+| DSS Media Platform                   | Media                 | Users, News, Research Lab, Community Hub, Academy, Downloads, Messages |
+| DSS Editor                           | Editor Platform       | News, Research Lab, Community Hub and comments                         |
+| Content Gates                        | Content Gate Platform | News, Research Lab, Community Hub, Downloads                           |
+| Comments and reactions               | Interaction Platform  | News, Research, profiles and other approved content                    |
+| Reputation                           | Gamification          | Profiles, Community Hub, ranking and moderation                        |
+| Community Points and levels          | Gamification          | Members Directory, Mission Control and profiles                        |
+| Search                               | Search Platform       | All searchable domains                                                 |
+| Notifications                        | Notification Platform | All event-producing domains                                            |
+| Audit                                | Audit Platform        | Command Deck, Security Deck and compliance                             |
+| Events, outbox and jobs              | Platform Runtime      | Search, notifications, media, email, analytics and AI                  |
+| AI Core                              | AI Platform           | Feed, editors, search, Academy and administrative assistance           |
+| Theme Engine                         | Theme Platform        | Entire Web application and CMS Builder                                 |
 
 ## Administrative Surfaces
 
@@ -101,7 +101,7 @@ Command Deck delegates domain actions to the owning module. It must not write di
 Internal code may retain stable technical nouns when useful:
 
 - `forum` can remain a domain/package name while the UI says Community Hub;
-- `wiki` can remain a technical content type while the UI says Knowledge Forge;
+- `wiki` can remain a technical content type while the UI says Research Lab;
 - `media` is the domain noun while the complete platform name is DSS Media Platform;
 - `admin` may appear in permission names and routes, but the product surface is Command Deck.
 
