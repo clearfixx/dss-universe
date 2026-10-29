@@ -76,7 +76,7 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 ## Command Deck administrative boundary — 29 October 2026
 
 - `/command-deck` is a restricted administrator dashboard, **not** the regular-user Mission Control. No regular-user link points to this route.
-- IAM capability `admin.command-deck.access` is seeded for the `admin` role; `owner` inherits all registered permissions. Ordinary `user`/`moderator` roles do not receive it.
+- Access requires **both** the effective IAM capability `admin.command-deck.access` and the current `admin` or `owner` role. The capability is seeded for `admin`; `owner` inherits all registered permissions. An explicitly granted permission never promotes a regular user or moderator into an administrator.
 - The GraphQL query `adminCommandDeckAccess` is protected by JWT and `PermissionsGuard`; a Next.js server component checks it before loading any dashboard data and returns 404 for unauthorized sessions.
 - The shared Shell hides this admin destination in every navigation variant, the mobile launcher and the personal menu unless the server-side capability check returns true. Visibility is **not** a security guard.
 - `proxy.ts` remains responsible only for authentication/session renewal; it does not infer administrator rights from JWT contents.
@@ -89,3 +89,5 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - Added a real GraphQL E2E regression verifying that revocation of `admin.command-deck.access` denies access using the **same unexpired JWT**, without requiring a new login. This relies on existing authoritative request-time access reads.
 - Added isolated Next.js SSR tests: explicit `true` grants access; permission errors, malformed responses, false values, network failures and non-2xx responses fail closed.
 - These new regression tests require green CI before being considered verified.
+
+- A regression verifies that the same valid JWT loses Command Deck access when either the permission or administrator role is revoked, and that a permission alone does not grant the route to a regular user.
