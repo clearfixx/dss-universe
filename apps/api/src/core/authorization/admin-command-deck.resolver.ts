@@ -1,7 +1,7 @@
-import { UseGuards } from '@nestjs/common';
+import { ForbiddenException, UseGuards } from '@nestjs/common';
 import { Query, Resolver } from '@nestjs/graphql';
 
-import { JwtAuthGuard } from '@api/core/auth';
+import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
 
 import { RequirePermissions } from './decorators/require-permissions.decorator';
 import { Permission } from './enums/permission.registry';
@@ -13,7 +13,11 @@ export class AdminCommandDeckResolver {
   @Query(() => Boolean)
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions(Permission.AdminCommandDeckAccess)
-  adminCommandDeckAccess(): boolean {
+  adminCommandDeckAccess(@AuthUser() user: AuthenticatedUser): boolean {
+    const roles = user.roles.map((role) => role.toLowerCase());
+    if (!roles.includes('admin') && !roles.includes('owner')) {
+      throw new ForbiddenException('Administrative role is required.');
+    }
     return true;
   }
 }
