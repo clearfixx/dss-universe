@@ -84,3 +84,20 @@ and record platform/toolchain provenance. Complete full quality, migrated DB
 regressions, generated-output checks, build and no-retry Web smoke. Keep any
 failure evidence. Request owner packet acceptance after terminal CI/full-gate
 results; this packet cannot independently close P2, DEBT-037 or D7.
+
+## CI interpreter-selection correction
+
+Initial headf818d41 completed the new primitive proof on all three platforms.
+Its Windows setup-python step installed3.14.10, but node-gyp's own discovery
+selected an existing3.15.1 interpreter. The new launcher correctly used that
+same actual build interpreter, exposing the difference instead of hiding it.
+Linux/macOS proof reports used3.14.10. Those results remain valid primitive
+evidence, but do not prove a uniformly pinned build interpreter.
+
+The native build now receives PYTHON from setup-python's documented python-path
+output explicitly. A focused policy regression first failed against the missing
+binding (5/6), then protects the corrected setup/build association. No Python
+version/dependency is upgraded; the existing declared3.14.10 is actually selected.
+The [action metadata](https://raw.githubusercontent.com/actions/setup-python/v5/action.yml)
+documents the absolute executable output. Final CI must confirm actual node-gyp
+selection and the helper's reported version, not only the setup step's CLI log.

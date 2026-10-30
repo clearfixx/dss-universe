@@ -11,6 +11,7 @@
  * 🧠 Responsibilities:
  * • rejects incomplete browser reports and unsafe database endpoints;
  * • preserves the safe browser allowlist and ordered verification plan.
+ * • guards the native CI interpreter binding against automatic discovery drift.
  *
  * 🏗️ Architecture:
  * Test-only policy regressions; no service provisioning or runtime changes.
@@ -22,10 +23,30 @@
  * ===============================================================
  */
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { getFileInfo } from "prettier";
 import FullQualityWebReporter from "./full-quality-web-reporter.mjs";
+
+test("native CI passes the setup-python executable to the build", () => {
+  const workflow = readFileSync(
+    new URL("../.github/workflows/storage-native.yml", import.meta.url),
+    "utf8",
+  );
+  const setup = workflow.match(
+    /- uses: actions\/setup-python@v5[\s\S]*?(?=\n      -)/,
+  )?.[0];
+  const build = workflow.match(
+    /- name: Build and verify real native capabilities[\s\S]*?(?=\n      -)/,
+  )?.[0];
+  assert.ok(setup && build, "native interpreter/build steps must exist");
+  assert.match(setup, /\bid: python\b/);
+  assert.match(setup, /python-version: 3\.14\.10\b/);
+  assert.ok(
+    build.includes("PYTHON: ${{ steps.python.outputs['python-path'] }}"),
+  );
+});
 
 test("format policy excludes only the generated Next environment declaration", async () => {
   const ignorePath = fileURLToPath(
