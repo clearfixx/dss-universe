@@ -91,3 +91,9 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - These new regression tests require green CI before being considered verified.
 
 - A regression verifies that the same valid JWT loses Command Deck access when either the permission or administrator role is revoked, and that a permission alone does not grant the route to a regular user.
+
+## Final route boundary audit — 30 October 2026
+
+- `/settings/platform-appearance` now fails closed with the Next.js `notFound()` boundary when the backend's guarded `adminPlatformAppearance` query denies or cannot confirm access. Previously an error-state view returned HTTP 200 to unauthorized visitors.
+- Server component regression tests cover denied access and all three valid Shell Variant values.
+- Previous merged-main CI passed at commit `94d8532`; this page-boundary change requires its own green CI before acceptance.
