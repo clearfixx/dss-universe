@@ -8,6 +8,7 @@ import {
   currentModule,
   isShellVariant,
   moduleSidebarItems,
+  navigationCurrent,
   routeMatches,
   visibleModules,
 } from "./shell-navigation";
@@ -33,6 +34,14 @@ describe("application shell navigation contracts", () => {
     expect(currentModule("/news/en/article")?.href).toBe("/news");
     expect(currentModule("/unknown")).toBeNull();
     expect(routeMatches("/newsroom", "/news")).toBe(false);
+  });
+
+  it("distinguishes the current page from its ancestor module", () => {
+    expect(navigationCurrent("/news", "/news")).toBe("page");
+    expect(navigationCurrent("/news/en/article", "/news")).toBe("location");
+    expect(navigationCurrent("/newsroom/new", "/newsroom")).toBe("location");
+    expect(navigationCurrent("/newsroom", "/news")).toBeUndefined();
+    expect(navigationCurrent("/unknown", "/news")).toBeUndefined();
   });
 
   it("builds contextual, not global, sidebar navigation", () => {
