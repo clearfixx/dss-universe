@@ -71,7 +71,7 @@ try {
     }
     [IO.Directory]::CreateDirectory($arena) | Out-Null
     $trusted = "D:P(A;OICI;FA;;;${controllerSid})(A;OICI;FA;;;SY)(A;OICI;FA;;;${serviceSid})"
-    [Dss037IdentityNative]::Descriptor($arena, $trusted + "(A;;RX;;;${attackerSid})")
+    [Dss037IdentityNative]::Descriptor($arena, $trusted + "(A;;FRFX;;;${attackerSid})")
     $safe = [IO.Path]::Combine($arena, 'safe-empty')
     $unsafe = [IO.Path]::Combine($arena, 'unsafe-empty')
     $historical = [IO.Path]::Combine($arena, 'historical-empty')

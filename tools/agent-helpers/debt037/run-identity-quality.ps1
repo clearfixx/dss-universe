@@ -8,6 +8,7 @@ Build. Share. Grow.
 #>
 param(
     [Parameter(Mandatory)][string]$ExpectedHead,
+    [Parameter(Mandatory)][string]$PythonPath,
     [ValidateRange(1024, 65535)][int]$WebPort = 4200
 )
 $ErrorActionPreference = 'Stop'
@@ -15,6 +16,10 @@ $root = [IO.Path]::GetFullPath([IO.Path]::Combine($PSScriptRoot, '..', '..', '..
 Set-Location -LiteralPath $root
 $head = (& git rev-parse HEAD).Trim()
 if ($LASTEXITCODE -ne 0 -or $head -cne $ExpectedHead) { throw 'Unexpected source HEAD.' }
+if (-not [IO.Path]::IsPathFullyQualified($PythonPath) -or -not [IO.File]::Exists($PythonPath)) {
+    throw 'An existing explicit native-build Python executable is required.'
+}
+$env:PYTHON = $PythonPath
 $compose = Get-Content -LiteralPath docker-compose.test.yml -Raw
 $password = [regex]::Match($compose, '(?m)^\s+POSTGRES_PASSWORD:\s*([A-Za-z0-9_]+)\s*$')
 if (-not $password.Success) { throw 'Cannot resolve disposable compose password safely.' }
