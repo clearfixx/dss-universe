@@ -6,7 +6,10 @@ Architecture: local orchestration only; reads disposable credentials from compos
 Important: no database reset, provisioning, host ACL changes or secret logging.
 Build. Share. Grow.
 #>
-param([Parameter(Mandatory)][string]$ExpectedHead)
+param(
+    [Parameter(Mandatory)][string]$ExpectedHead,
+    [ValidateRange(1024, 65535)][int]$WebPort = 4200
+)
 $ErrorActionPreference = 'Stop'
 $root = [IO.Path]::GetFullPath([IO.Path]::Combine($PSScriptRoot, '..', '..', '..'))
 Set-Location -LiteralPath $root
@@ -19,12 +22,12 @@ $env:DATABASE_URL = 'postgresql://dss_test:' + [Uri]::EscapeDataString($password
 $env:REDIS_HOST = '127.0.0.1'
 $env:REDIS_PORT = '6380'
 $env:TEST_REDIS_PORT = '6380'
-$env:DSS_WEB_TEST_PORT = '3195'
+$env:DSS_WEB_TEST_PORT = [string]$WebPort
 $cache = [IO.Path]::Combine($root, 'node_modules', '.cache')
 [IO.Directory]::CreateDirectory($cache) | Out-Null
 $nonce = [Guid]::NewGuid().ToString('N')
 $log = [IO.Path]::Combine($cache, 'identity-quality-' + $nonce + '.log')
-$receipt = [IO.Path]::Combine($root, 'tools', 'agent-helpers', 'debt037-identity-quality.local.json')
+$receipt = [IO.Path]::Combine($root, 'tools', 'agent-helpers', 'debt037-identity-quality-' + $nonce + '.local.json')
 $started = [DateTime]::UtcNow.ToString('o')
 $code = 1
 try {
