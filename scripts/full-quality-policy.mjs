@@ -90,6 +90,7 @@ export function qualitySteps(apiReport) {
     ["test:security-policy"],
     ["security:check"],
     ["--filter", "@dss/storage", "native:verify"],
+    ["storage:coordination:verify"],
     ["test:full", "--coverage"],
     ["--filter", "@dss/api", "test:e2e", "--json", `--outputFile=${apiReport}`],
     ["graphql:check"],
