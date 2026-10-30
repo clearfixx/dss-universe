@@ -97,3 +97,10 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - `/settings/platform-appearance` now fails closed with the Next.js `notFound()` boundary when the backend's guarded `adminPlatformAppearance` query denies or cannot confirm access. Previously an error-state view returned HTTP 200 to unauthorized visitors.
 - Server component regression tests cover denied access and all three valid Shell Variant values.
 - Previous merged-main CI passed at commit `94d8532`; this page-boundary change requires its own green CI before acceptance.
+
+## Navigation accessibility consistency — 30 October 2026
+
+- Nested module routes now declare `aria-current="location"` on ancestor links and `aria-current="page"` only for exact destinations; this matches the visual active styling in Navbar, launcher and Sidebar.
+- Breadcrumbs no longer incorrectly designate an ancestor as the current page when the actual nested route has no declared breadcrumb metadata. It remains navigable instead.
+- Unit regression covers exact match, nested routes, prefix collisions and unknown routes. Dynamic-route display names still require explicit verified metadata before visual acceptance.
+- A fresh CI result is required for these navigation changes.
