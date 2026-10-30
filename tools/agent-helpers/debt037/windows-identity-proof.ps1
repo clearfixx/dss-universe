@@ -109,8 +109,11 @@ try {
     $privateRead = [Dss037IdentityNative]::OpenOutcome($tokens[1], [IO.Path]::Combine($stage, 'secret.txt'), 1)
     if ($privateRead -ne 5) { throw "Expected private-stage denial; actual $privateRead" }
     $unsafeOutcome = [Dss037IdentityNative]::Junction($tokens[1], $attackerUnsafe, $stage)
-    if ($unsafeOutcome -ne 0 -or [Dss037IdentityNative]::Tag($heldUnsafe) -ne 0xA0000003) {
-        throw "Writable metadata positive control failed: $unsafeOutcome"
+    # PowerShell interprets 0xA0000003 as signed Int32; native tags are UInt32.
+    $mountPointTag = [uint32]2684354563
+    $unsafeTag = [Dss037IdentityNative]::Tag($heldUnsafe)
+    if ($unsafeOutcome -ne 0 -or $unsafeTag -ne $mountPointTag) {
+        throw "Writable metadata positive control failed: error=$unsafeOutcome tag=$unsafeTag"
     }
     [Dss037IdentityNative]::Descriptor($historical, $safeAcl)
     $newOpen = [Dss037IdentityNative]::OpenOutcome($tokens[1], $historical, 0x102)
@@ -118,7 +121,7 @@ try {
     $historicalOutcome = [Dss037IdentityNative]::Junction($tokens[1], $attackerHistorical, $stage)
     $historicalTag = [Dss037IdentityNative]::Tag($heldHistorical)
     # Fail closed on unexpected outcomes; this packet tests the concrete counterexample.
-    if ($historicalOutcome -ne 0 -or $historicalTag -ne 0xA0000003) {
+    if ($historicalOutcome -ne 0 -or $historicalTag -ne $mountPointTag) {
         throw "Historical-handle counterexample not reproduced: error=$historicalOutcome tag=$historicalTag"
     }
     if ([IO.File]::ReadAllText([IO.Path]::Combine($stage, 'secret.txt')) -cne 'SYNTHETIC PRIVATE STAGE') {
