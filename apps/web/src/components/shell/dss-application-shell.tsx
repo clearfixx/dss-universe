@@ -32,6 +32,7 @@ import {
   breadcrumbsForPath,
   currentModule,
   moduleSidebarItems,
+  navigationCurrent,
   routeMatches,
   type ShellVariant,
 } from "./shell-navigation";
@@ -43,7 +44,7 @@ function ModuleLinks({ pathname, hasSession, canAccessAdminDeck, onNavigate }: {
         <Link
           key={href}
           href={href}
-          aria-current={pathname === href ? "page" : undefined}
+          aria-current={navigationCurrent(pathname, href)}
           onClick={onNavigate}
           className={cn(
             "flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-slate-300 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400",
@@ -83,7 +84,7 @@ function GlobalNavigation({
             <Link
               key={href}
               href={href}
-              aria-current={pathname === href ? "page" : undefined}
+              aria-current={navigationCurrent(pathname, href)}
               className={cn(
                 "inline-flex h-9 shrink-0 items-center gap-2 rounded-lg px-2.5 text-xs text-slate-300 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-violet-400",
                 routeMatches(pathname, href) && "bg-violet-500/15 text-violet-200",
@@ -122,10 +123,10 @@ function ModuleSidebar({ pathname, onNavigate }: { pathname: string; onNavigate?
             key={href}
             href={href}
             onClick={onNavigate}
-            aria-current={pathname === href ? "page" : undefined}
+            aria-current={navigationCurrent(pathname, href)}
             className={cn(
               "flex min-h-10 items-center gap-3 rounded-lg bg-white/[0.035] px-3 text-sm text-slate-300 transition-colors hover:bg-white/[0.07] hover:text-white focus-visible:outline-2 focus-visible:outline-violet-400",
-              pathname === href && "bg-violet-500/15 text-violet-200",
+              routeMatches(pathname, href) && "bg-violet-500/15 text-violet-200",
             )}
           >
             <LinkIcon aria-hidden="true" className="size-4 shrink-0" />
@@ -147,7 +148,7 @@ function Breadcrumbs({ pathname }: { pathname: string }) {
         {parts.map((part, index) => (
           <li key={part.href} className="flex items-center gap-2">
             <span aria-hidden="true">/</span>
-            {index === parts.length - 1 ? (
+            {index === parts.length - 1 && pathname === part.href ? (
               <span aria-current="page" className="text-slate-200">{part.label}</span>
             ) : (
               <Link href={part.href} className="hover:text-white">{part.label}</Link>
