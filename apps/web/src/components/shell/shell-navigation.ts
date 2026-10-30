@@ -90,6 +90,15 @@ export function routeMatches(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+/** Exact destination is the page; an ancestor module represents the current location. */
+export function navigationCurrent(
+  pathname: string,
+  href: string,
+): "page" | "location" | undefined {
+  if (pathname === href) return "page";
+  return routeMatches(pathname, href) ? "location" : undefined;
+}
+
 export function currentModule(pathname: string): ModuleNavigation | null {
   return MODULE_NAVIGATION
     .filter((entry) => routeMatches(pathname, entry.href))
