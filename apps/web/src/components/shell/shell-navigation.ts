@@ -123,10 +123,16 @@ export function breadcrumbsForPath(pathname: string): readonly { href: string; l
   if (!activeModule) return [];
 
   const child = activeModule.children.find((item) => routeMatches(pathname, item.href));
-  return [
+  const parts = [
     { href: activeModule.href, label: activeModule.label },
     ...(child ? [{ href: child.href, label: child.label }] : []),
   ];
+  // No title is inferred from dynamic URL segments; the page can provide
+  // trusted metadata in a later explicit route contract.
+  if (parts[parts.length - 1]?.href !== pathname) {
+    parts.push({ href: pathname, label: "Поточна сторінка" });
+  }
+  return parts;
 }
 
 /** Reduces dead-end links for guests, without substituting for API/route authorization. */
