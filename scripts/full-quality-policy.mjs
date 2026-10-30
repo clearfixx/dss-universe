@@ -78,6 +78,7 @@ export function createBrowserEnvironment(source) {
 export function qualitySteps(apiReport) {
   return [
     ["format:check"],
+    ["helpers:verify"],
     ["architecture:check"],
     ["db:validate"],
     ["db:generate"],
@@ -88,6 +89,7 @@ export function qualitySteps(apiReport) {
     ["test:quality-policy"],
     ["test:security-policy"],
     ["security:check"],
+    ["--filter", "@dss/storage", "native:verify"],
     ["test:full", "--coverage"],
     ["--filter", "@dss/api", "test:e2e", "--json", `--outputFile=${apiReport}`],
     ["graphql:check"],
