@@ -104,3 +104,9 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - Breadcrumbs no longer incorrectly designate an ancestor as the current page when the actual nested route has no declared breadcrumb metadata. It remains navigable instead.
 - Unit regression covers exact match, nested routes, prefix collisions and unknown routes. Dynamic-route display names still require explicit verified metadata before visual acceptance.
 - A fresh CI result is required for these navigation changes.
+
+## Nested breadcrumb completeness — 30 October 2026
+
+- Breadcrumbs for nested routes without verified page-title metadata now end with a non-linked `Поточна сторінка` element (`aria-current="page"`); the URL slug is not treated as a trusted display title.
+- Known module and child labels retain their exact existing navigation metadata. Future dynamic page titles should be supplied through an explicit route metadata contract rather than inferred from path segments.
+- Unit tests cover news detail paths, a nested newsroom child, exact module pages and unknown routes. CI verification for this change remains pending.
