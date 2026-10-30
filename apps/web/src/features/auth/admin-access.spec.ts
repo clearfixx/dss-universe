@@ -18,6 +18,8 @@ vi.mock("@/config/site.config", () => ({
   siteConfig: { graphqlUrl: "http://localhost:4000/graphql" },
 }));
 
+import { cookies } from "next/headers";
+
 import { loadAdminCommandDeckAccess } from "./admin-access";
 
 describe("server-side Command Deck authorization", () => {
@@ -27,6 +29,14 @@ describe("server-side Command Deck authorization", () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it("denies guests without contacting the IAM service", async () => {
+    vi.mocked(cookies).mockResolvedValueOnce({
+      get: () => undefined,
+    } as Awaited<ReturnType<typeof cookies>>);
+    expect(await loadAdminCommandDeckAccess()).toBe(false);
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("grants access only to an explicit successful IAM response", async () => {
