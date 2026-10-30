@@ -102,8 +102,15 @@ On Linux6.18.54.1-microsoft-standard-WSL2/tmpfs, deterministic pipe barriers pro
 2. Independently opened private flock descriptions reject overlapping exclusive
    acquisition. After the first process releases its lock, publication completes;
    stale cleanup reacquires coordination, rechecks identity and preserves NEW.
+3. The publisher closes unused pipe ends and the inherited parent lock descriptor
+   immediately after fork. A controlled parent-abort closes the command pipe;
+   the child observes EOF, exits with the expected code and never publishes.
+   This covers the descriptor-inheritance issue found during source review.
 
 No sleeps, retries, application data or host-user provisioning were involved.
+An alarm is a ten-second fail-closed watchdog for a broken fixture, not timing
+synchronization or an enlarged application/test timeout. All ordering assertions
+use pipes and nonblocking lock acquisition.
 The helper is a primitive counterexample/control, not the production backend,
 distinct-attacker evidence, Windows/macOS proof or complete root admission.
 

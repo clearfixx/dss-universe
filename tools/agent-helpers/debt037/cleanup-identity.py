@@ -26,6 +26,7 @@ import errno
 import fcntl
 import json
 import os
+import signal
 import stat
 import tempfile
 
@@ -38,10 +39,14 @@ def identity(path):
     return info.st_dev, info.st_ino
 
 
-def publisher(path, staged, lock, ready, release, protected):
+def publisher(path, staged, lock, ready, release, protected,
+              unused_ready, unused_release, inherited_lock):
     pid = os.fork()
     if pid == 0:
         try:
+            os.close(unused_ready)
+            os.close(unused_release)
+            os.close(inherited_lock)
             # Open independently: inherited flock descriptions are not independent.
             with open(lock, "r+b", buffering=0) as handle:
                 if protected:
@@ -52,7 +57,10 @@ def publisher(path, staged, lock, ready, release, protected):
                     else:
                         raise AssertionError("Concurrent private lock was admitted")
                     os.write(ready, b"B")
-                    assert os.read(release, 1) == b"R"
+                    command = os.read(release, 1)
+                    if command == b"":
+                        os._exit(2)  # Parent aborted; do not publish.
+                    assert command == b"R"
                     fcntl.flock(handle, fcntl.LOCK_EX)
                 os.replace(staged, path)
                 os.write(ready, b"P")
@@ -62,8 +70,9 @@ def publisher(path, staged, lock, ready, release, protected):
     return pid
 
 
-def scenario(arena, protected):
-    directory = os.path.join(arena, "locked" if protected else "unlocked")
+def scenario(arena, protected, abort=False):
+    directory = os.path.join(arena, "abort" if abort else
+                             "locked" if protected else "unlocked")
     os.mkdir(directory, 0o700)
     path, staged, lock = (os.path.join(directory, name)
                           for name in ("object", "next", "coordination"))
@@ -78,29 +87,39 @@ def scenario(arena, protected):
         if protected:
             fcntl.flock(handle, fcntl.LOCK_EX)
         assert identity(path) == captured
-        pid = publisher(path, staged, lock, ready_write, release_read, protected)
+        pid = publisher(path, staged, lock, ready_write, release_read, protected,
+                        ready_read, release_write, handle.fileno())
         os.close(ready_write)
         os.close(release_read)
         try:
             if protected:
                 assert os.read(ready_read, 1) == b"B"
-                fcntl.flock(handle, fcntl.LOCK_UN)
-                os.write(release_write, b"R")
-            assert os.read(ready_read, 1) == b"P"
-            if protected:
+                if abort:
+                    os.close(release_write)
+                    release_write = None
+                else:
+                    fcntl.flock(handle, fcntl.LOCK_UN)
+                    os.write(release_write, b"R")
+            if abort:
+                with open(path, "rb") as current:
+                    assert current.read() == b"OLD"
+            else:
+                assert os.read(ready_read, 1) == b"P"
+            if protected and not abort:
                 fcntl.flock(handle, fcntl.LOCK_EX)
                 assert identity(path) != captured
                 # Stale cleanup rechecks identity under coordination and skips.
                 with open(path, "rb") as current:
                     assert current.read() == b"NEW"
-            else:
+            elif not protected:
                 os.unlink(path)
                 assert not os.path.exists(path)
         finally:
             os.close(ready_read)
-            os.close(release_write)
+            if release_write is not None:
+                os.close(release_write)
             _, status = os.waitpid(pid, 0)
-            assert os.waitstatus_to_exitcode(status) == 0
+            assert os.waitstatus_to_exitcode(status) == (2 if abort else 0)
     return True
 
 
@@ -113,6 +132,10 @@ def main():
     with open("/proc/mounts", encoding="ascii") as mounts:
         assert any(line.split()[1:3] == ["/tmp", "tmpfs"] for line in mounts)
     assert os.geteuid() == 0
+    def watchdog(_number, _frame):
+        raise TimeoutError("Disposable characterization exceeded safety deadline")
+    signal.signal(signal.SIGALRM, watchdog)
+    signal.alarm(10)
     arena = tempfile.mkdtemp(prefix="dss037-cleanup-", dir="/tmp")
     os.chown(arena, SERVICE, SERVICE)
     os.setgroups([])
@@ -124,9 +147,11 @@ def main():
     assert caps == "0000000000000000"
     result = {"uncoordinatedCheckUnlinkDeletesReplacement": scenario(arena, False),
               "privateLockBlocksConcurrentPublicationAndStaleCleanupSkips": scenario(arena, True),
+              "parentAbortClosesChildWithoutPublication": scenario(arena, True, True),
               "serviceUid": os.geteuid(), "effectiveCapabilities": caps,
               "kernel": os.uname().release, "filesystem": "tmpfs",
               "productionContainmentProved": False}
+    signal.alarm(0)
     print(json.dumps(result))
 
 
