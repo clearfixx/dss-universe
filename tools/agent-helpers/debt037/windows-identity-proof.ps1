@@ -38,7 +38,8 @@ $accounts = [Collections.Generic.List[object]]::new()
 $tokens = [Collections.Generic.List[IDisposable]]::new()
 $handles = [Collections.Generic.List[IDisposable]]::new()
 $passwords = [Collections.Generic.List[Security.SecureString]]::new()
-$description = 'DISPOSABLE DSS IDENTITY PROBE ' + $nonce
+# Local account descriptions are bounded; retain the full invocation nonce.
+$description = 'DSS037 disposable ' + $nonce.Substring(0, 24)
 try {
     foreach ($prefix in @('dssS-', 'dssA-')) {
         $name = $prefix + $nonce.Substring(0, 10)
