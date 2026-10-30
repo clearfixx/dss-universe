@@ -1,12 +1,27 @@
-/*
- * DSS Universe — Storage infrastructure characterization
- * File: tools/agent-helpers/debt037/windows-identity-native.cs
- * Purpose: synchronous, real-logon fixture capabilities for disposable Windows CI.
- * Responsibilities: own token/handle lifetimes; preserve Win32 outcomes; clear passwords.
- * Architecture: diagnostic helper only; no API/Worker or production storage imports.
- * Important: callers must enforce disposable-runner admission before provisioning users.
- * This is not production containment or a substitute for historical-handle proofs.
- * Build. Share. Grow.
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Storage Identity Characterization
+ * 📄 File: tools/agent-helpers/debt037/windows-identity-native.cs
+ *
+ * 🎯 Purpose:
+ * Supplies synchronous real-logon fixture capabilities for disposable Windows CI.
+ *
+ * 🧠 Responsibilities:
+ * • owns native token and file-handle lifetimes;
+ * • preserves Win32 outcomes and clears temporary password buffers;
+ * • inspects captured objects without a second pathname lookup.
+ *
+ * 🏗️ Architecture:
+ * Diagnostic interop only; no API/Worker or production storage imports.
+ *
+ * ⚠️ Important:
+ * Caller must enforce disposable-runner admission before provisioning users.
+ * This fixture is not production containment or root admission.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
  */
 using System;
 using System.ComponentModel;

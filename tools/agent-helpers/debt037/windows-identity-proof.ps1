@@ -1,13 +1,27 @@
 #requires -Version 7.0
 <#
-DSS Universe — Storage infrastructure characterization
-File: tools/agent-helpers/debt037/windows-identity-proof.ps1
-Purpose: real-account historical metadata-handle evidence in disposable Windows CI.
-Responsibilities: guard provisioning; create isolated identities and fixture ACLs;
-dispose tokens/passwords; remove only accounts created by this invocation.
-Architecture: opt-in diagnostic helper; never imported by API or Worker.
-Important: no host execution, upload migration, production admission or recursive cleanup.
-Build. Share. Grow.
+===============================================================
+🚀 DSS Universe
+---------------------------------------------------------------
+📦 Module: Storage Identity Characterization
+📄 File: tools/agent-helpers/debt037/windows-identity-proof.ps1
+
+🎯 Purpose:
+Collects real-account historical metadata-handle evidence in disposable Windows CI.
+
+🧠 Responsibilities:
+• guards provisioning and creates isolated identities and fixture ACLs;
+• checks access outcomes through real logon tokens;
+• disposes capabilities and removes only this invocation's accounts.
+
+🏗️ Architecture:
+Opt-in diagnostic helper; never imported by API or Worker.
+
+⚠️ Important:
+No host execution, upload migration, production admission or recursive cleanup.
+
+🚀 Build. Share. Grow.
+===============================================================
 #>
 $ErrorActionPreference = 'Stop'
 if (-not $IsWindows -or -not [Environment]::Is64BitProcess -or
@@ -38,7 +52,7 @@ $accounts = [Collections.Generic.List[object]]::new()
 $tokens = [Collections.Generic.List[IDisposable]]::new()
 $handles = [Collections.Generic.List[IDisposable]]::new()
 $passwords = [Collections.Generic.List[Security.SecureString]]::new()
-# Local account descriptions are bounded; retain the full invocation nonce.
+# Local account descriptions are bounded; retain an invocation-specific nonce.
 $description = 'DSS037 disposable ' + $nonce.Substring(0, 24)
 try {
     foreach ($prefix in @('dssS-', 'dssA-')) {

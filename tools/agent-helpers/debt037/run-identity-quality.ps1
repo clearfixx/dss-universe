@@ -1,10 +1,27 @@
 #requires -Version 7.0
 <#
-DSS Universe — DEBT-037 verification helper
-Purpose: retain exact-source full-quality evidence against prepared test services.
-Architecture: local orchestration only; reads disposable credentials from compose.
-Important: no database reset, provisioning, host ACL changes or secret logging.
-Build. Share. Grow.
+===============================================================
+🚀 DSS Universe
+---------------------------------------------------------------
+📦 Module: Storage Identity Verification
+📄 File: tools/agent-helpers/debt037/run-identity-quality.ps1
+
+🎯 Purpose:
+Retains exact-source full-quality evidence against prepared test services.
+
+🧠 Responsibilities:
+• checks source identity and an explicitly supplied build interpreter;
+• reads disposable credentials from compose without logging them;
+• preserves each gate log and result without overwriting previous runs.
+
+🏗️ Architecture:
+Local test orchestration; never loaded by API or Worker.
+
+⚠️ Important:
+No database reset, provisioning, host ACL changes or secret logging.
+
+🚀 Build. Share. Grow.
+===============================================================
 #>
 param(
     [Parameter(Mandatory)][string]$ExpectedHead,

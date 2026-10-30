@@ -33,7 +33,7 @@ the directory ACL. A new equivalent open must then fail with access denied. The
 existing handle is used to attempt a mount-point reparse operation; the service's
 already-held handle supplies the observed reparse tag. The current executable
 expects the concrete successful historical-handle counterexample and fails on
-unexpected outcomes. No such outcome is yet claimed as observed.
+unexpected outcomes. That counterexample was observed in CI as recorded below.
 
 Tokens and file handles are disposed before exact-SID account cleanup. Cleanup
 checks the invocation-specific account name and description before removal.
@@ -43,11 +43,39 @@ recursively deletes a directory containing junctions.
 ## Evidence and next decision
 
 Local C# compilation passed. A local invocation was rejected by the disposable
-runner guard before side effects. Real-account CI execution and the full quality
-gate remain pending. These checks do not prove complete admission requirements,
-owner metadata, Linux/macOS identity behavior or safe production publication.
+runner guard before side effects. On head `1369b4e`, all three CI workflows
+passed. The Windows identity job
+[124090091138](https://github.com/clearfixx/dss-universe/actions/runs/41063879632/job/124090091138)
+reported distinct service/attacker account SIDs ending in 1003/1004:
 
-If reproduced, the counterexample means current DACL inspection cannot establish
+| Observation                                           | Actual result                                    |
+| ----------------------------------------------------- | ------------------------------------------------ |
+| Safe-directory metadata/delete-child/DACL/owner opens | Win32 5 for all five masks                       |
+| Private-stage read                                    | Win32 5                                          |
+| Unsafe-directory junction control                     | Win32 0                                          |
+| New metadata open after ACL revocation                | Win32 5                                          |
+| Historical-handle junction after ACL revocation       | Win32 0                                          |
+| Captured historical directory tag                     | UInt32 2684354563 (`IO_REPARSE_TAG_MOUNT_POINT`) |
+| Private sentinel bytes                                | Unchanged                                        |
+
+These checks do not prove complete admission requirements, owner metadata,
+Linux/macOS identity behavior or safe production publication. The helper
+explicitly reports `productionContainmentProved: false`.
+
+Earlier CI failures are retained: overlong account description (`de682ec`),
+invalid SDDL `RX` rights (`1f95c26`), and signed PowerShell tag comparison
+(`ce3bf92`). The last case had a successful native junction operation but a bad
+assertion; comparing the same tag bits as UInt32 fixed it without weakening the
+expected outcome.
+
+Local gate attempts also remain preserved: port 3195 was rejected because it
+lies inside the observed Windows excluded range 3128–3227; the next attempt
+lacked an explicit Python interpreter; the following run reached coverage but
+terminated with `1073807364` during `test:full`. Its tool process handle is gone
+and its log is terminal. The exact external interruption cause is not proven;
+this run is not accepted as a passing gate. A final full gate remains required.
+
+The observed counterexample means current DACL inspection cannot establish
 that no historical writable handle exists. The next design must address that
 history explicitly; it must not silently attest legacy roots or weaken the
 agreed separate-OS-user threat model. Runtime implementation remains separate.
