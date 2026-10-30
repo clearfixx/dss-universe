@@ -121,6 +121,16 @@ test("full plan includes coverage, E2E and generation but never provisioning/res
     (step) => step.join(" ") === "--filter @dss/storage native:verify",
   );
   assert.ok(native >= 0, "native lifecycle verification is mandatory");
+  const coordination = steps.findIndex(
+    (step) => step.join(" ") === "storage:coordination:verify",
+  );
+  assert.ok(
+    coordination > native,
+    "coordination requires the selected native toolchain",
+  );
+  assert.ok(
+    coordination < steps.findIndex((step) => step.includes("--coverage")),
+  );
   assert.ok(native < steps.findIndex((step) => step.includes("--coverage")));
   assert.ok(steps.some((step) => step.includes("--coverage")));
   assert.ok(steps.some((step) => step.includes("--outputFile=unique.json")));

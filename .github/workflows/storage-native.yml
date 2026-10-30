@@ -43,3 +43,5 @@ jobs:
         run: c++ --version
       - name: Build and verify real native capabilities
         run: pnpm --filter @dss/storage native:verify
+      - name: Verify cross-process storage coordination primitives
+        run: pnpm storage:coordination:verify
