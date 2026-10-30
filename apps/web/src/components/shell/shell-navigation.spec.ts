@@ -72,6 +72,22 @@ describe("application shell navigation contracts", () => {
     expect(visibleModules(true, true)).toHaveLength(MODULE_NAVIGATION.length);
   });
 
+  it("finishes dynamic breadcrumb trails without inventing route titles", () => {
+    expect(breadcrumbsForPath("/news/en/article-slug")).toEqual([
+      { href: "/news", label: "Новини" },
+      { href: "/news/en/article-slug", label: "Поточна сторінка" },
+    ]);
+    expect(breadcrumbsForPath("/newsroom/new/preview")).toEqual([
+      { href: "/newsroom", label: "Newsroom" },
+      { href: "/newsroom/new", label: "Нова стаття" },
+      { href: "/newsroom/new/preview", label: "Поточна сторінка" },
+    ]);
+    expect(breadcrumbsForPath("/unknown")).toEqual([]);
+    expect(breadcrumbsForPath("/news")).toEqual([
+      { href: "/news", label: "Новини" },
+    ]);
+  });
+
   it("uses declared labels for known breadcrumbs", () => {
     expect(breadcrumbsForPath("/newsroom/new")).toEqual([
       { href: "/newsroom", label: "Newsroom" },
