@@ -83,6 +83,50 @@ This proposal does not declare arbitrary Windows/POSIX installations supported.
 | Worker boundary     | No handles/paths in jobs or business contracts; P3 integration and cross-process coordination explicitly tracked                                        |
 | Platforms/gates     | Real Windows/Linux/macOS evidence, native checks, full quality gate, CI and owner packet acceptance                                                     |
 
+## Cleanup characterization checkpoint
+
+The new opt-in helper tools/agent-helpers/debt037/cleanup-identity.py ran in the
+previously cached image
+sha256:5d9624a93634d1c5e595619cc57b1d330758120d1baf445fa97300c0c1fc3c0a.
+The container had no network, a read-only rootfs, only the helper mounted
+read-only and a private 16MiB noexec/nosuid/nodev tmpfs. Its controller created
+synthetic fixtures, dropped to UID/GID5050 with no supplementary groups and
+verified zero effective capabilities before every tested service operation.
+
+On Linux6.18.54.1-microsoft-standard-WSL2/tmpfs, deterministic pipe barriers proved:
+
+1. A cleanup process checks the old device/inode; a second process atomically
+   publishes different bytes; the first process unlinks the replacement. A
+   matching identity check before an unlocked unlink is insufficient even when
+   both processes are legitimate service writers.
+2. Independently opened private flock descriptions reject overlapping exclusive
+   acquisition. After the first process releases its lock, publication completes;
+   stale cleanup reacquires coordination, rechecks identity and preserves NEW.
+
+No sleeps, retries, application data or host-user provisioning were involved.
+The helper is a primitive counterexample/control, not the production backend,
+distinct-attacker evidence, Windows/macOS proof or complete root admission.
+
+Candidate protocol: all API/Worker namespace writers and captured-object cleanup
+must share private coordination for a canonical key, including revalidation and
+publication/removal inside that scope. Lock identity must survive competing
+processes and must not be deleted/recreated while participants can hold it.
+Bounded striping is a possible way to avoid unbounded lock-file growth; exact
+mapping and Windows/macOS equivalents remain design decisions. Advisory locking
+alone does not constrain an attacker: protected object/parent ownership is still
+required. The existing Worker pathname adapter does not participate, so this
+protocol cannot be advertised active after an API-only switch.
+
+Primary references reviewed:
+
+- [NtCreateFile](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntcreatefile): relative roots and explicit reparse handling.
+- [Windows file security](https://learn.microsoft.com/en-us/windows/win32/fileio/file-security-and-access-rights): per-object security and inheritance; a parent ACL is not a substitute for checking its children.
+- [CreateFile sharing](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew): sharing compatibility and lifetime; sharing does not replace ACL admission.
+- [Linux flock](https://man7.org/linux/man-pages/man2/flock.2.html), [unlink](https://man7.org/linux/man-pages/man2/unlink.2.html) and [rename](https://man7.org/linux/man-pages/man2/rename.2.html): advisory coordination and directory-entry operations, not an atomic compare-and-unlink API.
+
+The POSIX Issue8 Open Group pages returned HTTP403 during this review. Linux
+manuals and the Linux probe do not certify Darwin behavior; that remains open.
+
 ## Next review boundary
 
 First review the admission/publication/cleanup protocol and platform test setup.
