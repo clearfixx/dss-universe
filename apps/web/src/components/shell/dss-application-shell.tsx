@@ -31,6 +31,7 @@ import {
   visibleModules,
   breadcrumbsForPath,
   currentModule,
+  currentSidebarHref,
   moduleSidebarItems,
   navigationCurrent,
   routeMatches,
@@ -108,6 +109,7 @@ function GlobalNavigation({
 function ModuleSidebar({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
   const activeModule = currentModule(pathname);
   const links = moduleSidebarItems(pathname);
+  const currentHref = currentSidebarHref(pathname);
   if (!activeModule) return null;
 
   const Icon = activeModule.icon;
@@ -123,10 +125,10 @@ function ModuleSidebar({ pathname, onNavigate }: { pathname: string; onNavigate?
             key={href}
             href={href}
             onClick={onNavigate}
-            aria-current={navigationCurrent(pathname, href)}
+            aria-current={currentHref === href ? navigationCurrent(pathname, href) : undefined}
             className={cn(
               "flex min-h-10 items-center gap-3 rounded-lg bg-white/[0.035] px-3 text-sm text-slate-300 transition-colors hover:bg-white/[0.07] hover:text-white focus-visible:outline-2 focus-visible:outline-violet-400",
-              routeMatches(pathname, href) && "bg-violet-500/15 text-violet-200",
+              currentHref === href && "bg-violet-500/15 text-violet-200",
             )}
           >
             <LinkIcon aria-hidden="true" className="size-4 shrink-0" />
