@@ -24,8 +24,6 @@ security base and be verified again before its own acceptance.
 
 See [evidence and compatibility](../audits/DEBT_092_JOI_SECURITY.md).
 
-## Purpose
-
 ### DEBT-093 — Community Points ledger E2E timeout (Medium, approved investigation, OPEN)
 
 The exact PR120 head6c3634f local full gate ended687/688, with the ledger
@@ -40,6 +38,8 @@ crypto, runtime policy, assertions and deadline unchanged; no sleep, retry or
 rerun-to-green. A proven runtime cause needs separate approval. The diagnostic
 branch stacks on PR120 but is not its acceptance. See
 [investigation evidence](../audits/DEBT_093_POINTS_E2E_TIMING.md).
+
+## Purpose
 
 This document records defects and architectural debt discovered outside the
 currently accepted implementation package. Entries are reviewed with the

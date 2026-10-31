@@ -35,6 +35,10 @@ describe('Community Points Ledger (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
   let points: CommunityPointsService;
+  let user: RegisteredUser;
+  let moderator: RegisteredUser;
+  let reorderedUser: RegisteredUser;
+  let moderatorToken: string;
   const tracing = process.env.DSS_POINTS_E2E_TIMINGS === '1';
   let sequence = 0;
   let scenarioStarted = 0;
@@ -57,6 +61,37 @@ describe('Community Points Ledger (e2e)', () => {
     points = app.get(CommunityPointsService);
   });
 
+  beforeAll(async () => {
+    user = await register('points-user');
+  });
+
+  beforeAll(async () => {
+    moderator = await register('points-moderator');
+  });
+
+  beforeAll(async () => {
+    reorderedUser = await register('points-reordered');
+  });
+
+  beforeAll(async () => {
+    const permissions = await prisma.permission.findMany({
+      where: {
+        key: {
+          in: ['community-points.reverse', 'community-points.settings.manage'],
+        },
+      },
+      select: { id: true },
+    });
+    expect(permissions).toHaveLength(2);
+    await prisma.userPermission.createMany({
+      data: permissions.map((permission) => ({
+        userId: moderator.id,
+        permissionId: permission.id,
+      })),
+    });
+    moderatorToken = await login(moderator.email);
+  });
+
   afterAll(async () => {
     await measure('cleanup.outbox', () =>
       prisma.outboxEvent.deleteMany({
@@ -68,8 +103,6 @@ describe('Community Points Ledger (e2e)', () => {
 
   it('keeps event awards idempotent, capped, explainable and reversible', async () => {
     scenarioStarted = performance.now();
-    const user = await register('points-user');
-    const moderator = await register('points-moderator');
     await prisma.communityPointRule.update({
       where: { key: 'reputation.positive' },
       data: { dailyLimit: 2, points: 10, enabled: true },
@@ -138,22 +171,6 @@ describe('Community Points Ledger (e2e)', () => {
       reversal: null,
     });
 
-    const permissions = await prisma.permission.findMany({
-      where: {
-        key: {
-          in: ['community-points.reverse', 'community-points.settings.manage'],
-        },
-      },
-      select: { id: true },
-    });
-    expect(permissions).toHaveLength(2);
-    await prisma.userPermission.createMany({
-      data: permissions.map((permission) => ({
-        userId: moderator.id,
-        permissionId: permission.id,
-      })),
-    });
-    const moderatorToken = await login(moderator.email);
     const entryId = firstEntry?.id;
     expect(entryId).toBeDefined();
 
@@ -244,7 +261,6 @@ describe('Community Points Ledger (e2e)', () => {
       }),
     ).rejects.toThrow('community points ledger entries are immutable');
 
-    const reorderedUser = await register('points-reordered');
     await expect(
       consume({
         ...reputationEvent(
