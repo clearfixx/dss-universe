@@ -24,6 +24,27 @@ security base and be verified again before its own acceptance.
 
 See [evidence and compatibility](../audits/DEBT_092_JOI_SECURITY.md).
 
+### DEBT-093 — Community Points ledger E2E timeout (Medium, approved investigation, OPEN)
+
+The exact PR120 head6c3634f local full gate ended687/688, with the ledger
+scenario exceeding its unchanged5000ms deadline (reported5007ms). The same
+scenario passed in exact-head CI2267ms. Full coverage passed1466/1466; CI8/8
+does not erase the local red. The failed JSON SHA256 is
+`6020EE8A16BD40F7F10CB00789CB39E8A83ADF4B761A707E952D27F55A161ECD`.
+
+Owner approved a separate diagnostic/test package. First measure real
+registration/login, consume, GraphQL history/reversal and cleanup. Keep Auth,
+crypto, runtime policy, assertions and deadline unchanged; no sleep, retry or
+rerun-to-green. A proven runtime cause needs separate approval. The diagnostic
+branch stacks on PR120 but is not its acceptance. See
+[investigation evidence](../audits/DEBT_093_POINTS_E2E_TIMING.md).
+
+A single isolated measured run reproduced fixture preparation overlapping the
+5000ms timeout/cleanup. The test-only candidate now creates the same real
+identities and moderator session in setup; focused corrected observation1/1
+passed with ledger elapsed657.48ms. No runtime, assertion, timeout or concurrency
+change. Full gate/CI and acceptance remain open; the old red remains evidence.
+
 ## Purpose
 
 This document records defects and architectural debt discovered outside the
