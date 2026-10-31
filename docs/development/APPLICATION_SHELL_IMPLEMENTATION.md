@@ -110,3 +110,9 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - Breadcrumbs for nested routes without verified page-title metadata now end with a non-linked `Поточна сторінка` element (`aria-current="page"`); the URL slug is not treated as a trusted display title.
 - Known module and child labels retain their exact existing navigation metadata. Future dynamic page titles should be supplied through an explicit route metadata contract rather than inferred from path segments.
 - Unit tests cover news detail paths, a nested newsroom child, exact module pages and unknown routes. CI verification for this change remains pending.
+
+## Sidebar current-location semantics — 31 October 2026
+
+- A nested route must mark **only its deepest matching Sidebar destination** as `aria-current`, instead of marking both a module overview and a nested child as current.
+- The Sidebar active background follows the same deepest-match selection. Navbar continues to mark the parent module as a location, preserving distinct global vs contextual semantics.
+- Added unit regressions for exact, child, nested-child, news-detail and unknown routes. Await the new Quality Gate before treating this change as verified.
