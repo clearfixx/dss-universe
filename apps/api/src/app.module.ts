@@ -92,6 +92,7 @@ import { CommentWriteCompositionModule } from './composition/comment-writes/comm
 import { AchievementsModule } from './modules/achievements';
 import { ActivityModule } from './modules/activity';
 import { AiCoreModule } from './modules/ai-core';
+import { AppearanceModule } from './modules/appearance/appearance.module';
 import { IdentityPresentationModule } from './composition/identity/identity-presentation.module';
 import { CommunityPointsModule } from './modules/community-points';
 import { ContentAccessModule } from './modules/content-access';
@@ -152,6 +153,7 @@ import { UsersModule } from './modules/users/users.module';
     CustomTitlesModule,
     EditorModule,
     AiCoreModule,
+    AppearanceModule,
     AchievementsModule,
     LeaderboardsModule,
   ],

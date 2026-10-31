@@ -910,6 +910,7 @@ type Mutation {
   updateCustomTitleSettings(input: UpdateCustomTitleSettingsInput!): CustomTitleSettings!
   updateLevelDefinition(input: UpdateLevelDefinitionInput!): LevelDefinition!
   updateNewsSettings(input: UpdateNewsSettingsInput!): NewsSettings!
+  updatePlatformAppearance(activeShellVariant: ShellVariant!): PlatformAppearance!
   updateReputationPolicy(input: UpdateReputationPolicyInput!): ReputationPolicy!
   updateViewerNotificationPreferences(input: UpdateNotificationPreferencesInput!): NotificationPreferences!
   updateViewerPrivacy(input: UpdateUserPrivacyInput!): UserPrivacySettings!
@@ -1227,6 +1228,11 @@ type NumberedNewsPage {
   totalPages: Int!
 }
 
+type PlatformAppearance {
+  activeShellVariant: ShellVariant!
+  updatedAt: DateTime!
+}
+
 type PresenceSummary {
   onlineCrawlers: Int!
   onlineGuests: Int!
@@ -1295,6 +1301,8 @@ type Query {
   achievementRules: [AchievementRule!]!
   achievements: [Achievement!]!
   achievementsAdmin: [Achievement!]!
+  adminCommandDeckAccess: Boolean!
+  adminPlatformAppearance: PlatformAppearance!
   apiInfo: ApiInfo!
   blockedUsers(pagination: UsersPageInput): UsersPageModel!
   commentDraft(interactionTargetId: ID!, parentId: ID): CommentDraft
@@ -1331,6 +1339,7 @@ type Query {
   newsNavigation(articleId: ID!): NewsNavigation!
   newsRatingVotes(articleId: ID!, page: Int! = 1, pageSize: Int! = 20): NewsRatingVotePage!
   newsSettings: NewsSettings!
+  platformAppearance: PlatformAppearance!
   presenceSummary: PresenceSummary!
   previewEditorDocument(input: PreviewEditorDocumentInput!): EditorDocumentPreview!
   profileWall(pagination: UsersPageInput, profileOwnerId: ID!): ProfileWallPage!
@@ -1601,6 +1610,12 @@ enum ShareChannel {
 type ShareChannelCount {
   channel: ShareChannel!
   count: Int!
+}
+
+enum ShellVariant {
+  HORIZONTAL_NAVIGATION
+  HYBRID
+  MODULE_LAUNCHER
 }
 
 type ShortNews {
