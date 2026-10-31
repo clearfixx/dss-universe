@@ -39,6 +39,12 @@ rerun-to-green. A proven runtime cause needs separate approval. The diagnostic
 branch stacks on PR120 but is not its acceptance. See
 [investigation evidence](../audits/DEBT_093_POINTS_E2E_TIMING.md).
 
+A single isolated measured run reproduced fixture preparation overlapping the
+5000ms timeout/cleanup. The test-only candidate now creates the same real
+identities and moderator session in setup; focused corrected observation1/1
+passed with ledger elapsed657.48ms. No runtime, assertion, timeout or concurrency
+change. Full gate/CI and acceptance remain open; the old red remains evidence.
+
 ## Purpose
 
 This document records defects and architectural debt discovered outside the

@@ -70,5 +70,15 @@ parallelized. Permission-count and all ledger assertions remain. The third
 user's preparation now occurs earlier, but none of its ledger events occur
 until the same final reordering scenario. API/DB/runtime code is unchanged.
 
-Focused corrected observation, full local gate, CI and owner acceptance remain
-pending. Opt-in timings are diagnostic observations, not a performance SLA.
+The single corrected focused observation on700ef84 passed1/1. Ledger execution
+completed at657.48ms; cleanup began at665.73ms and app close completed at685.24ms.
+The three real registrations measured920.29/634.60/585.34ms and real login673.60ms
+in setup, outside the ledger assertion deadline. They were also individually
+faster than the retained failed observation; these two runs are not a controlled
+benchmark and do not prove a particular performance improvement ratio. The
+structural change is the separation of fixture preparation from ledger assertions.
+The corrected log is
+`node_modules/.cache/debt093-13a5f7c16f574f4e97a3c381e8bbb8fd.log`.
+
+Full local gate, CI and owner acceptance remain pending. Opt-in timings are
+diagnostic observations, not a performance SLA. Neither prior red is discarded.
