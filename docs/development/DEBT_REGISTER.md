@@ -2,7 +2,27 @@
 
 > Status: Active
 >
-> Updated: 2026-10-25
+> Updated: 2026-10-31
+
+### DEBT-092 — Joi email splitting advisory blocks current gate (High, OPEN)
+
+The 2026-10-31 local PR119 gate found GHSA-4528-x5fx-h6hg in the installed
+direct API dependency Joi18.2.9. Earlier PR119 CI was green; that historical
+result is not current dependency clearance. The affected multiple-email rule
+can consume quadratic CPU on whitespace. Reachability through a DSS HTTP
+request has not been established; the current direct consumer is environment
+configuration validation.
+
+Under the owner's standing safe patch/minor-update authorization, separate
+branch `debt/debt-092-joi-security` starts from accepted main43447c1. It raises
+only Joi to18.3.1 and preserves unrelated Vitest peer resolution. No new audit
+exception, API policy, UI change or stack replacement. Frozen install and all
+six existing environment-schema regressions pass; security check exits0 with
+the approved braces patch and its14 regressions retained. Full gate, final CI
+and owner acceptance remain required. PR119 must integrate the accepted
+security base and be verified again before its own acceptance.
+
+See [evidence and compatibility](../audits/DEBT_092_JOI_SECURITY.md).
 
 ## Purpose
 
