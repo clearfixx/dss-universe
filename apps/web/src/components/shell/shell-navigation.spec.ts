@@ -6,6 +6,7 @@ import {
   SHELL_VARIANTS,
   breadcrumbsForPath,
   currentModule,
+  currentSidebarHref,
   isShellVariant,
   moduleSidebarItems,
   navigationCurrent,
@@ -55,6 +56,14 @@ describe("application shell navigation contracts", () => {
     ]);
     expect(moduleSidebarItems("/media")).toHaveLength(1);
     expect(moduleSidebarItems("/unknown")).toEqual([]);
+  });
+
+  it("selects one deepest current Sidebar destination", () => {
+    expect(currentSidebarHref("/newsroom")).toBe("/newsroom");
+    expect(currentSidebarHref("/newsroom/new")).toBe("/newsroom/new");
+    expect(currentSidebarHref("/newsroom/new/preview")).toBe("/newsroom/new");
+    expect(currentSidebarHref("/news/en/article")).toBe("/news");
+    expect(currentSidebarHref("/unknown")).toBeNull();
   });
 
   it("keeps private destinations out of guest navigation", () => {
