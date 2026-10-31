@@ -30,6 +30,7 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - uses: actions/setup-python@v5
+        id: python
         with:
           python-version: 3.14.10
       - name: Install pinned dependencies
@@ -42,4 +43,8 @@ jobs:
         if: runner.os != 'Windows'
         run: c++ --version
       - name: Build and verify real native capabilities
+        env:
+          PYTHON: ${{ steps.python.outputs['python-path'] }}
         run: pnpm --filter @dss/storage native:verify
+      - name: Verify cross-process storage coordination primitives
+        run: pnpm storage:coordination:verify
