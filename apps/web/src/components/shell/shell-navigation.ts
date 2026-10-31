@@ -118,6 +118,14 @@ export function moduleSidebarItems(pathname: string): readonly ModuleNavigationI
   ];
 }
 
+/** Only the deepest matching Sidebar destination receives aria-current. */
+export function currentSidebarHref(pathname: string): string | null {
+  const candidates = moduleSidebarItems(pathname).filter((item) =>
+    routeMatches(pathname, item.href),
+  );
+  return candidates.sort((a, b) => b.href.length - a.href.length)[0]?.href ?? null;
+}
+
 export function breadcrumbsForPath(pathname: string): readonly { href: string; label: string }[] {
   const activeModule = currentModule(pathname);
   if (!activeModule) return [];
