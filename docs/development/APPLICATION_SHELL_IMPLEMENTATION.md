@@ -116,3 +116,10 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - A nested route must mark **only its deepest matching Sidebar destination** as `aria-current`, instead of marking both a module overview and a nested child as current.
 - The Sidebar active background follows the same deepest-match selection. Navbar continues to mark the parent module as a location, preserving distinct global vs contextual semantics.
 - Added unit regressions for exact, child, nested-child, news-detail and unknown routes. Await the new Quality Gate before treating this change as verified.
+
+## Personal Hub responsive pass — 1 November 2026
+
+- Removed the duplicate standalone Settings action from mobile and tablet header widths: profile settings remain available inside the Personal Hub menu, while the desktop quick action is retained. This leaves more room in narrow navigation headers without changing global logout behavior.
+- The Personal Hub trigger now announces the authenticated viewer's normalized display name (or username fallback) instead of a generic menu label. The same normalized display name appears visually and in the dropdown header.
+- New unit regressions cover whitespace-only, missing and valid display names. A fresh Quality Gate must confirm the complete shell change before promotion.
+- Approved logo and final visual parity remain pending; no speculative logo asset or additional product functionality has been introduced.
