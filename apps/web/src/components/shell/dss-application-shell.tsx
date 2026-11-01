@@ -60,7 +60,7 @@ function ModuleLinks({ pathname, hasSession, canAccessAdminDeck, onNavigate }: {
   );
 }
 
-function GlobalNavigation({
+export function GlobalNavigation({
   pathname,
   variant,
   hasSession,
