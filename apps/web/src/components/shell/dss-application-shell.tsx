@@ -85,6 +85,8 @@ function GlobalNavigation({
             <Link
               key={href}
               href={href}
+              aria-label={label}
+              title={label}
               aria-current={navigationCurrent(pathname, href)}
               className={cn(
                 "inline-flex h-9 shrink-0 items-center gap-2 rounded-lg px-2.5 text-xs text-slate-300 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-violet-400",
