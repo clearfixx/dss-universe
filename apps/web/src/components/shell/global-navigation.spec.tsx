@@ -1,4 +1,4 @@
-import { createElement } from "react";
+import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
@@ -9,7 +9,7 @@ vi.mock("next/link", () => ({
     ...props
   }: {
     href: string;
-    children: React.ReactNode;
+    children: ReactNode;
     "aria-label"?: string;
     title?: string;
   }) => createElement("a", { href, ...props }, children),
