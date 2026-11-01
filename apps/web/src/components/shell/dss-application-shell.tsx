@@ -26,6 +26,8 @@ import { logoutAction } from "@/features/auth/auth-actions";
 import type { SessionViewer } from "@/features/auth/session-contract";
 import { cn } from "@/lib/utils";
 
+import { viewerDisplayName } from "./personal-hub-presentation";
+
 import {
   DEFAULT_SHELL_VARIANT,
   visibleModules,
@@ -197,7 +199,7 @@ export function DssApplicationShell({
         <div className="ml-auto flex items-center gap-2">
           {viewer ? (
             <>
-              <Button asChild variant="ghost" size="icon" aria-label="Налаштування">
+              <Button asChild variant="ghost" size="icon" aria-label="Налаштування" className="hidden lg:inline-flex">
                 <Link href="/settings/profile"><Settings aria-hidden="true" /></Link>
               </Button>
               <form action={logoutAction}>
@@ -207,15 +209,15 @@ export function DssApplicationShell({
               </form>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" type="button" className="h-auto gap-2 px-2" aria-label="Відкрити меню користувача">
+                  <Button variant="ghost" type="button" className="h-auto gap-2 px-2" aria-label={`Меню користувача: ${viewerDisplayName(viewer)}`}>
                     <Avatar><AvatarFallback>{viewerInitials(viewer)}</AvatarFallback></Avatar>
-                    <span className="hidden max-w-36 truncate text-sm text-slate-200 sm:block">{viewer.displayName || viewer.username}</span>
+                    <span className="hidden max-w-36 truncate text-sm text-slate-200 sm:block">{viewerDisplayName(viewer)}</span>
                     <ChevronDown className="size-4 text-slate-400" aria-hidden="true" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-60 border border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)]">
                   <DropdownMenuLabel>
-                    <span className="block truncate text-sm">{viewer.displayName || viewer.username}</span>
+                    <span className="block truncate text-sm">{viewerDisplayName(viewer)}</span>
                     <span className="block truncate text-xs font-normal text-slate-400">@{viewer.username}</span>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
