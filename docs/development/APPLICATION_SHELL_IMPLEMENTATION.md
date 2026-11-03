@@ -136,3 +136,9 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - Drawer state is local and now associated with the pathname where the user explicitly opened it. A route transition, including Back/Forward initiated outside the drawer, resets it closed using a guarded render-time state adjustment; this avoids a `useEffect` race closing newly opened dialogs.
 - Existing click-to-close behavior is retained. Pure regressions verify same-path open and closed states, nested navigation changes, and the committed closed state after a route transition.
 - The next full Quality Gate and Web Smoke must pass before this package is considered verified. Approved designs and admin authorization remain unchanged.
+
+## Browser history regression — 3 November 2026
+
+- Added Playwright coverage of a guest opening the mobile navigation drawer on `/news`, changing the pathname through the browser History API (which Next.js synchronizes with `usePathname()`), returning via Back, and reopening the drawer explicitly.
+- This exercises route-scoped drawer state independently of link click handlers, complementing existing mobile click-to-close and pure state regression tests.
+- CI verification of the new browser scenario is required before acceptance; the test itself does not change application behavior.
