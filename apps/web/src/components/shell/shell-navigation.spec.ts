@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { isProtectedPath } from "@/features/auth/session-contract";
+
 import {
   DEFAULT_SHELL_VARIANT,
   MODULE_NAVIGATION,
@@ -71,6 +73,8 @@ describe("application shell navigation contracts", () => {
     expect(guestRoutes).toContain("/news");
     expect(guestRoutes).not.toContain("/command-deck");
     expect(guestRoutes).not.toContain("/newsroom");
+    expect(guestRoutes).not.toContain("/members");
+    expect(guestRoutes).not.toContain("/media");
     expect(guestRoutes).not.toContain("/settings/profile");
     expect(visibleModules(true).map((entry) => entry.href)).not.toContain(
       "/command-deck",
@@ -79,6 +83,21 @@ describe("application shell navigation contracts", () => {
       "/command-deck",
     );
     expect(visibleModules(true, true)).toHaveLength(MODULE_NAVIGATION.length);
+  });
+
+  it("never advertises a session-protected module to guests", () => {
+    const guestRoutes = visibleModules(false).map((item) => item.href);
+    for (const item of MODULE_NAVIGATION) {
+      if (isProtectedPath(item.href)) {
+        expect(guestRoutes).not.toContain(item.href);
+      }
+    }
+    expect(guestRoutes).toEqual(["/news"]);
+    expect(visibleModules(true).map((item) => item.href).toEqual(
+      MODULE_NAVIGATION.filter((item) => !item.requiresAdminDeck).map(
+        (item) => item.href,
+      ),
+    );
   });
 
   it("finishes dynamic breadcrumb trails without inventing route titles", () => {
