@@ -27,6 +27,7 @@ import type { SessionViewer } from "@/features/auth/session-contract";
 import { cn } from "@/lib/utils";
 
 import { viewerDisplayName } from "./personal-hub-presentation";
+import { isDrawerOpenForPath } from "./shell-drawer-state";
 
 import {
   DEFAULT_SHELL_VARIANT,
@@ -174,8 +175,11 @@ export function DssApplicationShell({
   canAccessAdminDeck = false,
 }: PropsWithChildren<{ viewer: SessionViewer | null; variant?: ShellVariant; toolbar?: ReactNode; canAccessAdminDeck?: boolean }>) {
   const pathname = usePathname();
-  // Drawer visibility is local presentation state, never shared product state.
-  const [open, setOpen] = useState(false);
+  // Keep drawer state local and route-scoped, without an effect that could
+  // unexpectedly close the drawer after a user opens it.
+  const [drawerState, setDrawerState] = useState({ pathname, open: false });
+  const open = isDrawerOpenForPath(drawerState, pathname);
+  const setOpen = (nextOpen: boolean) => setDrawerState({ pathname, open: nextOpen });
   const hasSidebar = Boolean(currentModule(pathname));
 
   return (
