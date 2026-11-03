@@ -130,3 +130,9 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - All three Shell compositions share the `visibleModules()` projection; only `/news` remains a guest-visible module. Signed-in navigation retains `/members` and `/media`, while `/command-deck` still requires server-confirmed administrator permission.
 - Regression tests compare every registered session-protected module against the proxy's shared route contract. The change is presentation-only and **does not modify authentication, proxy guards or IAM authorization**.
 - Require a new green Quality Gate for this commit before treating the package as verified.
+
+## Mobile drawer route lifecycle — 3 November 2026
+
+- Drawer state is local and now associated with the pathname where the user explicitly opened it. A route transition, including Back/Forward initiated outside the drawer, resets it closed using a guarded render-time state adjustment; this avoids a `useEffect` race closing newly opened dialogs.
+- Existing click-to-close behavior is retained. Pure regressions verify same-path open and closed states, nested navigation changes, and the committed closed state after a route transition.
+- The next full Quality Gate and Web Smoke must pass before this package is considered verified. Approved designs and admin authorization remain unchanged.
