@@ -69,12 +69,14 @@ export const MODULE_NAVIGATION: readonly ModuleNavigation[] = [
     label: "Учасники",
     icon: Users,
     featured: true,
+    requiresSession: true,
     children: [],
   },
   {
     href: "/media",
     label: "Медіатека",
     icon: Boxes,
+    requiresSession: true,
     children: [],
   },
   {
