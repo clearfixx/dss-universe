@@ -178,6 +178,11 @@ export function DssApplicationShell({
   // Keep drawer state local and route-scoped, without an effect that could
   // unexpectedly close the drawer after a user opens it.
   const [drawerState, setDrawerState] = useState({ pathname, open: false });
+  // Reset on route changes (including browser Back/Forward), not only links
+  // inside the drawer. Guarded render-time adjustment avoids an effect race.
+  if (drawerState.pathname !== pathname) {
+    setDrawerState({ pathname, open: false });
+  }
   const open = isDrawerOpenForPath(drawerState, pathname);
   const setOpen = (nextOpen: boolean) => setDrawerState({ pathname, open: nextOpen });
   const hasSidebar = Boolean(currentModule(pathname));
