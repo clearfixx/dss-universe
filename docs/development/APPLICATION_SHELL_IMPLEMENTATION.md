@@ -123,3 +123,10 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - The Personal Hub trigger now announces the authenticated viewer's normalized display name (or username fallback) instead of a generic menu label. The same normalized display name appears visually and in the dropdown header.
 - New unit regressions cover whitespace-only, missing and valid display names. A fresh Quality Gate must confirm the complete shell change before promotion.
 - Approved logo and final visual parity remain pending; no speculative logo asset or additional product functionality has been introduced.
+
+## Guest navigation and proxy alignment — 3 November 2026
+
+- `MODULE_NAVIGATION` now marks `/members` and `/media` as requiring a session, matching the existing `isProtectedPath()` proxy contract. Guest Shell menus should not advertise protected links that immediately redirect to login.
+- All three Shell compositions share the `visibleModules()` projection; only `/news` remains a guest-visible module. Signed-in navigation retains `/members` and `/media`, while `/command-deck` still requires server-confirmed administrator permission.
+- Regression tests compare every registered session-protected module against the proxy's shared route contract. The change is presentation-only and **does not modify authentication, proxy guards or IAM authorization**.
+- Require a new green Quality Gate for this commit before treating the package as verified.
