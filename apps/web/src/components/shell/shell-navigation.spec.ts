@@ -93,7 +93,7 @@ describe("application shell navigation contracts", () => {
       }
     }
     expect(guestRoutes).toEqual(["/news"]);
-    expect(visibleModules(true).map((item) => item.href).toEqual(
+    expect(visibleModules(true).map((item) => item.href)).toEqual(
       MODULE_NAVIGATION.filter((item) => !item.requiresAdminDeck).map(
         (item) => item.href,
       ),
