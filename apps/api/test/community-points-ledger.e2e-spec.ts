@@ -8,12 +8,14 @@
  * 🎯 Purpose:
  * Verifies idempotent awards, daily caps, GraphQL history, reversals and
  * PostgreSQL immutability.
+ * Opt-in stage timings preserve real operations and never log credentials.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 
 import { ValidationPipe, type INestApplication } from '@nestjs/common';
+import { performance } from 'node:perf_hooks';
 import { Test, type TestingModule } from '@nestjs/testing';
 import type { IntegrationEventJob } from '@dss/jobs';
 import request from 'supertest';
@@ -33,6 +35,13 @@ describe('Community Points Ledger (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
   let points: CommunityPointsService;
+  let user: RegisteredUser;
+  let moderator: RegisteredUser;
+  let reorderedUser: RegisteredUser;
+  let moderatorToken: string;
+  const tracing = process.env.DSS_POINTS_E2E_TIMINGS === '1';
+  let sequence = 0;
+  let scenarioStarted = 0;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -47,21 +56,53 @@ describe('Community Points Ledger (e2e)', () => {
         forbidUnknownValues: true,
       }),
     );
-    await app.init();
+    await measure('fixture.init', () => app.init());
     prisma = app.get(PrismaService);
     points = app.get(CommunityPointsService);
   });
 
-  afterAll(async () => {
-    await prisma.outboxEvent.deleteMany({
-      where: { producer: 'dss.api.community-points' },
+  beforeAll(async () => {
+    user = await register('points-user');
+  });
+
+  beforeAll(async () => {
+    moderator = await register('points-moderator');
+  });
+
+  beforeAll(async () => {
+    reorderedUser = await register('points-reordered');
+  });
+
+  beforeAll(async () => {
+    const permissions = await prisma.permission.findMany({
+      where: {
+        key: {
+          in: ['community-points.reverse', 'community-points.settings.manage'],
+        },
+      },
+      select: { id: true },
     });
-    await app.close();
+    expect(permissions).toHaveLength(2);
+    await prisma.userPermission.createMany({
+      data: permissions.map((permission) => ({
+        userId: moderator.id,
+        permissionId: permission.id,
+      })),
+    });
+    moderatorToken = await login(moderator.email);
+  });
+
+  afterAll(async () => {
+    await measure('cleanup.outbox', () =>
+      prisma.outboxEvent.deleteMany({
+        where: { producer: 'dss.api.community-points' },
+      }),
+    );
+    await measure('cleanup.app', () => app.close());
   });
 
   it('keeps event awards idempotent, capped, explainable and reversible', async () => {
-    const user = await register('points-user');
-    const moderator = await register('points-moderator');
+    scenarioStarted = performance.now();
     await prisma.communityPointRule.update({
       where: { key: 'reputation.positive' },
       data: { dailyLimit: 2, points: 10, enabled: true },
@@ -73,8 +114,8 @@ describe('Community Points Ledger (e2e)', () => {
       `source-1-${user.id}`,
     );
     const concurrent = await Promise.all([
-      points.consume(firstEvent),
-      points.consume(firstEvent),
+      consume(firstEvent),
+      consume(firstEvent),
     ]);
     expect(concurrent.map((result) => result.status).sort()).toEqual([
       'AWARDED',
@@ -89,7 +130,7 @@ describe('Community Points Ledger (e2e)', () => {
     });
 
     await expect(
-      points.consume(
+      consume(
         reputationEvent(
           user.id,
           `event-points-2-${user.id}`,
@@ -98,7 +139,7 @@ describe('Community Points Ledger (e2e)', () => {
       ),
     ).resolves.toMatchObject({ status: 'AWARDED' });
     await expect(
-      points.consume(
+      consume(
         reputationEvent(
           user.id,
           `event-points-3-${user.id}`,
@@ -106,7 +147,7 @@ describe('Community Points Ledger (e2e)', () => {
         ),
       ),
     ).resolves.toEqual({ status: 'CAPPED', entry: null });
-    await expect(points.consume(firstEvent)).resolves.toEqual({
+    await expect(consume(firstEvent)).resolves.toEqual({
       status: 'DUPLICATE',
       entry: null,
     });
@@ -130,42 +171,28 @@ describe('Community Points Ledger (e2e)', () => {
       reversal: null,
     });
 
-    const permissions = await prisma.permission.findMany({
-      where: {
-        key: {
-          in: ['community-points.reverse', 'community-points.settings.manage'],
-        },
-      },
-      select: { id: true },
-    });
-    expect(permissions).toHaveLength(2);
-    await prisma.userPermission.createMany({
-      data: permissions.map((permission) => ({
-        userId: moderator.id,
-        permissionId: permission.id,
-      })),
-    });
-    const moderatorToken = await login(moderator.email);
     const entryId = firstEntry?.id;
     expect(entryId).toBeDefined();
 
-    const reversed = await request(app.getHttpServer())
-      .post('/api/graphql')
-      .set('Authorization', `Bearer ${moderatorToken}`)
-      .send({
-        query: `mutation Reverse($input: ReverseCommunityPointsInput!) {
+    const reversed = await measure('graphql.reverse', () =>
+      request(app.getHttpServer())
+        .post('/api/graphql')
+        .set('Authorization', `Bearer ${moderatorToken}`)
+        .send({
+          query: `mutation Reverse($input: ReverseCommunityPointsInput!) {
           reverseCommunityPoints(input: $input) {
             id points reason userId actorId
           }
         }`,
-        variables: {
-          input: {
-            entryId,
-            reason: 'Source activity was invalidated by moderation.',
+          variables: {
+            input: {
+              entryId,
+              reason: 'Source activity was invalidated by moderation.',
+            },
           },
-        },
-      })
-      .expect(200);
+        })
+        .expect(200),
+    );
     expect(reversed.body).toMatchObject({
       data: {
         reverseCommunityPoints: {
@@ -177,25 +204,27 @@ describe('Community Points Ledger (e2e)', () => {
       },
     });
 
-    const updatedRule = await request(app.getHttpServer())
-      .post('/api/graphql')
-      .set('Authorization', `Bearer ${moderatorToken}`)
-      .send({
-        query: `mutation Update($input: UpdateCommunityPointRuleInput!) {
+    const updatedRule = await measure('graphql.rule-update', () =>
+      request(app.getHttpServer())
+        .post('/api/graphql')
+        .set('Authorization', `Bearer ${moderatorToken}`)
+        .send({
+          query: `mutation Update($input: UpdateCommunityPointRuleInput!) {
           updateCommunityPointRule(input: $input) {
             key points dailyLimit enabled updatedById
           }
         }`,
-        variables: {
-          input: {
-            key: 'reputation.positive',
-            points: 12,
-            dailyLimit: null,
-            enabled: true,
+          variables: {
+            input: {
+              key: 'reputation.positive',
+              points: 12,
+              dailyLimit: null,
+              enabled: true,
+            },
           },
-        },
-      })
-      .expect(200);
+        })
+        .expect(200),
+    );
     expect(updatedRule.body).toMatchObject({
       data: {
         updateCommunityPointRule: {
@@ -232,9 +261,8 @@ describe('Community Points Ledger (e2e)', () => {
       }),
     ).rejects.toThrow('community points ledger entries are immutable');
 
-    const reorderedUser = await register('points-reordered');
     await expect(
-      points.consume({
+      consume({
         ...reputationEvent(
           reorderedUser.id,
           `event-reversal-first-${reorderedUser.id}`,
@@ -248,7 +276,7 @@ describe('Community Points Ledger (e2e)', () => {
       }),
     ).resolves.toEqual({ status: 'AWARDED', entry: null });
     await expect(
-      points.consume(
+      consume(
         reputationEvent(
           reorderedUser.id,
           `event-source-late-${reorderedUser.id}`,
@@ -260,6 +288,39 @@ describe('Community Points Ledger (e2e)', () => {
       history(reorderedUser.id, reorderedUser.accessToken),
     ).resolves.toMatchObject({ balance: 0, total: 0 });
   });
+
+  function consume(event: IntegrationEventJob) {
+    return measure('consume', () => points.consume(event));
+  }
+
+  async function measure<T>(
+    stage: string,
+    work: () => PromiseLike<T>,
+  ): Promise<T> {
+    if (!tracing) return work();
+    const started = performance.now();
+    const ordinal = ++sequence;
+    let status = 'fulfilled';
+    try {
+      return await work();
+    } catch (error) {
+      status = 'rejected';
+      throw error;
+    } finally {
+      console.info(
+        JSON.stringify({
+          kind: 'dss.points.e2e.stage',
+          ordinal,
+          stage,
+          status,
+          durationMs: performance.now() - started,
+          scenarioElapsedMs: scenarioStarted
+            ? performance.now() - scenarioStarted
+            : null,
+        }),
+      );
+    }
+  }
 
   function reputationEvent(
     userId: string,
@@ -284,25 +345,27 @@ describe('Community Points Ledger (e2e)', () => {
     const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const username = `${prefix}-${suffix}`;
     const email = `${username}@dss.test`;
-    const response = await request(app.getHttpServer())
-      .post('/api/graphql')
-      .send({
-        query: `mutation Register($input: RegisterInput!) {
+    const response = await measure(`register.${prefix}`, () =>
+      request(app.getHttpServer())
+        .post('/api/graphql')
+        .send({
+          query: `mutation Register($input: RegisterInput!) {
           register(input: $input) {
             user { id email }
             tokens { accessToken }
           }
         }`,
-        variables: {
-          input: {
-            email,
-            username,
-            displayName: prefix,
-            password: 'dss-test-password',
+          variables: {
+            input: {
+              email,
+              username,
+              displayName: prefix,
+              password: 'dss-test-password',
+            },
           },
-        },
-      })
-      .expect(200);
+        })
+        .expect(200),
+    );
     const result = response.body as {
       data: {
         register: {
@@ -319,17 +382,19 @@ describe('Community Points Ledger (e2e)', () => {
   }
 
   async function login(email: string): Promise<string> {
-    const response = await request(app.getHttpServer())
-      .post('/api/graphql')
-      .send({
-        query: `mutation Login($input: LoginInput!) {
+    const response = await measure('login', () =>
+      request(app.getHttpServer())
+        .post('/api/graphql')
+        .send({
+          query: `mutation Login($input: LoginInput!) {
           login(input: $input) { tokens { accessToken } }
         }`,
-        variables: {
-          input: { email, password: 'dss-test-password' },
-        },
-      })
-      .expect(200);
+          variables: {
+            input: { email, password: 'dss-test-password' },
+          },
+        })
+        .expect(200),
+    );
     return (
       response.body as {
         data: { login: { tokens: { accessToken: string } } };
@@ -338,11 +403,12 @@ describe('Community Points Ledger (e2e)', () => {
   }
 
   async function history(userId: string, accessToken: string) {
-    const response = await request(app.getHttpServer())
-      .post('/api/graphql')
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        query: `query History($userId: ID!) {
+    const response = await measure('graphql.history', () =>
+      request(app.getHttpServer())
+        .post('/api/graphql')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          query: `query History($userId: ID!) {
           communityPointsHistory(userId: $userId) {
             balance total
             items {
@@ -351,9 +417,10 @@ describe('Community Points Ledger (e2e)', () => {
             }
           }
         }`,
-        variables: { userId },
-      })
-      .expect(200);
+          variables: { userId },
+        })
+        .expect(200),
+    );
     return (
       response.body as {
         data: {
