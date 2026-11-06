@@ -95,6 +95,14 @@ Actual POSIX compile/actor results, final exact-head CI/full gate and owner
 acceptance remain pending at this checkpoint. No predetermined absence result,
 skipped positive control or permissive fallback can satisfy acceptance.
 
+Initial head37c1faf: Linux actually passed7 actor controls and the EBADF control
+(run42307330287/job128199867522). macOS failed to compile because fgetattrlist
+was not declared without unistd.h (job128199867542). The artifact uploader also
+excluded the hidden .cache directory. The follow-up adds the public header and
+include-hidden-files only for the narrow validated proof JSON glob. Original
+Linux records remain in CI logs; no initial JSON artifact is claimed. No proof
+assertion or platform is removed by these corrections.
+
 ## Reviewed sources
 
 - [Apple ACL getter](https://github.com/apple-oss-distributions/Libc/blob/71bbe350ab79eef58113991d817ccc6165061a64/posix1e/acl_file.c)

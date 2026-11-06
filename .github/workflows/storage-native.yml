@@ -59,4 +59,5 @@ jobs:
         with:
           name: acl-contract-${{ runner.os }}
           path: node_modules/.cache/acl-contract-proof-*.json
+          include-hidden-files: true
           if-no-files-found: warn
