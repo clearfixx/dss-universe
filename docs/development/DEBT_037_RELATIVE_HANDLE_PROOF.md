@@ -68,6 +68,56 @@ change to the production storage interface. Existing native three-OS gates and
 the complete quality gate remain required. Final CI/local evidence and owner
 acceptance are pending; DEBT-037/D7 remain open.
 
+## First measured Windows result
+
+Exact head `fb8274c`, Storage security run
+[42144199629, Windows job127651624225](https://github.com/clearfixx/dss-universe/actions/runs/42144199629/job/127651624225),
+reported all24 cases. This is one runner observation with real logon tokens;
+no independent-process or filesystem qualification claim is added.
+
+| Measured group                                            | Observations                                                                                           |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| WRITE_ATTRIBUTES only, both sharing modes/orders/policies | All8 junction attempts succeed; captured tag is mount point                                            |
+| ADD_FILE or combined access, service sharing READ         | All4 service-first cases deny attacker open with32; all4 attacker-first cases deny service open with32 |
+| ADD_FILE or combined access, service sharing READ\|WRITE  | All8 pairs open and junction attempts succeed                                                          |
+| Reparsed parents with a captured service handle           | All16 relative opens fail with NTSTATUS `0xC0000280`, mapped Win32 `1921`; no bytes read               |
+| Captured parents where attacker open was denied           | All4 retain absent-child result `0xC0000034` / Win32 `2`                                               |
+| Attacker-first cases denying service capture              | All4 record no captured handle and no relative-read attempt                                            |
+
+The trusted positive control reads23 bytes and matches the exact synthetic
+sentinel. The sentinel is unchanged afterward; attacker private-stage access
+remains denied. Across the matrix,20 junction operations succeed,4 attacker
+opens are denied and4 service opens are denied. These overlap by case; they
+must not be added together as independent test counts.
+
+Fresh metadata-bearing opens after ACL revocation return5. Fresh ADD_FILE-only
+opens remain permitted unless incompatible sharing returns32. Consequently,
+the fixture's safe ACL cannot by itself exclude every handle capable of setting
+a directory junction: permitting directory child creation grants a relevant
+right too. This is a finding about the synthetic fixture policy, not a newly
+demonstrated exploit against production storage.
+
+Microsoft identifies `0xC0000280` as
+[STATUS_REPARSE_POINT_NOT_RESOLVED](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-erref/596a1078-e883-4972-9bbc-49e60bebca55).
+The observed relative-open refusal is a candidate property to preserve in a
+later mechanism. It does not prove that reparse mutation is prevented, nor that
+publication, rename, cleanup, concurrent schedules or another filesystem behave
+equivalently. Do not select a production adapter or weaken legacy-root handling
+from this single read experiment.
+
+The local full gate completed with exit0 on `fb8274c`,
+2026-11-06T01:29:43Z–01:44:47Z: coverage8/8 (API1466/1466), E2E688/688 across64
+suites with no failures/skips/todo, build6/6, GraphQL/compiled API and Web15/15
+with retries0. Start/end HEAD match. Only this report changed during the run;
+runtime, proof helpers, tests and configuration are identical. The local API
+JSON SHA256 is `0CE8000EFB718FBA33A3C3A43D744817615D8DC2E3E1826BB92E46A27EA958ED`.
+
+Initial-head CI is8/8 green. Its API artifact13469373783 also reports688/688
+without skips/todo (JSON SHA256
+`291E0CC8CC53065AF59AD8A10A6EB2374B90F2CF5010F57245B7FA82FE11CB14`).
+The final report-only commit still requires exact-head CI and owner acceptance;
+neither is inferred from initial-head success. DEBT-037/D7 remain open.
+
 ## Primary references
 
 - [CreateFileW](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew)
