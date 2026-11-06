@@ -103,6 +103,15 @@ include-hidden-files only for the narrow validated proof JSON glob. Original
 Linux records remain in CI logs; no initial JSON artifact is claimed. No proof
 assertion or platform is removed by these corrections.
 
+Header-corrected head9128aac compiled on macOS but failed before fixture work.
+Diagnostic headda946cf measured check8: groupCount1, onlyActorGroup=true,
+rootGroup=false (run42314507300/job128223737371). A zero-count assertion had
+incorrectly treated Darwin's primary-group entry as a supplementary leak.
+The correction still clears groups and validates every returned GID: Linux
+requires zero entries; Darwin allows at most the exact actor primary GID,
+with no root/unrelated group. Successful readiness records retain those bounded
+facts for every actor. UID/GID matching and inability to regain root remain.
+
 ## Reviewed sources
 
 - [Apple ACL getter](https://github.com/apple-oss-distributions/Libc/blob/71bbe350ab79eef58113991d817ccc6165061a64/posix1e/acl_file.c)

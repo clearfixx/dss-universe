@@ -157,7 +157,12 @@ for (const line of (child.stdout ?? "").split(/\r?\n/).filter(Boolean)) {
       (value.success === false && !/^[a-z0-9-]+$/.test(value.stage))
     )
       throw new Error("Invalid proof summary.");
-  } else if (value.kind === "dss.acl-contract.identity-failure") {
+  } else if (
+    [
+      "dss.acl-contract.identity-failure",
+      "dss.acl-contract.identity-checked",
+    ].includes(value.kind)
+  ) {
     if (
       Object.keys(value).sort().join() !==
         [
@@ -171,7 +176,7 @@ for (const line of (child.stdout ?? "").split(/\r?\n/).filter(Boolean)) {
           .sort()
           .join() ||
       !Number.isInteger(value.checkCode) ||
-      value.checkCode < 1 ||
+      value.checkCode < 0 ||
       value.checkCode > 9 ||
       !Number.isInteger(value.error) ||
       !Number.isInteger(value.groupCount) ||
@@ -179,6 +184,17 @@ for (const line of (child.stdout ?? "").split(/\r?\n/).filter(Boolean)) {
       typeof value.rootGroup !== "boolean"
     )
       throw new Error("Invalid identity-failure evidence.");
+    if (
+      value.kind === "dss.acl-contract.identity-checked" &&
+      (value.checkCode !== 0 ||
+        value.rootGroup !== false ||
+        value.onlyActorGroup !== true ||
+        value.groupCount < 0 ||
+        value.groupCount > (process.platform === "darwin" ? 1 : 0))
+    )
+      throw new Error(
+        "Unexpected actor groups in successful readiness evidence.",
+      );
   } else throw new Error("Unexpected evidence kind.");
   records.push(value);
 }

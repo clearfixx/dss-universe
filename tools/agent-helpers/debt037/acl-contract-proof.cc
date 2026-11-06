@@ -102,7 +102,11 @@ Outcome RunAs(Account actor, rlim_t limit, const std::function<Outcome()>& actio
         }
       }
     }
-    check(8, ready.groups == 0);
+#if defined(__APPLE__)
+    check(8, ready.groups >= 0 && ready.groups <= 1 && ready.only_actor_group && !ready.root_group);
+#else
+    check(8, ready.groups == 0 && ready.only_actor_group && !ready.root_group);
+#endif
     errno = 0; check(9, ::seteuid(0) == -1 && errno == EPERM);
     if (!Transfer(output[1], &ready, sizeof(ready), true) || ready.check) ::_exit(2);
     unsigned char go = 0;
@@ -119,7 +123,8 @@ Outcome RunAs(Account actor, rlim_t limit, const std::function<Outcome()>& actio
   ChildLifetime child {pid, start[1], output[0]};
   Readiness ready;
   Require(Transfer(child.output, &ready, sizeof(ready), false));
-  if (ready.check) std::cout << "{\"kind\":\"dss.acl-contract.identity-failure\",\"checkCode\":" << ready.check
+  std::cout << "{\"kind\":\"" << (ready.check ? "dss.acl-contract.identity-failure" : "dss.acl-contract.identity-checked")
+      << "\",\"checkCode\":" << ready.check
       << ",\"error\":" << ready.error << ",\"groupCount\":" << ready.groups
       << ",\"onlyActorGroup\":" << (ready.only_actor_group ? "true" : "false")
       << ",\"rootGroup\":" << (ready.root_group ? "true" : "false") << "}" << std::endl;
