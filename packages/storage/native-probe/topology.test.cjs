@@ -69,16 +69,23 @@ test("R3 returns bounded topology observations without native identity bytes", a
     );
     for (const value of facts.components) {
       assert.deepEqual(Object.keys(value).sort(), [
+        "device",
         "filesystem",
         "filesystemFamily",
         "mount",
         "object",
+        "sameDeviceAsPrevious",
         "sameFilesystemAsPrevious",
         "sameMountAsPrevious",
         "sameObjectAsPrevious",
         "volumeFlags",
       ]);
-      for (const observation of [value.object, value.filesystem, value.mount])
+      for (const observation of [
+        value.object,
+        value.device,
+        value.filesystem,
+        value.mount,
+      ])
         assertObservation(observation);
       assert.ok(
         [
@@ -131,6 +138,7 @@ test("R3 compares independent held objects without exposing serials or inode num
     assert.deepEqual(Object.keys(equal).sort(), [
       "admitted",
       "kind",
+      "sameDevice",
       "sameFilesystem",
       "sameMount",
       "sameObject",
@@ -299,20 +307,34 @@ test("R3 records real filesystem/mount relationships without creating host mount
     const comparison = await probe.compareTopologyChains(left, right);
     assert.equal(comparison.sameObject, false);
     const sameDevice = statSync(paths.left).dev === statSync(otherPath).dev;
-    assert.equal(comparison.sameFilesystem, sameDevice);
+    assert.equal(comparison.sameDevice, sameDevice);
+    console.info(
+      JSON.stringify({
+        kind: "dss.native.r3.topology-control",
+        platform: process.platform,
+        pathDeviceSame: sameDevice,
+        capturedDeviceSame: comparison.sameDevice,
+        capturedFilesystemSame: comparison.sameFilesystem,
+        capturedMountSame: comparison.sameMount,
+      }),
+    );
     if (process.platform === "linux") {
       assert.equal(
         sameDevice,
         false,
         "The tmpfs fixture is a genuine different-filesystem positive control",
       );
+      assert.equal(comparison.sameFilesystem, false);
       if (comparison.sameMount !== null)
         assert.equal(comparison.sameMount, false);
       else if (process.env.CI)
         assert.fail(
           "Linux CI must supply a mount identity for the cross-mount control",
         );
-    } else assert.equal(comparison.sameMount, null);
+    } else {
+      assert.equal(typeof comparison.sameFilesystem, "boolean");
+      assert.equal(comparison.sameMount, null);
+    }
     assert.equal(comparison.admitted, false);
   } finally {
     probe.close(left);

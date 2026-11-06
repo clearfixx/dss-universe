@@ -11,12 +11,12 @@ and frontend are not changed. No complete admitted-root capability is returned.
   each retained object without reopening its pathname. It returns kind
   `topology-evidence`, admitted false and filesystemQualified false.
 - `compareTopologyChains(left, right)` observes both complete retained chains
-  and returns nullable sameObject/sameFilesystem/sameMount for their final
+  and returns nullable sameObject/sameDevice/sameFilesystem/sameMount for their final
   objects, with kind `topology-comparison` and admitted false.
 - Existing logical close rejects new operations. Accepted asynchronous work
   pins both chains. Environment finalization releases unclosed resources.
 
-Each component has separate object/filesystem/mount observations: state
+Each component has separate object/device/filesystem/mount observations: state
 present/unavailable/unsupported, a bounded mechanism kind and numeric OS error.
 Private native vectors retain IDs only for the observation/comparison. No raw
 device/inode, fsid, file ID, volume serial, mount ID, descriptor or path is
@@ -28,6 +28,8 @@ Component output also includes a bounded filesystem family, volumeFlags
 (state/error and nullable readOnly/local/persistentAcl) and nullable relations
 to its previous chain object. Anchor relations are null. Null local or
 persistentAcl means that lens is not supplied on that platform, not false.
+Device is the platform's native volume/device discriminator, not a hardware
+identity. It is deliberately separate from the combined device/fsid observation.
 
 These are fresh observations, not an atomic metadata snapshot, persistent
 deployment identity, cross-host identity or proof that an object remains under
@@ -92,6 +94,19 @@ Both logs remain at node_modules/.cache/debt037-r3-native-first.log and
 debt037-r3-native-export-order.log. No implementation failure is hidden by a
 retry or weakened assertion. Final full gate, three-platform CI and packet
 acceptance are still pending at this implementation checkpoint.
+
+Initial three-platform head2ce4925 passed Linux but macOS reported35/36:
+the root-versus-leaf control asserted combined device/fsid equality from the
+path-based Node st_dev equality alone. Native comparison was false while that
+oracle was true (run42276299740/job128093376062). This does not yet establish
+the particular cause of the differing native filesystem observations. The
+follow-up exposes only a separate bounded device comparison, keeps the strict
+same-object/sibling-filesystem and Linux cross-mount controls, and records the
+actual device/filesystem relations instead of assuming they are interchangeable.
+The first local full gate was intentionally interrupted for this correction;
+it is not passing evidence. Its log is retained separately. Fresh Windows
+native36/36 passes after the change; the updated three-platform proof remains
+required before acceptance.
 
 ## Remaining gates and references
 

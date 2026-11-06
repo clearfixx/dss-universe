@@ -23,6 +23,7 @@ TopologyEvidence ReadTopology(const NativeObject& object) {
   const int fd = static_cast<int>(object.handle());
   result.object.kind = "darwin-device-inode";
   result.filesystem.kind = "darwin-device-fsid";
+  result.device.kind = "darwin-device";
   result.mount.state = TopologyState::Unsupported;
   result.mount.os_code = ENOTSUP;
   struct stat identity {};
@@ -30,7 +31,12 @@ TopologyEvidence ReadTopology(const NativeObject& object) {
     result.object.state = TopologyState::Present;
     AppendIdentity(result.object.bytes, static_cast<std::uint64_t>(identity.st_dev));
     AppendIdentity(result.object.bytes, static_cast<std::uint64_t>(identity.st_ino));
-  } else result.object.os_code = static_cast<std::uint32_t>(errno);
+    result.device.state = TopologyState::Present;
+    AppendIdentity(result.device.bytes, static_cast<std::uint64_t>(identity.st_dev));
+  } else {
+    result.object.os_code = static_cast<std::uint32_t>(errno);
+    result.device.os_code = result.object.os_code;
+  }
   struct statfs filesystem {};
   if (::fstatfs(fd, &filesystem) == 0) {
     if (result.object.state == TopologyState::Present) {

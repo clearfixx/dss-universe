@@ -26,6 +26,7 @@ TopologyEvidence ReadTopology(const NativeObject& object) {
   const auto handle = reinterpret_cast<HANDLE>(object.handle());
   result.object.kind = "windows-file-id-128";
   result.filesystem.kind = "windows-volume-serial";
+  result.device.kind = "windows-volume-serial";
   result.mount.state = TopologyState::Unsupported;
   result.mount.os_code = ERROR_NOT_SUPPORTED;
   FILE_ID_INFO identity {};
@@ -33,11 +34,13 @@ TopologyEvidence ReadTopology(const NativeObject& object) {
     result.object.state = TopologyState::Present;
     result.filesystem.state = TopologyState::Present;
     AppendIdentity(result.filesystem.bytes, identity.VolumeSerialNumber);
+    result.device = result.filesystem;
     result.object.bytes = result.filesystem.bytes;
     result.object.bytes.insert(result.object.bytes.end(), identity.FileId.Identifier, identity.FileId.Identifier + 16);
   } else {
     result.object.os_code = GetLastError();
     result.filesystem.os_code = result.object.os_code;
+    result.device.os_code = result.object.os_code;
   }
   DWORD flags = 0;
   wchar_t family[64] {};

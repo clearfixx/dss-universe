@@ -23,7 +23,7 @@ struct IdentityObservation {
   std::vector<unsigned char> bytes;
 };
 struct TopologyEvidence {
-  IdentityObservation object, filesystem, mount;
+  IdentityObservation object, device, filesystem, mount;
   const char* filesystem_family = "unknown";
   bool flags_known = false;
   std::uint32_t flags_os_code = 0;

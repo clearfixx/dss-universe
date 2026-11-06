@@ -58,12 +58,18 @@ TopologyEvidence ReadTopology(const NativeObject& object) {
   const int fd = static_cast<int>(object.handle());
   result.object.kind = "linux-device-inode";
   result.filesystem.kind = "linux-device-fsid";
+  result.device.kind = "linux-device";
   struct stat identity {};
   if (::fstat(fd, &identity) == 0) {
     result.object.state = TopologyState::Present;
     AppendIdentity(result.object.bytes, static_cast<std::uint64_t>(identity.st_dev));
     AppendIdentity(result.object.bytes, static_cast<std::uint64_t>(identity.st_ino));
-  } else result.object.os_code = static_cast<std::uint32_t>(errno);
+    result.device.state = TopologyState::Present;
+    AppendIdentity(result.device.bytes, static_cast<std::uint64_t>(identity.st_dev));
+  } else {
+    result.object.os_code = static_cast<std::uint32_t>(errno);
+    result.device.os_code = result.object.os_code;
+  }
   struct statfs filesystem {};
   if (::fstatfs(fd, &filesystem) == 0) {
     if (result.object.state == TopologyState::Present) {

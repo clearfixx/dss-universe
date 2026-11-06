@@ -242,11 +242,13 @@ napi_value TopologyValue(napi_env env, const TopologyEvidence& facts, const Topo
       !Property(env, flags, "local", BooleanValue(env, facts.local_known, facts.local)) ||
       !Property(env, flags, "persistentAcl", BooleanValue(env, facts.persistent_acl_known, facts.persistent_acl)) ||
       !Property(env, result, "object", ObservationValue(env, facts.object)) ||
+      !Property(env, result, "device", ObservationValue(env, facts.device)) ||
       !Property(env, result, "filesystem", ObservationValue(env, facts.filesystem)) ||
       !Property(env, result, "mount", ObservationValue(env, facts.mount)) ||
       !Property(env, result, "filesystemFamily", TextValue(env, facts.filesystem_family)) ||
       !Property(env, result, "volumeFlags", flags) ||
       !Property(env, result, "sameObjectAsPrevious", RelationValue(env, previous ? &previous->object : nullptr, facts.object)) ||
+      !Property(env, result, "sameDeviceAsPrevious", RelationValue(env, previous ? &previous->device : nullptr, facts.device)) ||
       !Property(env, result, "sameFilesystemAsPrevious", RelationValue(env, previous ? &previous->filesystem : nullptr, facts.filesystem)) ||
       !Property(env, result, "sameMountAsPrevious", RelationValue(env, previous ? &previous->mount : nullptr, facts.mount))) return nullptr;
   return result;
@@ -271,6 +273,7 @@ napi_value TopologyComparisonValue(napi_env env, const TopologyEvidence& left, c
       !Property(env, result, "kind", TextValue(env, "topology-comparison")) ||
       !Property(env, result, "admitted", BooleanValue(env, true, false)) ||
       !Property(env, result, "sameObject", RelationValue(env, &left.object, right.object)) ||
+      !Property(env, result, "sameDevice", RelationValue(env, &left.device, right.device)) ||
       !Property(env, result, "sameFilesystem", RelationValue(env, &left.filesystem, right.filesystem)) ||
       !Property(env, result, "sameMount", RelationValue(env, &left.mount, right.mount))) return nullptr;
   return result;
