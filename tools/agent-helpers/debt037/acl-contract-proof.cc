@@ -34,6 +34,7 @@ namespace {
 const char* stage = "guard";
 struct Account { uid_t uid; gid_t gid; };
 struct Outcome { int rc = -1; int error = 0; int identity_checked = 0; Observation observation; };
+struct Readiness { int check = 0, error = 0, groups = -1, only_actor_group = 0, root_group = 0; };
 struct OwnedFd { int value; ~OwnedFd() { if (value >= 0) ::close(value); } };
 void Require(bool condition) { if (!condition) throw std::runtime_error("proof condition failed"); }
 std::string Label(const char* text) {
@@ -83,13 +84,27 @@ Outcome RunAs(Account actor, rlim_t limit, const std::function<Outcome()>& actio
     ::close(start[1]); ::close(output[0]);
     for (int fd = 3; static_cast<rlim_t>(fd) < limit; ++fd)
       if (fd != start[0] && fd != output[1]) ::close(fd);
-    const bool dropped = ::setgroups(0, nullptr) == 0 && ::setgid(actor.gid) == 0 && ::setuid(actor.uid) == 0 &&
-        ::getuid() == actor.uid && ::geteuid() == actor.uid && ::getgid() == actor.gid &&
-        ::getegid() == actor.gid && ::getgroups(0, nullptr) == 0;
-    errno = 0;
-    const bool cannot_regain_root = dropped && ::seteuid(0) == -1 && errno == EPERM;
-    unsigned char ready = cannot_regain_root ? 'R' : 'F';
-    if (!Transfer(output[1], &ready, 1, true) || ready != 'R') ::_exit(2);
+    Readiness ready;
+    auto check = [&](int code, bool success) { if (!success && !ready.check) { ready.check = code; ready.error = errno; } };
+    errno = 0; check(1, ::setgroups(0, nullptr) == 0);
+    errno = 0; check(2, ::setgid(actor.gid) == 0);
+    errno = 0; check(3, ::setuid(actor.uid) == 0);
+    errno = 0; check(4, ::getuid() == actor.uid);
+    check(5, ::geteuid() == actor.uid); check(6, ::getgid() == actor.gid); check(7, ::getegid() == actor.gid);
+    errno = 0; ready.groups = ::getgroups(0, nullptr);
+    if (ready.groups >= 0 && ready.groups <= 64) {
+      gid_t groups[64] {};
+      if (::getgroups(64, groups) == ready.groups) {
+        ready.only_actor_group = 1;
+        for (int index = 0; index < ready.groups; ++index) {
+          if (groups[index] != actor.gid) ready.only_actor_group = 0;
+          if (groups[index] == 0) ready.root_group = 1;
+        }
+      }
+    }
+    check(8, ready.groups == 0);
+    errno = 0; check(9, ::seteuid(0) == -1 && errno == EPERM);
+    if (!Transfer(output[1], &ready, sizeof(ready), true) || ready.check) ::_exit(2);
     unsigned char go = 0;
     if (!Transfer(start[0], &go, 1, false) || go != 'G') ::_exit(3);
     ::close(start[0]);
@@ -102,8 +117,13 @@ Outcome RunAs(Account actor, rlim_t limit, const std::function<Outcome()>& actio
   }
   ::close(start[0]); ::close(output[1]);
   ChildLifetime child {pid, start[1], output[0]};
-  unsigned char ready = 0;
-  Require(Transfer(child.output, &ready, 1, false) && ready == 'R');
+  Readiness ready;
+  Require(Transfer(child.output, &ready, sizeof(ready), false));
+  if (ready.check) std::cout << "{\"kind\":\"dss.acl-contract.identity-failure\",\"checkCode\":" << ready.check
+      << ",\"error\":" << ready.error << ",\"groupCount\":" << ready.groups
+      << ",\"onlyActorGroup\":" << (ready.only_actor_group ? "true" : "false")
+      << ",\"rootGroup\":" << (ready.root_group ? "true" : "false") << "}" << std::endl;
+  Require(ready.check == 0);
   unsigned char go = 'G';
   Require(Transfer(child.start, &go, 1, true));
   ::close(child.start); child.start = -1;

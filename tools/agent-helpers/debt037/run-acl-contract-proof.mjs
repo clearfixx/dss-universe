@@ -157,6 +157,28 @@ for (const line of (child.stdout ?? "").split(/\r?\n/).filter(Boolean)) {
       (value.success === false && !/^[a-z0-9-]+$/.test(value.stage))
     )
       throw new Error("Invalid proof summary.");
+  } else if (value.kind === "dss.acl-contract.identity-failure") {
+    if (
+      Object.keys(value).sort().join() !==
+        [
+          "kind",
+          "checkCode",
+          "error",
+          "groupCount",
+          "onlyActorGroup",
+          "rootGroup",
+        ]
+          .sort()
+          .join() ||
+      !Number.isInteger(value.checkCode) ||
+      value.checkCode < 1 ||
+      value.checkCode > 9 ||
+      !Number.isInteger(value.error) ||
+      !Number.isInteger(value.groupCount) ||
+      typeof value.onlyActorGroup !== "boolean" ||
+      typeof value.rootGroup !== "boolean"
+    )
+      throw new Error("Invalid identity-failure evidence.");
   } else throw new Error("Unexpected evidence kind.");
   records.push(value);
 }
