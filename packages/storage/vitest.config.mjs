@@ -29,6 +29,7 @@ export default defineConfig({
       ...configDefaults.exclude,
       "native-probe/probe.test.cjs",
       "native-probe/security.test.cjs",
+      "native-probe/topology.test.cjs",
     ],
   },
 });

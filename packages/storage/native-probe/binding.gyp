@@ -10,7 +10,7 @@
   "targets": [
     {
       "target_name": "dss_storage_probe",
-      "sources": ["src/addon.cc", "src/native-object.cc", "src/root-chain.cc", "src/security-evidence.cc"],
+      "sources": ["src/addon.cc", "src/native-object.cc", "src/root-chain.cc", "src/security-evidence.cc", "src/topology-evidence.cc"],
       "defines": ["NAPI_VERSION=8"],
       "cflags_cc!": ["-fno-exceptions"],
       "cflags_cc": ["-Wall", "-Wextra", "-Werror"],
@@ -26,10 +26,10 @@
         }
       },
       "conditions": [
-        ["OS=='win'", {"sources": ["src/platform-win.cc", "src/security-win.cc"], "libraries": ["ntdll.lib", "advapi32.lib"]},
+        ["OS=='win'", {"sources": ["src/platform-win.cc", "src/security-win.cc", "src/topology-win.cc"], "libraries": ["ntdll.lib", "advapi32.lib"]},
           {"sources": ["src/platform-posix.cc", "src/security-posix.cc"]}],
-        ["OS=='linux'", {"sources": ["src/security-linux.cc"]}],
-        ["OS=='mac'", {"sources": ["src/security-darwin.cc"]}]
+        ["OS=='linux'", {"sources": ["src/security-linux.cc", "src/topology-linux.cc"]}],
+        ["OS=='mac'", {"sources": ["src/security-darwin.cc", "src/topology-darwin.cc"]}]
       ]
     }
   ]

@@ -27,12 +27,14 @@
 #include "native-object.h"
 #include <new>
 #include <utility>
+#include <cstring>
 
 namespace dss::storage::probe {
 namespace {
 const napi_type_tag kCapabilityTag {0x44535353544f5241ULL, 0x4745503143415031ULL};
 struct Envelope { std::shared_ptr<NativeObject> resource; std::shared_ptr<NativeChain> chain; };
-enum class Operation { OpenRoot, OpenFile, Inspect, CaptureRootChain, InspectChain, CaptureSecurityChain, InspectSecurityChain };
+enum class Operation { OpenRoot, OpenFile, Inspect, CaptureRootChain, InspectChain, CaptureSecurityChain, InspectSecurityChain,
+  InspectTopologyChain, CompareTopologyChains };
 struct Work {
   Operation operation;
   napi_async_work work = nullptr;
@@ -43,6 +45,8 @@ struct Work {
   std::shared_ptr<NativeChain> chain;
   std::uint32_t chain_components = 0;
   std::vector<SecurityEvidence> security;
+  std::shared_ptr<NativeChain> other_chain;
+  std::vector<TopologyEvidence> topology, other_topology;
   Metadata metadata {Kind::Root, 0, 0};
   const char* error = nullptr;
   std::uint32_t os_code = 0;
@@ -212,6 +216,65 @@ napi_value SecurityChainValue(napi_env env, const std::vector<SecurityEvidence>&
       !Property(env, result, "components", components)) return nullptr;
   return result;
 }
+napi_value ObservationValue(napi_env env, const IdentityObservation& facts) {
+  napi_value result, code;
+  const char* state = facts.state == TopologyState::Present ? "present" :
+      facts.state == TopologyState::Unsupported ? "unsupported" : "unavailable";
+  if (!Check(env, napi_create_object(env, &result)) ||
+      !Check(env, napi_create_uint32(env, facts.os_code, &code)) ||
+      !Property(env, result, "state", TextValue(env, state)) ||
+      !Property(env, result, "kind", TextValue(env, facts.kind)) ||
+      !Property(env, result, "osCode", code)) return nullptr;
+  return result;
+}
+napi_value RelationValue(napi_env env, const IdentityObservation* left, const IdentityObservation& right) {
+  const bool known = left != nullptr && left->state == TopologyState::Present && right.state == TopologyState::Present &&
+      std::strcmp(left->kind, right.kind) == 0 && !left->bytes.empty() && !right.bytes.empty();
+  return BooleanValue(env, known, known && left->bytes == right.bytes);
+}
+napi_value TopologyValue(napi_env env, const TopologyEvidence& facts, const TopologyEvidence* previous) {
+  napi_value result, flags, code;
+  if (!Check(env, napi_create_object(env, &result)) || !Check(env, napi_create_object(env, &flags)) ||
+      !Check(env, napi_create_uint32(env, facts.flags_os_code, &code)) ||
+      !Property(env, flags, "state", TextValue(env, facts.flags_known ? "present" : "unavailable")) ||
+      !Property(env, flags, "osCode", code) ||
+      !Property(env, flags, "readOnly", BooleanValue(env, facts.flags_known, facts.read_only)) ||
+      !Property(env, flags, "local", BooleanValue(env, facts.local_known, facts.local)) ||
+      !Property(env, flags, "persistentAcl", BooleanValue(env, facts.persistent_acl_known, facts.persistent_acl)) ||
+      !Property(env, result, "object", ObservationValue(env, facts.object)) ||
+      !Property(env, result, "filesystem", ObservationValue(env, facts.filesystem)) ||
+      !Property(env, result, "mount", ObservationValue(env, facts.mount)) ||
+      !Property(env, result, "filesystemFamily", TextValue(env, facts.filesystem_family)) ||
+      !Property(env, result, "volumeFlags", flags) ||
+      !Property(env, result, "sameObjectAsPrevious", RelationValue(env, previous ? &previous->object : nullptr, facts.object)) ||
+      !Property(env, result, "sameFilesystemAsPrevious", RelationValue(env, previous ? &previous->filesystem : nullptr, facts.filesystem)) ||
+      !Property(env, result, "sameMountAsPrevious", RelationValue(env, previous ? &previous->mount : nullptr, facts.mount))) return nullptr;
+  return result;
+}
+napi_value TopologyChainValue(napi_env env, const std::vector<TopologyEvidence>& facts) {
+  napi_value result, components;
+  if (!Check(env, napi_create_object(env, &result)) ||
+      !Check(env, napi_create_array_with_length(env, facts.size(), &components))) return nullptr;
+  for (std::uint32_t index = 0; index < facts.size(); ++index) {
+    napi_value value = TopologyValue(env, facts[index], index ? &facts[index - 1] : nullptr);
+    if (!value || !Check(env, napi_set_element(env, components, index, value))) return nullptr;
+  }
+  if (!Property(env, result, "kind", TextValue(env, "topology-evidence")) ||
+      !Property(env, result, "admitted", BooleanValue(env, true, false)) ||
+      !Property(env, result, "filesystemQualified", BooleanValue(env, true, false)) ||
+      !Property(env, result, "components", components)) return nullptr;
+  return result;
+}
+napi_value TopologyComparisonValue(napi_env env, const TopologyEvidence& left, const TopologyEvidence& right) {
+  napi_value result;
+  if (!Check(env, napi_create_object(env, &result)) ||
+      !Property(env, result, "kind", TextValue(env, "topology-comparison")) ||
+      !Property(env, result, "admitted", BooleanValue(env, true, false)) ||
+      !Property(env, result, "sameObject", RelationValue(env, &left.object, right.object)) ||
+      !Property(env, result, "sameFilesystem", RelationValue(env, &left.filesystem, right.filesystem)) ||
+      !Property(env, result, "sameMount", RelationValue(env, &left.mount, right.mount))) return nullptr;
+  return result;
+}
 napi_value MetadataValue(napi_env env, const Metadata& metadata) {
   napi_value result, kind, size, links;
   if (!Check(env, napi_create_object(env, &result)) ||
@@ -234,6 +297,11 @@ void Execute(napi_env, void* data) {
       case Operation::InspectChain: work.chain_components = InspectChain(*work.chain); break;
       case Operation::CaptureSecurityChain: work.chain = CaptureSecurityChain(work.text); break;
       case Operation::InspectSecurityChain: work.security = InspectSecurityChain(*work.chain); break;
+        case Operation::InspectTopologyChain: work.topology = InspectTopologyChain(*work.chain); break;
+        case Operation::CompareTopologyChains:
+          work.topology = InspectTopologyChain(*work.chain);
+          work.other_topology = InspectTopologyChain(*work.other_chain);
+          break;
     }
   } catch (const NativeError& error) { work.error = error.code; work.os_code = error.os_code;
   } catch (...) { work.error = "ERR_STORAGE_NATIVE_INTERNAL"; }
@@ -257,6 +325,9 @@ void Complete(napi_env env, napi_status status, void* data) {
   if (work->operation == Operation::Inspect) result = MetadataValue(env, work->metadata);
   else if (work->operation == Operation::InspectChain) result = ChainValue(env, work->chain_components);
   else if (work->operation == Operation::InspectSecurityChain) result = SecurityChainValue(env, work->security);
+  else if (work->operation == Operation::InspectTopologyChain) result = TopologyChainValue(env, work->topology);
+  else if (work->operation == Operation::CompareTopologyChains)
+    result = TopologyComparisonValue(env, work->topology.back(), work->other_topology.back());
   else if (work->operation == Operation::CaptureRootChain || work->operation == Operation::CaptureSecurityChain)
     result = Wrap(env, {}, work->chain);
   else result = Wrap(env, work->result);
@@ -360,6 +431,31 @@ napi_value InspectSecurityChainCallback(napi_env env, napi_callback_info info) {
     return Queue(env, std::move(work));
   });
 }
+napi_value InspectTopologyChainCallback(napi_env env, napi_callback_info info) {
+  return Guard(env, [&]() -> napi_value {
+    napi_value args[2];
+    if (!Arguments(env, info, 1, args)) return nullptr;
+    auto chain = LiveChain(env, args[0]);
+    if (!chain) return nullptr;
+    auto work = std::make_unique<Work>(Operation::InspectTopologyChain);
+    work->chain = std::move(chain);
+    return Queue(env, std::move(work));
+  });
+}
+napi_value CompareTopologyChainsCallback(napi_env env, napi_callback_info info) {
+  return Guard(env, [&]() -> napi_value {
+    napi_value args[3];
+    if (!Arguments(env, info, 2, args)) return nullptr;
+    auto left = LiveChain(env, args[0]);
+    if (!left) return nullptr;
+    auto right = LiveChain(env, args[1]);
+    if (!right) return nullptr;
+    auto work = std::make_unique<Work>(Operation::CompareTopologyChains);
+    work->chain = std::move(left);
+    work->other_chain = std::move(right);
+    return Queue(env, std::move(work));
+  });
+}
 napi_value CloseCallback(napi_env env, napi_callback_info info) {
   napi_value args[2], result;
   if (!Arguments(env, info, 1, args)) return nullptr;
@@ -372,6 +468,8 @@ napi_value CloseCallback(napi_env env, napi_callback_info info) {
 }  // namespace
 napi_value Initialize(napi_env env, napi_value exports) {
   const napi_property_descriptor descriptors[] = {
+    {"inspectTopologyChain", nullptr, InspectTopologyChainCallback, nullptr, nullptr, nullptr, napi_default, nullptr},
+    {"compareTopologyChains", nullptr, CompareTopologyChainsCallback, nullptr, nullptr, nullptr, napi_default, nullptr},
     {"captureSecurityChain", nullptr, CaptureSecurityChainCallback, nullptr, nullptr, nullptr, napi_default, nullptr},
     {"inspectSecurityChain", nullptr, InspectSecurityChainCallback, nullptr, nullptr, nullptr, napi_default, nullptr},
     {"captureRootChain", nullptr, CaptureRootChainCallback, nullptr, nullptr, nullptr, napi_default, nullptr},
@@ -381,7 +479,7 @@ napi_value Initialize(napi_env env, napi_value exports) {
     {"inspect", nullptr, InspectCallback, nullptr, nullptr, nullptr, napi_default, nullptr},
     {"close", nullptr, CloseCallback, nullptr, nullptr, nullptr, napi_default, nullptr}
   };
-  return Check(env, napi_define_properties(env, exports, 8, descriptors)) ? exports : nullptr;
+  return Check(env, napi_define_properties(env, exports, 10, descriptors)) ? exports : nullptr;
 }
 }  // namespace dss::storage::probe
 NAPI_MODULE(NODE_GYP_MODULE_NAME, dss::storage::probe::Initialize)
