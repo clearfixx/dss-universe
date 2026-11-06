@@ -68,12 +68,14 @@ Metadata Inspect(const NativeObject& object) {
   return {object.kind(), static_cast<std::uint64_t>(info.EndOfFile.QuadPart), info.NumberOfLinks};
 }
 
-std::shared_ptr<NativeObject> OpenRoot(const std::string& path) {
+namespace {
+std::shared_ptr<NativeObject> OpenRootWithAccess(const std::string& path, bool security_read) {
   const auto wide = Wide(path);
   if (wide.size() < 3 || !((wide[0] >= L'A' && wide[0] <= L'Z') ||
       (wide[0] >= L'a' && wide[0] <= L'z')) || wide[1] != L':' ||
       (wide[2] != L'\\' && wide[2] != L'/')) throw NativeError("ERR_STORAGE_NATIVE_ROOT_PATH");
-  HANDLE handle = CreateFileW(wide.c_str(), FILE_LIST_DIRECTORY | FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+  const DWORD access = FILE_LIST_DIRECTORY | FILE_READ_ATTRIBUTES | SYNCHRONIZE | (security_read ? READ_CONTROL : 0);
+  HANDLE handle = CreateFileW(wide.c_str(), access,
       FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
       FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
   if (handle == INVALID_HANDLE_VALUE) throw NativeError("ERR_STORAGE_NATIVE_IO", GetLastError());
@@ -81,6 +83,8 @@ std::shared_ptr<NativeObject> OpenRoot(const std::string& path) {
   Inspect(resource);
   return std::make_shared<NativeObject>(std::move(resource));
 }
+}
+std::shared_ptr<NativeObject> OpenRoot(const std::string& path) { return OpenRootWithAccess(path, false); }
 
 std::shared_ptr<NativeObject> OpenFile(const NativeObject& root, const std::string& name) {
   ValidateComponent(name);
@@ -108,7 +112,8 @@ std::shared_ptr<NativeObject> OpenFile(const NativeObject& root, const std::stri
   return std::make_shared<NativeObject>(std::move(resource));
 }
 
-std::shared_ptr<NativeChain> CaptureRootChain(const std::string& path) {
+namespace {
+std::shared_ptr<NativeChain> CaptureChain(const std::string& path, bool security_read) {
   const auto plan = PlanRootChain(path);
   // Validate all UTF-8/component lengths before opening even the drive anchor.
   std::vector<std::wstring> names;
@@ -119,7 +124,7 @@ std::shared_ptr<NativeChain> CaptureRootChain(const std::string& path) {
     names.push_back(std::move(wide));
   }
   std::vector<std::shared_ptr<NativeObject>> components;
-  components.push_back(OpenRoot(plan.anchor));
+  components.push_back(OpenRootWithAccess(plan.anchor, security_read));
   for (auto& name : names) {
     UNICODE_STRING text {};
     text.Length = static_cast<USHORT>(name.size() * sizeof(wchar_t));
@@ -132,7 +137,8 @@ std::shared_ptr<NativeChain> CaptureRootChain(const std::string& path) {
     attributes.Attributes = 0x40;
     IO_STATUS_BLOCK io {};
     HANDLE handle = INVALID_HANDLE_VALUE;
-    const NTSTATUS status = NtCreateFile(&handle, FILE_LIST_DIRECTORY | FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+    const ACCESS_MASK access = FILE_LIST_DIRECTORY | FILE_READ_ATTRIBUTES | SYNCHRONIZE | (security_read ? READ_CONTROL : 0);
+    const NTSTATUS status = NtCreateFile(&handle, access,
         &attributes, &io, nullptr, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, 1,
         0x00200000 | 0x00000020 | 0x00000001, nullptr, 0);
     if (status < 0) throw NativeError("ERR_STORAGE_NATIVE_IO", static_cast<std::uint32_t>(status));
@@ -140,6 +146,9 @@ std::shared_ptr<NativeChain> CaptureRootChain(const std::string& path) {
     Inspect(resource);
     components.push_back(std::make_shared<NativeObject>(std::move(resource)));
   }
-  return std::make_shared<NativeChain>(std::move(components));
+  return std::make_shared<NativeChain>(std::move(components), security_read);
 }
+}
+std::shared_ptr<NativeChain> CaptureRootChain(const std::string& path) { return CaptureChain(path, false); }
+std::shared_ptr<NativeChain> CaptureSecurityChain(const std::string& path) { return CaptureChain(path, true); }
 }  // namespace dss::storage::probe

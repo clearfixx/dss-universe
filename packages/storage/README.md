@@ -48,3 +48,19 @@ file capability. The public package exports and API/Worker routes are unchanged.
 Whole-chain capture is not ACL/effective-rights admission, mount qualification,
 relocation prevention or mutation safety. See
 [R1 scope and evidence](../../docs/development/DEBT_037_R1_CAPTURED_CHAIN.md).
+
+## Experimental native R2
+
+The private `captureSecurityChain` operation separately requests security-readable
+resources; `inspectSecurityChain` observes owner comparisons, POSIX mode flags and
+bounded ACL facts from those held resources. R1 capabilities cannot be promoted
+to this intent. Windows distinguishes null and empty DACLs; POSIX preserves
+unavailable/unsupported evidence instead of interpreting a query error as absence.
+The observations always report `admitted: false` and
+`effectiveAccessEvaluated: false`. They expose neither raw identities nor ACLs.
+
+The mandatory native runner includes real synthetic ACL controls. Windows fixture
+setup uses PowerShell 7 and existing .NET/Win32 APIs; Linux uses Python's standard
+library xattr support; macOS uses the system chmod ACL utility. These helpers only
+modify newly created opt-in test directories. No application storage is changed.
+See [R2 scope and evidence](../../docs/development/DEBT_037_R2_SECURITY_EVIDENCE.md).

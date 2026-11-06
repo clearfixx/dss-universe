@@ -32,7 +32,7 @@ namespace dss::storage::probe {
 namespace {
 const napi_type_tag kCapabilityTag {0x44535353544f5241ULL, 0x4745503143415031ULL};
 struct Envelope { std::shared_ptr<NativeObject> resource; std::shared_ptr<NativeChain> chain; };
-enum class Operation { OpenRoot, OpenFile, Inspect, CaptureRootChain, InspectChain };
+enum class Operation { OpenRoot, OpenFile, Inspect, CaptureRootChain, InspectChain, CaptureSecurityChain, InspectSecurityChain };
 struct Work {
   Operation operation;
   napi_async_work work = nullptr;
@@ -42,6 +42,7 @@ struct Work {
   std::shared_ptr<NativeObject> result;
   std::shared_ptr<NativeChain> chain;
   std::uint32_t chain_components = 0;
+  std::vector<SecurityEvidence> security;
   Metadata metadata {Kind::Root, 0, 0};
   const char* error = nullptr;
   std::uint32_t os_code = 0;
@@ -147,6 +148,70 @@ napi_value ChainValue(napi_env env, std::uint32_t components) {
       !Check(env, napi_set_named_property(env, result, "admitted", admitted))) return nullptr;
   return result;
 }
+napi_value TextValue(napi_env env, const char* text) {
+  napi_value value;
+  return Check(env, napi_create_string_utf8(env, text, NAPI_AUTO_LENGTH, &value)) ? value : nullptr;
+}
+napi_value BooleanValue(napi_env env, bool known, bool observed) {
+  napi_value value;
+  return Check(env, known ? napi_get_boolean(env, observed, &value) : napi_get_null(env, &value)) ? value : nullptr;
+}
+bool Property(napi_env env, napi_value object, const char* name, napi_value value) {
+  return value != nullptr && Check(env, napi_set_named_property(env, object, name, value));
+}
+napi_value AclValue(napi_env env, const AclEvidence& acl) {
+  const char* state = "unavailable";
+  switch (acl.state) {
+    case EvidenceState::Present: state = "present"; break;
+    case EvidenceState::VerifiedAbsent: state = "verified-absent"; break;
+    case EvidenceState::Unavailable: break;
+    case EvidenceState::Unsupported: state = "unsupported"; break;
+  }
+  napi_value result, count, code;
+  if (!Check(env, napi_create_object(env, &result)) ||
+      !Check(env, acl.entries_known ? napi_create_uint32(env, acl.entries, &count) : napi_get_null(env, &count)) ||
+      !Check(env, napi_create_uint32(env, acl.os_code, &code)) ||
+      !Property(env, result, "state", TextValue(env, state)) ||
+      !Property(env, result, "format", TextValue(env, acl.format)) ||
+      !Property(env, result, "shape", TextValue(env, acl.shape)) ||
+      !Property(env, result, "entries", count) ||
+      !Property(env, result, "osCode", code) ||
+      !Property(env, result, "unknownEntryTypes", BooleanValue(env, acl.entries_known, acl.unknown_entry_types)) ||
+      !Property(env, result, "inheritanceObserved", BooleanValue(env, acl.entries_known, acl.inheritance_observed))) return nullptr;
+  return result;
+}
+napi_value SecurityValue(napi_env env, const SecurityEvidence& facts) {
+  napi_value result, mode, default_acl;
+  if (!Check(env, napi_create_object(env, &result))) return nullptr;
+  if (facts.mode_known) {
+    if (!Check(env, napi_create_object(env, &mode)) ||
+        !Property(env, mode, "groupWrite", BooleanValue(env, true, facts.group_write)) ||
+        !Property(env, mode, "otherWrite", BooleanValue(env, true, facts.other_write)) ||
+        !Property(env, mode, "sticky", BooleanValue(env, true, facts.sticky))) return nullptr;
+  } else if (!Check(env, napi_get_null(env, &mode))) return nullptr;
+  if (facts.default_acl_applicable) default_acl = AclValue(env, facts.default_acl);
+  else if (!Check(env, napi_get_null(env, &default_acl))) return nullptr;
+  if (!Property(env, result, "ownerMatchesProcess", BooleanValue(env, facts.owner_match_known, facts.owner_matches_process)) ||
+      !Property(env, result, "ownerIsSystem", BooleanValue(env, facts.owner_known, facts.owner_is_system)) ||
+      !Property(env, result, "mode", mode) ||
+      !Property(env, result, "acl", AclValue(env, facts.acl)) ||
+      !Property(env, result, "defaultAcl", default_acl)) return nullptr;
+  return result;
+}
+napi_value SecurityChainValue(napi_env env, const std::vector<SecurityEvidence>& facts) {
+  napi_value result, components;
+  if (!Check(env, napi_create_object(env, &result)) ||
+      !Check(env, napi_create_array_with_length(env, facts.size(), &components))) return nullptr;
+  for (std::uint32_t index = 0; index < facts.size(); ++index) {
+    napi_value value = SecurityValue(env, facts[index]);
+    if (value == nullptr || !Check(env, napi_set_element(env, components, index, value))) return nullptr;
+  }
+  if (!Property(env, result, "kind", TextValue(env, "security-evidence")) ||
+      !Property(env, result, "admitted", BooleanValue(env, true, false)) ||
+      !Property(env, result, "effectiveAccessEvaluated", BooleanValue(env, true, false)) ||
+      !Property(env, result, "components", components)) return nullptr;
+  return result;
+}
 napi_value MetadataValue(napi_env env, const Metadata& metadata) {
   napi_value result, kind, size, links;
   if (!Check(env, napi_create_object(env, &result)) ||
@@ -167,6 +232,8 @@ void Execute(napi_env, void* data) {
       case Operation::Inspect: work.metadata = Inspect(*work.resource); break;
       case Operation::CaptureRootChain: work.chain = CaptureRootChain(work.text); break;
       case Operation::InspectChain: work.chain_components = InspectChain(*work.chain); break;
+      case Operation::CaptureSecurityChain: work.chain = CaptureSecurityChain(work.text); break;
+      case Operation::InspectSecurityChain: work.security = InspectSecurityChain(*work.chain); break;
     }
   } catch (const NativeError& error) { work.error = error.code; work.os_code = error.os_code;
   } catch (...) { work.error = "ERR_STORAGE_NATIVE_INTERNAL"; }
@@ -189,7 +256,9 @@ void Complete(napi_env env, napi_status status, void* data) {
   napi_value result;
   if (work->operation == Operation::Inspect) result = MetadataValue(env, work->metadata);
   else if (work->operation == Operation::InspectChain) result = ChainValue(env, work->chain_components);
-  else if (work->operation == Operation::CaptureRootChain) result = Wrap(env, {}, work->chain);
+  else if (work->operation == Operation::InspectSecurityChain) result = SecurityChainValue(env, work->security);
+  else if (work->operation == Operation::CaptureRootChain || work->operation == Operation::CaptureSecurityChain)
+    result = Wrap(env, {}, work->chain);
   else result = Wrap(env, work->result);
   if (!result) Reject(env, work->deferred, "ERR_STORAGE_NATIVE_BINDING", 0);
   else napi_resolve_deferred(env, work->deferred, result);
@@ -267,6 +336,30 @@ napi_value InspectChainCallback(napi_env env, napi_callback_info info) {
     return Queue(env, std::move(work));
   });
 }
+napi_value CaptureSecurityChainCallback(napi_env env, napi_callback_info info) {
+  return Guard(env, [&]() -> napi_value {
+    napi_value args[2];
+    if (!Arguments(env, info, 1, args)) return nullptr;
+    auto work = std::make_unique<Work>(Operation::CaptureSecurityChain);
+    if (!String(env, args[0], work->text)) return nullptr;
+    return Queue(env, std::move(work));
+  });
+}
+napi_value InspectSecurityChainCallback(napi_env env, napi_callback_info info) {
+  return Guard(env, [&]() -> napi_value {
+    napi_value args[2];
+    if (!Arguments(env, info, 1, args)) return nullptr;
+    auto chain = LiveChain(env, args[0]);
+    if (!chain) return nullptr;
+    if (!chain->security_read()) {
+      napi_throw_type_error(env, "ERR_STORAGE_NATIVE_SECURITY_CAPABILITY", "Expected a security-readable chain.");
+      return nullptr;
+    }
+    auto work = std::make_unique<Work>(Operation::InspectSecurityChain);
+    work->chain = std::move(chain);
+    return Queue(env, std::move(work));
+  });
+}
 napi_value CloseCallback(napi_env env, napi_callback_info info) {
   napi_value args[2], result;
   if (!Arguments(env, info, 1, args)) return nullptr;
@@ -279,6 +372,8 @@ napi_value CloseCallback(napi_env env, napi_callback_info info) {
 }  // namespace
 napi_value Initialize(napi_env env, napi_value exports) {
   const napi_property_descriptor descriptors[] = {
+    {"captureSecurityChain", nullptr, CaptureSecurityChainCallback, nullptr, nullptr, nullptr, napi_default, nullptr},
+    {"inspectSecurityChain", nullptr, InspectSecurityChainCallback, nullptr, nullptr, nullptr, napi_default, nullptr},
     {"captureRootChain", nullptr, CaptureRootChainCallback, nullptr, nullptr, nullptr, napi_default, nullptr},
     {"inspectChain", nullptr, InspectChainCallback, nullptr, nullptr, nullptr, napi_default, nullptr},
     {"openRoot", nullptr, OpenRootCallback, nullptr, nullptr, nullptr, napi_default, nullptr},
@@ -286,7 +381,7 @@ napi_value Initialize(napi_env env, napi_value exports) {
     {"inspect", nullptr, InspectCallback, nullptr, nullptr, nullptr, napi_default, nullptr},
     {"close", nullptr, CloseCallback, nullptr, nullptr, nullptr, napi_default, nullptr}
   };
-  return Check(env, napi_define_properties(env, exports, 6, descriptors)) ? exports : nullptr;
+  return Check(env, napi_define_properties(env, exports, 8, descriptors)) ? exports : nullptr;
 }
 }  // namespace dss::storage::probe
 NAPI_MODULE(NODE_GYP_MODULE_NAME, dss::storage::probe::Initialize)
