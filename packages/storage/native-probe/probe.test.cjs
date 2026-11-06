@@ -63,9 +63,11 @@ test("prototype exports are explicit and public portable exports remain isolated
     "captureRootChain",
     "captureSecurityChain",
     "close",
+    "compareTopologyChains",
     "inspect",
     "inspectChain",
     "inspectSecurityChain",
+    "inspectTopologyChain",
     "openFile",
     "openRoot",
   ]);
