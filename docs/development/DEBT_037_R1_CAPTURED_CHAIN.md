@@ -83,6 +83,23 @@ control admission, publication or conditional deletion. A retained descriptor is
 not a substitute for those policies or syscalls. No different-user fixture or
 production root is modified in this subpacket. DEBT-037/D7 remain open.
 
+## Retained macOS measurement failure
+
+Initial head `73d0dee` native CI passed20/20 on Linux and Windows, but19/20 on
+macOS. Run42212514383/job127874369785 failed the whole-chain teardown test's
+pre-teardown census assertion: actual15 versus expected14. Compilation and the
+other19 native scenarios passed; no runtime leak or its absence is established
+by that mismatch. The failed run is retained, not rerun to obtain a green result.
+
+The old census compared before Worker creation with after capture, combining
+Worker initialization and native-resource acquisition. The revised fixture uses
+an explicit message barrier before capture. It records counts before Worker,
+after Worker-ready and after capture, still requires the exact component-count
+delta, and still requires teardown to return to the original pre-Worker baseline.
+No sleep, timeout change, platform skip or relaxed descriptor bound is added.
+Native implementation is unchanged. New phase observations must establish what
+happened; this correction does not presume the cause of the extra descriptor.
+
 Related: [accepted complete runtime boundary](DEBT_037_RUNTIME_BOUNDARY_DESIGN.md),
 [parent coordination protocol](DEBT_037_P2_PROTOCOL.md) and
 [Windows historical-handle matrix](DEBT_037_RELATIVE_HANDLE_PROOF.md).

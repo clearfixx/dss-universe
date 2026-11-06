@@ -275,25 +275,45 @@ test("R1 environment teardown releases the complete captured ancestor chain", as
     `
     const { parentPort, workerData } = require('node:worker_threads');
     const native = require(workerData.binary);
-    (async () => {
+    parentPort.once('message', async () => {
       globalThis.chain = await native.captureRootChain(workerData.root);
       parentPort.on('message', () => {});
       parentPort.postMessage(await native.inspectChain(globalThis.chain));
-    })().catch(error => { throw error; });
+    });
+    parentPort.postMessage('worker-ready-before-capture');
   `,
     { eval: true, workerData: { binary, root: paths.nested } },
   );
   t.after(() => worker.terminate());
   assert.deepEqual(await once(worker, "message"), [
+    "worker-ready-before-capture",
+  ]);
+  // A Worker can own process/runtime descriptors before native capture. Measure
+  // the operation against that phase, then require full teardown to the original baseline.
+  const ready = census ? countTarget() : null;
+  const captured = once(worker, "message");
+  worker.postMessage("capture");
+  assert.deepEqual(await captured, [
     {
       kind: "captured-chain",
       components: expectedComponents(paths.nested),
       admitted: false,
     },
   ]);
-  if (census)
-    assert.equal(countTarget(), before + expectedComponents(paths.nested));
-  else {
+  if (census) {
+    const afterCapture = countTarget();
+    console.info(
+      JSON.stringify({
+        kind: "dss.native.r1.descriptor-phases",
+        platform: process.platform,
+        beforeWorker: before,
+        workerReady: ready,
+        afterCapture,
+        chainComponents: expectedComponents(paths.nested),
+      }),
+    );
+    assert.equal(afterCapture, ready + expectedComponents(paths.nested));
+  } else {
     // Do not try to rename system ancestors; every synthetic captured ancestor
     // must be pinned, not only the final directory.
     for (const path of prefixes.filter(
@@ -304,7 +324,18 @@ test("R1 environment teardown releases the complete captured ancestor chain", as
   }
   await worker.terminate();
   await nextTurn();
-  if (census) assert.equal(countTarget(), before);
+  if (census) {
+    const afterTeardown = countTarget();
+    console.info(
+      JSON.stringify({
+        kind: "dss.native.r1.teardown-baseline",
+        platform: process.platform,
+        beforeWorker: before,
+        afterTeardown,
+      }),
+    );
+    assert.equal(afterTeardown, before);
+  }
   renameSync(paths.root, join(paths.arena, "released-chain"));
 });
 
