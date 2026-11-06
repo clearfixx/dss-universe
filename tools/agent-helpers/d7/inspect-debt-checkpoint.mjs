@@ -27,16 +27,23 @@ if (
   extra.length
 ) {
   throw new Error(
-    "Expected baseline, checkpoint checkout, snapshot.local.json and output.local.json",
+    "Expected baseline, checkpoint checkout, snapshot JSON under helpers and output.local.json",
   );
 }
-for (const name of [snapshotName, outputName]) {
-  if (!/^[a-z0-9-]+\.local\.json$/.test(name))
-    throw new Error(
-      "Use a named local evidence file under tools/agent-helpers",
-    );
-}
-if (snapshotName === outputName)
+if (!/^[a-z0-9-]+\.local\.json$/.test(outputName))
+  throw new Error("Use a named local output under tools/agent-helpers");
+const snapshotPath = resolve(helperRoot, snapshotName);
+const snapshotRelative = relative(helperRoot, snapshotPath);
+if (
+  !snapshotRelative ||
+  snapshotRelative.startsWith("..") ||
+  isAbsolute(snapshotRelative) ||
+  !snapshotRelative.endsWith(".json")
+)
+  throw new Error(
+    "Input snapshot must be a JSON file inside tools/agent-helpers",
+  );
+if (snapshotPath === resolve(helperRoot, outputName))
   throw new Error("Never overwrite the input evidence snapshot");
 if (!isAbsolute(checkpointRoot))
   throw new Error("Checkpoint checkout must be absolute");
@@ -55,7 +62,7 @@ function oid(value) {
   return value;
 }
 const acceptedHead = oid(
-  git(["rev-parse", "--verify", `${baseline}^{commit}`]),
+  git(["rev-parse", "--verify", "--end-of-options", `${baseline}^{commit}`]),
 );
 const checkpointHead = oid(
   git(["rev-parse", "--verify", "HEAD"], checkpointRoot),
@@ -68,13 +75,22 @@ const checkpointMatrix = git(
   ["show", `${checkpointHead}:docs/audits/D7_DEBT_DISPOSITION_MATRIX.md`],
   checkpointRoot,
 );
-const currentIds = [
-  ...new Set(
-    [...registry.matchAll(/^(?:###\s+|\|\s*)(DEBT-\d{3})(?=\s|\s*\|)/gm)].map(
-      (match) => match[1],
+function inventory(text) {
+  return [
+    ...new Set(
+      [...text.matchAll(/^(?:###\s+|\|\s*)(DEBT-\d{3})(?=\s|\s*\|)/gm)].map(
+        (match) => match[1],
+      ),
     ),
+  ].sort();
+}
+const currentIds = inventory(registry);
+const workingRegistryIds = inventory(
+  readFileSync(
+    resolve(repository, "docs/development/DEBT_REGISTER.md"),
+    "utf8",
   ),
-].sort();
+);
 const rows = [
   ...checkpointMatrix.matchAll(
     /^\|\s*(DEBT-\d{3})\s*\|\s*([CMOQX])\s*\|([^\r\n]*)/gm,
@@ -97,9 +113,7 @@ if (!checkpointBaseline)
 const declaredBaseline = oid(
   git(["rev-parse", "--verify", `${checkpointBaseline}^{commit}`]),
 );
-const snapshot = JSON.parse(
-  readFileSync(resolve(helperRoot, snapshotName), "utf8"),
-);
+const snapshot = JSON.parse(readFileSync(snapshotPath, "utf8"));
 if (!Array.isArray(snapshot.pullRequests) || !snapshot.pullRequests.length)
   throw new Error("Missing externally observed PR metadata");
 
@@ -145,6 +159,20 @@ const result = {
   checkpointDeclaredBaseline: declaredBaseline,
   checkpointCoversCurrentAcceptedHead: declaredBaseline === acceptedHead,
   currentInventory: currentIds,
+  workingRegistry: {
+    head: git(["rev-parse", "HEAD"]),
+    status: git([
+      "status",
+      "--porcelain",
+      "--",
+      "docs/development/DEBT_REGISTER.md",
+    ]),
+    ids: workingRegistryIds,
+    newlyRecordedIds: workingRegistryIds.filter(
+      (id) => !currentIds.includes(id),
+    ),
+    notAcceptanceEvidence: true,
+  },
   retainedRouteCounts: Object.fromEntries(
     ["C", "M", "O", "Q", "X"].map((route) => [
       route,
@@ -176,6 +204,7 @@ console.log(
     checkpointHead,
     checkpointDeclaredBaseline: declaredBaseline,
     currentDebts: currentIds.length,
+    workingRegistryDebts: workingRegistryIds.length,
     retainedDebts: rows.length,
     retainedRouteCounts: result.retainedRouteCounts,
     missing: result.missingFromRetainedCheckpoint,
