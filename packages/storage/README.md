@@ -64,3 +64,15 @@ setup uses PowerShell 7 and existing .NET/Win32 APIs; Linux uses Python's standa
 library xattr support; macOS uses the system chmod ACL utility. These helpers only
 modify newly created opt-in test directories. No application storage is changed.
 See [R2 scope and evidence](../../docs/development/DEBT_037_R2_SECURITY_EVIDENCE.md).
+
+## Experimental native R3
+
+Private `inspectTopologyChain` and `compareTopologyChains` add actual retained-
+object identity, filesystem and mount observations without returning native IDs.
+Unavailable/unsupported identity stays distinct from equality; filesystem or
+volume equality is never silently promoted to mount equality. Observations
+always report admitted false; no filesystem allowlist or application activation
+is introduced. Linux uses descriptor-bound statx mount observations. Windows
+and Darwin retain explicit unsupported mount-point identity while observing
+their actual native file/volume facts. See
+[R3 scope and limits](../../docs/development/DEBT_037_R3_TOPOLOGY_EVIDENCE.md).

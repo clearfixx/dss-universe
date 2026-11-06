@@ -30,6 +30,7 @@
 #include <utility>
 #include <vector>
 #include "security-evidence.h"
+#include "topology-evidence.h"
 #if !defined(_WIN32) && !defined(__linux__) && !defined(__APPLE__)
 #error "Storage native P1 supports only Windows, Linux and macOS"
 #endif
@@ -84,4 +85,6 @@ SecurityEvidence ReadSecurity(const NativeObject& object);
 SecurityEvidence ReadPosixSecurityBase(const NativeObject& object);
 #endif
 std::vector<SecurityEvidence> InspectSecurityChain(const NativeChain& chain);
+TopologyEvidence ReadTopology(const NativeObject& object);
+std::vector<TopologyEvidence> InspectTopologyChain(const NativeChain& chain);
 }  // namespace dss::storage::probe
