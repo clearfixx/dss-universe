@@ -31,6 +31,23 @@
         ["OS=='linux'", {"sources": ["src/security-linux.cc", "src/topology-linux.cc"]}],
         ["OS=='mac'", {"sources": ["src/security-darwin.cc", "src/topology-darwin.cc"]}]
       ]
+    },
+    {
+      "target_name": "dss_acl_contract_proof",
+      "type": "none",
+      "conditions": [
+        ["OS!='win'", {
+          "type": "executable",
+          "sources": ["../../../tools/agent-helpers/debt037/acl-contract-proof.cc"],
+          "cflags_cc!": ["-fno-exceptions"],
+          "cflags_cc": ["-Wall", "-Wextra", "-Werror", "-std=c++20"],
+          "xcode_settings": {"GCC_ENABLE_CPP_EXCEPTIONS": "YES", "CLANG_CXX_LANGUAGE_STANDARD": "c++20"},
+          "conditions": [
+            ["OS=='linux'", {"sources": ["../../../tools/agent-helpers/debt037/acl-contract-linux.cc"]}],
+            ["OS=='mac'", {"sources": ["../../../tools/agent-helpers/debt037/acl-contract-darwin.cc"]}]
+          ]
+        }]
+      ]
     }
   ]
 }

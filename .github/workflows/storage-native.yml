@@ -48,3 +48,15 @@ jobs:
         run: pnpm --filter @dss/storage native:verify
       - name: Verify cross-process storage coordination primitives
         run: pnpm storage:coordination:verify
+      - name: Prove POSIX ACL contracts with real ordinary identities
+        if: runner.os != 'Windows'
+        env:
+          DSS_ACL_CONTRACT_PROOF: "1"
+        run: node tools/agent-helpers/debt037/run-acl-contract-proof.mjs
+      - name: Preserve bounded ACL contract evidence
+        if: always() && runner.os != 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: acl-contract-${{ runner.os }}
+          path: node_modules/.cache/acl-contract-proof-*.json
+          if-no-files-found: warn
