@@ -141,6 +141,9 @@ try {
     if ([IO.File]::ReadAllText([IO.Path]::Combine($stage, 'secret.txt')) -cne 'SYNTHETIC PRIVATE STAGE') {
         throw 'Private sentinel changed.'
     }
+    & ([IO.Path]::Combine($PSScriptRoot, 'windows-relative-matrix.ps1')) `
+        -ServiceToken $tokens[0] -AttackerToken $tokens[1] -Arena $arena -Stage $stage `
+        -SafeAcl $safeAcl -UnsafeAcl $unsafeAcl
     [ordered]@{
         kind = 'real local logons; synchronous impersonation, not independent processes'
         arena = $arena; serviceSid = $serviceSid; attackerSid = $attackerSid

@@ -12,6 +12,7 @@
  * • owns native token and file-handle lifetimes;
  * • preserves Win32 outcomes and clears temporary password buffers;
  * • inspects captured objects without a second pathname lookup.
+ * • records bounded relative-read observations without emitting file bytes.
  *
  * 🏗️ Architecture:
  * Diagnostic interop only; no API/Worker or production storage imports.
@@ -53,6 +54,36 @@ public static class Dss037IdentityNative
         int information, out AttributeTag value, uint size);
     [StructLayout(LayoutKind.Sequential)]
     private struct AttributeTag { public uint Attributes; public uint Tag; }
+    [StructLayout(LayoutKind.Sequential)]
+    private struct UnicodeName { public ushort Length, MaximumLength; public IntPtr Buffer; }
+    [StructLayout(LayoutKind.Sequential)]
+    private struct ObjectAttributes
+    {
+        public uint Length;
+        public IntPtr RootDirectory, ObjectName;
+        public uint Attributes;
+        public IntPtr SecurityDescriptor, SecurityQualityOfService;
+    }
+    [StructLayout(LayoutKind.Sequential)]
+    private struct IoStatus { public IntPtr Status; public UIntPtr Information; }
+    [DllImport("ntdll.dll")]
+    private static extern int NtCreateFile(out IntPtr handle, uint access,
+        ref ObjectAttributes attributes, out IoStatus io, IntPtr allocation,
+        uint fileAttributes, uint share, uint disposition, uint options, IntPtr ea, uint eaSize);
+    [DllImport("ntdll.dll")]
+    private static extern uint RtlNtStatusToDosError(int status);
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool ReadFile(SafeFileHandle handle, byte[] buffer, uint size,
+        out uint read, IntPtr overlapped);
+
+    public sealed class RelativeReadObservation
+    {
+        public string NtStatusHex { get; set; }
+        public uint OpenWin32Error { get; set; }
+        public int ReadWin32Error { get; set; }
+        public uint BytesRead { get; set; }
+        public bool SentinelMatched { get; set; }
+    }
 
     public static SafeAccessTokenHandle Logon(string name, SecureString password)
     {
@@ -102,9 +133,14 @@ public static class Dss037IdentityNative
 
     public static SafeFileHandle Open(SafeAccessTokenHandle token, string path, uint access)
     {
+        return Open(token, path, access, 3);
+    }
+
+    public static SafeFileHandle Open(SafeAccessTokenHandle token, string path, uint access, uint share)
+    {
         return WindowsIdentity.RunImpersonated(token, () =>
         {
-            SafeFileHandle handle = CreateFileW(path, access, 3, IntPtr.Zero, 3, 0x02200000, IntPtr.Zero);
+            SafeFileHandle handle = CreateFileW(path, access, share, IntPtr.Zero, 3, 0x02200000, IntPtr.Zero);
             if (handle.IsInvalid)
             {
                 int error = Marshal.GetLastWin32Error();
@@ -112,6 +148,63 @@ public static class Dss037IdentityNative
                 throw new Win32Exception(error);
             }
             return handle;
+        });
+    }
+
+    public static RelativeReadObservation RelativeRead(SafeAccessTokenHandle token,
+        SafeFileHandle parent, string name, string expected)
+    {
+        if (String.IsNullOrEmpty(name) || name.IndexOfAny(new char[] { '\\', '/', ':', '\0' }) >= 0 ||
+            name == "." || name == ".." || name.Length > 255)
+            throw new ArgumentException("Single fixture component required.");
+        return WindowsIdentity.RunImpersonated(token, () =>
+        {
+            bool retained = false;
+            IntPtr text = IntPtr.Zero, unicode = IntPtr.Zero;
+            try
+            {
+                parent.DangerousAddRef(ref retained);
+                text = Marshal.StringToHGlobalUni(name);
+                UnicodeName value = new UnicodeName { Length = checked((ushort)(name.Length * 2)),
+                    MaximumLength = checked((ushort)((name.Length + 1) * 2)), Buffer = text };
+                unicode = Marshal.AllocHGlobal(Marshal.SizeOf<UnicodeName>());
+                Marshal.StructureToPtr(value, unicode, false);
+                ObjectAttributes attributes = new ObjectAttributes {
+                    Length = (uint)Marshal.SizeOf<ObjectAttributes>(), RootDirectory = parent.DangerousGetHandle(),
+                    ObjectName = unicode, Attributes = 0x40 };
+                IoStatus io;
+                IntPtr raw;
+                // Same access/options as the P1 native OpenFile probe; no pathname reconstruction.
+                int status = NtCreateFile(out raw, 0x100081, ref attributes, out io,
+                    IntPtr.Zero, 0, 1, 1, 0x200060, IntPtr.Zero, 0);
+                var result = new RelativeReadObservation {
+                    NtStatusHex = "0x" + unchecked((uint)status).ToString("X8"),
+                    OpenWin32Error = status < 0 ? RtlNtStatusToDosError(status) : 0 };
+                if (status < 0) return result;
+                using (var file = new SafeFileHandle(raw, true))
+                {
+                    byte[] buffer = new byte[256];
+                    try
+                    {
+                        uint read;
+                        if (!ReadFile(file, buffer, (uint)buffer.Length, out read, IntPtr.Zero))
+                            result.ReadWin32Error = Marshal.GetLastWin32Error();
+                        else
+                        {
+                            result.BytesRead = read;
+                            result.SentinelMatched = System.Text.Encoding.UTF8.GetString(buffer, 0, (int)read) == expected;
+                        }
+                    }
+                    finally { Array.Clear(buffer, 0, buffer.Length); }
+                }
+                return result;
+            }
+            finally
+            {
+                if (unicode != IntPtr.Zero) Marshal.FreeHGlobal(unicode);
+                if (text != IntPtr.Zero) Marshal.FreeHGlobal(text);
+                if (retained) parent.DangerousRelease();
+            }
         });
     }
 
