@@ -36,3 +36,15 @@ The three-platform CI matrix records actual toolchain/architecture. Native tests
 use fresh system-temp fixtures, retained for inspection, and no application data.
 POSIX tests also use the standard mkfifo utility to verify nonblocking rejection.
 See [P1 scope and evidence](../../docs/development/DEBT_037_NATIVE_P1.md).
+
+## Experimental native R1
+
+The private addon additionally exposes named `captureRootChain` and `inspectChain`
+operations, using existing `close`. A captured chain retains the anchor and every
+directory opened relative to its predecessor. It rejects ancestor/final links and
+reports structural facts with `admitted: false`; it cannot be used as a P1 root or
+file capability. The public package exports and API/Worker routes are unchanged.
+
+Whole-chain capture is not ACL/effective-rights admission, mount qualification,
+relocation prevention or mutation safety. See
+[R1 scope and evidence](../../docs/development/DEBT_037_R1_CAPTURED_CHAIN.md).

@@ -11,6 +11,7 @@
  * 🧠 Responsibilities:
  * • Prevents copying and transfers handle ownership explicitly.
  * • Defines Node-independent technical operations for the prototype.
+ * • Retains whole captured directory chains without claiming security admission.
  *
  * 🏗️ Architecture:
  * Private cross-platform infrastructure contract; no application or Node dependencies.
@@ -27,6 +28,7 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <vector>
 #if !defined(_WIN32) && !defined(__linux__) && !defined(__APPLE__)
 #error "Storage native P1 supports only Windows, Linux and macOS"
 #endif
@@ -59,4 +61,18 @@ void ValidateComponent(const std::string& name);
 std::shared_ptr<NativeObject> OpenRoot(const std::string& path);
 std::shared_ptr<NativeObject> OpenFile(const NativeObject& root, const std::string& name);
 Metadata Inspect(const NativeObject& object);
+struct RootChainPlan { std::string anchor; std::vector<std::string> components; };
+RootChainPlan PlanRootChain(const std::string& path);
+class NativeChain {
+ public:
+  explicit NativeChain(std::vector<std::shared_ptr<NativeObject>> components)
+      : components_(std::move(components)) {}
+  NativeChain(const NativeChain&) = delete;
+  NativeChain& operator=(const NativeChain&) = delete;
+  const std::vector<std::shared_ptr<NativeObject>>& components() const noexcept { return components_; }
+ private:
+  std::vector<std::shared_ptr<NativeObject>> components_;
+};
+std::shared_ptr<NativeChain> CaptureRootChain(const std::string& path);
+std::uint32_t InspectChain(const NativeChain& chain);
 }  // namespace dss::storage::probe
