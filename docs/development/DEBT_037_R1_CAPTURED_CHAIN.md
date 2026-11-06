@@ -100,6 +100,30 @@ No sleep, timeout change, platform skip or relaxed descriptor bound is added.
 Native implementation is unchanged. New phase observations must establish what
 happened; this correction does not presume the cause of the extra descriptor.
 
+On phase-fixture head `4f7183b`,
+[macOS job127877119618](https://github.com/clearfixx/dss-universe/actions/runs/42213335463/job/127877119618)
+passed20/20 and reported:
+
+| Phase                         | Matching descriptors |
+| ----------------------------- | -------------------- |
+| Before Worker                 | 3                    |
+| Worker ready, before capture  | 4                    |
+| After capture of11 components | 15                   |
+| After Worker teardown         | 3                    |
+
+The extra observed descriptor therefore appeared before R1 capture in this
+run. Native capture added exactly11, and teardown restored the original3. This
+does not identify a particular Node/macOS internal subsystem or prove absence
+of all possible leaks; it explains why a pre-Worker baseline was wrong for the
+capture-only delta. Both exact assertions remain. The original19/20 result is
+not relabeled as passing evidence.
+
+[Linux job127877119945](https://github.com/clearfixx/dss-universe/actions/runs/42213335463/job/127877119945)
+also passed20/20, with phases0 → 0 → 6 → 0 for6 components. Windows phase-fixture
+tests passed20/20 locally; final three-OS CI and a fresh final-head full gate
+remain required. The prior local gate was stopped for this fixture correction
+and is preserved as incomplete, not a passing full gate.
+
 Related: [accepted complete runtime boundary](DEBT_037_RUNTIME_BOUNDARY_DESIGN.md),
 [parent coordination protocol](DEBT_037_P2_PROTOCOL.md) and
 [Windows historical-handle matrix](DEBT_037_RELATIVE_HANDLE_PROOF.md).
