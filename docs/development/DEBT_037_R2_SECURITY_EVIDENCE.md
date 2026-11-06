@@ -67,8 +67,13 @@ and previous 20 tests) and `node_modules/.cache/debt037-r2-tests-network.log`
 (28 tests). The preceding test command could not start because sandbox Corepack
 DNS failed; its separate log is retained, not counted as a test run.
 
-Three-platform CI and the final full quality gate are pending. This document is
-not acceptance evidence until those results are recorded on the reviewed head.
+R2 was accepted and merged as [PR131](https://github.com/clearfixx/dss-universe/pull/131),
+merge `64c767e`. Exact implementation head `caa6995` passed CI8/8 and native28/28
+on Windows/Linux/macOS. Local full gate exited0 on that same head: coverage8/8
+(API1466/1466), E2E688/688 in64 suites without pending/todo, build6/6 and Web15/15
+with retries0. The run included confirmed Windows sleep13:04:42Z–18:22:36Z on
+2026-11-06 and completed after resume; it was not uninterrupted. The PR records
+the run IDs, timestamps and E2E JSON hash. Acceptance does not close DEBT-037/D7.
 
 ## Remaining physical-containment work
 
