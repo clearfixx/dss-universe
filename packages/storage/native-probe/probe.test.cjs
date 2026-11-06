@@ -11,6 +11,7 @@
  * 🧠 Responsibilities:
  * • Exercises rejected arguments, links and closed/forged capabilities.
  * • Checks in-flight ownership, failure cleanup and environment teardown.
+ * • Verifies R1 ancestor-link refusal and whole-chain resource retention.
  *
  * 🏗️ Architecture:
  * Opt-in Node test runner using actual OS objects, without application services.
@@ -35,9 +36,10 @@ const {
   readdirSync,
   statSync,
   fstatSync,
+  realpathSync,
 } = require("node:fs");
 const { tmpdir } = require("node:os");
-const { join } = require("node:path");
+const { join, parse, sep } = require("node:path");
 const { setImmediate: nextTurn } = require("node:timers/promises");
 const { Worker } = require("node:worker_threads");
 const test = require("node:test");
@@ -58,13 +60,283 @@ const nativeError = (error) => /^ERR_STORAGE_NATIVE_/.test(error.code);
 
 test("prototype exports are explicit and public portable exports remain isolated", () => {
   assert.deepEqual(Object.getOwnPropertyNames(probe).sort(), [
+    "captureRootChain",
     "close",
     "inspect",
+    "inspectChain",
     "openFile",
     "openRoot",
   ]);
   const manifest = require("../package.json");
   assert.deepEqual(Object.keys(manifest.exports), ["."]);
+});
+
+function chainFixture() {
+  // Canonicalization is fixture setup only (macOS temp paths can contain /var aliases).
+  // Capture itself must reject, rather than resolve, caller-supplied symlinks.
+  const arena = realpathSync(mkdtempSync(join(tmpdir(), "dss-native-r1-")));
+  const root = join(arena, "uploads");
+  const nested = join(root, "DSS-π", "nested");
+  const outside = join(arena, "outside");
+  mkdirSync(nested, { recursive: true });
+  mkdirSync(outside);
+  writeFileSync(join(outside, "sentinel.txt"), "SYNTHETIC OUTSIDE");
+  return { arena, root, nested, outside };
+}
+
+const expectedComponents = (path) =>
+  1 + path.slice(parse(path).root.length).split(sep).filter(Boolean).length;
+
+test("R1 captures the whole canonical chain with opaque, non-admitted structural facts", async () => {
+  const paths = chainFixture();
+  const chain = await probe.captureRootChain(paths.nested);
+  try {
+    assert.deepEqual(Object.getOwnPropertyNames(chain), []);
+    assert.equal(JSON.stringify(chain), "{}");
+    assert.deepEqual(await probe.inspectChain(chain), {
+      kind: "captured-chain",
+      components: expectedComponents(paths.nested),
+      admitted: false,
+    });
+    assert.throws(() => probe.inspect(chain), {
+      code: "ERR_STORAGE_NATIVE_CAPABILITY_KIND",
+    });
+    assert.throws(() => probe.openFile(chain, "sample"), {
+      code: "ERR_STORAGE_NATIVE_CAPABILITY_KIND",
+    });
+  } finally {
+    probe.close(chain);
+  }
+  for (const path of [parse(paths.nested).root, paths.nested + sep]) {
+    const captured = await probe.captureRootChain(path);
+    try {
+      assert.equal(
+        (await probe.inspectChain(captured)).components,
+        path === parse(paths.nested).root
+          ? 1
+          : expectedComponents(paths.nested),
+      );
+    } finally {
+      probe.close(captured);
+    }
+  }
+});
+
+test("R1 rejects malformed whole plans before a missing prefix can cause IO failure", async () => {
+  const paths = chainFixture();
+  const invalid = [
+    "",
+    "relative/root",
+    paths.root + sep + "missing" + sep + ".." + sep + "target",
+    paths.root + sep + "." + sep + "target",
+    paths.root + sep + sep + "target",
+    paths.root + "\0tail",
+  ];
+  if (process.platform === "win32")
+    invalid.push(
+      "C:relative",
+      "\\\\server\\share",
+      paths.root + "\\file:stream",
+    );
+  else invalid.push("//ambiguous/root");
+  for (const path of invalid) {
+    await assert.rejects(probe.captureRootChain(path), {
+      code: "ERR_STORAGE_NATIVE_ROOT_PLAN",
+    });
+  }
+  assert.throws(() => probe.captureRootChain(), {
+    code: "ERR_STORAGE_NATIVE_ARGUMENTS",
+  });
+  assert.throws(() => probe.captureRootChain(paths.root, "extra"), {
+    code: "ERR_STORAGE_NATIVE_ARGUMENTS",
+  });
+  assert.throws(() => probe.captureRootChain(7), {
+    code: "ERR_STORAGE_NATIVE_STRING",
+  });
+});
+
+test("R1 rejects ancestor and final links without reading outside and releases partial captures", async () => {
+  const paths = chainFixture();
+  mkdirSync(join(paths.outside, "nested"));
+  const linked = join(paths.root, "linked");
+  symlinkSync(
+    paths.outside,
+    linked,
+    process.platform === "win32" ? "junction" : "dir",
+  );
+  for (const path of [linked, join(linked, "nested")]) {
+    await assert.rejects(probe.captureRootChain(path), nativeError);
+  }
+  assert.equal(
+    readFileSync(join(paths.outside, "sentinel.txt"), "utf8"),
+    "SYNTHETIC OUTSIDE",
+  );
+  renameSync(linked, join(paths.root, "rejected-link-moved"));
+  renameSync(paths.root, join(paths.arena, "released-parents"));
+});
+
+test("R1 missing and non-directory components release all retained resources", async () => {
+  const paths = chainFixture();
+  writeFileSync(join(paths.root, "not-directory"), "FILE");
+  const census =
+    process.platform === "linux"
+      ? "/proc/self/fd"
+      : process.platform === "darwin"
+        ? "/dev/fd"
+        : null;
+  const before = census ? readdirSync(census).length : null;
+  for (let index = 0; index < 32; index++) {
+    await assert.rejects(
+      probe.captureRootChain(join(paths.nested, "missing")),
+      nativeError,
+    );
+    await assert.rejects(
+      probe.captureRootChain(join(paths.root, "not-directory", "nested")),
+      nativeError,
+    );
+  }
+  if (census) assert.equal(readdirSync(census).length, before);
+  renameSync(paths.root, join(paths.arena, "after-failed-capture"));
+});
+
+test("R1 chain kinds, forged capabilities and logical close stay isolated", async () => {
+  const paths = chainFixture();
+  const root = await probe.openRoot(paths.root);
+  const chain = await probe.captureRootChain(paths.nested);
+  try {
+    assert.throws(() => probe.inspectChain(root), {
+      code: "ERR_STORAGE_NATIVE_CAPABILITY_KIND",
+    });
+    for (const fake of [{}, null, Object.create(chain), new Proxy(chain, {})]) {
+      assert.throws(() => probe.inspectChain(fake), {
+        code: "ERR_STORAGE_NATIVE_CAPABILITY",
+      });
+    }
+    assert.throws(() => probe.inspectChain(), {
+      code: "ERR_STORAGE_NATIVE_ARGUMENTS",
+    });
+    const accepted = probe.inspectChain(chain);
+    probe.close(chain);
+    probe.close(chain);
+    assert.throws(() => probe.inspectChain(chain), {
+      code: "ERR_STORAGE_NATIVE_CAPABILITY_CLOSED",
+    });
+    assert.equal((await accepted).components, expectedComponents(paths.nested));
+  } finally {
+    probe.close(chain);
+    probe.close(root);
+  }
+  renameSync(paths.root, join(paths.arena, "after-inflight-close"));
+});
+
+test("R1 keeps platform root spelling separate from portable key policy", async () => {
+  const paths = chainFixture();
+  const path =
+    process.platform === "win32"
+      ? paths.nested.replaceAll("\\", "/")
+      : join(paths.root, "host:root\\name");
+  if (process.platform !== "win32") mkdirSync(path);
+  const chain = await probe.captureRootChain(path);
+  try {
+    assert.equal((await probe.inspectChain(chain)).admitted, false);
+  } finally {
+    probe.close(chain);
+  }
+});
+
+test("R1 environment teardown releases the complete captured ancestor chain", async (t) => {
+  const paths = chainFixture();
+  const census =
+    process.platform === "linux"
+      ? "/proc/self/fd"
+      : process.platform === "darwin"
+        ? "/dev/fd"
+        : null;
+  const prefixes = [parse(paths.nested).root];
+  for (const component of paths.nested.slice(prefixes[0].length).split(sep)) {
+    prefixes.push(join(prefixes.at(-1), component));
+  }
+  const targets = prefixes.map((path) => statSync(path, { bigint: true }));
+  const countTarget = () =>
+    readdirSync(census).filter((name) => {
+      if (!/^\d+$/.test(name)) return false;
+      try {
+        const info = fstatSync(Number(name), { bigint: true });
+        return targets.some(
+          (target) => target.dev === info.dev && target.ino === info.ino,
+        );
+      } catch (error) {
+        if (error.code !== "EBADF") throw error;
+        return false;
+      }
+    }).length;
+  const before = census ? countTarget() : null;
+  const worker = new Worker(
+    `
+    const { parentPort, workerData } = require('node:worker_threads');
+    const native = require(workerData.binary);
+    parentPort.once('message', async () => {
+      globalThis.chain = await native.captureRootChain(workerData.root);
+      parentPort.on('message', () => {});
+      parentPort.postMessage(await native.inspectChain(globalThis.chain));
+    });
+    parentPort.postMessage('worker-ready-before-capture');
+  `,
+    { eval: true, workerData: { binary, root: paths.nested } },
+  );
+  t.after(() => worker.terminate());
+  assert.deepEqual(await once(worker, "message"), [
+    "worker-ready-before-capture",
+  ]);
+  // A Worker can own process/runtime descriptors before native capture. Measure
+  // the operation against that phase, then require full teardown to the original baseline.
+  const ready = census ? countTarget() : null;
+  const captured = once(worker, "message");
+  worker.postMessage("capture");
+  assert.deepEqual(await captured, [
+    {
+      kind: "captured-chain",
+      components: expectedComponents(paths.nested),
+      admitted: false,
+    },
+  ]);
+  if (census) {
+    const afterCapture = countTarget();
+    console.info(
+      JSON.stringify({
+        kind: "dss.native.r1.descriptor-phases",
+        platform: process.platform,
+        beforeWorker: before,
+        workerReady: ready,
+        afterCapture,
+        chainComponents: expectedComponents(paths.nested),
+      }),
+    );
+    assert.equal(afterCapture, ready + expectedComponents(paths.nested));
+  } else {
+    // Do not try to rename system ancestors; every synthetic captured ancestor
+    // must be pinned, not only the final directory.
+    for (const path of prefixes.filter(
+      (path) => path === paths.arena || path.startsWith(paths.arena + sep),
+    )) {
+      assert.throws(() => renameSync(path, path + "-held"));
+    }
+  }
+  await worker.terminate();
+  await nextTurn();
+  if (census) {
+    const afterTeardown = countTarget();
+    console.info(
+      JSON.stringify({
+        kind: "dss.native.r1.teardown-baseline",
+        platform: process.platform,
+        beforeWorker: before,
+        afterTeardown,
+      }),
+    );
+    assert.equal(afterTeardown, before);
+  }
+  renameSync(paths.root, join(paths.arena, "released-chain"));
 });
 
 test("opens opaque root/file resources and describes their actual OS metadata", async () => {

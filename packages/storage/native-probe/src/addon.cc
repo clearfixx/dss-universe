@@ -12,6 +12,7 @@
  * • Validates JS callers before accessing wrapped native state.
  * • Pins resources until in-flight work settles and finalizes unused ownership.
  * • Exposes metadata without raw descriptors or private paths.
+ * • Keeps R1 captured chains distinct from P1 single-object capabilities.
  *
  * 🏗️ Architecture:
  * Experimental infrastructure bridge outside the public package exports.
@@ -30,8 +31,8 @@
 namespace dss::storage::probe {
 namespace {
 const napi_type_tag kCapabilityTag {0x44535353544f5241ULL, 0x4745503143415031ULL};
-struct Envelope { std::shared_ptr<NativeObject> resource; };
-enum class Operation { OpenRoot, OpenFile, Inspect };
+struct Envelope { std::shared_ptr<NativeObject> resource; std::shared_ptr<NativeChain> chain; };
+enum class Operation { OpenRoot, OpenFile, Inspect, CaptureRootChain, InspectChain };
 struct Work {
   Operation operation;
   napi_async_work work = nullptr;
@@ -39,6 +40,8 @@ struct Work {
   std::string text;
   std::shared_ptr<NativeObject> resource;
   std::shared_ptr<NativeObject> result;
+  std::shared_ptr<NativeChain> chain;
+  std::uint32_t chain_components = 0;
   Metadata metadata {Kind::Root, 0, 0};
   const char* error = nullptr;
   std::uint32_t os_code = 0;
@@ -60,8 +63,9 @@ napi_value ErrorValue(napi_env env, const char* code, std::uint32_t os_code) {
   return error;
 }
 void Finalize(napi_env, void* data, void*) { delete static_cast<Envelope*>(data); }
-napi_value Wrap(napi_env env, const std::shared_ptr<NativeObject>& resource) {
-  std::unique_ptr<Envelope> slot(new (std::nothrow) Envelope {resource});
+napi_value Wrap(napi_env env, const std::shared_ptr<NativeObject>& resource,
+                const std::shared_ptr<NativeChain>& chain = {}) {
+  std::unique_ptr<Envelope> slot(new (std::nothrow) Envelope {resource, chain});
   if (!slot) { napi_throw_error(env, "ERR_STORAGE_NATIVE_MEMORY", "Native resource allocation failed."); return nullptr; }
   napi_value object;
   if (!Check(env, napi_create_object(env, &object)) ||
@@ -115,8 +119,33 @@ bool Arguments(napi_env env, napi_callback_info info, std::size_t wanted, napi_v
 std::shared_ptr<NativeObject> Live(napi_env env, napi_value object) {
   Envelope* slot = Unwrap(env, object);
   if (!slot) return {};
+  if (slot->chain) {
+    napi_throw_type_error(env, "ERR_STORAGE_NATIVE_CAPABILITY_KIND", "Expected a single-object capability.");
+    return {};
+  }
   if (!slot->resource) napi_throw_error(env, "ERR_STORAGE_NATIVE_CAPABILITY_CLOSED", "Native probe capability is closed.");
   return slot->resource;
+}
+std::shared_ptr<NativeChain> LiveChain(napi_env env, napi_value object) {
+  Envelope* slot = Unwrap(env, object);
+  if (!slot) return {};
+  if (slot->resource) {
+    napi_throw_type_error(env, "ERR_STORAGE_NATIVE_CAPABILITY_KIND", "Expected a captured-chain capability.");
+    return {};
+  }
+  if (!slot->chain) napi_throw_error(env, "ERR_STORAGE_NATIVE_CAPABILITY_CLOSED", "Native chain capability is closed.");
+  return slot->chain;
+}
+napi_value ChainValue(napi_env env, std::uint32_t components) {
+  napi_value result, kind, count, admitted;
+  if (!Check(env, napi_create_object(env, &result)) ||
+      !Check(env, napi_create_string_utf8(env, "captured-chain", NAPI_AUTO_LENGTH, &kind)) ||
+      !Check(env, napi_create_uint32(env, components, &count)) ||
+      !Check(env, napi_get_boolean(env, false, &admitted)) ||
+      !Check(env, napi_set_named_property(env, result, "kind", kind)) ||
+      !Check(env, napi_set_named_property(env, result, "components", count)) ||
+      !Check(env, napi_set_named_property(env, result, "admitted", admitted))) return nullptr;
+  return result;
 }
 napi_value MetadataValue(napi_env env, const Metadata& metadata) {
   napi_value result, kind, size, links;
@@ -136,6 +165,8 @@ void Execute(napi_env, void* data) {
       case Operation::OpenRoot: work.result = OpenRoot(work.text); break;
       case Operation::OpenFile: work.result = OpenFile(*work.resource, work.text); break;
       case Operation::Inspect: work.metadata = Inspect(*work.resource); break;
+      case Operation::CaptureRootChain: work.chain = CaptureRootChain(work.text); break;
+      case Operation::InspectChain: work.chain_components = InspectChain(*work.chain); break;
     }
   } catch (const NativeError& error) { work.error = error.code; work.os_code = error.os_code;
   } catch (...) { work.error = "ERR_STORAGE_NATIVE_INTERNAL"; }
@@ -155,8 +186,11 @@ void Complete(napi_env env, napi_status status, void* data) {
     Reject(env, work->deferred, work->error ? work->error : "ERR_STORAGE_NATIVE_CANCELLED", work->os_code);
     return;
   }
-  napi_value result = work->operation == Operation::Inspect
-      ? MetadataValue(env, work->metadata) : Wrap(env, work->result);
+  napi_value result;
+  if (work->operation == Operation::Inspect) result = MetadataValue(env, work->metadata);
+  else if (work->operation == Operation::InspectChain) result = ChainValue(env, work->chain_components);
+  else if (work->operation == Operation::CaptureRootChain) result = Wrap(env, {}, work->chain);
+  else result = Wrap(env, work->result);
   if (!result) Reject(env, work->deferred, "ERR_STORAGE_NATIVE_BINDING", 0);
   else napi_resolve_deferred(env, work->deferred, result);
 }
@@ -213,23 +247,46 @@ napi_value InspectCallback(napi_env env, napi_callback_info info) {
     return Queue(env, std::move(work));
   });
 }
+napi_value CaptureRootChainCallback(napi_env env, napi_callback_info info) {
+  return Guard(env, [&]() -> napi_value {
+    napi_value args[2];
+    if (!Arguments(env, info, 1, args)) return nullptr;
+    auto work = std::make_unique<Work>(Operation::CaptureRootChain);
+    if (!String(env, args[0], work->text)) return nullptr;
+    return Queue(env, std::move(work));
+  });
+}
+napi_value InspectChainCallback(napi_env env, napi_callback_info info) {
+  return Guard(env, [&]() -> napi_value {
+    napi_value args[2];
+    if (!Arguments(env, info, 1, args)) return nullptr;
+    auto chain = LiveChain(env, args[0]);
+    if (!chain) return nullptr;
+    auto work = std::make_unique<Work>(Operation::InspectChain);
+    work->chain = std::move(chain);
+    return Queue(env, std::move(work));
+  });
+}
 napi_value CloseCallback(napi_env env, napi_callback_info info) {
   napi_value args[2], result;
   if (!Arguments(env, info, 1, args)) return nullptr;
   Envelope* slot = Unwrap(env, args[0]);
   if (!slot) return nullptr;
   slot->resource.reset();
+  slot->chain.reset();
   return Check(env, napi_get_undefined(env, &result)) ? result : nullptr;
 }
 }  // namespace
 napi_value Initialize(napi_env env, napi_value exports) {
   const napi_property_descriptor descriptors[] = {
+    {"captureRootChain", nullptr, CaptureRootChainCallback, nullptr, nullptr, nullptr, napi_default, nullptr},
+    {"inspectChain", nullptr, InspectChainCallback, nullptr, nullptr, nullptr, napi_default, nullptr},
     {"openRoot", nullptr, OpenRootCallback, nullptr, nullptr, nullptr, napi_default, nullptr},
     {"openFile", nullptr, OpenFileCallback, nullptr, nullptr, nullptr, napi_default, nullptr},
     {"inspect", nullptr, InspectCallback, nullptr, nullptr, nullptr, napi_default, nullptr},
     {"close", nullptr, CloseCallback, nullptr, nullptr, nullptr, napi_default, nullptr}
   };
-  return Check(env, napi_define_properties(env, exports, 4, descriptors)) ? exports : nullptr;
+  return Check(env, napi_define_properties(env, exports, 6, descriptors)) ? exports : nullptr;
 }
 }  // namespace dss::storage::probe
 NAPI_MODULE(NODE_GYP_MODULE_NAME, dss::storage::probe::Initialize)

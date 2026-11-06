@@ -11,6 +11,7 @@
  * 🧠 Responsibilities:
  * • Validates string conversion and opens relative leaves without following reparse points.
  * • Inspects object type/link metadata and closes handles on failure.
+ * • Captures each R1 directory relative to its retained predecessor.
  *
  * 🏗️ Architecture:
  * Private Windows adapter; no Node, Media or application dependencies.
@@ -105,5 +106,40 @@ std::shared_ptr<NativeObject> OpenFile(const NativeObject& root, const std::stri
   NativeObject resource(reinterpret_cast<std::intptr_t>(handle), Kind::File);
   Inspect(resource);
   return std::make_shared<NativeObject>(std::move(resource));
+}
+
+std::shared_ptr<NativeChain> CaptureRootChain(const std::string& path) {
+  const auto plan = PlanRootChain(path);
+  // Validate all UTF-8/component lengths before opening even the drive anchor.
+  std::vector<std::wstring> names;
+  for (const auto& name : plan.components) {
+    auto wide = Wide(name);
+    if (wide.size() > (std::numeric_limits<USHORT>::max() / sizeof(wchar_t)) - 1)
+      throw NativeError("ERR_STORAGE_NATIVE_ROOT_PLAN");
+    names.push_back(std::move(wide));
+  }
+  std::vector<std::shared_ptr<NativeObject>> components;
+  components.push_back(OpenRoot(plan.anchor));
+  for (auto& name : names) {
+    UNICODE_STRING text {};
+    text.Length = static_cast<USHORT>(name.size() * sizeof(wchar_t));
+    text.MaximumLength = static_cast<USHORT>(text.Length + sizeof(wchar_t));
+    text.Buffer = name.data();
+    OBJECT_ATTRIBUTES attributes {};
+    attributes.Length = sizeof(attributes);
+    attributes.RootDirectory = Handle(*components.back());
+    attributes.ObjectName = &text;
+    attributes.Attributes = 0x40;
+    IO_STATUS_BLOCK io {};
+    HANDLE handle = INVALID_HANDLE_VALUE;
+    const NTSTATUS status = NtCreateFile(&handle, FILE_LIST_DIRECTORY | FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+        &attributes, &io, nullptr, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, 1,
+        0x00200000 | 0x00000020 | 0x00000001, nullptr, 0);
+    if (status < 0) throw NativeError("ERR_STORAGE_NATIVE_IO", static_cast<std::uint32_t>(status));
+    NativeObject resource(reinterpret_cast<std::intptr_t>(handle), Kind::Root);
+    Inspect(resource);
+    components.push_back(std::make_shared<NativeObject>(std::move(resource)));
+  }
+  return std::make_shared<NativeChain>(std::move(components));
 }
 }  // namespace dss::storage::probe

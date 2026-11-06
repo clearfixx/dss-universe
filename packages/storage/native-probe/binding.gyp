@@ -10,7 +10,7 @@
   "targets": [
     {
       "target_name": "dss_storage_probe",
-      "sources": ["src/addon.cc", "src/native-object.cc"],
+      "sources": ["src/addon.cc", "src/native-object.cc", "src/root-chain.cc"],
       "defines": ["NAPI_VERSION=8"],
       "cflags_cc!": ["-fno-exceptions"],
       "cflags_cc": ["-Wall", "-Wextra", "-Werror"],
