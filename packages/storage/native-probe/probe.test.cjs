@@ -61,9 +61,11 @@ const nativeError = (error) => /^ERR_STORAGE_NATIVE_/.test(error.code);
 test("prototype exports are explicit and public portable exports remain isolated", () => {
   assert.deepEqual(Object.getOwnPropertyNames(probe).sort(), [
     "captureRootChain",
+    "captureSecurityChain",
     "close",
     "inspect",
     "inspectChain",
+    "inspectSecurityChain",
     "openFile",
     "openRoot",
   ]);

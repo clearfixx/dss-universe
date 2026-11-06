@@ -25,6 +25,10 @@ import { configDefaults, defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    exclude: [...configDefaults.exclude, "native-probe/probe.test.cjs"],
+    exclude: [
+      ...configDefaults.exclude,
+      "native-probe/probe.test.cjs",
+      "native-probe/security.test.cjs",
+    ],
   },
 });

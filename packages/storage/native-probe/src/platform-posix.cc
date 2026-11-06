@@ -67,7 +67,8 @@ std::shared_ptr<NativeObject> OpenFile(const NativeObject& root, const std::stri
   return std::make_shared<NativeObject>(std::move(resource));
 }
 
-std::shared_ptr<NativeChain> CaptureRootChain(const std::string& path) {
+namespace {
+std::shared_ptr<NativeChain> CaptureChain(const std::string& path, bool security_read) {
   const auto plan = PlanRootChain(path);
   std::vector<std::shared_ptr<NativeObject>> components;
   components.push_back(OpenRoot(plan.anchor));
@@ -79,6 +80,9 @@ std::shared_ptr<NativeChain> CaptureRootChain(const std::string& path) {
     Inspect(resource);
     components.push_back(std::make_shared<NativeObject>(std::move(resource)));
   }
-  return std::make_shared<NativeChain>(std::move(components));
+  return std::make_shared<NativeChain>(std::move(components), security_read);
 }
+}
+std::shared_ptr<NativeChain> CaptureRootChain(const std::string& path) { return CaptureChain(path, false); }
+std::shared_ptr<NativeChain> CaptureSecurityChain(const std::string& path) { return CaptureChain(path, true); }
 }  // namespace dss::storage::probe
