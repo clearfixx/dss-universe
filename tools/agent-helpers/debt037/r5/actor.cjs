@@ -47,6 +47,7 @@ function denied(action) {
   assert.throws(action, (error) => ["EACCES", "EPERM"].includes(error.code));
 }
 async function run() {
+  stage = "identity";
   if (process.platform !== "win32") {
     assert.notEqual(process.getuid(), 0);
     assert.notEqual(process.getgid(), 0);
@@ -60,13 +61,17 @@ async function run() {
     denied(() => process.setuid(0));
   }
   if (actor === "attacker") {
+    stage = "create-foreign";
     fs.mkdirSync(join(arena, "foreign"), { mode: 0o755 });
   } else {
+    stage = "load-addon";
     probe = require(binary);
     for (const name of names) fs.mkdirSync(join(arena, name), { mode: 0o700 });
     fs.writeFileSync(join(arena, "control", "secret"), "SYNTHETIC PRIVATE");
-    for (const name of [...names, "foreign"])
+    for (const name of [...names, "foreign"]) {
+      stage = "capture-" + name.replace("/", "-");
       chains.set(name, await probe.captureSecurityChain(join(arena, name)));
+    }
   }
   const socket = net.connect({ host: "127.0.0.1", port: Number(portText) });
   activeSocket = socket;
@@ -182,11 +187,28 @@ async function run() {
   await once(socket, "close");
   input.close();
 }
-run().catch(() => {
+run().catch((error) => {
   const message = JSON.stringify({ kind: "failure", actor, stage }) + "\n";
   if (activeSocket && !activeSocket.destroyed)
     activeSocket.end(message, () => process.exit(1));
   else {
+    const code =
+      typeof error.code === "string" && /^[A-Z_]{2,64}$/.test(error.code)
+        ? error.code
+        : "UNKNOWN";
+    const osCode =
+      Number.isInteger(error.osCode) &&
+      error.osCode >= 0 &&
+      error.osCode <= 0xffffffff
+        ? error.osCode
+        : 0;
+    try {
+      fs.writeFileSync(
+        join(arena, actor + "-failure.json"),
+        JSON.stringify({ stage, code, osCode }),
+        { flag: "wx" },
+      );
+    } catch {}
     process.stderr.write("Ordinary rights actor proof failed during setup.\n");
     process.exit(1);
   }

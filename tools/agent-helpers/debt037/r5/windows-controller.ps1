@@ -35,6 +35,9 @@ $passwords = [Collections.Generic.List[IDisposable]]::new()
 $children = [Collections.Generic.List[IDisposable]]::new()
 $channels = @{}
 $listener = $null
+$stage = 'provision'
+$proofFailed = $false
+$setupOsCode = $null
 try {
     foreach ($prefix in @('r5S-', 'r5A-')) {
         $name = $prefix + $nonce.Substring(0, 10)
@@ -62,6 +65,7 @@ try {
     $serviceSid = $accounts[0].SID.Value
     $attackerSid = $accounts[1].SID.Value
     if ($serviceSid -ceq $attackerSid) { throw 'Distinct identities required.' }
+    $stage = 'prepare-fixtures'
     [IO.Directory]::CreateDirectory($arena) | Out-Null
     $code = [IO.Path]::Combine($arena, 'code')
     $work = [IO.Path]::Combine($arena, 'fixtures')
@@ -84,13 +88,25 @@ try {
     $listener.Start(2)
     $port = $listener.LocalEndpoint.Port
     foreach ($actor in @('attacker', 'service')) {
+        $stage = 'launch-' + $actor
         $index = if ($actor -ceq 'service') { 0 } else { 1 }
         $child = [DssR5Process]::Launch($tokens[$index], $accounts[$index].SID.Value,
             [IO.Path]::Combine($code, 'node.exe'), [IO.Path]::Combine($code, 'actor.cjs'), $port, $nonce,
             $actor, $work, [IO.Path]::Combine($code, 'probe.node'), $arena)
         $children.Add($child)
+        $stage = 'ready-' + $actor
         $pending = $listener.AcceptTcpClientAsync()
-        if (-not $pending.Wait(60000)) { throw 'Actor readiness deadline exceeded.' }
+        if (-not $pending.Wait(60000)) {
+            $diagnostic = [IO.Path]::Combine($work, $actor + '-failure.json')
+            if ([IO.File]::Exists($diagnostic) -and ([IO.FileInfo]::new($diagnostic)).Length -le 1024) {
+                $failure = [IO.File]::ReadAllText($diagnostic) | ConvertFrom-Json
+                if ($failure.stage -cmatch '^[a-z-]{1,48}$' -and $failure.code -cmatch '^[A-Z_]{2,64}$') {
+                    $stage = 'setup-' + $actor + '-' + $failure.stage + '-' + $failure.code.ToLowerInvariant().Replace('_', '-')
+                    if ($failure.osCode -ge 0 -and $failure.osCode -le [uint32]::MaxValue) { $setupOsCode = $failure.osCode }
+                }
+            }
+            throw 'Actor readiness deadline exceeded.'
+        }
         $client = $pending.GetAwaiter().GetResult()
         $stream = $client.GetStream()
         $stream.ReadTimeout = 60000
@@ -104,6 +120,7 @@ try {
         if ($ready.kind -cne 'ready' -or $ready.actor -cne $actor -or $ready.nonce -cne $nonce) { throw 'Actor protocol mismatch.' }
         $channels[$actor] = @{ Client = $client; Reader = $reader; Writer = $writer; Child = $child }
     }
+    $stage = 'configure-acls'
     [Dss037IdentityNative]::Descriptor($work, 'D:P' + $admins + $service + "(A;;FRFX;;;${attackerSid})")
     foreach ($name in @('protected', 'control', 'shared', 'unsafe', 'inherited', 'denied', 'deny-allow', 'parent', 'parent/child')) {
         [Dss037IdentityNative]::Descriptor([IO.Path]::Combine($work, $name), 'D:P' + $admins + $service)
@@ -118,6 +135,7 @@ try {
     [Dss037IdentityNative]::Descriptor([IO.Path]::Combine($work, 'empty'), 'D:P')
     [Dss037IdentityNative]::Descriptor([IO.Path]::Combine($work, 'null'), 'D:NO_ACCESS_CONTROL')
     foreach ($actor in @('service', 'attacker')) {
+        $stage = 'result-' + $actor
         $channel = $channels[$actor]
         $channel.Writer.WriteLine('go')
         $line = $channel.Reader.ReadLine()
@@ -133,6 +151,18 @@ try {
         if ($channel.Child.Finish() -ne 0) { throw 'Ordinary actor failed.' }
         $line
     }
+} catch {
+    $proofFailed = $true
+    $original = $_.Exception.GetBaseException()
+    $code = [int]($original.HResult -band 65535)
+    if ($original -is [ComponentModel.Win32Exception]) { $code = $original.NativeErrorCode }
+    if ($null -ne $setupOsCode) { $code = $setupOsCode }
+    if ($original.Message -cmatch 'Proof process failure at ([a-z-]{1,48}), code ([0-9]{1,10})') {
+        $stage = $Matches[1]; $code = [long]$Matches[2]
+    } elseif ($original.Message -cmatch 'Actor check failed: ([a-z/-]{1,48})') {
+        $stage = 'actor-' + $Matches[1].Replace('/', '-')
+    }
+    [Console]::Error.WriteLine('DSS_R5_FAILURE stage=' + $stage + ' code=' + $code)
 } finally {
     $cleanupFailed = $false
     if ($null -ne $listener) { $listener.Stop() }
@@ -154,3 +184,4 @@ try {
     # No recursive fixture deletion: disposable runner teardown owns the arena.
     if ($cleanupFailed) { throw 'Owned proof cleanup failed; disposable VM teardown remains required.' }
 }
+if ($proofFailed) { exit 1 }

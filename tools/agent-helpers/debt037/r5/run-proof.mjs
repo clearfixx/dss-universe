@@ -79,7 +79,7 @@ if (process.platform === "win32") {
 const records = [];
 const diagnosticText = (child.stderr ?? "").replace(/\x1b\[[0-9;]*m/g, "");
 const windowsFailure = diagnosticText.match(
-  /Proof process failure at ([a-z-]{1,48}), code ([0-9]{1,10})/,
+  /DSS_R5_FAILURE stage=([a-z-]{1,80}) code=([0-9]{1,10})/,
 );
 const posixFailure = diagnosticText.match(
   /failed at ([a-z-]{1,80}) \([A-Za-z]+, errno=(None|[0-9]{1,10})\)/,
