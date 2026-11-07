@@ -46,6 +46,16 @@ jobs:
         env:
           PYTHON: ${{ steps.python.outputs['python-path'] }}
         run: pnpm --filter @dss/storage native:verify
+      - name: Characterize outstanding qualification premises without admission
+        run: node tools/agent-helpers/debt037/r6/observe-existing-boundary.mjs
+      - name: Preserve existing qualification boundary evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qualification-baseline-${{ runner.os }}
+          path: node_modules/.cache/qualification-baseline-*/evidence.json
+          include-hidden-files: true
+          if-no-files-found: warn
       - name: Verify cross-process storage coordination primitives
         run: pnpm storage:coordination:verify
       - name: Prove POSIX ACL contracts with real ordinary identities

@@ -881,11 +881,14 @@ lexical checks as sandbox isolation.
 R5 checkpoint2026-11-07 supersedes the original unanswered-scope wording above:
 the separate ordinary OS writer is in scope and physical protection remains
 mandatory before Phase11. Accepted R1–R4 foundations and PR136's owner/right
-design exist. The private inactive R5 candidate in PR138 now has native43/43 on
-Windows/Linux/macOS and real ordinary-process actor15/15,12/12,14/14 respectively
-at `fa49538`. See [R5 implementation/evidence](DEBT_037_R5_OWNER_RIGHTS.md).
-Final acceptance requires local full-gate receipts, final-head CI and owner
-review; those are tracked in PR138, not inferred from the native checkpoint.
+design exist. Owner accepted the private inactive R5 in PR138 at `94623e0`,
+merged as `1ebfa67`: native43/43 on Windows/Linux/macOS, real ordinary-process
+actor15/15,12/12,14/14 respectively, CI8/8 and exact-head local full gate exit0
+without sleep. See [R5 implementation/evidence](DEBT_037_R5_OWNER_RIGHTS.md)
+and PR138 for final receipts (API E2E688/688, Web15/15 without retries).
+The next [R6 qualification evidence proposal](DEBT_037_R6_QUALIFICATION_PROPOSAL.md)
+defines the still-unproved identity/filesystem premises and a test-only probe
+requiring separate authorization; it does not implement a qualification policy.
 No complete admitted root, operation containment, uploads adoption or joint
 API/Worker activation is claimed; DEBT-037 and D7 remain open.
 
