@@ -1,6 +1,6 @@
 # DEBT-037 R4 — Disposable POSIX ACL contract proof
 
-Status: owner-approved proof-only implementation; measured CI results pending.
+Status: proof-only R4 accepted in PR135 and merged as `6ae392f`.
 Baseline: accepted PR134 / main `48b51ae`. The owner approved the separate C++
 probe and guarded hosted POSIX sudo harness on2026-11-07 local time. This does
 not implement admission policy, repair uploads ACLs, change application data,
@@ -111,6 +111,30 @@ The correction still clears groups and validates every returned GID: Linux
 requires zero entries; Darwin allows at most the exact actor primary GID,
 with no root/unrelated group. Successful readiness records retain those bounded
 facts for every actor. UID/GID matching and inability to regain root remain.
+
+## Final measurement and acceptance
+
+Owner accepted head `9cd38ae`; merge `6ae392f` has the exact same source tree
+`597c459d63b8399eec8824b181fb37aebc194e7b`. Exact-head CI8/8 and local full gate0
+passed; native36/36 on Windows/Linux/macOS, coverage8/8/API1466, E2E688/688 with
+no failed/pending/todo, build6/6 and Web15/15 without retries. Local gate ran
+2026-11-06T23:57:05Z–2026-11-07T00:14:51Z. Earlier failures above remain evidence.
+
+Native CI run42314858746 measured Linux7/7 and Darwin6/6 actor controls and
+successful real EBADF controls. Linux artifact13550073447 JSON SHA-256:
+`E47791AD66413FDF2C79B1588AB55CE22AF14A2FFA2ED13F865FD39A76BB0D09`.
+Darwin artifact13549948642 JSON SHA-256:
+`61B02A8BD725BF2D0301AF78C5DE715A3565F03FC2271B7FF8F53923F34A9668`.
+Actual runtime observations: Node24.18.0; Linux x64 kernel7.0.0-1017-azure;
+Darwin arm64 kernel25.6.0. Reviewed source versions are separate hypotheses.
+
+Darwin fresh and explicit-empty fixtures both produced getter ENOENT, while the
+returned-security metadata differed: omitted versus44 bytes. Named allow/deny
+and inherited controls returned one entry/68 bytes. This does not establish
+portable absence, effective rights or admitted-root policy. The next
+[owner/right design](DEBT_037_OWNER_RIGHTS_POLICY_DESIGN.md) keeps that gate
+explicit. R4 changed no API/Worker, uploads ACL, application data or frontend.
+DEBT-037/D7 remain open; R4 acceptance authorizes no further runtime package.
 
 ## Reviewed sources
 
