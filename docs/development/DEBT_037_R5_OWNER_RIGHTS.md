@@ -2,8 +2,9 @@
 
 Owner authorized implementation from accepted PR136 / main `0c161bbc`.
 This packet implements the private directory-rights part of the
-[owner/right design](DEBT_037_OWNER_RIGHTS_POLICY_DESIGN.md). Verification is
-in progress; packet acceptance and merge have not been requested.
+[owner/right design](DEBT_037_OWNER_RIGHTS_POLICY_DESIGN.md). Final gate receipts
+and packet acceptance are tracked in [PR138](https://github.com/clearfixx/dss-universe/pull/138);
+the implementation checkpoints below do not substitute for that acceptance.
 
 ## Scope and fixed contracts
 
@@ -132,3 +133,35 @@ invocation-owned accounts are still removed. The current-user bootstrap
 preflight is separate from the mandatory distinct-user proof. Socket/readline
 errors are explicitly observed across both emitters; a failed connection must
 reach bounded diagnostics rather than an unhandled event.
+
+## Verified implementation checkpoint
+
+At head `fa495384c785307ffe4f501f9c92097b073823f4`, native workflow
+[42379254885](https://github.com/clearfixx/dss-universe/actions/runs/42379254885)
+is green on all three OS families. Each native suite is43/43 with no skips/todo;
+existing coordination and POSIX R4 controls remain required and passed. The
+Windows current-user bootstrap preflight also passed, separately from the
+credential-launched two-user proof.
+
+| Platform | Actual ordinary processes | Required actor controls | Artifact    | JSON SHA256                                                        |
+| -------- | ------------------------- | ----------------------- | ----------- | ------------------------------------------------------------------ |
+| Windows  | 2                         | 15/15                   | 13577215995 | `2B44A774E43AD179302C6ECB733D0B8CC110367BFB6409811446393B0B6010E1` |
+| Linux    | 2                         | 12/12                   | 13576474523 | `1EF111D9384AB2D31DE10E4734308832DE986CC8738AEB99985B8B11292314B0` |
+| Darwin   | 2                         | 14/14                   | 13577071995 | `C1CBCC8562F5D9942D52B29534F78FA918E3FA1D86D9F41E2FCFFD12E406894C` |
+
+All ZIP digests were checked against GitHub metadata; the bounded inspector
+read the single expected JSON without extracting paths or executing content.
+Every artifact has exitCode0, failure:null and admitted:false. In Windows the
+framework uses the account credentials to create the process; independent
+token queries require the exact expected SID, TokenPrimary and no elevation.
+There is no controller-token or impersonation substitute for the child.
+
+This checkpoint's correction for a fresh runner creates the evidence cache
+parent before the current-user preflight. The earlier ENOENT failed before the
+actual actor proof and is preserved. Prior direct-token READY failures, the
+Windows Node-header download interruption and the initial discovery/fixture
+failures remain historical failures, not evidence of successful tests.
+
+Packet acceptance requires a full local gate and final-head CI after this
+documentation checkpoint, with exact receipts retained in PR138. R5 does not
+close DEBT-037, D7 or the complete pre-Phase11 objective.
