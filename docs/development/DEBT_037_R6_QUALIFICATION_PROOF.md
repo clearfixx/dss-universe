@@ -52,6 +52,16 @@ shows context consistency, not a host/domain trust classification. Missing SDK
 features, permission errors and absent fields remain explicit unresolved facts.
 No UID/GID mapping strings are requested or parsed.
 
+The test-only mount ABI uses the reviewed24-byte request and72-byte response
+prefix. Compile-time checks bind it to installed UAPI definitions when those
+definitions exist. A missing larger SDK struct does not require a new package;
+the syscall ordinal must still come from installed `SYS_`/`__NR_` declarations.
+The bounded Linux build mask reports ordinal(1), unique-ID support(2), native
+mount-basic layout(4) and reviewed prefix(8), making the acquisition gate explicit.
+No string fields or variable buffers are requested. The reviewed kernel copy
+contract supports this fixed prefix; actual returned size/mask/ID still decide
+whether a response can be used.
+
 Darwin reads ownership-ignored, snapshot, read-only and local flags through
 the held descriptor and installed SDK constants. It does not infer absent ACLs,
 unique mount identity, ownership enforcement or APFS operation guarantees from
@@ -127,3 +137,31 @@ activation remain open. DEBT-037 and D7 are not closed by this packet.
 
 These references support query interpretation. They are not proof of the CI
 kernel/SDK's exact implementation or evidence of complete containment.
+
+## Initial real-platform checkpoint
+
+At `8dc62472718c6b5a0a989687acaf746f02c73aac`, native workflow
+[42408636443](https://github.com/clearfixx/dss-universe/actions/runs/42408636443)
+completed on Windows/Linux/macOS. Existing checks remain required; the new
+standalone controls bring the local native suite to48/48 without skips/todo.
+This is not final packet acceptance or a completed local full gate.
+
+| Platform | Proof artifact | Independently measured controls                                                                                                                                                  |
+| -------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Windows  | 13588486902    | Two ordinary primary-token actors; held parent across attacker junction creation; new alias capture refused; handle-bound remote-device flag false on the ordinary local fixture |
+| Linux    | 13588089062    | Verified isolated mount namespace; actual tmpfs/bind/idmapped mounts; mapped owner distinguished; bind/idmapped aliases retain object identity but differ in mount identity      |
+| macOS    | 13588785704    | Two distinct APFS images actually attached with ownership on/off; descriptor ownershipIgnored is respectively false/true and both filesystems differ from the normal fixture     |
+
+ZIP SHA256 values were verified against GitHub metadata before bounded JSON
+inspection, without archive extraction or execution:
+Windows `eb398d331126e8f9e2aa86f1e93cc9080eb85bc79eccc2a23eb796bb90da20d5`;
+Linux `82bdd3747aa39f34db6722d645317f205d50eebe925763b212bc32aab0159023`;
+macOS `e120d364edb62798c8586fb03fbb0d590293ef61b4b0c398db6ce2bb34f5951b`.
+
+Linux mount-basic acquisition was **not compiled** at that checkpoint: its
+unsupported/code38 result is not an observed kernel syscall failure. The next
+change removes dependence on the larger SDK record using the reviewed fixed
+wire prefix above, still requiring installed syscall/unique-ID declarations,
+and records the build facts explicitly. Earlier artifacts are preserved; their
+missing query must not be described as a successful idmap query. Final-head
+three-platform evidence and the complete local gate remain required.

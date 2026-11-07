@@ -11,7 +11,8 @@
  * ===============================================================
  */
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -34,6 +35,23 @@ const executable = resolve(
   "packages/storage/native-probe/build/Release",
   `dss_qualification_proof${process.platform === "win32" ? ".exe" : ""}`,
 );
+const sourceHead = execFileSync("git", ["rev-parse", "HEAD"], {
+  cwd: root,
+  encoding: "utf8",
+  shell: false,
+  windowsHide: true,
+}).trim();
+const sourceTree = execFileSync("git", ["rev-parse", "HEAD^{tree}"], {
+  cwd: root,
+  encoding: "utf8",
+  shell: false,
+  windowsHide: true,
+}).trim();
+assert.match(sourceHead, /^[a-f0-9]{40}$/);
+assert.match(sourceTree, /^[a-f0-9]{40}$/);
+const binarySha256 = createHash("sha256")
+  .update(readFileSync(executable))
+  .digest("hex");
 let child;
 if (process.platform === "win32") {
   child = spawnSync(
@@ -101,6 +119,9 @@ writeFileSync(
   JSON.stringify(
     {
       kind: "qualification-proof",
+      sourceHead,
+      sourceTree,
+      binarySha256,
       platform: process.platform,
       node: process.version,
       exitCode: child.status,

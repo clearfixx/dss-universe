@@ -23,6 +23,7 @@ struct Fact {
   std::uint32_t error = 0;
 };
 struct Evidence {
+  unsigned linux_build_features = 0;
   Fact remote_device, removable_media, ownership_ignored, snapshot, read_only;
   Fact idmapped, mount_bound, namespace_context;
 };

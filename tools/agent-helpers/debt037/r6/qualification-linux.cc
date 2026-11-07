@@ -11,12 +11,14 @@
  * ===============================================================
  */
 #include "qualification-proof.h"
+#include "qualification-linux-abi.h"
 #include <cerrno>
 #include <cstddef>
 #include <fcntl.h>
 #include <linux/mount.h>
 #include <linux/magic.h>
 #include <linux/stat.h>
+#include <asm/unistd.h>
 #include <sys/stat.h>
 #include <sys/vfs.h>
 #include <sys/statvfs.h>
@@ -48,10 +50,16 @@ Fact CompareNamespaces(const NamespaceStamp& before, const NamespaceStamp& after
   return Present(before.user_info.st_dev == after.user_info.st_dev && before.user_info.st_ino == after.user_info.st_ino &&
       before.mount_info.st_dev == after.mount_info.st_dev && before.mount_info.st_ino == after.mount_info.st_ino);
 }
-#if defined(SYS_statmount) && defined(SYS_statx) && defined(STATX_MNT_ID_UNIQUE) && defined(STATMOUNT_MNT_BASIC)
-Fact Decode(const struct statmount& value, std::size_t capacity, std::uint64_t expected, bool idmap) {
-  if (value.size > capacity || value.size < offsetof(struct statmount, mnt_attr) + sizeof(value.mnt_attr) ||
-      !(value.mask & STATMOUNT_MNT_BASIC) || value.mnt_id != expected) return Unavailable(EPROTO);
+#if (defined(SYS_statmount) || defined(__NR_statmount)) && defined(SYS_statx) && defined(STATX_MNT_ID_UNIQUE) && defined(MOUNT_ATTR_IDMAP)
+#define DSS_R6_HAS_MOUNT_QUERY 1
+#if defined(SYS_statmount)
+constexpr long MountSyscall = SYS_statmount;
+#else
+constexpr long MountSyscall = __NR_statmount;
+#endif
+Fact Decode(const MountBasicPrefix& value, std::size_t capacity, std::uint64_t expected, bool idmap) {
+  if (value.size > capacity || value.size < sizeof(MountBasicPrefix) ||
+      !(value.mask & MountBasicMask) || value.mnt_id != expected) return Unavailable(EPROTO);
   return Present(idmap ? (value.mnt_attr & MOUNT_ATTR_IDMAP) != 0 : true);
 }
 bool UniqueMount(int fd, struct statx& value) {
@@ -64,23 +72,32 @@ bool UniqueMount(int fd, struct statx& value) {
 }
 Evidence ObservePlatform(const NativeObject& object) {
   Evidence result;
+  // Installed build facts:1 syscall ordinal,2 unique statx ID,4 native basic layout,8 reviewed wire prefix.
+  result.linux_build_features = 8;
+#if defined(SYS_statmount) || defined(__NR_statmount)
+  result.linux_build_features |= 1;
+#endif
+#if defined(SYS_statx) && defined(STATX_MNT_ID_UNIQUE)
+  result.linux_build_features |= 2;
+#endif
+#if defined(STATMOUNT_MNT_BASIC)
+  result.linux_build_features |= 4;
+#endif
   NamespaceStamp entry;
   const int fd = static_cast<int>(object.handle());
   struct statvfs flags {};
   if (::fstatvfs(fd, &flags) == 0) result.read_only = Present((flags.f_flag & ST_RDONLY) != 0);
   else result.read_only = Unavailable(static_cast<std::uint32_t>(errno));
-#if defined(SYS_statmount) && defined(SYS_statx) && defined(STATX_MNT_ID_UNIQUE) && defined(STATMOUNT_MNT_BASIC)
+#if defined(DSS_R6_HAS_MOUNT_QUERY)
   struct statx before {}, after {};
   if (!UniqueMount(fd, before)) {
     result.mount_bound = result.idmapped = Unavailable(errno ? static_cast<std::uint32_t>(errno) : EOPNOTSUPP);
     NamespaceStamp exit; result.namespace_context = CompareNamespaces(entry, exit); return result;
   }
-  struct mnt_id_req request {};
-  request.size = MNT_ID_REQ_SIZE_VER0;
+  MountRequestV0 request {};
   request.mnt_id = before.stx_mnt_id;
-  request.param = STATMOUNT_MNT_BASIC;
-  struct statmount mount {};
-  if (::syscall(SYS_statmount, &request, &mount, sizeof(mount), 0) != 0) {
+  MountBasicPrefix mount {};
+  if (::syscall(MountSyscall, &request, &mount, sizeof(mount), 0) != 0) {
     result.mount_bound = result.idmapped = Unavailable(static_cast<std::uint32_t>(errno));
     NamespaceStamp exit; result.namespace_context = CompareNamespaces(entry, exit); return result;
   }
@@ -91,21 +108,21 @@ Evidence ObservePlatform(const NativeObject& object) {
   result.mount_bound = Decode(mount, sizeof(mount), before.stx_mnt_id, false);
   result.idmapped = Decode(mount, sizeof(mount), before.stx_mnt_id, true);
 #else
-  result.mount_bound = result.idmapped = Unsupported(ENOSYS);
+  result.mount_bound = result.idmapped = Unsupported(0); // Not attempted: installed syscall/unique-ID declarations missing.
 #endif
   NamespaceStamp exit; result.namespace_context = CompareNamespaces(entry, exit);
   return result;
 }
 bool DecoderControls() {
-#if defined(SYS_statmount) && defined(SYS_statx) && defined(STATX_MNT_ID_UNIQUE) && defined(STATMOUNT_MNT_BASIC)
-  struct statmount value {};
-  value.size = sizeof(value); value.mask = STATMOUNT_MNT_BASIC; value.mnt_id = 42;
+#if defined(DSS_R6_HAS_MOUNT_QUERY)
+  MountBasicPrefix value {};
+  value.size = sizeof(value); value.mask = MountBasicMask; value.mnt_id = 42;
   if (Decode(value, sizeof(value), 42, true).value != 0) throw std::runtime_error("mount decoder");
   value.mnt_attr = MOUNT_ATTR_IDMAP;
   if (Decode(value, sizeof(value), 42, true).value != 1) throw std::runtime_error("mount decoder");
   value.mask = 0;
   if (Decode(value, sizeof(value), 42, true).state != State::Unavailable) throw std::runtime_error("mount mask");
-  value.mask = STATMOUNT_MNT_BASIC; value.size = 1;
+  value.mask = MountBasicMask; value.size = 1;
   if (Decode(value, sizeof(value), 42, true).state != State::Unavailable) throw std::runtime_error("mount short");
   value.size = sizeof(value) + 1;
   if (Decode(value, sizeof(value), 42, true).state != State::Unavailable) throw std::runtime_error("mount extent");

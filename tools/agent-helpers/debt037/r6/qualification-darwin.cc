@@ -33,12 +33,12 @@ Evidence ObservePlatform(const NativeObject& object) {
 #if defined(MNT_IGNORE_OWNERSHIP)
   result.ownership_ignored = Flag(flags.f_flags, MNT_IGNORE_OWNERSHIP, true);
 #else
-  result.ownership_ignored = Unsupported(ENOTSUP);
+  result.ownership_ignored = Unsupported(0);
 #endif
 #if defined(MNT_SNAPSHOT)
   result.snapshot = Flag(flags.f_flags, MNT_SNAPSHOT, true);
 #else
-  result.snapshot = Unsupported(ENOTSUP);
+  result.snapshot = Unsupported(0);
 #endif
   result.remote_device = Present((flags.f_flags & MNT_LOCAL) == 0);
   return result;

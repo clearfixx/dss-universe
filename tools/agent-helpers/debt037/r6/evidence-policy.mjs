@@ -56,6 +56,7 @@ export function validateEvidence(value) {
     "filesystemQualified",
     "atomic",
     "credentialContextStable",
+    "linuxBuildFeatures",
     "family",
     "sameObject",
     "sameDevice",
@@ -75,6 +76,11 @@ export function validateEvidence(value) {
   ])
     assert.equal(value[key], false);
   assert.equal(value.credentialContextStable, true);
+  assert.ok(
+    Number.isInteger(value.linuxBuildFeatures) &&
+      value.linuxBuildFeatures >= 0 &&
+      value.linuxBuildFeatures <= 15,
+  );
   assert.equal(typeof value.heldAcrossBarrier, "boolean");
   assert.match(
     value.family,

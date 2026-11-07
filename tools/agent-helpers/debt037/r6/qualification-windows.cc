@@ -45,7 +45,7 @@ Evidence ObservePlatform(const NativeObject& object) {
   else result.read_only = Unavailable(GetLastError());
   const auto address = GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "NtQueryVolumeInformationFile");
   if (!address) {
-    result.remote_device = result.removable_media = Unsupported(ERROR_PROC_NOT_FOUND); return result;
+    result.remote_device = result.removable_media = Unsupported(GetLastError()); return result;
   }
   QueryVolume query = nullptr;
   static_assert(sizeof(query) == sizeof(address));

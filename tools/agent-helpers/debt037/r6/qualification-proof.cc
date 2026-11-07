@@ -89,7 +89,8 @@ void Inspect(const char* path, const char* other, bool ordinary, bool hold) {
     Require(before.object.state == TopologyState::Present && after.object.state == TopologyState::Present &&
         before.object.bytes == after.object.bytes && std::strcmp(before.object.kind, after.object.kind) == 0);
     std::cout << "{\"kind\":\"qualification-evidence\",\"admitted\":false,\"filesystemQualified\":false,"
-        "\"atomic\":false,\"credentialContextStable\":true,\"family\":\"" << after.filesystem_family << '"';
+        "\"atomic\":false,\"credentialContextStable\":true,\"linuxBuildFeatures\":" << facts.linux_build_features <<
+        ",\"family\":\"" << after.filesystem_family << '"';
     PrintFact("remoteDevice", facts.remote_device); PrintFact("removableMedia", facts.removable_media);
     PrintFact("ownershipIgnored", facts.ownership_ignored); PrintFact("snapshot", facts.snapshot);
     PrintFact("readOnly", facts.read_only); PrintFact("idmapped", facts.idmapped);

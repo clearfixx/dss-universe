@@ -63,6 +63,7 @@ function inspect(left, right) {
       "filesystemQualified",
       "atomic",
       "credentialContextStable",
+      "linuxBuildFeatures",
       "family",
       "sameObject",
       "sameDevice",
@@ -83,6 +84,11 @@ function inspect(left, right) {
   ])
     assert.equal(value[key], false);
   assert.equal(value.credentialContextStable, true);
+  assert.ok(
+    Number.isInteger(value.linuxBuildFeatures) &&
+      value.linuxBuildFeatures >= 0 &&
+      value.linuxBuildFeatures <= 15,
+  );
   assert.match(
     value.family,
     /^(unknown|ntfs|refs|ext|xfs|btrfs|tmpfs|overlay|apfs|hfs|other)$/,
