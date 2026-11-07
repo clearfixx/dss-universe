@@ -143,6 +143,11 @@ selected by this document.
 
 ## Concrete implementation sequence and acceptance
 
+Current checkpoint: R3/PR133 and R4/PR135 are accepted; main `6ae392f` retains
+inactive observations and the POSIX proof, not an admitted root. The concrete
+[owner/right and filesystem design](DEBT_037_OWNER_RIGHTS_POLICY_DESIGN.md)
+refines the remaining decisions below. Its own review does not authorize runtime.
+
 1. Add inactive descriptor-bound identity/mount observations and explicit field
    availability, with real three-platform fixtures and lifecycle tests. Do not
    return an admitted capability or change R1/R2 semantics. This is the next
