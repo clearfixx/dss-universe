@@ -68,6 +68,7 @@ public static class DssR5Process
     public sealed class Child : IDisposable {
         private IntPtr process;
         internal Child(IntPtr handle) { process = handle; }
+        public uint Status { get { uint status; Require(GetExitCodeProcess(process, out status)); return status; } }
         public uint Finish() {
             if (WaitForSingleObject(process, 60000) != 0) throw new InvalidOperationException("Proof child did not finish.");
             uint status; Require(GetExitCodeProcess(process, out status)); return status;
@@ -87,7 +88,14 @@ public static class DssR5Process
         Require(DuplicateTokenEx(token, 0x000F01FF, IntPtr.Zero, 2, 1, out primary), "duplicate-primary");
         using (primary) {
             var startup = new Startup { Size = Marshal.SizeOf<Startup>() };
-            var command = new StringBuilder(Quote(node) + " " + Quote(script) + " " + port + " " + Quote(nonce) +
+            // Static bootstrap code uses argv for paths, never string interpolation
+            // of source or credentials. It distinguishes JS startup from actor setup.
+            const string bootstrap = "const f=require('node:fs');const d=process.argv[1];const s=process.argv[2];" +
+                "f.writeFileSync(d,JSON.stringify({started:true,environmentReady:process.env.GITHUB_ACTIONS==='true'&&" +
+                "process.env.RUNNER_ENVIRONMENT==='github-hosted'&&process.env.DSS_RIGHTS_ACTOR_PROOF==='1'}),{flag:'wx'});" +
+                "process.argv.splice(1,1);require(s);";
+            var marker = System.IO.Path.Combine(arena, actor + "-bootstrap.json");
+            var command = new StringBuilder(Quote(node) + " --eval " + Quote(bootstrap) + " " + Quote(marker) + " " + Quote(script) + " " + port + " " + Quote(nonce) +
                 " " + Quote(actor) + " " + Quote(arena) + " " + Quote(binary));
             var block = "DSS_RIGHTS_ACTOR_PROOF=1\0GITHUB_ACTIONS=true\0RUNNER_ENVIRONMENT=github-hosted\0SystemRoot=" +
                 Environment.GetEnvironmentVariable("SystemRoot") + "\0TEMP=" + directory + "\0TMP=" + directory + "\0\0";

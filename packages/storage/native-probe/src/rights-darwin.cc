@@ -128,7 +128,9 @@ RightsFacts ReadDirectoryRights(const NativeObject& object, DirectoryRole role, 
   const int access = ::faccessat(fd, ".", RequiredPosixAccess(role), AT_EACCESS);
   result.service_access = PosixAccessResult(access, access == 0 ? 0 : errno);
   const auto acl = Acquire(fd, posix->user());
-  result.acl_metadata = result.grants = result.inheritance = acl.check;
+  result.acl_metadata = result.inheritance = acl.check;
+  // An ACL result cannot fill a missing mode contribution after a failed stat.
+  if (result.grants.state == RightsState::Satisfied) result.grants = acl.check;
   result.current_risks |= acl.current;
   result.inherited_risks = acl.inherited;
   return result;

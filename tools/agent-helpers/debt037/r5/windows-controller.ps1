@@ -97,6 +97,16 @@ try {
         $stage = 'ready-' + $actor
         $pending = $listener.AcceptTcpClientAsync()
         if (-not $pending.Wait(60000)) {
+            $childStatus = $child.Status
+            if ($childStatus -ne 259) { $stage = 'exit-before-ready-' + $actor; $setupOsCode = $childStatus }
+            $bootstrap = [IO.Path]::Combine($work, $actor + '-bootstrap.json')
+            if ([IO.File]::Exists($bootstrap) -and ([IO.FileInfo]::new($bootstrap)).Length -le 1024) {
+                $started = [IO.File]::ReadAllText($bootstrap) | ConvertFrom-Json
+                if ($started.started -ceq $true) {
+                    $stage = 'actor-load-' + $actor
+                    if ($started.environmentReady -cne $true) { $stage = 'bootstrap-environment-' + $actor }
+                }
+            }
             $diagnostic = [IO.Path]::Combine($work, $actor + '-failure.json')
             if ([IO.File]::Exists($diagnostic) -and ([IO.FileInfo]::new($diagnostic)).Length -le 1024) {
                 $failure = [IO.File]::ReadAllText($diagnostic) | ConvertFrom-Json
