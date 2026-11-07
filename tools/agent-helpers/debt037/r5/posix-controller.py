@@ -111,11 +111,11 @@ def main():
             if record.get("kind") == "failure" and re.fullmatch(r"[a-z/-]{1,48}", record.get("stage", "")):
                 STAGE += "-" + record["stage"].replace("/", "-")
             require(record.get("kind") == "result" and record.get("actor") == actor)
-            connection.shutdown(socket.SHUT_RDWR)
+            print(json.dumps(record), flush=True)
+            STAGE = "close-" + actor
             stream.close()
             connection.close()
             require(child.wait(timeout=60) == 0)
-            print(json.dumps(record), flush=True)
         require((work / "shared" / "attacker-created").read_text() == "SYNTHETIC ATTACKER")
         require((work / "protected" / "service-created").read_text() == "SYNTHETIC SERVICE")
     finally:

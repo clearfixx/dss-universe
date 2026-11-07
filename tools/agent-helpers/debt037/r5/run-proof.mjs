@@ -77,6 +77,31 @@ if (process.platform === "win32") {
   );
 }
 const records = [];
+const diagnosticText = (child.stderr ?? "").replace(/\x1b\[[0-9;]*m/g, "");
+const windowsFailure = diagnosticText.match(
+  /Proof process failure at ([a-z-]{1,48}), code ([0-9]{1,10})/,
+);
+const posixFailure = diagnosticText.match(
+  /failed at ([a-z-]{1,80}) \([A-Za-z]+, errno=(None|[0-9]{1,10})\)/,
+);
+const actorFailure = diagnosticText.match(
+  /Actor check failed: ([a-z/-]{1,48})/,
+);
+const failure =
+  child.status === 0
+    ? null
+    : {
+        stage:
+          windowsFailure?.[1] ??
+          posixFailure?.[1] ??
+          actorFailure?.[1] ??
+          "unclassified-controller-failure",
+        osCode: windowsFailure
+          ? Number(windowsFailure[2])
+          : posixFailure && posixFailure[2] !== "None"
+            ? Number(posixFailure[2])
+            : null,
+      };
 for (const line of (child.stdout ?? "").split(/\r?\n/).filter(Boolean)) {
   const item = JSON.parse(line);
   assert.deepEqual(Object.keys(item).sort(), [
@@ -129,6 +154,7 @@ writeFileSync(
       exitCode: child.status,
       admitted: false,
       records,
+      failure,
     },
     null,
     2,
@@ -137,7 +163,7 @@ writeFileSync(
 assert.equal(
   child.status,
   0,
-  `Controller failed; bounded stderr: ${(child.stderr ?? "").replace(/[^a-zA-Z .\n-]/g, "").slice(-180)}`,
+  `Controller failed at ${failure?.stage}; OS code ${failure?.osCode}`,
 );
 assert.equal(records.length, 2);
 assert.equal(new Set(records.map((item) => item.actor)).size, 2);
