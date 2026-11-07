@@ -11,7 +11,7 @@
   },
   "scripts": {
     "native:build": "node native-probe/build.mjs",
-    "native:test": "node --test native-probe/probe.test.cjs native-probe/security.test.cjs native-probe/topology.test.cjs native-probe/rights.test.cjs",
+    "native:test": "node --test native-probe/probe.test.cjs native-probe/security.test.cjs native-probe/topology.test.cjs native-probe/rights.test.cjs native-probe/qualification.test.cjs",
     "native:verify": "pnpm native:build && pnpm native:test",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
