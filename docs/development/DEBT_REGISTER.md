@@ -2,7 +2,7 @@
 
 > Status: Active
 >
-> Updated: 2026-11-06 (scoped accepted-history reconciliation)
+> Updated: 2026-11-07 (R5 candidate checkpoint; accepted-history reconciliation retained)
 >
 > Historical candidate checkpoints and the original table below are retained.
 > Read entry-specific acceptance updates and the
@@ -877,6 +877,17 @@ application-controlled. There is no established remote exploit under this assump
 Decide whether hostile local writers are in scope; if so, design OS-specific physical
 containment and TOCTOU defenses. Do not silently expand this package or describe
 lexical checks as sandbox isolation.
+
+R5 checkpoint2026-11-07 supersedes the original unanswered-scope wording above:
+the separate ordinary OS writer is in scope and physical protection remains
+mandatory before Phase11. Accepted R1–R4 foundations and PR136's owner/right
+design exist. The private inactive R5 candidate in PR138 now has native43/43 on
+Windows/Linux/macOS and real ordinary-process actor15/15,12/12,14/14 respectively
+at `fa49538`. See [R5 implementation/evidence](DEBT_037_R5_OWNER_RIGHTS.md).
+Final acceptance requires local full-gate receipts, final-head CI and owner
+review; those are tracked in PR138, not inferred from the native checkpoint.
+No complete admitted root, operation containment, uploads adoption or joint
+API/Worker activation is claimed; DEBT-037 and D7 remain open.
 
 ### DEBT-038 — API E2E exceeds CI job limit (High, OPEN, D6)
 
