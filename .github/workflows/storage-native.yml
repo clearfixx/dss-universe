@@ -61,3 +61,16 @@ jobs:
           path: node_modules/.cache/acl-contract-proof-*.json
           include-hidden-files: true
           if-no-files-found: warn
+      - name: Prove role rights in actual ordinary Node processes
+        env:
+          DSS_RIGHTS_ACTOR_PROOF: "1"
+          PYTHON: ${{ steps.python.outputs['python-path'] }}
+        run: node tools/agent-helpers/debt037/r5/run-proof.mjs
+      - name: Preserve bounded role rights evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: role-rights-${{ runner.os }}
+          path: node_modules/.cache/rights-actor-*.json
+          include-hidden-files: true
+          if-no-files-found: warn

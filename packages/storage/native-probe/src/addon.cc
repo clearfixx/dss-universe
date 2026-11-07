@@ -25,6 +25,7 @@
  */
 #include <node_api.h>
 #include "native-object.h"
+#include "rights-model.h"
 #include <new>
 #include <utility>
 #include <cstring>
@@ -34,7 +35,7 @@ namespace {
 const napi_type_tag kCapabilityTag {0x44535353544f5241ULL, 0x4745503143415031ULL};
 struct Envelope { std::shared_ptr<NativeObject> resource; std::shared_ptr<NativeChain> chain; };
 enum class Operation { OpenRoot, OpenFile, Inspect, CaptureRootChain, InspectChain, CaptureSecurityChain, InspectSecurityChain,
-  InspectTopologyChain, CompareTopologyChains };
+  InspectTopologyChain, CompareTopologyChains, InspectRoleRights };
 struct Work {
   Operation operation;
   napi_async_work work = nullptr;
@@ -47,6 +48,9 @@ struct Work {
   std::vector<SecurityEvidence> security;
   std::shared_ptr<NativeChain> other_chain;
   std::vector<TopologyEvidence> topology, other_topology;
+  DirectoryRole role = DirectoryRole::Ancestor;
+  std::shared_ptr<RightsContext> rights_context;
+  std::vector<RoleRightsEvidence> rights;
   Metadata metadata {Kind::Root, 0, 0};
   const char* error = nullptr;
   std::uint32_t os_code = 0;
@@ -289,6 +293,48 @@ napi_value MetadataValue(napi_env env, const Metadata& metadata) {
       !Check(env, napi_set_named_property(env, result, "links", links))) return nullptr;
   return result;
 }
+napi_value RightsCheckValue(napi_env env, const RightsCheck& check) {
+  napi_value result, code;
+  if (!Check(env, napi_create_object(env, &result)) ||
+      !Check(env, napi_create_uint32(env, check.os_code, &code)) ||
+      !Property(env, result, "state", TextValue(env, RightsStateName(check.state))) ||
+      !Property(env, result, "reason", TextValue(env, check.reason)) ||
+      !Property(env, result, "osCode", code)) return nullptr;
+  return result;
+}
+napi_value RightsValue(napi_env env, const std::vector<RoleRightsEvidence>& facts) {
+  napi_value result, components, qualifications;
+  if (!Check(env, napi_create_object(env, &result)) ||
+      !Check(env, napi_create_array_with_length(env, facts.size(), &components)) ||
+      !Check(env, napi_create_array_with_length(env, 4, &qualifications))) return nullptr;
+  const char* required[] = {"identity-domain", "filesystem-and-transition", "creation-protocol", "hostile-operations"};
+  for (std::uint32_t index = 0; index < 4; ++index) {
+    const auto text = TextValue(env, required[index]);
+    if (!text || !Check(env, napi_set_element(env, qualifications, index, text))) return nullptr;
+  }
+  for (std::uint32_t index = 0; index < facts.size(); ++index) {
+    const auto& item = facts[index];
+    napi_value value;
+    if (!Check(env, napi_create_object(env, &value)) ||
+        !Property(env, value, "role", TextValue(env, DirectoryRoleName(item.role))) ||
+        !Property(env, value, "ownerClass", TextValue(env, OwnerClassName(item.owner_class))) ||
+        !Property(env, value, "owner", RightsCheckValue(env, item.owner)) ||
+        !Property(env, value, "serviceAccess", RightsCheckValue(env, item.service_access)) ||
+        !Property(env, value, "aclMetadata", RightsCheckValue(env, item.acl_metadata)) ||
+        !Property(env, value, "grantModel", RightsCheckValue(env, item.grant_model)) ||
+        !Property(env, value, "inheritanceModel", RightsCheckValue(env, item.inheritance_model)) ||
+        !Property(env, value, "parentModel", RightsCheckValue(env, item.parent_model)) ||
+        !Check(env, napi_set_element(env, components, index, value))) return nullptr;
+  }
+  if (!Property(env, result, "kind", TextValue(env, "role-rights-evidence")) ||
+      !Property(env, result, "ruleset", TextValue(env, "directory-owner-rights-v1")) ||
+      !Property(env, result, "admitted", BooleanValue(env, true, false)) ||
+      !Property(env, result, "filesystemQualified", BooleanValue(env, true, false)) ||
+      !Property(env, result, "atomic", BooleanValue(env, true, false)) ||
+      !Property(env, result, "qualificationsRequired", qualifications) ||
+      !Property(env, result, "components", components)) return nullptr;
+  return result;
+}
 void Execute(napi_env, void* data) {
   Work& work = *static_cast<Work*>(data);
   try {
@@ -300,6 +346,7 @@ void Execute(napi_env, void* data) {
       case Operation::InspectChain: work.chain_components = InspectChain(*work.chain); break;
       case Operation::CaptureSecurityChain: work.chain = CaptureSecurityChain(work.text); break;
       case Operation::InspectSecurityChain: work.security = InspectSecurityChain(*work.chain); break;
+      case Operation::InspectRoleRights: work.rights = InspectRoleRights(*work.chain, work.role, *work.rights_context); break;
         case Operation::InspectTopologyChain: work.topology = InspectTopologyChain(*work.chain); break;
         case Operation::CompareTopologyChains:
           work.topology = InspectTopologyChain(*work.chain);
@@ -328,6 +375,7 @@ void Complete(napi_env env, napi_status status, void* data) {
   if (work->operation == Operation::Inspect) result = MetadataValue(env, work->metadata);
   else if (work->operation == Operation::InspectChain) result = ChainValue(env, work->chain_components);
   else if (work->operation == Operation::InspectSecurityChain) result = SecurityChainValue(env, work->security);
+  else if (work->operation == Operation::InspectRoleRights) result = RightsValue(env, work->rights);
   else if (work->operation == Operation::InspectTopologyChain) result = TopologyChainValue(env, work->topology);
   else if (work->operation == Operation::CompareTopologyChains)
     result = TopologyComparisonValue(env, work->topology.back(), work->other_topology.back());
@@ -445,6 +493,33 @@ napi_value InspectTopologyChainCallback(napi_env env, napi_callback_info info) {
     return Queue(env, std::move(work));
   });
 }
+napi_value InspectRoleRightsCallback(napi_env env, napi_callback_info info) {
+  return Guard(env, [&]() -> napi_value {
+    napi_value args[3];
+    if (!Arguments(env, info, 2, args)) return nullptr;
+    auto chain = LiveChain(env, args[0]);
+    if (!chain) return nullptr;
+    if (!chain->security_read()) {
+      napi_throw_type_error(env, "ERR_STORAGE_NATIVE_SECURITY_CAPABILITY", "Expected a security-readable chain.");
+      return nullptr;
+    }
+    auto work = std::make_unique<Work>(Operation::InspectRoleRights);
+    if (!String(env, args[1], work->text)) return nullptr;
+    try {
+      if (work->text.find('\0') != std::string::npos) throw NativeError("ERR_STORAGE_NATIVE_RIGHTS_ROLE");
+      work->role = ParseDirectoryRole(work->text.c_str());
+      // Capture before enqueue: active caller impersonation must not disappear
+      // silently when Node moves execution into its worker pool.
+      work->rights_context = CaptureRightsContext();
+    } catch (const NativeError& error) {
+      const auto value = ErrorValue(env, error.code, error.os_code);
+      if (value) napi_throw(env, value);
+      return nullptr;
+    }
+    work->chain = std::move(chain);
+    return Queue(env, std::move(work));
+  });
+}
 napi_value CompareTopologyChainsCallback(napi_env env, napi_callback_info info) {
   return Guard(env, [&]() -> napi_value {
     napi_value args[3];
@@ -471,6 +546,7 @@ napi_value CloseCallback(napi_env env, napi_callback_info info) {
 }  // namespace
 napi_value Initialize(napi_env env, napi_value exports) {
   const napi_property_descriptor descriptors[] = {
+    {"inspectRoleRights", nullptr, InspectRoleRightsCallback, nullptr, nullptr, nullptr, napi_default, nullptr},
     {"inspectTopologyChain", nullptr, InspectTopologyChainCallback, nullptr, nullptr, nullptr, napi_default, nullptr},
     {"compareTopologyChains", nullptr, CompareTopologyChainsCallback, nullptr, nullptr, nullptr, napi_default, nullptr},
     {"captureSecurityChain", nullptr, CaptureSecurityChainCallback, nullptr, nullptr, nullptr, napi_default, nullptr},
@@ -482,7 +558,7 @@ napi_value Initialize(napi_env env, napi_value exports) {
     {"inspect", nullptr, InspectCallback, nullptr, nullptr, nullptr, napi_default, nullptr},
     {"close", nullptr, CloseCallback, nullptr, nullptr, nullptr, napi_default, nullptr}
   };
-  return Check(env, napi_define_properties(env, exports, 10, descriptors)) ? exports : nullptr;
+  return Check(env, napi_define_properties(env, exports, 11, descriptors)) ? exports : nullptr;
 }
 }  // namespace dss::storage::probe
 NAPI_MODULE(NODE_GYP_MODULE_NAME, dss::storage::probe::Initialize)

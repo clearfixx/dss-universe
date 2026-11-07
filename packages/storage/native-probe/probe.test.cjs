@@ -66,6 +66,7 @@ test("prototype exports are explicit and public portable exports remain isolated
     "compareTopologyChains",
     "inspect",
     "inspectChain",
+    "inspectRoleRights",
     "inspectSecurityChain",
     "inspectTopologyChain",
     "openFile",

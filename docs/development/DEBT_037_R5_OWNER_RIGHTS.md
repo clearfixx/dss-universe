@@ -1,0 +1,92 @@
+# DEBT-037 R5 — Inactive directory owner/right core
+
+Owner authorized implementation from accepted PR136 / main `0c161bbc`.
+This packet implements the private directory-rights part of the
+[owner/right design](DEBT_037_OWNER_RIGHTS_POLICY_DESIGN.md). Verification is
+in progress; packet acceptance and merge have not been requested.
+
+## Scope and fixed contracts
+
+`inspectRoleRights(securityChainCapability, fixedRole)` is a private native
+diagnostic, outside the public storage exports. Four exact roles are accepted:
+`ancestor`, `shared-namespace`, `protected-parent`, `private-control`. Every
+preceding captured component is evaluated as an ancestor. No caller-supplied
+trust assertion, mask, trustee, token or filesystem qualification is accepted.
+
+Separate checks report owner model, actual service access, ACL metadata,
+conservative grant model, inheritance and actual parent deletion effects.
+States are `satisfied`, `violated`, `unavailable`, `unsupported`, with fixed
+reasons and numeric errors. Raw paths, descriptors, ACLs and OS identities stay
+native. Results always retain `admitted:false`, `filesystemQualified:false`,
+`atomic:false`, and explicit identity-domain, filesystem/transition,
+creation-protocol and hostile-operation qualifications.
+
+These directory checks request traversal for ancestors; traversal and child
+creation for shared/protected parents; private directory listing, child
+creation and cleanup for private control. Windows also requests security and
+attribute read access; private control requests DELETE_CHILD. POSIX uses
+effective X, WX and RWX respectively. File payload access, publication, deletion
+and captured cleanup still require their later operation-specific contracts.
+
+## Execution context and platform readers
+
+Context is captured before enqueue and compared in the actual async worker,
+before object reads and after collection. Evidence is fresh and non-atomic.
+Accepted work owns chain/context resources through completion after JS close.
+
+- Windows refuses active caller/worker impersonation; only ERROR_NO_TOKEN
+  selects the process context. A private duplicated token, SID/authentication/
+  modification fingerprint and descriptor-bound AccessCheck establish the
+  service result. Owner, group and DACL are fetched for AccessCheck; the group
+  is never reclassified as trusted. API failure and completed denial differ.
+  All applicable allow grants are bounded separately, with no deny credit.
+  Unknown ACEs, rights and CREATOR/OWNER forms remain unsupported. Empty and
+  null DACLs are different controls. Old handles remain a separate obligation.
+- Linux checks real/effective/saved/filesystem credentials and groups against
+  actual procfs thread metadata, then uses faccessat2 with effective credentials
+  and AT_EMPTY_PATH. There is no ACL-blind wrapper or reconstructed target path
+  fallback. Access/default xattrs are bounded and validated. ENODATA remains
+  unavailable ACL evidence; a separately labelled mode-class bound is conditional
+  on qualified POSIX ACL semantics. Other query failures are not mode fallbacks.
+- Darwin refuses per-thread overrides, uses descriptor-relative faccessat with
+  AT_EACCESS, and acquires returned extended-security attributes. SDK header,
+  count, extent and entry masks are validated before public native ACL import.
+  An omitted attribute stays unresolved. The model unions mode and applicable
+  allow grants, including inherited rights; it never subtracts deny entries.
+
+Exact service ownership is required for descendants. POSIX root and Windows
+LocalSystem/Administrators are conditional administrator candidates only for
+ancestors. All other principals/groups remain untrusted. Sticky exceptions are
+conditional model rules, not relocation or historical-handle certificates.
+
+## Verification obligations
+
+Local native tests cover the fixed API, bounded projection, real object reads,
+closure/in-flight ownership, fresh reads, pure model negatives, genuine OS
+query failures and context controls. Darwin additionally exercises synthetic
+malformed/truncated/oversized native decoder inputs separately from OS errors.
+All existing R1–R4 tests remain required.
+
+The new opt-in hosted-CI proof runs actual ordinary service/attacker Node
+processes with ready/go barriers. Windows creates two invocation-owned ordinary
+accounts and uses verified primary-token processes. POSIX uses runner/nobody,
+drops groups/credentials before exec and checks failed root regain. Code is
+read-only to both actors; fixtures are fresh and retained for VM teardown.
+No account creation, elevation or privileged proof runs on the developer PC.
+
+Required controls include usable protected/private fixtures, actual service
+creation, attacker private/protected denial and shared creation, foreign owner,
+dangerous/inherited grants, service denial and parent deletion. Darwin/Windows
+include deny/allow conservatism; Windows includes held-capability empty/null
+DACL distinction. These tests do not claim operation containment or revocation
+of historical capabilities.
+
+## Remaining gates
+
+No API/Worker path, Prisma data, existing uploads ACL, frontend, dependency or
+public package export is changed. Filesystem/identity-domain qualification,
+complete admitted root, hostile operations, deployment adoption and joint
+API/Worker activation remain open. DEBT-037 and D7 are not closed by R5.
+
+Final local/CI measurements and failed attempts will be appended before packet
+acceptance; implementation authorization is not acceptance of unverified code.
