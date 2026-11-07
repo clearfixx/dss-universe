@@ -28,6 +28,7 @@ const bootstrap = [...expression[1].matchAll(/"(?:\\.|[^"\\])*"/g)]
   .map((item) => JSON.parse(item[0]))
   .join("");
 const nonce = randomUUID().replaceAll("-", "");
+mkdirSync(resolve(root, "node_modules/.cache"), { recursive: true });
 const arena = resolve(
   root,
   "node_modules/.cache",
