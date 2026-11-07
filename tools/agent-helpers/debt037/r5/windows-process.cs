@@ -14,6 +14,7 @@ using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Security.Principal;
 using Microsoft.Win32.SafeHandles;
 
 public static class DssR5Process
@@ -34,11 +35,31 @@ public static class DssR5Process
         StringBuilder command, uint creation, IntPtr environment, string directory, ref Startup startup, out ProcessInfo info);
     [DllImport("advapi32.dll", SetLastError = true)]
     private static extern bool OpenProcessToken(IntPtr process, uint access, out SafeAccessTokenHandle token);
+    [DllImport("advapi32.dll", SetLastError = true)]
+    private static extern bool GetTokenInformation(SafeAccessTokenHandle token, int kind, IntPtr buffer, int size, out int returned);
     [DllImport("kernel32.dll", SetLastError = true)] private static extern bool CloseHandle(IntPtr handle);
     [DllImport("kernel32.dll", SetLastError = true)] private static extern uint WaitForSingleObject(IntPtr handle, uint ms);
     [DllImport("kernel32.dll", SetLastError = true)] private static extern bool GetExitCodeProcess(IntPtr handle, out uint status);
     [DllImport("kernel32.dll", SetLastError = true)] private static extern bool TerminateProcess(IntPtr handle, uint status);
     private static void Require(bool result) { if (!result) throw new Win32Exception(Marshal.GetLastWin32Error()); }
+    private static void Require(bool result, string stage) {
+        if (!result) throw new InvalidOperationException("Proof process failure at " + stage + ", code " + Marshal.GetLastWin32Error());
+    }
+    private static string TokenSid(SafeAccessTokenHandle token) {
+        int size;
+        GetTokenInformation(token, 1, IntPtr.Zero, 0, out size);
+        if (size < IntPtr.Size + 4 || size > 65536) throw new InvalidOperationException("Invalid child token extent.");
+        IntPtr bytes = Marshal.AllocHGlobal(size);
+        try {
+            int returned;
+            Require(GetTokenInformation(token, 1, bytes, size, out returned), "read-child-token");
+            IntPtr sid = Marshal.ReadIntPtr(bytes);
+            long offset = sid.ToInt64() - bytes.ToInt64();
+            if (offset < 0 || offset > size - 8 || 8 + Marshal.ReadByte(sid, 1) * 4 > size - offset)
+                throw new InvalidOperationException("Invalid child token SID extent.");
+            return new SecurityIdentifier(sid).Value;
+        } finally { Marshal.FreeHGlobal(bytes); }
+    }
     private static string Quote(string value) {
         if (value.IndexOfAny(new char[] {'"', '\0', '\r', '\n'}) >= 0 || value.EndsWith("\\"))
             throw new ArgumentException("Invalid proof process argument.");
@@ -63,7 +84,7 @@ public static class DssR5Process
     public static Child Launch(SafeAccessTokenHandle token, string expectedSid, string node, string script,
         int port, string nonce, string actor, string arena, string binary, string directory) {
         SafeAccessTokenHandle primary;
-        Require(DuplicateTokenEx(token, 0x000F01FF, IntPtr.Zero, 2, 1, out primary));
+        Require(DuplicateTokenEx(token, 0x000F01FF, IntPtr.Zero, 2, 1, out primary), "duplicate-primary");
         using (primary) {
             var startup = new Startup { Size = Marshal.SizeOf<Startup>() };
             var command = new StringBuilder(Quote(node) + " " + Quote(script) + " " + port + " " + Quote(nonce) +
@@ -72,15 +93,15 @@ public static class DssR5Process
                 Environment.GetEnvironmentVariable("SystemRoot") + "\0TEMP=" + directory + "\0TMP=" + directory + "\0\0";
             IntPtr environment = Marshal.StringToHGlobalUni(block);
             ProcessInfo info;
-            try { Require(CreateProcessWithTokenW(primary, 0, node, command, 0x08000400, environment, directory, ref startup, out info)); }
+            try { Require(CreateProcessWithTokenW(primary, 0, node, command, 0x08000400, environment, directory, ref startup, out info), "create-primary-process"); }
             finally { Marshal.FreeHGlobal(environment); }
             CloseHandle(info.Thread);
             var child = new Child(info.Process);
             try {
                 SafeAccessTokenHandle actual;
-                Require(OpenProcessToken(info.Process, 10, out actual));
+                Require(OpenProcessToken(info.Process, 8, out actual), "query-child-token");
                 using (actual) {
-                    if (Dss037IdentityNative.Identity(actual) != expectedSid)
+                    if (TokenSid(actual) != expectedSid)
                         throw new InvalidOperationException("Actual child identity mismatch.");
                 }
                 return child;

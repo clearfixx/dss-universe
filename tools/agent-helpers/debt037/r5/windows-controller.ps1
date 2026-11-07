@@ -134,16 +134,23 @@ try {
         $line
     }
 } finally {
+    $cleanupFailed = $false
     if ($null -ne $listener) { $listener.Stop() }
     foreach ($channel in $channels.Values) {
-        $channel.Writer.Dispose(); $channel.Reader.Dispose(); $channel.Client.Dispose()
+        foreach ($resource in @($channel.Writer, $channel.Reader, $channel.Client)) {
+            try { $resource.Dispose() } catch { $cleanupFailed = $true }
+        }
     }
-    foreach ($child in $children) { $child.Dispose() }
-    foreach ($token in $tokens) { $token.Dispose() }
+    foreach ($resource in @($children.ToArray()) + @($tokens.ToArray())) {
+        try { $resource.Dispose() } catch { $cleanupFailed = $true }
+    }
     foreach ($account in $accounts) {
-        $actual = Get-LocalUser -SID $account.SID -ErrorAction SilentlyContinue
-        if ($null -ne $actual -and $actual.Description -ceq $description) { Remove-LocalUser -SID $account.SID }
+        try {
+            $actual = Get-LocalUser -SID $account.SID -ErrorAction SilentlyContinue
+            if ($null -ne $actual -and $actual.Description -ceq $description) { Remove-LocalUser -SID $account.SID }
+        } catch { $cleanupFailed = $true }
     }
     foreach ($password in $passwords) { $password.Dispose() }
     # No recursive fixture deletion: disposable runner teardown owns the arena.
+    if ($cleanupFailed) { throw 'Owned proof cleanup failed; disposable VM teardown remains required.' }
 }

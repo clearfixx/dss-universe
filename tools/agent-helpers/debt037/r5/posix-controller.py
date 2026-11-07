@@ -65,28 +65,13 @@ def main():
     children = []
     channels = {}
 
-    def ordinary(user, group):
-        def drop():
-            os.setgroups([])
-            os.setgid(group)
-            os.setuid(user)
-            require(os.getuid() == user and os.geteuid() == user)
-            require(os.getgid() == group and os.getegid() == group)
-            require(all(value == group and value != 0 for value in os.getgroups()))
-            try:
-                os.setuid(0)
-            except PermissionError:
-                return
-            raise RuntimeError("Privilege drop failed.")
-        return drop
-
     def launch(actor, user, group):
         global STAGE
         STAGE = "launch-" + actor
         child = subprocess.Popen([str(code / "node"), str(code / "actor.cjs"), str(listener.getsockname()[1]),
                                   nonce, actor, str(work), str(code / "probe.node")],
                                  stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
-                                 close_fds=True, preexec_fn=ordinary(user, group), cwd=arena)
+                                 close_fds=True, user=user, group=group, extra_groups=(), cwd=arena)
         children.append(child)
         connection, _ = listener.accept()
         connection.settimeout(60)
@@ -135,10 +120,14 @@ def main():
         require((work / "protected" / "service-created").read_text() == "SYNTHETIC SERVICE")
     finally:
         listener.close()
+        for connection, stream, _ in channels.values():
+            stream.close()
+            connection.close()
         for child in children:
             if child.poll() is None:
                 child.kill()
             child.wait(timeout=60)
+            child.stderr.close()
         # Fixtures are intentionally retained for disposable VM teardown.
 
 
