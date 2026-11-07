@@ -11,7 +11,9 @@
  * ===============================================================
  */
 const assert = require("node:assert/strict");
-const { execFileSync } = require("node:child_process");
+const { execFileSync, spawnSync } = require("node:child_process");
+const { once } = require("node:events");
+const { Worker } = require("node:worker_threads");
 const { mkdtempSync, realpathSync, mkdirSync, chmodSync } = require("node:fs");
 const { tmpdir } = require("node:os");
 const { join } = require("node:path");
@@ -113,11 +115,47 @@ test("all four fixed roles produce bounded non-admission evidence from actual ob
   const target = fixture();
   const chain = await probe.captureSecurityChain(target);
   try {
+    const actualOwner = (await probe.inspectSecurityChain(chain)).components.at(
+      -1,
+    );
+    let ownerClass = actualOwner.ownerMatchesProcess
+      ? "service"
+      : actualOwner.ownerIsSystem
+        ? "os-administrator-candidate"
+        : "other";
+    if (process.platform === "win32") {
+      // Elevated Windows can choose Administrators as a new object's default
+      // owner. Query the fixture independently instead of weakening the policy.
+      ownerClass = execFileSync(
+        "powershell.exe",
+        [
+          "-NoProfile",
+          "-NonInteractive",
+          "-Command",
+          '$current=[Security.Principal.WindowsIdentity]::GetCurrent(); try { $owner=([IO.Directory]::GetAccessControl($env:DSS_R5_FIXTURE)).GetOwner([Security.Principal.SecurityIdentifier]).Value; if ($owner -eq $current.User.Value) { "service" } elseif ($owner -in @("S-1-5-18","S-1-5-32-544")) { "os-administrator-candidate" } else { "other" } } finally { $current.Dispose() }',
+        ],
+        {
+          encoding: "utf8",
+          windowsHide: true,
+          env: { ...process.env, DSS_R5_FIXTURE: target },
+        },
+      ).trim();
+      assert.ok(
+        ["service", "os-administrator-candidate", "other"].includes(ownerClass),
+      );
+    }
     for (const role of roles) {
       const value = await probe.inspectRoleRights(chain, role);
       bounded(value);
       assert.equal(value.components.at(-1).role, role);
-      assert.equal(value.components.at(-1).ownerClass, "service");
+      assert.equal(value.components.at(-1).ownerClass, ownerClass);
+      assert.equal(
+        value.components.at(-1).owner.state,
+        ownerClass === "service" ||
+          (role === "ancestor" && ownerClass === "os-administrator-candidate")
+          ? "satisfied"
+          : "violated",
+      );
       assert.equal(value.components.at(-1).serviceAccess.state, "satisfied");
       assert.ok(
         value.components.slice(0, -1).every((item) => item.role === "ancestor"),
@@ -192,4 +230,47 @@ test("repeated inspection refreshes actual mode/ACL metadata without cross-call 
   } finally {
     probe.close(chain);
   }
+});
+test("R5 queued context resources survive worker teardown without exporting handles", async () => {
+  const binary = join(__dirname, "build/Release/dss_storage_probe.node");
+  const target = fixture();
+  const worker = new Worker(
+    `
+    const {parentPort,workerData}=require('node:worker_threads');
+    const p=require(workerData.binary);
+    p.captureSecurityChain(workerData.target).then(c=>{
+      const pending=Array.from({length:24},()=>p.inspectRoleRights(c,'private-control'));
+      p.close(c);
+      parentPort.postMessage('accepted');
+      Promise.all(pending).then(()=>parentPort.postMessage('settled'));
+    });`,
+    { eval: true, workerData: { binary, target } },
+  );
+  const [message] = await once(worker, "message");
+  assert.equal(message, "accepted");
+  assert.ok(Number.isInteger(await worker.terminate()));
+  const subsequent = await probe.captureSecurityChain(target);
+  try {
+    bounded(await probe.inspectRoleRights(subsequent, "private-control"));
+  } finally {
+    probe.close(subsequent);
+  }
+});
+test("privileged actor harness refuses a developer invocation before controller execution", () => {
+  const result = spawnSync(
+    process.execPath,
+    [join(__dirname, "../../../tools/agent-helpers/debt037/r5/run-proof.mjs")],
+    {
+      env: {
+        ...process.env,
+        GITHUB_ACTIONS: "false",
+        DSS_RIGHTS_ACTOR_PROOF: "0",
+      },
+      encoding: "utf8",
+      windowsHide: true,
+    },
+  );
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, "");
+  assert.match(result.stderr, /Requires opted-in disposable hosted CI/);
 });

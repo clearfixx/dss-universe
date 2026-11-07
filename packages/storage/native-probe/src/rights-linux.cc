@@ -12,6 +12,7 @@
  */
 #include "native-object.h"
 #include "rights-posix.h"
+#include "rights-linux.h"
 #include <cerrno>
 #include <fcntl.h>
 #include <sys/syscall.h>
@@ -20,21 +21,26 @@
 
 namespace dss::storage::probe {
 namespace {
-struct AclFacts { RightsCheck check; std::uint32_t risks = 0; };
 std::uint16_t Le16(const unsigned char* p) { return static_cast<std::uint16_t>(p[0] | (p[1] << 8)); }
 std::uint32_t Le32(const unsigned char* p) { return Le16(p) | (static_cast<std::uint32_t>(Le16(p + 2)) << 16); }
 RightsCheck Failure(int error) {
   return {error == ENOTSUP ? RightsState::Unsupported : RightsState::Unavailable,
       "acl-query-unresolved", static_cast<std::uint32_t>(error)};
 }
-AclFacts ReadAcl(int fd, const char* name, uid_t service) {
+LinuxAclFacts ReadAcl(int fd, const char* name, uid_t service) {
   const auto size = ::fgetxattr(fd, name, nullptr, 0);
   if (size < 0) return {Failure(errno), 0};
   if (size < 28 || size > 65536 || (size - 4) % 8 != 0) return {Failure(EINVAL), 0};
   std::vector<unsigned char> bytes(static_cast<std::size_t>(size));
   const auto count = ::fgetxattr(fd, name, bytes.data(), bytes.size());
   if (count < 0) return {Failure(errno), 0};
-  if (count != size || Le32(bytes.data()) != 2) return {Failure(EINVAL), 0};
+  if (count != size) return {Failure(EINVAL), 0};
+  return DecodeLinuxAcl(bytes, service);
+}
+}
+LinuxAclFacts DecodeLinuxAcl(const std::vector<unsigned char>& bytes, uid_t service) {
+  if (bytes.size() < 28 || bytes.size() > 65536 || (bytes.size() - 4) % 8 != 0 || Le32(bytes.data()) != 2)
+    return {Failure(EINVAL), 0};
   unsigned owner = 0, group = 0, other = 0, masks = 0, named = 0, mask = 7, ordinary = 0, grouped = 0;
   unsigned phase = 0;
   std::uint32_t previous_user = 0, previous_group = 0;
@@ -68,7 +74,6 @@ AclFacts ReadAcl(int fd, const char* name, uid_t service) {
   }
   if (owner != 1 || group != 1 || other != 1 || (named && masks != 1)) return {Failure(EINVAL), 0};
   return {{RightsState::Satisfied, "validated-posix-acl-model", 0}, PosixRisks(ordinary | (grouped & mask))};
-}
 }
 RightsFacts ReadDirectoryRights(const NativeObject& object, DirectoryRole role, const RightsContext& context) {
   if (context.kind() != RightsContextKind::Posix) throw NativeError("ERR_STORAGE_NATIVE_RIGHTS_CONTEXT");

@@ -123,7 +123,12 @@ try {
         $line = $channel.Reader.ReadLine()
         if ($null -eq $line -or $line.Length -gt 65536) { throw 'Missing bounded actor result.' }
         $record = $line | ConvertFrom-Json
-        if ($record.kind -cne 'result' -or $record.actor -cne $actor) { throw 'Invalid actor result.' }
+        if ($record.kind -cne 'result' -or $record.actor -cne $actor) {
+            if ($record.kind -ceq 'failure' -and $record.stage -cmatch '^[a-z/-]{1,48}$') {
+                throw ('Actor check failed: ' + $record.stage)
+            }
+            throw 'Invalid actor result.'
+        }
         $channel.Writer.Dispose(); $channel.Reader.Dispose(); $channel.Client.Dispose()
         if ($channel.Child.Finish() -ne 0) { throw 'Ordinary actor failed.' }
         $line

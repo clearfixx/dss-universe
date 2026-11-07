@@ -21,6 +21,9 @@ import socket
 import subprocess
 import sys
 import tempfile
+import re
+
+STAGE = "guard"
 
 
 def require(condition):
@@ -29,6 +32,7 @@ def require(condition):
 
 
 def main():
+    global STAGE
     require(sys.platform in ("linux", "darwin") and os.getuid() == 0)
     require(os.environ.get("GITHUB_ACTIONS") == "true")
     require(os.environ.get("RUNNER_ENVIRONMENT") == "github-hosted")
@@ -39,7 +43,10 @@ def main():
     attacker = pwd.getpwnam("nobody")
     require(uid > 0 and gid > 0 and service.pw_gid == gid)
     require(attacker.pw_uid > 0 and attacker.pw_gid > 0 and attacker.pw_uid != uid)
-    arena = pathlib.Path(tempfile.mkdtemp(prefix="dss-rights-r5-")).resolve()
+    # Runner TMPDIR on Darwin can sit below a user-private ancestor. Both real
+    # actors need a fresh arena below the OS shared temporary namespace.
+    arena = pathlib.Path(tempfile.mkdtemp(prefix="dss-rights-r5-", dir="/tmp")).resolve()
+    STAGE = "prepare-code"
     os.chmod(arena, 0o755)
     code = arena / "code"
     code.mkdir(mode=0o755)
@@ -74,6 +81,8 @@ def main():
         return drop
 
     def launch(actor, user, group):
+        global STAGE
+        STAGE = "launch-" + actor
         child = subprocess.Popen([str(code / "node"), str(code / "actor.cjs"), str(listener.getsockname()[1]),
                                   nonce, actor, str(work), str(code / "probe.node")],
                                  stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
@@ -89,7 +98,10 @@ def main():
     try:
         launch("attacker", attacker.pw_uid, attacker.pw_gid)
         launch("service", uid, gid)
+        STAGE = "prepare-acls"
         os.chmod(work, 0o755)
+        subprocess.run([str(code / "fixture"), "fixture", str(work), "safe", str(attacker.pw_uid)], check=True,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         names = ["protected", "control", "shared", "unsafe", "inherited", "denied", "deny-allow", "parent", "parent/child", "empty", "null"]
         for name in names:
             path = work / name
@@ -107,9 +119,12 @@ def main():
         os.chmod(work / "parent", 0o777)
         os.chmod(work / "foreign", 0o755)
         for actor in ("service", "attacker"):
+            STAGE = "result-" + actor
             connection, stream, child = channels[actor]
             stream.write(b"go\n")
             record = json.loads(stream.readline(65537))
+            if record.get("kind") == "failure" and re.fullmatch(r"[a-z/-]{1,48}", record.get("stage", "")):
+                STAGE += "-" + record["stage"].replace("/", "-")
             require(record.get("kind") == "result" and record.get("actor") == actor)
             connection.shutdown(socket.SHUT_RDWR)
             stream.close()
@@ -129,6 +144,7 @@ def main():
 
 try:
     main()
-except Exception:
-    print("Disposable POSIX rights controller failed.", file=sys.stderr)
+except Exception as error:
+    print("Disposable POSIX rights controller failed at " + STAGE + " (" + type(error).__name__ +
+          ", errno=" + str(getattr(error, "errno", 0)) + ").", file=sys.stderr)
     sys.exit(1)

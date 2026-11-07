@@ -78,7 +78,7 @@ public static class DssR5Process
             var child = new Child(info.Process);
             try {
                 SafeAccessTokenHandle actual;
-                Require(OpenProcessToken(info.Process, 8, out actual));
+                Require(OpenProcessToken(info.Process, 10, out actual));
                 using (actual) {
                     if (Dss037IdentityNative.Identity(actual) != expectedSid)
                         throw new InvalidOperationException("Actual child identity mismatch.");

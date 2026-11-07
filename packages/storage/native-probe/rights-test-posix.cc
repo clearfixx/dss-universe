@@ -20,6 +20,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #if defined(__linux__)
+#include "src/rights-linux.h"
 #include <sys/xattr.h>
 #else
 #include "src/rights-darwin.h"
@@ -84,7 +85,25 @@ void PreparePosixRightsFixture(const char* path, const char* control, const char
 #endif
 }
 void PosixDecoderControls() {
-#if defined(__APPLE__)
+#if defined(__linux__)
+  using namespace dss::storage::probe;
+  const uid_t service = 1001;
+  std::vector<unsigned char> bytes;
+  U32(bytes, 2); Entry(bytes, 1, 7); Entry(bytes, 2, 7, 1002); Entry(bytes, 4, 0); Entry(bytes, 16, 0); Entry(bytes, 32, 0);
+  Require(DecodeLinuxAcl(bytes, service).check.state == RightsState::Satisfied && DecodeLinuxAcl(bytes, service).risks == 0);
+  auto malformed = bytes; malformed.pop_back();
+  Require(DecodeLinuxAcl(malformed, service).check.state != RightsState::Satisfied);
+  malformed = bytes; malformed[0] = 3;
+  Require(DecodeLinuxAcl(malformed, service).check.state != RightsState::Satisfied);
+  malformed = bytes; malformed[6] = 8;
+  Require(DecodeLinuxAcl(malformed, service).check.state != RightsState::Satisfied);
+  malformed = bytes; malformed.insert(malformed.begin() + 20, bytes.begin() + 12, bytes.begin() + 20);
+  Require(DecodeLinuxAcl(malformed, service).check.state != RightsState::Satisfied);
+  malformed = bytes; malformed.erase(malformed.begin() + 28, malformed.begin() + 36);
+  Require(DecodeLinuxAcl(malformed, service).check.state != RightsState::Satisfied);
+  malformed.assign(65537, 0);
+  Require(DecodeLinuxAcl(malformed, service).check.state != RightsState::Satisfied);
+#else
   using namespace dss::storage::probe;
   Acl empty {::acl_init(0)};
   Require(empty.value != nullptr);

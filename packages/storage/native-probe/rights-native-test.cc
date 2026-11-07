@@ -64,6 +64,11 @@ void Models() {
 void OsControls() {
   auto context = CaptureRightsContext();
   Require(context->MatchesCurrent());
+  NativeChain oversized(std::vector<std::shared_ptr<NativeObject>>(1025), true);
+  bool bounded = false;
+  try { InspectRoleRights(oversized, DirectoryRole::Ancestor, *context); }
+  catch (const NativeError& error) { bounded = std::strcmp(error.code, "ERR_STORAGE_NATIVE_RIGHTS_LIMIT") == 0; }
+  Require(bounded);
 #if defined(_WIN32)
   NativeObject invalid(0, Kind::Root); // -1 is a valid current-process pseudo-handle on Windows.
 #else

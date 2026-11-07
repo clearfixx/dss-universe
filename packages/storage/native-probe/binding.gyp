@@ -35,7 +35,7 @@
     {
       "target_name": "dss_rights_native_test",
       "type": "executable",
-      "sources": ["rights-native-test.cc", "src/native-object.cc", "src/root-chain.cc", "src/rights-model.cc"],
+      "sources": ["rights-native-test.cc", "src/native-object.cc", "src/root-chain.cc", "src/rights-model.cc", "src/rights-evidence.cc"],
       "cflags_cc!": ["-fno-exceptions"],
       "cflags_cc": ["-Wall", "-Wextra", "-Werror", "-std=c++20"],
       "xcode_settings": {"GCC_ENABLE_CPP_EXCEPTIONS": "YES", "CLANG_CXX_LANGUAGE_STANDARD": "c++20"},

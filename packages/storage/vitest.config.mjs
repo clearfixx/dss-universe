@@ -30,6 +30,7 @@ export default defineConfig({
       "native-probe/probe.test.cjs",
       "native-probe/security.test.cjs",
       "native-probe/topology.test.cjs",
+      "native-probe/rights.test.cjs",
     ],
   },
 });

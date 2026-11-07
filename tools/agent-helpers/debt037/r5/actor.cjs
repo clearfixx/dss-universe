@@ -41,6 +41,8 @@ const names = [
 ];
 const chains = new Map();
 let probe;
+let activeSocket;
+let stage = "setup";
 function denied(action) {
   assert.throws(action, (error) => ["EACCES", "EPERM"].includes(error.code));
 }
@@ -67,6 +69,7 @@ async function run() {
       chains.set(name, await probe.captureSecurityChain(join(arena, name)));
   }
   const socket = net.connect({ host: "127.0.0.1", port: Number(portText) });
+  activeSocket = socket;
   socket.setEncoding("utf8");
   const input = readline.createInterface({ input: socket });
   await once(socket, "connect");
@@ -77,6 +80,7 @@ async function run() {
   const checks = {};
   if (actor === "service") {
     async function inspect(name, role = "protected-parent") {
+      stage = name;
       const value = await probe.inspectRoleRights(chains.get(name), role);
       assert.equal(value.admitted, false);
       assert.equal(value.filesystemQualified, false);
@@ -151,6 +155,7 @@ async function run() {
     }
     for (const value of chains.values()) probe.close(value);
   } else {
+    stage = "attacker-controls";
     fs.writeFileSync(
       join(arena, "shared", "attacker-created"),
       "SYNTHETIC ATTACKER",
@@ -178,6 +183,11 @@ async function run() {
   input.close();
 }
 run().catch(() => {
-  process.stderr.write("Ordinary rights actor proof failed.\n");
-  process.exit(1);
+  const message = JSON.stringify({ kind: "failure", actor, stage }) + "\n";
+  if (activeSocket && !activeSocket.destroyed)
+    activeSocket.end(message, () => process.exit(1));
+  else {
+    process.stderr.write("Ordinary rights actor proof failed during setup.\n");
+    process.exit(1);
+  }
 });

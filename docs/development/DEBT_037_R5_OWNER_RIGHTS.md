@@ -90,3 +90,26 @@ API/Worker activation remain open. DEBT-037 and D7 are not closed by R5.
 
 Final local/CI measurements and failed attempts will be appended before packet
 acceptance; implementation authorization is not acceptance of unverified code.
+
+## Initial verification record
+
+Head `92e085d`: Linux native41/41, existing POSIX7/7 and ordinary actor12/12
+controls passed. Darwin native41/41 and existing POSIX6/6 passed; its new actor
+controller failed before returning records. Its arena used the runner's default
+temporary namespace; the correction selects a fresh arena below shared `/tmp`
+and adds bounded controller stages instead of assuming arbitrary ancestors are
+accessible to nobody. This is harness work, not a changed ACL permission rule.
+
+Windows native40/41 identified an incorrect test assumption: an elevated token
+may create a directory owned by Administrators. The assertion now checks its
+actual owner independently; descendant-owner policy remains strict, with exact
+ordinary service ownership still required by the actor proof. The new native
+suite also needed the same explicit Vitest exclusion as the other three native
+suites: it remains mandatory in native:verify, full gate and native CI. Initial
+local full gate and CI coverage failed on that runner-discovery error; their
+reports remain preserved, with no claim of a full pass.
+
+Additional controls bound R5 to1024 captured components, exercise Node Worker
+teardown, refuse local privileged-harness execution and test malformed Linux ACL
+wire shapes separately from real OS query errors. Current local native43/43 and
+portable storage43/43 pass after these corrections. Final CI is still pending.

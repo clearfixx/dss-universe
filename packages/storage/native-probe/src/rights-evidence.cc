@@ -17,6 +17,8 @@ namespace dss::storage::probe {
 std::vector<RoleRightsEvidence> InspectRoleRights(const NativeChain& chain, DirectoryRole role,
     const RightsContext& context) {
   if (!chain.security_read()) throw NativeError("ERR_STORAGE_NATIVE_SECURITY_CAPABILITY");
+  if (chain.components().empty() || chain.components().size() > 1024)
+    throw NativeError("ERR_STORAGE_NATIVE_RIGHTS_LIMIT");
   if (!context.MatchesCurrent()) throw NativeError("ERR_STORAGE_NATIVE_RIGHTS_CONTEXT");
   InspectChain(chain);
   std::vector<RightsFacts> facts;
