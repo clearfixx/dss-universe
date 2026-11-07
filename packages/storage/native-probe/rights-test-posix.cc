@@ -86,7 +86,8 @@ void PreparePosixRightsFixture(const char* path, const char* control, const char
 }
 void PosixDecoderControls() {
 #if defined(__linux__)
-  using namespace dss::storage::probe;
+  using dss::storage::probe::DecodeLinuxAcl;
+  using dss::storage::probe::RightsState;
   const uid_t service = 1001;
   std::vector<unsigned char> bytes;
   U32(bytes, 2); Entry(bytes, 1, 7); Entry(bytes, 2, 7, 1002); Entry(bytes, 4, 0); Entry(bytes, 16, 0); Entry(bytes, 32, 0);
@@ -104,7 +105,8 @@ void PosixDecoderControls() {
   malformed.assign(65537, 0);
   Require(DecodeLinuxAcl(malformed, service).check.state != RightsState::Satisfied);
 #else
-  using namespace dss::storage::probe;
+  using dss::storage::probe::DecodeDarwinAcl;
+  using dss::storage::probe::RightsState;
   Acl empty {::acl_init(0)};
   Require(empty.value != nullptr);
   const auto size = ::acl_size(empty.value);

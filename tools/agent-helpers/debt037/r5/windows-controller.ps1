@@ -30,7 +30,6 @@ if (-not $arena.StartsWith($base.TrimEnd('\') + '\', [StringComparison]::Ordinal
     [IO.Directory]::Exists($arena)) { throw 'Fresh proof arena required.' }
 Add-Type -Path @([IO.Path]::Combine($PSScriptRoot, '../windows-identity-native.cs'), [IO.Path]::Combine($PSScriptRoot, 'windows-process.cs'))
 $accounts = [Collections.Generic.List[object]]::new()
-$tokens = [Collections.Generic.List[IDisposable]]::new()
 $passwords = [Collections.Generic.List[IDisposable]]::new()
 $children = [Collections.Generic.List[IDisposable]]::new()
 $channels = @{}
@@ -58,9 +57,6 @@ try {
         if (Get-LocalGroupMember -SID 'S-1-5-32-544' | Where-Object { $_.SID.Value -eq $account.SID.Value }) {
             throw 'Proof accounts must be ordinary users.'
         }
-        $token = [DssR5Process]::Logon($name, $password)
-        $tokens.Add($token)
-        if ([Dss037IdentityNative]::Identity($token) -cne $account.SID.Value) { throw 'Token identity mismatch.' }
     }
     $serviceSid = $accounts[0].SID.Value
     $attackerSid = $accounts[1].SID.Value
@@ -71,7 +67,6 @@ try {
     $work = [IO.Path]::Combine($arena, 'fixtures')
     [IO.Directory]::CreateDirectory($code) | Out-Null
     [IO.Directory]::CreateDirectory($work) | Out-Null
-    Copy-Item -LiteralPath $NodePath -Destination ([IO.Path]::Combine($code, 'node.exe'))
     Copy-Item -LiteralPath $BinaryPath -Destination ([IO.Path]::Combine($code, 'probe.node'))
     Copy-Item -LiteralPath ([IO.Path]::Combine($PSScriptRoot, 'actor.cjs')) -Destination ([IO.Path]::Combine($code, 'actor.cjs'))
     $admins = '(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)'
@@ -80,7 +75,7 @@ try {
     [Dss037IdentityNative]::Descriptor($arena, 'D:P' + $admins + $readers)
     [Dss037IdentityNative]::Descriptor($code, 'D:P' + $admins + $readers)
     # Code files already exist: explicitly protect each, not just future inheritance.
-    foreach ($file in @('node.exe', 'probe.node', 'actor.cjs')) {
+    foreach ($file in @('probe.node', 'actor.cjs')) {
         [Dss037IdentityNative]::Descriptor([IO.Path]::Combine($code, $file), 'D:P' + $admins + $readers)
     }
     [Dss037IdentityNative]::Descriptor($work, 'D:P' + $admins + $service + "(A;;0x001200a7;;;${attackerSid})")
@@ -90,8 +85,8 @@ try {
     foreach ($actor in @('attacker', 'service')) {
         $stage = 'launch-' + $actor
         $index = if ($actor -ceq 'service') { 0 } else { 1 }
-        $child = [DssR5Process]::Launch($tokens[$index], $accounts[$index].SID.Value,
-            [IO.Path]::Combine($code, 'node.exe'), [IO.Path]::Combine($code, 'actor.cjs'), $port, $nonce,
+        $child = [DssR5Process]::Launch($accounts[$index].Name, $passwords[$index], $accounts[$index].SID.Value,
+            $NodePath, [IO.Path]::Combine($code, 'actor.cjs'), $port, $nonce,
             $actor, $work, [IO.Path]::Combine($code, 'probe.node'), $arena)
         $children.Add($child)
         $stage = 'ready-' + $actor
@@ -99,6 +94,7 @@ try {
         if (-not $pending.Wait(60000)) {
             $childStatus = $child.Status
             if ($childStatus -ne 259) { $stage = 'exit-before-ready-' + $actor; $setupOsCode = $childStatus }
+            if ($child.ErrorHint -cne 'none' -and $child.ErrorHint -cmatch '^[a-z-]{1,48}$') { $stage = 'startup-' + $actor + '-' + $child.ErrorHint }
             $bootstrap = [IO.Path]::Combine($work, $actor + '-bootstrap.json')
             if ([IO.File]::Exists($bootstrap) -and ([IO.FileInfo]::new($bootstrap)).Length -le 1024) {
                 $started = [IO.File]::ReadAllText($bootstrap) | ConvertFrom-Json
@@ -181,7 +177,7 @@ try {
             try { $resource.Dispose() } catch { $cleanupFailed = $true }
         }
     }
-    foreach ($resource in @($children.ToArray()) + @($tokens.ToArray())) {
+    foreach ($resource in $children) {
         try { $resource.Dispose() } catch { $cleanupFailed = $true }
     }
     foreach ($account in $accounts) {

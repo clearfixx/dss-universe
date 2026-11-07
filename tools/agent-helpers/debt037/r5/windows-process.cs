@@ -4,7 +4,7 @@
  * 📦 Module: Disposable Rights Actor Proof
  * 📄 File: tools/agent-helpers/debt037/r5/windows-process.cs
  * 🎯 Purpose: Launches and verifies real primary-token Node children in disposable CI.
- * 🧠 Responsibilities: Owns duplicated tokens, process/thread handles and minimal environments.
+ * 🧠 Responsibilities: Uses framework credential startup, bounded stdio and verified primary-token metadata.
  * 🏗️ Architecture: Test-only Win32 process adapter, distinct from native runtime code.
  * ⚠️ Important: No NETCREDENTIALS_ONLY or thread impersonation substitutes an ordinary process.
  * 🚀 Build. Share. Grow.
@@ -12,40 +12,21 @@
  */
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Security.Principal;
 using System.Security;
+using System.Security.Principal;
+using System.Text;
+using System.Threading.Tasks;
 using Microsoft.Win32.SafeHandles;
 
 public static class DssR5Process
 {
-    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-    private static extern bool LogonUserW(string name, string domain, IntPtr password, int kind,
-        int provider, out SafeAccessTokenHandle token);
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-    private struct Startup {
-        public int Size; public string Reserved, Desktop, Title;
-        public int X, Y, Width, Height, XChars, YChars, Fill, Flags;
-        public short Show, ReservedSize; public IntPtr ReservedPointer, Input, Output, Error;
-    }
-    [StructLayout(LayoutKind.Sequential)]
-    private struct ProcessInfo { public IntPtr Process, Thread; public uint Id, ThreadId; }
-    [DllImport("advapi32.dll", SetLastError = true)]
-    private static extern bool DuplicateTokenEx(SafeAccessTokenHandle token, uint access, IntPtr attributes,
-        int level, int type, out SafeAccessTokenHandle primary);
-    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-    private static extern bool CreateProcessWithTokenW(SafeAccessTokenHandle token, uint flags, string application,
-        StringBuilder command, uint creation, IntPtr environment, string directory, ref Startup startup, out ProcessInfo info);
     [DllImport("advapi32.dll", SetLastError = true)]
     private static extern bool OpenProcessToken(IntPtr process, uint access, out SafeAccessTokenHandle token);
     [DllImport("advapi32.dll", SetLastError = true)]
     private static extern bool GetTokenInformation(SafeAccessTokenHandle token, int kind, IntPtr buffer, int size, out int returned);
-    [DllImport("kernel32.dll", SetLastError = true)] private static extern bool CloseHandle(IntPtr handle);
-    [DllImport("kernel32.dll", SetLastError = true)] private static extern uint WaitForSingleObject(IntPtr handle, uint ms);
-    [DllImport("kernel32.dll", SetLastError = true)] private static extern bool GetExitCodeProcess(IntPtr handle, out uint status);
-    [DllImport("kernel32.dll", SetLastError = true)] private static extern bool TerminateProcess(IntPtr handle, uint status);
-    private static void Require(bool result) { if (!result) throw new Win32Exception(Marshal.GetLastWin32Error()); }
     private static void Require(bool result, string stage) {
         if (!result) throw new InvalidOperationException("Proof process failure at " + stage + ", code " + Marshal.GetLastWin32Error());
     }
@@ -64,74 +45,101 @@ public static class DssR5Process
             return new SecurityIdentifier(sid).Value;
         } finally { Marshal.FreeHGlobal(bytes); }
     }
-    public static SafeAccessTokenHandle Logon(string name, SecureString password) {
-        IntPtr secret = Marshal.SecureStringToGlobalAllocUnicode(password);
+    private static int TokenNumber(SafeAccessTokenHandle token, int kind) {
+        IntPtr bytes = Marshal.AllocHGlobal(4);
         try {
-            SafeAccessTokenHandle token;
-            // R5 launches local processes. R4's NETWORK token remains unchanged
-            // in its own harness and is not reused as a process logon here.
-            if (!LogonUserW(name, ".", secret, 2, 0, out token)) {
-                int error = Marshal.GetLastWin32Error();
-                if (token != null) token.Dispose();
-                throw new Win32Exception(error);
-            }
-            return token;
-        } finally { Marshal.ZeroFreeGlobalAllocUnicode(secret); }
-    }
-    private static string Quote(string value) {
-        if (value.IndexOfAny(new char[] {'"', '\0', '\r', '\n'}) >= 0 || value.EndsWith("\\"))
-            throw new ArgumentException("Invalid proof process argument.");
-        return "\"" + value + "\"";
+            int returned;
+            Require(GetTokenInformation(token, kind, bytes, 4, out returned), "read-child-token");
+            if (returned != 4) throw new InvalidOperationException("Invalid token number extent.");
+            return Marshal.ReadInt32(bytes);
+        } finally { Marshal.FreeHGlobal(bytes); }
     }
     public sealed class Child : IDisposable {
-        private IntPtr process;
-        internal Child(IntPtr handle) { process = handle; }
-        public uint Status { get { uint status; Require(GetExitCodeProcess(process, out status)); return status; } }
+        private readonly Process process;
+        private readonly Task output, errors;
+        private volatile string hint = "none";
+        private bool disposed;
+        internal Child(Process value) {
+            process = value;
+            output = Drain(process.StandardOutput, false);
+            errors = Drain(process.StandardError, true);
+            process.StandardInput.Close();
+        }
+        private async Task Drain(StreamReader reader, bool diagnostic) {
+            char[] buffer = new char[1024];
+            var text = new StringBuilder();
+            int count;
+            while ((count = await reader.ReadAsync(buffer, 0, buffer.Length)) > 0) {
+                if (diagnostic && text.Length < 8192) {
+                    text.Append(buffer, 0, Math.Min(count, 8192 - text.Length));
+                    string seen = text.ToString();
+                    if (seen.Contains("Cannot find module")) hint = "module-not-found";
+                    else if (seen.Contains("EACCES") || seen.Contains("Access is denied")) hint = "file-access-denied";
+                    else if (seen.Contains("ECONNREFUSED")) hint = "connection-refused";
+                    else if (seen.Contains("Unadmitted proof child")) hint = "environment-guard";
+                    else if (seen.Contains("error") || seen.Contains("Error")) hint = "node-error";
+                }
+            }
+        }
+        public string ErrorHint { get { return hint; } }
+        public uint Status { get { return process.HasExited ? unchecked((uint)process.ExitCode) : 259; } }
         public uint Finish() {
-            if (WaitForSingleObject(process, 60000) != 0) throw new InvalidOperationException("Proof child did not finish.");
-            uint status; Require(GetExitCodeProcess(process, out status)); return status;
+            var clock = Stopwatch.StartNew();
+            if (!process.WaitForExit(60000)) throw new InvalidOperationException("Proof child did not finish.");
+            var drained = Task.WhenAll(output, errors);
+            int remaining = (int)Math.Max(0, 60000 - clock.ElapsedMilliseconds);
+            if (!drained.Wait(remaining)) throw new InvalidOperationException("Proof child stdio did not close.");
+            drained.GetAwaiter().GetResult();
+            return unchecked((uint)process.ExitCode);
         }
         public void Dispose() {
-            if (process == IntPtr.Zero) return;
-            if (WaitForSingleObject(process, 0) == 258) {
-                Require(TerminateProcess(process, 1));
-                if (WaitForSingleObject(process, 60000) != 0) throw new InvalidOperationException("Proof child cleanup failed.");
-            }
-            Require(CloseHandle(process)); process = IntPtr.Zero;
+            if (disposed) return;
+            try {
+                if (!process.HasExited) process.Kill();
+                Finish();
+            } finally { process.Dispose(); disposed = true; }
         }
     }
-    public static Child Launch(SafeAccessTokenHandle token, string expectedSid, string node, string script,
+    public static Child Launch(string name, SecureString password, string expectedSid, string node, string script,
         int port, string nonce, string actor, string arena, string binary, string directory) {
-        SafeAccessTokenHandle primary;
-        Require(DuplicateTokenEx(token, 0x000F01FF, IntPtr.Zero, 2, 1, out primary), "duplicate-primary");
-        using (primary) {
-            var startup = new Startup { Size = Marshal.SizeOf<Startup>() };
-            // Static bootstrap code uses argv for paths, never string interpolation
-            // of source or credentials. It distinguishes JS startup from actor setup.
-            const string bootstrap = "const f=require('node:fs');const d=process.argv[1];const s=process.argv[2];" +
-                "f.writeFileSync(d,JSON.stringify({started:true,environmentReady:process.env.GITHUB_ACTIONS==='true'&&" +
-                "process.env.RUNNER_ENVIRONMENT==='github-hosted'&&process.env.DSS_RIGHTS_ACTOR_PROOF==='1'}),{flag:'wx'});" +
-                "process.argv.splice(1,1);require(s);";
-            var marker = System.IO.Path.Combine(arena, actor + "-bootstrap.json");
-            var command = new StringBuilder(Quote(node) + " --eval " + Quote(bootstrap) + " " + Quote(marker) + " " + Quote(script) + " " + port + " " + Quote(nonce) +
-                " " + Quote(actor) + " " + Quote(arena) + " " + Quote(binary));
-            var block = "DSS_RIGHTS_ACTOR_PROOF=1\0GITHUB_ACTIONS=true\0RUNNER_ENVIRONMENT=github-hosted\0SystemRoot=" +
-                Environment.GetEnvironmentVariable("SystemRoot") + "\0TEMP=" + directory + "\0TMP=" + directory + "\0\0";
-            IntPtr environment = Marshal.StringToHGlobalUni(block);
-            ProcessInfo info;
-            try { Require(CreateProcessWithTokenW(primary, 1, node, command, 0x08000400, environment, directory, ref startup, out info), "create-primary-process"); }
-            finally { Marshal.FreeHGlobal(environment); }
-            CloseHandle(info.Thread);
-            var child = new Child(info.Process);
-            try {
-                SafeAccessTokenHandle actual;
-                Require(OpenProcessToken(info.Process, 8, out actual), "query-child-token");
-                using (actual) {
-                    if (TokenSid(actual) != expectedSid)
-                        throw new InvalidOperationException("Actual child identity mismatch.");
-                }
-                return child;
-            } catch { child.Dispose(); throw; }
+        // The managed credential API owns logon/profile/stdio setup. Credentials
+        // remain SecureString data; no shell, password argument or elevated actor.
+        var start = new ProcessStartInfo {
+            FileName = node, UserName = name, Domain = ".", Password = password,
+            LoadUserProfile = true, UseShellExecute = false, CreateNoWindow = true,
+            WindowStyle = ProcessWindowStyle.Hidden, WorkingDirectory = directory,
+            RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true
+        };
+        const string bootstrap = "const f=require('node:fs');const d=process.argv[1];const s=process.argv[2];" +
+            "f.writeFileSync(d,JSON.stringify({started:true,environmentReady:process.env.GITHUB_ACTIONS==='true'&&" +
+            "process.env.RUNNER_ENVIRONMENT==='github-hosted'&&process.env.DSS_RIGHTS_ACTOR_PROOF==='1'}),{flag:'wx'});" +
+            "process.argv.splice(1,1);require(s);";
+        var marker = Path.Combine(arena, actor + "-bootstrap.json");
+        foreach (string argument in new string[] {"--eval", bootstrap, marker, script, port.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            nonce, actor, arena, binary}) start.ArgumentList.Add(argument);
+        start.Environment.Clear();
+        start.Environment["DSS_RIGHTS_ACTOR_PROOF"] = "1";
+        start.Environment["GITHUB_ACTIONS"] = "true";
+        start.Environment["RUNNER_ENVIRONMENT"] = "github-hosted";
+        start.Environment["SystemRoot"] = Environment.GetEnvironmentVariable("SystemRoot");
+        start.Environment["TEMP"] = directory;
+        start.Environment["TMP"] = directory;
+        var process = new Process { StartInfo = start };
+        Child child = null;
+        try {
+            if (!process.Start()) throw new InvalidOperationException("Ordinary process did not start.");
+            child = new Child(process);
+            SafeAccessTokenHandle token;
+            Require(OpenProcessToken(process.Handle, 8, out token), "query-child-token");
+            using (token) {
+                if (TokenSid(token) != expectedSid || TokenNumber(token, 8) != 1 || TokenNumber(token, 20) != 0)
+                    throw new InvalidOperationException("Actual ordinary primary token mismatch.");
+            }
+            return child;
+        } catch {
+            if (child != null) child.Dispose();
+            else process.Dispose();
+            throw;
         }
     }
 }

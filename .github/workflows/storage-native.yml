@@ -61,6 +61,9 @@ jobs:
           path: node_modules/.cache/acl-contract-proof-*.json
           include-hidden-files: true
           if-no-files-found: warn
+      - name: Verify current-user Windows JS bootstrap without logons
+        if: runner.os == 'Windows'
+        run: node tools/agent-helpers/debt037/r5/windows-bootstrap-preflight.mjs
       - name: Prove role rights in actual ordinary Node processes
         env:
           DSS_RIGHTS_ACTOR_PROOF: "1"

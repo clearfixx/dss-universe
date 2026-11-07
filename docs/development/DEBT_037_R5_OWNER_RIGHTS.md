@@ -113,3 +113,22 @@ Additional controls bound R5 to1024 captured components, exercise Node Worker
 teardown, refuse local privileged-harness execution and test malformed Linux ACL
 wire shapes separately from real OS query errors. Current local native43/43 and
 portable storage43/43 pass after these corrections. Final CI is still pending.
+
+At `c85be28`, Linux and Darwin actor artifacts are complete: respectively12/12
+and14/14 controls, two actual ordinary processes each. JSON SHA256:
+Linux `1EF111D9384AB2D31DE10E4734308832DE986CC8738AEB99985B8B11292314B0`;
+Darwin `C1CBCC8562F5D9942D52B29534F78FA918E3FA1D86D9F41E2FCFFD12E406894C`.
+Those records do not establish Windows success or complete R5 acceptance.
+
+Windows direct-token launch attempts created a verified-SID process but never
+reached READY. Neither NETWORK-token reuse nor a subsequent interactive/profile
+attempt proved JS startup; no exact loader cause is claimed. The candidate now
+uses the framework credential/profile/stdio API and the installed pinned Node
+binary, verifies the actual child's SID, primary token type and lack of
+elevation, and drains only bounded diagnostic categories. Passwords remain
+SecureString data, absent from argv/logs. Temporary account profiles, like fresh
+fixtures, are confined to disposable CI and retained only until VM teardown;
+invocation-owned accounts are still removed. The current-user bootstrap
+preflight is separate from the mandatory distinct-user proof. Socket/readline
+errors are explicitly observed across both emitters; a failed connection must
+reach bounded diagnostics rather than an unhandled event.

@@ -26,7 +26,23 @@
 #else
 #include "rights-test-posix.h"
 #endif
-using namespace dss::storage::probe;
+using dss::storage::probe::CaptureRightsContext;
+using dss::storage::probe::ChangeMetadata;
+using dss::storage::probe::ChangeNamespace;
+using dss::storage::probe::DeleteChild;
+using dss::storage::probe::DirectoryRole;
+using dss::storage::probe::EvaluateDirectoryRights;
+using dss::storage::probe::InspectRoleRights;
+using dss::storage::probe::Kind;
+using dss::storage::probe::NativeChain;
+using dss::storage::probe::NativeError;
+using dss::storage::probe::NativeObject;
+using dss::storage::probe::OwnerClass;
+using dss::storage::probe::ParseDirectoryRole;
+using dss::storage::probe::ReadContent;
+using dss::storage::probe::ReadDirectoryRights;
+using dss::storage::probe::RightsFacts;
+using dss::storage::probe::RightsState;
 namespace {
 void Require(bool condition) { if (!condition) throw std::runtime_error("rights test failed"); }
 void Models() {

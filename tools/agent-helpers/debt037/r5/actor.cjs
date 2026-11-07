@@ -73,12 +73,21 @@ async function run() {
       chains.set(name, await probe.captureSecurityChain(join(arena, name)));
     }
   }
+  stage = "connect-barrier";
   const socket = net.connect({ host: "127.0.0.1", port: Number(portText) });
   activeSocket = socket;
   socket.setEncoding("utf8");
   const input = readline.createInterface({ input: socket });
-  await once(socket, "connect");
-  const go = once(input, "line");
+  let rejectFault;
+  const fault = new Promise((_, reject) => {
+    rejectFault = reject;
+  });
+  // Readline forwards its input's error on a separate emitter. Every phase
+  // observes both sources; a connection failure must reach bounded diagnostics.
+  socket.on("error", rejectFault);
+  input.on("error", rejectFault);
+  await Promise.race([once(socket, "connect"), fault]);
+  const go = Promise.race([once(input, "line"), fault]);
   socket.write(JSON.stringify({ kind: "ready", actor, nonce }) + "\n");
   const [command] = await go;
   assert.equal(command, "go");
@@ -184,31 +193,31 @@ async function run() {
     JSON.stringify({ kind: "result", actor, identityChecked: true, checks }) +
       "\n",
   );
-  await once(socket, "close");
+  await Promise.race([once(socket, "close"), fault]);
   input.close();
 }
 run().catch((error) => {
   const message = JSON.stringify({ kind: "failure", actor, stage }) + "\n";
-  if (activeSocket && !activeSocket.destroyed)
+  const code =
+    typeof error.code === "string" && /^[A-Z_]{2,64}$/.test(error.code)
+      ? error.code
+      : "UNKNOWN";
+  const osCode =
+    Number.isInteger(error.osCode) &&
+    error.osCode >= 0 &&
+    error.osCode <= 0xffffffff
+      ? error.osCode
+      : 0;
+  try {
+    fs.writeFileSync(
+      join(arena, actor + "-failure.json"),
+      JSON.stringify({ stage, code, osCode }),
+      { flag: "wx" },
+    );
+  } catch {}
+  if (activeSocket && activeSocket.readyState === "open")
     activeSocket.end(message, () => process.exit(1));
   else {
-    const code =
-      typeof error.code === "string" && /^[A-Z_]{2,64}$/.test(error.code)
-        ? error.code
-        : "UNKNOWN";
-    const osCode =
-      Number.isInteger(error.osCode) &&
-      error.osCode >= 0 &&
-      error.osCode <= 0xffffffff
-        ? error.osCode
-        : 0;
-    try {
-      fs.writeFileSync(
-        join(arena, actor + "-failure.json"),
-        JSON.stringify({ stage, code, osCode }),
-        { flag: "wx" },
-      );
-    } catch {}
     process.stderr.write("Ordinary rights actor proof failed during setup.\n");
     process.exit(1);
   }
