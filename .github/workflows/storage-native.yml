@@ -50,7 +50,7 @@ jobs:
         run: node tools/agent-helpers/debt037/r6/observe-existing-boundary.mjs
       - name: Preserve existing qualification boundary evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: qualification-baseline-${{ runner.os }}
           path: node_modules/.cache/qualification-baseline-*/evidence.json
@@ -65,7 +65,7 @@ jobs:
         run: node tools/agent-helpers/debt037/run-acl-contract-proof.mjs
       - name: Preserve bounded ACL contract evidence
         if: always() && runner.os != 'Windows'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: acl-contract-${{ runner.os }}
           path: node_modules/.cache/acl-contract-proof-*.json
@@ -81,7 +81,7 @@ jobs:
         run: node tools/agent-helpers/debt037/r5/run-proof.mjs
       - name: Preserve bounded role rights evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: role-rights-${{ runner.os }}
           path: node_modules/.cache/rights-actor-*.json
@@ -94,7 +94,7 @@ jobs:
         run: node tools/agent-helpers/debt037/r6/run-proof.mjs
       - name: Preserve qualification proof and unresolved gates
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: qualification-proof-${{ runner.os }}
           path: node_modules/.cache/qualification-proof-*.json
