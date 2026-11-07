@@ -48,6 +48,21 @@
       ]
     },
     {
+      "target_name": "dss_qualification_proof",
+      "type": "executable",
+      "sources": ["../../../tools/agent-helpers/debt037/r6/qualification-proof.cc", "src/native-object.cc", "src/root-chain.cc", "src/rights-model.cc"],
+      "cflags_cc!": ["-fno-exceptions"],
+      "cflags_cc": ["-Wall", "-Wextra", "-Werror", "-std=c++20"],
+      "xcode_settings": {"GCC_ENABLE_CPP_EXCEPTIONS": "YES", "CLANG_CXX_LANGUAGE_STANDARD": "c++20"},
+      "msvs_settings": {"VCCLCompilerTool": {"ExceptionHandling": 1, "WarningLevel": 4, "WarnAsError": "true"}},
+      "conditions": [
+        ["OS=='win'", {"sources": ["../../../tools/agent-helpers/debt037/r6/qualification-windows.cc", "src/platform-win.cc", "src/topology-win.cc", "src/rights-win.cc"], "libraries": ["ntdll.lib", "advapi32.lib"]},
+          {"sources": ["src/platform-posix.cc", "src/rights-posix.cc"]}],
+        ["OS=='linux'", {"sources": ["../../../tools/agent-helpers/debt037/r6/qualification-linux.cc", "src/topology-linux.cc", "src/rights-linux.cc"], "libraries": ["-pthread"]}],
+        ["OS=='mac'", {"sources": ["../../../tools/agent-helpers/debt037/r6/qualification-darwin.cc", "src/topology-darwin.cc", "src/rights-darwin.cc"]}]
+      ]
+    },
+    {
       "target_name": "dss_acl_contract_proof",
       "type": "none",
       "conditions": [

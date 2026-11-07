@@ -886,9 +886,11 @@ merged as `1ebfa67`: native43/43 on Windows/Linux/macOS, real ordinary-process
 actor15/15,12/12,14/14 respectively, CI8/8 and exact-head local full gate exit0
 without sleep. See [R5 implementation/evidence](DEBT_037_R5_OWNER_RIGHTS.md)
 and PR138 for final receipts (API E2E688/688, Web15/15 without retries).
-The next [R6 qualification evidence proposal](DEBT_037_R6_QUALIFICATION_PROPOSAL.md)
-defines the still-unproved identity/filesystem premises and a test-only probe
-requiring separate authorization; it does not implement a qualification policy.
+Owner accepted [R6 qualification evidence proposal](DEBT_037_R6_QUALIFICATION_PROPOSAL.md)
+in PR139 / `64e6b14` and separately authorized the standalone proof/harness.
+The [R6 implementation candidate](DEBT_037_R6_QUALIFICATION_PROOF.md) remains
+proof-only with verification/acceptance pending; no production qualification
+policy or new admitted-root exists.
 No complete admitted root, operation containment, uploads adoption or joint
 API/Worker activation is claimed; DEBT-037 and D7 remain open.
 
