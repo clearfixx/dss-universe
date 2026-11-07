@@ -58,7 +58,7 @@ try {
         if (Get-LocalGroupMember -SID 'S-1-5-32-544' | Where-Object { $_.SID.Value -eq $account.SID.Value }) {
             throw 'Proof accounts must be ordinary users.'
         }
-        $token = [Dss037IdentityNative]::Logon($name, $password)
+        $token = [DssR5Process]::Logon($name, $password)
         $tokens.Add($token)
         if ([Dss037IdentityNative]::Identity($token) -cne $account.SID.Value) { throw 'Token identity mismatch.' }
     }
@@ -164,7 +164,7 @@ try {
 } catch {
     $proofFailed = $true
     $original = $_.Exception.GetBaseException()
-    $code = [int]($original.HResult -band 65535)
+    $code = 0 # A controller assertion/HRESULT is not a Win32 OS error.
     if ($original -is [ComponentModel.Win32Exception]) { $code = $original.NativeErrorCode }
     if ($null -ne $setupOsCode) { $code = $setupOsCode }
     if ($original.Message -cmatch 'Proof process failure at ([a-z-]{1,48}), code ([0-9]{1,10})') {

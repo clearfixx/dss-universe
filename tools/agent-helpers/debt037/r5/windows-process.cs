@@ -15,10 +15,14 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Security.Principal;
+using System.Security;
 using Microsoft.Win32.SafeHandles;
 
 public static class DssR5Process
 {
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern bool LogonUserW(string name, string domain, IntPtr password, int kind,
+        int provider, out SafeAccessTokenHandle token);
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     private struct Startup {
         public int Size; public string Reserved, Desktop, Title;
@@ -59,6 +63,20 @@ public static class DssR5Process
                 throw new InvalidOperationException("Invalid child token SID extent.");
             return new SecurityIdentifier(sid).Value;
         } finally { Marshal.FreeHGlobal(bytes); }
+    }
+    public static SafeAccessTokenHandle Logon(string name, SecureString password) {
+        IntPtr secret = Marshal.SecureStringToGlobalAllocUnicode(password);
+        try {
+            SafeAccessTokenHandle token;
+            // R5 launches local processes. R4's NETWORK token remains unchanged
+            // in its own harness and is not reused as a process logon here.
+            if (!LogonUserW(name, ".", secret, 2, 0, out token)) {
+                int error = Marshal.GetLastWin32Error();
+                if (token != null) token.Dispose();
+                throw new Win32Exception(error);
+            }
+            return token;
+        } finally { Marshal.ZeroFreeGlobalAllocUnicode(secret); }
     }
     private static string Quote(string value) {
         if (value.IndexOfAny(new char[] {'"', '\0', '\r', '\n'}) >= 0 || value.EndsWith("\\"))
@@ -101,7 +119,7 @@ public static class DssR5Process
                 Environment.GetEnvironmentVariable("SystemRoot") + "\0TEMP=" + directory + "\0TMP=" + directory + "\0\0";
             IntPtr environment = Marshal.StringToHGlobalUni(block);
             ProcessInfo info;
-            try { Require(CreateProcessWithTokenW(primary, 0, node, command, 0x08000400, environment, directory, ref startup, out info), "create-primary-process"); }
+            try { Require(CreateProcessWithTokenW(primary, 1, node, command, 0x08000400, environment, directory, ref startup, out info), "create-primary-process"); }
             finally { Marshal.FreeHGlobal(environment); }
             CloseHandle(info.Thread);
             var child = new Child(info.Process);
