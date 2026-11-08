@@ -888,9 +888,16 @@ without sleep. See [R5 implementation/evidence](DEBT_037_R5_OWNER_RIGHTS.md)
 and PR138 for final receipts (API E2E688/688, Web15/15 without retries).
 Owner accepted [R6 qualification evidence proposal](DEBT_037_R6_QUALIFICATION_PROPOSAL.md)
 in PR139 / `64e6b14` and separately authorized the standalone proof/harness.
-The [R6 implementation candidate](DEBT_037_R6_QUALIFICATION_PROOF.md) remains
-proof-only with verification/acceptance pending; no production qualification
-policy or new admitted-root exists.
+Owner accepted the [R6 proof-only implementation](DEBT_037_R6_QUALIFICATION_PROOF.md)
+in PR140 at `20dcf61`, merged as `1781916`: CI8/8, exact-head local full gate exit0
+without sleep, native48/48 on all three OS, coverage5/5 executable workspaces
+(API1466/1466), E2E688/688 without skips/todo, build6/6 and Web15/15 without retries.
+Linux idmap/mount binding, Darwin ownership on/off and Windows ordinary-token/
+junction controls passed. Production qualification is not established; Windows
+remote/removable fixtures remain unprovisioned. The proposed
+[qualification decisions](DEBT_037_QUALIFICATION_DECISIONS.md) identify remaining
+ACL completeness, identity authority and operation gates; that document is not
+an implementation authorization or an admitted-root policy.
 No complete admitted root, operation containment, uploads adoption or joint
 API/Worker activation is claimed; DEBT-037 and D7 remain open.
 

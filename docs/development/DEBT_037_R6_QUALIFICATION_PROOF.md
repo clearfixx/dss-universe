@@ -3,7 +3,11 @@
 Owner accepted design/characterization PR139 (merge `64e6b14`) and separately
 authorized this proof-only implementation. The
 [accepted proposal](DEBT_037_R6_QUALIFICATION_PROPOSAL.md) defines its gates.
-Implementation verification and packet acceptance remain pending.
+Owner accepted the verified proof-only packet in
+[PR140](https://github.com/clearfixx/dss-universe/pull/140), head
+`20dcf61af6685f93f1a6a4d68f317767472236ce`; merge
+`1781916079bcf0d1642aa6bb5b416006cca42337` preserves its exact tree.
+The final acceptance record below supersedes the pending checkpoint wording.
 
 ## Scope and evidence boundary
 
@@ -165,3 +169,36 @@ wire prefix above, still requiring installed syscall/unique-ID declarations,
 and records the build facts explicitly. Earlier artifacts are preserved; their
 missing query must not be described as a successful idmap query. Final-head
 three-platform evidence and the complete local gate remain required.
+
+## Final accepted evidence
+
+The accepted head and merged main have tree
+`1552dbfd543e0d1a7ee9db54964ae74588fa37f9`. Exact-head CI passed8/8:
+native run42409760875, quality run42409760870 and storage-security
+run42409760934. Native48/48 passed on Windows/Linux/macOS without skips/todo.
+
+The exact-head local full gate completed with exit0 on2026-11-07,
+20:11:57–20:32:25 UTC. The actual Windows System-log query found zero sleep
+events in that interval. Coverage included all5 executable workspace packages
+(8 Turbo tasks), API1466/1466; E2E688/688 across64 suites without skips/todo;
+build6/6; fresh Web smoke15/15 without retries. Format, lint, types, Prisma
+validation/drift, security, architecture, GraphQL and compiled-entry checks passed.
+The local API JSON SHA256 is
+`345d40d555763a6e0e68ded7e86d1251765b4a5c5b1e19300211dea2d7a9c6aa`.
+
+Final artifacts13588862040(Linux),13588757618(Windows) and13588617943(macOS)
+passed ZIP SHA256, bounded-record/schema and source-tree review. Their synthetic
+CI checkout `21d2c135bb97adc72980f38a9c5878165171fc2f` has the verified tree
+above; it is not the actual main merge SHA. The final Linux query was compiled
+(feature mask15) and measured non-idmapped normal/bind mounts and an idmapped
+control, with descriptor/mount binding present. macOS ownership on/off and
+Windows ordinary-token/junction controls passed. Windows remote/removable
+fixtures remain unprovisioned, not successful negative controls.
+
+Earlier checkpoint artifacts and failed/interrupted attempts remain preserved.
+The detailed local receipt is
+`tools/agent-helpers/debt037-r6-runtime-proof.local.json`; it is intentionally
+untracked and is supplementary to the committed record and PR/CI evidence.
+The [qualification decision plan](DEBT_037_QUALIFICATION_DECISIONS.md) records
+the remaining gates. This acceptance does not close DEBT-037/D7 or authorize
+production admission, new native implementation, ACL repair or activation.
