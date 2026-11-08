@@ -1,6 +1,8 @@
 # DEBT-007 — C1 qualification and admission protocol
 
-Date: 2026-10-29. Baseline: accepted mainddb685d, including PR108.
+Original protocol: 2026-10-29, accepted mainddb685d including PR108.
+Integration review: 2026-11-08, accepted main
+`67b04a048698104699e34dc178dcead601634f4d` including the accepted R6/PR141 work.
 Status: protocol/characterization candidate. No runtime or migration authorized.
 The owner approved new legitimate qualification cycles, not restoration by late
 old-cycle events. Existing scoring, caps, recipient precedence and API remain.
@@ -291,6 +293,8 @@ not authority to claim an arbitrary-rule framework is already complete.
 5. Complete D operations/activation runbook and owner acceptance before enabling
    automatic awards. Historical replay/backfill and Phase11 remain separate.
 
-Focused5/5 establishes legacy behavior only. Full local quality and CI are
-pending for this protocol packet. C1 design acceptance is not runtime C approval,
+Focused5/5 establishes legacy behavior only. Historical head `10c09eb` passed
+its then-current full gate and CI5/5; those results do not certify this integration
+head. A new exact-head full local gate and all8 current CI checks are required.
+C1 design acceptance is not runtime C approval,
 DEBT-090 correction, D7 acceptance, stack audit or Phase11 readiness.

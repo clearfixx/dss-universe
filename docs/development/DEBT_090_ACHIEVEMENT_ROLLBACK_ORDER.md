@@ -62,6 +62,6 @@ coverage before new-cycle eligibility, not only a remembered old tombstone.
 Focused characterization now passes5/5 with unique synthetic event names; the
 initial fixture-rule collision is retained separately. No runtime fix is claimed.
 
-Evidence: [migrated characterization](../../apps/api/test/gamification-delivery-characterization.e2e-spec.ts),
-focused4/4 including the two existing Points replay/atomicity tests. Raw focused
+Historical baseline evidence: [migrated characterization](../../apps/api/test/gamification-delivery-characterization.e2e-spec.ts),
+then focused4/4 including the two existing Points replay/atomicity tests. Raw focused
 output is retained at node_modules/.cache/debt007-c-characterization.log.
