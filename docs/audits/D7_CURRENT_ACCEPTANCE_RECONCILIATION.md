@@ -68,9 +68,16 @@ separate from the requested accepted baseline and retained checkpoint.
 
 ## Remaining D7 work
 
-- Nov8 candidate DEBT-094: concurrent authenticated upload intake is reproduced
-  with two Media rows but one real queue job. Characterization is not a fix;
-  agree and verify its separate bounded runtime correction. See the
+- Nov8 DEBT-095 records an unexplained IAM timeout in PR144's local gate:
+  698/699 versus CI699/699. Preserve its red evidence. The owner approved a
+  separate diagnostic/test scope; its first valid focused observation passed
+  1452ms without reproducing the delay. Cause remains open; full diagnostic gate,
+  final CI and owner acceptance are still required.
+  This adds the95th register ID; the earlier93/94-entry checkpoints stay historical.
+- Nov8 DEBT-094: characterization PR143 was accepted and merged `a4ab472`.
+  Its two-Media/one-job reproduction is not a fix. The separately approved
+  atomic-claim runtime candidate has focused unit11/11 and DB/HTTP/Redis10/10;
+  full gate, final CI and runtime packet acceptance remain open. See the
   [Media intake evidence](DEBT_094_MEDIA_INTAKE_CONCURRENCY.md). The historical
   91-row matrix and93-entry checkpoint above do not include this new94th ID.
 - Reconcile all retained M/O/Q/X rows against current accepted code, tests and
