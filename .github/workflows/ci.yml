@@ -86,6 +86,8 @@ jobs:
 
       - name: Quality policy regressions
         run: pnpm test:quality-policy
+      - name: Verify preserved agent helper sources
+        run: pnpm helpers:verify
 
       - name: Unit tests with coverage
         run: pnpm test:full-policy && pnpm test:full --coverage

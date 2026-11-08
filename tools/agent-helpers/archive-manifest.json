@@ -1,0 +1,384 @@
+{
+  "version": 1,
+  "createdAtUtc": "2026-10-29T16:26:43.2175300Z",
+  "entries": [
+    {
+      "source": "cache-d5",
+      "path": "debt007-full-gate.ps1",
+      "archivePath": "archive/cache-d5/debt007-full-gate.ps1",
+      "bytes": 1736,
+      "sha256": "f66af958de248cd117fec029f7c60a6914c374ae92e67c995a2dcdb6f769fb70"
+    },
+    {
+      "source": "cache-d5",
+      "path": "debt007-run-db-characterization.ps1",
+      "archivePath": "archive/cache-d5/debt007-run-db-characterization.ps1",
+      "bytes": 2020,
+      "sha256": "209b2221449748e4f243b37527317a5bd813be89634d9da17a91006e41c8c08f"
+    },
+    {
+      "source": "cache-d5",
+      "path": "debt066-integration-gate.ps1",
+      "archivePath": "archive/cache-d5/debt066-integration-gate.ps1",
+      "bytes": 1900,
+      "sha256": "a6b2cdd843d981228335d281b4ac013164b8d1cf5595a98f5e258942fcf48b1e"
+    },
+    {
+      "source": "cache-d5",
+      "path": "debt066-main81-gate.ps1",
+      "archivePath": "archive/cache-d5/debt066-main81-gate.ps1",
+      "bytes": 1900,
+      "sha256": "37f49b37e9a36a82dc5c9cfcd4bf1d214ffe3932b1cc2eedb1794873aeecb01b"
+    },
+    {
+      "source": "cache-d5",
+      "path": "debt081-integration-gate.ps1",
+      "archivePath": "archive/cache-d5/debt081-integration-gate.ps1",
+      "bytes": 1250,
+      "sha256": "c89d174940fbf4d7b8ad2c59d5f79223d4200c577b959d716c8c6ca264168eed"
+    },
+    {
+      "source": "cache-d5",
+      "path": "debt081-production-flow.cjs",
+      "archivePath": "archive/cache-d5/debt081-production-flow.cjs",
+      "bytes": 4249,
+      "sha256": "0447ec0b397a61fca25f1a49919b817787caed87c3600ebecf8277e3dc60738c"
+    },
+    {
+      "source": "cache-d5",
+      "path": "debt081-run-quality.ps1",
+      "archivePath": "archive/cache-d5/debt081-run-quality.ps1",
+      "bytes": 2024,
+      "sha256": "5707dcf66bcf4f3495be45d31e87d3d61529c94a1aceec720b77e0987ba84d71"
+    },
+    {
+      "source": "cache-d6",
+      "path": "c1-event-inventory.mjs",
+      "archivePath": "archive/cache-d6/c1-event-inventory.mjs",
+      "bytes": 1664,
+      "sha256": "2a41476f7e38874b1464b0d0624abb0079439f8bdcf9f6aa8d1eb664cd51fbd7"
+    },
+    {
+      "source": "cache-d6",
+      "path": "c1-read-rule-metadata.mjs",
+      "archivePath": "archive/cache-d6/c1-read-rule-metadata.mjs",
+      "bytes": 2173,
+      "sha256": "df68710ca4e99f56af708ec29aa79f88de78e1d0cef49b6ff07d936286830981"
+    },
+    {
+      "source": "cache-d6",
+      "path": "c1-save-gate-proof.mjs",
+      "archivePath": "archive/cache-d6/c1-save-gate-proof.mjs",
+      "bytes": 1840,
+      "sha256": "61a3a8495c2377458448bb7296026a2092ae2eb5b810de3a587f47dc5035c3d6"
+    },
+    {
+      "source": "cache-d6",
+      "path": "d7-003-005-implementation-reconcile.py",
+      "archivePath": "archive/cache-d6/d7-003-005-implementation-reconcile.py",
+      "bytes": 2860,
+      "sha256": "4a6dddc8f4fda9daa29e79790a23ad94313ef8d232e953fe1d696253054da2cc"
+    },
+    {
+      "source": "cache-d6",
+      "path": "d7-091-approved-checkpoint.py",
+      "archivePath": "archive/cache-d6/d7-091-approved-checkpoint.py",
+      "bytes": 1689,
+      "sha256": "cae6054509d73ada0d8c052ad9508c2a57addf17ac4e0c6390367f8cf449985e"
+    },
+    {
+      "source": "cache-d6",
+      "path": "d7-091-current-ci.py",
+      "archivePath": "archive/cache-d6/d7-091-current-ci.py",
+      "bytes": 2240,
+      "sha256": "da1843dca78e7c79d8dcf43c8dc20264a5b219609bd5f715bc75b813c1e7f453"
+    },
+    {
+      "source": "cache-d6",
+      "path": "d7-accept-106-review-c.py",
+      "archivePath": "archive/cache-d6/d7-accept-106-review-c.py",
+      "bytes": 7427,
+      "sha256": "478c0c96702acf612969151d91a7e7f50785d94d482062fd7575027ce6f33592"
+    },
+    {
+      "source": "cache-d6",
+      "path": "d7-accept-107.py",
+      "archivePath": "archive/cache-d6/d7-accept-107.py",
+      "bytes": 6194,
+      "sha256": "26b02883064b5c785182e3f7bc85ae77cc357bf5bc51ae0af7e52b1ee27b26cf"
+    },
+    {
+      "source": "cache-d6",
+      "path": "d7-bootstrap-isolated-probe.mjs",
+      "archivePath": "archive/cache-d6/d7-bootstrap-isolated-probe.mjs",
+      "bytes": 3272,
+      "sha256": "a2dda559c9a7adc30cd8deee29c99700e85fcdde1ddca05fa740371bfab22885"
+    },
+    {
+      "source": "cache-d6",
+      "path": "d7-checkpoint-108.py",
+      "archivePath": "archive/cache-d6/d7-checkpoint-108.py",
+      "bytes": 1611,
+      "sha256": "a27db6bcecd72a8cfe2a5da0ef04cc3c379e6c00f8ea795e5eabda1a5b44a3a2"
+    },
+    {
+      "source": "cache-d6",
+      "path": "d7-current-context-20261029.py",
+      "archivePath": "archive/cache-d6/d7-current-context-20261029.py",
+      "bytes": 2588,
+      "sha256": "7aa456d0ace576131bfb4a67174d978eda07d8d817e0b226d946a91dfd391ad0"
+    },
+    {
+      "source": "cache-d6",
+      "path": "d7-current-links.cjs",
+      "archivePath": "archive/cache-d6/d7-current-links.cjs",
+      "bytes": 1911,
+      "sha256": "317a675c3b0a8a55370c6f0722af49606630e49d8764b8308a4b776c696f68cf"
+    },
+    {
+      "source": "cache-d6",
+      "path": "d7-dev-scope-probe.mjs",
+      "archivePath": "archive/cache-d6/d7-dev-scope-probe.mjs",
+      "bytes": 6469,
+      "sha256": "fe265eb5bb642e84ccda15d7b65ba0fbe178c63e924b610b061e4715f105c0a3"
+    },
+    {
+      "source": "cache-d6",
+      "path": "d7-dev-scope-reconcile.py",
+      "archivePath": "archive/cache-d6/d7-dev-scope-reconcile.py",
+      "bytes": 4853,
+      "sha256": "d4678c8497e7672bd1afaf5f9dd7e2ae69d4abc3cace5201fa94e4123b0039b3"
+    },
+    {
+      "source": "cache-d6",
+      "path": "d7-public-root-inventory.cjs",
+      "archivePath": "archive/cache-d6/d7-public-root-inventory.cjs",
+      "bytes": 2678,
+      "sha256": "f6d9b866a80257c929287bc2a3e13780b9dd2da73f4e25e08ab57264cce17ecc"
+    },
+    {
+      "source": "cache-d6",
+      "path": "d7-reconcile-20261029.py",
+      "archivePath": "archive/cache-d6/d7-reconcile-20261029.py",
+      "bytes": 9600,
+      "sha256": "8e3538afdcb4efed89b108c6ca6dd0b78126709831c8854944eacf89ea87ea1f"
+    },
+    {
+      "source": "cache-d6",
+      "path": "d7-record-bootstrap-091.py",
+      "archivePath": "archive/cache-d6/d7-record-bootstrap-091.py",
+      "bytes": 5352,
+      "sha256": "9384727d203234e6e4f98175df4fcdf6ebfa0d8adcd7ab56e70407100d616a87"
+    },
+    {
+      "source": "cache-d6",
+      "path": "d7-resolve-108.py",
+      "archivePath": "archive/cache-d6/d7-resolve-108.py",
+      "bytes": 2363,
+      "sha256": "d2d5532706cd30a53478f482a70caa2d1a4de5bba0e3e36288b8c490df6317f9"
+    },
+    {
+      "source": "cache-d6",
+      "path": "d7-run-quality-7512931.ps1",
+      "archivePath": "archive/cache-d6/d7-run-quality-7512931.ps1",
+      "bytes": 1949,
+      "sha256": "7e5ba31e3edd6a9dc4e93dad8e36b90f1dd6dc7b1d82d4901e09720419e32537"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt007-b-epoch-probe.cjs",
+      "archivePath": "archive/cache-d6/debt007-b-epoch-probe.cjs",
+      "bytes": 3840,
+      "sha256": "3cef284de7a6cf9d5f52959c39a6c1a3d22e6ec1ecb8bdfe3ad40213f7ef791a"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt007-b-prepare-clock-probe.cjs",
+      "archivePath": "archive/cache-d6/debt007-b-prepare-clock-probe.cjs",
+      "bytes": 1294,
+      "sha256": "1e4fdcf74307d57b37f18290559fc5077322e3f198cf8a12f05fa2827f6253ee"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt007-provider-probe.cjs",
+      "archivePath": "archive/cache-d6/debt007-provider-probe.cjs",
+      "bytes": 5213,
+      "sha256": "6050dc923344a051aeeb049f4bb68f64fadbdb36f7445073202ff2341799a9cb"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt013-check-mailbox.cjs",
+      "archivePath": "archive/cache-d6/debt013-check-mailbox.cjs",
+      "bytes": 1674,
+      "sha256": "06f654630579e1dacc318748daa561de562c716eb15ff174896e09e43f10b9a8"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt013-ci-policy-gate.ps1",
+      "archivePath": "archive/cache-d6/debt013-ci-policy-gate.ps1",
+      "bytes": 1836,
+      "sha256": "5699d29552f99f517282d92fd746c2685a0343965fc45262133d864db2170fe0"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt013-full-gate.ps1",
+      "archivePath": "archive/cache-d6/debt013-full-gate.ps1",
+      "bytes": 1836,
+      "sha256": "173e1f76a96efa3cde9684b6ccfbb6d4e37f13efd611d7a31c09e91180869b09"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt013-smtp-smoke.cjs",
+      "archivePath": "archive/cache-d6/debt013-smtp-smoke.cjs",
+      "bytes": 1711,
+      "sha256": "776f5268a93fc646ace77fb7f60b772ff5ceb2c8eb83687b2d0c5af406d5400b"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt040-run-quality.ps1",
+      "archivePath": "archive/cache-d6/debt040-run-quality.ps1",
+      "bytes": 1819,
+      "sha256": "bc1ca2c9c4720af9a8e42d505bb170e47114653ef35ca13411673518fccae6cf"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt057-integration-gate.ps1",
+      "archivePath": "archive/cache-d6/debt057-integration-gate.ps1",
+      "bytes": 1137,
+      "sha256": "b3f44aea3e3addd686a863aae64e93edad08636bd00d9a05d0a924970af2e969"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt066-fixture-inventory.cjs",
+      "archivePath": "archive/cache-d6/debt066-fixture-inventory.cjs",
+      "bytes": 4189,
+      "sha256": "db9b774860d6b0306d94c1a4bfb54a7361e08f17c7dfe492e38463119f7e9ca3"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt066-run-quality.ps1",
+      "archivePath": "archive/cache-d6/debt066-run-quality.ps1",
+      "bytes": 1982,
+      "sha256": "b295a735f252e9f29fbb4d14bf2a7376779b4691e4c37c095fc23b28af1fdf8a"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt081-production-probe.cjs",
+      "archivePath": "archive/cache-d6/debt081-production-probe.cjs",
+      "bytes": 4453,
+      "sha256": "3c2c5a40c9b8a74ea39f45bddd3c15cbebe141e863634ee71f12583a0bc02a30"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt082-run-quality-main80.ps1",
+      "archivePath": "archive/cache-d6/debt082-run-quality-main80.ps1",
+      "bytes": 3344,
+      "sha256": "ddde2d465398e5538b39c1711ae21de49ee7df9d670b75a8cbe3bc594796aa9a"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt083-controlled-mount.cjs",
+      "archivePath": "archive/cache-d6/debt083-controlled-mount.cjs",
+      "bytes": 3657,
+      "sha256": "39039f6b5665de580a943a9087c37d32c04c6dac0ce4afb2a6d11a2ca690b630"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt083-run-quality.ps1",
+      "archivePath": "archive/cache-d6/debt083-run-quality.ps1",
+      "bytes": 1729,
+      "sha256": "070cb446123298bf53ce9dd0b881520611d90ae7402fbb64d2fd6b44f231789f"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt083-timer-probe.cjs",
+      "archivePath": "archive/cache-d6/debt083-timer-probe.cjs",
+      "bytes": 4469,
+      "sha256": "64da02f1ac9dc460482c570c9a4eb3199702b0b9afcd35afc72eadcd490145e5"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt091-save-proof.mjs",
+      "archivePath": "archive/cache-d6/debt091-save-proof.mjs",
+      "bytes": 2391,
+      "sha256": "4858e8002f52f8a2b5824c87bd8a7ce7f55ecf3e101fa3937f8e83dd1a7c8de9"
+    },
+    {
+      "source": "cache-d6",
+      "path": "dev-port-local-env-update.ps1",
+      "archivePath": "archive/cache-d6/dev-port-local-env-update.ps1",
+      "bytes": 3560,
+      "sha256": "5327342d418fcec0591faa4a127a007cecbdbba21cf769191d128958711b9eca"
+    },
+    {
+      "source": "cache-d6",
+      "path": "mailpit-local-env-update.ps1",
+      "archivePath": "archive/cache-d6/mailpit-local-env-update.ps1",
+      "bytes": 3086,
+      "sha256": "2c54f4a3a8bf900ce5a3ad4796242f2d15c76942eec7b4c25d975699d019da52"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt083-full-probe/arrival.spec.ts",
+      "archivePath": "archive/cache-d6/debt083-full-probe/arrival.spec.ts",
+      "bytes": 11496,
+      "sha256": "de1909add8451f9b6885d640a5e9d7c38bb829e31afc5d359efef27e02adcde6"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt083-full-probe/home.spec.ts",
+      "archivePath": "archive/cache-d6/debt083-full-probe/home.spec.ts",
+      "bytes": 670,
+      "sha256": "f99856431d80ee205107f49b2ba75eba2074775dde2f42bffe58d7e686614266"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt083-full-probe/playwright.config.cjs",
+      "archivePath": "archive/cache-d6/debt083-full-probe/playwright.config.cjs",
+      "bytes": 816,
+      "sha256": "5c77ccf41740947e4443e2fd269cd8c9bc0fd45db6c75d7b31c5f274af07d179"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt083-full-probe/prepare.cjs",
+      "archivePath": "archive/cache-d6/debt083-full-probe/prepare.cjs",
+      "bytes": 1418,
+      "sha256": "853a1ed8f3a396b68745e6e5ffb43d1a236932e749dd62028cb30f37a2660a37"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt083-full-probe/probe-fixture.ts",
+      "archivePath": "archive/cache-d6/debt083-full-probe/probe-fixture.ts",
+      "bytes": 3339,
+      "sha256": "afeb135ae17cc69101fb8f6c8f5d3a58bb746196ef71ee78a3020fdefe0cd3a3"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt083-evidence-fixture/failure.spec.cjs",
+      "archivePath": "archive/cache-d6/debt083-evidence-fixture/failure.spec.cjs",
+      "bytes": 916,
+      "sha256": "7b4f842be624590e177bd4760506f03522f62ed7fca6decb6eca17123cb89264"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt083-evidence-fixture/playwright.config.cjs",
+      "archivePath": "archive/cache-d6/debt083-evidence-fixture/playwright.config.cjs",
+      "bytes": 697,
+      "sha256": "fbe1d6cd18b5095c6120c0bce13078386235a6bd20967d318ecc4ad3df858b08"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt029-failfast-probe/network-guard.mjs",
+      "archivePath": "archive/cache-d6/debt029-failfast-probe/network-guard.mjs",
+      "bytes": 440,
+      "sha256": "e462dd6afc9a5fbe1f864a453bb321a9652a6b827348aa1a27fba6417f730b67"
+    },
+    {
+      "source": "cache-d6",
+      "path": "debt029-failfast-probe/run.cjs",
+      "archivePath": "archive/cache-d6/debt029-failfast-probe/run.cjs",
+      "bytes": 1750,
+      "sha256": "3146242889f3541c6862b8dd1c8b3cedb2ebb3b2b420857d9d17f2ee70b488db"
+    }
+  ]
+}

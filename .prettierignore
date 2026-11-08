@@ -8,3 +8,5 @@ apps/api/src/schema.gql
 apps/web/src/gql
 apps/web/next-env.d.ts
 /src/schema.gql
+tools/agent-helpers/archive/
+tools/agent-helpers/*.local.json
