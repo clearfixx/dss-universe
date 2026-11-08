@@ -2,7 +2,7 @@
 
 > Status: Active
 >
-> Updated: 2026-11-08 (Media intake candidate and IAM gate finding; accepted history retained)
+> Updated: 2026-11-08 (accepted Media intake; qualified-owner design candidate)
 >
 > Historical candidate checkpoints and the original table below are retained.
 > Read entry-specific acceptance updates and the
@@ -33,7 +33,16 @@ No fixture/runtime correction or cause resolution is claimed. Initial zero-case
 launcher evidence is preserved. Full gate, final CI and diagnostic acceptance
 remain open; the original local gate failure is not relabelled as passing.
 
-### DEBT-094 — Concurrent Media intake creates an unqueued duplicate (Medium, IMPLEMENTED candidate; acceptance open)
+Acceptance update: owner accepted diagnostic PR145, merged into Media as
+`15839b3`, then accepted PR144 into main `417fe99`. The diagnostic's exact-source
+full gate exited0 without observed Kernel-Power events: API1469/1469,
+E2E699/699, build6/6, Web15/15 without retries. Integrated CI8/8 and main have
+the identical source tree. Active local observations recorded IAM1319ms, not
+the original270-second delay. Diagnostic collection is accepted; the cause
+remains OPEN with no fixture/runtime correction claimed. Both failed/valid
+controls and the invalid zero-case launcher remain separate retained evidence.
+
+### DEBT-094 — Concurrent Media intake creates an unqueued duplicate (Medium, RESOLVED scoped runtime)
 
 At accepted main `bab5557`, two authenticated multipart uploads of one session
 can both read INITIATED before the unconditional UPLOADING update. A deterministic
@@ -56,6 +65,14 @@ See [reproduction, evidence limits and proposed scope](../audits/DEBT_094_MEDIA_
 Gate update: runtime head `35aec05` passed CI8/8, coverage5/5/API1469 and all ten
 local Media regressions. Full local E2E was698/699 due to the separate DEBT-095
 IAM timeout; the runtime packet is not accepted and remains draft.
+
+Acceptance update: owner accepted PR144 head `15839b3`, merged into main as
+`417fe99`. Integration CI8/8: API1469/1469, E2E699/699, build6/6, Web15/15 without
+retries, native48/48 on all3 platforms. The full local gate exited0 at `1f5109f`
+on the exactly identical tree `75067998c4c0b89f43201ddf0709be17575babda`.
+This closes the agreed atomic-intake defect; it does not close DEBT-095's cause
+or broaden the claim to global exactly-once, abort/Worker races or D7 acceptance.
+Earlier candidate/failure paragraphs are historical checkpoints.
 
 ### DEBT-092 — Joi email splitting advisory blocks current gate (High, RESOLVED scoped patch)
 
@@ -189,6 +206,12 @@ cycles while rejecting restoration by late old-cycle events. Detailed C1 identit
 serialization and runtime-correction approval remain open; no runtime fix here.
 [Evidence and scope](DEBT_090_ACHIEVEMENT_ROLLBACK_ORDER.md).
 
+Accepted C1 PR109 fixes the design policy, not runtime. The subsequent
+[owner design candidate](DEBT_090_QUALIFIED_OWNER_DESIGN.md) specifies additive
+owner storage, durable bounded retirement, enrolled legacy-consume behavior,
+lock participation and real-producer acceptance requirements. No migration or
+qualified command is implemented; this candidate needs review and its own gate.
+
 ### DEBT-089 — systeminformation Windows command injection (High, correction candidate)
 
 Mailpit PR106's gate and GitHub audit identify GHSA-3f7j-7jwc-fxfj in resolved
@@ -225,6 +248,11 @@ activation, owner effect or historical replay
 is enabled. C/D, UTC/configuration/retention preflight and
 complete DEBT-007/D7 acceptance remain open. Historical register dispositions below
 are not replaced by a claim that Phase8 delivery is complete.
+
+Next concrete design: [qualified Achievements owner](DEBT_090_QUALIFIED_OWNER_DESIGN.md).
+O1 owner runtime, P1 producer facts and C2/C3/D delivery/activation remain separate
+implementation approvals. This does not silently authorize the queue or replace
+the required real producer/admission proof with synthetic owner-only tests.
 
 ### DEBT-079 — Domain failures coupled to Nest transport (Medium, ACCEPTED runtime correction; verification open)
 

@@ -68,16 +68,19 @@ separate from the requested accepted baseline and retained checkpoint.
 
 ## Remaining D7 work
 
-- Nov8 DEBT-095 records an unexplained IAM timeout in PR144's local gate:
-  698/699 versus CI699/699. Preserve its red evidence. The owner approved a
-  separate diagnostic/test scope; its first valid focused observation passed
-  1452ms without reproducing the delay. Cause remains open; full diagnostic gate,
-  final CI and owner acceptance are still required.
+- Nov8 DEBT-095 records an unexplained IAM timeout in PR144's first local gate:
+  698/699 versus CI699/699. Its separate diagnostic PR145 was accepted and merged
+  into PR144 at `15839b3`, then main `417fe99`. Exact-source full gate0 and
+  integrated CI8/8 include E2E699/699, API1469, build6 and Web15 without retries;
+  local IAM observation1319ms did not reproduce the delay. Cause remains open;
+  diagnostic acceptance is not a fixture/runtime correction. Preserve the red
+  and invalid zero-case launcher evidence alongside the valid controls.
   This adds the95th register ID; the earlier93/94-entry checkpoints stay historical.
 - Nov8 DEBT-094: characterization PR143 was accepted and merged `a4ab472`.
   Its two-Media/one-job reproduction is not a fix. The separately approved
-  atomic-claim runtime candidate has focused unit11/11 and DB/HTTP/Redis10/10;
-  full gate, final CI and runtime packet acceptance remain open. See the
+  atomic-claim runtime PR144 was accepted and merged as `417fe99`, with full
+  gate0 on an identical tree and integrated CI8/8, including all10 Media
+  regressions. DEBT-094 is resolved within that scope. See the
   [Media intake evidence](DEBT_094_MEDIA_INTAKE_CONCURRENCY.md). The historical
   91-row matrix and93-entry checkpoint above do not include this new94th ID.
 - Reconcile all retained M/O/Q/X rows against current accepted code, tests and
@@ -86,6 +89,9 @@ separate from the requested accepted baseline and retained checkpoint.
 - Keep the current trusted-filesystem-writer deployment assumption explicit;
   DEBT-037's unfinished hostile-writer research is deferred by owner decision.
   Finish DEBT-007 C/D plus the separately reviewed090 source-cycle correction.
+  The [qualified-owner design candidate](../development/DEBT_090_QUALIFIED_OWNER_DESIGN.md)
+  specifies the next runtime proposal; its tables/commands and producer work are
+  not implemented or authorized by this reconciliation.
 - Dispose the remaining administrator-availability047 and Activity/source067
   policy questions; keep unresolved timing/retention evidence explicit, including
   058/059/083/084/086. Later passing gates do not universally identify old causes.

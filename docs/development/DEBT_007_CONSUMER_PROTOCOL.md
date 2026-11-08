@@ -7,6 +7,11 @@ Status: protocol/characterization candidate. No runtime or migration authorized.
 The owner approved new legitimate qualification cycles, not restoration by late
 old-cycle events. Existing scoring, caps, recipient precedence and API remain.
 
+Acceptance update: C1 PR109 was accepted and merged as `7e5cce7`. The detailed
+[qualified-owner design candidate](DEBT_090_QUALIFIED_OWNER_DESIGN.md) now proposes
+the owner tables, bounded retirement frontier, legacy-enrolment behavior and
+real-producer proof sequence. It adds no runtime authorization or automatic work.
+
 ## Evidence that drives this protocol
 
 The migrated [owner characterization](../../apps/api/test/gamification-delivery-characterization.e2e-spec.ts)
