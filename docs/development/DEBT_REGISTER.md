@@ -136,8 +136,9 @@ DEBT-007 C characterization on migrated owned schema confirms empty source
 rollback followed by a matching original produces an active Achievement until
 rollback is replayed. This does not prove a current automatic-delivery incident.
 Points already retains an absent source's revocation; Achievements must not inherit
-that guarantee by assumption. Separate owner-local policy/correction approval is
-required before reliable out-of-order consumer acceptance; no runtime fix here.
+that guarantee by assumption. The owner approved new legitimate qualification
+cycles while rejecting restoration by late old-cycle events. Detailed C1 identity/
+serialization and runtime-correction approval remain open; no runtime fix here.
 [Evidence and scope](DEBT_090_ACHIEVEMENT_ROLLBACK_ORDER.md).
 
 ### DEBT-089 — systeminformation Windows command injection (High, correction candidate)
@@ -159,14 +160,19 @@ no Windows reservation or dev DB is changed. See
 [scope and evidence](DEBT_088_DEV_PORT_READINESS.md). Full startup/quality/CI and
 acceptance remain open; this does not fold the separate Mailpit task into B/C.
 
-### DEBT-007 — Automatic gamification delivery (High, runtime B approved; verification open)
+### DEBT-007 — Automatic gamification delivery (High, runtime B accepted; C1 review open)
 
 After accepted A/A.1 PR101 and routing design/protocol PR102/103, the owner approved
 an isolated B persistence package: additive destination storage, atomic discovery,
 fenced publication claims/recovery and audited explicit control transitions.
-The [B implementation/evidence](DEBT_007_ROUTING_PERSISTENCE.md) is a candidate,
-not accepted automatic delivery. No queue, runner, public activation, owner effect
-or historical replay is enabled. C/D, UTC/configuration/retention preflight and
+Owner accepted the [B implementation](DEBT_007_ROUTING_PERSISTENCE.md) in PR104,
+head `c146c60`, merged as `c6b5417`. Its exact-head CI5/5 and local full gate exit0
+included API1466/1466, E2E686/686 without skips, build6/6 and Web15/15 without retries.
+This accepts isolated routing persistence, not automatic delivery. The
+[C1 qualification/admission protocol](DEBT_007_CONSUMER_PROTOCOL.md) remains a
+design/characterization candidate requiring current-main verification and owner
+acceptance. No queue, runner, public activation, owner effect or historical replay
+is enabled. C/D, UTC/configuration/retention preflight and
 complete DEBT-007/D7 acceptance remain open. Historical register dispositions below
 are not replaced by a claim that Phase8 delivery is complete.
 

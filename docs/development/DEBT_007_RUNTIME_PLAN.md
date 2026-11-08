@@ -202,6 +202,10 @@ Current C design/ordering characterization is in
 [the consumer proposal](DEBT_007_CONSUMER_DESIGN.md), based on accepted maincc39080.
 It separates queue publication from consumption and records DEBT-090 as an open
 owner-policy prerequisite. Proposed sub-stages do not authorize runtime changes.
+The [C1 protocol candidate](DEBT_007_CONSUMER_PROTOCOL.md) now records the approved
+new-cycle policy, producer-owned revisions and retirement-before-eligibility,
+plus the additional successor-before-withdrawal characterization. Runtime scope
+and remaining storage/performance evidence still require separate acceptance.
 
 | Package | Scope                                                   | Required evidence                                                                                     |
 | ------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
