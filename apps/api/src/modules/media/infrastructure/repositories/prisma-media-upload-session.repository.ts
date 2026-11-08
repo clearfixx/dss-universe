@@ -8,6 +8,10 @@
  * 🎯 Purpose:
  * Implements Media upload-session persistence through Prisma.
  *
+ * 🧠 Responsibilities:
+ * • persists owner-scoped declarations and lifecycle updates;
+ * • atomically claims INITIATED sessions before binary intake effects.
+ *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
@@ -17,7 +21,7 @@ import type { Prisma } from '@prisma/client';
 
 import { PrismaService } from '@api/core/database';
 
-import type { MediaUploadStatus } from '../../domain/enums/media-upload-status.enum';
+import { MediaUploadStatus } from '../../domain/enums/media-upload-status.enum';
 import type { MediaUploadSessionRepository } from '../../domain/repositories/media-upload-session.repository.interface';
 import type { CreateMediaUploadSessionInput } from '../../domain/types/media-upload-session.type';
 import type { MediaMetadata } from '../../domain/types/media-metadata.type';
@@ -43,6 +47,14 @@ export class PrismaMediaUploadSessionRepository implements MediaUploadSessionRep
     return record ? PrismaMediaUploadSessionMapper.toDomain(record) : null;
   }
 
+  async claimInitiated(id: string): Promise<boolean> {
+    const result = await this.prisma.mediaUploadSession.updateMany({
+      where: { id, status: MediaUploadStatus.INITIATED },
+      data: { status: MediaUploadStatus.UPLOADING, completedAt: null },
+    });
+    return result.count === 1;
+  }
+
   async updateStatus(
     id: string,
     status: MediaUploadStatus,
@@ -56,3 +68,7 @@ export class PrismaMediaUploadSessionRepository implements MediaUploadSessionRep
     return PrismaMediaUploadSessionMapper.toDomain(record);
   }
 }
+
+/**
+ * 🛰️ One upload ticket, one launch. Double-clicking does not book a second rocket.
+ */

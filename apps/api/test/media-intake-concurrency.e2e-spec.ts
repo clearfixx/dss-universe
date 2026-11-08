@@ -2,11 +2,11 @@
  * ===============================================================
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
- * 📦 Module: Media Intake Characterization
+ * 📦 Module: Media Intake Regression
  * 📄 File: apps/api/test/media-intake-concurrency.e2e-spec.ts
  *
  * 🎯 Purpose:
- * Measures concurrent multipart intake against real owner persistence and IO.
+ * Verifies exclusive multipart intake against real owner persistence and IO.
  *
  * 🧠 Responsibilities:
  * • exercises authenticated HTTP with real sessions and a migrated private schema;
@@ -17,7 +17,7 @@
  * AppModule test fixture; queue forwarding isolates publication from other workers.
  *
  * ⚠️ Important:
- * Characterizes the current duplicate-intake defect, not a corrected invariant.
+ * The claim loser must not compensate or mutate the successful intake.
  * No Worker/scanner runs; READY, quarantine bypass and data leakage are not proved.
  *
  * 🚀 Build. Share. Grow.
@@ -51,7 +51,7 @@ const PNG = Buffer.from(
   'base64',
 );
 
-describe('Media concurrent binary intake characterization (e2e)', () => {
+describe('Media concurrent binary intake serialization (e2e)', () => {
   let fixture: Awaited<ReturnType<typeof createIsolatedApiSchemaFixture>>;
   let app: INestApplication<App>;
   let queue: Queue<MediaProcessingJob>;
@@ -59,11 +59,15 @@ describe('Media concurrent binary intake characterization (e2e)', () => {
   let publication: jest.SpiedFunction<
     QueueRegistryService['mediaProcessing']['add']
   >;
+  let removal: jest.SpiedFunction<
+    QueueRegistryService['mediaProcessing']['remove']
+  >;
   let sessions: MediaUploadSessionService;
   let ownerId: string;
   let accessToken: string;
   let uploadsRoot: string;
   let releaseReads: (() => void) | undefined;
+  let releaseStorage: (() => void) | undefined;
   const presenceWrites: Promise<void>[] = [];
   const requests: Promise<Response>[] = [];
 
@@ -113,7 +117,7 @@ describe('Media concurrent binary intake characterization (e2e)', () => {
       .mockImplementation((name, data, options) =>
         queue.add(name, data, options),
       );
-    jest
+    removal = jest
       .spyOn(registry.mediaProcessing, 'remove')
       .mockImplementation((id, options) => queue.remove(id, options));
     const presence = app.get(UserPresenceService);
@@ -127,7 +131,9 @@ describe('Media concurrent binary intake characterization (e2e)', () => {
 
   afterEach(async () => {
     releaseReads?.();
+    releaseStorage?.();
     releaseReads = undefined;
+    releaseStorage = undefined;
     try {
       await Promise.allSettled(requests.splice(0));
       await Promise.all(presenceWrites.splice(0));
@@ -215,8 +221,7 @@ describe('Media concurrent binary intake characterization (e2e)', () => {
     expect(await queue.getJob(session.id)).toBeUndefined();
   });
 
-  it('currently accepts two INITIATED snapshots but queues only one of two Media rows', async () => {
-    const session = await initiate();
+  function synchronizeInitialReads(sessionId: string) {
     const repository = app.get<MediaUploadSessionRepository>(
       MEDIA_UPLOAD_SESSION_REPOSITORY,
     );
@@ -231,7 +236,7 @@ describe('Media concurrent binary intake characterization (e2e)', () => {
       .spyOn(repository, 'findById')
       .mockImplementation(async (id) => {
         const snapshot = await read(id);
-        if (id === session.id) {
+        if (id === sessionId) {
           expect(snapshot?.status).toBe(MediaUploadStatus.INITIATED);
           reads += 1;
           if (reads === 2) releaseReads?.();
@@ -239,43 +244,164 @@ describe('Media concurrent binary intake characterization (e2e)', () => {
         }
         return snapshot;
       });
+    return {
+      get readCount() {
+        return reads;
+      },
+      restore: () => readSpy.mockRestore(),
+    };
+  }
+
+  it('accepts only one of two INITIATED snapshots and queues exactly its Media row', async () => {
+    const session = await initiate();
+    const barrier = synchronizeInitialReads(session.id);
     const responses = await Promise.all([
       upload(session.id),
       upload(session.id),
     ]);
-    readSpy.mockRestore();
-    expect(reads).toBe(2);
-    expect(responses.map((response) => response.status)).toEqual([200, 200]);
+    barrier.restore();
+    expect(barrier.readCount).toBe(2);
+    expect(responses.map((response) => response.status).sort()).toEqual([
+      200, 409,
+    ]);
+    expect(
+      responses.find((response) => response.status === 200)?.body,
+    ).toMatchObject({
+      id: session.id,
+      status: MediaUploadStatus.COMPLETED,
+    });
     for (const response of responses) {
-      expect(response.body).toMatchObject({
-        id: session.id,
-        status: MediaUploadStatus.COMPLETED,
-      });
       expect(response.body).not.toHaveProperty('temporaryKey');
     }
     const records = await fixture.prisma.media.findMany({
       where: { metadata: { path: ['uploadSessionId'], equals: session.id } },
     });
-    expect(records).toHaveLength(2);
-    expect(new Set(records.map((record) => record.id)).size).toBe(2);
-    expect(records.every((record) => record.status === 'PROCESSING')).toBe(
-      true,
-    );
-    expect(publication).toHaveBeenCalledTimes(2);
+    expect(records).toHaveLength(1);
+    expect(records[0].status).toBe('PROCESSING');
+    expect(publication).toHaveBeenCalledTimes(1);
+    expect(removal).not.toHaveBeenCalled();
     const job = await queue.getJob(session.id);
     expect(job).toBeDefined();
-    expect(records.map((record) => record.id)).toContain(job?.data.mediaId);
+    expect(job?.data.mediaId).toBe(records[0].id);
     const jobs = await queue.getJobs(['wait', 'active', 'delayed']);
     expect(
       jobs.filter((candidate) => candidate.id === session.id),
     ).toHaveLength(1);
     const completed = await sessions.findOwned(ownerId, session.id);
     expect(completed.status).toBe(MediaUploadStatus.COMPLETED);
-    expect(records.map((record) => record.id)).toContain(
-      completed.metadata?.mediaId,
-    );
+    expect(completed.metadata?.mediaId).toBe(records[0].id);
     await expect(
       app.get(StorageService).read(session.temporaryKey),
     ).resolves.toEqual(PNG);
   });
+
+  it('returns the losing conflict while the winner retains its session and physical bytes', async () => {
+    const session = await initiate();
+    const barrier = synchronizeInitialReads(session.id);
+    const storage = app.get(StorageService);
+    const save = storage.save.bind(storage) as StorageService['save'];
+    let signalStored: () => void = () => undefined;
+    const stored = new Promise<void>((release) => {
+      signalStored = release;
+    });
+    const resume = new Promise<void>((release) => {
+      releaseStorage = release;
+    });
+    const saving = jest
+      .spyOn(storage, 'save')
+      .mockImplementation(async (input) => {
+        const result = await save(input);
+        signalStored();
+        await resume;
+        return result;
+      });
+    const deleting = jest.spyOn(storage, 'delete');
+    const pending = [upload(session.id), upload(session.id)];
+    await stored;
+    barrier.restore();
+    const loser = await Promise.race(pending);
+    expect(loser.status).toBe(409);
+    expect(barrier.readCount).toBe(2);
+    expect(saving).toHaveBeenCalledTimes(1);
+    expect(deleting).not.toHaveBeenCalled();
+    expect(publication).not.toHaveBeenCalled();
+    expect(removal).not.toHaveBeenCalled();
+    expect((await sessions.findOwned(ownerId, session.id)).status).toBe(
+      MediaUploadStatus.UPLOADING,
+    );
+    expect(
+      await fixture.prisma.media.count({
+        where: { metadata: { path: ['uploadSessionId'], equals: session.id } },
+      }),
+    ).toBe(0);
+    await expect(storage.read(session.temporaryKey)).resolves.toEqual(PNG);
+    releaseStorage?.();
+    const completed = await Promise.all(pending);
+    expect(completed.map((response) => response.status).sort()).toEqual([
+      200, 409,
+    ]);
+    expect((await sessions.findOwned(ownerId, session.id)).status).toBe(
+      MediaUploadStatus.COMPLETED,
+    );
+    const job = await queue.getJob(session.id);
+    expect(job).toBeDefined();
+    expect(publication).toHaveBeenCalledTimes(1);
+    expect(deleting).not.toHaveBeenCalled();
+    await expect(storage.read(session.temporaryKey)).resolves.toEqual(PNG);
+  });
+
+  it('still compensates a claimed winner when queue publication fails', async () => {
+    const session = await initiate();
+    publication.mockRejectedValueOnce(
+      new Error('Synthetic intake queue failure'),
+    );
+    expect((await upload(session.id)).status).toBe(500);
+    expect((await sessions.findOwned(ownerId, session.id)).status).toBe(
+      MediaUploadStatus.FAILED,
+    );
+    const records = await fixture.prisma.media.findMany({
+      where: { metadata: { path: ['uploadSessionId'], equals: session.id } },
+    });
+    expect(records).toHaveLength(1);
+    expect(records[0]).toMatchObject({
+      status: 'FAILED',
+      failureCode: 'INTAKE_FAILED',
+    });
+    expect(await queue.getJob(session.id)).toBeUndefined();
+    await expect(
+      app.get(StorageService).read(session.temporaryKey),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it.each([
+    MediaUploadStatus.UPLOADING,
+    MediaUploadStatus.COMPLETED,
+    MediaUploadStatus.ABORTED,
+    MediaUploadStatus.EXPIRED,
+    MediaUploadStatus.FAILED,
+  ])(
+    'refuses a claim from %s without changing its persisted state',
+    async (status) => {
+      const session = await initiate();
+      const before = await fixture.prisma.mediaUploadSession.update({
+        where: { id: session.id },
+        data: {
+          status,
+          completedAt:
+            status === MediaUploadStatus.COMPLETED ? new Date() : null,
+          metadata: { sentinel: 'preserve-state' },
+        },
+      });
+      const repository = app.get<MediaUploadSessionRepository>(
+        MEDIA_UPLOAD_SESSION_REPOSITORY,
+      );
+      await expect(repository.claimInitiated(session.id)).resolves.toBe(false);
+      expect(
+        await fixture.prisma.mediaUploadSession.findUnique({
+          where: { id: session.id },
+        }),
+      ).toEqual(before);
+      expect(publication).not.toHaveBeenCalled();
+    },
+  );
 });

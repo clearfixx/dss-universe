@@ -1,7 +1,8 @@
 # DEBT-094 — Concurrent intake of one Media upload session
 
 Date: 2026-11-08. Source baseline: accepted main `bab5557` (PR142).
-Status: confirmed defect; characterization candidate, runtime unchanged.
+Status: characterization accepted in PR143; separate runtime correction candidate.
+The original reproduction and failed fixture evidence below remain historical.
 
 ## Observed behavior
 
@@ -45,20 +46,20 @@ SHA256:
 `adb972550e930df1c9840664ac555b18281ed2f6d1139ffb2a0ba7e02235b4ab`.
 These focused results do not substitute for final full-gate/CI evidence.
 
-The characterization intentionally asserts the observed duplicate behavior.
-A green result proves reproduction, not resolution. The future runtime package
-must replace that assertion with one successful intake and one conflict.
+The accepted characterization intentionally asserted the duplicate behavior.
+Its green result proved reproduction, not resolution. The runtime candidate
+below replaces that assertion with one successful intake and one conflict.
 
 ## Cause and proposed bounded correction
 
-`MediaBinaryUploadService.accept` reads the owned session and validates its
+At the characterized baseline, `MediaBinaryUploadService.accept` reads the owned session and validates its
 INITIATED state, then separately calls `updateStatus(UPLOADING)`.
 `PrismaMediaUploadSessionRepository.updateStatus` updates by ID without an
 expected-status predicate. Both requests can therefore pass validation before
 either claims the session. Each subsequently generates its own mediaId but
 publishes with the same queue jobId.
 
-Proposed separate runtime scope, subject to owner approval:
+Separate runtime scope subsequently approved by the owner:
 
 - Media owns an atomic conditional INITIATED→UPLOADING claim before file IO.
 - The claim loser receives409 before entering compensation, so it cannot
@@ -76,12 +77,59 @@ cross-effects nor terminal-state overwrite are established here.
 
 ## Plan and scope
 
-Record as a separate pre11 correction candidate under D7. The owner requires
+The characterization was recorded as a separate pre11 candidate under D7. The owner requires
 outside-phase defects to be documented and runtime changes agreed separately;
 no correction is folded into this characterization. Full gate, CI and packet
 acceptance remain open at this checkpoint. DEBT-094, DEBT-007/090 and D7 remain
 open; stack audit and Phase11 are not started.
 
+Acceptance update: the owner accepted characterization PR143 at `d0ce753`,
+merged as `a4ab472`. Its exact-source local full gate exited0 without sleep,
+CI8/8, API coverage1466/1466, E2E692/692, build6/6 and Web15/15 without retries.
+That acceptance preserves the reproduction; it does not resolve DEBT-094.
+
 This issue involves concurrent website/API calls by the same valid owner.
 It is independent of the accepted owner/DSS-only filesystem writer model.
 It does not reopen the deferred DEBT-037 hostile-OS-writer native research.
+
+## Approved runtime candidate
+
+The owner separately authorized implementation before accepting PR143. Branch
+`debt/debt-094-atomic-upload-claim` starts from accepted main `a4ab472`.
+`MediaUploadSessionRepository.claimInitiated` returns a boolean from one
+conditional update by ID and INITIATED status, setting UPLOADING and clearing
+completedAt just as the former transition did. Existing metadata is preserved;
+an unsuccessful predicate changes no row, including updatedAt.
+
+`MediaUploadSessionService.claimUpload` maps false to ConflictException and
+preserves unknown repository errors. Binary intake calls it after the existing
+ownership, expiry, declaration, MIME and checksum checks, before the compensation
+try block. Exactly one concurrent intake reaches file IO; its existing successful
+response, mediaId/jobId contract and compensation remain in place. The new
+concurrent loser gets409 and cannot save/delete bytes, publish/remove jobs,
+create/update Media or mark the session FAILED.
+
+The real two-INITIATED-read HTTP schedule now asserts sorted outcomes200/409,
+one PROCESSING row, one actual BullMQ job and matching completed metadata.
+A second schedule holds the winner after the real file write: the loser returns409
+while the session remains UPLOADING and its bytes remain readable. Releasing the
+winner completes the upload. A queue-publication fault is injected separately
+to verify the winner still compensates to FAILED and physically removes its
+temporary file; this is not evidence of a real Redis outage. Direct migrated-DB
+controls reject claims from all five non-INITIATED states without changing the
+persisted record. Sequential repeat and invalid-JWT controls remain.
+
+Focused candidate evidence: typecheck and strict lint pass; unit11/11 and
+DB/HTTP/Redis10/10 pass. The unit JSON SHA256 is
+`cc6c71bee12e3103671f7323af781b8eadd9b55d889cb5bbfb38fd39989023aa`;
+the integration JSON SHA256 is
+`725f93aaacff1f914cc355b3dea517124fd472b91d557ea8b1d5220b6cbafcb3`.
+Two strict-lint method-reference findings in new unit assertions were corrected
+before the successful focused run, without changing assertions or runtime logic.
+Full gate, final CI and runtime packet acceptance are still required.
+
+No migration, new transaction/isolation/timeout, lease system, dependency,
+frontend, ACL or native activation change. The claim does not guarantee global
+exactly-once processing, solve abort during an in-flight upload, or coordinate
+Worker execution with intake finalization. Existing session-expiry/now semantics
+are preserved. DEBT-007/090 and final D7 acceptance remain separate.

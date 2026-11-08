@@ -2,14 +2,14 @@
 
 > Status: Active
 >
-> Updated: 2026-11-08 (Media intake concurrency characterization; accepted history retained)
+> Updated: 2026-11-08 (Media intake atomic-claim candidate; accepted history retained)
 >
 > Historical candidate checkpoints and the original table below are retained.
 > Read entry-specific acceptance updates and the
 > [current D7 reconciliation](../audits/D7_CURRENT_ACCEPTANCE_RECONCILIATION.md)
 > before interpreting an old OPEN/candidate label. This is not final D7 acceptance.
 
-### DEBT-094 — Concurrent Media intake creates an unqueued duplicate (Medium, CONFIRMED; runtime open)
+### DEBT-094 — Concurrent Media intake creates an unqueued duplicate (Medium, IMPLEMENTED candidate; acceptance open)
 
 At accepted main `bab5557`, two authenticated multipart uploads of one session
 can both read INITIATED before the unconditional UPLOADING update. A deterministic
@@ -18,12 +18,15 @@ two distinct PROCESSING Media rows and only one real BullMQ job using the shared
 session ID. Sequential repeat is409; an invalid JWT is401 without mutation.
 The same harmless PNG is read back through the real local storage provider.
 
-This separate characterization packet changes no runtime. Its green duplicate
-assertion is evidence of the defect, not a fix. Proposed separate correction:
-atomic INITIATED→UPLOADING claim before IO; the loser returns409 outside
-compensation. Owner approval, runtime implementation and full acceptance remain
-required. No migration, global lease or abort/Worker redesign is implied.
-Quarantine bypass, data disclosure and compensation cross-effects are not proved.
+Owner accepted characterization PR143 at `d0ce753`, merged `a4ab472`; its green
+duplicate assertion proves the defect, not a fix. The separately approved runtime
+candidate now uses one conditional INITIATED→UPLOADING claim before IO; the loser
+returns409 outside compensation. Focused unit11/11 and real DB/HTTP/Redis10/10 pass:
+one Media/job, matching completion metadata, preserved winner bytes while its
+loser returns409, five unchanged non-INITIATED state controls, and winner failure
+cleanup. Full gate, final CI and runtime acceptance remain open. No migration,
+global lease or abort/Worker redesign. Quarantine bypass and data disclosure are
+not proved; the claim does not establish global exactly-once processing.
 See [reproduction, evidence limits and proposed scope](../audits/DEBT_094_MEDIA_INTAKE_CONCURRENCY.md).
 
 ### DEBT-092 — Joi email splitting advisory blocks current gate (High, RESOLVED scoped patch)
