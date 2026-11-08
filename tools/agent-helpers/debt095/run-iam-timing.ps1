@@ -41,15 +41,30 @@ $env:DSS_IAM_E2E_REPORT = [IO.Path]::Combine($cache, 'debt095-' + $nonce + '-tim
 $receipt = [IO.Path]::Combine($root, 'tools', 'agent-helpers', 'debt095-' + $nonce + '.local.json')
 $started = [DateTime]::UtcNow.ToString('o')
 $code = 1
+$nativeCode = $null
+$validObservation = $false
 try {
     Write-Host "IAM timing log: $log"
-    & pnpm --filter @dss/api test:e2e --runTestsByPath test/app.e2e-spec.ts --testNamePattern '^DSS API \(e2e\) manages IAM permissions through the owned repository and rolls back failed audit$' --json "--outputFile=$report" *> $log
-    $code = $LASTEXITCODE
+    & pnpm --filter @dss/api test:e2e --runTestsByPath test/app.e2e-spec.ts --testNamePattern=manages.*IAM.*permissions.*owned.*repository --json "--outputFile=$report" *> $log
+    $nativeCode = $LASTEXITCODE
+    $code = $nativeCode
+    if ([IO.File]::Exists($report)) {
+        $captured = Get-Content -LiteralPath $report -Raw | ConvertFrom-Json
+        $executed = @($captured.testResults | ForEach-Object { $_.assertionResults } | Where-Object { $_.status -in @('passed', 'failed') })
+        $validObservation = $executed.Count -eq 1 -and
+            $executed[0].fullName -ceq 'DSS API (e2e) manages IAM permissions through the owned repository and rolls back failed audit' -and
+            [IO.File]::Exists($env:DSS_IAM_E2E_REPORT)
+    }
+    if (-not $validObservation) {
+        $code = 1
+        throw 'Invalid diagnostic observation: expected exactly one executed IAM case and timing report.'
+    }
 } finally {
     [ordered]@{
         startedHead = $head; endedHead = (& git rev-parse HEAD).Trim()
         startedAt = $started; endedAt = [DateTime]::UtcNow.ToString('o')
         exitCode = $code; log = $log; report = $report; timings = $env:DSS_IAM_E2E_REPORT
+        nativeExitCode = $nativeCode; validObservation = $validObservation
         scope = 'One focused case; excluded cases are not a full-gate result.'
     } | ConvertTo-Json | Set-Content -LiteralPath $receipt
 }
