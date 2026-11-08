@@ -12,7 +12,7 @@
  * Full historical migrations in an owned disposable schema; no repair DDL.
  *
  * ⚠️ Important:
- * Catalog checks cover twelve legacy and three routing defaults; CRUD checks are representative,
+ * Catalog checks cover twelve legacy, three routing and one qualification default; CRUD checks are representative,
  * not a claim that every model/business use case was exercised here.
  *
  * 🚀 Build. Share. Grow.
@@ -30,7 +30,7 @@ describe('Prisma and historical migration alignment (e2e)', () => {
     await fixture?.close();
   });
 
-  it('preserves twelve legacy defaults, three routing defaults and both Users indexes', async () => {
+  it('preserves legacy, routing and qualification defaults and both Users indexes', async () => {
     const columns = await fixture.prisma.$queryRaw<
       { table_name: string; column_default: string }[]
     >`
@@ -62,13 +62,20 @@ describe('Prisma and historical migration alignment (e2e)', () => {
       table_name,
       column_default: "timezone('UTC'::text, clock_timestamp())",
     }));
+    const qualificationDefaults = [
+      {
+        table_name: 'achievement_source_cursors',
+        column_default: 'CURRENT_TIMESTAMP',
+      },
+    ];
     expect(columns).toEqual(
-      [...legacyDefaults, ...routingDefaults].sort((left, right) =>
-        left.table_name < right.table_name
-          ? -1
-          : left.table_name > right.table_name
-            ? 1
-            : 0,
+      [...legacyDefaults, ...routingDefaults, ...qualificationDefaults].sort(
+        (left, right) =>
+          left.table_name < right.table_name
+            ? -1
+            : left.table_name > right.table_name
+              ? 1
+              : 0,
       ),
     );
     const indexes = await fixture.prisma.$queryRaw<

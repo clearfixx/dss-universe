@@ -148,16 +148,20 @@ describe('Achievement award atomicity (e2e)', () => {
     expect(await evidence()).toEqual([1, 1, 1, 1]);
   });
   it('observes the second transaction waiting before its real quota read', async () => {
-    const counted = repository as unknown as {
-      dailyCount(
-        transaction: TransactionClient,
-        ruleId: string,
-        subjectId: string,
-        at: Date,
-      ): Promise<number>;
-    };
+    const counted = (
+      repository as unknown as {
+        ruleAwards: {
+          dailyCount(
+            transaction: TransactionClient,
+            ruleId: string,
+            subjectId: string,
+            at: Date,
+          ): Promise<number>;
+        };
+      }
+    ).ruleAwards;
     const original = counted.dailyCount.bind(
-      repository,
+      counted,
     ) as typeof counted.dailyCount;
     const observed: number[] = [];
     let holderPid = 0;

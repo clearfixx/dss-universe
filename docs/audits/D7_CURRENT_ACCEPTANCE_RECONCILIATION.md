@@ -89,9 +89,11 @@ separate from the requested accepted baseline and retained checkpoint.
 - Keep the current trusted-filesystem-writer deployment assumption explicit;
   DEBT-037's unfinished hostile-writer research is deferred by owner decision.
   Finish DEBT-007 C/D plus the separately reviewed090 source-cycle correction.
-  The [qualified-owner design candidate](../development/DEBT_090_QUALIFIED_OWNER_DESIGN.md)
-  specifies the next runtime proposal; its tables/commands and producer work are
-  not implemented or authorized by this reconciliation.
+  The [qualified-owner design](../development/DEBT_090_QUALIFIED_OWNER_DESIGN.md)
+  was accepted in PR146 (`f3e950e`, merge `fa043a3`). Its separately authorized
+  [inactive O1 runtime candidate](../development/DEBT_090_QUALIFIED_OWNER_RUNTIME.md)
+  adds owner tables/commands under verification, not accepted activation or a
+  real producer/admission implementation. DEBT-007/090 and D7 remain open.
 - Dispose the remaining administrator-availability047 and Activity/source067
   policy questions; keep unresolved timing/retention evidence explicit, including
   058/059/083/084/086. Later passing gates do not universally identify old causes.
