@@ -31,6 +31,7 @@ type PlanNode = {
   'Relation Name'?: string;
   'Index Name'?: string;
   'Actual Rows': number;
+  'Actual Loops'?: number;
   'Rows Removed by Filter'?: number;
   Plans?: PlanNode[];
 };
@@ -357,8 +358,9 @@ describe('Qualified Achievements bounded query work (e2e)', () => {
     ).toBe(2048);
   });
 
-  it('uses the actual indexed source windows at initial and exhausted frontiers', async () => {
-    for (const population of [0, 1, 64, 65, 1024]) {
+  it.each([0, 1, 64, 65, 1024])(
+    'uses the actual source windows for %i rows at initial and exhausted frontiers',
+    async (population) => {
       const data = datasets.get(population)!;
       const cursor =
         await fixture.prisma.achievementSourceCursor.findUniqueOrThrow({
@@ -373,6 +375,16 @@ describe('Qualified Achievements bounded query work (e2e)', () => {
             sql: achievementInventoryWindow({
               sourceKind: 'Synthetic',
               sourceId: data.sourceId,
+              afterId: positioned ? cursor.inventoryAfterId : null,
+            }),
+          },
+          {
+            name: 'event inventory',
+            relation: 'achievement_awards',
+            index: 'achievement_event_inventory_idx',
+            sql: achievementInventoryWindow({
+              sourceKind: '@event',
+              sourceId: data.facts[0].qualificationEventId,
               afterId: positioned ? cursor.inventoryAfterId : null,
             }),
           },
@@ -414,19 +426,49 @@ describe('Qualified Achievements bounded query work (e2e)', () => {
             nodes: sourceNodes.map((node) => ({
               type: node['Node Type'],
               index: node['Index Name'],
+              returned: node['Actual Rows'],
+              loops: node['Actual Loops'] ?? 1,
               removed: node['Rows Removed by Filter'] ?? 0,
             })),
           });
-          // PostgreSQL may choose a bitmap over at most one small page. The
-          // large-history check below must still reject rescanning its prefix.
-          expect(
-            sourceNodes.every(
-              (node) =>
-                (node['Rows Removed by Filter'] ?? 0) <=
-                Math.min(population, 64),
-            ),
-          ).toBe(true);
+          // Preserve the committed small-input filter bound. Actual loop counts
+          // remain visible, and large-history source visits are bounded below.
+          if (population < 1024) {
+            expect(
+              sourceNodes.reduce(
+                (sum, node) =>
+                  sum + node['Actual Rows'] * (node['Actual Loops'] ?? 1),
+                0,
+              ),
+            ).toBeLessThanOrEqual(population);
+            expect(
+              sourceNodes.every(
+                (node) =>
+                  (node['Rows Removed by Filter'] ?? 0) <=
+                  Math.min(population, 64),
+              ),
+            ).toBe(true);
+          }
           if (population === 1024) {
+            expect(
+              sourceNodes.reduce(
+                (sum, node) =>
+                  sum +
+                  (node['Rows Removed by Filter'] ?? 0) *
+                    (node['Actual Loops'] ?? 1),
+                0,
+              ),
+            ).toBeLessThanOrEqual(1);
+            expect(
+              sourceNodes.reduce(
+                (sum, node) =>
+                  sum + node['Actual Rows'] * (node['Actual Loops'] ?? 1),
+                0,
+              ),
+            ).toBeLessThanOrEqual(64);
+            expect(sourceNodes.every((node) => node['Actual Rows'] <= 64)).toBe(
+              true,
+            );
             expect(
               sourceNodes.every(
                 (node) => (node['Rows Removed by Filter'] ?? 0) <= 1,
@@ -448,6 +490,6 @@ describe('Qualified Achievements bounded query work (e2e)', () => {
           });
         }
       }
-    }
-  });
+    },
+  );
 });

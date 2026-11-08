@@ -15,7 +15,7 @@ The API and headless wrapper share the same singleton provider graph. Root still
 must attest producer facts against canonical evidence before calling it; a typed
 command and these synthetic tests do not supply that missing admission boundary.
 
-Three additive owner tables retain source cursors, exact immutable lifecycle
+Three additive owner tables in two forward migrations retain source cursors, exact immutable lifecycle
 facts and award qualification bindings. Decimal wire revisions are lossless
 PostgreSQL bigint, including values above JavaScript's exact-integer range.
 Composite FKs, checks, a partial qualification-identity index and immutable-history
@@ -58,7 +58,12 @@ preserve identity; only owned qualification conflicts become bounded BLOCKED cod
 ## Bounded progress and legacy compatibility
 
 Inventory and retirement each select at most64 history rows using stable indexed
-keysets. Revoked bindings count toward work; there is no active-row anti-join
+keysets. Inventory performs up to64 one-row seeks inside one recursive SQL query,
+with bytewise C order on its ID predicates, indexes and monotonic cursor guard.
+Its second forward migration replaces only the two new O1 inventory indexes;
+accepted baseline indexes are retained. Prisma's index shape does not model that
+collation, so a separate pg_catalog and Z→a/backwards-cursor regression verifies it.
+Revoked bindings count toward work; there is no active-row anti-join
 that scans an arbitrary historical prefix before LIMIT. A nonempty page commits
 its frontier and returns CONTINUE. Final STABLE/applied-target advancement requires
 the subsequent empty indexed window. Across multiple scopes the call returns on
@@ -96,15 +101,23 @@ the empty frontier. Fresh repository instances use persisted progress; this is
 not an OS process-crash experiment. Each page retains a512 client-SQL-statement
 budget and unchanged transaction timeouts. Trigger-internal statements are not
 counted by client query capture. EXPLAIN uses the actual production SQL factories,
-without forced indexes: small bitmap plans may filter at most one64-row population;
-the1024 history must use its named index and reject historical-prefix filtering.
+without forced indexes: the committed small-input filter bound is unchanged
+(`Rows Removed by Filter ≤ min(population,64)` per source node), and returned
+source rows across actual execution loops cannot exceed the fixture's population.
+The1024 history must use its named index, return at most64 source rows across all
+loops and filter at most one source row in total; sequential scans are rejected.
+The64 owner-delivered-row bound is also asserted on every real advance. Both
+resource and event inventory indexes are checked, with separate cases for each
+population so an early small-fixture failure cannot hide large-history results.
+One full inventory page costs up to64 index descents, not64 client round trips;
+the query-count capture does not measure internal executor statements.
 No measured fixture time is a production latency SLA.
 
 Retained diagnostic evidence includes the first522-statement batch failure,
 corrected by one guarded projection read rather than64 reads, without increasing
 the512 budget. A later query-plan failure exposed PostgreSQL's legitimate bitmap
-choice for a64-row population; the test now distinguishes that bounded small
-population from the large-history requirement. Earlier storage-fixture omissions
+choice for small populations; the test distinguishes total small-input scan work
+from the large-history requirement and owner page size. Earlier storage-fixture omissions
 and these failed logs remain in the local O1 proof record; no retry-to-green claim.
 
 The first CI on `e783a33` passed API coverage1483/1483 but E2E772/773: the existing
@@ -114,6 +127,18 @@ the same PostgreSQL lock wait, quota reads `[0,1]`, AWARDED/CAPPED results and e
 award/marker/Audit/Outbox assertions remain. The first red log is retained. A local
 gate on that old head was explicitly cancelled during lint once this CI failure
 was known; it is an interrupted run, not a completed E2E failure or a passing gate.
+
+The next candidate `0102fee` passed CI8/8 with E2E773/773, but its complete local
+gate failed E2E772/773: the small65-row exhausted inventory used a bitmap plan
+filtering65 rows. Further production-SQL plans exposed a global primary-key scan
+and an exhausted event-inventory sequential scan on the1024 fixture. An attempted
+broader small-input threshold was rejected by automatic approval review and was
+not executed; the committed filter assertion was restored. Index-only C ordering
+and a MIN prototype were insufficient. The final candidate combines matching C
+indexes/guard with bounded one-row LIMIT1 seeks, preserves the old small filter
+bound and strengthens large-history actual-loop accounting. All unsuccessful
+prototype logs, the failed full receipt/report and review rejection remain in the
+local proof. A new exact-head full gate/CI are required before acceptance.
 
 Current focused evidence and exact-head full gate/CI/acceptance are recorded in
 the PR and local `tools/agent-helpers/debt090-o1-runtime-proof.local.json` receipt.

@@ -1759,6 +1759,7 @@ model AchievementAward {
   @@unique([achievementId, sourceEventId])
   @@index([userId, awardedAt, id])
   @@index([sourceType, sourceId])
+  // Inventory id collation C is SQL-owned; catalog/query-plan regressions verify it.
   @@index([sourceType, sourceId, kind, id], map: "achievement_source_inventory_idx")
   @@index([sourceEventId, kind, id], map: "achievement_event_inventory_idx")
   @@index([ruleId, userId, awardedAt])

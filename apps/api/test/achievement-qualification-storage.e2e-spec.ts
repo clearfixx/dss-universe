@@ -126,6 +126,41 @@ describe('Achievement qualification storage (e2e)', () => {
     ).toBe(0n);
   });
 
+  it('pins inventory index and cursor order to opaque bytewise C collation', async () => {
+    const indexes = await fixture.prisma.$queryRaw<
+      { name: string; collation: string }[]
+    >`
+      SELECT c.relname AS name, col.collname AS collation
+      FROM pg_index i JOIN pg_class c ON c.oid = i.indexrelid
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+      JOIN pg_collation col ON col.oid = i.indcollation[i.indnkeyatts - 1]
+      WHERE n.nspname = current_schema()
+        AND c.relname IN ('achievement_source_inventory_idx', 'achievement_event_inventory_idx')
+      ORDER BY c.relname
+    `;
+    expect(indexes).toEqual([
+      { name: 'achievement_event_inventory_idx', collation: 'C' },
+      { name: 'achievement_source_inventory_idx', collation: 'C' },
+    ]);
+    const { cursor } = await source();
+    await fixture.prisma.achievementSourceCursor.update({
+      where: { id: cursor.id },
+      data: { inventoryAfterId: 'Z' },
+    });
+    await expect(
+      fixture.prisma.achievementSourceCursor.update({
+        where: { id: cursor.id },
+        data: { inventoryAfterId: 'a' },
+      }),
+    ).resolves.toMatchObject({ inventoryAfterId: 'a' });
+    await expect(
+      fixture.prisma.achievementSourceCursor.update({
+        where: { id: cursor.id },
+        data: { inventoryAfterId: 'Z' },
+      }),
+    ).rejects.toThrow('Achievement inventory reset needs a new generation');
+  });
+
   it('preserves fact history and refuses conflicting revision reuse', async () => {
     const { cursor, fact } = await source();
     await expect(

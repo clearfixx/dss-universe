@@ -24,9 +24,27 @@ export function achievementInventoryWindow(input: {
   const frontier =
     input.afterId === null
       ? Prisma.empty
-      : Prisma.sql`AND "id" > ${input.afterId}`;
-  return Prisma.sql`SELECT "id" FROM "achievement_awards" WHERE "kind" = 'RULE'
-    AND ${source} ${frontier} ORDER BY "id" LIMIT ${QUALIFICATION_HISTORY_PAGE_SIZE}`;
+      : Prisma.sql`AND "id" COLLATE "C" > ${input.afterId}`;
+  // Bounded one-row seeks avoid a global primary-key scan chosen for ORDER BY/LIMIT64
+  // when the source dominates a small table or its frontier is exhausted.
+  return Prisma.sql`
+    WITH RECURSIVE inventory("id", "position") AS (
+      SELECT (
+        SELECT "id" FROM "achievement_awards"
+        WHERE "kind" = 'RULE' AND ${source} ${frontier}
+        ORDER BY "id" COLLATE "C" LIMIT 1
+      ), 1
+      UNION ALL
+      SELECT (
+        SELECT "id" FROM "achievement_awards"
+        WHERE "kind" = 'RULE' AND ${source}
+          AND "id" COLLATE "C" > inventory."id"
+        ORDER BY "id" COLLATE "C" LIMIT 1
+      ), inventory."position" + 1
+      FROM inventory
+      WHERE inventory."id" IS NOT NULL AND inventory."position" < ${QUALIFICATION_HISTORY_PAGE_SIZE}
+    )
+    SELECT "id" FROM inventory WHERE "id" IS NOT NULL ORDER BY "id" COLLATE "C"`;
 }
 export function achievementRetirementWindow(input: {
   cursorId: string;
