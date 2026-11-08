@@ -21,10 +21,17 @@ pause cause remains unknown. All ten Media regressions and coverage passed;
 the later local build/Web stages were not reached.
 
 Preserve the red report and do not rerun-to-green, inflate timeouts, weaken
-assertions or mock Auth. A separate diagnostic/test scope is proposed to measure
+assertions or mock Auth. The owner approved a separate diagnostic/test scope to measure
 the real request, owner boundaries and wall/monotonic/event-loop timing before
 selecting any fixture correction; runtime changes require separate approval.
 See [captured evidence and limits](../audits/DEBT_095_IAM_PERMISSION_DENIAL_TIMING.md).
+
+Diagnostic candidate: opt-in test-only wall/monotonic/event-loop and owner/IO
+observations retain the original test and5000ms. The corrected fail-closed
+launcher observed one focused pass1452ms; the 270-second delay did not reproduce.
+No fixture/runtime correction or cause resolution is claimed. Initial zero-case
+launcher evidence is preserved. Full gate, final CI and diagnostic acceptance
+remain open; the original local gate failure is not relabelled as passing.
 
 ### DEBT-094 — Concurrent Media intake creates an unqueued duplicate (Medium, IMPLEMENTED candidate; acceptance open)
 

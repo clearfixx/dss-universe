@@ -69,8 +69,10 @@ separate from the requested accepted baseline and retained checkpoint.
 ## Remaining D7 work
 
 - Nov8 DEBT-095 records an unexplained IAM timeout in PR144's local gate:
-  698/699 versus CI699/699. Preserve its red evidence and agree a separate
-  diagnostic/test scope; no fixture/runtime cause or correction is yet proved.
+  698/699 versus CI699/699. Preserve its red evidence. The owner approved a
+  separate diagnostic/test scope; its first valid focused observation passed
+  1452ms without reproducing the delay. Cause remains open; full diagnostic gate,
+  final CI and owner acceptance are still required.
   This adds the95th register ID; the earlier93/94-entry checkpoints stay historical.
 - Nov8 DEBT-094: characterization PR143 was accepted and merged `a4ab472`.
   Its two-Media/one-job reproduction is not a fix. The separately approved

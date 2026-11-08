@@ -70,6 +70,55 @@ design/approval; an unidentified pause remains explicitly open. The preserved
 red report must not be replaced by a later green result. Final integrated
 head still requires the full local gate, CI and owner acceptance.
 
-The owner authorized documenting out-of-phase findings; diagnostic execution
-and corrective test/runtime changes are not silently folded into DEBT-094.
+The owner subsequently approved a separate diagnostic/test packet, with runtime
+causes still requiring separate design/approval. Branch
+`audit/debt-095-iam-denial-timing` is based on Media PR144 head `792da8b`;
+it is not merged into that runtime packet or main at this checkpoint.
 This is independent of the already scoped historical DEBT-086/093 findings.
+
+## Diagnostic candidate and first valid observation
+
+Only the API test and its test helpers are instrumented. With
+`DSS_IAM_E2E_DIAGNOSTIC=1` and an explicit unique cache JSON output path, the
+fixture observes the real session validator, current-access reader, each real
+PermissionsGuard instance and Redis commands. Calls still return their original
+values/promises and error identities. No arguments, results, SQL text/parameters,
+headers or credentials are stored. Prisma query durations, Redis connection/
+queue state, process CPU, debugger-listening booleans, wall/monotonic clocks and
+event-loop histogram samples are recorded. The histogram is observation, not
+sleep synchronization. The afterEach hook disables it, restores spies and
+captures pending spans without cancelling or awaiting the original work.
+
+The observer is inactive by default. Its span/checkpoint bounds are explicit;
+dropped span count is reported, never interpreted as complete coverage. The
+prototype spy invokes the saved method with the actual guard instance; one
+line-local lint annotation documents that intentional method reference. No
+production code, lint configuration, policy, assertion or deadline changes.
+
+`tools/agent-helpers/debt095/run-iam-timing.ps1` runs one focused case against
+prepared disposable services. It rejects a result unless exactly that case
+executed and the timing report exists. The first launcher at `5e83930` had
+Windows regex double escaping: zero executed/27 skipped, no timing report.
+Its JSON SHA256 is
+`65c799e7236ed55ce62d9b3d3af680968f1d79829ae4642c2191de7798489192`.
+That native exit0 is an invalid observation, not a passing diagnostic.
+The launcher was corrected and made fail-closed at `3eb7904`.
+
+The first valid focused observation at that source passed the original case in
+1452ms; the other26 cases were deliberately excluded. This is not a full gate.
+Observed wall/monotonic duration1445/1445.153ms, delta−0.153ms; event-loop maximum
+64.061ms over56 samples. Session reads maximum4.969ms, current access9.157ms,
+guard decision0.224ms, Redis command1.159ms; zero pending/dropped spans.
+Redis was ready with zero queued commands at both snapshots;139 observed Prisma
+queries total324.313ms, maximum45.964ms. Debugger-listening/inspect/auto-attach
+booleans were false. Query counts and CPU are scoped observations, not exclusive
+causal attribution to the denied request.
+
+The 270-second delay did not reproduce. No fixture correction was chosen and
+the original cause remains open. Focused Jest JSON SHA256 is
+`250e4a0909f1a9666a60b70f79b2c369bcebcb539a2f249f83c12fd592a5686d`;
+timings JSON SHA256 is
+`4ba72cef568c9170efb459839bfc07f14d75023ba5e8e0b43bdcdc4d62e7a6e7`.
+The original red evidence remains unchanged. Full local gate, final CI and owner
+acceptance of this diagnostic-only result remain required; this does not close
+DEBT-095, accept Media PR144 or complete D7.
