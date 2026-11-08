@@ -1,5 +1,10 @@
 # DEBT-037 — Owner, access and filesystem qualification policy
 
+Historical hostile-writer policy. The owner's2026-11-08 clarification accepts
+owner/DSS-only filesystem writers and website/API-only users. The
+[current scope](DEBT_037_QUALIFICATION_DECISIONS.md) supersedes the mandatory
+pre11 admission/identity proof work below; no native activation is implied.
+
 Baseline: accepted R4 / PR135, main `6ae392f`. Status: design for review;
 no policy implementation, deployment repair or runtime activation. This refines
 the [admission design](DEBT_037_ADMISSION_POLICY_DESIGN.md) and preserves the

@@ -1,5 +1,10 @@
 # DEBT-037 — Physical LOCAL runtime boundary
 
+Historical hostile-writer boundary. The owner's2026-11-08 clarification accepts
+owner/DSS-only filesystem writers; users act through the website/API. See the
+[current scope](DEBT_037_QUALIFICATION_DECISIONS.md). The native integration below
+remains inactive research, not a current pre11 requirement.
+
 Status: design for review, not runtime implementation or activation.
 Baseline: accepted main `8e7f301` (PR128). This document carries forward the
 [P2 requirements](DEBT_037_P2_DESIGN.md) and

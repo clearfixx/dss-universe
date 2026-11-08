@@ -4,6 +4,12 @@ Date:2026-11-06. Accepted source baseline: `f1a1bcc` (R3 / PR133).
 Status: scoped reconciliation, **not final D7 acceptance**. Runtime, migrations,
 API/Worker, application data and frontend are unchanged by this packet.
 
+Update2026-11-08, accepted main `7e5cce7`: the owner explicitly limited direct
+filesystem writers to themselves and DSS, with users acting only through the
+website/API. The DEBT-037 rows/remaining work below now use that scope. C1/PR109
+was also accepted and merged; its design is not automatic gamification delivery.
+The dated Nov6 metadata snapshot and retained91-row matrix remain historical.
+
 ## Verified discrepancy
 
 The retained D7 checkout is commit `81e0a6581b9ae27f683e4ec442790e16075cf9ba`,
@@ -22,23 +28,24 @@ actually accepted. No broad route M is silently promoted to C.
 
 ## Source-to-acceptance checks
 
-| Debt    | Current scoped finding                                               | Evidence inspected                                                                                                                                                                |
-| ------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 092     | Identified Joi advisory resolved; future dependency risk is separate | PR120 accepted/merged `e6179f7`; API requires Joi^18.3.1, lock resolves18.3.1; API manifest unchanged from that merge to baseline                                                 |
-| 093     | Measured fixture-budget defect corrected; no OS/crypto cause claim   | PR121 accepted into PR120, then main; current real registrations/login are sequential setup hooks, existing deadlines/assertions retained; ledger test has no diff from `e6179f7` |
-| 084     | Diagnostic evidence/retention disposition remains open               | Accepted evidence collector PR87; existing report discloses missing originals and new controlled comparison; retained route M                                                     |
-| 085     | Scoped arrival lifecycle correction retained                         | Accepted PR96 / `b41dd9e`; universe-arrival component and regression have no diff to baseline; historical raw-evidence limits remain separate                                     |
-| 086     | Diagnostics accepted, original timeout cause open                    | Accepted PR97 / `8e3c4c7`; reporter analysis is not a deadline fix; retained route O                                                                                              |
-| 087     | Shared smoke endpoint correction retained                            | Accepted PR98 / `b63d555`; resolver/test unchanged, Playwright still imports it; later diff only adds accepted first-failure evidence settings                                    |
-| 037     | R1/R2/R3 foundations accepted; physical containment open             | PR131/132/133 merged; no admitted-root, effective-rights policy, complete mount qualification or API/Worker activation                                                            |
-| 007/090 | Automatic consumption and ordering correction remain open            | A/A.1/B accepted; PR109 C1 remains unmerged, no acceptance inferred from its synthetic merge SHA                                                                                  |
+| Debt    | Current scoped finding                                               | Evidence inspected                                                                                                                                                                                   |
+| ------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 092     | Identified Joi advisory resolved; future dependency risk is separate | PR120 accepted/merged `e6179f7`; API requires Joi^18.3.1, lock resolves18.3.1; API manifest unchanged from that merge to baseline                                                                    |
+| 093     | Measured fixture-budget defect corrected; no OS/crypto cause claim   | PR121 accepted into PR120, then main; current real registrations/login are sequential setup hooks, existing deadlines/assertions retained; ledger test has no diff from `e6179f7`                    |
+| 084     | Diagnostic evidence/retention disposition remains open               | Accepted evidence collector PR87; existing report discloses missing originals and new controlled comparison; retained route M                                                                        |
+| 085     | Scoped arrival lifecycle correction retained                         | Accepted PR96 / `b41dd9e`; universe-arrival component and regression have no diff to baseline; historical raw-evidence limits remain separate                                                        |
+| 086     | Diagnostics accepted, original timeout cause open                    | Accepted PR97 / `8e3c4c7`; reporter analysis is not a deadline fix; retained route O                                                                                                                 |
+| 087     | Shared smoke endpoint correction retained                            | Accepted PR98 / `b63d555`; resolver/test unchanged, Playwright still imports it; later diff only adds accepted first-failure evidence settings                                                       |
+| 037     | Hostile-OS-writer research deferred; not a current pre11 blocker     | Owner's explicit2026-11-08 owner/DSS-only writers and website/API-only users decision; shared key validation and owned intake/delivery retained; R1–R6 inactive, no physical-containment fix claimed |
+| 007/090 | C1 accepted; automatic consumption and ordering correction open      | A/A.1/B accepted; PR109 C1 accepted at `34baae0`, merged as `7e5cce7` with exact-head CI8/8/local gate0, E2E689/689, characterization5/5, Web15/15; no runtime consumer or correction implied        |
 
 GitHub metadata was refreshed through the connector and sanitized into
 `tools/agent-helpers/d7/accepted-pr-observations-20261106.json`. The helper
 independently verifies merged commits are ancestors of baseline and records
 whether reviewed-head and merge trees match. PR121's base is its security
-branch, not main; main inclusion follows through accepted PR120. PR109's
-unmerged preview commit is deliberately excluded from accepted ancestry.
+branch, not main; main inclusion follows through accepted PR120. At that dated
+checkpoint PR109's unmerged preview was excluded. The Nov8 update uses its actual
+accepted merge `7e5cce7`, not the earlier synthetic preview SHA.
 
 Metadata observation and Git ancestry alone are not a security or debt-closure
 proof. The source checks and reviewed acceptance scope above are also required.
@@ -64,8 +71,9 @@ separate from the requested accepted baseline and retained checkpoint.
 - Reconcile all retained M/O/Q/X rows against current accepted code, tests and
   owner decisions; the original91-row review is not advanced wholesale by this
   packet or by recent green storage checks.
-- Finish DEBT-037 physical policy/operations/integration and DEBT-007 C/D plus
-  the separately reviewed090 source-cycle correction.
+- Keep the current trusted-filesystem-writer deployment assumption explicit;
+  DEBT-037's unfinished hostile-writer research is deferred by owner decision.
+  Finish DEBT-007 C/D plus the separately reviewed090 source-cycle correction.
 - Dispose the remaining administrator-availability047 and Activity/source067
   policy questions; keep unresolved timing/retention evidence explicit, including
   058/059/083/084/086. Later passing gates do not universally identify old causes.
@@ -75,10 +83,11 @@ separate from the requested accepted baseline and retained checkpoint.
   the owner's preserved `docs/audits/STACK_AUDIT_PLAN.md`, then Phase11 brainstorm.
 
 The stack audit and Phase11 are not started by this reconciliation. Current
-native observations remain inactive; owner/ACL/filesystem policy and physical
-operation guarantees still require their own evidence and approved scope.
+native observations remain inactive. Reopening hostile-writer admission or
+physical-operation research requires an explicit deployment-scope change; it is
+not a hidden prerequisite for the current owner-controlled deployment.
 
-This packet's final full quality gate and CI are pending at the documentation
-checkpoint. Accepted PR133's earlier full gate0/CI8/8, E2E688/688, native36 per
-platform, build6/6 and Web15/15 are retained baseline evidence, not a claim that
-the new reconciliation helper or documentation has already passed those gates.
+The original reconciliation was accepted in PR134 at `35d74ac`, merged as
+`48b51ae`; its dated baseline/snapshot remain historical evidence. The current
+Nov8 documentation revision requires its own full quality gate and CI before
+packet acceptance. Neither prior R6 nor C1 results alone certify this revision.

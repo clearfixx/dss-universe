@@ -1,5 +1,10 @@
 # DEBT-037 — Proposed implementation boundary
 
+Historical hostile-writer proposal, deferred after the owner's2026-11-08
+owner/DSS-only filesystem-writer clarification. See the
+[current scope](DEBT_037_QUALIFICATION_DECISIONS.md). The steps below are not
+current pre11 requirements or authorization to activate native storage.
+
 Status: design proposal, not runtime authorization or debt closure.
 Baseline: main289b24c plus the characterization branch. Read the
 [physical storage evidence](DEBT_037_PHYSICAL_STORAGE_DESIGN.md) first.

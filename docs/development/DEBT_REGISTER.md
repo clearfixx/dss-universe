@@ -160,7 +160,7 @@ no Windows reservation or dev DB is changed. See
 [scope and evidence](DEBT_088_DEV_PORT_READINESS.md). Full startup/quality/CI and
 acceptance remain open; this does not fold the separate Mailpit task into B/C.
 
-### DEBT-007 — Automatic gamification delivery (High, runtime B accepted; C1 review open)
+### DEBT-007 — Automatic gamification delivery (High, runtime B and C1 design accepted; C/D open)
 
 After accepted A/A.1 PR101 and routing design/protocol PR102/103, the owner approved
 an isolated B persistence package: additive destination storage, atomic discovery,
@@ -169,9 +169,11 @@ Owner accepted the [B implementation](DEBT_007_ROUTING_PERSISTENCE.md) in PR104,
 head `c146c60`, merged as `c6b5417`. Its exact-head CI5/5 and local full gate exit0
 included API1466/1466, E2E686/686 without skips, build6/6 and Web15/15 without retries.
 This accepts isolated routing persistence, not automatic delivery. The
-[C1 qualification/admission protocol](DEBT_007_CONSUMER_PROTOCOL.md) remains a
-design/characterization candidate requiring current-main verification and owner
-acceptance. No queue, runner, public activation, owner effect or historical replay
+[C1 qualification/admission protocol](DEBT_007_CONSUMER_PROTOCOL.md) was accepted
+in PR109 at `34baae0`, merged as `7e5cce7`: CI8/8, exact-head local gate0 without
+sleep, E2E689/689, characterization5/5, coverageAPI1466, build6/6 and Web15/15.
+That accepts design/legacy characterization only. No queue, runner, public
+activation, owner effect or historical replay
 is enabled. C/D, UTC/configuration/retention preflight and
 complete DEBT-007/D7 acceptance remain open. Historical register dispositions below
 are not replaced by a claim that Phase8 delivery is complete.
@@ -869,43 +871,33 @@ consumers share `@dss/storage`; variant validation precedes filesystem effects.
 Sharp metadata inspection is buffer-backed in tests; production caching is unchanged.
 Evidence: `docs/audits/D0_6_STORAGE_SECURITY_2026-10-10.md`.
 
-### DEBT-037 — Physical storage containment threat model (Medium, OPEN, D2/D6)
+### DEBT-037 — Hostile filesystem writer containment (Medium, DEFERRED RESEARCH, not a pre11 blocker)
 
-Owner decision2026-10-29: physical containment against hostile local symlink/
-junction substitution is required before Phase11; trusted-writers-only deferral
-is rejected. Separate design inventory and synthetic Windows characterization
-are recorded in [working physical storage design](DEBT_037_PHYSICAL_STORAGE_DESIGN.md).
-No native mechanism or runtime correction is selected/implemented yet.
+Owner clarification2026-11-08 supersedes the earlier2026-10-29 hostile-OS-writer
+requirement: only the owner controls the execution environment, and only the owner
+and DSS processes write the filesystem. Users act through the website/API; no
+other OS account receives direct write access to uploads. This is an explicit
+scope decision, not a claim that the native mechanism has been completed.
 
-Lexical key validation cannot prevent a pre-existing symlink/junction or a local
-filesystem race from redirecting IO outside uploads. D0.6 assumes directories are
-application-controlled. There is no established remote exploit under this assumption.
-Decide whether hostile local writers are in scope; if so, design OS-specific physical
-containment and TOCTOU defenses. Do not silently expand this package or describe
-lexical checks as sandbox isolation.
+The current LOCAL contract therefore retains trusted directories plus shared
+portable key validation. API authorization, upload-session ownership, binary
+policy/quarantine and public/signed delivery remain required. Lexical checks
+still do not supply isolation from arbitrary symlink/junction substitution by a
+hostile local writer. Such a writer is outside this accepted deployment model.
 
-R5 checkpoint2026-11-07 supersedes the original unanswered-scope wording above:
-the separate ordinary OS writer is in scope and physical protection remains
-mandatory before Phase11. Accepted R1–R4 foundations and PR136's owner/right
-design exist. Owner accepted the private inactive R5 in PR138 at `94623e0`,
-merged as `1ebfa67`: native43/43 on Windows/Linux/macOS, real ordinary-process
-actor15/15,12/12,14/14 respectively, CI8/8 and exact-head local full gate exit0
-without sleep. See [R5 implementation/evidence](DEBT_037_R5_OWNER_RIGHTS.md)
-and PR138 for final receipts (API E2E688/688, Web15/15 without retries).
-Owner accepted [R6 qualification evidence proposal](DEBT_037_R6_QUALIFICATION_PROPOSAL.md)
-in PR139 / `64e6b14` and separately authorized the standalone proof/harness.
-Owner accepted the [R6 proof-only implementation](DEBT_037_R6_QUALIFICATION_PROOF.md)
-in PR140 at `20dcf61`, merged as `1781916`: CI8/8, exact-head local full gate exit0
-without sleep, native48/48 on all three OS, coverage5/5 executable workspaces
-(API1466/1466), E2E688/688 without skips/todo, build6/6 and Web15/15 without retries.
-Linux idmap/mount binding, Darwin ownership on/off and Windows ordinary-token/
-junction controls passed. Production qualification is not established; Windows
-remote/removable fixtures remain unprovisioned. The proposed
-[qualification decisions](DEBT_037_QUALIFICATION_DECISIONS.md) identify remaining
-ACL completeness, identity authority and operation gates; that document is not
-an implementation authorization or an admitted-root policy.
-No complete admitted root, operation containment, uploads adoption or joint
-API/Worker activation is claimed; DEBT-037 and D7 remain open.
+[Current scope and source/test evidence](DEBT_037_QUALIFICATION_DECISIONS.md).
+Native R1–R6 remain accepted inactive research. Preserve their actual limits and
+historical failures; no admitted-root, complete operation containment or joint
+API/Worker native activation is claimed. See the retained
+[physical design](DEBT_037_PHYSICAL_STORAGE_DESIGN.md),
+[R5 evidence](DEBT_037_R5_OWNER_RIGHTS.md) and
+[accepted R6 proof](DEBT_037_R6_QUALIFICATION_PROOF.md).
+
+The unfinished hostile-writer research no longer blocks Phase11 under the owner's
+current requirements. Reopening it requires an explicit change to deployment
+scope. This disposition does not close D7, DEBT-007/090, the stack audit or the
+Phase11 brainstorm. No runtime, ACL/data, dependency or verification-policy
+change is part of this reconciliation packet.
 
 ### DEBT-038 — API E2E exceeds CI job limit (High, OPEN, D6)
 

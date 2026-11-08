@@ -1,12 +1,17 @@
 # DEBT-037 — Physical local storage design and evidence
 
+Historical hostile-OS-writer design. The owner's2026-11-08 clarification accepts
+owner/DSS-only filesystem writers and website/API-only users. The
+[current scope](DEBT_037_QUALIFICATION_DECISIONS.md) supersedes the pre11 mandate
+below; retained experiments are not a completed or activated runtime mechanism.
+
 Date: 2026-10-29. Source baseline: accepted main289b24c.
 Status: WORKING DESIGN; inventory and Windows/Linux primitive characterization.
 No physical runtime correction, migration or final mechanism acceptance is claimed.
 The [implementation proposal](DEBT_037_IMPLEMENTATION_PLAN.md) separates physical
 capabilities, attempt-local snapshots, rollout and remaining acceptance proofs.
 
-## Required outcome
+## Historical required outcome
 
 The owner explicitly requires physical containment before Phase11, including
 hostile local symlink/junction substitution. A trusted-writers-only assumption
