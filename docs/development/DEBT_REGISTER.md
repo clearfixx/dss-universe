@@ -2,12 +2,29 @@
 
 > Status: Active
 >
-> Updated: 2026-11-07 (R5 candidate checkpoint; accepted-history reconciliation retained)
+> Updated: 2026-11-08 (Media intake concurrency characterization; accepted history retained)
 >
 > Historical candidate checkpoints and the original table below are retained.
 > Read entry-specific acceptance updates and the
 > [current D7 reconciliation](../audits/D7_CURRENT_ACCEPTANCE_RECONCILIATION.md)
 > before interpreting an old OPEN/candidate label. This is not final D7 acceptance.
+
+### DEBT-094 — Concurrent Media intake creates an unqueued duplicate (Medium, CONFIRMED; runtime open)
+
+At accepted main `bab5557`, two authenticated multipart uploads of one session
+can both read INITIATED before the unconditional UPLOADING update. A deterministic
+HTTP/real-auth/private-migrated-schema test confirms two200 COMPLETED responses,
+two distinct PROCESSING Media rows and only one real BullMQ job using the shared
+session ID. Sequential repeat is409; an invalid JWT is401 without mutation.
+The same harmless PNG is read back through the real local storage provider.
+
+This separate characterization packet changes no runtime. Its green duplicate
+assertion is evidence of the defect, not a fix. Proposed separate correction:
+atomic INITIATED→UPLOADING claim before IO; the loser returns409 outside
+compensation. Owner approval, runtime implementation and full acceptance remain
+required. No migration, global lease or abort/Worker redesign is implied.
+Quarantine bypass, data disclosure and compensation cross-effects are not proved.
+See [reproduction, evidence limits and proposed scope](../audits/DEBT_094_MEDIA_INTAKE_CONCURRENCY.md).
 
 ### DEBT-092 — Joi email splitting advisory blocks current gate (High, RESOLVED scoped patch)
 

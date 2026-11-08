@@ -68,6 +68,11 @@ separate from the requested accepted baseline and retained checkpoint.
 
 ## Remaining D7 work
 
+- Nov8 candidate DEBT-094: concurrent authenticated upload intake is reproduced
+  with two Media rows but one real queue job. Characterization is not a fix;
+  agree and verify its separate bounded runtime correction. See the
+  [Media intake evidence](DEBT_094_MEDIA_INTAKE_CONCURRENCY.md). The historical
+  91-row matrix and93-entry checkpoint above do not include this new94th ID.
 - Reconcile all retained M/O/Q/X rows against current accepted code, tests and
   owner decisions; the original91-row review is not advanced wholesale by this
   packet or by recent green storage checks.
