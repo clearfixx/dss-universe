@@ -2,12 +2,29 @@
 
 > Status: Active
 >
-> Updated: 2026-11-08 (Media intake atomic-claim candidate; accepted history retained)
+> Updated: 2026-11-08 (Media intake candidate and IAM gate finding; accepted history retained)
 >
 > Historical candidate checkpoints and the original table below are retained.
 > Read entry-specific acceptance updates and the
 > [current D7 reconciliation](../audits/D7_CURRENT_ACCEPTANCE_RECONCILIATION.md)
 > before interpreting an old OPEN/candidate label. This is not final D7 acceptance.
+
+### DEBT-095 — IAM permission-denial E2E exceeds its deadline (Medium, OPEN cause/diagnostic scope)
+
+PR144 head `35aec05` has CI8/8 and E2E699/699, but its local full gate ended
+698/699, exit1. The existing IAM permission-management/audit-rollback case
+reports timeout5000ms and wall duration270190ms. The same CI case passed1106ms.
+Structured logs show a denied IAM POST403 with responseTime270753ms; this is
+not evidence that moving registration setup would correct it. Verified power/
+time System-log queries do not explain the gap. Runtime, fixture or execution-
+pause cause remains unknown. All ten Media regressions and coverage passed;
+the later local build/Web stages were not reached.
+
+Preserve the red report and do not rerun-to-green, inflate timeouts, weaken
+assertions or mock Auth. A separate diagnostic/test scope is proposed to measure
+the real request, owner boundaries and wall/monotonic/event-loop timing before
+selecting any fixture correction; runtime changes require separate approval.
+See [captured evidence and limits](../audits/DEBT_095_IAM_PERMISSION_DENIAL_TIMING.md).
 
 ### DEBT-094 — Concurrent Media intake creates an unqueued duplicate (Medium, IMPLEMENTED candidate; acceptance open)
 
@@ -28,6 +45,10 @@ cleanup. Full gate, final CI and runtime acceptance remain open. No migration,
 global lease or abort/Worker redesign. Quarantine bypass and data disclosure are
 not proved; the claim does not establish global exactly-once processing.
 See [reproduction, evidence limits and proposed scope](../audits/DEBT_094_MEDIA_INTAKE_CONCURRENCY.md).
+
+Gate update: runtime head `35aec05` passed CI8/8, coverage5/5/API1469 and all ten
+local Media regressions. Full local E2E was698/699 due to the separate DEBT-095
+IAM timeout; the runtime packet is not accepted and remains draft.
 
 ### DEBT-092 — Joi email splitting advisory blocks current gate (High, RESOLVED scoped patch)
 

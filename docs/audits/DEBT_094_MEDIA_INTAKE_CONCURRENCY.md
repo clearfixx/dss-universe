@@ -126,7 +126,13 @@ the integration JSON SHA256 is
 `725f93aaacff1f914cc355b3dea517124fd472b91d557ea8b1d5220b6cbafcb3`.
 Two strict-lint method-reference findings in new unit assertions were corrected
 before the successful focused run, without changing assertions or runtime logic.
-Full gate, final CI and runtime packet acceptance are still required.
+The first full gate on runtime head `35aec05` passed coverage5/5/API1469 and
+Media10/10, but ended698/699 at E2E because of the separately documented
+[DEBT-095 IAM timeout](DEBT_095_IAM_PERMISSION_DENIAL_TIMING.md). Later local
+build/Web stages were not reached. Exact-head CI8/8 includes E2E699/699,
+build6/6 and Web15/15. The failed local report remains retained; the runtime
+packet stays draft and is not accepted. A subsequent final integrated head
+still needs full verification and owner acceptance.
 
 No migration, new transaction/isolation/timeout, lease system, dependency,
 frontend, ACL or native activation change. The claim does not guarantee global
