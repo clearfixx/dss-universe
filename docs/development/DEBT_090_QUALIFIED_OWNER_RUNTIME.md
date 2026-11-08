@@ -107,6 +107,14 @@ choice for a64-row population; the test now distinguishes that bounded small
 population from the large-history requirement. Earlier storage-fixture omissions
 and these failed logs remain in the local O1 proof record; no retry-to-green claim.
 
+The first CI on `e783a33` passed API coverage1483/1483 but E2E772/773: the existing
+award-atomicity test still observed `repository.dailyCount` after that private
+method moved into `ruleAwards`. Its observation now targets the real owned writer;
+the same PostgreSQL lock wait, quota reads `[0,1]`, AWARDED/CAPPED results and exact
+award/marker/Audit/Outbox assertions remain. The first red log is retained. A local
+gate on that old head was explicitly cancelled during lint once this CI failure
+was known; it is an interrupted run, not a completed E2E failure or a passing gate.
+
 Current focused evidence and exact-head full gate/CI/acceptance are recorded in
 the PR and local `tools/agent-helpers/debt090-o1-runtime-proof.local.json` receipt.
 Only the disposable loopback5434 `dss_test` database receives the migration during
