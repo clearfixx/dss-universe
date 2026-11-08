@@ -203,14 +203,19 @@ rollback is replayed. This does not prove a current automatic-delivery incident.
 Points already retains an absent source's revocation; Achievements must not inherit
 that guarantee by assumption. The owner approved new legitimate qualification
 cycles while rejecting restoration by late old-cycle events. Detailed C1 identity/
-serialization and runtime-correction approval remain open; no runtime fix here.
+serialization is fixed by accepted C1/owner design; full runtime correction and
+real producer/admission acceptance remain open.
 [Evidence and scope](DEBT_090_ACHIEVEMENT_ROLLBACK_ORDER.md).
 
 Accepted C1 PR109 fixes the design policy, not runtime. The subsequent
-[owner design candidate](DEBT_090_QUALIFIED_OWNER_DESIGN.md) specifies additive
+[accepted owner design](DEBT_090_QUALIFIED_OWNER_DESIGN.md), PR146 `f3e950e`
+merged as `fa043a3`, specifies additive
 owner storage, durable bounded retirement, enrolled legacy-consume behavior,
-lock participation and real-producer acceptance requirements. No migration or
-qualified command is implemented; this candidate needs review and its own gate.
+lock participation and real-producer acceptance requirements. The separately
+authorized [inactive O1 runtime candidate](DEBT_090_QUALIFIED_OWNER_RUNTIME.md)
+implements three owner tables, the qualified command and bounded retirement.
+Its full gate, CI and runtime acceptance remain pending; there is no automatic
+consumer, real producer journal or historical replay, and DEBT-090 stays open.
 
 ### DEBT-089 — systeminformation Windows command injection (High, correction candidate)
 
@@ -249,9 +254,10 @@ is enabled. C/D, UTC/configuration/retention preflight and
 complete DEBT-007/D7 acceptance remain open. Historical register dispositions below
 are not replaced by a claim that Phase8 delivery is complete.
 
-Next concrete design: [qualified Achievements owner](DEBT_090_QUALIFIED_OWNER_DESIGN.md).
-O1 owner runtime, P1 producer facts and C2/C3/D delivery/activation remain separate
-implementation approvals. This does not silently authorize the queue or replace
+Accepted owner design: [qualified Achievements owner](DEBT_090_QUALIFIED_OWNER_DESIGN.md).
+O1 owner runtime is separately authorized and under verification; P1 producer facts
+and C2/C3/D delivery/activation still require their own implementation approvals.
+This does not silently authorize the queue or replace
 the required real producer/admission proof with synthetic owner-only tests.
 
 ### DEBT-079 — Domain failures coupled to Nest transport (Medium, ACCEPTED runtime correction; verification open)

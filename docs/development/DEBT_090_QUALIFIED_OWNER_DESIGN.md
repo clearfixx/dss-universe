@@ -1,7 +1,11 @@
 # DEBT-090 — Qualified achievement commands and bounded retirement
 
 Date: 2026-11-08. Reviewed source: accepted main `417fe99` (PR144).
-Status: design candidate. No migration, production command or activation added.
+Status: design accepted in PR146 at `f3e950e`, merged as `fa043a3`.
+That package added no migration, production command or activation.
+The owner subsequently authorized the separate inactive O1 implementation;
+see its [runtime candidate and verification boundary](DEBT_090_QUALIFIED_OWNER_RUNTIME.md).
+Specification language below remains the accepted design, not O1 acceptance.
 This makes the accepted [C1 protocol](DEBT_007_CONSUMER_PROTOCOL.md) concrete for
 Achievements. Approval of this document is separate from runtime implementation.
 
