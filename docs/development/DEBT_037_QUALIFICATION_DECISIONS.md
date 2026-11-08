@@ -1,12 +1,53 @@
 # DEBT-037 — Qualification decisions after R6
 
 Baseline: accepted R6 / [PR140](https://github.com/clearfixx/dss-universe/pull/140),
-main `1781916079bcf0d1642aa6bb5b416006cca42337`. Status: design for review.
+main `1781916079bcf0d1642aa6bb5b416006cca42337`. Historical R6 design accepted in
+PR141 / `67b04a0`; its hostile-writer scope is superseded by the decision below.
 This packet changes documentation only. It refines the accepted
 [owner/right policy](DEBT_037_OWNER_RIGHTS_POLICY_DESIGN.md) and preserves the
 [complete API/Worker boundary](DEBT_037_RUNTIME_BOUNDARY_DESIGN.md).
 
-## Decisions supported by current evidence
+## Current owner decision — 2026-11-08
+
+The owner explicitly clarified both premises: only they control the environment
+where DSS runs, and users access DSS through the website/API, without direct
+filesystem write access. Only the owner and DSS processes write uploads. This
+supersedes the earlier separate-OS-user writer and its mandatory pre-Phase11
+native-containment implementation. Trusted startup is a deployment precondition,
+not a runtime claim of self-certified host identity.
+
+Retain the existing LOCAL contract: application-controlled directories, shared
+portable key validation before IO, authenticated owned upload sessions, policy/
+MIME/size checks, quarantine and public/signed delivery rules. Do not describe
+lexical validation as a sandbox against hostile local filesystem mutation.
+The owner must keep that directory/control assumption true; no ACL repair or
+new trust switch is introduced by documenting it.
+
+Source/test review on accepted main `7e5cce7` found:
+
+| Boundary      | Evidence                                                                                                                                                                                                                                                 |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Portable keys | `packages/storage/src/normalize-storage-key.ts`, `resolve-storage-key.ts` and `storage-key.spec.ts`: traversal, absolute paths, controls, ADS and Windows aliases are rejected                                                                           |
+| API IO/intake | `local-storage.provider.ts` uses the shared resolver for save/read/delete; its spec covers unsafe keys before side effects; Media upload controller requires authentication and the service checks session ownership before saving server-generated keys |
+| Worker IO     | `local-media-file.processor.ts` validates source, destination and every variant before IO; its spec covers traversal and cleanup keys; ClamAV scanner spec checks refusal before socket connection                                                       |
+| Delivery      | Media repository selects undeleted READY/PUBLIC candidates; signed delivery verifies its token and READY state; existing `app.e2e-spec.ts` exercises binary intake/delivery; no authored API static uploads handler was found                            |
+
+Inspected intake/Worker adapters write bytes, copy passthrough files or transform
+images; no symlink creation or archive extraction call was found in that bounded
+source review. This is not a certification of arbitrary dependencies, hostile
+OS accounts or every future endpoint. Revisit the boundary if direct writers or
+archive extraction are introduced.
+
+Accepted R1–R6 remain inactive research with their original limitations. Their
+unfinished admission/hostile-operation obligations are deferred, not solved or
+activated. This documentation packet changes no native code, application path,
+ACL/data, dependency, checks or frontend. Full packet verification and owner
+acceptance remain required; D7 and the Phase11 transition are not completed.
+
+## Historical decisions supported by R6 evidence
+
+The remaining sections preserve the former hostile-writer proposal. They are
+not current pre-Phase11 implementation requirements under the owner decision above.
 
 R6 provides usable query routes, not a production storage profile. Its final
 artifacts distinguish Linux idmapped mounts and Darwin ownership-disabled

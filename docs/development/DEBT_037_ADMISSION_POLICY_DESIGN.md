@@ -1,5 +1,10 @@
 # DEBT-037 — Admission policy and remaining native decisions
 
+Historical hostile-writer admission proposal. The owner's2026-11-08 decision
+accepts owner/DSS-only filesystem writers and website/API-only users. Follow the
+[current scope](DEBT_037_QUALIFICATION_DECISIONS.md); the native obligations below
+are deferred research, not current pre11 implementation requirements.
+
 Baseline: main `64c767e`, accepted R2 / PR131. This is a concrete design for
 review, not a runtime implementation, activation or certificate of containment.
 It supplements the [complete boundary](DEBT_037_RUNTIME_BOUNDARY_DESIGN.md).
