@@ -1,7 +1,7 @@
 # DEBT-007 — C2 admission and durable continuation
 
 Baseline: accepted main `601fa4f` (P1 / PR149).
-Status: initial design draft, not accepted or runtime-authorized. No migration,
+Status: proposed staged design, not accepted or runtime-authorized. No migration,
 queue, consumer activation or frontend change is supplied by this draft.
 
 ## Source-backed integration gaps
@@ -56,12 +56,12 @@ authorization to migrate. UUIDs identify admissions/attempts; counters use BigIn
 with nonnegative constraints and decimal-string transport, never JS-number
 round trips. All timestamps follow B's millisecond UTC convention.
 
-| Record             | Identity and immutable fields                                                                                                                                         | Mutable fields and guards                                                                                                                                                                                 |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Admission          | UUID primary key; unique destination/eventId; composite restrictive FK to B delivery; cutoff; descriptor ID/version; codec version; safe sealed projection and digest | None. Reject updates to identity/projection; no cascade deletion                                                                                                                                          |
-| ConsumptionReceipt | admissionId primary/restrictive FK; destination duplicated only with a composite consistency FK                                                                       | READY/RUNNING/RETRY_DUE/COMPLETE/BLOCKED; epoch; claim sequence; token/claimedAt/leaseUntil; availableAt; consecutive technical failures; Points/Levels/Achievements completion flags; bounded block code |
-| ConsumptionAttempt | UUID; unique claim token; unique admissionId/epoch/claim sequence; admission and epoch identity; startedAt                                                            | One terminal transition from OPEN to COMPLETE/CONTINUED/FAILED/EXPIRED/BLOCKED/FENCED; finishedAt and bounded disposition. Settled evidence cannot be rewritten                                           |
-| OwnerProgress      | receipt/owner primary key; owner discriminant                                                                                                                         | Versioned owner-local coordinates; for O1: scope, generation, sequence. Updated only with the receipt's current-token CAS in the same transaction                                                         |
+| Record             | Identity and immutable fields                                                                                                                                         | Mutable fields and guards                                                                                                                                                                           |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Admission          | UUID primary key; unique destination/eventId; composite restrictive FK to B delivery; cutoff; descriptor ID/version; codec version; safe sealed projection and digest | None. Reject updates to identity/projection; no cascade deletion                                                                                                                                    |
+| ConsumptionReceipt | admissionId primary/restrictive FK; destination duplicated only with a composite consistency FK                                                                       | READY/RUNNING/RETRY_DUE/COMPLETE/BLOCKED; epoch; claim sequence; token/claimedAt/leaseUntil; availableAt; epoch technical failures; Points/Levels/Achievements completion flags; bounded block code |
+| ConsumptionAttempt | UUID; unique claim token; unique admissionId/epoch/claim sequence; admission and epoch identity; startedAt                                                            | One terminal transition from OPEN to COMPLETE/CONTINUED/FAILED/EXPIRED/BLOCKED/FENCED; finishedAt and bounded disposition. Settled evidence cannot be rewritten                                     |
+| OwnerProgress      | receipt/owner primary key; owner discriminant                                                                                                                         | Versioned owner-local coordinates; for O1: scope, generation, sequence. Updated only with the receipt's current-token CAS in the same transaction                                                   |
 
 Receipt CHECK constraints bind RUNNING to a non-null token and lease; all other
 states clear those claim fields. Terminal receipts have no due wake-up. A COMPLETE
@@ -85,7 +85,7 @@ codec limits before implementation; hashing alone does not bound storage.
 | Claim                | ACTIVE destination, READY/RETRY_DUE receipt due now                                   | RUNNING, new token/lease and incremented claim sequence; append OPEN attempt                                                    |
 | Owner completes      | RUNNING, current epoch/token; owner call already returned                             | Mark that owner complete; retain other completion/progress. Last applicable owner settles COMPLETE and attempt COMPLETE         |
 | Owner continues      | Same current claim; valid owner progress outcome                                      | Save progress, settle attempt CONTINUED, clear claim and return READY with due wake-up; preserve failure counter and done flags |
-| Technical failure    | Same current claim                                                                    | Settle FAILED attempt; increment consecutive failure counter, RETRY_DUE/backoff or BLOCKED at approved budget                   |
+| Technical failure    | Same current claim                                                                    | Settle FAILED attempt; increment epoch failure counter, RETRY_DUE/backoff or BLOCKED at approved budget                         |
 | Owner policy rejects | Same current claim; reviewed bounded owner outcome                                    | BLOCKED receipt and attempt, without pretending queue publication failed                                                        |
 | Lease recovery       | RUNNING lease expired, still same token under row lock                                | Settle EXPIRED attempt and apply technical-failure policy; clear token                                                          |
 | Stale callback       | Epoch/token/state mismatch                                                            | No receipt/progress/done-flag mutation and no subsequent owner call                                                             |
@@ -96,10 +96,13 @@ about publication only. Proposed consumption budget/lease/backoff require explic
 C approval. Claim sequence counts work; it is not the failure budget. A valid
 CONTINUE never increments or resets technical failures: otherwise progress could
 either exhaust a five-attempt budget or conceal repeated technical failures.
-Whether successful owner completion resets consecutive failures must be fixed in
-the final policy before runtime; total failures remain available in attempt
-history regardless. Manual retry creates a new audited epoch through D, never
-edits old attempts or erases completion flags.
+Propose a five-technical-failures budget per epoch, a 60-second lease and
+1/2/4/8-second retry backoff. Successful owner completion and CONTINUE do not reset
+this counter. This makes the budget finite without charging valid progress;
+owner acceptance is still required before consumption runtime implements these
+parameters. Manual retry creates a new audited epoch through D, resets only that
+epoch's technical counter, and never edits old attempts or erases completion
+flags. Claim sequence remains monotonic across epochs.
 
 A due receipt is the durable scheduling authority. A CONTINUE cannot rely on
 BullMQ re-adding the same live job ID: deduplication could consume its only hint.
@@ -142,7 +145,8 @@ Projection rejection occurs before an admission exists, so it also needs durable
 publication disposition evidence separate from ConsumptionAttempt. The final B
 extension must distinguish admission rejection from QUEUE_ADD_FAILED and
 CLAIM_EXPIRED; adding a fake queue failure would misreport both operations and
-retry policy. Its schema and recovery behavior remain an explicit design gap.
+retry policy. The following proposed rejection contract supplies that separate
+history and settlement; implementation and concurrency proof remain pending.
 
 ## Proposed admission rejection contract
 
@@ -271,7 +275,7 @@ evidence references and test attempted deletion under pending/continued work.
 Completed receipt retention and manual retry history belong to D; deleting an
 admission is not a mechanism for replay or changing the activation cutoff.
 
-## Required next design work
+## Staged implementation proposal and outstanding gates
 
 Inspected owner contracts currently expose `Promise<void>` for both Points and
 Levels. Their private services already return `CommunityPointConsumption` and
@@ -284,20 +288,26 @@ interleavings still need the accepted C1 concurrency proof. These are source
 integration gaps, not newly reproduced production incidents or authority to
 change owner behavior in this design packet.
 
-1. Specify physical admission/receipt/attempt/progress records, immutable identity
-   constraints, state transitions and query indexes.
-2. Resolve snapshot/isolation and shared lock order with B, configuration changes
-   and transaction-bound producer preparation, without global isolation changes.
-3. Inventory Points and Levels outcomes and define narrow owner capabilities;
-   a void return cannot be used as an economic-effect receipt.
-4. Specify progress scheduling, technical retry budget, lease recovery, soft pause,
-   lost hints and audited publication-cycle rollover through reviewed B methods.
-5. Define descriptor/configuration compatibility, canonical retention and reviewed
-   legacy mappings. Reputation support alone must not masquerade as coverage of
-   all configured News, Comments and future producer families.
-6. Prepare deterministic DB/compatibility/query-work characterization before
-   proposing a concrete separately approved runtime implementation.
+| Stage                                       | Concrete boundary                                                                                                                                                                                    | Acceptance evidence                                                                                                                    |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| C2.1 inactive persistence                   | Admission, receipt, attempt, progress and admission-rejection records; constraints, repository CAS, due/recovery reads; transaction-bound P1 preparation; no App import, runner, queue or activation | Migrated DB atomicity, immutable identity, stale claim/callback rejection, exact safe projection, real query plans                     |
+| C2.2 owner prerequisites                    | Named Points outcomes and qualified control/contribution semantics; Levels supported-event outcomes and distinct-event synchronization proof                                                         | Owner-local rule/cap/reversal/idempotency regressions; current public facade compatibility; no root-owned economic logic               |
+| C2.3 compatibility and complete projections | Compatibility guard/counters, every relevant writer, full descriptor inventory, canonical and mapping retention, bounded codec limits                                                                | Configuration/admission races, backlog counter rollback, private-data exclusion, attempted evidence deletion, actual producer coverage |
+| C3 queue integration                        | Durable due-receipt wake-up, reviewed B cycle rollover, runner and durable second-hop consumption                                                                                                    | Real DB/Redis pause, crash, duplicate/lost/unknown hint and long CONTINUE scenarios without retries-to-green                           |
+| D operations and activation                 | Audited retry epochs, retention, preflight, operations/runbook and explicit activation acceptance                                                                                                    | Complete source/descriptor/effect matrix and owner-approved activation; no historical replay                                           |
 
-This draft is a source-gap map and initial invariants, not the completed C2
-protocol or a release certificate. It has not passed a package full gate or CI.
+C2.1 is an implementation outline, not yet a ready runtime request: exact SQL
+columns/constraints, sealed-codec field limits and repository signatures must be
+reviewable before asking for its separate authorization. Seven proposed record
+families exist across C2.1/C2.3 (five persistence records plus guard and counters);
+do not describe this as an already-approved four-table migration.
+
+Splitting these stages does not waive any C1 requirement. Inactive persistence
+can be accepted independently, but C2 as a whole and automatic processing cannot
+be declared complete while owner facets, configuration writers, source families,
+retention or wake-up semantics remain unproved. A Reputation-only route is not a
+substitute for the agreed producer coverage.
+
+This proposal documents the state machine and staged dependencies, not a release
+certificate. It has not passed a package full gate or final-head CI.
 DEBT-007/090, final D7, stack audit and Phase11 brainstorm remain open.
