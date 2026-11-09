@@ -212,10 +212,15 @@ Accepted C1 PR109 fixes the design policy, not runtime. The subsequent
 merged as `fa043a3`, specifies additive
 owner storage, durable bounded retirement, enrolled legacy-consume behavior,
 lock participation and real-producer acceptance requirements. The separately
-authorized [inactive O1 runtime candidate](DEBT_090_QUALIFIED_OWNER_RUNTIME.md)
+accepted [inactive O1 runtime](DEBT_090_QUALIFIED_OWNER_RUNTIME.md), PR147
+`8568503` merged as `a31b5fd`,
 implements three owner tables, the qualified command and bounded retirement.
-Its full gate, CI and runtime acceptance remain pending; there is no automatic
+Exact-head full gate0 and CI8/8 included API1483/1483, E2E778/778, build6/6,
+Web15/15 without retries and native48/48 on three OSes. There is no automatic
 consumer, real producer journal or historical replay, and DEBT-090 stays open.
+The next [P1 Reputation producer design](DEBT_090_REPUTATION_PRODUCER_DESIGN.md)
+is a design/characterization candidate; its legacy-provenance policy and runtime
+implementation need separate review and approval.
 
 ### DEBT-089 — systeminformation Windows command injection (High, correction candidate)
 
@@ -255,7 +260,7 @@ complete DEBT-007/D7 acceptance remain open. Historical register dispositions be
 are not replaced by a claim that Phase8 delivery is complete.
 
 Accepted owner design: [qualified Achievements owner](DEBT_090_QUALIFIED_OWNER_DESIGN.md).
-O1 owner runtime is separately authorized and under verification; P1 producer facts
+O1 owner runtime was separately accepted in PR147, merged as `a31b5fd`; P1 producer facts
 and C2/C3/D delivery/activation still require their own implementation approvals.
 This does not silently authorize the queue or replace
 the required real producer/admission proof with synthetic owner-only tests.

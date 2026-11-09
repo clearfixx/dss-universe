@@ -91,9 +91,13 @@ separate from the requested accepted baseline and retained checkpoint.
   Finish DEBT-007 C/D plus the separately reviewed090 source-cycle correction.
   The [qualified-owner design](../development/DEBT_090_QUALIFIED_OWNER_DESIGN.md)
   was accepted in PR146 (`f3e950e`, merge `fa043a3`). Its separately authorized
-  [inactive O1 runtime candidate](../development/DEBT_090_QUALIFIED_OWNER_RUNTIME.md)
-  adds owner tables/commands under verification, not accepted activation or a
-  real producer/admission implementation. DEBT-007/090 and D7 remain open.
+  [inactive O1 runtime](../development/DEBT_090_QUALIFIED_OWNER_RUNTIME.md)
+  was accepted in PR147 at `8568503`, merged as `a31b5fd` with the identical
+  tested tree: local full gate0 without sleep, CI8/8, API1483/1483, E2E778/778,
+  build6/6, Web15/15 without retries and native48/48 on three OSes. This accepts
+  owner tables/commands, not activation or a real producer/admission implementation.
+  The next [P1 producer design](../development/DEBT_090_REPUTATION_PRODUCER_DESIGN.md)
+  remains a separate design/characterization candidate. DEBT-007/090 and D7 remain open.
 - Dispose the remaining administrator-availability047 and Activity/source067
   policy questions; keep unresolved timing/retention evidence explicit, including
   058/059/083/084/086. Later passing gates do not universally identify old causes.
