@@ -11,7 +11,7 @@
 🚀 Build. Share. Grow.
 ===============================================================
 #>
-param([ValidateSet('storage','codec','producer','admission','consumption','performance')][string]$Kind = 'storage')
+param([ValidateSet('storage','codec','producer','admission','consumption','performance','alignment')][string]$Kind = 'storage')
 $ErrorActionPreference = 'Stop'
 $c21Root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../..'))
 Set-Location -LiteralPath $c21Root
@@ -47,6 +47,8 @@ try {
             & pnpm --filter @dss/api exec jest --config test/jest-e2e.json --runInBand --runTestsByPath test/gamification-admission.e2e-spec.ts test/gamification-routing-persistence.e2e-spec.ts *>> $c21Log
         } elseif ($Kind -eq 'consumption') {
             & pnpm --filter @dss/api exec jest --config test/jest-e2e.json --runInBand --runTestsByPath test/gamification-consumption.e2e-spec.ts test/gamification-consumption-assembly.e2e-spec.ts *>> $c21Log
+        } elseif ($Kind -eq 'alignment') {
+            & pnpm --filter @dss/api exec jest --config test/jest-e2e.json --runInBand --runTestsByPath test/prisma-schema-alignment.e2e-spec.ts *>> $c21Log
         } else {
             & pnpm --filter @dss/api exec jest --config test/jest-e2e.json --runInBand --runTestsByPath test/gamification-consumption-performance.e2e-spec.ts *>> $c21Log
         }

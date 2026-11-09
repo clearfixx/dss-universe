@@ -154,5 +154,13 @@ deployment and zero drift passed using the guarded verification helper.
 
 Complete full quality gate, final-head CI and separate owner acceptance remain.
 
+The first exact-head full gate at78ee61d failed865/866 E2E with zero skips/todo;
+CI independently reported the same single catalog-alignment failure. API coverage
+passed1541/1541, and all8 workspace coverage tasks passed. The new receipt and
+progress updatedAt defaults were absent from the exact catalog expectation.
+The correction adds both reviewed rows while retaining exact equality, all old
+defaults and both Users indexes. SQL/runtime/guards are unchanged. Original red
+reports are retained; a new complete gate is required for the corrected head.
+
 C2.2/C2.3, C3/D and final D7 remain separate pending work. No historical replay,
 frontend change or Phase11 implementation is included.
