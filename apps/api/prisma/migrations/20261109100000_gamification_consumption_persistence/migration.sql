@@ -112,6 +112,8 @@ CREATE UNIQUE INDEX "gamification_admission_rejections_claimToken_key" ON "gamif
 -- CreateIndex
 CREATE INDEX "gamification_admission_rejection_time_idx" ON "gamification_admission_rejections"("destination", "observedAt", "id");
 
+CREATE INDEX "gamification_rejection_delivery_idx" ON "gamification_admission_rejections"("destination", "eventId", "cycle", "cycleAttempt");
+
 -- AddForeignKey
 ALTER TABLE "gamification_admissions" ADD CONSTRAINT "gamification_admissions_destination_eventId_fkey" FOREIGN KEY ("destination", "eventId") REFERENCES "gamification_deliveries"("destination", "eventId") ON DELETE RESTRICT ON UPDATE RESTRICT;
 
@@ -189,6 +191,36 @@ CREATE FUNCTION gamification_c21_reject_mutation() RETURNS trigger LANGUAGE plpg
 BEGIN
   RAISE EXCEPTION 'gamification C2.1 history is immutable';
 END $$;
+
+-- Extend B only for the explicitly reviewed, separately evidenced rejection path.
+ALTER TABLE gamification_deliveries DROP CONSTRAINT gamification_delivery_budget;
+ALTER TABLE gamification_deliveries ADD CONSTRAINT gamification_delivery_budget CHECK (
+  (state<>'WAITING' OR "cycleAttempts"<5)
+  AND (state<>'BLOCKED' OR "cycleAttempts" BETWEEN 1 AND 5)
+);
+CREATE FUNCTION gamification_c21_publication_rejection_guard() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  IF NEW.state<>'BLOCKED' OR NEW."cycleAttempts"=5 THEN RETURN NEW; END IF;
+  IF TG_OP<>'UPDATE' THEN RAISE EXCEPTION 'early publication block requires claimed rejection'; END IF;
+  IF OLD.state='CLAIMED' AND NEW.destination=OLD.destination AND NEW."eventId"=OLD."eventId"
+    AND NEW.cycle=OLD.cycle AND NEW."cycleAttempts"=OLD."cycleAttempts" AND NEW."claimCount"=OLD."claimCount"
+    AND EXISTS (
+    SELECT 1 FROM gamification_admission_rejections r
+    WHERE r.destination=NEW.destination AND r."eventId"=NEW."eventId"
+      AND r.cycle=NEW.cycle AND r."cycleAttempt"=NEW."cycleAttempts"
+      AND r."claimToken"=OLD."claimToken"
+  ) THEN RETURN NEW; END IF;
+  IF OLD.state='BLOCKED' AND NEW.destination=OLD.destination AND NEW."eventId"=OLD."eventId"
+    AND NEW.cycle=OLD.cycle AND NEW."cycleAttempts"=OLD."cycleAttempts" AND NEW."claimCount"=OLD."claimCount"
+    AND EXISTS (SELECT 1 FROM gamification_admission_rejections r
+      WHERE r.destination=NEW.destination AND r."eventId"=NEW."eventId"
+        AND r.cycle=NEW.cycle AND r."cycleAttempt"=NEW."cycleAttempts") THEN RETURN NEW; END IF;
+  RAISE EXCEPTION 'early publication block lacks exact rejection evidence';
+END $$;
+CREATE CONSTRAINT TRIGGER gamification_publication_rejection_guard
+AFTER INSERT OR UPDATE ON gamification_deliveries DEFERRABLE INITIALLY DEFERRED
+FOR EACH ROW WHEN (NEW.state='BLOCKED' AND NEW."cycleAttempts"<5)
+EXECUTE FUNCTION gamification_c21_publication_rejection_guard();
 
 CREATE TRIGGER gamification_admission_immutable BEFORE UPDATE OR DELETE ON gamification_admissions
 FOR EACH ROW EXECUTE FUNCTION gamification_c21_reject_mutation();

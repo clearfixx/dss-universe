@@ -38,7 +38,6 @@ import {
   PrismaReputationEntryReader,
   PrismaReputationWriter,
   PrismaReputationQualificationWriter,
-  PrismaReputationQualificationReader,
 } from '@api/modules/reputation/infrastructure';
 import {
   ReputationModule,
@@ -53,7 +52,7 @@ import { ReputationBlockAdapter } from './infrastructure/reputation-block.adapte
 import { ReputationProfileAdapter } from './infrastructure/reputation-profile.adapter';
 import { PrismaReputationReadUnit } from './infrastructure/prisma-reputation.read-unit';
 import { PrismaReputationWriteTransaction } from './infrastructure/prisma-reputation-write.transaction';
-import { ReputationQualificationAdapter } from './infrastructure/reputation-qualification.adapter';
+import { ReputationQualificationReadModule } from './reputation-qualification-read.module';
 @Global()
 @Module({
   imports: [
@@ -63,6 +62,7 @@ import { ReputationQualificationAdapter } from './infrastructure/reputation-qual
     AuthModule,
     UsersModule,
     ReputationModule,
+    ReputationQualificationReadModule,
   ],
   providers: [
     PrismaReputationEntryReader,
@@ -70,8 +70,6 @@ import { ReputationQualificationAdapter } from './infrastructure/reputation-qual
     PrismaReputationWriteActorReader,
     PrismaReputationWriter,
     PrismaReputationQualificationWriter,
-    PrismaReputationQualificationReader,
-    ReputationQualificationAdapter,
     {
       provide: REPUTATION_WRITE_TRANSACTION,
       useClass: PrismaReputationWriteTransaction,

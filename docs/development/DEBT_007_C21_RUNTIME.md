@@ -19,8 +19,10 @@ token authority still belongs to transactional repositories; these guards are
 not a substitute for CAS or producer attestation.
 
 No App import, runner, broker operation, owner call or automatic award is added.
-The new DDL has only run in isolated disposable schemas through the established
-migration fixture; no public/dev migration deployment is claimed at this stage.
+The new DDL ran in isolated disposable schemas through the established migration
+fixture and subsequently in public on the fixed disposable test database at
+127.0.0.1:5434/dss_test. Prisma reported no schema difference after deployment.
+No dev database migration deployment is claimed.
 
 ## Current evidence
 
@@ -99,12 +101,58 @@ now uses the existing file's explicit reader signature. Lint/typecheck passed
 after correction. Architecture checks passed142/142 with the unchanged frozen
 inventory; this is boundary-regression evidence, not final D7 acceptance.
 
+## Admission and consumption checkpoint
+
+The inactive admission adapter now prepares producer facts inside the caller's
+Repeatable Read transaction, fences the current publication claim, creates the
+seal and initial receipt atomically, and reuses an existing seal before reading
+the producer's newer mutable view. Canonical identity remains checked on reuse.
+Admission rejection is immutable evidence, not a fabricated publication failure.
+
+The additive migration also replaces the existing delivery budget CHECK to allow
+an early BLOCKED outcome only with matching rejection evidence, enforced by a
+deferred trigger. Its exact token/cycle/attempt checks preserve the existing
+five-failure publication path. Historical migration files remain unchanged.
+Admission plus existing routing regressions passed34/34, including rollback,
+stale claims, reuse after withdrawal and invalid rejection evidence.
+
+Consumption persistence supplies current-token load/settlement, atomic receipt
+and attempt changes, continuation progress, separate policy blocks, five technical
+failures with1/2/4/8-second backoff, and expired-claim recovery. Timestamp expiry
+alone does not revoke a claim; recovery changes its authority. Old callbacks are
+fenced by admission/epoch/sequence/token. More than five continuation pages do not
+consume the technical failure budget. This bookkeeping cannot cancel an already
+running owner transaction and does not promise exactly-once effects.
+
+The expanded consumption/lifecycle checkpoint passed23/23. It includes
+real headless Nest init/close and shared provider identity with the existing API
+composition. Only named frozen capabilities are exported. The new assembly is
+not imported by AppModule and has no controllers, scheduler or broker operations.
+Fairness across READY/RETRY_DUE and the exact60-second lease also passed.
+Codec plus pre-transaction argument validation passed45/45.
+
+Performance regressions passed2/2 on8193 synthetic receipts using actual query
+factories and EXPLAIN ANALYZE without planner overrides. Due work used two indexed
+state lanes, each reading32 rows; their merged result contains at most32 claims.
+The transaction can lock up to two candidate batches before releasing unused
+locks. Recovery excluded future leases through the index range with zero rows
+read/filtered. These are bounded-query observations, not a latency SLA.
+The first performance fixture failed because Jest's structuredClone produced a
+foreign-realm object prototype; a JSON round-trip models JSONB input instead.
+The strict codec was not weakened, and the failed log is retained.
+
+Consumption/performance fixtures construct synthetic shape-valid seals directly;
+they are not producer attestation. Admission tests separately exercise the real
+P1 preparation path. Per-run receipts and logs are retained by the fixed helper.
+
 ## Remaining before package acceptance
 
-Immutable seal reuse; admission/rejection and consumption CAS
-repositories; actual-token and concurrency schedules; bounded query plans;
-inactive assembly/lifecycle regressions; disposable public deployment/drift;
-complete full quality gate, final-head CI and separate owner acceptance.
+Typecheck and API lint passed. Architecture checks passed142/142 with zero frozen
+inventory findings; this is not a D7 compliance certificate. Admission/routing
+was rerun after the assembly extraction and again passed34/34. Disposable public
+deployment and zero drift passed using the guarded verification helper.
+
+Complete full quality gate, final-head CI and separate owner acceptance remain.
 
 C2.2/C2.3, C3/D and final D7 remain separate pending work. No historical replay,
 frontend change or Phase11 implementation is included.

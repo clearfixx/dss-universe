@@ -16,6 +16,7 @@ import type {
   CONSUMPTION_TECHNICAL_CODES,
 } from './consumption.constants';
 import type { PublicationClaim } from './routing.types';
+import type { ReputationAdmissionSeal } from './admission-seal.types';
 
 export type AdmissionRejectionCode = (typeof ADMISSION_REJECTION_CODES)[number];
 export type ConsumptionTechnicalCode =
@@ -76,6 +77,13 @@ export type OwnerBlock = Readonly<{
 
 export type ClaimSettlement = 'APPLIED' | 'STALE';
 
+export type ConsumptionWork = Readonly<{
+  admissionId: string;
+  projection: ReputationAdmissionSeal;
+  done: Readonly<{ POINTS: boolean; LEVELS: boolean; ACHIEVEMENTS: boolean }>;
+  progress: AchievementContinuation['progress'] | null;
+}>;
+
 export interface GamificationAdmission {
   prepare(claim: PublicationClaim): Promise<AdmissionPreparation>;
   rejectAdmission(
@@ -86,6 +94,7 @@ export interface GamificationAdmission {
 
 export interface GamificationConsumption {
   claim(limit?: number): Promise<readonly ConsumptionClaim[]>;
+  load(claim: ConsumptionClaim): Promise<ConsumptionWork | null>;
   completeOwner(
     claim: ConsumptionClaim,
     outcome: OwnerCompletion,

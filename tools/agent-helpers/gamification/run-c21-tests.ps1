@@ -11,7 +11,7 @@
 🚀 Build. Share. Grow.
 ===============================================================
 #>
-param([ValidateSet('storage','codec','producer')][string]$Kind = 'storage')
+param([ValidateSet('storage','codec','producer','admission','consumption','performance')][string]$Kind = 'storage')
 $ErrorActionPreference = 'Stop'
 $c21Root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../..'))
 Set-Location -LiteralPath $c21Root
@@ -41,11 +41,17 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'Prisma client generation failed; see retained log.' }
         if ($Kind -eq 'storage') {
             & pnpm --filter @dss/api exec jest --config test/jest-e2e.json --runInBand --runTestsByPath test/gamification-consumption-storage.e2e-spec.ts *>> $c21Log
-        } else {
+        } elseif ($Kind -eq 'producer') {
             & pnpm --filter @dss/api exec jest --config test/jest-e2e.json --runInBand --runTestsByPath test/reputation-qualification.e2e-spec.ts *>> $c21Log
+        } elseif ($Kind -eq 'admission') {
+            & pnpm --filter @dss/api exec jest --config test/jest-e2e.json --runInBand --runTestsByPath test/gamification-admission.e2e-spec.ts test/gamification-routing-persistence.e2e-spec.ts *>> $c21Log
+        } elseif ($Kind -eq 'consumption') {
+            & pnpm --filter @dss/api exec jest --config test/jest-e2e.json --runInBand --runTestsByPath test/gamification-consumption.e2e-spec.ts test/gamification-consumption-assembly.e2e-spec.ts *>> $c21Log
+        } else {
+            & pnpm --filter @dss/api exec jest --config test/jest-e2e.json --runInBand --runTestsByPath test/gamification-consumption-performance.e2e-spec.ts *>> $c21Log
         }
     } else {
-        & pnpm --filter @dss/api exec jest --runInBand --runTestsByPath src/composition/gamification-delivery/infrastructure/admission-seal.codec.spec.ts *> $c21Log
+        & pnpm --filter @dss/api exec jest --runInBand --runTestsByPath src/composition/gamification-delivery/infrastructure/admission-seal.codec.spec.ts src/composition/gamification-delivery/infrastructure/consumption-validation.spec.ts *> $c21Log
     }
     $c21Code = $LASTEXITCODE
 } finally {

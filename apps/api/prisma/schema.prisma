@@ -1526,6 +1526,7 @@ model GamificationAdmissionRejection {
   delivery GamificationDelivery @relation(fields: [destination, eventId], references: [destination, eventId], onDelete: Restrict, onUpdate: Restrict)
 
   @@index([destination, observedAt, id], map: "gamification_admission_rejection_time_idx")
+  @@index([destination, eventId, cycle, cycleAttempt], map: "gamification_rejection_delivery_idx")
   @@map("gamification_admission_rejections")
 }
 
