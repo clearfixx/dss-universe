@@ -36,6 +36,22 @@ describe("global navigation accessibility", () => {
     expect(html).not.toContain('href="/command-deck"');
   });
 
+  it("announces an open desktop module launcher", () => {
+    const html = renderToStaticMarkup(
+      createElement(GlobalNavigation, {
+        pathname: "/news",
+        variant: "MODULE_LAUNCHER",
+        hasSession: false,
+        canAccessAdminDeck: false,
+        onOpenLauncher: () => {},
+        launcherOpen: true,
+      }),
+    );
+
+    expect(html).toContain('aria-haspopup="dialog"');
+    expect(html).toContain('aria-expanded="true"');
+  });
+
   it("names links for the hybrid featured navigation", () => {
     const html = renderToStaticMarkup(
       createElement(GlobalNavigation, {
@@ -47,6 +63,8 @@ describe("global navigation accessibility", () => {
       }),
     );
 
+    expect(html).toContain('aria-haspopup="dialog"');
+    expect(html).toContain('aria-expanded="false"');
     expect(html).toContain('aria-label="Учасники"');
     expect(html).toContain('aria-current="page"');
     expect(html).not.toContain('href="/command-deck"');
