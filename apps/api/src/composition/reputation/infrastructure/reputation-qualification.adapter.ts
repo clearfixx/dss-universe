@@ -4,7 +4,7 @@
  * 📦 Module: Reputation Qualification Composition
  * 📄 File: apps/api/src/composition/reputation/infrastructure/reputation-qualification.adapter.ts
  * 🎯 Purpose: Compares owned producer views with canonical events before preparing O1 input.
- * 🧠 Responsibilities: Preserves safe payloads, original control and independent event contribution.
+ * 🧠 Responsibilities: Preserves safe facts and supports an existing caller-owned transaction.
  * 🏗️ Architecture: Inactive root read adapter; no eligibility, queue, activation or delivery seal.
  * ⚠️ Important: A prepared snapshot does not promise atomicity with later consumer transactions.
  * 🚀 Build. Share. Grow.
@@ -122,79 +122,88 @@ export class ReputationQualificationAdapter {
     )
       return { status: 'BLOCKED', code: 'INVALID_EVENT_ID' };
     return this.prisma.$transaction(
-      async (transaction) => {
-        const view = await this.owned.read(transaction, eventId);
-        if (!view)
-          return {
-            status: 'BLOCKED',
-            code: 'MISSING_PRODUCER_EVIDENCE',
-          } as const;
-        if (view.blocked)
-          return {
-            status: 'BLOCKED',
-            code: 'LEGACY_PROVENANCE_REQUIRED',
-          } as const;
-        const expected = [
-          view.event,
-          ...view.facts.map((fact) => fact.evidence),
-        ];
-        const canonical = new Map<string, CanonicalOutboxEvidence | null>();
-        for (const evidence of expected) {
-          if (!canonical.has(evidence.eventId))
-            canonical.set(
-              evidence.eventId,
-              await this.core.read(transaction, evidence.eventId, keys),
-            );
-          if (!matches(evidence, canonical.get(evidence.eventId) ?? null))
-            return {
-              status: 'BLOCKED',
-              code: 'CANONICAL_EVIDENCE_MISMATCH',
-            } as const;
-        }
-        const event = canonical.get(view.event.eventId)!;
-        if (!event?.payload)
-          return {
-            status: 'BLOCKED',
-            code: 'CANONICAL_EVIDENCE_MISMATCH',
-          } as const;
-        return {
-          status: 'READY',
-          command: {
-            event: {
-              eventId: event.eventId,
-              eventName: event.name,
-              eventVersion: event.version,
-              producer: event.producer,
-              sourceType: event.aggregateType,
-              sourceId: event.aggregateId,
-              occurredAt: event.occurredAt,
-              payload: event.payload,
-            },
-            facts: view.facts.map((fact) => ({
-              producer: 'dss.api.reputation',
-              sourceKind: fact.scope === 'ENTRY' ? 'ReputationEntry' : '@event',
-              sourceId: fact.sourceId,
-              factId: fact.factId,
-              canonicalEventId: fact.eventId,
-              revision: fact.revision,
-              action: fact.action,
-              qualificationId: fact.qualification.factId,
-              qualificationRevision: '1',
-              qualificationEventId: fact.qualification.eventId,
-              qualificationFactId: fact.qualification.factId,
-              retiredThroughRevision: fact.action === 'WITHDRAW' ? '1' : '0',
-              predecessorWithdrawalFactId: null,
-              contractVersion: 1,
-            })),
-            contribution: {
-              producer: 'dss.api.reputation',
-              factId: view.contributionFactId,
-            },
-          },
-        } as const;
-      },
+      (transaction) => this.prepareInTransaction(transaction, eventId),
       { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
     );
+  }
+
+  /** The caller owns snapshot/isolation and transaction lifetime. */
+  async prepareInTransaction(
+    transaction: TransactionClient,
+    eventId: string,
+  ): Promise<PreparedReputationCommand> {
+    if (
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        eventId,
+      )
+    )
+      return { status: 'BLOCKED', code: 'INVALID_EVENT_ID' };
+    const view = await this.owned.read(transaction, eventId);
+    if (!view)
+      return {
+        status: 'BLOCKED',
+        code: 'MISSING_PRODUCER_EVIDENCE',
+      } as const;
+    if (view.blocked)
+      return {
+        status: 'BLOCKED',
+        code: 'LEGACY_PROVENANCE_REQUIRED',
+      } as const;
+    const expected = [view.event, ...view.facts.map((fact) => fact.evidence)];
+    const canonical = new Map<string, CanonicalOutboxEvidence | null>();
+    for (const evidence of expected) {
+      if (!canonical.has(evidence.eventId))
+        canonical.set(
+          evidence.eventId,
+          await this.core.read(transaction, evidence.eventId, keys),
+        );
+      if (!matches(evidence, canonical.get(evidence.eventId) ?? null))
+        return {
+          status: 'BLOCKED',
+          code: 'CANONICAL_EVIDENCE_MISMATCH',
+        } as const;
+    }
+    const event = canonical.get(view.event.eventId)!;
+    if (!event?.payload)
+      return {
+        status: 'BLOCKED',
+        code: 'CANONICAL_EVIDENCE_MISMATCH',
+      } as const;
+    return {
+      status: 'READY',
+      command: {
+        event: {
+          eventId: event.eventId,
+          eventName: event.name,
+          eventVersion: event.version,
+          producer: event.producer,
+          sourceType: event.aggregateType,
+          sourceId: event.aggregateId,
+          occurredAt: event.occurredAt,
+          payload: event.payload,
+        },
+        facts: view.facts.map((fact) => ({
+          producer: 'dss.api.reputation',
+          sourceKind: fact.scope === 'ENTRY' ? 'ReputationEntry' : '@event',
+          sourceId: fact.sourceId,
+          factId: fact.factId,
+          canonicalEventId: fact.eventId,
+          revision: fact.revision,
+          action: fact.action,
+          qualificationId: fact.qualification.factId,
+          qualificationRevision: '1',
+          qualificationEventId: fact.qualification.eventId,
+          qualificationFactId: fact.qualification.factId,
+          retiredThroughRevision: fact.action === 'WITHDRAW' ? '1' : '0',
+          predecessorWithdrawalFactId: null,
+          contractVersion: 1,
+        })),
+        contribution: {
+          producer: 'dss.api.reputation',
+          factId: view.contributionFactId,
+        },
+      },
+    } as const;
   }
 }
 
