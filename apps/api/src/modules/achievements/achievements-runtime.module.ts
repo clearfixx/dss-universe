@@ -16,7 +16,7 @@
  * Headless-capable owner wrapper; contains no queue, resolver or scheduler.
  *
  * ⚠️ Important:
- * The facade invokes only the existing owner command and preserves rejection identity.
+ * Facades expose owner commands without queue startup and preserve unknown rejection identity.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -25,6 +25,12 @@ import { Module } from '@nestjs/common';
 import type { IntegrationEventJob } from '@dss/jobs';
 import { AchievementsService } from './application/services/achievements.service';
 import { AchievementsProvidersModule } from './achievements-providers.module';
+import { QualifiedAchievementsService } from './application/services/qualified-achievements.service';
+import type { QualifiedAchievementCommand } from './domain/types/qualified-achievement.type';
+import {
+  QUALIFIED_ACHIEVEMENT_CONSUMER,
+  type QualifiedAchievementConsumer,
+} from './contracts/qualified-consumer.contract';
 import {
   ACHIEVEMENT_EVENT_CONSUMER,
   type AchievementEventConsumer,
@@ -33,6 +39,17 @@ import {
 @Module({
   imports: [AchievementsProvidersModule],
   providers: [
+    {
+      provide: QUALIFIED_ACHIEVEMENT_CONSUMER,
+      inject: [QualifiedAchievementsService],
+      useFactory: (
+        service: QualifiedAchievementsService,
+      ): QualifiedAchievementConsumer =>
+        Object.freeze({
+          advance: (command: QualifiedAchievementCommand) =>
+            service.advance(command),
+        }),
+    },
     {
       provide: ACHIEVEMENT_EVENT_CONSUMER,
       inject: [AchievementsService],
@@ -44,6 +61,6 @@ import {
         }),
     },
   ],
-  exports: [ACHIEVEMENT_EVENT_CONSUMER],
+  exports: [ACHIEVEMENT_EVENT_CONSUMER, QUALIFIED_ACHIEVEMENT_CONSUMER],
 })
 export class AchievementsRuntimeModule {}

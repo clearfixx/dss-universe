@@ -11,6 +11,7 @@
  * 🧠 Responsibilities:
  * • Prevents copying and transfers handle ownership explicitly.
  * • Defines Node-independent technical operations for the prototype.
+ * • Retains whole captured directory chains without claiming security admission.
  *
  * 🏗️ Architecture:
  * Private cross-platform infrastructure contract; no application or Node dependencies.
@@ -27,6 +28,9 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <vector>
+#include "security-evidence.h"
+#include "topology-evidence.h"
 #if !defined(_WIN32) && !defined(__linux__) && !defined(__APPLE__)
 #error "Storage native P1 supports only Windows, Linux and macOS"
 #endif
@@ -59,4 +63,28 @@ void ValidateComponent(const std::string& name);
 std::shared_ptr<NativeObject> OpenRoot(const std::string& path);
 std::shared_ptr<NativeObject> OpenFile(const NativeObject& root, const std::string& name);
 Metadata Inspect(const NativeObject& object);
+struct RootChainPlan { std::string anchor; std::vector<std::string> components; };
+RootChainPlan PlanRootChain(const std::string& path);
+class NativeChain {
+ public:
+  explicit NativeChain(std::vector<std::shared_ptr<NativeObject>> components, bool security_read = false)
+      : components_(std::move(components)), security_read_(security_read) {}
+  NativeChain(const NativeChain&) = delete;
+  NativeChain& operator=(const NativeChain&) = delete;
+  const std::vector<std::shared_ptr<NativeObject>>& components() const noexcept { return components_; }
+  bool security_read() const noexcept { return security_read_; }
+ private:
+  std::vector<std::shared_ptr<NativeObject>> components_;
+  bool security_read_;
+};
+std::shared_ptr<NativeChain> CaptureRootChain(const std::string& path);
+std::uint32_t InspectChain(const NativeChain& chain);
+std::shared_ptr<NativeChain> CaptureSecurityChain(const std::string& path);
+SecurityEvidence ReadSecurity(const NativeObject& object);
+#if !defined(_WIN32)
+SecurityEvidence ReadPosixSecurityBase(const NativeObject& object);
+#endif
+std::vector<SecurityEvidence> InspectSecurityChain(const NativeChain& chain);
+TopologyEvidence ReadTopology(const NativeObject& object);
+std::vector<TopologyEvidence> InspectTopologyChain(const NativeChain& chain);
 }  // namespace dss::storage::probe

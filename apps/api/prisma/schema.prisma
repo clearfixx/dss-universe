@@ -1765,14 +1765,18 @@ model AchievementAward {
   sourceId        String?
   awardedAt       DateTime             @default(now())
 
-  user        User                        @relation(fields: [userId], references: [id], onDelete: Restrict)
-  achievement AchievementDefinition       @relation(fields: [achievementId], references: [id], onDelete: Restrict)
-  rule        AchievementRule?            @relation(fields: [ruleId], references: [id], onDelete: Restrict)
-  revocation  AchievementAwardRevocation?
+  user          User                           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  achievement   AchievementDefinition          @relation(fields: [achievementId], references: [id], onDelete: Restrict)
+  rule          AchievementRule?               @relation(fields: [ruleId], references: [id], onDelete: Restrict)
+  revocation    AchievementAwardRevocation?
+  qualification AchievementAwardQualification?
 
   @@unique([achievementId, sourceEventId])
   @@index([userId, awardedAt, id])
   @@index([sourceType, sourceId])
+  // Inventory id collation C is SQL-owned; catalog/query-plan regressions verify it.
+  @@index([sourceType, sourceId, kind, id], map: "achievement_source_inventory_idx")
+  @@index([sourceEventId, kind, id], map: "achievement_event_inventory_idx")
   @@index([ruleId, userId, awardedAt])
   @@map("achievement_awards")
 }
@@ -1788,4 +1792,82 @@ model AchievementAwardRevocation {
 
   @@index([occurredAt])
   @@map("achievement_award_revocations")
+}
+
+/// Achievements-owned, inactive qualification progress; never a producer journal.
+model AchievementSourceCursor {
+  id                      String   @id @default(uuid())
+  producer                String
+  sourceKind              String
+  sourceId                String
+  appliedRevision         BigInt   @default(0)
+  targetRevision          BigInt   @default(0)
+  retiredThrough          BigInt   @default(0)
+  pendingRetiredThrough   BigInt   @default(0)
+  phase                   String   @default("RETIRING")
+  enrollmentState         String   @default("PENDING")
+  generation              BigInt   @default(0)
+  progress                BigInt   @default(0)
+  inventoryAfterId        String?
+  retirementAfterRevision BigInt?
+  retirementAfterAwardId  String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @default(now()) @updatedAt
+
+  facts AchievementSourceFact[]
+
+  @@unique([producer, sourceKind, sourceId], map: "achievement_source_scope_key")
+  @@unique([id, producer], map: "achievement_source_cursor_producer_key")
+  @@index([sourceKind, sourceId, producer], map: "achievement_source_compatibility_idx")
+  @@map("achievement_source_cursors")
+}
+
+/// Immutable verified owner input. Canonical event IDs can carry several facets.
+model AchievementSourceFact {
+  id                          String   @id @default(uuid())
+  cursorId                    String
+  producer                    String
+  producerFactId              String
+  canonicalEventId            String
+  revision                    BigInt
+  action                      String
+  qualificationId             String
+  qualificationRevision       BigInt
+  qualificationEventId        String
+  qualificationFactId         String
+  retiredThroughRevision      BigInt
+  predecessorWithdrawalFactId String?
+  codecVersion                Int      @default(1)
+  factDigest                  String
+  eventProjection             Json?
+  eventProjectionDigest       String?
+  createdAt                   DateTime @default(now())
+
+  cursor AchievementSourceCursor         @relation(fields: [cursorId, producer], references: [id, producer], onDelete: Restrict, onUpdate: Restrict)
+  awards AchievementAwardQualification[]
+
+  @@unique([cursorId, revision], map: "achievement_source_revision_key")
+  @@unique([producer, producerFactId], map: "achievement_source_producer_fact_key")
+  @@unique([cursorId, id, revision], map: "achievement_source_fact_binding_key")
+  @@index([producer, canonicalEventId, id], map: "achievement_source_event_idx")
+  @@index([producer, qualificationEventId], map: "achievement_source_qualification_event_idx")
+  @@map("achievement_source_facts")
+}
+
+/// Immutable award provenance. Retirement progress belongs to the cursor.
+model AchievementAwardQualification {
+  awardId               String   @id
+  cursorId              String
+  factId                String
+  qualificationRevision BigInt
+  sourceEventId         String
+  mappingEvidenceId     String?
+  mappingEvidenceDigest String?
+  createdAt             DateTime @default(now())
+
+  award AchievementAward      @relation(fields: [awardId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  fact  AchievementSourceFact @relation(fields: [cursorId, factId, qualificationRevision], references: [cursorId, id, revision], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([cursorId, qualificationRevision, awardId], map: "achievement_qualification_retirement_idx")
+  @@map("achievement_award_qualifications")
 }

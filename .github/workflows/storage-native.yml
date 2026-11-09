@@ -46,5 +46,57 @@ jobs:
         env:
           PYTHON: ${{ steps.python.outputs['python-path'] }}
         run: pnpm --filter @dss/storage native:verify
+      - name: Characterize outstanding qualification premises without admission
+        run: node tools/agent-helpers/debt037/r6/observe-existing-boundary.mjs
+      - name: Preserve existing qualification boundary evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qualification-baseline-${{ runner.os }}
+          path: node_modules/.cache/qualification-baseline-*/evidence.json
+          include-hidden-files: true
+          if-no-files-found: warn
       - name: Verify cross-process storage coordination primitives
         run: pnpm storage:coordination:verify
+      - name: Prove POSIX ACL contracts with real ordinary identities
+        if: runner.os != 'Windows'
+        env:
+          DSS_ACL_CONTRACT_PROOF: "1"
+        run: node tools/agent-helpers/debt037/run-acl-contract-proof.mjs
+      - name: Preserve bounded ACL contract evidence
+        if: always() && runner.os != 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: acl-contract-${{ runner.os }}
+          path: node_modules/.cache/acl-contract-proof-*.json
+          include-hidden-files: true
+          if-no-files-found: warn
+      - name: Verify current-user Windows JS bootstrap without logons
+        if: runner.os == 'Windows'
+        run: node tools/agent-helpers/debt037/r5/windows-bootstrap-preflight.mjs
+      - name: Prove role rights in actual ordinary Node processes
+        env:
+          DSS_RIGHTS_ACTOR_PROOF: "1"
+          PYTHON: ${{ steps.python.outputs['python-path'] }}
+        run: node tools/agent-helpers/debt037/r5/run-proof.mjs
+      - name: Preserve bounded role rights evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: role-rights-${{ runner.os }}
+          path: node_modules/.cache/rights-actor-*.json
+          include-hidden-files: true
+          if-no-files-found: warn
+      - name: Prove qualification query and isolated transition contracts
+        env:
+          DSS_QUALIFICATION_PROOF: "1"
+          PYTHON: ${{ steps.python.outputs['python-path'] }}
+        run: node tools/agent-helpers/debt037/r6/run-proof.mjs
+      - name: Preserve qualification proof and unresolved gates
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qualification-proof-${{ runner.os }}
+          path: node_modules/.cache/qualification-proof-*.json
+          include-hidden-files: true
+          if-no-files-found: warn

@@ -47,12 +47,17 @@ import {
   AchievementsModule,
   AchievementsRuntimeModule,
   ACHIEVEMENT_EVENT_CONSUMER,
+  QUALIFIED_ACHIEVEMENT_CONSUMER,
+  type QualifiedAchievementConsumer,
+  type QualifiedAchievementCommand,
   ACHIEVEMENT_RECIPIENT_EXISTENCE,
   MANUAL_AWARD_TRANSACTION,
 } from '@api/modules/achievements';
 import { CommunityPointsService } from '@api/modules/community-points/application/services/community-points.service';
 import { LevelsService } from '@api/modules/levels/application/services/levels.service';
 import { AchievementsService } from '@api/modules/achievements/application/services/achievements.service';
+import { QualifiedAchievementsService } from '@api/modules/achievements/application/services/qualified-achievements.service';
+import { PrismaQualifiedAchievementsRepository } from '@api/modules/achievements/infrastructure/repositories/prisma-qualified-achievements.repository';
 import { PrismaCommunityPointsRepository } from '@api/modules/community-points/infrastructure/repositories/prisma-community-points.repository';
 import { PrismaLevelsRepository } from '@api/modules/levels/infrastructure/repositories/prisma-levels.repository';
 import { PrismaAchievementsRepository } from '@api/modules/achievements/infrastructure/repositories/prisma-achievements.repository';
@@ -178,12 +183,55 @@ describe('gamification runtime assembly', () => {
     ).toEqual([LEVEL_EVENT_CONSUMER]);
     expect(
       Reflect.getMetadata(MODULE_METADATA.EXPORTS, AchievementsRuntimeModule),
-    ).toEqual([ACHIEVEMENT_EVENT_CONSUMER]);
+    ).toEqual([ACHIEVEMENT_EVENT_CONSUMER, QUALIFIED_ACHIEVEMENT_CONSUMER]);
     const recipients = context.get<{ exists(id: string): Promise<boolean> }>(
       POINTS_RECIPIENT_EXISTENCE,
     );
     expect(context.get(LEVEL_RECIPIENT_EXISTENCE)).toBe(recipients);
     expect(context.get(ACHIEVEMENT_RECIPIENT_EXISTENCE)).toBe(recipients);
+  });
+
+  it('returns qualified continuation intact and preserves unknown failure identity without bootstrap IO', async () => {
+    const service = context.get(QualifiedAchievementsService);
+    const capability = context.get<QualifiedAchievementConsumer>(
+      QUALIFIED_ACHIEVEMENT_CONSUMER,
+    );
+    const command: QualifiedAchievementCommand = {
+      event: {
+        eventId: 'event',
+        eventName: 'synthetic.test.v1',
+        eventVersion: 1,
+        producer: 'synthetic',
+        sourceType: null,
+        sourceId: null,
+        occurredAt: '2026-11-08T12:00:00.000Z',
+        payload: {},
+      },
+      facts: [],
+      contribution: null,
+    };
+    const result = {
+      status: 'CONTINUE' as const,
+      examined: 64,
+      progress: {
+        scope: {
+          producer: 'synthetic',
+          sourceKind: 'Synthetic',
+          sourceId: 'source',
+        },
+        generation: '2',
+        sequence: '3',
+      },
+    };
+    const advance = jest
+      .spyOn(service, 'advance')
+      .mockResolvedValueOnce(result);
+    await expect(capability.advance(command)).resolves.toBe(result);
+    expect(advance).toHaveBeenCalledWith(command);
+    const failure = new Error('synthetic qualified failure');
+    advance.mockRejectedValueOnce(failure);
+    await expect(capability.advance(command)).rejects.toBe(failure);
+    expect(database.$transaction).not.toHaveBeenCalled();
   });
 
   it('reads ID-only recipient existence freshly and propagates unavailable facts', async () => {
@@ -265,6 +313,8 @@ describe('gamification runtime assembly', () => {
         CommunityPointsService,
         LevelsService,
         AchievementsService,
+        QualifiedAchievementsService,
+        PrismaQualifiedAchievementsRepository,
         PrismaCommunityPointsRepository,
         PrismaLevelsRepository,
         PrismaAchievementsRepository,

@@ -11,6 +11,7 @@
  * 🧠 Responsibilities:
  * • Opens typed directory/file objects and inspects actual metadata.
  * • Rejects nonregular or multiply linked file objects and closes rejected handles.
+ * • Captures R1 directory chains component by component with retained descriptors.
  *
  * 🏗️ Architecture:
  * Private Linux/macOS syscall adapter, independent of Node and Media.
@@ -65,4 +66,23 @@ std::shared_ptr<NativeObject> OpenFile(const NativeObject& root, const std::stri
   Inspect(resource);
   return std::make_shared<NativeObject>(std::move(resource));
 }
+
+namespace {
+std::shared_ptr<NativeChain> CaptureChain(const std::string& path, bool security_read) {
+  const auto plan = PlanRootChain(path);
+  std::vector<std::shared_ptr<NativeObject>> components;
+  components.push_back(OpenRoot(plan.anchor));
+  for (const auto& name : plan.components) {
+    int fd = ::openat(static_cast<int>(components.back()->handle()), name.c_str(),
+        O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK);
+    if (fd == -1) throw NativeError("ERR_STORAGE_NATIVE_IO", static_cast<std::uint32_t>(errno));
+    NativeObject resource(fd, Kind::Root);
+    Inspect(resource);
+    components.push_back(std::make_shared<NativeObject>(std::move(resource)));
+  }
+  return std::make_shared<NativeChain>(std::move(components), security_read);
+}
+}
+std::shared_ptr<NativeChain> CaptureRootChain(const std::string& path) { return CaptureChain(path, false); }
+std::shared_ptr<NativeChain> CaptureSecurityChain(const std::string& path) { return CaptureChain(path, true); }
 }  // namespace dss::storage::probe

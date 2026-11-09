@@ -2,7 +2,171 @@
 
 > Status: Active
 >
-> Updated: 2026-10-25
+> Updated: 2026-11-08 (accepted Media intake; qualified-owner design candidate)
+>
+> Historical candidate checkpoints and the original table below are retained.
+> Read entry-specific acceptance updates and the
+> [current D7 reconciliation](../audits/D7_CURRENT_ACCEPTANCE_RECONCILIATION.md)
+> before interpreting an old OPEN/candidate label. This is not final D7 acceptance.
+
+### DEBT-095 — IAM permission-denial E2E exceeds its deadline (Medium, OPEN cause/diagnostic scope)
+
+PR144 head `35aec05` has CI8/8 and E2E699/699, but its local full gate ended
+698/699, exit1. The existing IAM permission-management/audit-rollback case
+reports timeout5000ms and wall duration270190ms. The same CI case passed1106ms.
+Structured logs show a denied IAM POST403 with responseTime270753ms; this is
+not evidence that moving registration setup would correct it. Verified power/
+time System-log queries do not explain the gap. Runtime, fixture or execution-
+pause cause remains unknown. All ten Media regressions and coverage passed;
+the later local build/Web stages were not reached.
+
+Preserve the red report and do not rerun-to-green, inflate timeouts, weaken
+assertions or mock Auth. The owner approved a separate diagnostic/test scope to measure
+the real request, owner boundaries and wall/monotonic/event-loop timing before
+selecting any fixture correction; runtime changes require separate approval.
+See [captured evidence and limits](../audits/DEBT_095_IAM_PERMISSION_DENIAL_TIMING.md).
+
+Diagnostic candidate: opt-in test-only wall/monotonic/event-loop and owner/IO
+observations retain the original test and5000ms. The corrected fail-closed
+launcher observed one focused pass1452ms; the 270-second delay did not reproduce.
+No fixture/runtime correction or cause resolution is claimed. Initial zero-case
+launcher evidence is preserved. Full gate, final CI and diagnostic acceptance
+remain open; the original local gate failure is not relabelled as passing.
+
+Acceptance update: owner accepted diagnostic PR145, merged into Media as
+`15839b3`, then accepted PR144 into main `417fe99`. The diagnostic's exact-source
+full gate exited0 without observed Kernel-Power events: API1469/1469,
+E2E699/699, build6/6, Web15/15 without retries. Integrated CI8/8 and main have
+the identical source tree. Active local observations recorded IAM1319ms, not
+the original270-second delay. Diagnostic collection is accepted; the cause
+remains OPEN with no fixture/runtime correction claimed. Both failed/valid
+controls and the invalid zero-case launcher remain separate retained evidence.
+
+### DEBT-094 — Concurrent Media intake creates an unqueued duplicate (Medium, RESOLVED scoped runtime)
+
+At accepted main `bab5557`, two authenticated multipart uploads of one session
+can both read INITIATED before the unconditional UPLOADING update. A deterministic
+HTTP/real-auth/private-migrated-schema test confirms two200 COMPLETED responses,
+two distinct PROCESSING Media rows and only one real BullMQ job using the shared
+session ID. Sequential repeat is409; an invalid JWT is401 without mutation.
+The same harmless PNG is read back through the real local storage provider.
+
+Owner accepted characterization PR143 at `d0ce753`, merged `a4ab472`; its green
+duplicate assertion proves the defect, not a fix. The separately approved runtime
+candidate now uses one conditional INITIATED→UPLOADING claim before IO; the loser
+returns409 outside compensation. Focused unit11/11 and real DB/HTTP/Redis10/10 pass:
+one Media/job, matching completion metadata, preserved winner bytes while its
+loser returns409, five unchanged non-INITIATED state controls, and winner failure
+cleanup. Full gate, final CI and runtime acceptance remain open. No migration,
+global lease or abort/Worker redesign. Quarantine bypass and data disclosure are
+not proved; the claim does not establish global exactly-once processing.
+See [reproduction, evidence limits and proposed scope](../audits/DEBT_094_MEDIA_INTAKE_CONCURRENCY.md).
+
+Gate update: runtime head `35aec05` passed CI8/8, coverage5/5/API1469 and all ten
+local Media regressions. Full local E2E was698/699 due to the separate DEBT-095
+IAM timeout; the runtime packet is not accepted and remains draft.
+
+Acceptance update: owner accepted PR144 head `15839b3`, merged into main as
+`417fe99`. Integration CI8/8: API1469/1469, E2E699/699, build6/6, Web15/15 without
+retries, native48/48 on all3 platforms. The full local gate exited0 at `1f5109f`
+on the exactly identical tree `75067998c4c0b89f43201ddf0709be17575babda`.
+This closes the agreed atomic-intake defect; it does not close DEBT-095's cause
+or broaden the claim to global exactly-once, abort/Worker races or D7 acceptance.
+Earlier candidate/failure paragraphs are historical checkpoints.
+
+### DEBT-092 — Joi email splitting advisory blocks current gate (High, RESOLVED scoped patch)
+
+The 2026-10-31 local PR119 gate found GHSA-4528-x5fx-h6hg in the installed
+direct API dependency Joi18.2.9. Earlier PR119 CI was green; that historical
+result is not current dependency clearance. The affected multiple-email rule
+can consume quadratic CPU on whitespace. Reachability through a DSS HTTP
+request has not been established; the current direct consumer is environment
+configuration validation.
+
+Under the owner's standing safe patch/minor-update authorization, separate
+branch `debt/debt-092-joi-security` starts from accepted main43447c1. It raises
+only Joi to18.3.1 and preserves unrelated Vitest peer resolution. No new audit
+exception, API policy, UI change or stack replacement. Frozen install and all
+six existing environment-schema regressions pass; security check exits0 with
+the approved braces patch and its14 regressions retained. Full gate, final CI
+and owner acceptance remain required. PR119 must integrate the accepted
+security base and be verified again before its own acceptance. Those statements
+describe the original candidate checkpoint, not the current accepted status.
+
+Acceptance update2026-11-06: owner accepted PR120, merged `e6179f7`, including
+accepted PR121. Joi is18.3.1 in the current API manifest/lockfile; the manifest
+and ledger fixture have no diff from that accepted merge to main `f1a1bcc`.
+The accepted package has CI8/8 and full gate0, E2E688/688, build6/6 and Web15/15.
+This resolves the identified Joi advisory, not all future dependency risk.
+
+See [evidence and compatibility](../audits/DEBT_092_JOI_SECURITY.md).
+
+### DEBT-093 — Community Points ledger E2E timeout (Medium, RESOLVED scoped fixture correction)
+
+The exact PR120 head6c3634f local full gate ended687/688, with the ledger
+scenario exceeding its unchanged5000ms deadline (reported5007ms). The same
+scenario passed in exact-head CI2267ms. Full coverage passed1466/1466; CI8/8
+does not erase the local red. The failed JSON SHA256 is
+`6020EE8A16BD40F7F10CB00789CB39E8A83ADF4B761A707E952D27F55A161ECD`.
+
+Owner approved a separate diagnostic/test package. First measure real
+registration/login, consume, GraphQL history/reversal and cleanup. Keep Auth,
+crypto, runtime policy, assertions and deadline unchanged; no sleep, retry or
+rerun-to-green. A proven runtime cause needs separate approval. The diagnostic
+branch stacks on PR120 but is not its acceptance. See
+[investigation evidence](../audits/DEBT_093_POINTS_E2E_TIMING.md).
+
+A single isolated measured run reproduced fixture preparation overlapping the
+5000ms timeout/cleanup. The test-only candidate now creates the same real
+identities and moderator session in setup; focused corrected observation1/1
+passed with ledger elapsed657.48ms. No runtime, assertion, timeout or concurrency
+change. Full gate/CI and acceptance were open at that historical checkpoint;
+the old red remains evidence.
+
+Acceptance update2026-11-06: owner accepted PR121 into PR120, then PR120 into
+main `e6179f7`. Current source retains sequential real identity/login setup
+outside the ledger assertion budget, all original assertions and deadlines.
+Exact accepted runtime/test sources passed full gate0 and CI8/8, E2E688/688,
+build6/6 and Web15/15 without retries. OS/crypto latency and unrelated historical
+timeouts, including DEBT-086, are not declared resolved.
+
+### DEBT-084 — Keyboard smoke pointer interception (Medium, diagnostic evidence / retention open)
+
+Restored from the retained D7 checkpoint; this ID was missing from the main
+register. Accepted PR87 adds first-failure evidence collection; it does not
+recover missing original traces or prove every natural failure's event order.
+New controlled production evidence is recorded by DEBT-085. Retain route M
+until the historical evidence limits receive their final D7 disposition.
+See [diagnostic and retention limits](../audits/DEBT_084_KEYBOARD_SMOKE_POINTER_INTERCEPTION.md).
+
+### DEBT-085 — Early keyboard focus can be covered by arrival (Medium, RESOLVED scoped runtime correction)
+
+Owner accepted PR96, merged `b41dd9e`, after new production pre/post controls,
+CI5/5 and local full gate0, E2E623/623, Web15/15 without retries. Current
+universe-arrival component and its unit regression have no diff from that
+accepted merge to main `f1a1bcc`. The fix is retained; missing old traces and
+DEBT-084's historical attribution limits are not erased. Restored register ID;
+no frontend change in this reconciliation. See
+[production evidence and lifecycle](../audits/DEBT_085_EARLY_KEYBOARD_ARRIVAL_LIFECYCLE.md).
+
+### DEBT-086 — Credential-rotation E2E deadline (Medium, OPEN cause; diagnostics accepted)
+
+Owner accepted diagnostic PR97, merged `8e3c4c7`; the accepted CI/full gate
+passed, but the original5003ms timeout's cause was not reproduced or corrected.
+Reporter analysis explains missing passing-stage output, not the timeout.
+Retain route O and the explicit prohibition on deadline inflation, Auth mocks,
+sleep/retries or unsupported runtime fixes. Restored register ID. See
+[diagnostic boundary](../audits/DEBT_086_AUTH_ROTATION_DIAGNOSTIC.md).
+
+### DEBT-087 — Reserved Web smoke port (Medium, RESOLVED scoped test-infrastructure correction)
+
+Owner accepted PR98, merged `b63d555`: shared validated DSS_WEB_TEST_PORT,
+loopback resolver and fail-closed preflight. Current resolver and its controls
+are unchanged from the accepted merge. Playwright has the separately accepted
+first-failure trace/screenshot policy; the shared endpoint remains in use.
+Original scoped verification: CI5/5, full gate0, E2E623/623, Web14/14 on3195.
+No Windows reservation or runtime/UI change is claimed. Restored register ID.
+See [endpoint contract](../audits/DEBT_087_WEB_SMOKE_ENDPOINT.md).
 
 ## Purpose
 
@@ -37,9 +201,26 @@ DEBT-007 C characterization on migrated owned schema confirms empty source
 rollback followed by a matching original produces an active Achievement until
 rollback is replayed. This does not prove a current automatic-delivery incident.
 Points already retains an absent source's revocation; Achievements must not inherit
-that guarantee by assumption. Separate owner-local policy/correction approval is
-required before reliable out-of-order consumer acceptance; no runtime fix here.
+that guarantee by assumption. The owner approved new legitimate qualification
+cycles while rejecting restoration by late old-cycle events. Detailed C1 identity/
+serialization is fixed by accepted C1/owner design; full runtime correction and
+real producer/admission acceptance remain open.
 [Evidence and scope](DEBT_090_ACHIEVEMENT_ROLLBACK_ORDER.md).
+
+Accepted C1 PR109 fixes the design policy, not runtime. The subsequent
+[accepted owner design](DEBT_090_QUALIFIED_OWNER_DESIGN.md), PR146 `f3e950e`
+merged as `fa043a3`, specifies additive
+owner storage, durable bounded retirement, enrolled legacy-consume behavior,
+lock participation and real-producer acceptance requirements. The separately
+accepted [inactive O1 runtime](DEBT_090_QUALIFIED_OWNER_RUNTIME.md), PR147
+`8568503` merged as `a31b5fd`,
+implements three owner tables, the qualified command and bounded retirement.
+Exact-head full gate0 and CI8/8 included API1483/1483, E2E778/778, build6/6,
+Web15/15 without retries and native48/48 on three OSes. There is no automatic
+consumer, real producer journal or historical replay, and DEBT-090 stays open.
+The next [P1 Reputation producer design](DEBT_090_REPUTATION_PRODUCER_DESIGN.md)
+is a design/characterization candidate; its legacy-provenance policy and runtime
+implementation need separate review and approval.
 
 ### DEBT-089 — systeminformation Windows command injection (High, correction candidate)
 
@@ -60,16 +241,29 @@ no Windows reservation or dev DB is changed. See
 [scope and evidence](DEBT_088_DEV_PORT_READINESS.md). Full startup/quality/CI and
 acceptance remain open; this does not fold the separate Mailpit task into B/C.
 
-### DEBT-007 — Automatic gamification delivery (High, runtime B approved; verification open)
+### DEBT-007 — Automatic gamification delivery (High, runtime B and C1 design accepted; C/D open)
 
 After accepted A/A.1 PR101 and routing design/protocol PR102/103, the owner approved
 an isolated B persistence package: additive destination storage, atomic discovery,
 fenced publication claims/recovery and audited explicit control transitions.
-The [B implementation/evidence](DEBT_007_ROUTING_PERSISTENCE.md) is a candidate,
-not accepted automatic delivery. No queue, runner, public activation, owner effect
-or historical replay is enabled. C/D, UTC/configuration/retention preflight and
+Owner accepted the [B implementation](DEBT_007_ROUTING_PERSISTENCE.md) in PR104,
+head `c146c60`, merged as `c6b5417`. Its exact-head CI5/5 and local full gate exit0
+included API1466/1466, E2E686/686 without skips, build6/6 and Web15/15 without retries.
+This accepts isolated routing persistence, not automatic delivery. The
+[C1 qualification/admission protocol](DEBT_007_CONSUMER_PROTOCOL.md) was accepted
+in PR109 at `34baae0`, merged as `7e5cce7`: CI8/8, exact-head local gate0 without
+sleep, E2E689/689, characterization5/5, coverageAPI1466, build6/6 and Web15/15.
+That accepts design/legacy characterization only. No queue, runner, public
+activation, owner effect or historical replay
+is enabled. C/D, UTC/configuration/retention preflight and
 complete DEBT-007/D7 acceptance remain open. Historical register dispositions below
 are not replaced by a claim that Phase8 delivery is complete.
+
+Accepted owner design: [qualified Achievements owner](DEBT_090_QUALIFIED_OWNER_DESIGN.md).
+O1 owner runtime was separately accepted in PR147, merged as `a31b5fd`; P1 producer facts
+and C2/C3/D delivery/activation still require their own implementation approvals.
+This does not silently authorize the queue or replace
+the required real producer/admission proof with synthetic owner-only tests.
 
 ### DEBT-079 — Domain failures coupled to Nest transport (Medium, ACCEPTED runtime correction; verification open)
 
@@ -764,20 +958,33 @@ consumers share `@dss/storage`; variant validation precedes filesystem effects.
 Sharp metadata inspection is buffer-backed in tests; production caching is unchanged.
 Evidence: `docs/audits/D0_6_STORAGE_SECURITY_2026-10-10.md`.
 
-### DEBT-037 — Physical storage containment threat model (Medium, OPEN, D2/D6)
+### DEBT-037 — Hostile filesystem writer containment (Medium, DEFERRED RESEARCH, not a pre11 blocker)
 
-Owner decision2026-10-29: physical containment against hostile local symlink/
-junction substitution is required before Phase11; trusted-writers-only deferral
-is rejected. Separate design inventory and synthetic Windows characterization
-are recorded in [working physical storage design](DEBT_037_PHYSICAL_STORAGE_DESIGN.md).
-No native mechanism or runtime correction is selected/implemented yet.
+Owner clarification2026-11-08 supersedes the earlier2026-10-29 hostile-OS-writer
+requirement: only the owner controls the execution environment, and only the owner
+and DSS processes write the filesystem. Users act through the website/API; no
+other OS account receives direct write access to uploads. This is an explicit
+scope decision, not a claim that the native mechanism has been completed.
 
-Lexical key validation cannot prevent a pre-existing symlink/junction or a local
-filesystem race from redirecting IO outside uploads. D0.6 assumes directories are
-application-controlled. There is no established remote exploit under this assumption.
-Decide whether hostile local writers are in scope; if so, design OS-specific physical
-containment and TOCTOU defenses. Do not silently expand this package or describe
-lexical checks as sandbox isolation.
+The current LOCAL contract therefore retains trusted directories plus shared
+portable key validation. API authorization, upload-session ownership, binary
+policy/quarantine and public/signed delivery remain required. Lexical checks
+still do not supply isolation from arbitrary symlink/junction substitution by a
+hostile local writer. Such a writer is outside this accepted deployment model.
+
+[Current scope and source/test evidence](DEBT_037_QUALIFICATION_DECISIONS.md).
+Native R1–R6 remain accepted inactive research. Preserve their actual limits and
+historical failures; no admitted-root, complete operation containment or joint
+API/Worker native activation is claimed. See the retained
+[physical design](DEBT_037_PHYSICAL_STORAGE_DESIGN.md),
+[R5 evidence](DEBT_037_R5_OWNER_RIGHTS.md) and
+[accepted R6 proof](DEBT_037_R6_QUALIFICATION_PROOF.md).
+
+The unfinished hostile-writer research no longer blocks Phase11 under the owner's
+current requirements. Reopening it requires an explicit change to deployment
+scope. This disposition does not close D7, DEBT-007/090, the stack audit or the
+Phase11 brainstorm. No runtime, ACL/data, dependency or verification-policy
+change is part of this reconciliation packet.
 
 ### DEBT-038 — API E2E exceeds CI job limit (High, OPEN, D6)
 

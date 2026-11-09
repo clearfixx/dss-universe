@@ -1,0 +1,20 @@
+{
+  "purpose": "Reviewed source hypotheses, not proof of the installed implementation or an ACL absence contract",
+  "reviewedAt": "2026-11-06",
+  "apple": {
+    "repository": "apple-oss-distributions/Libc",
+    "commit": "71bbe350ab79eef58113991d817ccc6165061a64",
+    "release": "Libc-1752.100.10",
+    "paths": ["posix1e/acl_file.c", "gen/filesec.c", "sys/statx_np.c"]
+  },
+  "linux": {
+    "repository": "torvalds/linux",
+    "commit": "a91337fb5e8e0127c8b5be87be9f3027f95b48bc",
+    "path": "fs/posix_acl.c"
+  },
+  "limits": [
+    "Runtime kernel/OS observations are recorded separately.",
+    "Do not promote an unset or omitted property into verified ACL absence.",
+    "No upstream implementation code is copied into the proof."
+  ]
+}

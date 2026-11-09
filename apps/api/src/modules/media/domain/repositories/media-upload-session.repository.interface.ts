@@ -26,6 +26,8 @@ export const MEDIA_UPLOAD_SESSION_REPOSITORY = Symbol(
 export interface MediaUploadSessionRepository {
   create(input: CreateMediaUploadSessionInput): Promise<MediaUploadSession>;
   findById(id: string): Promise<MediaUploadSession | null>;
+  /** Atomically enters UPLOADING from INITIATED; false leaves the row unchanged. */
+  claimInitiated(id: string): Promise<boolean>;
   updateStatus(
     id: string,
     status: MediaUploadStatus,

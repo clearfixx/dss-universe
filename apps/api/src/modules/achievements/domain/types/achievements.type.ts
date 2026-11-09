@@ -71,6 +71,7 @@ export type AchievementAwardRevocation = {
 };
 
 export type AchievementEvent = {
+  producer?: string;
   eventId: string;
   eventName: string;
   eventVersion: number;

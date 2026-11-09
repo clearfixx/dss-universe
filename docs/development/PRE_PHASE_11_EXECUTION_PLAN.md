@@ -514,6 +514,13 @@ Model: `gpt-6-luna` low/medium for execution; escalate failures to
 
 ### D7 — Baseline release gate
 
+Owner clarification2026-11-08: only the owner controls the DSS environment and
+only owner/DSS processes write uploads; users act through the website/API.
+DEBT-037's former hostile-OS-writer/native-containment mandate is superseded.
+Retain existing LOCAL key/authorization checks and inactive R1–R6 evidence; see
+[the current disposition](DEBT_037_QUALIFICATION_DECISIONS.md). This does not waive
+the remaining D7, gamification, stack-audit or Phase11 brainstorm gates.
+
 Branch: `debt/d7-release-gate` only if final integration changes are required;
 otherwise use the accepted D6 branch/PR.
 
