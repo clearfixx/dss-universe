@@ -57,9 +57,35 @@ under `tools/agent-helpers/gamification/`. The local pnpm launcher uses the exis
 the frontend worktree were not changed. This is a verification workaround, not a
 claim that the global pnpm installation has been repaired.
 
+## Strict codec checkpoint
+
+The root codec now copies a closed, descriptor-specific Reputation projection,
+checks exact keys/plain records/dense arrays and rejects property accessors
+without invoking them. It preserves Unicode without normalization, rejects lone
+surrogates, enforces per-string UTF-8 limits and measures the canonical encoding
+against256 KiB. Recursive ordering sees validated, copied, bounded data only.
+SHA-256 and encoded byte length are verified again on stored JSONB load.
+
+The first inactive descriptor supports the existing qualified Achievements input,
+including up to three P1 facts and the existing bounded reviewed-mapping shape.
+Its Points/Levels applicability is explicitly false. This does not implement
+Points facets or authorize production activation of a Reputation-only route;
+complete owner prerequisites and producer/configuration coverage remain C2.2/C2.3.
+Codec acceptance is shape/integrity validation, never producer attestation.
+
+Unit regressions passed25/25 initially and28/28 after expanding canonical-order,
+three-fact/optional-mapping and cyclic-input cases. They cover getters, prototypes,
+symbols, sparse/accessor arrays, malformed signed values and identities, Unicode,
+exact16 KiB/256 KiB boundaries and digest/length/projection tampering. Logs:
+`node_modules/.cache/debt007-c21-codec-0033681f681448b3b3b7ffe37eac099c.log`
+and
+`node_modules/.cache/debt007-c21-codec-4c1fb50890a04c86b271702cd8029cde.log`.
+Initial strict lint found an unnecessary type assertion and two untyped Array.fill
+constructions in tests; these were corrected without rule/assertion changes.
+
 ## Remaining before package acceptance
 
-Strict codec/decoder and malformed-input regressions; transaction-bound P1
+Transaction-bound P1
 preparation and immutable seal reuse; admission/rejection and consumption CAS
 repositories; actual-token and concurrency schedules; bounded query plans;
 inactive assembly/lifecycle regressions; disposable public deployment/drift;
