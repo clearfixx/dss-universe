@@ -157,6 +157,96 @@ Oversize is an explicit blocked/review disposition; no historical data rewrite,
 silent clipping or hidden result limit is allowed. Other descriptors need their
 own reviewed field limits before activation.
 
+Read-only local observation, 2026-11-09 09:09 UTC: the disposable5434 public
+schema contained nine Reputation producer events. Maximum entryId/actorId/
+recipientId/originalEntryId lengths were each 36 UTF-8 bytes; zero rows exceeded
+16 KiB. The helper reads aggregate counts/maxima only inside an explicit read-only
+Repeatable Read transaction, then rolls back. It does not inspect profiles or
+content and does not establish deployed-data compatibility. Reproduce with
+`node tools/agent-helpers/gamification/inspect-c21-evidence-lengths.mjs`; local
+report is `tools/agent-helpers/debt007-c21-evidence-lengths.local.json`.
+The initial sandbox connection was denied EACCES; the authorized read-only run
+completed, with no data changes or broader target fallback.
+
+## Closed result codes and canonical encoding
+
+Admission rejection V1 codes:
+`UNSUPPORTED_DESCRIPTOR`, `UNSUPPORTED_EVENT_VERSION`, `CONFIGURATION_REQUIRED`,
+`CANONICAL_EVIDENCE_MISSING`, `CANONICAL_EVIDENCE_MISMATCH`,
+`PRODUCER_EVIDENCE_MISSING`, `LEGACY_PROVENANCE_REQUIRED`,
+`BLOCKED_LEGACY_MAPPING`, `INVALID_QUALIFIED_PROJECTION`,
+`PROJECTION_TOO_LARGE`, `SEALED_IDENTITY_CONFLICT`.
+P1 invalid event ID is a malformed caller command before any SQL claim operation,
+not evidence that an unrelated B event should be blocked. A missing canonical row
+is distinguishable from a thrown database error. Preserve that distinction.
+
+Consumption technical V1 codes: `OWNER_UNAVAILABLE`, `OWNER_FAILURE`,
+`LEASE_EXPIRED`, `SEAL_READ_FAILURE`. These are operational classifications only;
+unknown error identity is preserved in-process and safe diagnostics do not store
+raw messages in these columns. A supported owner policy block uses its explicit
+owner/code tag (including O1's four qualification block codes), never a technical
+retry code. Unknown owner code is a contract failure, not an accepted new policy.
+
+Codec V1 object shape: `codecVersion`, `destination`, `descriptor`, `canonical`,
+`applicability`, `inputs`. Descriptor is `{id,version}`. Canonical contains exactly
+eventId, eventName, eventVersion, producer, sourceType, sourceId and occurredAt.
+Applicability declares POINTS/LEVELS/ACHIEVEMENTS steps; each input has an explicit
+owner-local codec tag. No actor/reason/metadata is copied implicitly. Points may
+need a separately reviewed actor reference; O1's existing safe event does not
+provide authority to add it to every projection.
+
+Canonical encoding recursively sorts object keys by ECMAScript string comparison
+after schema validation, preserves array order and emits compact JSON UTF-8 with
+no BOM/newline. Reject lone UTF-16 surrogates rather than replacing their bytes;
+preserve Unicode content without normalization. Reject undefined, holes, getters,
+symbols, inherited enumerable keys and non-plain objects. Plain objects here explicitly mean
+Object.prototype or null prototype; an ordinary parsed JSON object is valid.
+Only descriptor-declared finite safe-integer numbers are permitted; P1 value is
+exactly -1 or 1, versions are positive integers. BigInt revisions remain canonical
+decimal strings with no leading zeros; declared zero coordinates permit `0`.
+
+Digest is SHA-256 over those exact bytes. On JSONB load, revalidate and re-encode
+before comparing the digest; PostgreSQL's textual JSONB formatting is not the
+digest input. Structural comparison of validated values is still required when
+checking an existing seal against a claimed identity. Timestamp wire values use
+the existing canonical ISO UTC representation; neither locale formatting nor
+timezone conversion changes the sealed identity.
+
+Store `encodedBytes` as a positive integer alongside the Admission digest, with
+a maximum of 262144, and validate it against the canonical encoding on load. This
+is immutable seal metadata. A JSONB-to-text byte count is not equal to canonical
+wire size because PostgreSQL can insert formatting whitespace; do not substitute
+that count silently. A separate conservative database storage-size guard needs
+explicit tests and cannot certify the canonical byte limit by itself.
+
+Claims/recovery propose a default and maximum batch of 32, matching B's current
+claim batch. Caller inputs outside 1..32 are rejected before querying. This bounds
+one operation only; repeated due/reconciliation work has no total-result cap.
+No new transaction timeout, retry loop or global isolation change is introduced.
+
+Required codec negatives include unknown fields at every level, duplicate raw
+JSON keys at any external parser boundary, malformed tags, number coercion,
+oversize multibyte strings, lone surrogates, prototype/accessor injection and
+digest tampering. Internal P1 objects have no raw duplicate-key ambiguity, but a
+future operator/import route cannot silently use JSON.parse's last-key-wins as
+proof of canonical uniqueness.
+
+## Trigger and repository transition matrix
+
+| Record    | Allowed operation                                                                                              | Database/repository proof requirement                                                                                                       |
+| --------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Admission | Valid INSERT only                                                                                              | Shape/byte constraints, immutable UPDATE/DELETE rejection, B identity FK and current claim lock in the insert transaction                   |
+| Receipt   | Initial READY; READY/RETRY_DUE to RUNNING; RUNNING to READY/RETRY_DUE/COMPLETE/BLOCKED or RUNNING flag advance | Nonnegative counters, exactly one sequence increment on claim, immutable identity/epoch, current-token CAS, completion flags never decrease |
+| Attempt   | OPEN INSERT; exact OPEN to one terminal disposition                                                            | Token/epoch/sequence references match current receipt at claim; settled fields immutable; finalization atomic with receipt settlement       |
+| Progress  | INSERT or validated replacement under the current receipt claim                                                | Admission/owner identity immutable, codec supported; no caller-selected claim token bypass; no automatic delete on retry                    |
+| Rejection | Valid INSERT only                                                                                              | Exact B claim is settled in same transaction, unique token, immutable UPDATE/DELETE rejection                                               |
+
+SQL transition guards validate local OLD/NEW invariants; repository CAS establishes
+current cross-record authority under locks. They are complementary. Do not claim
+that a trigger can infer which application caller owns a token merely because
+the caller supplied its UUID. Database administration remains trusted, consistent
+with the owner's deployment model.
+
 ## Remaining decisions and proof
 
 The destination configuration guard/counters belong to C2.3. C2.1 cannot pretend
@@ -165,8 +255,9 @@ assembly needs a root-owned fixed descriptor registry and explicit unconfigured
 failure; no App import or production preparation route is added. Full live-rule
 compatibility remains an activation prerequisite, not silently waived.
 
-Next work: concrete closed code sets, deterministic canonical encoding, complete
-SQL trigger transition matrix, query factories and migrated characterization.
-After those are reviewable, request separate C2.1 runtime authorization. No queue,
+Next work: validate codec size compatibility, concrete query factories and migrated
+characterization before accepting an implementation. The protocol now defines
+closed codes, canonical encoding and the trigger/repository division; executable
+SQL and negative fixtures still need separate runtime authorization. No queue,
 owner effects, automatic awards, ACL changes, frontend or Phase11 work is part of
 this proposal. DEBT007/090 and final D7 remain open.
