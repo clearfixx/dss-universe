@@ -71,7 +71,9 @@ test("mobile navigation exposes expanded state and closes with Escape", async ({
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/news");
 
-  const trigger = page.getByRole("button", { name: "Відкрити навігацію" });
+  // Modal dialogs make background controls inaccessible to role queries while
+  // open; inspect this specific trigger's DOM state across the transition.
+  const trigger = page.locator('header button[aria-label="Відкрити навігацію"]');
   const drawer = page.getByRole("dialog", { name: "Навігація DSS Universe" });
 
   await expect(trigger).toHaveAttribute("aria-expanded", "false");
