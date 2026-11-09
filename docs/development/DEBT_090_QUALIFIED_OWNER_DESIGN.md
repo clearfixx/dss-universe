@@ -4,8 +4,9 @@ Date: 2026-11-08. Reviewed source: accepted main `417fe99` (PR144).
 Status: design accepted in PR146 at `f3e950e`, merged as `fa043a3`.
 That package added no migration, production command or activation.
 The owner subsequently authorized the separate inactive O1 implementation;
-see its [runtime candidate and verification boundary](DEBT_090_QUALIFIED_OWNER_RUNTIME.md).
-Specification language below remains the accepted design, not O1 acceptance.
+see its [accepted inactive runtime and verification boundary](DEBT_090_QUALIFIED_OWNER_RUNTIME.md).
+O1 was accepted in PR147, merged as `a31b5fd`. Specification language below
+remains the accepted design; real producer/admission work remains separate.
 This makes the accepted [C1 protocol](DEBT_007_CONSUMER_PROTOCOL.md) concrete for
 Achievements. Approval of this document is separate from runtime implementation.
 

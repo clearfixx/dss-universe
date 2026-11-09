@@ -1,9 +1,15 @@
 # DEBT-090 — O1 qualified Achievements owner
 
 Date: 2026-11-08. Base: accepted main `fa043a3` (PR146).
-Status: authorized implementation candidate; runtime acceptance and merge pending.
+Status: accepted inactive O1 implementation. The owner accepted PR147 at
+`8568503`, merged as `a31b5fd`; the merge tree equals the tested source tree.
 The owner separately approved O1 after accepting the
 [qualified-owner design](DEBT_090_QUALIFIED_OWNER_DESIGN.md).
+Exact-head local full gate exited0 without sleep events; CI8/8, API coverage
+1483/1483, E2E778/778 without skips/todo, build6/6, Web15/15 without retries and
+native48/48 on Windows/Linux/macOS passed. Failed earlier evidence below remains
+historical. The next [P1 producer design](DEBT_090_REPUTATION_PRODUCER_DESIGN.md)
+is a separate candidate, not runtime authorization or activation.
 
 ## Implemented boundary
 
@@ -138,7 +144,8 @@ and a MIN prototype were insufficient. The final candidate combines matching C
 indexes/guard with bounded one-row LIMIT1 seeks, preserves the old small filter
 bound and strengthens large-history actual-loop accounting. All unsuccessful
 prototype logs, the failed full receipt/report and review rejection remain in the
-local proof. A new exact-head full gate/CI are required before acceptance.
+local proof. The subsequent exact-head full gate/CI passed as recorded above;
+earlier failed runs are not relabelled as passing evidence.
 
 Current focused evidence and exact-head full gate/CI/acceptance are recorded in
 the PR and local `tools/agent-helpers/debt090-o1-runtime-proof.local.json` receipt.
