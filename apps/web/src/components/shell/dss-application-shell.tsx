@@ -201,8 +201,13 @@ export function DssApplicationShell({
         >
           <Menu aria-hidden="true" />
         </Button>
-        <Link href="/" className="shrink-0 text-sm font-semibold tracking-[0.12em] text-slate-100 sm:text-base">
-          DSS UNIVERSE
+        <Link
+          href="/"
+          aria-label="DSS Universe — головна"
+          className="shrink-0 text-sm font-semibold tracking-[0.12em] text-slate-100 sm:text-base"
+        >
+          <span aria-hidden="true" className="sm:hidden">DSS</span>
+          <span aria-hidden="true" className="hidden sm:inline">DSS UNIVERSE</span>
         </Link>
         <GlobalNavigation pathname={pathname} variant={variant} hasSession={Boolean(viewer)} canAccessAdminDeck={canAccessAdminDeck} onOpenLauncher={() => setOpen(true)} />
         <div className="ml-auto flex items-center gap-2">
