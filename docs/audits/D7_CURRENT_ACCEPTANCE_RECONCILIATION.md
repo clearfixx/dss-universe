@@ -97,7 +97,9 @@ separate from the requested accepted baseline and retained checkpoint.
   build6/6, Web15/15 without retries and native48/48 on three OSes. This accepts
   owner tables/commands, not activation or a real producer/admission implementation.
   The next [P1 producer design](../development/DEBT_090_REPUTATION_PRODUCER_DESIGN.md)
-  remains a separate design/characterization candidate. DEBT-007/090 and D7 remain open.
+  was accepted in PR148 at `0d77960`, merged as `3fc470f`. Its separately authorized
+  [inactive runtime candidate](../development/DEBT_090_REPUTATION_PRODUCER_RUNTIME.md)
+  has not received runtime acceptance or activation. DEBT-007/090 and D7 remain open.
 - Dispose the remaining administrator-availability047 and Activity/source067
   policy questions; keep unresolved timing/retention evidence explicit, including
   058/059/083/084/086. Later passing gates do not universally identify old causes.

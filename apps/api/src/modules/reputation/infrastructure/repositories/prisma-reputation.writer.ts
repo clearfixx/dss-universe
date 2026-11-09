@@ -11,6 +11,7 @@
  * 🧠 Responsibilities:
  * • enforces the same rolling-pair and original-entry advisory lock decisions;
  * • appends direct/compensating facts and audit/outbox atomically;
+ * • appends owned qualification provenance after evidence in that same transaction;
  * • requests response composition at the former relation-read point before evidence.
  *
  * 🏗️ Architecture:
@@ -32,6 +33,10 @@ import type {
   ReputationValue,
 } from '../../domain/types/reputation.type';
 import type { ReputationEntryFact } from './prisma-reputation-entry.reader';
+import {
+  PrismaReputationQualificationWriter,
+  type ReputationOriginalEvidenceLookup,
+} from './prisma-reputation-qualification.writer';
 
 export type ReputationEntryProjection = (
   entry: ReputationEntryFact,
@@ -52,6 +57,7 @@ export class PrismaReputationWriter {
   constructor(
     private readonly audit: AuditWriterService,
     private readonly outbox: OutboxWriterService,
+    private readonly qualifications: PrismaReputationQualificationWriter,
   ) {}
 
   async createDirect(
@@ -83,7 +89,7 @@ export class PrismaReputationWriter {
       select: entrySelect,
     });
     const response = await project(entry);
-    await this.appendEvidence(
+    const event = await this.appendEvidence(
       transaction,
       entry.id,
       input.actorId,
@@ -92,6 +98,14 @@ export class PrismaReputationWriter {
       input.reason,
       DIRECT_EVENT,
     );
+    await this.qualifications.direct(transaction, {
+      entryId: entry.id,
+      actorId: input.actorId,
+      recipientId: input.recipientId,
+      value: input.value,
+      eventId: event.id,
+      occurredAt: event.occurredAt,
+    });
     return response;
   }
 
@@ -103,6 +117,7 @@ export class PrismaReputationWriter {
     value: ReputationValue,
     reason: string,
     project: ReputationEntryProjection,
+    lookupOriginalEvidence: ReputationOriginalEvidenceLookup,
   ): Promise<ReputationEntry | null> {
     await this.lock(transaction, `reputation-reversal:${entryId}`);
     const exists = await transaction.reputationEntry.findUnique({
@@ -115,7 +130,7 @@ export class PrismaReputationWriter {
       select: entrySelect,
     });
     const response = await project(entry);
-    await this.appendEvidence(
+    const event = await this.appendEvidence(
       transaction,
       entry.id,
       actorId,
@@ -124,6 +139,19 @@ export class PrismaReputationWriter {
       reason,
       REVERSED_EVENT,
       entryId,
+    );
+    await this.qualifications.reverse(
+      transaction,
+      {
+        entryId: entry.id,
+        actorId,
+        recipientId,
+        value,
+        eventId: event.id,
+        occurredAt: event.occurredAt,
+      },
+      entryId,
+      lookupOriginalEvidence,
     );
     return response;
   }
@@ -146,7 +174,7 @@ export class PrismaReputationWriter {
     reason: string,
     eventName: string,
     reversesEntryId?: string,
-  ): Promise<void> {
+  ) {
     const evidence = {
       recipientId,
       value,
@@ -164,18 +192,17 @@ export class PrismaReputationWriter {
       reason,
       metadata: evidence,
     });
-    await this.outbox.append(
-      transaction,
-      createEventEnvelope({
-        name: eventName,
-        version: 1,
-        category: 'integration',
-        producer: 'dss.api.reputation',
-        actorId,
-        aggregate: { type: 'ReputationEntry', id: entryId },
-        payload: evidence,
-      }),
-    );
+    const event = createEventEnvelope({
+      name: eventName,
+      version: 1,
+      category: 'integration',
+      producer: 'dss.api.reputation',
+      actorId,
+      aggregate: { type: 'ReputationEntry', id: entryId },
+      payload: evidence,
+    });
+    await this.outbox.append(transaction, event);
+    return event;
   }
 }
 

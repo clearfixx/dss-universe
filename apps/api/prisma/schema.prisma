@@ -1328,6 +1328,7 @@ model OutboxEvent {
   @@index([createdAt, id], map: "outbox_routing_coordinate_idx")
   @@index([status, availableAt])
   @@index([aggregateType, aggregateId])
+  @@index([producer, aggregateType, aggregateId, eventName, id], map: "outbox_producer_evidence_idx")
   @@index([correlationId])
   @@map("outbox_events")
 }
@@ -1527,11 +1528,82 @@ model ReputationEntry {
   reverses ReputationEntry? @relation("ReputationReversal", fields: [reversesEntryId], references: [id], onDelete: Restrict)
   reversal ReputationEntry? @relation("ReputationReversal")
 
+  qualificationEvent     ReputationQualificationEvent?  @relation("ReputationQualificationEntry")
+  qualificationReversals ReputationQualificationEvent[] @relation("ReputationQualificationOriginal")
+  qualificationFacts     ReputationQualificationFact[]
+  qualificationState     ReputationQualificationState?
+
   @@index([recipientId, createdAt, id])
   @@index([actorId, recipientId, createdAt])
   @@index([createdAt, recipientId])
   @@index([reversesEntryId])
   @@map("reputation_entries")
+}
+
+/// DSS File Passport: private producer provenance; no automatic gamification activation.
+model ReputationQualificationEvent {
+  id              String   @id @default(uuid()) @db.Uuid
+  eventId         String   @unique @db.Uuid
+  entryId         String   @unique
+  kind            String
+  actorId         String
+  recipientId     String
+  value           Int
+  originalEntryId String?
+  occurredAt      DateTime
+  provenance      String
+  contractVersion Int      @default(1)
+  createdAt       DateTime @default(now())
+
+  entry    ReputationEntry               @relation("ReputationQualificationEntry", fields: [entryId], references: [id], onDelete: Restrict)
+  original ReputationEntry?              @relation("ReputationQualificationOriginal", fields: [originalEntryId], references: [id], onDelete: Restrict)
+  facts    ReputationQualificationFact[]
+
+  @@index([originalEntryId, kind])
+  @@map("reputation_qualification_events")
+}
+
+/// DSS File Passport: immutable ENTRY lifecycle and independent EVENT contributions.
+model ReputationQualificationFact {
+  id                  String   @id @default(uuid()) @db.Uuid
+  eventBindingId      String   @db.Uuid
+  scope               String
+  scopeEntryId        String?
+  revision            BigInt
+  action              String
+  qualificationFactId String   @db.Uuid
+  contractVersion     Int      @default(1)
+  createdAt           DateTime @default(now())
+
+  eventBinding    ReputationQualificationEvent   @relation(fields: [eventBindingId], references: [id], onDelete: Restrict)
+  entry           ReputationEntry?               @relation(fields: [scopeEntryId], references: [id], onDelete: Restrict)
+  qualification   ReputationQualificationFact    @relation("ReputationQualificationSelf", fields: [qualificationFactId], references: [id], onDelete: Restrict)
+  withdrawals     ReputationQualificationFact[]  @relation("ReputationQualificationSelf")
+  qualifiedStates ReputationQualificationState[] @relation("ReputationQualifiedState")
+  currentStates   ReputationQualificationState[] @relation("ReputationCurrentState")
+
+  @@unique([scopeEntryId, revision], map: "reputation_qualification_revision_key")
+  @@unique([id, scopeEntryId], map: "reputation_qualification_scope_key")
+  @@unique([eventBindingId, scope], map: "reputation_qualification_event_scope_key")
+  @@index([qualificationFactId])
+  @@map("reputation_qualification_facts")
+}
+
+/// DSS File Passport: current owned pointer, never a consumer eligibility or delivery cursor.
+model ReputationQualificationState {
+  originalEntryId     String   @id
+  status              String
+  revision            BigInt?
+  qualificationFactId String?  @db.Uuid
+  currentFactId       String?  @db.Uuid
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @default(now()) @updatedAt
+
+  entry         ReputationEntry              @relation(fields: [originalEntryId], references: [id], onDelete: Restrict)
+  qualification ReputationQualificationFact? @relation("ReputationQualifiedState", fields: [qualificationFactId, originalEntryId], references: [id, scopeEntryId], onDelete: Restrict)
+  current       ReputationQualificationFact? @relation("ReputationCurrentState", fields: [currentFactId, originalEntryId], references: [id, scopeEntryId], onDelete: Restrict)
+
+  @@map("reputation_qualification_states")
 }
 
 model ReputationPolicy {

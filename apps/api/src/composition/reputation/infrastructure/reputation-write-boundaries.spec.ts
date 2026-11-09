@@ -22,6 +22,7 @@
 import type { Prisma } from '@prisma/client';
 import type { PrismaService } from '@api/core/database';
 import type { AuditWriterService } from '@api/core/audit';
+import type { CanonicalOutboxReader } from '@api/core/events/infrastructure';
 import type {
   CreateReputationEntry,
   ReputationEntry,
@@ -31,6 +32,7 @@ import {
   type ReputationEntryProjection,
   type ReputationEntryFact,
   type PrismaReputationEntryReader,
+  type ReputationOriginalEvidenceLookup,
 } from '@api/modules/reputation/infrastructure';
 import { PrismaReputationWriteActorReader } from '@api/modules/users/infrastructure';
 import { PrismaReputationWriteTransaction } from './prisma-reputation-write.transaction';
@@ -81,14 +83,31 @@ describe('Owned Reputation writer', () => {
     } as unknown as Prisma.TransactionClient;
     const audit = jest.fn().mockResolvedValue('audit');
     const outbox = jest.fn().mockResolvedValue('outbox');
+    const qualifications = {
+      direct: jest.fn().mockResolvedValue(undefined),
+      reverse: jest.fn().mockResolvedValue(undefined),
+    };
+    const lookup: ReputationOriginalEvidenceLookup = () =>
+      Promise.resolve({ status: 'BLOCKED' });
     const project = jest
       .fn<Promise<ReputationEntry>, [ReputationEntryFact]>()
       .mockResolvedValue(response);
     const writer = new PrismaReputationWriter(
       { append: audit } as unknown as AuditWriterService,
       { append: outbox },
+      qualifications,
     );
-    return { delegate, lock, transaction, audit, outbox, project, writer };
+    return {
+      delegate,
+      lock,
+      transaction,
+      audit,
+      outbox,
+      project,
+      writer,
+      qualifications,
+      lookup,
+    };
   }
   it('locks the pair, uses strict cooldown and projects owned scalar INSERT before evidence', async () => {
     const h = harness();
@@ -132,6 +151,7 @@ describe('Owned Reputation writer', () => {
       h.project.mock.invocationCallOrder[0],
       h.audit.mock.invocationCallOrder[0],
       h.outbox.mock.invocationCallOrder[0],
+      h.qualifications.direct.mock.invocationCallOrder[0],
     ];
     expect(order).toEqual([...order].sort((a, b) => a - b));
     expect(h.audit).toHaveBeenCalledWith(
@@ -163,6 +183,7 @@ describe('Owned Reputation writer', () => {
       -1,
       'Correction',
       h.project,
+      h.lookup,
     );
     expect(h.lock).toHaveBeenCalledWith(
       expect.any(Array),
@@ -209,6 +230,7 @@ describe('Owned Reputation writer', () => {
         -1,
         'Correction',
         h.project,
+        h.lookup,
       ),
     ).toBeNull();
     for (const call of [h.delegate.create, h.project, h.audit, h.outbox])
@@ -259,6 +281,7 @@ describe('Root Reputation write transaction', () => {
           -1 | 1,
           string,
           ReputationEntryProjection,
+          ReputationOriginalEvidenceLookup,
         ]
       >()
       .mockImplementation(
@@ -280,6 +303,7 @@ describe('Root Reputation write transaction', () => {
       { createDirect, reverse } as unknown as PrismaReputationWriter,
       entries as unknown as PrismaReputationEntryReader,
       actors,
+      {} as CanonicalOutboxReader,
     );
     return {
       client,
@@ -330,6 +354,7 @@ describe('Root Reputation write transaction', () => {
       'recipient',
       -1,
       'Correction',
+      expect.any(Function),
       expect.any(Function),
     );
     expect(h.transaction).toHaveBeenCalledTimes(1);
