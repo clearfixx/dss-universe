@@ -66,3 +66,24 @@ test("guest shell header fits narrow phones without hiding navigation or sign-in
     expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
   }
 });
+
+test("mobile navigation exposes expanded state and closes with Escape", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/news");
+
+  const trigger = page.getByRole("button", { name: "Відкрити навігацію" });
+  const drawer = page.getByRole("dialog", { name: "Навігація DSS Universe" });
+
+  await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  await trigger.click();
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+  await expect(drawer).toBeVisible();
+
+  await page.keyboard.press("Escape");
+  await expect(drawer).not.toBeVisible();
+  await expect(trigger).toHaveAttribute("aria-expanded", "false");
+
+  await trigger.click();
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+  await expect(drawer).toBeVisible();
+});
