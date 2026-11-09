@@ -118,6 +118,11 @@ and local proof receipt.
   now retain explicit signatures and canonical projection uses scalar guards.
   Architecture export inventories are extended only by the reviewed named types
   and technical capabilities, not by wildcard or baseline exceptions.
+- The first exact-head full gate stopped at format:check because the new focused
+  helper wrote generated receipts below a task subdirectory, outside the existing
+  root-level local-report exclusion. Receipts are moved byte-exactly to the
+  established helper-root report location and the writer path is corrected;
+  formatter policy is unchanged. No runtime/test failure is inferred from it.
 
 Failed logs are retained alongside subsequent evidence. They are not called
 runtime regressions resolved by unchanged reruns. No retries-to-green, raised
