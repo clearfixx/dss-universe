@@ -1403,6 +1403,8 @@ model GamificationDelivery {
   activation    GamificationActivation           @relation(fields: [destination], references: [destination], onDelete: Restrict, onUpdate: Restrict)
   source        OutboxEvent                      @relation(fields: [eventId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   failures      GamificationPublicationFailure[]
+  admission     GamificationAdmission?
+  rejections    GamificationAdmissionRejection[]
 
   @@id([destination, eventId])
   @@index([destination, state, availableAt, eventId], map: "gamification_delivery_due_idx")
@@ -1423,6 +1425,108 @@ model GamificationPublicationFailure {
 
   @@index([destination, failedAt, id], map: "gamification_publication_failure_time_idx")
   @@map("gamification_publication_failures")
+}
+
+/// DSS File Passport: immutable root-owned delivery seal; no automatic consumer activation.
+model GamificationAdmission {
+  id                String   @id @db.Uuid
+  destination       String   @db.VarChar(64)
+  eventId           String   @db.Uuid
+  cutoff            DateTime @db.Timestamp(3)
+  descriptorId      String   @db.VarChar(128)
+  descriptorVersion Int
+  codecVersion      Int
+  projection        Json
+  projectionDigest  Bytes
+  encodedBytes      Int
+  createdAt         DateTime @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @db.Timestamp(3)
+
+  delivery GamificationDelivery             @relation(fields: [destination, eventId], references: [destination, eventId], onDelete: Restrict, onUpdate: Restrict)
+  receipt  GamificationConsumptionReceipt?
+  attempts GamificationConsumptionAttempt[]
+  progress GamificationOwnerProgress[]
+
+  @@unique([destination, eventId], map: "gamification_admission_event_key")
+  @@unique([id, destination], map: "gamification_admission_destination_key")
+  @@map("gamification_admissions")
+}
+
+/// DSS File Passport: fenced technical work state; owner effects remain owner-local.
+model GamificationConsumptionReceipt {
+  admissionId       String    @id @db.Uuid
+  destination       String    @db.VarChar(64)
+  state             String    @default("READY") @db.VarChar(16)
+  epoch             BigInt    @default(0)
+  claimSequence     BigInt    @default(0)
+  technicalFailures Int       @default(0)
+  claimToken        String?   @unique @db.Uuid
+  claimedAt         DateTime? @db.Timestamp(3)
+  leaseUntil        DateTime? @db.Timestamp(3)
+  availableAt       DateTime? @db.Timestamp(3)
+  blockCode         String?   @db.VarChar(64)
+  pointsDone        Boolean
+  levelsDone        Boolean
+  achievementsDone  Boolean
+  createdAt         DateTime  @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @db.Timestamp(3)
+  updatedAt         DateTime  @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @updatedAt @db.Timestamp(3)
+
+  admission GamificationAdmission @relation(fields: [admissionId, destination], references: [id, destination], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([admissionId, destination], map: "gamification_receipt_destination_key")
+  @@index([destination, state, availableAt, admissionId], map: "gamification_consumption_due_idx")
+  @@index([destination, state, leaseUntil, admissionId], map: "gamification_consumption_lease_idx")
+  @@map("gamification_consumption_receipts")
+}
+
+/// DSS File Passport: one open-to-terminal technical attempt; settled history is immutable.
+model GamificationConsumptionAttempt {
+  id            String    @id @db.Uuid
+  admissionId   String    @db.Uuid
+  epoch         BigInt
+  claimSequence BigInt
+  claimToken    String    @unique @db.Uuid
+  state         String    @default("OPEN") @db.VarChar(16)
+  code          String?   @db.VarChar(64)
+  startedAt     DateTime  @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @db.Timestamp(3)
+  finishedAt    DateTime? @db.Timestamp(3)
+
+  admission GamificationAdmission @relation(fields: [admissionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([admissionId, epoch, claimSequence], map: "gamification_consumption_attempt_key")
+  @@map("gamification_consumption_attempts")
+}
+
+/// DSS File Passport: bounded owner-local resume coordinates, persisted with receipt CAS.
+model GamificationOwnerProgress {
+  admissionId  String   @db.Uuid
+  owner        String   @db.VarChar(16)
+  codecVersion Int
+  coordinates  Json
+  updatedAt    DateTime @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @updatedAt @db.Timestamp(3)
+
+  admission GamificationAdmission @relation(fields: [admissionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([admissionId, owner])
+  @@map("gamification_owner_progress")
+}
+
+/// DSS File Passport: append-only projection rejection, distinct from queue publication failure.
+model GamificationAdmissionRejection {
+  id                String   @id @db.Uuid
+  destination       String   @db.VarChar(64)
+  eventId           String   @db.Uuid
+  claimToken        String   @unique @db.Uuid
+  cycle             Int
+  cycleAttempt      Int
+  descriptorId      String?  @db.VarChar(128)
+  descriptorVersion Int?
+  code              String   @db.VarChar(64)
+  observedAt        DateTime @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @db.Timestamp(3)
+
+  delivery GamificationDelivery @relation(fields: [destination, eventId], references: [destination, eventId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([destination, observedAt, id], map: "gamification_admission_rejection_time_idx")
+  @@map("gamification_admission_rejections")
 }
 
 model ProcessedEvent {
