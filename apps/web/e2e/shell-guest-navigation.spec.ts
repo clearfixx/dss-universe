@@ -46,3 +46,23 @@ test("mobile drawer closes on client-side history changes and stays closed after
   await trigger.click();
   await expect(drawer).toBeVisible();
 });
+
+test("guest shell header fits narrow phones without hiding navigation or sign-in", async ({ page }) => {
+  await page.goto("/news");
+
+  for (const width of [320, 375]) {
+    await page.setViewportSize({ width, height: 760 });
+
+    const header = page.locator("header").first();
+    await expect(header).toBeVisible();
+    await expect(page.getByRole("link", { name: "DSS Universe — головна" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Відкрити навігацію" })).toBeVisible();
+    await expect(header.getByRole("link", { name: "Увійти" })).toBeVisible();
+
+    const dimensions = await header.evaluate((element) => ({
+      scrollWidth: element.scrollWidth,
+      clientWidth: element.clientWidth,
+    }));
+    expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+  }
+});
