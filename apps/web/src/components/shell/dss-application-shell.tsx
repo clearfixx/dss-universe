@@ -69,12 +69,14 @@ export function GlobalNavigation({
   hasSession,
   canAccessAdminDeck,
   onOpenLauncher,
+  launcherOpen = false,
 }: {
   pathname: string;
   variant: ShellVariant;
   hasSession: boolean;
   canAccessAdminDeck: boolean;
   onOpenLauncher: () => void;
+  launcherOpen?: boolean;
 }) {
   const modules = visibleModules(hasSession, canAccessAdminDeck);
   const featured = modules.filter((item) => item.featured);
@@ -102,7 +104,7 @@ export function GlobalNavigation({
           ))}
         </nav>
       )}
-      <Button type="button" variant="outline" size="sm" onClick={onOpenLauncher}>
+      <Button type="button" variant="outline" size="sm" onClick={onOpenLauncher} aria-haspopup="dialog" aria-expanded={launcherOpen}>
         <Menu aria-hidden="true" />
         {variant === "MODULE_LAUNCHER" ? "Модулі" : "Усі модулі"}
         <ChevronDown aria-hidden="true" className="size-3" />
@@ -197,6 +199,8 @@ export function DssApplicationShell({
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Відкрити навігацію"
+          aria-haspopup="dialog"
+          aria-expanded={open}
           className="lg:hidden"
         >
           <Menu aria-hidden="true" />
@@ -209,7 +213,7 @@ export function DssApplicationShell({
           <span aria-hidden="true" className="sm:hidden">DSS</span>
           <span aria-hidden="true" className="hidden sm:inline">DSS UNIVERSE</span>
         </Link>
-        <GlobalNavigation pathname={pathname} variant={variant} hasSession={Boolean(viewer)} canAccessAdminDeck={canAccessAdminDeck} onOpenLauncher={() => setOpen(true)} />
+        <GlobalNavigation pathname={pathname} variant={variant} hasSession={Boolean(viewer)} canAccessAdminDeck={canAccessAdminDeck} launcherOpen={open} onOpenLauncher={() => setOpen(true)} />
         <div className="ml-auto flex items-center gap-2">
           {viewer ? (
             <>
