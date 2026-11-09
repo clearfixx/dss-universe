@@ -142,3 +142,10 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - Added Playwright coverage of a guest opening the mobile navigation drawer on `/news`, changing the pathname through the browser History API (which Next.js synchronizes with `usePathname()`), returning via Back, and reopening the drawer explicitly.
 - This exercises route-scoped drawer state independently of link click handlers, complementing existing mobile click-to-close and pure state regression tests.
 - CI verification of the new browser scenario is required before acceptance; the test itself does not change application behavior.
+
+## Narrow mobile header fit — 9 November 2026
+
+- The temporary text wordmark now uses a compact visible `DSS` on small phones and the full `DSS UNIVERSE` from the `sm` breakpoint. Its accessible name consistently identifies the home link; this does **not** replace the approved logo asset.
+- Added guest Playwright regressions for 320px and 375px widths, asserting the mobile launcher and sign-in link remain visible and the Shell header itself does not overflow horizontally.
+- This focused Shell UX package intentionally does not merge the substantially diverged `main` branch. A separate reconciliation is required because concurrent work overlaps API schema, API package manifest, alignment tests and pnpm lockfile.
+- Full CI verification is required before promotion.
