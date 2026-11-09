@@ -149,3 +149,9 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - Added guest Playwright regressions for 320px and 375px widths, asserting the mobile launcher and sign-in link remain visible and the Shell header itself does not overflow horizontally.
 - This focused Shell UX package intentionally does not merge the substantially diverged `main` branch. A separate reconciliation is required because concurrent work overlaps API schema, API package manifest, alignment tests and pnpm lockfile.
 - Full CI verification is required before promotion.
+
+## Navigation trigger accessibility — 9 November 2026
+
+- Both the mobile drawer trigger and the desktop module launcher now expose `aria-haspopup="dialog"` and `aria-expanded` derived from the existing local Shell drawer state. This is an accessibility-only change; no new store or navigation behavior was introduced.
+- Added Playwright coverage for expansion, Escape dismissal, and reopening on mobile, plus render regressions for the desktop launcher in collapsed and expanded states.
+- The approved production logo asset and final visual parity are still pending; this package does not invent either. Require fresh CI verification before treating the package as completed.
