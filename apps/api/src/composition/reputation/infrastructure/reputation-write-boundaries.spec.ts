@@ -22,7 +22,6 @@
 import type { Prisma } from '@prisma/client';
 import type { PrismaService } from '@api/core/database';
 import type { AuditWriterService } from '@api/core/audit';
-import type { CanonicalOutboxReader } from '@api/core/events/infrastructure';
 import type {
   CreateReputationEntry,
   ReputationEntry,
@@ -298,12 +297,16 @@ describe('Root Reputation write transaction', () => {
           ]),
         ),
     };
+    const canonical = {
+      read: jest.fn(),
+      candidates: jest.fn().mockResolvedValue([]),
+    };
     const unit = new PrismaReputationWriteTransaction(
       { $transaction: transaction } as unknown as PrismaService,
       { createDirect, reverse } as unknown as PrismaReputationWriter,
       entries as unknown as PrismaReputationEntryReader,
       actors,
-      {} as CanonicalOutboxReader,
+      canonical,
     );
     return {
       client,
@@ -312,6 +315,7 @@ describe('Root Reputation write transaction', () => {
       reverse,
       entries,
       actors,
+      canonical,
       unit,
     };
   }
@@ -360,6 +364,57 @@ describe('Root Reputation write transaction', () => {
     expect(h.transaction).toHaveBeenCalledTimes(1);
     expect(h.transaction).toHaveBeenCalledWith(expect.any(Function));
   });
+  it.each(['missing', 'failure'] as const)(
+    'binds legacy canonical lookup to the existing client and preserves %s disposition',
+    async (mode) => {
+      const h = harness();
+      const failure = new Error('Synthetic canonical failure');
+      if (mode === 'failure') h.canonical.candidates.mockRejectedValue(failure);
+      h.reverse.mockImplementation(
+        async (
+          _tx,
+          _id,
+          _actor,
+          _recipient,
+          _value,
+          _reason,
+          project,
+          lookup,
+        ) => {
+          const projected = await project(fact);
+          const evidence = await lookup({
+            entryId: 'original',
+            actorId: 'actor',
+            recipientId: 'recipient',
+            value: 1,
+          });
+          expect(evidence).toEqual({ status: 'BLOCKED' });
+          return projected;
+        },
+      );
+      const result = h.unit.reverse(
+        'original',
+        'moderator',
+        'recipient',
+        -1,
+        'Correction',
+      );
+      if (mode === 'failure') await expect(result).rejects.toBe(failure);
+      else await expect(result).resolves.toEqual(response);
+      expect(h.canonical.candidates).toHaveBeenCalledWith(
+        h.client,
+        {
+          producer: 'dss.api.reputation',
+          aggregateType: 'ReputationEntry',
+          aggregateId: 'original',
+          eventName: 'reputation.direct.changed.v1',
+        },
+        ['recipientId', 'value', 'reversesEntryId'],
+      );
+      expect(h.transaction).toHaveBeenCalledTimes(1);
+      expect(h.transaction).toHaveBeenCalledWith(expect.any(Function));
+    },
+  );
   it('composes a present compensation through the same four-field mapper', async () => {
     const h = harness();
     h.entries.reversals.mockResolvedValue([

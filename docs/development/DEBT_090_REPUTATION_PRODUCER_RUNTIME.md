@@ -123,6 +123,12 @@ and local proof receipt.
   root-level local-report exclusion. Receipts are moved byte-exactly to the
   established helper-root report location and the writer path is corrected;
   formatter policy is unchanged. No runtime/test failure is inferred from it.
+- The next exact-head local/CI runs passed1494 unit cases but failed the existing
+  100% coverage threshold on the root write transaction: its new legacy-lookup
+  callback had no unit invocation. Focused composition cases now invoke that
+  actual callback with the same transaction client and check missing evidence
+  and unknown-failure identity. Thresholds remain unchanged; a new full gate/CI
+  is required for the corrected test head.
 
 Failed logs are retained alongside subsequent evidence. They are not called
 runtime regressions resolved by unchanged reruns. No retries-to-green, raised
