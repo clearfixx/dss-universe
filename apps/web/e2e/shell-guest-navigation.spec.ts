@@ -89,3 +89,35 @@ test("mobile navigation exposes expanded state and closes with Escape", async ({
   await expect(trigger).toHaveAttribute("aria-expanded", "true");
   await expect(drawer).toBeVisible();
 });
+
+test("desktop Shell keeps its module launcher and contextual sidebar usable", async ({ page }) => {
+  await page.goto("/news");
+
+  for (const width of [1024, 1280]) {
+    await page.setViewportSize({ width, height: 800 });
+
+    const header = page.locator("header").first();
+    const launcher = header.getByRole("button", { name: "Модулі" });
+    const sidebar = page.getByRole("navigation", { name: "Розділи: Новини" });
+
+    await expect(launcher).toBeVisible();
+    await expect(launcher).toHaveAttribute("aria-expanded", "false");
+    await expect(sidebar.getByRole("link", { name: "Огляд" })).toBeVisible();
+    await expect(header.getByRole("link", { name: "DSS Universe — головна" })).toBeVisible();
+
+    const { scrollWidth, clientWidth } = await header.evaluate((element) => ({
+      scrollWidth: element.scrollWidth,
+      clientWidth: element.clientWidth,
+    }));
+    expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+
+    await launcher.click();
+    const drawer = page.getByRole("dialog", { name: "Навігація DSS Universe" });
+    await expect(drawer).toBeVisible();
+    // Role queries exclude inert background content while the dialog is open.
+    await expect(header.locator('button[aria-haspopup="dialog"]')).toHaveAttribute("aria-expanded", "true");
+    await page.keyboard.press("Escape");
+    await expect(drawer).not.toBeVisible();
+    await expect(launcher).toHaveAttribute("aria-expanded", "false");
+  }
+});
