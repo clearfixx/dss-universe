@@ -219,8 +219,9 @@ Exact-head full gate0 and CI8/8 included API1483/1483, E2E778/778, build6/6,
 Web15/15 without retries and native48/48 on three OSes. There is no automatic
 consumer, real producer journal or historical replay, and DEBT-090 stays open.
 The next [P1 Reputation producer design](DEBT_090_REPUTATION_PRODUCER_DESIGN.md)
-is a design/characterization candidate; its legacy-provenance policy and runtime
-implementation need separate review and approval.
+was accepted in PR148 at `0d77960`, merged as `3fc470f`. The owner separately
+authorized the [inactive P1 runtime candidate](DEBT_090_REPUTATION_PRODUCER_RUNTIME.md),
+including its legacy-provenance policy; final runtime gate/CI/acceptance remain open.
 
 ### DEBT-089 — systeminformation Windows command injection (High, correction candidate)
 
@@ -260,8 +261,9 @@ complete DEBT-007/D7 acceptance remain open. Historical register dispositions be
 are not replaced by a claim that Phase8 delivery is complete.
 
 Accepted owner design: [qualified Achievements owner](DEBT_090_QUALIFIED_OWNER_DESIGN.md).
-O1 owner runtime was separately accepted in PR147, merged as `a31b5fd`; P1 producer facts
-and C2/C3/D delivery/activation still require their own implementation approvals.
+O1 owner runtime was separately accepted in PR147, merged as `a31b5fd`; P1 design
+was accepted in PR148, merged as `3fc470f`, and inactive P1 implementation separately
+authorized. Its runtime acceptance and C2/C3/D implementation/activation remain open.
 This does not silently authorize the queue or replace
 the required real producer/admission proof with synthetic owner-only tests.
 

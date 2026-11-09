@@ -13,6 +13,7 @@
  * • binds independently owned Reputation input ports;
  * • keeps feature applications unaware of sibling implementations.
  * • binds default-isolation ledger display reads to guarded owner persistence adapters.
+ * • wires inactive producer qualification preparation and canonical evidence capabilities.
  *
  * 🏗️ Architecture:
  * Root composition wiring; no scoring or authentication business rules.
@@ -36,6 +37,8 @@ import {
 import {
   PrismaReputationEntryReader,
   PrismaReputationWriter,
+  PrismaReputationQualificationWriter,
+  PrismaReputationQualificationReader,
 } from '@api/modules/reputation/infrastructure';
 import {
   ReputationModule,
@@ -50,6 +53,7 @@ import { ReputationBlockAdapter } from './infrastructure/reputation-block.adapte
 import { ReputationProfileAdapter } from './infrastructure/reputation-profile.adapter';
 import { PrismaReputationReadUnit } from './infrastructure/prisma-reputation.read-unit';
 import { PrismaReputationWriteTransaction } from './infrastructure/prisma-reputation-write.transaction';
+import { ReputationQualificationAdapter } from './infrastructure/reputation-qualification.adapter';
 @Global()
 @Module({
   imports: [
@@ -65,6 +69,9 @@ import { PrismaReputationWriteTransaction } from './infrastructure/prisma-reputa
     PrismaReputationActorReader,
     PrismaReputationWriteActorReader,
     PrismaReputationWriter,
+    PrismaReputationQualificationWriter,
+    PrismaReputationQualificationReader,
+    ReputationQualificationAdapter,
     {
       provide: REPUTATION_WRITE_TRANSACTION,
       useClass: PrismaReputationWriteTransaction,

@@ -1,8 +1,10 @@
 # DEBT-090 — P1 Reputation producer facts
 
 Reviewed baseline: accepted main `a31b5fd`, including O1 / PR147.
-Status: design/characterization candidate. This packet adds no runtime, migration,
-consumer activation or frontend change. P1 implementation needs separate approval.
+Status: design/characterization accepted in PR148 at `0d77960`, merged as `3fc470f`.
+That packet adds no runtime, migration, consumer activation or frontend change.
+The owner separately approved the [inactive P1 runtime](DEBT_090_REPUTATION_PRODUCER_RUNTIME.md);
+its implementation and acceptance evidence remain distinct from design approval.
 
 ## Existing behavior and ownership
 

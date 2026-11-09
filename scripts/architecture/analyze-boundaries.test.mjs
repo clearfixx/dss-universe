@@ -474,6 +474,25 @@ for (const [file, expected, forbiddenRelations] of [
     ["actor", "recipient", "user", "reversal"],
   ],
   [
+    "modules/reputation/infrastructure/repositories/prisma-reputation-qualification.writer.ts",
+    [
+      "reputationEntry",
+      "reputationQualificationEvent",
+      "reputationQualificationFact",
+      "reputationQualificationState",
+    ],
+    ["actor", "recipient", "user", "roles", "permissions"],
+  ],
+  [
+    "modules/reputation/infrastructure/repositories/prisma-reputation-qualification.reader.ts",
+    [
+      "$queryRaw",
+      "reputationQualificationEvent",
+      "reputationQualificationState",
+    ],
+    ["actor", "recipient", "user", "roles", "permissions"],
+  ],
+  [
     "modules/interactions/infrastructure/repositories/prisma-comment.writer.ts",
     ["$executeRaw", "comment", "commentRevision", "mention"],
     ["actor", "author", "user"],
@@ -659,6 +678,9 @@ for (const [moduleName, expected] of [
       "ReputationBlockReader",
       "REPUTATION_PROFILE_EXISTENCE",
       "ReputationProfileExistence",
+      "ReputationQualificationEvent",
+      "ReputationProducerFact",
+      "ReputationQualificationView",
     ],
   ],
   [
@@ -992,6 +1014,10 @@ test("owners publish only the intended guarded technical symbols", () => {
         "ReputationEntryFact",
         "ReputationReversalFact",
         "PrismaReputationWriter",
+        "PrismaReputationQualificationWriter",
+        "PrismaReputationQualificationReader",
+        "ReputationOriginalEvidenceInput",
+        "ReputationOriginalEvidenceLookup",
         "ReputationEntryProjection",
         "leaderboardReputationAggregate",
       ],

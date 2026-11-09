@@ -11,6 +11,7 @@
  * 🧠 Responsibilities:
  * • preserves default-isolation transactions with no new timeout or retry settings;
  * • composes actor/reversal/compensation-actor reads at the existing pre-evidence point.
+ * • supplies Core-owned legacy canonical evidence without giving Core delegates to Reputation.
  *
  * 🏗️ Architecture:
  * Root unit of work behind a Reputation-owned semantic port; no foreign SQL or business ORM API.
@@ -24,6 +25,7 @@
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { PrismaService } from '@api/core/database';
+import { CanonicalOutboxReader } from '@api/core/events/infrastructure';
 import type {
   CreateReputationEntry,
   ReputationWriteTransaction,
@@ -35,6 +37,7 @@ import {
 } from '@api/modules/reputation/infrastructure';
 import { PrismaReputationWriteActorReader } from '@api/modules/users/infrastructure';
 import { composeReputationEntry } from './reputation-entry.mapper';
+import { lookupReputationOriginalEvidence } from './reputation-qualification.adapter';
 
 @Injectable()
 export class PrismaReputationWriteTransaction implements ReputationWriteTransaction {
@@ -43,6 +46,7 @@ export class PrismaReputationWriteTransaction implements ReputationWriteTransact
     private readonly writer: PrismaReputationWriter,
     private readonly entries: PrismaReputationEntryReader,
     private readonly actors: PrismaReputationWriteActorReader,
+    private readonly canonical: CanonicalOutboxReader,
   ) {}
   createDirect(input: CreateReputationEntry) {
     return this.prisma.$transaction((transaction) =>
@@ -67,6 +71,8 @@ export class PrismaReputationWriteTransaction implements ReputationWriteTransact
         value,
         reason,
         (entry) => this.project(transaction, entry),
+        (input) =>
+          lookupReputationOriginalEvidence(this.canonical, transaction, input),
       ),
     );
   }

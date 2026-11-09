@@ -12,7 +12,7 @@
  * Full historical migrations in an owned disposable schema; no repair DDL.
  *
  * ⚠️ Important:
- * Catalog checks cover twelve legacy, three routing and one qualification default; CRUD checks are representative,
+ * Catalog checks cover twelve legacy, three routing and two qualification defaults; CRUD checks are representative,
  * not a claim that every model/business use case was exercised here.
  *
  * 🚀 Build. Share. Grow.
@@ -65,6 +65,10 @@ describe('Prisma and historical migration alignment (e2e)', () => {
     const qualificationDefaults = [
       {
         table_name: 'achievement_source_cursors',
+        column_default: 'CURRENT_TIMESTAMP',
+      },
+      {
+        table_name: 'reputation_qualification_states',
         column_default: 'CURRENT_TIMESTAMP',
       },
     ];
