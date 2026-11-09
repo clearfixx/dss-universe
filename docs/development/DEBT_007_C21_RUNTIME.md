@@ -83,10 +83,25 @@ and
 Initial strict lint found an unnecessary type assertion and two untyped Array.fill
 constructions in tests; these were corrected without rule/assertion changes.
 
+## Transaction-bound preparation checkpoint
+
+P1 now supplies `prepareInTransaction` without opening its own transaction; the
+existing `prepare` wrapper retains Repeatable Read. The real producer integration
+suite passed19/19, including a new schedule that commits a concurrent withdrawal
+after the caller snapshot is established. The bound operation observes its
+original one-fact view; a fresh preparation sees the new withdrawal. A forbidden
+standalone transaction callback is never called. No write isolation or timeout
+is changed. Log:
+`node_modules/.cache/debt007-c21-producer-007591004bad4c5e9aef596ef93cddc2.log`.
+
+Strict lint initially caught the new snapshot test's untyped bind; the callback
+now uses the existing file's explicit reader signature. Lint/typecheck passed
+after correction. Architecture checks passed142/142 with the unchanged frozen
+inventory; this is boundary-regression evidence, not final D7 acceptance.
+
 ## Remaining before package acceptance
 
-Transaction-bound P1
-preparation and immutable seal reuse; admission/rejection and consumption CAS
+Immutable seal reuse; admission/rejection and consumption CAS
 repositories; actual-token and concurrency schedules; bounded query plans;
 inactive assembly/lifecycle regressions; disposable public deployment/drift;
 complete full quality gate, final-head CI and separate owner acceptance.

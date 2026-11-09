@@ -11,7 +11,7 @@
 🚀 Build. Share. Grow.
 ===============================================================
 #>
-param([ValidateSet('storage','codec')][string]$Kind = 'storage')
+param([ValidateSet('storage','codec','producer')][string]$Kind = 'storage')
 $ErrorActionPreference = 'Stop'
 $c21Root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../..'))
 Set-Location -LiteralPath $c21Root
@@ -23,6 +23,11 @@ $env:PATH = $c21NodeDirectory + ';' + (Join-Path $PSScriptRoot 'bin') + ';' + $e
 $c21Credential = [regex]::Match((Get-Content docker-compose.test.yml -Raw), '(?m)^\s+POSTGRES_PASSWORD:\s*([A-Za-z0-9_]+)\s*$')
 if (-not $c21Credential.Success) { throw 'Disposable credential unavailable.' }
 $env:DATABASE_URL = 'postgresql://dss_test:' + [Uri]::EscapeDataString($c21Credential.Groups[1].Value) + '@127.0.0.1:5434/dss_test'
+$env:REDIS_HOST = '127.0.0.1'
+$env:REDIS_PORT = '6380'
+$env:TEST_REDIS_PORT = '6380'
+$env:OUTBOX_DISPATCH_INTERVAL_MS = '0'
+$env:MEDIA_CLEANUP_INTERVAL_MS = '0'
 $c21Nonce = [Guid]::NewGuid().ToString('N')
 $c21Log = Join-Path $c21Root ('node_modules/.cache/debt007-c21-' + $Kind + '-' + $c21Nonce + '.log')
 $c21Receipt = Join-Path $c21Root ('tools/agent-helpers/debt007-c21-' + $Kind + '-' + $c21Nonce + '.local.json')
@@ -31,10 +36,14 @@ $c21Head = (& git rev-parse HEAD).Trim()
 $c21Code = 1
 try {
     Write-Host "C2.1 $Kind log: $c21Log"
-    if ($Kind -eq 'storage') {
+    if ($Kind -ne 'codec') {
         & pnpm --filter @dss/api db:generate *> $c21Log
         if ($LASTEXITCODE -ne 0) { throw 'Prisma client generation failed; see retained log.' }
-        & pnpm --filter @dss/api exec jest --config test/jest-e2e.json --runInBand --runTestsByPath test/gamification-consumption-storage.e2e-spec.ts *>> $c21Log
+        if ($Kind -eq 'storage') {
+            & pnpm --filter @dss/api exec jest --config test/jest-e2e.json --runInBand --runTestsByPath test/gamification-consumption-storage.e2e-spec.ts *>> $c21Log
+        } else {
+            & pnpm --filter @dss/api exec jest --config test/jest-e2e.json --runInBand --runTestsByPath test/reputation-qualification.e2e-spec.ts *>> $c21Log
+        }
     } else {
         & pnpm --filter @dss/api exec jest --runInBand --runTestsByPath src/composition/gamification-delivery/infrastructure/admission-seal.codec.spec.ts *> $c21Log
     }

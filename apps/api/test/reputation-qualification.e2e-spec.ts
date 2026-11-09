@@ -12,6 +12,7 @@
  */
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { Prisma } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '@api/core/database';
 import { createEventEnvelope, OutboxWriterService } from '@api/core/events';
@@ -27,6 +28,7 @@ import {
   type ReputationRepository,
 } from '../src/modules/reputation/domain/repositories/reputation.repository.interface';
 import { PrismaReputationQualificationWriter } from '../src/modules/reputation/infrastructure/repositories/prisma-reputation-qualification.writer';
+import { PrismaReputationQualificationReader } from '../src/modules/reputation/infrastructure/repositories/prisma-reputation-qualification.reader';
 import { ReputationQualificationAdapter } from '../src/composition/reputation/infrastructure/reputation-qualification.adapter';
 import { AppModule } from '../src/app.module';
 import { createIsolatedApiSchemaFixture } from './helpers/migrated-api-schema.fixture';
@@ -315,6 +317,41 @@ describe('Reputation qualification P1 (inactive integration e2e)', () => {
         where: { achievementId: reward.definition.id },
       }),
     ).toBe(1);
+  });
+
+  it('uses the caller Repeatable Read snapshot without opening a nested preparation transaction', async () => {
+    const s = await scenario();
+    const nested = jest.fn(() => {
+      throw new Error('Unexpected nested preparation transaction.');
+    });
+    const core = new CanonicalOutboxReader();
+    const actual = core.read.bind(core) as CanonicalOutboxReader['read'];
+    const bound = new ReputationQualificationAdapter(
+      { $transaction: nested } as unknown as PrismaService,
+      new PrismaReputationQualificationReader(),
+      core,
+    );
+    let isolation = '';
+    jest.spyOn(core, 'read').mockImplementationOnce(async (...args) => {
+      const [row] = await args[0].$queryRaw<{ isolation: string }[]>`
+        SELECT current_setting('transaction_isolation') AS isolation`;
+      isolation = row.isolation;
+      await reverse(s);
+      return actual(...args);
+    });
+    const captured = await fixture.prisma.$transaction(
+      (transaction) => bound.prepareInTransaction(transaction, s.eventId),
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+    );
+    expect(captured.status).toBe('READY');
+    if (captured.status !== 'READY')
+      throw new Error('Expected prepared fixture.');
+    expect(isolation).toBe('repeatable read');
+    expect(captured.command.facts).toHaveLength(1);
+    expect(nested).not.toHaveBeenCalled();
+    const current = await command(s.eventId);
+    expect(current.facts).toHaveLength(2);
+    expect(current.facts.some((fact) => fact.action === 'WITHDRAW')).toBe(true);
   });
 
   it('adopts verified pre-cutoff predecessor context without replaying or modifying its canonical event', async () => {
