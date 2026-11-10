@@ -214,3 +214,12 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - The Command Deck and platform appearance routes continue to enforce their own backend-backed guards before rendering protected content. Hiding controls and links is strictly a presentation layer, not access control.
 - Server composition tests cover guest, ordinary and approved admin Shell states; unauthorized settings requests; Command Deck notFound on denied access; and the appearance route's deny-before-render behavior.
 - No new role, API field, UI module, visual asset, or navigation destination has been introduced. CI must execute successfully before this batch can be called verified.
+
+## Public profile resilience and validated viewer — 10 November 2026
+
+- Public profile reads no longer equate an access-token cookie with a verified user. The request-scoped `loadSessionViewer()` determines whether to attach authorization. Revoked or invalid cookies are treated as guest viewing for otherwise-public profiles.
+- Reused the validated viewer ID rather than issuing a second `ProfileViewerDocument` query, reducing redundant authenticated requests.
+- The public profile itself remains the required primary API response; inaccessible or nonexistent profiles still fail. Once a valid viewer has loaded it, the wall, activity and gamification projections are independently optional. A failure in one no longer hides the profile or the other projections.
+- Existing backend privacy checks still decide visibility. No private data is synthesized or rendered for visitors without a validated session.
+- Tests cover stale-token guest behavior, verified identity, independent secondary failures, missing profile, and denied primary profile.
+- Changes require actual lint/typecheck/unit/build validation before merge; GitHub Actions jobs remain blocked before execution.
