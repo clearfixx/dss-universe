@@ -223,3 +223,11 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - Existing backend privacy checks still decide visibility. No private data is synthesized or rendered for visitors without a validated session.
 - Tests cover stale-token guest behavior, verified identity, independent secondary failures, missing profile, and denied primary profile.
 - Changes require actual lint/typecheck/unit/build validation before merge; GitHub Actions jobs remain blocked before execution.
+
+## Profile cache route integrity — 10 November 2026
+
+- Profile server actions validate the client-supplied username as a single route segment **before** performing a mutation. Only a canonical encoded `/profile/[username]` path may be passed to `revalidatePath`. Separators, dot segments, controls, and ambiguous percent sequences are rejected.
+- Public profile and personal settings links encode username segments; guest login URL encodes the entire return destination.
+- The shared post-authentication redirect validator now rejects raw ASCII controls before URL normalization. Legal same-origin query strings continue to work.
+- Regression tests cover allowed/invalid username segments and unsafe return URLs. Backend authorization is unchanged; these rules protect server-side routing and cache invalidation only.
+- CI checks must actually execute before calling this change verified.
