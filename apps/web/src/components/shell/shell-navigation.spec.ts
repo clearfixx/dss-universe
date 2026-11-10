@@ -13,6 +13,7 @@ import {
   moduleSidebarItems,
   navigationCurrent,
   routeMatches,
+  trustedPageTitle,
   visibleModules,
 } from "./shell-navigation";
 
@@ -122,4 +123,36 @@ describe("application shell navigation contracts", () => {
       { href: "/newsroom/new", label: "Нова стаття" },
     ]);
   });
+  it("uses route-owned titles only for the exact active path", () => {
+    const page = { pathname: "/news/uk/typed-title", title: "  Перевірена назва статті  " };
+    expect(trustedPageTitle(page.pathname, page)).toBe("Перевірена назва статті");
+    expect(breadcrumbsForPath(page.pathname, page)).toEqual([
+      { href: "/news", label: "Новини" },
+      { href: page.pathname, label: "Перевірена назва статті" },
+    ]);
+    // Navigating away must not reuse stale server metadata.
+    expect(breadcrumbsForPath("/news/uk/other", page).at(-1)?.label).toBe(
+      "Поточна сторінка",
+    );
+    expect(trustedPageTitle("/news/uk/other", page)).toBeNull();
+  });
+
+  it("does not infer titles from URLs or render blank route titles", () => {
+    expect(breadcrumbsForPath("/news/uk/%3Cscript%3E").at(-1)?.label).toBe(
+      "Поточна сторінка",
+    );
+    expect(breadcrumbsForPath("/news/uk/article", {
+      pathname: "/news/uk/article",
+      title: "   ",
+    }).at(-1)?.label).toBe("Поточна сторінка");
+    expect(breadcrumbsForPath("/newsroom/123", {
+      pathname: "/newsroom/123",
+      title: "Редагування матеріалу",
+    }).at(-1)?.label).toBe("Редагування матеріалу");
+    expect(breadcrumbsForPath("/news", {
+      pathname: "/news",
+      title: "Новини DSS",
+    })).toEqual([{ href: "/news", label: "Новини DSS" }]);
+  });
+
 });
