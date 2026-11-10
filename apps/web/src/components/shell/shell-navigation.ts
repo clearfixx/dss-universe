@@ -159,7 +159,7 @@ export function contextualBreadcrumbs(
       { href: pathname, label: "Оформлення платформи" },
     ];
   }
-  if (pathname.startsWith("/profile/") && pathname !== "/profile/") {
+  if (/^\\/profile\\/[^/]+$/.test(pathname)) {
     // The actual display name is supplied by the profile route owner,
     // never parsed or decoded from user-controlled URL segments.
     return [{ href: pathname, label: "Поточна сторінка" }];
