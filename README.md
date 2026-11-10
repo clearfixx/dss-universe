@@ -1,329 +1,172 @@
-# 🌌 DSS Universe
+<p align="center">
+  <strong>DSS UNIVERSE</strong>
+</p>
 
-> **Build. Share. Grow.**
+<h1 align="center">DSS Universe</h1>
 
-DSS Universe is an open, modular platform for developers.
+<p align="center">
+  <strong>Build. Inspire. Grow.</strong><br>
+  The community behind great software.
+</p>
 
-It combines community features, technical knowledge, AI-powered tools, learning resources, and a highly extensible CMS into a single ecosystem built around modern software engineering principles.
+<p align="center">
+  A modular developer platform bringing people, technical knowledge, learning,<br>
+  content, media, and intelligent assistance into one connected community.
+</p>
 
-Unlike a traditional forum or CMS, DSS Universe is designed as a long-term platform where every subsystem follows the same architectural standards and engineering practices.
+<p align="center">
+  <img alt="Status: active development" src="https://img.shields.io/badge/status-active_development-8250df?style=flat-square">
+  <img alt="Primary language: TypeScript" src="https://img.shields.io/badge/language-TypeScript-3178c6?style=flat-square&logo=typescript&logoColor=white">
+  <img alt="Platform: Web" src="https://img.shields.io/badge/platform-Web-2563eb?style=flat-square">
+  <img alt="Documentation language: English" src="https://img.shields.io/badge/docs-English-334155?style=flat-square">
+  <a href="LICENSE"><img alt="License: restricted source access" src="https://img.shields.io/badge/license-restricted_source_access-52525b?style=flat-square"></a>
+</p>
 
----
-
-# Vision
-
-DSS Universe is built around one idea:
-
-> Build a platform that developers enjoy using — and developers enjoy building.
-
-The project focuses on:
-
-- clean architecture;
-- modular design;
-- long-term maintainability;
-- predictable engineering standards;
-- developer experience;
-- documentation-first development.
-
----
-
-# Platform Philosophy
-
-DSS Universe follows a simple principle:
-
-```
-Think.
-
-Design.
-
-Document.
-
-Build.
-```
-
-Architecture is treated as a product.
-
-Code is the result of architecture — not the beginning of it.
+<p align="center">
+  <a href="#explore-the-universe">Modules</a> ·
+  <a href="#design-preview">Design preview</a> ·
+  <a href="#architecture">Architecture</a> ·
+  <a href="#getting-started">Getting started</a> ·
+  <a href="#project-status">Status</a> ·
+  <a href="#documentation">Documentation</a>
+</p>
 
 ---
 
-# Current Status
+## One universe. Many ways to grow.
 
-🚧 Active Development
+DSS Universe is being built as a community-centered platform for software developers. Instead of scattering discussions, technical writing, resources, and learning across disconnected experiences, the project aims to give them a shared home.
 
-Current milestone:
+**The community comes first.** The technology exists to help people share ideas, contribute, learn, and build useful software together.
 
-**Platform Foundation (Phase 2)**
+| **Connect** | **Learn** | **Create** | **Grow** |
+| :--- | :--- | :--- | :--- |
+| Meet developers and join conversations. | Explore technical writing and structured learning. | Publish knowledge and share resources. | Follow contributions, progress, and achievements. |
 
-Current priorities:
+> [!IMPORTANT]
+> **DSS Universe is under active development, not a released product.** The mockups below communicate the approved visual direction; they are not proof that every illustrated screen or feature is implemented.
 
-- backend platform architecture;
-- authentication & authorization;
-- shared architecture;
-- engineering standards;
-- users reference module.
+## Explore the Universe
 
----
+The platform is organized into connected product areas, each with clear responsibilities.
 
-# Repository Structure
+| Area | Purpose |
+| :--- | :--- |
+| **Mission Control** | A personal starting point for activity, progress, and relevant content. |
+| **Community Hub** | Discussions, questions, collaboration, and shared interests. |
+| **Research Lab** | Long-form articles, guides, and technical research. |
+| **Knowledge Forge** | Collaborative, versioned technical knowledge. |
+| **Academy** | Courses and learning journeys. |
+| **Downloads** | Developer resources, files, and releases. |
+| **DSS Media Platform** | Shared media upload, processing, and asset lifecycle. |
+| **DSS Intelligence** | Planned contextual intelligence across platform experiences. |
+| **Command Deck** | Restricted administration and platform operations. |
+
+Not every area is available today. Features are delivered incrementally under the [DSS Universe 1.0 roadmap](docs/roadmap/DSS_UNIVERSE_1.0_ROADMAP.md); navigation and access are backed by real implementation and server-enforced authorization, not by the mockups.
+
+## Design preview
+
+DSS uses a restrained, dark-first visual language: deep navy surfaces, purple and indigo accents, clear typography, accessible navigation, and carefully placed space-inspired artwork. **Space is the brand metaphor, not the background of every component.** A light theme and curated appearance options are part of the product direction.
+
+<p align="center">
+  <img src="docs/design/mockups/user-profile-frontend-concept-v1.png" alt="DSS Universe user profile frontend concept" width="100%">
+  <br>
+  <sub>User profile concept — a design reference, not a guarantee of current UI parity.</sub>
+</p>
+
+Additional approved direction covers the application shell, navigation, Personal Hub, Mission Control, content experiences, administrative screens, and onboarding. The [mockup catalog](docs/design/MOCKUP_CATALOG.md) explains which references are canonical, supporting, alternative, or historical.
+
+> [!NOTE]
+> The final production logo and the full reference-image gallery are still being prepared. The header intentionally uses a text wordmark rather than inventing a replacement logo or linking to uncommitted assets.
+
+## Architecture
+
+DSS Universe is a TypeScript monorepo with separate web, API, shared packages, engineering tools, and documentation.
 
 ```text
 dss-universe/
-
-apps/
-packages/
-docs/
-standards/
-scripts/
-tools/
+├── apps/         # Next.js web and NestJS API
+├── packages/     # Shared packages and contracts
+├── docs/         # Architecture, product and development documentation
+├── standards/    # Engineering and implementation rules
+├── scripts/      # Tooling and checks
+├── tools/        # Supporting engineering tools
+└── infra/        # Infrastructure configuration
 ```
 
----
+| Layer | Main technologies |
+| :--- | :--- |
+| Web | Next.js, React, TypeScript, Tailwind CSS, shadcn/ui |
+| API | NestJS, TypeScript, GraphQL, REST where appropriate |
+| Data | PostgreSQL, Prisma, Redis |
+| Tooling | pnpm workspaces, Turborepo, Docker, automated tests and CI |
 
-# Applications
+The backend follows explicit module boundaries. Product data and mutations are generally exposed through GraphQL; binary transfer uses REST where appropriate. The web app uses server-rendered access checks, and **visibility in the UI never replaces authorization on the server**.
 
-## API
+Read the [Engineering Handbook](ENGINEERING.md), [Project Constitution](CONSTITUTION.md), and [architecture documentation](docs/architecture/) for the actual contracts and decisions.
 
-```text
-apps/api
+## Getting started
+
+This repository is intended for contributors and local development, not a production one-click installation.
+
+**Prerequisites:** Node.js **24.18.0**, pnpm **11.9.0**, and Docker with Compose for local services. Follow the [environment guide](docs/development/environment.md) for current setup requirements.
+
+```bash
+git clone https://github.com/clearfixx/dss-universe.git
+cd dss-universe
+corepack enable
+pnpm install
 ```
 
-NestJS backend platform.
+Configure local environment variables using the repository's example files before starting services. Never commit real credentials.
 
-Responsible for:
-
-- authentication;
-- authorization;
-- users;
-- business modules;
-- infrastructure;
-- REST API.
-
----
-
-## Web
-
-```text
-apps/web
+```bash
+pnpm db:up
+pnpm dev
 ```
 
-Next.js frontend.
+Common validation commands:
 
-Currently under active development.
-
----
-
-# Architecture
-
-Backend follows a layered architecture.
-
-```text
-Presentation
-        │
-Application
-        │
-Domain
-
-Infrastructure
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+pnpm architecture:check
 ```
 
-Supported by:
+Some commands require configured services, environment variables, and generated database or GraphQL artifacts. See [development documentation](docs/development/) rather than assuming a clean clone is immediately ready for every test.
 
-```text
-Core
+## Project status
 
-↓
+**Active development — pre-release.** Architecture, identity, access control, content foundations, media, and application-shell work are progressing in parallel. The implementation and roadmap evolve; a polished mockup does not imply a shipped feature.
 
-Shared
+Development prioritizes **correctness, security, maintainability, and explicit module contracts** over cosmetic feature counts. The authoritative implementation status is the code, merged changes, CI results, and the current [roadmap](docs/roadmap/DSS_UNIVERSE_1.0_ROADMAP.md).
 
-↓
+## Documentation
 
-Modules
-```
+| Resource | What you'll find |
+| :--- | :--- |
+| [Engineering Handbook](ENGINEERING.md) | Engineering principles and technical entry points |
+| [Project Constitution](CONSTITUTION.md) | Long-term development rules |
+| [Product roadmap](docs/roadmap/DSS_UNIVERSE_1.0_ROADMAP.md) | Scope and delivery priorities for 1.0 |
+| [Mockup catalog](docs/design/MOCKUP_CATALOG.md) | Design reference classification and visual direction |
+| [Architecture](docs/architecture/) | System structure and boundaries |
+| [Development](docs/development/) | Environment, workflow and implementation notes |
+| [Engineering standards](standards/) | Conventions, quality and testing expectations |
 
----
+## Contributing
 
-# Core
+The project is being developed against documented engineering standards. Before contributing, read the [Engineering Handbook](ENGINEERING.md), check the applicable architecture and module contracts, and keep changes scoped and testable.
 
-The Core layer contains application-wide infrastructure.
+## License
 
-Examples:
-
-- authentication;
-- authorization;
-- configuration;
-- database;
-- security;
-- cache;
-- logging;
-- scheduler;
-- queues;
-- mail.
-
-Core never contains business logic.
+**Restricted Source Access — All Rights Reserved.** The [LICENSE](LICENSE) allows inspection and educational study by authorized repository visitors but grants no general rights to copy, modify, run, redistribute, or commercially exploit protected Project materials. Applicable legal exceptions, GitHub permissions, and third-party licenses remain effective. DSS Universe is maintained as a private repository.
 
 ---
 
-# Shared
-
-Shared contains reusable business-neutral building blocks.
-
-Examples:
-
-- repository contracts;
-- pagination;
-- domain primitives;
-- reusable helpers.
-
-Shared never depends on feature modules.
-
----
-
-# Modules
-
-Business functionality lives inside modules.
-
-Current module:
-
-- Users
-
-Planned modules:
-
-- Forum
-- Blog
-- Academy
-- CMS
-- Messages
-- Downloads
-- Support Center
-- AI Core
-- Research Lab
-
-Every module follows the same architectural standard.
-
----
-
-# Documentation
-
-Documentation is considered part of the product.
-
-Important directories:
-
-```text
-docs/
-
-architecture/
-engineering/
-development/
-roadmap/
-version-history/
-adr/
-```
-
----
-
-# Engineering Standards
-
-DSS Universe follows internal engineering standards.
-
-Topics include:
-
-- architecture;
-- module structure;
-- naming conventions;
-- dependency rules;
-- development workflow;
-- documentation standards.
-
-Consistency is preferred over cleverness.
-
----
-
-# Technology Stack
-
-Backend
-
-- NestJS
-- TypeScript
-- Prisma
-- PostgreSQL
-
-Frontend
-
-- Next.js
-- React
-- TypeScript
-
----
-
-# Development Workflow
-
-Every major feature follows the same lifecycle.
-
-```text
-Idea
-
-↓
-
-Architecture
-
-↓
-
-Documentation
-
-↓
-
-Implementation
-
-↓
-
-Testing
-
-↓
-
-Git
-
-↓
-
-Architecture Audit
-```
-
----
-
-# Long-Term Goals
-
-The platform is designed to support:
-
-- developer community;
-- technical articles;
-- forums;
-- learning platform;
-- CMS;
-- AI assistants;
-- plugin ecosystem;
-- maintenance tools;
-- future desktop and mobile applications.
-
-The architecture is intentionally designed for long-term growth.
-
----
-
-# Contributing
-
-The project is currently under active development.
-
-Internal engineering standards and architectural documents define how new functionality should be implemented.
-
----
-
-# License
-
-License information will be added before the first public release.
-
----
-
-# Final Note
-
-DSS Universe is not just another web application.
-
-It is an attempt to build a long-term software platform where architecture, documentation, and engineering quality are treated as first-class citizens.
+<p align="center">
+  <strong>DSS Universe</strong><br>
+  <em>Build. Inspire. Grow.</em><br>
+  <sub>The community behind great software.</sub>
+</p>
