@@ -175,7 +175,7 @@ export function NewsEditorWorkspace({
         </div>
       </header>
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_21rem]">
-        <main className="space-y-5 rounded-2xl border border-white/10 bg-slate-950/60 p-5 sm:p-7">
+        <section aria-label="Редагування матеріалу" className="space-y-5 rounded-2xl border border-white/10 bg-slate-950/60 p-5 sm:p-7">
           <div className="grid gap-4 md:grid-cols-2">
             <label className="space-y-2 text-sm">
               Заголовок
@@ -211,7 +211,7 @@ export function NewsEditorWorkspace({
             onDocumentChange={setDocument}
             ariaLabel="Редактор повної новини"
           />
-        </main>
+        </section>
         <aside className="space-y-5">
           <section className="space-y-4 rounded-2xl border border-white/10 bg-slate-950/60 p-5">
             <h2 className="font-semibold">Параметри</h2>
