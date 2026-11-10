@@ -148,7 +148,7 @@ function ModuleSidebar({ pathname, onNavigate }: { pathname: string; onNavigate?
   );
 }
 
-function Breadcrumbs({ pathname, pageTitle }: { pathname: string; pageTitle?: TrustedPageTitle }) {
+export function Breadcrumbs({ pathname, pageTitle }: { pathname: string; pageTitle?: TrustedPageTitle }) {
   const parts = breadcrumbsForPath(pathname, pageTitle);
   if (!parts.length) return null;
   return (
