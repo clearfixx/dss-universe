@@ -39,6 +39,7 @@ import {
   navigationCurrent,
   routeMatches,
   type ShellVariant,
+  type TrustedPageTitle,
 } from "./shell-navigation";
 
 function ModuleLinks({ pathname, hasSession, canAccessAdminDeck, onNavigate }: { pathname: string; hasSession: boolean; canAccessAdminDeck: boolean; onNavigate?: () => void }) {
@@ -147,8 +148,8 @@ function ModuleSidebar({ pathname, onNavigate }: { pathname: string; onNavigate?
   );
 }
 
-function Breadcrumbs({ pathname }: { pathname: string }) {
-  const parts = breadcrumbsForPath(pathname);
+function Breadcrumbs({ pathname, pageTitle }: { pathname: string; pageTitle?: TrustedPageTitle }) {
+  const parts = breadcrumbsForPath(pathname, pageTitle);
   if (!parts.length) return null;
   return (
     <nav aria-label="Навігаційний шлях" className="mb-5 text-xs text-slate-400">
@@ -175,7 +176,8 @@ export function DssApplicationShell({
   variant = DEFAULT_SHELL_VARIANT,
   toolbar,
   canAccessAdminDeck = false,
-}: PropsWithChildren<{ viewer: SessionViewer | null; variant?: ShellVariant; toolbar?: ReactNode; canAccessAdminDeck?: boolean }>) {
+  pageTitle,
+}: PropsWithChildren<{ viewer: SessionViewer | null; variant?: ShellVariant; toolbar?: ReactNode; canAccessAdminDeck?: boolean; pageTitle?: TrustedPageTitle }>) {
   const pathname = usePathname();
   // Keep drawer state local and route-scoped, without an effect that could
   // unexpectedly close the drawer after a user opens it.
@@ -268,7 +270,7 @@ export function DssApplicationShell({
       )}
       <div className={hasSidebar ? "lg:pl-60" : undefined}>
         <main id="main-content" className="mx-auto max-w-[1600px] p-4 sm:p-6 lg:p-8">
-          <Breadcrumbs pathname={pathname} />
+          <Breadcrumbs pathname={pathname} pageTitle={pageTitle} />
           {toolbar ? <div role="toolbar" aria-label="Дії сторінки" className="mb-5 flex flex-wrap items-center gap-2">{toolbar}</div> : null}
           {children}
         </main>
