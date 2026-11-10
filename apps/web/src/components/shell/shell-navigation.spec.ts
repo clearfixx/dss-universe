@@ -155,4 +155,35 @@ describe("application shell navigation contracts", () => {
     })).toEqual([{ href: "/news", label: "Новини DSS" }]);
   });
 
+  it("renders contextual profile and administrative settings without global launcher entries", () => {
+    const profilePath = "/profile/dss_user";
+    expect(breadcrumbsForPath(profilePath, {
+      pathname: profilePath,
+      title: "DSS Developer",
+    })).toEqual([{ href: profilePath, label: "DSS Developer" }]);
+    expect(breadcrumbsForPath(profilePath)).toEqual([
+      { href: profilePath, label: "Поточна сторінка" },
+    ]);
+    expect(breadcrumbsForPath("/settings/platform-appearance")).toEqual([
+      { href: "/settings/profile", label: "Налаштування" },
+      { href: "/settings/platform-appearance", label: "Оформлення платформи" },
+    ]);
+    expect(breadcrumbsForPath("/profile/")).toEqual([]);
+    expect(breadcrumbsForPath("/profile/a/unregistered")).toEqual([]);
+    expect(breadcrumbsForPath("/settings/unknown")).toEqual([]);
+    expect(currentModule(profilePath)).toBeNull();
+    expect(currentModule("/settings/platform-appearance")).toBeNull();
+    expect(MODULE_NAVIGATION.map((entry) => entry.href)).not.toContain(profilePath);
+    expect(MODULE_NAVIGATION.map((entry) => entry.href)).not.toContain(
+      "/settings/platform-appearance",
+    );
+  });
+
+  it("does not use route owners' stale titles across contextual paths", () => {
+    expect(breadcrumbsForPath("/profile/b", {
+      pathname: "/profile/a",
+      title: "Private profile display name",
+    })).toEqual([{ href: "/profile/b", label: "Поточна сторінка" }]);
+  });
+
 });
