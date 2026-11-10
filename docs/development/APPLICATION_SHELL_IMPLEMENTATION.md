@@ -183,3 +183,16 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - New route-level unit coverage exercises validated/unvalidated cases for both routes, including that a guest homepage makes no private feed query.
 - Session validation is request-scoped and reused by the Shell via React's `cache`; this avoids independently trusting cookie strings in each page. Proxy refresh behavior and existing IAM administration guards are unchanged.
 - No new UX or product module has been introduced; CI and security workflows must pass before merge.
+
+## Guest-only auth route loop prevention — 10 November 2026
+
+- Found a routing defect in the existing Next.js proxy: a locally parsed JWT `exp` field was treated as sufficient evidence to redirect visitors away from `/login` and `/register`. Revoked or forged-but-unexpired tokens could make the sign-in form inaccessible, even though the backend Viewer resolver rejected them.
+- Proxy now uses `exp` **only to decide whether a token refresh is necessary**. It does not redirect guest-only routes from unverified claims, including the successful token-refresh branch. Existing refresh-cookie handling, safe return-destination sanitization, protected path redirects, and server-only administrator permissions are preserved.
+- The login and registration server components use the request-scoped, backend-validated `loadSessionViewer()` before redirecting to sanitized local `returnTo` destinations. When viewer validation fails, the forms stay available. No frontend permission role is fabricated.
+- Unit coverage exercises unverified fresh tokens, refreshed tokens on guest routes, verified and unverified viewer states, and an attempted external return destination.
+- UI design, route scope, and permissions are unchanged. This is a routing-security and account-recovery reliability fix.
+
+### CI execution caveat
+
+- Quality Gate run `42791644872` (attempt 2) failed with all three jobs showing **zero executed steps** and approximately three seconds of job runtime. The Storage workflows show the same symptom. This is not sufficient evidence to attribute failure to application source. GitHub Actions execution/billing/runners requires checking by the repository administrator.
+- Until GitHub runners actually execute lint, unit tests, Playwright, and build on the current branch head, this package remains **unverified** and the App Shell PR stays draft/unmerged.
