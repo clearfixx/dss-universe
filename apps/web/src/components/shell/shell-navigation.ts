@@ -128,7 +128,28 @@ export function currentSidebarHref(pathname: string): string | null {
   return candidates.sort((a, b) => b.href.length - a.href.length)[0]?.href ?? null;
 }
 
-export function breadcrumbsForPath(pathname: string): readonly { href: string; label: string }[] {
+/**
+ * Route-owned titles may only be used for the exact path that supplied them.
+ * A previous page's title must never survive an App Router navigation.
+ */
+export type TrustedPageTitle = {
+  pathname: string;
+  title: string;
+};
+
+export function trustedPageTitle(
+  pathname: string,
+  page: TrustedPageTitle | undefined,
+): string | null {
+  if (!page || page.pathname !== pathname) return null;
+  const title = page.title.trim();
+  return title.length > 0 ? title : null;
+}
+
+export function breadcrumbsForPath(
+  pathname: string,
+  page?: TrustedPageTitle,
+): readonly { href: string; label: string }[] {
   const activeModule = currentModule(pathname);
   if (!activeModule) return [];
 
@@ -137,10 +158,13 @@ export function breadcrumbsForPath(pathname: string): readonly { href: string; l
     { href: activeModule.href, label: activeModule.label },
     ...(child ? [{ href: child.href, label: child.label }] : []),
   ];
-  // No title is inferred from dynamic URL segments; the page can provide
-  // trusted metadata in a later explicit route contract.
+  // Never infer display text from untrusted URL segments. Route owners
+  // may supply a verified title tied to the exact pathname.
+  const title = trustedPageTitle(pathname, page);
   if (parts[parts.length - 1]?.href !== pathname) {
-    parts.push({ href: pathname, label: "Поточна сторінка" });
+    parts.push({ href: pathname, label: title ?? "Поточна сторінка" });
+  } else if (title) {
+    parts[parts.length - 1] = { href: pathname, label: title };
   }
   return parts;
 }
