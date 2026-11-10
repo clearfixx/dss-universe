@@ -249,6 +249,21 @@ enum NewsPinScope {
   CATEGORY
 }
 
+enum ShellVariant {
+  MODULE_LAUNCHER
+  HORIZONTAL_NAVIGATION
+  HYBRID
+}
+
+model PlatformAppearanceSettings {
+  id                 String       @id
+  activeShellVariant ShellVariant @default(MODULE_LAUNCHER)
+  updatedById        String?
+  updatedAt          DateTime     @default(now()) @updatedAt
+
+  @@map("platform_appearance_settings")
+}
+
 model User {
   id                  String     @id @default(uuid())
   email               String     @unique

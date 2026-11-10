@@ -102,6 +102,69 @@ describe("session server actions", () => {
     expect(String(request?.body)).toContain('"twoFactorCode":"123456"');
   });
 
+
+  it("never persists a partial successful GraphQL authentication response", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      Response.json({
+        data: {
+          login: {
+            user: { id: "user-1" },
+            tokens: { accessToken: "access", refreshToken: "refresh" },
+          },
+        },
+        errors: [{ message: "Partial authentication failure" }],
+      }),
+    );
+    const form = new FormData();
+    form.set("email", "dev@dss.test");
+    form.set("password", "strong-pass");
+    await expect(loginAction(initialAuthFormState, form)).resolves.toMatchObject({
+      status: "error",
+    });
+    expect(mocks.cookieSet).not.toHaveBeenCalled();
+    expect(mocks.redirect).not.toHaveBeenCalled();
+  });
+
+  it("rejects incomplete token pairs instead of setting empty session cookies", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      Response.json({
+        data: {
+          login: {
+            user: { id: "user-1" },
+            tokens: { accessToken: "access", refreshToken: "" },
+          },
+        },
+      }),
+    );
+    const form = new FormData();
+    form.set("email", "dev@dss.test");
+    form.set("password", "strong-pass");
+    await expect(loginAction(initialAuthFormState, form)).resolves.toMatchObject({
+      status: "error",
+    });
+    expect(mocks.cookieSet).not.toHaveBeenCalled();
+  });
+
+  it("sets a finite timeout on login API requests", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      Response.json({
+        data: {
+          login: {
+            user: { id: "user-1" },
+            tokens: { accessToken: "access", refreshToken: "refresh" },
+          },
+        },
+      }),
+    );
+    const form = new FormData();
+    form.set("email", "dev@dss.test");
+    form.set("password", "strong-pass");
+    await expect(loginAction(initialAuthFormState, form)).rejects.toThrow(
+      "REDIRECT:/",
+    );
+    const options = fetchMock.mock.calls[0]?.[1];
+    expect(options?.signal).toBeInstanceOf(AbortSignal);
+  });
   it("revokes the API session, clears every cookie and returns to login", async () => {
     mocks.cookieGet.mockReturnValue({ value: "access" });
     const fetchMock = vi

@@ -215,6 +215,11 @@ export const PERMISSIONS = {
     description: 'Allows managing permission assignments.',
   },
 
+  AdminCommandDeckAccess: {
+    key: 'admin.command-deck.access',
+    label: 'Access administrative Command Deck',
+    description: 'Allows opening the protected administrator dashboard.',
+  },
   SystemSettingsRead: {
     key: 'system.settings.read',
     label: 'Read system settings',

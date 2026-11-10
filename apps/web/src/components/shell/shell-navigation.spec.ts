@@ -1,0 +1,189 @@
+import { describe, expect, it } from "vitest";
+
+import { isProtectedPath } from "@/features/auth/session-contract";
+
+import {
+  DEFAULT_SHELL_VARIANT,
+  MODULE_NAVIGATION,
+  SHELL_VARIANTS,
+  breadcrumbsForPath,
+  currentModule,
+  currentSidebarHref,
+  isShellVariant,
+  moduleSidebarItems,
+  navigationCurrent,
+  routeMatches,
+  trustedPageTitle,
+  visibleModules,
+} from "./shell-navigation";
+
+describe("application shell navigation contracts", () => {
+  it("only accepts supported shell variants", () => {
+    expect(SHELL_VARIANTS).toEqual([
+      "MODULE_LAUNCHER",
+      "HORIZONTAL_NAVIGATION",
+      "HYBRID",
+    ]);
+    expect(isShellVariant(DEFAULT_SHELL_VARIANT)).toBe(true);
+    expect(isShellVariant("CUSTOM")).toBe(false);
+    expect(isShellVariant({ variant: "HYBRID" })).toBe(false);
+  });
+
+  it("keeps module routes unique and identifies nested routes", () => {
+    const hrefs = MODULE_NAVIGATION.map((item) => item.href);
+    expect(new Set(hrefs).size).toBe(hrefs.length);
+    expect(hrefs).not.toContain("/research");
+    expect(hrefs).not.toContain("/academy");
+    expect(currentModule("/newsroom/new")?.href).toBe("/newsroom");
+    expect(currentModule("/news/en/article")?.href).toBe("/news");
+    expect(currentModule("/unknown")).toBeNull();
+    expect(routeMatches("/newsroom", "/news")).toBe(false);
+  });
+
+  it("distinguishes the current page from its ancestor module", () => {
+    expect(navigationCurrent("/news", "/news")).toBe("page");
+    expect(navigationCurrent("/news/en/article", "/news")).toBe("location");
+    expect(navigationCurrent("/newsroom/new", "/newsroom")).toBe("location");
+    expect(navigationCurrent("/newsroom", "/news")).toBeUndefined();
+    expect(navigationCurrent("/unknown", "/news")).toBeUndefined();
+  });
+
+  it("builds contextual, not global, sidebar navigation", () => {
+    expect(moduleSidebarItems("/newsroom/new").map((item) => item.href)).toEqual([
+      "/newsroom",
+      "/newsroom/new",
+    ]);
+    expect(moduleSidebarItems("/newsroom").map((item) => item.href)).toEqual([
+      "/newsroom",
+      "/newsroom/new",
+    ]);
+    expect(moduleSidebarItems("/media")).toHaveLength(1);
+    expect(moduleSidebarItems("/unknown")).toEqual([]);
+  });
+
+  it("selects one deepest current Sidebar destination", () => {
+    expect(currentSidebarHref("/newsroom")).toBe("/newsroom");
+    expect(currentSidebarHref("/newsroom/new")).toBe("/newsroom/new");
+    expect(currentSidebarHref("/newsroom/new/preview")).toBe("/newsroom/new");
+    expect(currentSidebarHref("/news/en/article")).toBe("/news");
+    expect(currentSidebarHref("/unknown")).toBeNull();
+  });
+
+  it("keeps private destinations out of guest navigation", () => {
+    const guestRoutes = visibleModules(false).map((entry) => entry.href);
+    expect(guestRoutes).toContain("/news");
+    expect(guestRoutes).not.toContain("/command-deck");
+    expect(guestRoutes).not.toContain("/newsroom");
+    expect(guestRoutes).not.toContain("/members");
+    expect(guestRoutes).not.toContain("/media");
+    expect(guestRoutes).not.toContain("/settings/profile");
+    expect(visibleModules(true).map((entry) => entry.href)).not.toContain(
+      "/command-deck",
+    );
+    expect(visibleModules(true, true).map((entry) => entry.href)).toContain(
+      "/command-deck",
+    );
+    expect(visibleModules(true, true)).toHaveLength(MODULE_NAVIGATION.length);
+  });
+
+  it("never advertises a session-protected module to guests", () => {
+    const guestRoutes = visibleModules(false).map((item) => item.href);
+    for (const item of MODULE_NAVIGATION) {
+      if (isProtectedPath(item.href)) {
+        expect(guestRoutes).not.toContain(item.href);
+      }
+    }
+    expect(guestRoutes).toEqual(["/news"]);
+    expect(visibleModules(true).map((item) => item.href)).toEqual(
+      MODULE_NAVIGATION.filter((item) => !item.requiresAdminDeck).map(
+        (item) => item.href,
+      ),
+    );
+  });
+
+  it("finishes dynamic breadcrumb trails without inventing route titles", () => {
+    expect(breadcrumbsForPath("/news/en/article-slug")).toEqual([
+      { href: "/news", label: "Новини" },
+      { href: "/news/en/article-slug", label: "Поточна сторінка" },
+    ]);
+    expect(breadcrumbsForPath("/newsroom/new/preview")).toEqual([
+      { href: "/newsroom", label: "Newsroom" },
+      { href: "/newsroom/new", label: "Нова стаття" },
+      { href: "/newsroom/new/preview", label: "Поточна сторінка" },
+    ]);
+    expect(breadcrumbsForPath("/unknown")).toEqual([]);
+    expect(breadcrumbsForPath("/news")).toEqual([
+      { href: "/news", label: "Новини" },
+    ]);
+  });
+
+  it("uses declared labels for known breadcrumbs", () => {
+    expect(breadcrumbsForPath("/newsroom/new")).toEqual([
+      { href: "/newsroom", label: "Newsroom" },
+      { href: "/newsroom/new", label: "Нова стаття" },
+    ]);
+  });
+  it("uses route-owned titles only for the exact active path", () => {
+    const page = { pathname: "/news/uk/typed-title", title: "  Перевірена назва статті  " };
+    expect(trustedPageTitle(page.pathname, page)).toBe("Перевірена назва статті");
+    expect(breadcrumbsForPath(page.pathname, page)).toEqual([
+      { href: "/news", label: "Новини" },
+      { href: page.pathname, label: "Перевірена назва статті" },
+    ]);
+    // Navigating away must not reuse stale server metadata.
+    expect(breadcrumbsForPath("/news/uk/other", page).at(-1)?.label).toBe(
+      "Поточна сторінка",
+    );
+    expect(trustedPageTitle("/news/uk/other", page)).toBeNull();
+  });
+
+  it("does not infer titles from URLs or render blank route titles", () => {
+    expect(breadcrumbsForPath("/news/uk/%3Cscript%3E").at(-1)?.label).toBe(
+      "Поточна сторінка",
+    );
+    expect(breadcrumbsForPath("/news/uk/article", {
+      pathname: "/news/uk/article",
+      title: "   ",
+    }).at(-1)?.label).toBe("Поточна сторінка");
+    expect(breadcrumbsForPath("/newsroom/123", {
+      pathname: "/newsroom/123",
+      title: "Редагування матеріалу",
+    }).at(-1)?.label).toBe("Редагування матеріалу");
+    expect(breadcrumbsForPath("/news", {
+      pathname: "/news",
+      title: "Новини DSS",
+    })).toEqual([{ href: "/news", label: "Новини DSS" }]);
+  });
+
+  it("renders contextual profile and administrative settings without global launcher entries", () => {
+    const profilePath = "/profile/dss_user";
+    expect(breadcrumbsForPath(profilePath, {
+      pathname: profilePath,
+      title: "DSS Developer",
+    })).toEqual([{ href: profilePath, label: "DSS Developer" }]);
+    expect(breadcrumbsForPath(profilePath)).toEqual([
+      { href: profilePath, label: "Поточна сторінка" },
+    ]);
+    expect(breadcrumbsForPath("/settings/platform-appearance")).toEqual([
+      { href: "/settings/profile", label: "Налаштування" },
+      { href: "/settings/platform-appearance", label: "Оформлення платформи" },
+    ]);
+    expect(breadcrumbsForPath("/profile/")).toEqual([]);
+    expect(breadcrumbsForPath("/profile/a/unregistered")).toEqual([]);
+    expect(breadcrumbsForPath("/settings/unknown")).toEqual([]);
+    expect(currentModule(profilePath)).toBeNull();
+    expect(currentModule("/settings/platform-appearance")).toBeNull();
+    expect(MODULE_NAVIGATION.map((entry) => entry.href)).not.toContain(profilePath);
+    expect(MODULE_NAVIGATION.map((entry) => entry.href)).not.toContain(
+      "/settings/platform-appearance",
+    );
+  });
+
+  it("does not use route owners' stale titles across contextual paths", () => {
+    expect(breadcrumbsForPath("/profile/b", {
+      pathname: "/profile/a",
+      title: "Private profile display name",
+    })).toEqual([{ href: "/profile/b", label: "Поточна сторінка" }]);
+  });
+
+});

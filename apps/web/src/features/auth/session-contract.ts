@@ -34,7 +34,8 @@ export function isGuestOnlyPath(pathname: string): boolean {
 
 export function safeReturnTo(value: string | null | undefined): string {
   if (!value || value.length > 2_048 || !value.startsWith("/")) return "/";
-  if (value.startsWith("//") || value.includes("\\")) return "/";
+  if (value.startsWith("//") || /[\\\u0000-\u001f\u007f]/u.test(value))
+    return "/";
 
   try {
     const parsed = new URL(value, "https://dss.local");

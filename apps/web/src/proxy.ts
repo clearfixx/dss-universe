@@ -29,7 +29,6 @@ import {
   ACCESS_COOKIE,
   ACCESS_TOKEN_MAX_AGE,
   isAccessTokenFresh,
-  isGuestOnlyPath,
   isProtectedPath,
   PERSISTENT_SESSION_COOKIE,
   REFRESH_COOKIE,
@@ -58,7 +57,6 @@ const REFRESH_MUTATION = `
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const protectedRoute = isProtectedPath(pathname);
-  const guestOnlyRoute = isGuestOnlyPath(pathname);
   const accessToken = request.cookies.get(ACCESS_COOKIE)?.value;
   const hasSessionCookie = Boolean(
     accessToken ||
@@ -67,26 +65,18 @@ export async function proxy(request: NextRequest) {
   );
 
   if (isAccessTokenFresh(accessToken)) {
-    return guestOnlyRoute
-      ? NextResponse.redirect(
-          new URL(
-            safeReturnTo(request.nextUrl.searchParams.get("returnTo")),
-            request.url,
-          ),
-        )
-      : NextResponse.next();
+    // A JWT exp claim is only a routing hint, never proof of identity.
+    // Guest-only pages validate the viewer server-side before redirecting.
+    return NextResponse.next();
   }
 
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
   if (refreshToken) {
     const refresh = await refreshSession(refreshToken);
     if (refresh.status === "refreshed") {
-      const destination = safeReturnTo(
-        request.nextUrl.searchParams.get("returnTo"),
-      );
-      const response = guestOnlyRoute
-        ? NextResponse.redirect(new URL(destination, request.url))
-        : nextWithSession(request, refresh.session);
+      // Even a successful token refresh is not an instruction to redirect
+      // before the login/register route validates the current viewer.
+      const response = nextWithSession(request, refresh.session);
       writeSessionCookies(
         response,
         refresh.session,
@@ -134,14 +124,31 @@ async function refreshSession(refreshToken: string): Promise<RefreshResult> {
       },
     );
 
-    if (response.status >= 500) return { status: "unavailable" };
+    // A rate limit, timeout, or upstream failure is not a rejected session.
+    // Preserve the refresh credential so a later request can retry.
+    if (response.status === 408 || response.status === 429 || response.status >= 500) {
+      return { status: "unavailable" };
+    }
+    // Invalid/expired refresh credentials are generally 4xx. Do not attempt
+    // to parse their body: the API may legitimately respond with plain text.
+    if (!response.ok) return { status: "rejected" };
+
     const body = (await response.json()) as {
       data?: { refreshTokens?: { tokens?: RefreshedSession } };
       errors?: unknown[];
     };
+    if (body.errors?.length) return { status: "rejected" };
+
     const session = body.data?.refreshTokens?.tokens;
-    if (!response.ok || body.errors?.length || !session) {
-      return { status: "rejected" };
+    if (
+      typeof session?.accessToken !== "string" ||
+      !session.accessToken.trim() ||
+      typeof session.refreshToken !== "string" ||
+      !session.refreshToken.trim()
+    ) {
+      // Unexpected successful API response: don't replace valid credentials
+      // with undefined or empty tokens, and don't destroy a recoverable session.
+      return { status: "unavailable" };
     }
     return { status: "refreshed", session };
   } catch {

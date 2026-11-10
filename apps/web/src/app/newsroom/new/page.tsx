@@ -1,11 +1,12 @@
-import { cookies } from "next/headers";
-
 import { DssApplicationShell } from "@/components/shell/session-application-shell";
 import { ErrorState } from "@/components/states/async-states";
 import { NewsEditorWorkspace } from "@/features/newsroom/news-editor-workspace";
+import { loadSessionViewer } from "@/features/auth/session-data";
 
 export default async function NewNewsPage() {
-  const authenticated = Boolean((await cookies()).get("dss_access_token"));
+  // A present cookie does not establish a valid session. The API remains
+  // the authority for draft-creation permissions.
+  const authenticated = Boolean(await loadSessionViewer());
   return (
     <DssApplicationShell>
       {authenticated ? (
