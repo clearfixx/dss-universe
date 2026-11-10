@@ -103,4 +103,24 @@ describe("breadcrumb rendering", () => {
       pathname: "/unregistered/route",
     }))).toBe("");
   });
+  it("renders profile and protected settings breadcrumbs with semantic current page", () => {
+    const profile = renderToStaticMarkup(
+      createElement(Breadcrumbs, {
+        pathname: "/profile/developer",
+        pageTitle: { pathname: "/profile/developer", title: "Developer Name" },
+      }),
+    );
+    expect(profile).toContain("Developer Name");
+    expect(profile).toContain('aria-current="page"');
+    expect(profile).not.toContain('href="/profile/developer"');
+
+    const settings = renderToStaticMarkup(
+      createElement(Breadcrumbs, { pathname: "/settings/platform-appearance" }),
+    );
+    expect(settings).toContain('href="/settings/profile"');
+    expect(settings).toContain("Оформлення платформи");
+    expect(settings).toContain('aria-current="page"');
+    expect(settings).not.toContain('href="/settings/platform-appearance"');
+  });
+
 });
