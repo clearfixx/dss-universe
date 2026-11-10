@@ -83,7 +83,7 @@ export default async function FullNewsRoute({ params }: Props) {
   };
 
   return (
-    <DssApplicationShell>
+    <DssApplicationShell pageTitle={{ pathname: articlePath, title: article.title }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
