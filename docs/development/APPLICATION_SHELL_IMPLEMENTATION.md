@@ -206,3 +206,11 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - Regression tests cover rate limiting, plaintext 401 responses, incomplete refresh responses, GraphQL partial success, invalid token pairs, and request timeout configuration.
 - These changes are isolated to the web authentication boundary. They do not alter backend token issuance, revoke semantics, IAM permissions, or product UI.
 - CI remains blocked before job steps execute on the private repository; no green status is claimed for these changes.
+
+## IAM request minimization and fail-closed server rendering — 10 November 2026
+
+- The server Application Shell now loads the backend-confirmed viewer and public appearance independently, then checks Command Deck IAM only if a viewer is present. The admin grant is therefore always false in guest/unverified sessions, even if an unrelated IAM response would have been available.
+- Profile settings first establishes the viewer and loads the authenticated settings only for confirmed sessions. The owner-only appearance check is requested only after settings are successfully loaded; the backend appearance resolver still independently enforces the required role and permission.
+- The Command Deck and platform appearance routes continue to enforce their own backend-backed guards before rendering protected content. Hiding controls and links is strictly a presentation layer, not access control.
+- Server composition tests cover guest, ordinary and approved admin Shell states; unauthorized settings requests; Command Deck notFound on denied access; and the appearance route's deny-before-render behavior.
+- No new role, API field, UI module, visual asset, or navigation destination has been introduced. CI must execute successfully before this batch can be called verified.

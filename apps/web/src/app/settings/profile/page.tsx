@@ -18,13 +18,19 @@ import { DssApplicationShell } from "@/components/shell/session-application-shel
 import { loadAdminShellVariant } from "@/features/appearance/appearance-data";
 import { ErrorState } from "@/components/states/async-states";
 import { loadProfileSettings } from "@/features/profile/profile-data";
+import { loadSessionViewer } from "@/features/auth/session-data";
 import { ProfileSettingsView } from "@/features/settings/profile-settings-view";
 
 export default async function ProfileSettingsPage() {
-  const [settings, canManageAppearance] = await Promise.all([
-    loadProfileSettings().catch(() => null),
-    loadAdminShellVariant(),
-  ]);
+  // Do not request administrative appearance data for guests or invalid
+  // sessions. The actual appearance resolver still enforces IAM server-side.
+  const viewer = await loadSessionViewer();
+  const settings = viewer
+    ? await loadProfileSettings().catch(() => null)
+    : null;
+  const canManageAppearance = settings
+    ? await loadAdminShellVariant()
+    : null;
 
   if (!settings) {
     return (
