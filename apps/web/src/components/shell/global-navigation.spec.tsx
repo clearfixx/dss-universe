@@ -15,7 +15,7 @@ vi.mock("next/link", () => ({
   }) => createElement("a", { href, ...props }, children),
 }));
 
-import { GlobalNavigation } from "./dss-application-shell";
+import { Breadcrumbs, GlobalNavigation } from "./dss-application-shell";
 
 describe("global navigation accessibility", () => {
   it("names icon-only links at intermediate desktop widths", () => {
@@ -68,5 +68,39 @@ describe("global navigation accessibility", () => {
     expect(html).toContain('aria-label="Учасники"');
     expect(html).toContain('aria-current="page"');
     expect(html).not.toContain('href="/command-deck"');
+  });
+});
+
+
+describe("breadcrumb rendering", () => {
+  it("renders a verified dynamic title as the current page, not a fabricated link", () => {
+    const html = renderToStaticMarkup(
+      createElement(Breadcrumbs, {
+        pathname: "/news/uk/article",
+        pageTitle: { pathname: "/news/uk/article", title: "Назва новини" },
+      }),
+    );
+    expect(html).toContain('aria-label="Навігаційний шлях"');
+    expect(html).toContain('aria-current="page"');
+    expect(html).toContain("Назва новини");
+    expect(html).toContain('href="/news"');
+    expect(html).not.toContain('href="/news/uk/article"');
+  });
+
+  it("ignores stale route metadata after a navigation", () => {
+    const html = renderToStaticMarkup(
+      createElement(Breadcrumbs, {
+        pathname: "/news/uk/next",
+        pageTitle: { pathname: "/news/uk/previous", title: "Previous article" },
+      }),
+    );
+    expect(html).toContain("Поточна сторінка");
+    expect(html).not.toContain("Previous article");
+  });
+
+  it("omits breadcrumbs for paths without registered shell metadata", () => {
+    expect(renderToStaticMarkup(createElement(Breadcrumbs, {
+      pathname: "/unregistered/route",
+    }))).toBe("");
   });
 });
