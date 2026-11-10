@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 import { AuthGateway } from "@/features/auth";
 import { safeReturnTo } from "@/features/auth/session-contract";
+import { loadSessionViewer } from "@/features/auth/session-data";
 
 export const metadata: Metadata = {
   title: "Create account · DSS Universe",
@@ -17,5 +19,7 @@ export default async function RegisterPage({
   searchParams,
 }: RegisterPageProps) {
   const { returnTo } = await searchParams;
-  return <AuthGateway mode="register" returnTo={safeReturnTo(returnTo)} />;
+  const destination = safeReturnTo(returnTo);
+  if (await loadSessionViewer()) redirect(destination);
+  return <AuthGateway mode="register" returnTo={destination} />;
 }
