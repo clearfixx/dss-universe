@@ -174,3 +174,12 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - Removed a nested `<main>` from the news editor workspace. The Shell owns the sole main document landmark; the editor is now a labelled section.
 - Unit and static-markup tests cover contextual paths, stale metadata, unregistered paths, one current-page breadcrumb, and the absence of hidden context destinations from global module navigation.
 - CI verification for the latest head is required before merge. The final design and logo remain separate owner-approval gates.
+
+## Validated-session route entry — 10 November 2026
+
+- The home route no longer assumes `dss_access_token` cookie presence means an authenticated session. It awaits the existing server-only, request-cached `loadSessionViewer()`, which resolves identity through the backend Viewer GraphQL query and returns `null` on failure.
+- The personal activity feed is queried only when an authenticated viewer has been confirmed. Missing, invalid, revoked, or unavailable sessions render the guest landing rather than the personalized dashboard.
+- `/newsroom/new` also requires the validated viewer before mounting the new-draft workspace. Actual draft authorization and all mutations remain enforced by the backend (no frontend role assumptions added).
+- New route-level unit coverage exercises validated/unvalidated cases for both routes, including that a guest homepage makes no private feed query.
+- Session validation is request-scoped and reused by the Shell via React's `cache`; this avoids independently trusting cookie strings in each page. Proxy refresh behavior and existing IAM administration guards are unchanged.
+- No new UX or product module has been introduced; CI and security workflows must pass before merge.
