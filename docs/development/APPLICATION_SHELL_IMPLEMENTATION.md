@@ -155,3 +155,12 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - Both the mobile drawer trigger and the desktop module launcher now expose `aria-haspopup="dialog"` and `aria-expanded` derived from the existing local Shell drawer state. This is an accessibility-only change; no new store or navigation behavior was introduced.
 - Added Playwright coverage for expansion, Escape dismissal, and reopening on mobile, plus render regressions for the desktop launcher in collapsed and expanded states.
 - The approved production logo asset and final visual parity are still pending; this package does not invent either. Require fresh CI verification before treating the package as completed.
+
+## Route-owned breadcrumb titles — 10 November 2026
+
+- The shared Shell accepts optional `TrustedPageTitle` metadata from a server-rendered route owner; the data includes the exact pathname plus a display title. The client never derives text from URL slugs.
+- The metadata is applied **only when its pathname equals the active `usePathname()` value**. This prevents a stale title from a previous route being shown during client navigation. Empty or whitespace-only titles fall back to the existing neutral terminal label.
+- Published news supplies its verified article title after `loadFullNews`; the editorial article route supplies the title only when `loadEditorialArticle` succeeds. Error states do not reuse or invent titles.
+- The existing Shell navigation registry remains a presentation contract. Server IAM and editorial read authorization are unchanged; breadcrumb text is never an authorization input.
+- Unit and server-markup regressions cover exact-path matching, stale metadata, blank titles, non-inferred slugs, semantic current-page markup, and unregistered paths.
+- This is navigation architecture and accessibility work only. Mockup parity, final logo, and owner approval are still pending. Do not report lint/typecheck/unit tests/build as verified until CI completes on the current branch head.
