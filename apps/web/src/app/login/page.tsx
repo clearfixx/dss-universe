@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 import { AuthGateway } from "@/features/auth";
 import { safeReturnTo } from "@/features/auth/session-contract";
+import { loadSessionViewer } from "@/features/auth/session-data";
 
 export const metadata: Metadata = {
   title: "Sign in · DSS Universe",
@@ -19,6 +21,10 @@ type LoginPageProps = {
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
+  const destination = safeReturnTo(params.returnTo);
+  // The proxy only evaluates expiry hints; the server must confirm identity.
+  // Explicit post-logout/invalid-session notices remain accessible.
+  if (await loadSessionViewer()) redirect(destination);
   const notice =
     params.loggedOut === "1"
       ? "You have been signed out safely."
@@ -33,7 +39,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     <AuthGateway
       mode="login"
       notice={notice}
-      returnTo={safeReturnTo(params.returnTo)}
+      returnTo={destination}
     />
   );
 }
