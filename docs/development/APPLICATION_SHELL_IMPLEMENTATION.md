@@ -164,3 +164,13 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - The existing Shell navigation registry remains a presentation contract. Server IAM and editorial read authorization are unchanged; breadcrumb text is never an authorization input.
 - Unit and server-markup regressions cover exact-path matching, stale metadata, blank titles, non-inferred slugs, semantic current-page markup, and unregistered paths.
 - This is navigation architecture and accessibility work only. Mockup parity, final logo, and owner approval are still pending. Do not report lint/typecheck/unit tests/build as verified until CI completes on the current branch head.
+
+## Contextual routes and semantic landmarks — 10 November 2026
+
+- The root Shell registry remains the sole source for visible global module links. Existing, separately owned profile (`/profile/[username]`) and administrator-guarded appearance (`/settings/platform-appearance`) routes now receive breadcrumbs without being advertised as standalone modules.
+- The profile route supplies its actual server-loaded public display name (falling back to username) using the exact profile pathname. Unknown or inaccessible profiles never publish profile metadata to the Shell.
+- The appearance route supplies its own trusted title only **after** its existing server-side admin guard succeeds. The contextual breadcrumb links to the real profile settings page but does not reveal any new administrative destination in global navigation.
+- Context paths are exact (appearance) or a single dynamic segment (profile). No routes, feature flags, permissions, or privileges were added.
+- Removed a nested `<main>` from the news editor workspace. The Shell owns the sole main document landmark; the editor is now a labelled section.
+- Unit and static-markup tests cover contextual paths, stale metadata, unregistered paths, one current-page breadcrumb, and the absence of hidden context destinations from global module navigation.
+- CI verification for the latest head is required before merge. The final design and logo remain separate owner-approval gates.
