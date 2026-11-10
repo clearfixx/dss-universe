@@ -146,18 +146,46 @@ export function trustedPageTitle(
   return title.length > 0 ? title : null;
 }
 
+/**
+ * Routes with an existing owner but no place in the global module launcher.
+ * No authorization decisions are derived from this presentation metadata.
+ */
+export function contextualBreadcrumbs(
+  pathname: string,
+): readonly { href: string; label: string }[] | null {
+  if (pathname === "/settings/platform-appearance") {
+    return [
+      { href: "/settings/profile", label: "Налаштування" },
+      { href: pathname, label: "Оформлення платформи" },
+    ];
+  }
+  if (pathname.startsWith("/profile/") && pathname !== "/profile/") {
+    // The actual display name is supplied by the profile route owner,
+    // never parsed or decoded from user-controlled URL segments.
+    return [{ href: pathname, label: "Поточна сторінка" }];
+  }
+  return null;
+}
+
 export function breadcrumbsForPath(
   pathname: string,
   page?: TrustedPageTitle,
 ): readonly { href: string; label: string }[] {
   const activeModule = currentModule(pathname);
-  if (!activeModule) return [];
+  // Context routes have breadcrumbs but are not global module entries.
+  // This keeps personal profiles and admin settings out of launchers.
+  const context = contextualBreadcrumbs(pathname);
+  if (!activeModule && !context) return [];
 
-  const child = activeModule.children.find((item) => routeMatches(pathname, item.href));
-  const parts = [
-    { href: activeModule.href, label: activeModule.label },
-    ...(child ? [{ href: child.href, label: child.label }] : []),
-  ];
+  const child = activeModule?.children.find((item) =>
+    routeMatches(pathname, item.href),
+  );
+  const parts: { href: string; label: string }[] = activeModule
+    ? [
+        { href: activeModule.href, label: activeModule.label },
+        ...(child ? [{ href: child.href, label: child.label }] : []),
+      ]
+    : [...context!];
   // Never infer display text from untrusted URL segments. Route owners
   // may supply a verified title tied to the exact pathname.
   const title = trustedPageTitle(pathname, page);
