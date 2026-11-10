@@ -19,7 +19,7 @@
   <img alt="Primary language: TypeScript" src="https://img.shields.io/badge/language-TypeScript-3178c6?style=flat-square&logo=typescript&logoColor=white">
   <img alt="Platform: Web" src="https://img.shields.io/badge/platform-Web-2563eb?style=flat-square">
   <img alt="Documentation language: English" src="https://img.shields.io/badge/docs-English-334155?style=flat-square">
-  <img alt="License: not yet assigned" src="https://img.shields.io/badge/license-not_yet_assigned-52525b?style=flat-square">
+  <a href="LICENSE"><img alt="License: restricted source access" src="https://img.shields.io/badge/license-restricted_source_access-52525b?style=flat-square"></a>
 </p>
 
 <p align="center">
@@ -161,7 +161,7 @@ The project is being developed against documented engineering standards. Before 
 
 ## License
 
-**No project license has been assigned yet.** Public repository visibility does **not** mean the code is licensed for unrestricted reuse, modification, or redistribution. Licensing terms will be published explicitly when decided.
+**Restricted Source Access — All Rights Reserved.** The [LICENSE](LICENSE) allows inspection and educational study by authorized repository visitors but grants no general rights to copy, modify, run, redistribute, or commercially exploit protected Project materials. Applicable legal exceptions, GitHub permissions, and third-party licenses remain effective. DSS Universe is maintained as a private repository.
 
 ---
 
