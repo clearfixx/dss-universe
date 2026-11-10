@@ -124,14 +124,31 @@ async function refreshSession(refreshToken: string): Promise<RefreshResult> {
       },
     );
 
-    if (response.status >= 500) return { status: "unavailable" };
+    // A rate limit, timeout, or upstream failure is not a rejected session.
+    // Preserve the refresh credential so a later request can retry.
+    if (response.status === 408 || response.status === 429 || response.status >= 500) {
+      return { status: "unavailable" };
+    }
+    // Invalid/expired refresh credentials are generally 4xx. Do not attempt
+    // to parse their body: the API may legitimately respond with plain text.
+    if (!response.ok) return { status: "rejected" };
+
     const body = (await response.json()) as {
       data?: { refreshTokens?: { tokens?: RefreshedSession } };
       errors?: unknown[];
     };
+    if (body.errors?.length) return { status: "rejected" };
+
     const session = body.data?.refreshTokens?.tokens;
-    if (!response.ok || body.errors?.length || !session) {
-      return { status: "rejected" };
+    if (
+      typeof session?.accessToken !== "string" ||
+      !session.accessToken.trim() ||
+      typeof session.refreshToken !== "string" ||
+      !session.refreshToken.trim()
+    ) {
+      // Unexpected successful API response: don't replace valid credentials
+      // with undefined or empty tokens, and don't destroy a recoverable session.
+      return { status: "unavailable" };
     }
     return { status: "refreshed", session };
   } catch {

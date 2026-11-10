@@ -196,3 +196,13 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 
 - Quality Gate run `42791644872` (attempt 2) failed with all three jobs showing **zero executed steps** and approximately three seconds of job runtime. The Storage workflows show the same symptom. This is not sufficient evidence to attribute failure to application source. GitHub Actions execution/billing/runners requires checking by the repository administrator.
 - Until GitHub runners actually execute lint, unit tests, Playwright, and build on the current branch head, this package remains **unverified** and the App Shell PR stays draft/unmerged.
+
+## Authentication response integrity and retry behavior — 10 November 2026
+
+- The session proxy now distinguishes terminal credential rejection (HTTP 4xx except 408/429, and explicit GraphQL refresh errors) from retryable authorization-service problems (408, 429, 5xx, network failure, malformed successful token response). This prevents an upstream rate limit from destroying the user's refresh credential.
+- Successful refresh results require **both** non-empty string tokens. A malformed 200 response is treated as temporarily unavailable instead of writing empty cookies.
+- Login and registration share an authenticated response validator: the response must be successful, have no GraphQL errors, contain a non-empty user id, and include both non-empty token strings. Partial GraphQL successes must never create local sessions.
+- Authentication requests now use a bounded 15-second timeout.
+- Regression tests cover rate limiting, plaintext 401 responses, incomplete refresh responses, GraphQL partial success, invalid token pairs, and request timeout configuration.
+- These changes are isolated to the web authentication boundary. They do not alter backend token issuance, revoke semantics, IAM permissions, or product UI.
+- CI remains blocked before job steps execute on the private repository; no green status is claimed for these changes.
