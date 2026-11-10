@@ -41,16 +41,25 @@ describe("session proxy", () => {
     expect(response.headers.get("location")).toBeNull();
   });
 
-  it("returns an authenticated visitor to a safe destination", async () => {
+  it("does not trust an unverified access-token expiry as authorization for a login redirect", async () => {
     const response = await proxy(
       request("/login?returnTo=%2Fsettings%2Fprofile", {
         dss_access_token: token(Math.floor(Date.now() / 1_000) + 60),
       }),
     );
 
-    expect(response.headers.get("location")).toBe(
-      "http://localhost:3000/settings/profile",
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+  });
+
+  it("does not redirect from registration before the server validates the viewer", async () => {
+    const response = await proxy(
+      request("/register?returnTo=%2Fnews", {
+        dss_access_token: token(Math.floor(Date.now() / 1_000) + 60),
+      }),
     );
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
   });
 
   it("rotates an expired session before rendering the route", async () => {
@@ -81,6 +90,29 @@ describe("session proxy", () => {
     );
     expect(response.headers.getSetCookie().join("\n")).toContain(
       "dss_refresh_token=new-refresh",
+    );
+  });
+
+  it("rotates an expired session on the login route without redirecting before viewer validation", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      Response.json({
+        data: {
+          refreshTokens: {
+            tokens: { accessToken: "new-access", refreshToken: "new-refresh" },
+          },
+        },
+      }),
+    );
+    const response = await proxy(
+      request("/login?returnTo=%2Fnewsroom", {
+        dss_access_token: token(Math.floor(Date.now() / 1_000) - 60),
+        dss_refresh_token: "old-refresh",
+      }),
+    );
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+    expect(response.headers.getSetCookie().join("\n")).toContain(
+      "dss_access_token=new-access",
     );
   });
 
