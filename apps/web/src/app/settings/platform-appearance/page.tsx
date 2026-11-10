@@ -15,7 +15,7 @@ export default async function PlatformAppearancePage() {
   if (!variant) notFound();
 
   return (
-    <DssApplicationShell>
+    <DssApplicationShell pageTitle={{ pathname: "/settings/platform-appearance", title: "Оформлення платформи" }}>
       <PlatformAppearanceForm activeVariant={variant} />
     </DssApplicationShell>
   );
