@@ -30,7 +30,7 @@ describe('Prisma and historical migration alignment (e2e)', () => {
     await fixture?.close();
   });
 
-  it('preserves legacy, routing and qualification defaults and both Users indexes', async () => {
+  it('preserves legacy, routing, qualification, consumption and reputation defaults and both Users indexes', async () => {
     const columns = await fixture.prisma.$queryRaw<
       { table_name: string; column_default: string }[]
     >`
@@ -43,7 +43,9 @@ describe('Prisma and historical migration alignment (e2e)', () => {
           'interaction_targets', 'level_definitions', 'reaction_aggregates',
           'reactions', 'reputation_policy', 'user_title_selections',
           'gamification_activations', 'gamification_deliveries',
-          'gamification_discovery'
+          'gamification_discovery', 'gamification_consumption_receipts',
+          'gamification_owner_progress', 'achievement_source_cursors',
+          'reputation_qualification_states'
         )
       ORDER BY table_name`;
     const legacyDefaults = [
@@ -67,6 +69,8 @@ describe('Prisma and historical migration alignment (e2e)', () => {
       'gamification_activations',
       'gamification_deliveries',
       'gamification_discovery',
+      'gamification_consumption_receipts',
+      'gamification_owner_progress',
     ].map((table_name) => ({
       table_name,
       column_default: "timezone('UTC'::text, clock_timestamp())",
@@ -74,6 +78,10 @@ describe('Prisma and historical migration alignment (e2e)', () => {
     const qualificationDefaults = [
       {
         table_name: 'achievement_source_cursors',
+        column_default: 'CURRENT_TIMESTAMP',
+      },
+      {
+        table_name: 'reputation_qualification_states',
         column_default: 'CURRENT_TIMESTAMP',
       },
     ];

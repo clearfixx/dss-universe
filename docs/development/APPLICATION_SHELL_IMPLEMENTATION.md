@@ -231,3 +231,10 @@ Direct GitHub content edits do not execute local commands. GitHub CI status and 
 - The shared post-authentication redirect validator now rejects raw ASCII controls before URL normalization. Legal same-origin query strings continue to work.
 - Regression tests cover allowed/invalid username segments and unsafe return URLs. Backend authorization is unchanged; these rules protect server-side routing and cache invalidation only.
 - CI checks must actually execute before calling this change verified.
+
+## CI recovery: Prisma alignment regression — 12 November 2026
+
+- The public-repository rerun recovered GitHub Actions execution. Architecture validation, Prisma generation, database migrations, lint, typecheck, all 1,548 unit tests, web Playwright smoke checks, dependency audit and cross-platform storage jobs completed successfully.
+- The API E2E suite reached 872/873 passing tests. One catalog assertion failed because its `information_schema.columns` query enumerated fewer `updatedAt` tables than the expected historical defaults.
+- Fixed the explicit query inventory and matching expectations for qualification, consumption and reputation tables. The check remains strict: it compares table names and exact SQL defaults and does not alter migrations, production data, or security policy.
+- CI must re-run on the new commit before this case is considered verified. The separate Prettier backlog remains open.
