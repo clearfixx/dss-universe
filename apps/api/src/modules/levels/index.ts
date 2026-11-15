@@ -26,6 +26,12 @@ export {
   LEVEL_POINTS_BALANCE_READER,
   type LevelPointsBalanceReader,
 } from './contracts/points-balance.port';
+export {
+  LEVEL_SYNCHRONIZATION,
+  type LevelSynchronization,
+  type LevelSynchronizationEvent,
+  type LevelTargetDerivation,
+} from './contracts/level-synchronization.port';
 
 /**
  * Keep the public airlock smaller than the level ladder.

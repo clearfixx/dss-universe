@@ -16,6 +16,7 @@ import type { IntegrationEventJob } from '@dss/jobs';
 
 import type { LevelPointsBalanceReader } from '../../contracts/points-balance.port';
 import type { LevelRecipientExistence } from '../../contracts/recipient-existence.port';
+import type { LevelSynchronization } from '../../contracts/level-synchronization.port';
 
 import type { LevelsRepository } from '../../domain/repositories/levels.repository.interface';
 import type { LevelDefinition } from '../../domain/types/levels.type';
@@ -61,7 +62,6 @@ describe('LevelsService', () => {
   const repository = {
     definitions: jest.fn(),
     updateDefinition: jest.fn(),
-    sync: jest.fn(),
     history: jest.fn(),
   } as unknown as jest.Mocked<LevelsRepository>;
   const points = {
@@ -70,12 +70,21 @@ describe('LevelsService', () => {
   const users = {
     exists: jest.fn(),
   } satisfies jest.Mocked<LevelRecipientExistence>;
-  const service = new LevelsService(repository, points, users);
+  const synchronization = {
+    sync: jest.fn<
+      ReturnType<LevelSynchronization['sync']>,
+      Parameters<LevelSynchronization['sync']>
+    >(),
+  } satisfies jest.Mocked<LevelSynchronization>;
+  const service = new LevelsService(repository, points, users, synchronization);
 
   beforeEach(() => {
     jest.clearAllMocks();
     repository.definitions.mockResolvedValue(definitions);
-    repository.sync.mockResolvedValue({ duplicate: false, transitions: [] });
+    synchronization.sync.mockResolvedValue({
+      duplicate: false,
+      transitions: [],
+    });
     points.balance.mockResolvedValue(50);
     users.exists.mockResolvedValue(true);
   });
@@ -123,23 +132,31 @@ describe('LevelsService', () => {
   it('routes Community Points events to serialized transition sync', async () => {
     await service.consume(event());
 
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(repository.sync).toHaveBeenCalledWith(
+    expect(synchronization.sync).toHaveBeenCalledWith(
       expect.objectContaining({
         eventId: 'points-event-1',
         userId: 'user-1',
       }),
-      2,
-      50,
+      expect.any(Function),
     );
+    const derive = synchronization.sync.mock.calls[0][1];
+    expect(derive(50, definitions)).toBe(2);
+    expect(points.balance).not.toHaveBeenCalled();
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(repository.definitions).not.toHaveBeenCalled();
   });
 
   it('ignores unrelated integration events', async () => {
     await expect(
       service.consume(event({ eventName: 'media.ready.v1' })),
     ).resolves.toEqual({ duplicate: false, transitions: [] });
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(repository.sync).not.toHaveBeenCalled();
+    expect(synchronization.sync).not.toHaveBeenCalled();
+  });
+
+  it('preserves unknown synchronization failure identity', async () => {
+    const failure = new Error('synthetic synchronization failure');
+    synchronization.sync.mockRejectedValueOnce(failure);
+    await expect(service.consume(event())).rejects.toBe(failure);
   });
 
   it('rejects non-monotonic threshold updates', async () => {

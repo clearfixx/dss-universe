@@ -42,6 +42,7 @@ import {
   LevelsRuntimeModule,
   LEVEL_EVENT_CONSUMER,
   LEVEL_RECIPIENT_EXISTENCE,
+  LEVEL_SYNCHRONIZATION,
 } from '@api/modules/levels';
 import {
   AchievementsModule,
@@ -64,6 +65,9 @@ import { PrismaAchievementsRepository } from '@api/modules/achievements/infrastr
 import { PrismaProfileExistenceReader } from '@api/modules/users/infrastructure/repositories/prisma-profile-existence.reader';
 import { GamificationConsumerCompositionModule } from './gamification-consumer-composition.module';
 import { PrismaManualAwardTransaction } from './infrastructure/prisma-manual-award.transaction';
+import { PrismaLevelSynchronizationTransaction } from './infrastructure/prisma-level-synchronization.transaction';
+import { PrismaLevelSynchronizationWriter } from '@api/modules/levels/infrastructure';
+import { PrismaTransactionalPointsBalanceReader } from '@api/modules/community-points/infrastructure';
 
 @Global()
 @Module({
@@ -165,6 +169,9 @@ describe('gamification runtime assembly', () => {
     expect(database.communityPointEntry.aggregate).not.toHaveBeenCalled();
     expect(context.get(MANUAL_AWARD_TRANSACTION)).toBeInstanceOf(
       PrismaManualAwardTransaction,
+    );
+    expect(context.get(LEVEL_SYNCHRONIZATION)).toBeInstanceOf(
+      PrismaLevelSynchronizationTransaction,
     );
   });
 
@@ -319,6 +326,9 @@ describe('gamification runtime assembly', () => {
         PrismaLevelsRepository,
         PrismaAchievementsRepository,
         PrismaProfileExistenceReader,
+        PrismaLevelSynchronizationTransaction,
+        PrismaLevelSynchronizationWriter,
+        PrismaTransactionalPointsBalanceReader,
       ]) {
         expect(
           new Set(instances.filter((instance) => instance instanceof type))
