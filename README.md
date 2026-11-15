@@ -39,8 +39,8 @@ DSS Universe is being built as a community-centered platform for software develo
 
 **The community comes first.** The technology exists to help people share ideas, contribute, learn, and build useful software together.
 
-| **Connect** | **Learn** | **Create** | **Grow** |
-| :--- | :--- | :--- | :--- |
+| **Connect**                             | **Learn**                                          | **Create**                             | **Grow**                                          |
+| :-------------------------------------- | :------------------------------------------------- | :------------------------------------- | :------------------------------------------------ |
 | Meet developers and join conversations. | Explore technical writing and structured learning. | Publish knowledge and share resources. | Follow contributions, progress, and achievements. |
 
 > [!IMPORTANT]
@@ -50,17 +50,17 @@ DSS Universe is being built as a community-centered platform for software develo
 
 The platform is organized into connected product areas, each with clear responsibilities.
 
-| Area | Purpose |
-| :--- | :--- |
-| **Mission Control** | A personal starting point for activity, progress, and relevant content. |
-| **Community Hub** | Discussions, questions, collaboration, and shared interests. |
-| **Research Lab** | Long-form articles, guides, and technical research. |
-| **Knowledge Forge** | Collaborative, versioned technical knowledge. |
-| **Academy** | Courses and learning journeys. |
-| **Downloads** | Developer resources, files, and releases. |
-| **DSS Media Platform** | Shared media upload, processing, and asset lifecycle. |
-| **DSS Intelligence** | Planned contextual intelligence across platform experiences. |
-| **Command Deck** | Restricted administration and platform operations. |
+| Area                   | Purpose                                                                 |
+| :--------------------- | :---------------------------------------------------------------------- |
+| **Mission Control**    | A personal starting point for activity, progress, and relevant content. |
+| **Community Hub**      | Discussions, questions, collaboration, and shared interests.            |
+| **Research Lab**       | Long-form articles, guides, and technical research.                     |
+| **Knowledge Forge**    | Collaborative, versioned technical knowledge.                           |
+| **Academy**            | Courses and learning journeys.                                          |
+| **Downloads**          | Developer resources, files, and releases.                               |
+| **DSS Media Platform** | Shared media upload, processing, and asset lifecycle.                   |
+| **DSS Intelligence**   | Planned contextual intelligence across platform experiences.            |
+| **Command Deck**       | Restricted administration and platform operations.                      |
 
 Not every area is available today. Features are delivered incrementally under the [DSS Universe 1.0 roadmap](docs/roadmap/DSS_UNIVERSE_1.0_ROADMAP.md); navigation and access are backed by real implementation and server-enforced authorization, not by the mockups.
 
@@ -94,11 +94,11 @@ dss-universe/
 └── infra/        # Infrastructure configuration
 ```
 
-| Layer | Main technologies |
-| :--- | :--- |
-| Web | Next.js, React, TypeScript, Tailwind CSS, shadcn/ui |
-| API | NestJS, TypeScript, GraphQL, REST where appropriate |
-| Data | PostgreSQL, Prisma, Redis |
+| Layer   | Main technologies                                          |
+| :------ | :--------------------------------------------------------- |
+| Web     | Next.js, React, TypeScript, Tailwind CSS, shadcn/ui        |
+| API     | NestJS, TypeScript, GraphQL, REST where appropriate        |
+| Data    | PostgreSQL, Prisma, Redis                                  |
 | Tooling | pnpm workspaces, Turborepo, Docker, automated tests and CI |
 
 The backend follows explicit module boundaries. Product data and mutations are generally exposed through GraphQL; binary transfer uses REST where appropriate. The web app uses server-rendered access checks, and **visibility in the UI never replaces authorization on the server**.
@@ -145,15 +145,15 @@ Development prioritizes **correctness, security, maintainability, and explicit m
 
 ## Documentation
 
-| Resource | What you'll find |
-| :--- | :--- |
-| [Engineering Handbook](ENGINEERING.md) | Engineering principles and technical entry points |
-| [Project Constitution](CONSTITUTION.md) | Long-term development rules |
-| [Product roadmap](docs/roadmap/DSS_UNIVERSE_1.0_ROADMAP.md) | Scope and delivery priorities for 1.0 |
-| [Mockup catalog](docs/design/MOCKUP_CATALOG.md) | Design reference classification and visual direction |
-| [Architecture](docs/architecture/) | System structure and boundaries |
-| [Development](docs/development/) | Environment, workflow and implementation notes |
-| [Engineering standards](standards/) | Conventions, quality and testing expectations |
+| Resource                                                    | What you'll find                                     |
+| :---------------------------------------------------------- | :--------------------------------------------------- |
+| [Engineering Handbook](ENGINEERING.md)                      | Engineering principles and technical entry points    |
+| [Project Constitution](CONSTITUTION.md)                     | Long-term development rules                          |
+| [Product roadmap](docs/roadmap/DSS_UNIVERSE_1.0_ROADMAP.md) | Scope and delivery priorities for 1.0                |
+| [Mockup catalog](docs/design/MOCKUP_CATALOG.md)             | Design reference classification and visual direction |
+| [Architecture](docs/architecture/)                          | System structure and boundaries                      |
+| [Development](docs/development/)                            | Environment, workflow and implementation notes       |
+| [Engineering standards](standards/)                         | Conventions, quality and testing expectations        |
 
 ## Contributing
 

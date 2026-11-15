@@ -156,3 +156,11 @@ not updated. Original setup/DI failures and both environment failures remain.
 
 A complete new gate and final-head CI are still required after this recovery;
 the successful backend stages alone are not labelled a complete full gate.
+
+Before the next gate, accepted main advanced to `db68dec` with owner README and
+restricted-source LICENSE changes (PR155/156). Both were integrated without
+changing their product/legal text or the active frontend checkout. Prettier
+required README table padding and delimiter widths to match repository style;
+the reviewed word diff contains only those table-format changes. LICENSE is
+unchanged. This integration, retained maintenance helper and report are included
+in the new candidate head, so its full gate and CI must use that head.
