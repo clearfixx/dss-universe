@@ -17,6 +17,9 @@ checkpoint, **not final D7 acceptance or Phase11 readiness**.
 - The old remote D7 head `ff46819` and the retained local head `81e0a65` contain
   additional audit history. This integration includes their Git ancestry and
   preserves the missing review/matrix/079/091 documents as dated evidence.
+- Local R4 header checkpoint `5814990` is already patch-equivalent to accepted
+  main (`git cherry` reports `-`). Its history is joined without replaying the
+  obsolete patch or changing current storage/workflow code.
 - Existing main versions of README, product/roadmap/context, architecture,
   execution plan, quality guidance, runtime plans and the debt register take
   precedence over older D7 versions. Reintroducing old unresolved/candidate
