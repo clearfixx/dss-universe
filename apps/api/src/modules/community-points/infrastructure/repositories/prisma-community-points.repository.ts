@@ -18,8 +18,8 @@
  * Community Points-owned transactional persistence adapter.
  *
  * ⚠️ Important:
- * Acquire the event lock before the user/rule/UTC-day quota lock.
- * Hold both through ledger, processed marker, Audit and Outbox commit.
+ * Acquire event, optional source, then user/rule/UTC-day quota locks.
+ * Hold them through ledger, processed marker, Audit and Outbox commit.
  * Quota reads rely on the existing Read Committed statement snapshots.
  *
  * 🚀 Build. Share. Grow.
@@ -162,6 +162,14 @@ export class PrismaCommunityPointsRepository implements CommunityPointsRepositor
       });
       if (processed) return { status: 'DUPLICATE', entry: null };
 
+      if (input.event.aggregateType && input.event.aggregateId) {
+        await this.lockSource(
+          transaction,
+          input.event.aggregateType,
+          input.event.aggregateId,
+        );
+      }
+
       if (
         input.event.aggregateType &&
         input.event.aggregateId &&
@@ -272,10 +280,7 @@ export class PrismaCommunityPointsRepository implements CommunityPointsRepositor
     occurredAt: Date,
   ): Promise<CommunityPointSourceReversal> {
     return this.prisma.$transaction(async (transaction) => {
-      await this.lock(
-        transaction,
-        `community-points-source-reversal:${sourceType}:${sourceId}`,
-      );
+      await this.lockSource(transaction, sourceType, sourceId);
       const revoked = await transaction.communityPointRevokedSource.findUnique({
         where: { sourceType_sourceId: { sourceType, sourceId } },
         select: { id: true },
@@ -443,6 +448,17 @@ export class PrismaCommunityPointsRepository implements CommunityPointsRepositor
         aggregate: { type: 'CommunityPointEntry', id: entry.id },
         payload: metadata,
       }),
+    );
+  }
+
+  private lockSource(
+    transaction: TransactionClient,
+    sourceType: string,
+    sourceId: string,
+  ): Promise<number> {
+    return this.lock(
+      transaction,
+      `community-points-source-reversal:${sourceType}:${sourceId}`,
     );
   }
 
