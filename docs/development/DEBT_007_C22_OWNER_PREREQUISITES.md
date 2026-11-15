@@ -130,3 +130,29 @@ event, not the newer one. Expanded log:
 `node_modules/.cache/debt007-c22-characterization-746306ce83d94122a2ffa57459fe5c39.log`.
 Final package validation remains pending. DEBT-007/090, D7, stack audit and Phase11
 remain open.
+
+## Local environment recovery, November15
+
+The November9 full-gate process was no longer present after the interruption;
+its log stopped during API coverage without a final receipt. That attempt is
+incomplete, not a successful or completed failing gate. The unchanged-head CI
+finished8/8 with API1541/1541, E2E868/868, build6/6 and Web15/15 without retries.
+
+Both existing disposable containers were stopped. Only PostgreSQL-test/Redis-test
+were started; the test PostgreSQL uses tmpfs and contained no application tables.
+The first resumed gate correctly failed drift preflight. Deploying the unchanged
+accepted migration history restored zero drift, matching CI preparation. No
+reset, demo seed, dev database change or unrelated-container restart occurred.
+
+The prepared full gate then passed coverage5/5 workspaces/API1541, E2E868/868 with
+zero skips/todo, GraphQL and build6/6, but all15 browser launches failed because
+the required Chromium headless executable was missing from the OS Playwright
+cache. No browser test body completed; this is not15 demonstrated UI defects.
+Its log, contexts and traces were retained outside cache with SHA-256 before any
+next browser run. `restore-c22-browser-cache.ps1` preserves that evidence, uses
+pinned tools and installs only the installed Playwright's required headless shell
+with --no-remove; dependencies, other browser revisions and frontend source are
+not updated. Original setup/DI failures and both environment failures remain.
+
+A complete new gate and final-head CI are still required after this recovery;
+the successful backend stages alone are not labelled a complete full gate.
