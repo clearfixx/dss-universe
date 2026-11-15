@@ -15,6 +15,18 @@
 export { AchievementsModule } from './achievements.module';
 export { AchievementsRuntimeModule } from './achievements-runtime.module';
 export {
+  QUALIFIED_ACHIEVEMENT_CONSUMER,
+  type QualifiedAchievementConsumer,
+} from './contracts/qualified-consumer.contract';
+export type {
+  QualifiedAchievementCommand,
+  QualifiedAchievementOutcome,
+  QualifiedAchievementFact,
+  QualifiedAchievementEvent,
+  AchievementFactReference,
+  VerifiedAchievementMapping,
+} from './domain/types/qualified-achievement.type';
+export {
   ACHIEVEMENT_EVENT_CONSUMER,
   type AchievementEventConsumer,
 } from './contracts/event-consumer.contract';

@@ -51,6 +51,7 @@ describe('MediaUploadSessionService', () => {
     repository = {
       create: jest.fn(),
       findById: jest.fn(),
+      claimInitiated: jest.fn(),
       updateStatus: jest.fn(),
     };
     service = new MediaUploadSessionService(
@@ -123,6 +124,23 @@ describe('MediaUploadSessionService', () => {
       session.id,
       MediaUploadStatus.ABORTED,
     ]);
+  });
+
+  it('maps an unsuccessful intake claim to conflict without another state write', async () => {
+    repository.claimInitiated.mockResolvedValue(false);
+
+    await expect(service.claimUpload('session-1')).rejects.toThrow(
+      ConflictException,
+    );
+    expect(repository.updateStatus.mock.calls).toHaveLength(0);
+  });
+
+  it('preserves an unknown claim failure without another state write', async () => {
+    const failure = new Error('Synthetic claim connection failure');
+    repository.claimInitiated.mockRejectedValue(failure);
+
+    await expect(service.claimUpload('session-1')).rejects.toBe(failure);
+    expect(repository.updateStatus.mock.calls).toHaveLength(0);
   });
 
   it('rejects aborting a completed session', async () => {

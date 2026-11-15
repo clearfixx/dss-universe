@@ -1,0 +1,89 @@
+{
+  "kind": "Sanitized GitHub PR metadata snapshot; not automatic debt closure or refreshed CI",
+  "observedAt": "2026-11-06T19:33:19Z",
+  "acceptedBaseline": "f1a1bcceb82989d42534a6652d5c9fde153e5660",
+  "retainedCheckpoint": "81e0a6581b9ae27f683e4ec442790e16075cf9ba",
+  "source": "GitHub get_pr_info observed in this chat; owner acceptance is separately evidenced in linked PR descriptions and user replies",
+  "pullRequests": [
+    {
+      "number": 87,
+      "merged": true,
+      "base": "main",
+      "head": "e6c4e44cfbd0a5fba9bed0d97fb9b8f778d27499",
+      "merge": "ebd77b8cb1af4ace6c43f5035844decd52496e57",
+      "url": "https://github.com/clearfixx/dss-universe/pull/87"
+    },
+    {
+      "number": 96,
+      "merged": true,
+      "base": "main",
+      "head": "6b1c6caad471dcabf459a47aacebc4f797cb190b",
+      "merge": "b41dd9ec080e321ab708d8edf399d56afd72d45d",
+      "url": "https://github.com/clearfixx/dss-universe/pull/96"
+    },
+    {
+      "number": 97,
+      "merged": true,
+      "base": "main",
+      "head": "0a7594ed964ff445c016a0f1348cc20a544fb7be",
+      "merge": "8e3c4c7d229f3a6112c9e427aaf2d5f1c64c5fed",
+      "url": "https://github.com/clearfixx/dss-universe/pull/97"
+    },
+    {
+      "number": 98,
+      "merged": true,
+      "base": "main",
+      "head": "b65df039770aeda08536ef6903a2361859987f8d",
+      "merge": "b63d555bb58365a7090eaa7bc0d7ae7c9a78e4a8",
+      "url": "https://github.com/clearfixx/dss-universe/pull/98"
+    },
+    {
+      "number": 120,
+      "merged": true,
+      "base": "main",
+      "head": "ea626498ee8db7e2981859c4939e73f44a36b50a",
+      "merge": "e6179f7a85e328b6ed2060e871ab7f91a4a3bd65",
+      "url": "https://github.com/clearfixx/dss-universe/pull/120"
+    },
+    {
+      "number": 121,
+      "merged": true,
+      "base": "debt/debt-092-joi-security",
+      "head": "06be627092c853de3b58ad2a94cdbdf8a08f3f38",
+      "merge": "ea626498ee8db7e2981859c4939e73f44a36b50a",
+      "url": "https://github.com/clearfixx/dss-universe/pull/121"
+    },
+    {
+      "number": 131,
+      "merged": true,
+      "base": "main",
+      "head": "caa6995149d9c603b6af04b3e41ee555e43c193d",
+      "merge": "64c767e3e395148a6de3ec82938f69f7362bb38b",
+      "url": "https://github.com/clearfixx/dss-universe/pull/131"
+    },
+    {
+      "number": 132,
+      "merged": true,
+      "base": "main",
+      "head": "2cf35c4b7690a8bf5f6bea181c8d74d470c08300",
+      "merge": "d43ec37265e476903a629734a6222e5e20a69b35",
+      "url": "https://github.com/clearfixx/dss-universe/pull/132"
+    },
+    {
+      "number": 133,
+      "merged": true,
+      "base": "main",
+      "head": "2f31c42624dab8daa8528ddd50f7a7ad1f6b16f3",
+      "merge": "f1a1bcceb82989d42534a6652d5c9fde153e5660",
+      "url": "https://github.com/clearfixx/dss-universe/pull/133"
+    },
+    {
+      "number": 109,
+      "merged": false,
+      "base": "main",
+      "head": "10c09eb3104790aaf58783a5fbf9dd6ff587f879",
+      "merge": null,
+      "url": "https://github.com/clearfixx/dss-universe/pull/109"
+    }
+  ]
+}

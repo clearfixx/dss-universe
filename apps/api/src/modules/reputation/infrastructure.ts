@@ -6,12 +6,18 @@
  * 📄 File: apps/api/src/modules/reputation/infrastructure.ts
  *
  * 🎯 Purpose:
- * Publishes only owned stateless ledger adapters for guarded root composition.
+ * Publishes owned ledger and qualification adapters for guarded root composition.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 export { leaderboardReputationAggregate } from './infrastructure/repositories/leaderboard-reputation.sql';
+export { PrismaReputationQualificationReader } from './infrastructure/repositories/prisma-reputation-qualification.reader';
+export {
+  PrismaReputationQualificationWriter,
+  type ReputationOriginalEvidenceLookup,
+  type ReputationOriginalEvidenceInput,
+} from './infrastructure/repositories/prisma-reputation-qualification.writer';
 export {
   PrismaReputationEntryReader,
   type ReputationEntryFact,

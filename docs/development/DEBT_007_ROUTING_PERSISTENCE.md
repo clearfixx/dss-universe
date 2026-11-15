@@ -1,30 +1,7 @@
 # DEBT-007 — Routing persistence, runtime package B
 
-Status: owner-accepted PR104 headc146c60, mergedc6b5417 on2026-10-28T16:44:09UTC.
+Status: authorized implementation candidate; full gate/CI and acceptance open.
 Baseline: accepted main `d992de6` (PR103), following accepted PR101/102.
-
-## Accepted verification checkpoint
-
-Owner accepted the exact implementation c146c60214da0d7152cc130024dffb4ddcb10f52.
-CI5/5 (Quality40694037281, containment40694037231) and completed local
-quality:full exit0: coverage8/8, API1466/1466 across179 suites, E2E686/686 in64
-suites without skips, generated API, build6/6 and production-entry checks;
-Web15/15 without retries47.4s. Working tree was clean and remote main still the
-accepted d992de6 before the exact-head guarded merge. No integration code changed.
-
-Local evidence in the D6 worktree cache:
-`debt007-b-runtime-quality-c146c60.log` / `.exit.txt` and
-`quality-full-HOuShF/api-e2e.json`, SHA256
-`2e9395e3ea6402040a7f29304943c94d29f54b48967b5f13f2e5a53f787ebbb5`.
-Downloaded CI report `debt007-b-runtime-ci-c146c60/api-e2e.json` is686/686,
-zero failed/pending, SHA256
-`4fe494fe5639ce13dc13ae3525e380e8a22662886d68f140ecb88b804d3da1d4`.
-An initial merge command never started because automatic approval review hit a
-usage limit. The later usage API confirmed ordinary execution allowed; the
-already authorized command then merged normally. No approval check was bypassed.
-
-This checkpoint supersedes earlier candidate verification-open wording only for
-B. C/D, operational activation, complete DEBT-007 and D7 acceptance remain open.
 
 ## Scope
 
@@ -156,7 +133,7 @@ catalog alignment), including the controlled-default clock case; scoped lint
 passes. Raw report/log: `node_modules/.cache/debt007-b-corrected-focused.*`.
 These targeted results do not replace the next exact-head full gate and CI.
 
-The accepted checkpoint above satisfies B's full verification/acceptance gate.
-The earlier candidate observations remain historical, including all red evidence.
-It does not establish DEBT-007 completion, D7 acceptance or Phase11 readiness.
-C/D and operational activation require their own work.
+Full format/lint/typecheck/schema/drift/architecture/coverage/E2E/generated API/
+build/production entrypoint/Web smoke and current-head CI remain mandatory.
+No package acceptance, DEBT-007 completion, D7 acceptance or Phase11 readiness is
+claimed by this candidate. C/D and operational activation require their own work.

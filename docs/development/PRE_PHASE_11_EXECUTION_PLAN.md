@@ -8,16 +8,6 @@
 
 ## Objective
 
-Owner decisions2026-10-29: Phase11 is the single Research Lab Wiki (historical
-Knowledge Forge); reconcile technical identifiers/routes and the old Phase12
-feature inventory in its brainstorm. No second Wiki/research module is implied.
-DEBT-037 physical containment against hostile local symlink/junction substitution
-is required before Phase11. The trusted-local-writer assumption is not accepted
-as its disposition. Inventory every API/Worker file operation and review a
-platform-specific race-safe design before implementing the corrective package.
-Lexical checks and a one-time realpath/lstat precheck are not proof of that
-stronger physical guarantee. No frontend work or Phase11 runtime starts here.
-
 Owner vision and corrected product names are recorded in
 [Product Vision 1.0](PRODUCT_VISION_1_0.md). Reconcile historical module naming and
 scope before Phase 11; this does not authorize unrelated implementation in D3.
@@ -62,16 +52,6 @@ Owner acceptance (2026-10-22): D5 PR#78 was accepted after five green remote che
 and full local verification, then merged asfcab53c. Main is available for owner
 testing. D6 proceeds separately on `debt/d6-quality-baseline`; DEBT-073 is the
 first owner-approved bounded package. File Passport work remains excluded.
-
-Owner acceptance/resumption (2026-10-22/23): D6 PR#79 was accepted with five green
-checks and consolidated full verification, then merged as `f118d82`. D7 review
-was explicitly approved from that main baseline on `debt/d7-release-gate`.
-Its scope is evidence/debt reconciliation, architecture/migration/secret/security
-review and an outstanding decision list. No runtime/UI, Passport cleanup or
-stack audit is authorized within D7. New fixes require separate packets and
-approval; the fresh Next advisory blocker is recorded in DEBT-016. See
-[D7 current evidence](../audits/D7_BASELINE_RELEASE_REVIEW.md). D7 acceptance,
-the later stack audit and Phase11 brainstorm remain open.
 
 1. Each phase uses a dedicated branch, review and PR; logical packages are
    checkpointed there. Separately approved security corrections may use their
@@ -533,6 +513,13 @@ Model: `gpt-6-luna` low/medium for execution; escalate failures to
 `gpt-6.1-sol` high.
 
 ### D7 — Baseline release gate
+
+Owner clarification2026-11-08: only the owner controls the DSS environment and
+only owner/DSS processes write uploads; users act through the website/API.
+DEBT-037's former hostile-OS-writer/native-containment mandate is superseded.
+Retain existing LOCAL key/authorization checks and inactive R1–R6 evidence; see
+[the current disposition](DEBT_037_QUALIFICATION_DECISIONS.md). This does not waive
+the remaining D7, gamification, stack-audit or Phase11 brainstorm gates.
 
 Branch: `debt/d7-release-gate` only if final integration changes are required;
 otherwise use the accepted D6 branch/PR.

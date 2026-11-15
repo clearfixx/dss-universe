@@ -40,3 +40,9 @@ jobs:
         run: pnpm --filter @dss/api test:unit --runInBand local-storage.provider.spec
       - name: Verify Worker boundaries and image cleanup
         run: pnpm --filter @dss/worker test --maxWorkers=2
+      - name: Characterize real Windows identities and historical handles
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          DSS_DISPOSABLE_WINDOWS_IDENTITY_PROBE: "1"
+        run: ./tools/agent-helpers/debt037/windows-identity-proof.ps1

@@ -9,7 +9,7 @@
  * Accepts, inspects, persists, and queues binaries for Media processing.
  *
  * 🧠 Responsibilities:
- * • enforces upload-session lifecycle and ownership;
+ * • enforces upload-session ownership and claims intake before binary effects;
  * • verifies actual size, MIME type, and optional SHA-256 checksum;
  * • persists the accepted binary through Core Storage;
  * • queues a typed media-processing job;
@@ -98,7 +98,7 @@ export class MediaBinaryUploadService {
       throw new BadRequestException('Uploaded file checksum does not match.');
     }
 
-    await this.sessions.updateStatus(session.id, MediaUploadStatus.UPLOADING);
+    await this.sessions.claimUpload(session.id);
     let stored = false;
     let queued = false;
     let mediaId: string | null = null;

@@ -105,10 +105,12 @@ describe('AchievementsService', () => {
   const users = {
     exists: jest.fn(),
   } satisfies jest.Mocked<AchievementRecipientExistence>;
-  const service = new AchievementsService(repository, users);
+  const qualified = { routeLegacy: jest.fn() };
+  const service = new AchievementsService(repository, users, qualified);
 
   beforeEach(() => {
     jest.clearAllMocks();
+    qualified.routeLegacy.mockResolvedValue(null);
     repository.writeDefinition.mockResolvedValue({
       status: 'OK',
       value: definition,
@@ -238,6 +240,7 @@ describe('AchievementsService', () => {
       'topic-1',
       'Source rollback from community.topic.moderated.v1.',
       null,
+      'LEGACY_EVENT',
     );
     // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(repository.matchingRules).not.toHaveBeenCalled();

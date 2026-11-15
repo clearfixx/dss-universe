@@ -47,6 +47,7 @@ import type {
   AchievementDefinition,
   AchievementRule,
 } from '../../domain/types/achievements.type';
+import { QualifiedAchievementsService } from './qualified-achievements.service';
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 const KEY = /^[a-z0-9]+([._-][a-z0-9]+)*$/;
@@ -81,6 +82,11 @@ export class AchievementsService {
     private readonly achievements: AchievementsRepository,
     @Inject(ACHIEVEMENT_RECIPIENT_EXISTENCE)
     private readonly users: AchievementRecipientExistence,
+    @Inject(QualifiedAchievementsService)
+    private readonly qualified: Pick<
+      QualifiedAchievementsService,
+      'routeLegacy'
+    >,
   ) {}
 
   definitions(includeInactive = false): Promise<AchievementDefinition[]> {
@@ -139,12 +145,15 @@ export class AchievementsService {
   async consume(job: IntegrationEventJob): Promise<AchievementConsumption[]> {
     const event = this.event(job);
     const rollback = this.rollbackCoordinates(event.payload);
+    const qualified = await this.qualified.routeLegacy(event, rollback);
+    if (qualified !== null) return qualified;
     if (rollback) {
       const awards = await this.achievements.rollbackSource(
         rollback.sourceType,
         rollback.sourceId,
         `Source rollback from ${event.eventName}.`,
         null,
+        'LEGACY_EVENT',
       );
       return awards.map((award) => ({
         ruleId: award.ruleId ?? 'manual',
@@ -329,6 +338,7 @@ export class AchievementsService {
     }
     return {
       eventId: job.eventId,
+      producer: job.producer,
       eventName: job.eventName,
       eventVersion: job.eventVersion,
       payload: job.payload as Record<string, unknown>,

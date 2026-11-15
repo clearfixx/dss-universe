@@ -12,7 +12,7 @@
  * ===============================================================
  */
 
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 import { createHash } from 'node:crypto';
 
 import type { QueueRegistryService } from '@api/core/queue';
@@ -51,6 +51,7 @@ const SESSION: MediaUploadSession = {
 describe('MediaBinaryUploadService', () => {
   const sessions = {
     findOwned: jest.fn(),
+    claimUpload: jest.fn(),
     updateStatus: jest.fn(),
   };
   const mimeInspection = { inspect: jest.fn() };
@@ -73,6 +74,7 @@ describe('MediaBinaryUploadService', () => {
   beforeEach(() => {
     jest.resetAllMocks();
     sessions.findOwned.mockResolvedValue(SESSION);
+    sessions.claimUpload.mockResolvedValue(undefined);
     sessions.updateStatus.mockImplementation(
       (_id: string, status: MediaUploadStatus) =>
         Promise.resolve({ ...SESSION, status }),
@@ -144,6 +146,7 @@ describe('MediaBinaryUploadService', () => {
       ),
     ).rejects.toThrow(BadRequestException);
 
+    expect(sessions.claimUpload).not.toHaveBeenCalled();
     expect(storage.save).not.toHaveBeenCalled();
     expect(queueAdd).not.toHaveBeenCalled();
   });
@@ -176,12 +179,35 @@ describe('MediaBinaryUploadService', () => {
     );
   });
 
+  it('leaves the winning intake untouched when its own claim conflicts', async () => {
+    const conflict = new ConflictException('Synthetic competing claim');
+    sessions.claimUpload.mockRejectedValue(conflict);
+
+    await expect(
+      service.accept(
+        'owner-1',
+        SESSION.id,
+        {
+          buffer: CONTENT,
+          size: CONTENT.length,
+          mimetype: 'text/plain',
+          originalname: SESSION.originalFilename,
+        },
+        new Date('2026-07-18T12:05:00.000Z'),
+      ),
+    ).rejects.toBe(conflict);
+
+    expect(storage.save).not.toHaveBeenCalled();
+    expect(storage.delete).not.toHaveBeenCalled();
+    expect(queueAdd).not.toHaveBeenCalled();
+    expect(queueRemove).not.toHaveBeenCalled();
+    expect(media.create).not.toHaveBeenCalled();
+    expect(media.update).not.toHaveBeenCalled();
+    expect(sessions.updateStatus).not.toHaveBeenCalled();
+  });
+
   it('removes the queued job if final session persistence fails', async () => {
     sessions.updateStatus
-      .mockResolvedValueOnce({
-        ...SESSION,
-        status: MediaUploadStatus.UPLOADING,
-      })
       .mockRejectedValueOnce(new Error('Database unavailable'))
       .mockResolvedValueOnce({
         ...SESSION,

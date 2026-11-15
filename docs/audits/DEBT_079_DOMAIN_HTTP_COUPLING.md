@@ -1,5 +1,11 @@
 # DEBT-079 — Domain exceptions inherit Nest HTTP transport
 
+> Historical diagnostic/design evidence retained from `81e0a65`, not the current
+> runtime status. The ten-error separation was subsequently accepted in PR99;
+> see the [runtime record](../development/DEBT_079_OWNER_FAILURE_RUNTIME.md) and
+> [integration checkpoint](D7_INTEGRATION_CHECKPOINT_2026-11-15.md).
+> OPEN/unimplemented and pending-PR statements below describe their dated snapshot.
+
 Date: 2026-10-23. Baseline: accepted main `f118d82`.
 Severity: Medium. Status: OPEN; characterization accepted, decoupling unimplemented.
 

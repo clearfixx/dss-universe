@@ -12,21 +12,11 @@
 
 ## 1. Purpose
 
-Owner clarification2026-10-29: there is one Wiki module, **Research Lab**.
-Knowledge Forge is its historical alias. Product labels below follow this
-decision; existing technical identifiers/capability keys/routes are unchanged.
-The historical Phase12 analytical-publishing inventory is retained for scope
-and scheduling reconciliation at the required Phase11 brainstorm, not authority
-to implement another content module or discard its listed1.0 requirements.
-DEBT-039 technical compatibility planning remains open until that review.
-
 Owner clarification recorded on 2026-10-11 takes precedence over historical
 product naming: Mission Control is the user dashboard; Command Deck is
 administration. See [Product Vision 1.0](../development/PRODUCT_VISION_1_0.md).
 Full scope/module naming reconciliation remains tracked as DEBT-039; this note
 does not rename existing routes or claim newly described features are delivered.
-Dashboard/administration product labels below follow that clarification. Existing
-code/UI labels and compatibility URLs are not renamed by this documentation edit.
 
 This document is the canonical working roadmap for DSS Universe 1.0.
 
@@ -54,7 +44,7 @@ The platform allows users to:
 - create a professional and social profile;
 - follow people and community activity;
 - publish and discuss news;
-- collaborate in Research Lab;
+- collaborate in Knowledge Forge;
 - publish research and technical material;
 - participate in structured forum discussions;
 - learn and publish courses;
@@ -65,7 +55,7 @@ The platform allows users to:
 - receive support and follow feature/release progress;
 - use AI assistance throughout the product.
 
-Administrators operate the platform through Command Deck, Security Deck, CMS Builder, Media Library and Maintenance Center.
+Administrators operate the platform through Mission Control, Security Deck, CMS Builder, Media Library and Maintenance Center.
 
 ---
 
@@ -75,7 +65,7 @@ Administrators operate the platform through Command Deck, Security Deck, CMS Bui
 
 - Universe Landing — guest presentation and acquisition;
 - Universe Feed — authenticated summary of activity since the last visit;
-- Mission Control — personal progress, work and recommendations;
+- Command Deck — personal progress, work and recommendations;
 - Astronaut Profile — public social profile;
 - Account Settings — private account and privacy management;
 - Members Directory — searchable community and leaderboards.
@@ -83,6 +73,7 @@ Administrators operate the platform through Command Deck, Security Deck, CMS Bui
 ### Feature modules
 
 - News;
+- Knowledge Forge;
 - Research Lab;
 - Community Hub / Forum;
 - Academy;
@@ -120,7 +111,7 @@ Administrators operate the platform through Command Deck, Security Deck, CMS Bui
 
 ### Administrative surfaces
 
-- Command Deck — general platform administration;
+- Mission Control — general platform administration;
 - Security Deck — identity, sessions, sanctions and security intelligence;
 - CMS Builder — pages, navigation, public content and branding;
 - Media Library — media operations;
@@ -458,7 +449,7 @@ See [D1 decisions](../development/D1_SCOPE_DECISIONS.md).
 - custom access groups separated from system roles;
 - allowlisted delegable permission builder;
 - group display name, color, badge, icon, visibility and membership period;
-- example groups: Editors, Research Lab Guardians, Premium, Trusted Contributors, Trusted Instructors, Beta Testers;
+- example groups: Editors, Knowledge Forge Guardians, Premium, Trusted Contributors, Trusted Instructors, Beta Testers;
 - no custom group may grant generic moderation/admin/security capabilities;
 - explicit authority policy for sanctions and protected actors.
 
@@ -547,7 +538,7 @@ Delivered in the Media v1 foundation package:
 - aggregate original/variant storage usage and failed/quarantined/orphan counters.
 - `media.jobs.manage` permission and GraphQL retry for failed processing;
 - atomic FAILED-to-PROCESSING claims, immutable job-contract reuse, audit and queue-failure compensation.
-- administrative Media Library route with authenticated server-side GraphQL (historical Mission Control label);
+- Mission Control Media Library route with authenticated server-side GraphQL;
 - storage metric cards, lifecycle/visibility/kind/search/orphan filters and forward cursor navigation;
 - permission-aware failure states and operator retry action.
 
@@ -761,7 +752,7 @@ Delivered in the Community Points Ledger foundation package:
   Reputation, reactions and Users;
 - event-derived, immutable PostgreSQL ledger with rebuildable balances;
 - configurable activity weights, enabled flags and UTC-day anti-abuse limits;
-- initial rules for comments, Community Hub topics, News, Research Lab and
+- initial rules for comments, Community Hub topics, News, Knowledge Forge and
   positive/negative direct reputation;
 - advisory-lock serialization and transactional processed-event markers;
 - duplicate deliveries and capped events remain idempotent;
@@ -869,7 +860,7 @@ Initial configurable events:
 - comment: +1;
 - forum topic: +5;
 - published news: +10;
-- published Research Lab article: +50;
+- published Knowledge Forge article: +50;
 - direct reputation +1: +10;
 - direct reputation -1: -10.
 
@@ -911,12 +902,13 @@ All points use a reversible ledger. Deleted/moderated/unpublished content may re
 # Phase 9 — Interaction Platform, Shared Content, Editor, Content Gates and Activity Feed
 
 **Status: historically delivered; current acceptance pending.** The reusable platform foundations and Phase 9 acceptance
-criteria are implemented. Product-owned News, Forum, Research Lab, Academy
+criteria are implemented. Product-owned News, Forum, Knowledge Forge, Academy
 and Moderation integrations remain in their scheduled phases.
 
 ## Interaction Target Registry
 
-- one canonical target identity for News, Community Hub, Research Lab, Academy, profile walls and future modules;
+- one canonical target identity for News, Community Hub, Research Lab,
+  Knowledge Forge, Academy, profile walls and future modules;
 - real foreign-key ownership for shared interactions instead of unconstrained
   `targetType + targetId` records;
 - domain modules register targets and remain responsible for their own
@@ -948,7 +940,7 @@ Delivered foundation:
 
 ## Cross-module architecture rules
 
-- News, Community Hub, Research Lab and Academy must not
+- News, Community Hub, Research Lab, Knowledge Forge and Academy must not
   create private duplicate comment, reaction or bookmark tables;
 - the first forum post, news body, article revision and lesson content remain
   entities of their owning modules rather than generic comments;
@@ -1008,7 +1000,7 @@ Delivered DSS Editor foundation:
 - document-grade `WIKI`/`ADMIN` extensions for structured tables, task lists,
   paired footnotes and one heading-derived table of contents, with strict
   profile boundaries and safe server rendering;
-- News, Community Hub, Research Lab add their own draft
+- News, Community Hub, Research Lab and Knowledge Forge add their own draft
   stores when their canonical domain models arrive.
 
 ## Comments, reactions and bookmarks
@@ -1123,7 +1115,7 @@ Delivered Activity Feed completion:
 - bilateral block filtering and retracted-event exclusion;
 - normalized, bounded module filters;
 - explicit per-user “since last visit” cursor and unread markers;
-- Mission Control integration with a failure-safe deterministic briefing (legacy dashboard route retained);
+- Command Deck integration with a failure-safe deterministic briefing;
 - dedicated integration coverage for visibility, ranking and visit state.
 
 ## Definition of Done
@@ -1236,9 +1228,7 @@ restart of Phase 5.
 
 ---
 
-<a id="phase-11--knowledge-forge"></a>
-
-# Phase 11 — Research Lab
+# Phase 11 — Knowledge Forge
 
 ## Scope
 
@@ -1256,7 +1246,7 @@ restart of Phase 5.
 ## Workflow
 
 - ordinary user edits always require review;
-- Research Lab Guardians may review/publish/reject/rollback revisions without becoming moderators;
+- Knowledge Forge Guardians may review/publish/reject/rollback revisions without becoming moderators;
 - every revision is preserved;
 - realtime collaborative editing is not required for 1.0.
 
@@ -1268,17 +1258,11 @@ restart of Phase 5.
 
 ---
 
-<a id="phase-12--research-lab"></a>
-
-# Phase 12 — Historical analytical-publishing inventory for Research Lab
+# Phase 12 — Research Lab
 
 ## Scope
 
-Historical scope inventory only: owner clarified that Research Lab is the
-single Wiki module. There is no separately approved analytical-content module.
-Preserve the features below for consolidation/scheduling at the Phase11
-brainstorm; this section does not authorize a second aggregate or implementation
-before that decision. News remains its own editorial owner.
+Long-form analytical and technical publishing distinct from News and collaborative Knowledge Forge.
 
 - research entries;
 - technical articles;
@@ -1452,7 +1436,7 @@ Combine the structured organization of IPB/XenForo/vBulletin with selected Reddi
 Admin notifications include:
 
 - News awaiting review;
-- Research Lab revisions awaiting review;
+- Knowledge Forge revisions awaiting review;
 - Academy courses awaiting review;
 - new support tickets;
 - moderation/security alerts;
@@ -1533,7 +1517,7 @@ Admin notifications include:
 - continue learning;
 - bookmarks;
 - completed courses;
-- Mission Control integration.
+- Command Deck integration.
 
 ## Assessment
 
@@ -1622,7 +1606,7 @@ Allowed statuses depend on request type.
 
 ---
 
-# Phase 19 — Mission Control, Universe Feed and Personalization
+# Phase 19 — Command Deck, Universe Feed and Personalization
 
 ## Universe Landing
 
@@ -1636,14 +1620,14 @@ Allowed statuses depend on request type.
 ## Universe Feed
 
 - activity since last visit;
-- new topics, posts, comments, News, Research Lab, Research and courses;
+- new topics, posts, comments, News, Knowledge Forge, Research and courses;
 - mentions, replies and reputation changes;
 - subscriptions/followed users/categories/topics;
 - unread markers and filters;
 - deterministic recommendations;
 - AI-generated summary as optional enhancement.
 
-## Mission Control
+## Command Deck
 
 - level, XP/Community Points, selected title and streak;
 - achievements and certificates;
@@ -1666,7 +1650,7 @@ Allowed statuses depend on request type.
 ## Definition of Done
 
 - guest and signed-in `/` experiences differ correctly;
-- Feed and Mission Control do not duplicate responsibilities;
+- Feed and Command Deck do not duplicate responsibilities;
 - optional AI failure does not break the dashboard.
 
 ---
@@ -1778,9 +1762,9 @@ cross-feature audit, redaction policy and the remaining product integrations.
 
 ---
 
-# Phase 22 — Command Deck, Analytics and Operations
+# Phase 22 — Mission Control, Analytics and Operations
 
-## Command Deck
+## Mission Control
 
 - platform dashboard;
 - user and module administration;
@@ -1920,9 +1904,9 @@ DSS Universe 1.0 is complete when:
 - Auth, sessions, IAM, access groups and security are complete;
 - Media Platform is the only file lifecycle boundary;
 - profiles, social graph, reputation, points, levels and titles work;
-- News, Research Lab, Community Hub, Academy, Downloads, Communications and Support provide their approved 1.0 core flows;
-- Universe Feed and Mission Control are functional and distinct;
-- Command Deck, Security Deck, CMS Builder, Media Library and Maintenance Center can operate the platform;
+- News, Knowledge Forge, Research Lab, Community Hub, Academy, Downloads, Communications and Support provide their approved 1.0 core flows;
+- Universe Feed and Command Deck are functional and distinct;
+- Mission Control, Security Deck, CMS Builder, Media Library and Maintenance Center can operate the platform;
 - CMS, Themes and SEO work;
 - AI integrations are safe, optional and observable;
 - critical scenarios are tested;
@@ -1972,7 +1956,7 @@ Current work:
   D2 architecture contracts and report-only inventory in verification/review
 
 Next product phase:
-  Phase 11 — Research Lab, not started
+  Phase 11 — Knowledge Forge, not started
   Only after D7 acceptance, the post-preparation stack audit and its acceptance,
   and an approved Phase 11 brainstorm
 ```

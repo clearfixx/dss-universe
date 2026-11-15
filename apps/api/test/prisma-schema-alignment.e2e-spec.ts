@@ -12,7 +12,7 @@
  * Full historical migrations in an owned disposable schema; no repair DDL.
  *
  * ⚠️ Important:
- * Catalog checks cover twelve legacy and three routing defaults; CRUD checks are representative,
+ * Catalog checks cover twelve legacy, three routing, two qualification and two consumption defaults; CRUD checks are representative,
  * not a claim that every model/business use case was exercised here.
  *
  * 🚀 Build. Share. Grow.
@@ -30,7 +30,7 @@ describe('Prisma and historical migration alignment (e2e)', () => {
     await fixture?.close();
   });
 
-  it('preserves twelve legacy defaults, three routing defaults and both Users indexes', async () => {
+  it('preserves legacy, routing, qualification and consumption defaults and both Users indexes', async () => {
     const columns = await fixture.prisma.$queryRaw<
       { table_name: string; column_default: string }[]
     >`
@@ -62,8 +62,30 @@ describe('Prisma and historical migration alignment (e2e)', () => {
       table_name,
       column_default: "timezone('UTC'::text, clock_timestamp())",
     }));
+    const qualificationDefaults = [
+      {
+        table_name: 'achievement_source_cursors',
+        column_default: 'CURRENT_TIMESTAMP',
+      },
+      {
+        table_name: 'reputation_qualification_states',
+        column_default: 'CURRENT_TIMESTAMP',
+      },
+    ];
+    const consumptionDefaults = [
+      'gamification_consumption_receipts',
+      'gamification_owner_progress',
+    ].map((table_name) => ({
+      table_name,
+      column_default: "timezone('UTC'::text, clock_timestamp())",
+    }));
     expect(columns).toEqual(
-      [...legacyDefaults, ...routingDefaults].sort((left, right) =>
+      [
+        ...legacyDefaults,
+        ...routingDefaults,
+        ...qualificationDefaults,
+        ...consumptionDefaults,
+      ].sort((left, right) =>
         left.table_name < right.table_name
           ? -1
           : left.table_name > right.table_name

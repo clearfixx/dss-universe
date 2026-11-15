@@ -1,6 +1,6 @@
 # DEBT-007 — Package B schema and transaction protocol
 
-Status: owner-accepted design PR103/merged992de6 and runtime B PR104/mergec6b5417; C/D and activation remain open.
+Status: owner-accepted design PR103/merged992de6; runtime B separately authorized, activation not authorized.
 Baseline: main `c2a242b`, owner-accepted routing design PR102.
 
 This makes the [accepted discovery design](DEBT_007_ROUTING_DESIGN.md) concrete.

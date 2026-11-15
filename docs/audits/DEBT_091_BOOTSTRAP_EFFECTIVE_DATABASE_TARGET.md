@@ -1,5 +1,12 @@
 # DEBT-091 — Bootstrap effective database target guard
 
+> Historical reproduction and candidate-verification notes retained from
+> `81e0a65`. PR110 was subsequently accepted and its implementation is already
+> in current main. Pending/running/candidate statements below are historical,
+> not new work or an instruction to rerun bootstrap.
+> See the [accepted policy](../development/DEBT_091_BOOTSTRAP_TARGET_POLICY.md)
+> and [integration checkpoint](D7_INTEGRATION_CHECKPOINT_2026-11-15.md).
+
 Date: 2026-10-29. Status: RESOLVED for the scoped bootstrap guard; accepted PR110834ea0b.
 Scope: development bootstrap safety, discovered during DEBT-031 D7 review.
 

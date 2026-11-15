@@ -11,7 +11,7 @@
  * and authoritative state guards.
  *
  * ⚠️ Important:
- * Optional credential-rotation diagnostics emit timings only, never secrets.
+ * Optional IAM/credential-rotation diagnostics emit timings only, never secrets.
  * Real authentication, assertions and the default test deadline stay intact.
  *
  * 🚀 Build. Share. Grow.
@@ -55,6 +55,7 @@ import { LocalMediaFileProcessor } from '../../worker/src/local-media-file.proce
 import { createMediaProcessingProcessor } from '../../worker/src/media-processing.processor';
 import { PostgresMediaProcessingStore } from '../../worker/src/postgres-media-processing.store';
 import { PostgresActivityProjector } from '../../worker/src/postgres-activity.projector';
+import { startIamPermissionTiming } from './helpers/iam-permission-timing.fixture';
 
 const E2E_UPLOADS_DIR = `.e2e-uploads-${process.pid}`;
 const PNG_1X1 = Buffer.from(
@@ -115,6 +116,12 @@ type InitiateMediaUploadResponse = {
 describe('DSS API (e2e)', () => {
   let app: INestApplication<App>;
   let processingPool: Pool;
+  let iamTiming: ReturnType<typeof startIamPermissionTiming>;
+
+  afterEach(() => {
+    iamTiming?.stop();
+    iamTiming = undefined;
+  });
 
   beforeAll(async () => {
     process.env.DSS_UPLOADS_DIR = E2E_UPLOADS_DIR;
@@ -144,6 +151,8 @@ describe('DSS API (e2e)', () => {
   });
 
   it('manages IAM permissions through the owned repository and rolls back failed audit', async () => {
+    iamTiming = startIamPermissionTiming(app);
+    iamTiming?.checkpoint('registration');
     const suffix = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const email = `iam-${suffix}@dss.test`;
     const password = 'iam-test-password-123';
@@ -159,14 +168,17 @@ describe('DSS API (e2e)', () => {
     const deniedKey = `${key}.denied`;
     const rollbackKey = `${key}.rollback`;
     try {
+      iamTiming?.checkpoint('anonymous-get');
       await request(app.getHttpServer())
         .get('/api/iam/permissions')
         .expect(401);
+      iamTiming?.checkpoint('denied-post');
       await request(app.getHttpServer())
         .post('/api/iam/permissions')
         .set('Authorization', `Bearer ${identity.tokens.accessToken}`)
         .send({ key: deniedKey, label: 'Denied' })
         .expect(403);
+      iamTiming?.checkpoint('permission-fixture');
       expect(await prisma.permission.count({ where: { key: deniedKey } })).toBe(
         0,
       );
@@ -180,7 +192,9 @@ describe('DSS API (e2e)', () => {
           data: { userId: identity.user.id, permissionId: permission.id },
         });
       }
+      iamTiming?.checkpoint('manager-login');
       const manager = await presentation.login({ email, password });
+      iamTiming?.checkpoint('authorized-crud-and-rollback');
       const bearer = `Bearer ${manager.tokens.accessToken}`;
       const created = await request(app.getHttpServer())
         .post('/api/iam/permissions')
@@ -253,6 +267,7 @@ describe('DSS API (e2e)', () => {
         .set('Authorization', bearer)
         .expect(404);
     } finally {
+      iamTiming?.checkpoint('cleanup');
       await prisma.permission.deleteMany({
         where: { key: { startsWith: key } },
       });

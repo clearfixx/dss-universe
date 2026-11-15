@@ -78,6 +78,7 @@ export interface AchievementsRepository {
     sourceId: string,
     reason: string,
     actorId: string | null,
+    origin?: 'ADMIN' | 'LEGACY_EVENT',
   ): Promise<AchievementAward[]>;
   awards(userId: string, includeRevoked: boolean): Promise<AchievementAward[]>;
 }

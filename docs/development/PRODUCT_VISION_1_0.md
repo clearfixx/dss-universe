@@ -35,12 +35,8 @@ Internal modules retain narrow responsibilities and explicit contracts.
 - DSS Intelligence: embedded platform capabilities, not a ChatGPT clone.
 
 Historical documents and the current dashboard route use conflicting names.
-Owner clarification2026-10-29: Research Lab is the single Wiki module.
-Knowledge Forge is a historical/product-planning alias, not a second module.
-Technical identifiers, route compatibility and the old Phase12 analytical-feature
-inventory must be reconciled before Phase11 implementation. No runtime/API,
-database identifier, route or frontend redesign is authorized by this naming
-decision; preserve the feature inventory for the required brainstorm.
+Research Lab versus Knowledge Forge also needs explicit reconciliation with the
+roadmap. Do not silently rename routes, merge modules or redesign the frontend.
 
 ## Confirmed 1.0 scope
 

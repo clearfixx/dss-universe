@@ -1,5 +1,14 @@
 # D7 — Baseline release review
 
+> Historical review snapshot, retained from `81e0a65` during the 2026-11-15
+> integration. The dated findings below are not current release authority.
+> In particular, the hostile-OS-writer requirement was superseded by the owner's
+> Nov8 trusted-writer decision; DEBT-079 runtime was accepted later.
+> Read the [integration checkpoint](D7_INTEGRATION_CHECKPOINT_2026-11-15.md),
+> [current reconciliation](D7_CURRENT_ACCEPTANCE_RECONCILIATION.md) and
+> [current register](../development/DEBT_REGISTER.md) for later accepted scope.
+> D7 itself remains unfinished; merging this snapshot does not accept the release.
+
 Date: 2026-10-22. Updated: 2026-10-29. Branch: `debt/d7-release-gate`.
 Current accepted baseline: `289b24cf78be3e960458a04285d724e8f2a9eb63`.
 Original baseline: `f118d82d62eca0f7783a79c0f624c7ee7e688c27` (accepted D6 merge PR79).

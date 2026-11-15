@@ -1328,6 +1328,7 @@ model OutboxEvent {
   @@index([createdAt, id], map: "outbox_routing_coordinate_idx")
   @@index([status, availableAt])
   @@index([aggregateType, aggregateId])
+  @@index([producer, aggregateType, aggregateId, eventName, id], map: "outbox_producer_evidence_idx")
   @@index([correlationId])
   @@map("outbox_events")
 }
@@ -1402,6 +1403,8 @@ model GamificationDelivery {
   activation    GamificationActivation           @relation(fields: [destination], references: [destination], onDelete: Restrict, onUpdate: Restrict)
   source        OutboxEvent                      @relation(fields: [eventId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   failures      GamificationPublicationFailure[]
+  admission     GamificationAdmission?
+  rejections    GamificationAdmissionRejection[]
 
   @@id([destination, eventId])
   @@index([destination, state, availableAt, eventId], map: "gamification_delivery_due_idx")
@@ -1422,6 +1425,109 @@ model GamificationPublicationFailure {
 
   @@index([destination, failedAt, id], map: "gamification_publication_failure_time_idx")
   @@map("gamification_publication_failures")
+}
+
+/// DSS File Passport: immutable root-owned delivery seal; no automatic consumer activation.
+model GamificationAdmission {
+  id                String   @id @db.Uuid
+  destination       String   @db.VarChar(64)
+  eventId           String   @db.Uuid
+  cutoff            DateTime @db.Timestamp(3)
+  descriptorId      String   @db.VarChar(128)
+  descriptorVersion Int
+  codecVersion      Int
+  projection        Json
+  projectionDigest  Bytes
+  encodedBytes      Int
+  createdAt         DateTime @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @db.Timestamp(3)
+
+  delivery GamificationDelivery             @relation(fields: [destination, eventId], references: [destination, eventId], onDelete: Restrict, onUpdate: Restrict)
+  receipt  GamificationConsumptionReceipt?
+  attempts GamificationConsumptionAttempt[]
+  progress GamificationOwnerProgress[]
+
+  @@unique([destination, eventId], map: "gamification_admission_event_key")
+  @@unique([id, destination], map: "gamification_admission_destination_key")
+  @@map("gamification_admissions")
+}
+
+/// DSS File Passport: fenced technical work state; owner effects remain owner-local.
+model GamificationConsumptionReceipt {
+  admissionId       String    @id @db.Uuid
+  destination       String    @db.VarChar(64)
+  state             String    @default("READY") @db.VarChar(16)
+  epoch             BigInt    @default(0)
+  claimSequence     BigInt    @default(0)
+  technicalFailures Int       @default(0)
+  claimToken        String?   @unique @db.Uuid
+  claimedAt         DateTime? @db.Timestamp(3)
+  leaseUntil        DateTime? @db.Timestamp(3)
+  availableAt       DateTime? @db.Timestamp(3)
+  blockCode         String?   @db.VarChar(64)
+  pointsDone        Boolean
+  levelsDone        Boolean
+  achievementsDone  Boolean
+  createdAt         DateTime  @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @db.Timestamp(3)
+  updatedAt         DateTime  @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @updatedAt @db.Timestamp(3)
+
+  admission GamificationAdmission @relation(fields: [admissionId, destination], references: [id, destination], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([admissionId, destination], map: "gamification_receipt_destination_key")
+  @@index([destination, state, availableAt, admissionId], map: "gamification_consumption_due_idx")
+  @@index([destination, state, leaseUntil, admissionId], map: "gamification_consumption_lease_idx")
+  @@map("gamification_consumption_receipts")
+}
+
+/// DSS File Passport: one open-to-terminal technical attempt; settled history is immutable.
+model GamificationConsumptionAttempt {
+  id            String    @id @db.Uuid
+  admissionId   String    @db.Uuid
+  epoch         BigInt
+  claimSequence BigInt
+  claimToken    String    @unique @db.Uuid
+  state         String    @default("OPEN") @db.VarChar(16)
+  code          String?   @db.VarChar(64)
+  startedAt     DateTime  @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @db.Timestamp(3)
+  finishedAt    DateTime? @db.Timestamp(3)
+
+  admission GamificationAdmission @relation(fields: [admissionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([admissionId, epoch, claimSequence], map: "gamification_consumption_attempt_key")
+  @@map("gamification_consumption_attempts")
+}
+
+/// DSS File Passport: bounded owner-local resume coordinates, persisted with receipt CAS.
+model GamificationOwnerProgress {
+  admissionId  String   @db.Uuid
+  owner        String   @db.VarChar(16)
+  codecVersion Int
+  coordinates  Json
+  updatedAt    DateTime @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @updatedAt @db.Timestamp(3)
+
+  admission GamificationAdmission @relation(fields: [admissionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([admissionId, owner])
+  @@map("gamification_owner_progress")
+}
+
+/// DSS File Passport: append-only projection rejection, distinct from queue publication failure.
+model GamificationAdmissionRejection {
+  id                String   @id @db.Uuid
+  destination       String   @db.VarChar(64)
+  eventId           String   @db.Uuid
+  claimToken        String   @unique @db.Uuid
+  cycle             Int
+  cycleAttempt      Int
+  descriptorId      String?  @db.VarChar(128)
+  descriptorVersion Int?
+  code              String   @db.VarChar(64)
+  observedAt        DateTime @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @db.Timestamp(3)
+
+  delivery GamificationDelivery @relation(fields: [destination, eventId], references: [destination, eventId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([destination, observedAt, id], map: "gamification_admission_rejection_time_idx")
+  @@index([destination, eventId, cycle, cycleAttempt], map: "gamification_rejection_delivery_idx")
+  @@map("gamification_admission_rejections")
 }
 
 model ProcessedEvent {
@@ -1527,11 +1633,82 @@ model ReputationEntry {
   reverses ReputationEntry? @relation("ReputationReversal", fields: [reversesEntryId], references: [id], onDelete: Restrict)
   reversal ReputationEntry? @relation("ReputationReversal")
 
+  qualificationEvent     ReputationQualificationEvent?  @relation("ReputationQualificationEntry")
+  qualificationReversals ReputationQualificationEvent[] @relation("ReputationQualificationOriginal")
+  qualificationFacts     ReputationQualificationFact[]
+  qualificationState     ReputationQualificationState?
+
   @@index([recipientId, createdAt, id])
   @@index([actorId, recipientId, createdAt])
   @@index([createdAt, recipientId])
   @@index([reversesEntryId])
   @@map("reputation_entries")
+}
+
+/// DSS File Passport: private producer provenance; no automatic gamification activation.
+model ReputationQualificationEvent {
+  id              String   @id @default(uuid()) @db.Uuid
+  eventId         String   @unique @db.Uuid
+  entryId         String   @unique
+  kind            String
+  actorId         String
+  recipientId     String
+  value           Int
+  originalEntryId String?
+  occurredAt      DateTime
+  provenance      String
+  contractVersion Int      @default(1)
+  createdAt       DateTime @default(now())
+
+  entry    ReputationEntry               @relation("ReputationQualificationEntry", fields: [entryId], references: [id], onDelete: Restrict)
+  original ReputationEntry?              @relation("ReputationQualificationOriginal", fields: [originalEntryId], references: [id], onDelete: Restrict)
+  facts    ReputationQualificationFact[]
+
+  @@index([originalEntryId, kind])
+  @@map("reputation_qualification_events")
+}
+
+/// DSS File Passport: immutable ENTRY lifecycle and independent EVENT contributions.
+model ReputationQualificationFact {
+  id                  String   @id @default(uuid()) @db.Uuid
+  eventBindingId      String   @db.Uuid
+  scope               String
+  scopeEntryId        String?
+  revision            BigInt
+  action              String
+  qualificationFactId String   @db.Uuid
+  contractVersion     Int      @default(1)
+  createdAt           DateTime @default(now())
+
+  eventBinding    ReputationQualificationEvent   @relation(fields: [eventBindingId], references: [id], onDelete: Restrict)
+  entry           ReputationEntry?               @relation(fields: [scopeEntryId], references: [id], onDelete: Restrict)
+  qualification   ReputationQualificationFact    @relation("ReputationQualificationSelf", fields: [qualificationFactId], references: [id], onDelete: Restrict)
+  withdrawals     ReputationQualificationFact[]  @relation("ReputationQualificationSelf")
+  qualifiedStates ReputationQualificationState[] @relation("ReputationQualifiedState")
+  currentStates   ReputationQualificationState[] @relation("ReputationCurrentState")
+
+  @@unique([scopeEntryId, revision], map: "reputation_qualification_revision_key")
+  @@unique([id, scopeEntryId], map: "reputation_qualification_scope_key")
+  @@unique([eventBindingId, scope], map: "reputation_qualification_event_scope_key")
+  @@index([qualificationFactId])
+  @@map("reputation_qualification_facts")
+}
+
+/// DSS File Passport: current owned pointer, never a consumer eligibility or delivery cursor.
+model ReputationQualificationState {
+  originalEntryId     String   @id
+  status              String
+  revision            BigInt?
+  qualificationFactId String?  @db.Uuid
+  currentFactId       String?  @db.Uuid
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @default(now()) @updatedAt
+
+  entry         ReputationEntry              @relation(fields: [originalEntryId], references: [id], onDelete: Restrict)
+  qualification ReputationQualificationFact? @relation("ReputationQualifiedState", fields: [qualificationFactId, originalEntryId], references: [id, scopeEntryId], onDelete: Restrict)
+  current       ReputationQualificationFact? @relation("ReputationCurrentState", fields: [currentFactId, originalEntryId], references: [id, scopeEntryId], onDelete: Restrict)
+
+  @@map("reputation_qualification_states")
 }
 
 model ReputationPolicy {
@@ -1750,14 +1927,18 @@ model AchievementAward {
   sourceId        String?
   awardedAt       DateTime             @default(now())
 
-  user        User                        @relation(fields: [userId], references: [id], onDelete: Restrict)
-  achievement AchievementDefinition       @relation(fields: [achievementId], references: [id], onDelete: Restrict)
-  rule        AchievementRule?            @relation(fields: [ruleId], references: [id], onDelete: Restrict)
-  revocation  AchievementAwardRevocation?
+  user          User                           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  achievement   AchievementDefinition          @relation(fields: [achievementId], references: [id], onDelete: Restrict)
+  rule          AchievementRule?               @relation(fields: [ruleId], references: [id], onDelete: Restrict)
+  revocation    AchievementAwardRevocation?
+  qualification AchievementAwardQualification?
 
   @@unique([achievementId, sourceEventId])
   @@index([userId, awardedAt, id])
   @@index([sourceType, sourceId])
+  // Inventory id collation C is SQL-owned; catalog/query-plan regressions verify it.
+  @@index([sourceType, sourceId, kind, id], map: "achievement_source_inventory_idx")
+  @@index([sourceEventId, kind, id], map: "achievement_event_inventory_idx")
   @@index([ruleId, userId, awardedAt])
   @@map("achievement_awards")
 }
@@ -1773,4 +1954,82 @@ model AchievementAwardRevocation {
 
   @@index([occurredAt])
   @@map("achievement_award_revocations")
+}
+
+/// Achievements-owned, inactive qualification progress; never a producer journal.
+model AchievementSourceCursor {
+  id                      String   @id @default(uuid())
+  producer                String
+  sourceKind              String
+  sourceId                String
+  appliedRevision         BigInt   @default(0)
+  targetRevision          BigInt   @default(0)
+  retiredThrough          BigInt   @default(0)
+  pendingRetiredThrough   BigInt   @default(0)
+  phase                   String   @default("RETIRING")
+  enrollmentState         String   @default("PENDING")
+  generation              BigInt   @default(0)
+  progress                BigInt   @default(0)
+  inventoryAfterId        String?
+  retirementAfterRevision BigInt?
+  retirementAfterAwardId  String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @default(now()) @updatedAt
+
+  facts AchievementSourceFact[]
+
+  @@unique([producer, sourceKind, sourceId], map: "achievement_source_scope_key")
+  @@unique([id, producer], map: "achievement_source_cursor_producer_key")
+  @@index([sourceKind, sourceId, producer], map: "achievement_source_compatibility_idx")
+  @@map("achievement_source_cursors")
+}
+
+/// Immutable verified owner input. Canonical event IDs can carry several facets.
+model AchievementSourceFact {
+  id                          String   @id @default(uuid())
+  cursorId                    String
+  producer                    String
+  producerFactId              String
+  canonicalEventId            String
+  revision                    BigInt
+  action                      String
+  qualificationId             String
+  qualificationRevision       BigInt
+  qualificationEventId        String
+  qualificationFactId         String
+  retiredThroughRevision      BigInt
+  predecessorWithdrawalFactId String?
+  codecVersion                Int      @default(1)
+  factDigest                  String
+  eventProjection             Json?
+  eventProjectionDigest       String?
+  createdAt                   DateTime @default(now())
+
+  cursor AchievementSourceCursor         @relation(fields: [cursorId, producer], references: [id, producer], onDelete: Restrict, onUpdate: Restrict)
+  awards AchievementAwardQualification[]
+
+  @@unique([cursorId, revision], map: "achievement_source_revision_key")
+  @@unique([producer, producerFactId], map: "achievement_source_producer_fact_key")
+  @@unique([cursorId, id, revision], map: "achievement_source_fact_binding_key")
+  @@index([producer, canonicalEventId, id], map: "achievement_source_event_idx")
+  @@index([producer, qualificationEventId], map: "achievement_source_qualification_event_idx")
+  @@map("achievement_source_facts")
+}
+
+/// Immutable award provenance. Retirement progress belongs to the cursor.
+model AchievementAwardQualification {
+  awardId               String   @id
+  cursorId              String
+  factId                String
+  qualificationRevision BigInt
+  sourceEventId         String
+  mappingEvidenceId     String?
+  mappingEvidenceDigest String?
+  createdAt             DateTime @default(now())
+
+  award AchievementAward      @relation(fields: [awardId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  fact  AchievementSourceFact @relation(fields: [cursorId, factId, qualificationRevision], references: [cursorId, id, revision], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([cursorId, qualificationRevision, awardId], map: "achievement_qualification_retirement_idx")
+  @@map("achievement_award_qualifications")
 }

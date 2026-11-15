@@ -11,6 +11,7 @@
  * 🧠 Responsibilities:
  * • validates upload declarations through the policy registry;
  * • creates short-lived sessions with opaque storage keys;
+ * • requires an exclusive INITIATED claim before binary intake;
  * • enforces session ownership and abort lifecycle rules.
  *
  * ⚠️ Important:
@@ -98,6 +99,14 @@ export class MediaUploadSessionService {
     }
 
     return this.sessions.updateStatus(session.id, MediaUploadStatus.ABORTED);
+  }
+
+  async claimUpload(sessionId: string): Promise<void> {
+    if (!(await this.sessions.claimInitiated(sessionId))) {
+      throw new ConflictException(
+        'Media upload session cannot accept content.',
+      );
+    }
   }
 
   updateStatus(

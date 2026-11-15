@@ -10,7 +10,8 @@
  *
  * 🧠 Responsibilities:
  * • serializes definitions, rules, and per-user awards;
- * • applies idempotency, repeatability, cooldown, and UTC daily caps;
+ * • delegates idempotent grant policy to the shared private writer;
+ * • orders compatibility/source guards before pair and revoke guards;
  * • records manual and event-driven awards plus source rollback;
  * • appends Audit and Outbox evidence inside business transactions.
  *
@@ -46,10 +47,16 @@ import {
   type ManualAwardTransaction,
 } from '../../contracts/manual-award-transaction.port';
 import { awardInclude, type AwardRow } from './achievement-award.shape';
+import { AchievementEvidenceWriter } from './achievement-evidence.writer';
+import { AchievementRuleAwardWriter } from './achievement-rule-award.writer';
+import { QualificationBlockedError } from '../../domain/errors/qualification-blocked.error';
+import { achievementLegacyCoordinates } from './achievement-qualified-facts';
 import {
-  ACHIEVEMENTS_PRODUCER,
-  AchievementEvidenceWriter,
-} from './achievement-evidence.writer';
+  lockAchievementCompatibilitySources,
+  lockAchievementQualifiedSources,
+  lockAchievementAwardPairs,
+  lockAchievementRevocations,
+} from './achievement-source-locks';
 
 const ruleInclude = { achievement: true } as const;
 
@@ -60,6 +67,7 @@ type RuleRow = Prisma.AchievementRuleGetPayload<{
 @Injectable()
 export class PrismaAchievementsRepository implements AchievementsRepository {
   private readonly evidence: AchievementEvidenceWriter;
+  private readonly ruleAwards: AchievementRuleAwardWriter;
   constructor(
     private readonly prisma: PrismaService,
     audit: AuditWriterService,
@@ -68,6 +76,7 @@ export class PrismaAchievementsRepository implements AchievementsRepository {
     private readonly manualAwards: ManualAwardTransaction,
   ) {
     this.evidence = new AchievementEvidenceWriter(audit, outbox);
+    this.ruleAwards = new AchievementRuleAwardWriter(this.evidence);
   }
 
   definitions(includeInactive: boolean): Promise<AchievementDefinition[]> {
@@ -241,78 +250,34 @@ export class PrismaAchievementsRepository implements AchievementsRepository {
     userId: string,
   ): Promise<AchievementConsumption> {
     return this.prisma.$transaction(async (transaction) => {
-      const consumerName = `${ACHIEVEMENTS_PRODUCER}:${rule.id}`;
-      await this.lock(
-        transaction,
-        `achievements:award:${userId}:${rule.achievementId}`,
+      const coordinates = achievementLegacyCoordinates(
+        event.sourceType,
+        event.sourceId,
+        event.eventId,
       );
-      const processed = await transaction.processedEvent.findUnique({
-        where: {
-          eventId_consumerName: {
-            eventId: event.eventId,
-            consumerName,
+      await lockAchievementCompatibilitySources(transaction, coordinates);
+      for (const coordinate of coordinates) {
+        if (
+          await transaction.achievementSourceCursor.findFirst({
+            where: coordinate,
+            select: { id: true },
+          })
+        ) {
+          throw new QualificationBlockedError('LEGACY_FACT_REQUIRED');
+        }
+      }
+      if (
+        event.producer &&
+        (await transaction.achievementSourceFact.findFirst({
+          where: {
+            producer: event.producer,
+            qualificationEventId: event.eventId,
           },
-        },
-        select: { id: true },
-      });
-      if (processed) {
-        return { ruleId: rule.id, status: 'DUPLICATE', award: null };
-      }
-      const activeAward = await transaction.achievementAward.findFirst({
-        where: {
-          userId,
-          achievementId: rule.achievementId,
-          revocation: null,
-        },
-        orderBy: [{ awardedAt: 'desc' }, { id: 'desc' }],
-      });
-      if (!rule.repeatable && activeAward) {
-        await this.markProcessed(transaction, event, consumerName);
-        return { ruleId: rule.id, status: 'IGNORED', award: null };
-      }
-      if (
-        rule.cooldownHours > 0 &&
-        activeAward &&
-        activeAward.awardedAt.getTime() + rule.cooldownHours * 3_600_000 >
-          event.occurredAt.getTime()
-      ) {
-        await this.markProcessed(transaction, event, consumerName);
-        return { ruleId: rule.id, status: 'CAPPED', award: null };
-      }
-      if (
-        rule.dailyCap !== null &&
-        (await this.dailyCount(
-          transaction,
-          rule.id,
-          userId,
-          event.occurredAt,
-        )) >= rule.dailyCap
-      ) {
-        await this.markProcessed(transaction, event, consumerName);
-        return { ruleId: rule.id, status: 'CAPPED', award: null };
-      }
-      const award = await transaction.achievementAward.create({
-        data: {
-          userId,
-          achievementId: rule.achievementId,
-          ruleId: rule.id,
-          kind: 'RULE',
-          reason: `Matched achievement event ${event.eventName}.`,
-          sourceEventId: event.eventId,
-          sourceEventName: event.eventName,
-          sourceType: event.sourceType,
-          sourceId: event.sourceId,
-          awardedAt: event.occurredAt,
-        },
-        include: awardInclude,
-      });
-      await this.markProcessed(transaction, event, consumerName);
-      await this.evidence.recordAward(transaction, 'awarded', null, award);
-      return {
-        ruleId: rule.id,
-        status: 'AWARDED',
-        award: this.toAward(award),
-      };
+          select: { id: true },
+        }))
+      )
+        throw new QualificationBlockedError('LEGACY_FACT_REQUIRED');
+      return this.ruleAwards.consume(transaction, rule, event, userId);
     });
   }
 
@@ -331,7 +296,73 @@ export class PrismaAchievementsRepository implements AchievementsRepository {
     actorId: string | null,
   ): Promise<AchievementRevokeResult> {
     return this.prisma.$transaction(async (transaction) => {
-      await this.lock(transaction, `achievements:revoke:${awardId}`);
+      const anchor = await transaction.achievementAward.findUnique({
+        where: { id: awardId },
+        select: {
+          userId: true,
+          achievementId: true,
+          sourceType: true,
+          sourceId: true,
+          sourceEventId: true,
+          qualification: {
+            select: {
+              fact: {
+                select: {
+                  cursor: {
+                    select: {
+                      producer: true,
+                      sourceKind: true,
+                      sourceId: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+      if (!anchor) return { status: 'NOT_FOUND', award: null };
+      const coordinates = anchor.sourceEventId
+        ? achievementLegacyCoordinates(
+            anchor.sourceType,
+            anchor.sourceId,
+            anchor.sourceEventId,
+          )
+        : [];
+      if (anchor.qualification)
+        coordinates.push(anchor.qualification.fact.cursor);
+      await lockAchievementCompatibilitySources(transaction, coordinates);
+      const qualification =
+        anchor.qualification ??
+        (await transaction.achievementAwardQualification.findUnique({
+          where: { awardId },
+          select: {
+            fact: {
+              select: {
+                cursor: {
+                  select: { producer: true, sourceKind: true, sourceId: true },
+                },
+              },
+            },
+          },
+        }));
+      if (
+        qualification &&
+        !coordinates.some(
+          (coordinate) =>
+            coordinate.sourceKind === qualification.fact.cursor.sourceKind &&
+            coordinate.sourceId === qualification.fact.cursor.sourceId,
+        )
+      )
+        throw new Error(
+          'Achievement binding changed outside the guarded owner path.',
+        );
+      await lockAchievementQualifiedSources(
+        transaction,
+        qualification ? [qualification.fact.cursor] : [],
+      );
+      await lockAchievementAwardPairs(transaction, [anchor]);
+      await lockAchievementRevocations(transaction, [awardId]);
       const award = await transaction.achievementAward.findUnique({
         where: { id: awardId },
         include: awardInclude,
@@ -354,8 +385,26 @@ export class PrismaAchievementsRepository implements AchievementsRepository {
     sourceId: string,
     reason: string,
     actorId: string | null,
+    origin: 'ADMIN' | 'LEGACY_EVENT' = 'ADMIN',
   ): Promise<AchievementAward[]> {
     return this.prisma.$transaction(async (transaction) => {
+      const coordinate = { sourceKind: sourceType, sourceId };
+      await lockAchievementCompatibilitySources(transaction, [coordinate]);
+      const scopes = await transaction.achievementSourceCursor.findMany({
+        where: coordinate,
+        select: { producer: true, sourceKind: true, sourceId: true },
+      });
+      if (origin === 'LEGACY_EVENT' && scopes.length > 0)
+        throw new QualificationBlockedError('LEGACY_FACT_REQUIRED');
+      if (
+        origin === 'LEGACY_EVENT' &&
+        (await transaction.achievementAwardQualification.findFirst({
+          where: { award: { sourceType, sourceId } },
+          select: { awardId: true },
+        }))
+      )
+        throw new QualificationBlockedError('LEGACY_FACT_REQUIRED');
+      await lockAchievementQualifiedSources(transaction, scopes);
       await this.lock(
         transaction,
         `achievements:source:${sourceType}:${sourceId}`,
@@ -366,7 +415,17 @@ export class PrismaAchievementsRepository implements AchievementsRepository {
         orderBy: { id: 'asc' },
       });
       const revoked: AchievementAward[] = [];
-      for (const award of awards) {
+      await lockAchievementAwardPairs(transaction, awards);
+      await lockAchievementRevocations(
+        transaction,
+        awards.map((award) => award.id),
+      );
+      for (const candidate of awards) {
+        const award = await transaction.achievementAward.findUniqueOrThrow({
+          where: { id: candidate.id },
+          include: awardInclude,
+        });
+        if (award.revocation) continue;
         const revocation = await transaction.achievementAwardRevocation.create({
           data: { awardId: award.id, reason, revokedById: actorId },
         });
@@ -396,45 +455,6 @@ export class PrismaAchievementsRepository implements AchievementsRepository {
       orderBy: [{ awardedAt: 'desc' }, { id: 'desc' }],
     });
     return rows.map((row) => this.toAward(row));
-  }
-
-  private async dailyCount(
-    transaction: TransactionClient,
-    ruleId: string,
-    userId: string,
-    occurredAt: Date,
-  ): Promise<number> {
-    const start = new Date(
-      Date.UTC(
-        occurredAt.getUTCFullYear(),
-        occurredAt.getUTCMonth(),
-        occurredAt.getUTCDate(),
-      ),
-    );
-    const end = new Date(start.getTime() + 86_400_000);
-    return transaction.achievementAward.count({
-      where: {
-        ruleId,
-        userId,
-        awardedAt: { gte: start, lt: end },
-        revocation: null,
-      },
-    });
-  }
-
-  private markProcessed(
-    transaction: TransactionClient,
-    event: AchievementEvent,
-    consumerName: string,
-  ) {
-    return transaction.processedEvent.create({
-      data: {
-        eventId: event.eventId,
-        consumerName,
-        eventName: event.eventName,
-        eventVersion: event.eventVersion,
-      },
-    });
   }
 
   private toRule(row: RuleRow): AchievementRule {

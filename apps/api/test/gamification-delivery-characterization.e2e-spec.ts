@@ -188,8 +188,7 @@ describe('Gamification delivery boundaries (characterization, not automatic wiri
     ).toBe(0);
   });
 
-  it('characterizes Achievements late-original award after empty rollback, then explicit rollback replay', async () => {
-    const input = await event();
+  async function configuredAchievement(input: IntegrationEventJob) {
     const userId = (input.payload as { authorId: string }).authorId;
     const key = randomUUID();
     const definition = await fixture.prisma.achievementDefinition.create({
@@ -206,13 +205,23 @@ describe('Gamification delivery boundaries (characterization, not automatic wiri
     const rule = await fixture.prisma.achievementRule.create({
       data: {
         achievementId: definition.id,
-        eventName: input.eventName,
+        eventName: `synthetic.achievement-${key}.v1`,
         recipientPayloadKey: 'beneficiaryId',
         createdById: userId,
         updatedById: userId,
       },
     });
-    const original = { ...input, payload: { beneficiaryId: userId } };
+    return { userId, definition, rule };
+  }
+
+  it('characterizes Achievements late-original award after empty rollback, then explicit rollback replay', async () => {
+    const input = await event();
+    const { userId, definition, rule } = await configuredAchievement(input);
+    const original = {
+      ...input,
+      eventName: rule.eventName,
+      payload: { beneficiaryId: userId },
+    };
     const rollback: IntegrationEventJob = {
       ...input,
       eventId: randomUUID(),
@@ -252,5 +261,45 @@ describe('Gamification delivery boundaries (characterization, not automatic wiri
         where: { awardId: awarded.id },
       }),
     ).toBe(1);
+  });
+
+  it('characterizes a successor ignored before predecessor rollback and deduplicated thereafter', async () => {
+    const input = await event();
+    const { userId, definition, rule } = await configuredAchievement(input);
+    const original = {
+      ...input,
+      eventName: rule.eventName,
+      payload: { beneficiaryId: userId },
+    };
+    const successor = { ...original, eventId: randomUUID() };
+    const rollback: IntegrationEventJob = {
+      ...input,
+      eventId: randomUUID(),
+      eventName: 'synthetic.source.reversed.v1',
+      payload: {
+        reversedSourceType: input.aggregateType,
+        reversedSourceId: input.aggregateId,
+      },
+    };
+    await expect(achievements.consume(original)).resolves.toMatchObject([
+      { ruleId: rule.id, status: 'AWARDED' },
+    ]);
+    await expect(achievements.consume(successor)).resolves.toMatchObject([
+      { ruleId: rule.id, status: 'IGNORED', award: null },
+    ]);
+    await expect(achievements.consume(rollback)).resolves.toHaveLength(1);
+    await expect(achievements.consume(successor)).resolves.toMatchObject([
+      { ruleId: rule.id, status: 'DUPLICATE', award: null },
+    ]);
+    const awards = await fixture.prisma.achievementAward.findMany({
+      where: { achievementId: definition.id },
+      include: { revocation: true },
+    });
+    expect(awards).toHaveLength(1);
+    expect(awards[0]).toMatchObject({ sourceEventId: original.eventId });
+    expect(awards[0].revocation).not.toBeNull();
+    expect(
+      awards.some((award) => award.sourceEventId === successor.eventId),
+    ).toBe(false);
   });
 });

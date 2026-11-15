@@ -1,5 +1,12 @@
 # D7 — Individual debt review matrix
 
+> Historical 91-entry matrix from `81e0a65`, integrated on 2026-11-15 for
+> traceability. These routes and counts are not a current closure verdict.
+> Later debts and owner decisions are recorded in the
+> [current register](../development/DEBT_REGISTER.md) and
+> [integration checkpoint](D7_INTEGRATION_CHECKPOINT_2026-11-15.md).
+> No old M/O/Q/X route is promoted by merging this historical matrix.
+
 Updated: 2026-10-29. Current accepted baseline: `289b24c`; initial review baseline
 was `f118d82`.
 Status: **IN PROGRESS; not a release certificate**.

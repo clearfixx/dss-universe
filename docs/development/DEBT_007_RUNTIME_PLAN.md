@@ -1,6 +1,6 @@
 # DEBT-007 — Detailed delivery implementation plan
 
-Status: owner-accepted design PR100, A/A.1 PR101 and routing persistence B PR104; C/D and activation remain open.
+Status: design proposal; runtime implementation and activation require separate acceptance.
 Source checkpoint: accepted main `a715ece`; prepared on 2026-10-28.
 
 ## Approved decisions
@@ -19,11 +19,9 @@ historical. Neither document constitutes evidence that automatic delivery works.
 Later owner decisions accepted this plan in PR100/merge625d1b9 and separately
 authorized package A (owner runtime assemblies) and A.1 (failed Prisma connect
 cleanup). Their [implementation boundary and evidence](DEBT_007_RUNTIME_ASSEMBLIES.md)
-were accepted in PR101/merge2c42e89 after full gate/CI. Routing design/protocol
-PR102/103 and runtime B PR104 are subsequently accepted; the
-[B evidence](DEBT_007_ROUTING_PERSISTENCE.md) records its bounded persistence scope.
-Queue consumption, operational activation and historical backfill are not
-authorized by A/A.1 or B acceptance.
+were accepted in PR101/merge2c42e89. The next
+[routing persistence design](DEBT_007_ROUTING_DESIGN.md) remains a proposal. Routing,
+queue activation and historical backfill are not authorized by A/A.1.
 
 ## Process and ownership
 
@@ -204,6 +202,10 @@ Current C design/ordering characterization is in
 [the consumer proposal](DEBT_007_CONSUMER_DESIGN.md), based on accepted maincc39080.
 It separates queue publication from consumption and records DEBT-090 as an open
 owner-policy prerequisite. Proposed sub-stages do not authorize runtime changes.
+The [C1 protocol candidate](DEBT_007_CONSUMER_PROTOCOL.md) now records the approved
+new-cycle policy, producer-owned revisions and retirement-before-eligibility,
+plus the additional successor-before-withdrawal characterization. Runtime scope
+and remaining storage/performance evidence still require separate acceptance.
 
 | Package | Scope                                                   | Required evidence                                                                                     |
 | ------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |

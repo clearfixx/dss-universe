@@ -38,6 +38,10 @@ import {
   LEVEL_RECIPIENT_EXISTENCE,
   type LevelRecipientExistence,
 } from '../../contracts/recipient-existence.port';
+import {
+  LEVEL_SYNCHRONIZATION,
+  type LevelSynchronization,
+} from '../../contracts/level-synchronization.port';
 
 import {
   LEVELS_REPOSITORY,
@@ -65,6 +69,8 @@ export class LevelsService {
     private readonly points: LevelPointsBalanceReader,
     @Inject(LEVEL_RECIPIENT_EXISTENCE)
     private readonly users: LevelRecipientExistence,
+    @Inject(LEVEL_SYNCHRONIZATION)
+    private readonly synchronization: LevelSynchronization,
   ) {}
 
   definitions(): Promise<LevelDefinition[]> {
@@ -131,18 +137,17 @@ export class LevelsService {
     if (!(await this.users.exists(event.userId))) {
       throw new BadRequestException('Level event recipient does not exist.');
     }
-    const [balance, definitions] = await Promise.all([
-      this.points.balance(event.userId),
-      this.levels.definitions(),
-    ]);
-    const target = this.calculate(event.userId, balance, definitions);
-    return this.levels.sync(event, target.currentLevel, balance);
+    return this.synchronization.sync(
+      event,
+      (balance, definitions) =>
+        this.calculate(event.userId, balance, definitions).currentLevel,
+    );
   }
 
   private calculate(
     userId: string,
     balance: number,
-    definitions: LevelDefinition[],
+    definitions: readonly LevelDefinition[],
   ): LevelProgress {
     const ordered = [...definitions].sort(
       (left, right) => left.level - right.level,
