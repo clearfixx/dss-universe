@@ -1,5 +1,13 @@
 # D7 — Accepted history and register reconciliation
 
+Update2026-11-15: the owner requested integration of the outstanding agent work
+before a new working policy. The retained review/matrix and diagnostic documents
+are integrated as explicitly historical snapshots. See the
+[integration checkpoint](D7_INTEGRATION_CHECKPOINT_2026-11-15.md) for accepted
+L1/source-guard scope, remaining delivery work and the unchanged trusted-writer
+decision. This is not final D7 acceptance; the older dated observations below
+remain evidence of their own checkpoints.
+
 Date:2026-11-06. Accepted source baseline: `f1a1bcc` (R3 / PR133).
 Status: scoped reconciliation, **not final D7 acceptance**. Runtime, migrations,
 API/Worker, application data and frontend are unchanged by this packet.
