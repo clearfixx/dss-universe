@@ -51,12 +51,14 @@ import { RecipientExistenceAdapter } from './infrastructure/recipient-existence.
 import { LevelPointsBalanceAdapter } from './infrastructure/level-points-balance.adapter';
 import { PrismaManualAwardTransaction } from './infrastructure/prisma-manual-award.transaction';
 import { PrismaTitleGrantTransaction } from './infrastructure/prisma-title-grant.transaction';
+import { LevelSynchronizationCompositionModule } from './level-synchronization-composition.module';
 @Global()
 @Module({
   imports: [
     PrismaModule,
     AuditModule,
     EventsModule,
+    LevelSynchronizationCompositionModule,
     CustomTitlesModule,
     UsersModule,
     CommunityPointsModule,

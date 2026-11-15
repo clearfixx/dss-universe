@@ -14,8 +14,6 @@
 
 import type {
   LevelDefinition,
-  LevelEvent,
-  LevelSyncResult,
   LevelTransitionHistory,
 } from '../types/levels.type';
 
@@ -28,11 +26,6 @@ export interface LevelsRepository {
     threshold: number,
     updatedById: string,
   ): Promise<LevelDefinition | null>;
-  sync(
-    event: LevelEvent,
-    targetLevel: number,
-    balance: number,
-  ): Promise<LevelSyncResult>;
   history(
     userId: string,
     page: number,
