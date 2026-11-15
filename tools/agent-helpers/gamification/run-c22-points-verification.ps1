@@ -3,14 +3,15 @@
 ===============================================================
 🚀 DSS Universe
 📦 Module: Points Source Ordering Verification
-📄 File: tools/agent-helpers/gamification/run-c22-points-characterization.ps1
-🎯 Purpose: Runs real owner DB characterization and retains its unique receipt.
+📄 File: tools/agent-helpers/gamification/run-c22-points-verification.ps1
+🎯 Purpose: Runs current source-guard regressions; PR161 retains the original characterization.
 🧠 Responsibilities: Pins Node and prepared disposable endpoints without logging credentials.
 🏗️ Architecture: Local test helper; no provisioning, reset, activation or retries.
 ⚠️ Important: Synthetic events are not canonical producer or HTTP evidence.
 🚀 Build. Share. Grow.
 ===============================================================
 #>
+param([ValidateSet('focused','regression')][string]$Kind = 'focused')
 $ErrorActionPreference = 'Stop'
 $pointsRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../..'))
 Set-Location -LiteralPath $pointsRoot
@@ -26,16 +27,18 @@ $env:TEST_REDIS_PORT = '6380'
 $env:OUTBOX_DISPATCH_INTERVAL_MS = '0'
 $env:MEDIA_CLEANUP_INTERVAL_MS = '0'
 $pointsNonce = [Guid]::NewGuid().ToString('N')
-$pointsLog = Join-Path $pointsRoot ('node_modules/.cache/debt007-c22-points-source-' + $pointsNonce + '.log')
-$pointsReceipt = Join-Path $pointsRoot ('tools/agent-helpers/debt007-c22-points-source-' + $pointsNonce + '.local.json')
+$pointsLog = Join-Path $pointsRoot ('node_modules/.cache/debt007-c22-points-source-guard-' + $Kind + '-' + $pointsNonce + '.log')
+$pointsReceipt = Join-Path $pointsRoot ('tools/agent-helpers/debt007-c22-points-source-guard-' + $Kind + '-' + $pointsNonce + '.local.json')
 $pointsStart = [DateTime]::UtcNow.ToString('o')
 $pointsCode = 1
 try {
-    Write-Host "Points characterization log: $pointsLog"
-    & pnpm --filter @dss/api exec jest --config test/jest-e2e.json --runInBand --runTestsByPath test/community-points-source-order.characterization.e2e-spec.ts *> $pointsLog
+    Write-Host "Points $Kind verification log: $pointsLog"
+    $pointsSuites = @('test/community-points-source-synchronization.e2e-spec.ts')
+    if ($Kind -eq 'regression') { $pointsSuites += @('test/community-points-cap-audit.e2e-spec.ts', 'test/community-points-ledger.e2e-spec.ts') }
+    & pnpm --filter @dss/api exec jest --config test/jest-e2e.json --runInBand --runTestsByPath @pointsSuites *> $pointsLog
     $pointsCode = $LASTEXITCODE
 } finally {
-    [ordered]@{ head=(& git rev-parse HEAD).Trim(); startedAt=$pointsStart; endedAt=[DateTime]::UtcNow.ToString('o'); exitCode=$pointsCode; log=$pointsLog; node='24.18.0'; workingStatus=(& git status --porcelain | Out-String).Trim() } |
+    [ordered]@{ head=(& git rev-parse HEAD).Trim(); kind=$Kind; startedAt=$pointsStart; endedAt=[DateTime]::UtcNow.ToString('o'); exitCode=$pointsCode; log=$pointsLog; node='24.18.0'; workingStatus=(& git status --porcelain | Out-String).Trim() } |
         ConvertTo-Json | Set-Content -LiteralPath $pointsReceipt
 }
 exit $pointsCode
