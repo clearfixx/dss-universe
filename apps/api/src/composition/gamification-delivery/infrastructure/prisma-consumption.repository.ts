@@ -169,7 +169,8 @@ export class PrismaConsumptionRepository implements GamificationConsumption {
   ): Promise<ClaimSettlement> {
     assertOwnerBlock(outcome);
     return this.withCurrent(claim, async (transaction, row) => {
-      if (row.achievementsDone) return 'STALE';
+      if (outcome.owner === 'POINTS' ? row.pointsDone : row.achievementsDone)
+        return 'STALE';
       const code = `${outcome.owner}:${outcome.code}`;
       await this.release(
         transaction,

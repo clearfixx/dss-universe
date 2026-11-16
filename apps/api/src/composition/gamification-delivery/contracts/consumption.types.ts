@@ -11,6 +11,7 @@
  * ===============================================================
  */
 import type { QualifiedAchievementOutcome } from '@api/modules/achievements';
+import type { QualifiedPointOutcome } from '@api/modules/community-points';
 import type {
   ADMISSION_REJECTION_CODES,
   CONSUMPTION_TECHNICAL_CODES,
@@ -50,6 +51,7 @@ export type OwnerCompletion =
   | Readonly<{
       owner: 'POINTS';
       disposition:
+        | 'COMPLETE'
         | 'APPLIED'
         | 'ALREADY_PROCESSED'
         | 'NO_MATCH'
@@ -70,10 +72,15 @@ export type AchievementContinuation = Readonly<{
   >['progress'];
 }>;
 
-export type OwnerBlock = Readonly<{
-  owner: 'ACHIEVEMENTS';
-  code: Extract<QualifiedAchievementOutcome, { status: 'BLOCKED' }>['code'];
-}>;
+export type OwnerBlock =
+  | Readonly<{
+      owner: 'ACHIEVEMENTS';
+      code: Extract<QualifiedAchievementOutcome, { status: 'BLOCKED' }>['code'];
+    }>
+  | Readonly<{
+      owner: 'POINTS';
+      code: Extract<QualifiedPointOutcome, { status: 'BLOCKED' }>['code'];
+    }>;
 
 export type ClaimSettlement = 'APPLIED' | 'STALE';
 

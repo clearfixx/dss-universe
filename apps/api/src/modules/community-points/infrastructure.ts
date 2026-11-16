@@ -19,3 +19,4 @@ export {
   type PointRuleDeliveryGuard,
 } from './infrastructure/rule-delivery-guard';
 export { PointRuleDeliveryConfigurationError } from './domain/errors/rule-delivery-configuration.error';
+export { PrismaPointRuleConfigurationReader } from './infrastructure/repositories/prisma-point-rule-configuration.reader';
