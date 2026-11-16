@@ -144,7 +144,7 @@ describe('Inactive gamification consumption storage', () => {
   it.each([
     ['zero bytes', '0', '"encodedBytes"'],
     ['oversize encoding', '262145', '"encodedBytes"'],
-    ['unsupported codec', '2', '"codecVersion"'],
+    ['unsupported codec', '3', '"codecVersion"'],
     ['short digest', "decode('00','hex')", '"projectionDigest"'],
     ['non-object projection', "'null'::jsonb", 'projection'],
   ])(

@@ -111,7 +111,7 @@ export class PrismaAdmissionRepository implements GamificationAdmission {
         else if (Date.parse(event.createdAt) < activation.cutoff.getTime())
           rejection = 'CANONICAL_EVIDENCE_MISMATCH';
         if (rejection) return this.rejected(transaction, claim, rejection);
-        const prepared = await this.producer.prepareInTransaction(
+        const prepared = await this.producer.prepareOwnersInTransaction(
           transaction,
           claim.eventId,
         );
@@ -124,13 +124,13 @@ export class PrismaAdmissionRepository implements GamificationAdmission {
                 : prepared.code;
           return this.rejected(transaction, claim, code);
         }
-        const source = prepared.command.event;
+        const source = prepared.achievements.event;
         let encoded: ReturnType<typeof encodeAdmissionSeal>;
         try {
           encoded = encodeAdmissionSeal({
-            codecVersion: 1,
+            codecVersion: 2,
             destination,
-            descriptor: { id: 'reputation.qualification', version: 1 },
+            descriptor: { id: 'reputation.qualification', version: 2 },
             canonical: {
               eventId: source.eventId,
               eventName: source.eventName,
@@ -140,11 +140,15 @@ export class PrismaAdmissionRepository implements GamificationAdmission {
               sourceId: source.sourceId,
               occurredAt: source.occurredAt,
             },
-            applicability: { POINTS: false, LEVELS: false, ACHIEVEMENTS: true },
+            applicability: { POINTS: true, LEVELS: false, ACHIEVEMENTS: true },
             inputs: {
+              POINTS: {
+                codec: 'points.qualified.v1',
+                command: prepared.points,
+              },
               ACHIEVEMENTS: {
                 codec: 'achievements.qualified.v1',
-                command: prepared.command,
+                command: prepared.achievements,
               },
             },
           });

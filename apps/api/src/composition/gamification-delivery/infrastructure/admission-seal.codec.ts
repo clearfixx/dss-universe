@@ -3,7 +3,7 @@
  * 🚀 DSS Universe
  * 📦 Module: Gamification Delivery Codec
  * 📄 File: apps/api/src/composition/gamification-delivery/infrastructure/admission-seal.codec.ts
- * 🎯 Purpose: Encodes and verifies the closed Reputation admission descriptor.
+ * 🎯 Purpose: Encodes and verifies both closed Reputation admission versions.
  * 🧠 Responsibilities: Copies only declared data, binds identity and checks canonical bytes.
  * 🏗️ Architecture: Root infrastructure codec; no database or owner service calls.
  * ⚠️ Important: Encoding is not producer attestation; prepare must supply verified owned facts.
@@ -18,7 +18,11 @@ import type {
   QualifiedAchievementFact,
   VerifiedAchievementMapping,
 } from '@api/modules/achievements';
-import type { ReputationAdmissionSeal } from '../contracts/admission-seal.types';
+import { isQualifiedPointCommand } from '@api/modules/community-points';
+import type {
+  ReputationAdmissionSeal,
+  GamificationAdmissionSeal,
+} from '../contracts/admission-seal.types';
 import { ADMISSION_MAX_BYTES } from '../contracts/consumption.constants';
 import { GAMIFICATION_DESTINATION } from '../contracts/routing.constants';
 import {
@@ -170,7 +174,7 @@ function command(value: unknown): QualifiedAchievementCommand {
   };
 }
 
-function projection(value: unknown): ReputationAdmissionSeal {
+function legacyProjection(value: unknown): ReputationAdmissionSeal {
   const row = exactRecord(value, [
     'codecVersion',
     'destination',
@@ -213,6 +217,122 @@ function projection(value: unknown): ReputationAdmissionSeal {
   };
 }
 
+/** Copy before the owner predicate: never evaluate accessors or recursively
+ * encode unbounded supplied objects. The legacy encoder remains unchanged.
+ */
+function copyPointInput(
+  value: unknown,
+  depth = 0,
+  budget = { remaining: 256 },
+): unknown {
+  if (depth > 7 || --budget.remaining < 0) invalidSeal();
+  if (value === null || typeof value === 'boolean') return value;
+  if (typeof value === 'string') return sealText(value);
+  if (typeof value === 'number') {
+    if (!Number.isSafeInteger(value)) invalidSeal();
+    return value;
+  }
+  if (Array.isArray(value))
+    return denseArray(value, 3).map((item) =>
+      copyPointInput(item, depth + 1, budget),
+    );
+  if (!value || typeof value !== 'object') invalidSeal();
+  const keys = Reflect.ownKeys(value);
+  if (keys.length > 24 || keys.some((key) => typeof key !== 'string'))
+    invalidSeal();
+  const row = exactRecord(value, keys as string[]);
+  return Object.fromEntries(
+    Object.entries(row).map(([key, item]) => [
+      key,
+      copyPointInput(item, depth + 1, budget),
+    ]),
+  );
+}
+
+function projection(value: unknown): GamificationAdmissionSeal {
+  const row = exactRecord(value, [
+    'codecVersion',
+    'destination',
+    'descriptor',
+    'canonical',
+    'applicability',
+    'inputs',
+  ]);
+  if (row.codecVersion === 1) return legacyProjection(value);
+  sealLiteral(row.codecVersion, 2);
+  const descriptor = exactRecord(row.descriptor, ['id', 'version']);
+  const applicability = exactRecord(row.applicability, [
+    'POINTS',
+    'LEVELS',
+    'ACHIEVEMENTS',
+  ]);
+  const inputs = exactRecord(row.inputs, ['POINTS', 'ACHIEVEMENTS']);
+  const pointsInput = exactRecord(inputs.POINTS, ['codec', 'command']);
+  const achievementsInput = exactRecord(inputs.ACHIEVEMENTS, [
+    'codec',
+    'command',
+  ]);
+  const header = canonical(row.canonical);
+  const achievements = command(achievementsInput.command);
+  const points = copyPointInput(pointsInput.command);
+  if (!isQualifiedPointCommand(points)) invalidSeal();
+  for (const key of canonicalKeys)
+    if (
+      header[key] !== achievements.event[key] ||
+      header[key] !== points.event[key]
+    )
+      invalidSeal();
+  if (
+    points.recipientId !== achievements.event.payload.recipientId ||
+    points.event.value !== achievements.event.payload.value ||
+    points.facts.length !== achievements.facts.length ||
+    points.contribution?.producer !== achievements.contribution?.producer ||
+    points.contribution?.factId !== achievements.contribution?.factId
+  )
+    invalidSeal();
+  for (const fact of achievements.facts) {
+    const owned = points.facts.find(
+      (item) => item.producer === fact.producer && item.factId === fact.factId,
+    );
+    if (!owned) invalidSeal();
+    for (const key of Object.keys(fact) as (keyof QualifiedAchievementFact)[])
+      if (owned[key] !== fact[key]) invalidSeal();
+  }
+  const control = achievements.facts.some((fact) => fact.action === 'WITHDRAW');
+  if (
+    !points.facets.includes('CONTRIBUTION') ||
+    points.facets.includes('CONTROL') !== control
+  )
+    invalidSeal();
+  return {
+    codecVersion: 2,
+    destination: sealLiteral(row.destination, GAMIFICATION_DESTINATION),
+    descriptor: {
+      id: sealLiteral(descriptor.id, 'reputation.qualification'),
+      version: sealLiteral(descriptor.version, 2),
+    },
+    canonical: header,
+    applicability: {
+      POINTS: sealLiteral(applicability.POINTS, true),
+      LEVELS: sealLiteral(applicability.LEVELS, false),
+      ACHIEVEMENTS: sealLiteral(applicability.ACHIEVEMENTS, true),
+    },
+    inputs: {
+      POINTS: {
+        codec: sealLiteral(pointsInput.codec, 'points.qualified.v1'),
+        command: points,
+      },
+      ACHIEVEMENTS: {
+        codec: sealLiteral(
+          achievementsInput.codec,
+          'achievements.qualified.v1',
+        ),
+        command: achievements,
+      },
+    },
+  };
+}
+
 // Only validated, copied, bounded data reaches this recursive encoder.
 function ordered(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(ordered);
@@ -243,7 +363,7 @@ export function verifyAdmissionSeal(
   value: unknown,
   digest: Uint8Array,
   encodedBytes: number,
-): ReputationAdmissionSeal {
+): GamificationAdmissionSeal {
   const encoded = encodeAdmissionSeal(value);
   if (
     !(digest instanceof Uint8Array) ||

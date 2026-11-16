@@ -19,6 +19,17 @@ import { AuditRedactionService, AuditWriterService } from '@api/core/audit';
 import { CanonicalOutboxReader } from '@api/core/events/infrastructure';
 import { AppModule } from '../src/app.module';
 import {
+  CommunityPointsRuntimeModule,
+  QUALIFIED_POINTS_CONSUMER,
+  COMMUNITY_POINTS_EVENT_CONSUMER,
+  type QualifiedPointsConsumer,
+  type CommunityPointsEventConsumer,
+} from '@api/modules/community-points';
+import {
+  encodeAdmissionSeal,
+  verifyAdmissionSeal,
+} from '../src/composition/gamification-delivery/infrastructure/admission-seal.codec';
+import {
   REPUTATION_REPOSITORY,
   type ReputationRepository,
 } from '../src/modules/reputation/domain/repositories/reputation.repository.interface';
@@ -39,13 +50,16 @@ describe('Inactive gamification admission (real producer)', () => {
   let admission: PrismaAdmissionRepository;
   let discovery: PrismaRoutingDiscoveryRepository;
   let publication: PrismaRoutingPublicationRepository;
+  let preCutoff: Awaited<ReturnType<typeof source>>;
   beforeAll(async () => {
     fixture = await createIsolatedApiSchemaFixture();
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
       options: `-c search_path=${fixture.schema},public`,
     });
-    const module = await Test.createTestingModule({ imports: [AppModule] })
+    const module = await Test.createTestingModule({
+      imports: [AppModule, CommunityPointsRuntimeModule],
+    })
       .overrideProvider(PrismaService)
       .useValue(fixture.prisma)
       .compile();
@@ -69,6 +83,23 @@ describe('Inactive gamification admission (real producer)', () => {
       actorType: 'SERVICE' as const,
     };
     await control.prepare(operator);
+    // A real legacy grant exists before activation; it must not be replayed,
+    // but a new post-cutoff withdrawal must still retire it exactly once.
+    preCutoff = await source();
+    await app
+      .get<CommunityPointsEventConsumer>(COMMUNITY_POINTS_EVENT_CONSUMER)
+      .consume({
+        eventId: preCutoff.eventId,
+        eventName: preCutoff.event.eventName,
+        eventVersion: 1,
+        category: preCutoff.event.eventCategory,
+        producer: preCutoff.event.producer,
+        aggregateType: 'ReputationEntry',
+        aggregateId: preCutoff.entry.id,
+        actorId: preCutoff.actorId,
+        payload: { recipientId: preCutoff.recipientId, value: 1 },
+        occurredAt: preCutoff.event.occurredAt.toISOString(),
+      });
     await control.activate(operator, 0n, 'synthetic:private-admission-proof');
   }, 60000);
   afterEach(() => jest.restoreAllMocks());
@@ -110,7 +141,7 @@ describe('Inactive gamification admission (real producer)', () => {
     const event = await fixture.prisma.outboxEvent.findFirstOrThrow({
       where: { producer: 'dss.api.reputation', aggregateId: entry.id },
     });
-    return { entry, eventId: event.id, actorId, recipientId };
+    return { entry, eventId: event.id, actorId, recipientId, event };
   }
   async function claimed(eventId: string): Promise<PublicationClaim> {
     await discovery.forward();
@@ -126,6 +157,7 @@ describe('Inactive gamification admission (real producer)', () => {
 
   it('creates one seal/receipt atomically and invokes no owner effects', async () => {
     const s = await source();
+    const pointsBefore = await fixture.prisma.communityPointEntry.count();
     const result = await admission.prepare(await claimed(s.eventId));
     expect(result.status).toBe('CREATED');
     if (result.status !== 'CREATED') throw new Error('Expected created seal.');
@@ -135,14 +167,277 @@ describe('Inactive gamification admission (real producer)', () => {
     });
     expect(row.receipt).toMatchObject({
       state: 'READY',
-      pointsDone: true,
+      pointsDone: false,
       levelsDone: true,
       achievementsDone: false,
       technicalFailures: 0,
     });
     expect(JSON.stringify(row.projection)).not.toContain('Synthetic reason');
+    expect(row).toMatchObject({ codecVersion: 2, descriptorVersion: 2 });
     expect(await fixture.prisma.achievementAward.count()).toBe(0);
-    expect(await fixture.prisma.communityPointEntry.count()).toBe(0);
+    expect(await fixture.prisma.communityPointEntry.count()).toBe(pointsBefore);
+    expect(
+      await fixture.prisma.communityPointEntry.count({
+        where: { userId: s.recipientId },
+      }),
+    ).toBe(0);
+  });
+
+  async function sealed(eventId: string) {
+    const created = await admission.prepare(await claimed(eventId));
+    if (created.status !== 'CREATED')
+      throw new Error('Expected new admission.');
+    const stored = await fixture.prisma.gamificationAdmission.findUniqueOrThrow(
+      { where: { id: created.admission.admissionId } },
+    );
+    const seal = verifyAdmissionSeal(
+      stored.projection,
+      stored.projectionDigest,
+      stored.encodedBytes,
+    );
+    if (seal.codecVersion !== 2)
+      throw new Error('Expected Points-enabled seal.');
+    return seal;
+  }
+
+  it('retires a pre-cutoff legacy grant from a new attested withdrawal without historical replay', async () => {
+    const activation =
+      await fixture.prisma.gamificationActivation.findUniqueOrThrow({
+        where: { destination: 'gamification.v1' },
+      });
+    if (!activation.cutoff) throw new Error('Missing activation cutoff.');
+    expect(preCutoff.event.createdAt.getTime()).toBeLessThan(
+      activation.cutoff.getTime(),
+    );
+    await discovery.forward();
+    expect(
+      await fixture.prisma.gamificationDelivery.count({
+        where: { eventId: preCutoff.eventId },
+      }),
+    ).toBe(0);
+    const legacy = await fixture.prisma.communityPointEntry.findUniqueOrThrow({
+      where: { sourceEventId: preCutoff.eventId },
+    });
+    expect(
+      await fixture.prisma.communityPointQualification.count({
+        where: { entryId: legacy.id },
+      }),
+    ).toBe(0);
+    const reversed = await reputation.reverse(
+      preCutoff.entry.id,
+      await subject(),
+      preCutoff.recipientId,
+      -1,
+      'Synthetic post-cutoff withdrawal',
+    );
+    if (!reversed) throw new Error('Expected reversal.');
+    const event = await fixture.prisma.outboxEvent.findFirstOrThrow({
+      where: {
+        producer: 'dss.api.reputation',
+        aggregateId: reversed.id,
+        eventName: 'reputation.direct.reversed.v1',
+      },
+    });
+    const seal = await sealed(event.id);
+    const points = app.get<QualifiedPointsConsumer>(QUALIFIED_POINTS_CONSUMER);
+    expect(await points.advance(seal.inputs.POINTS.command)).toMatchObject({
+      status: 'COMPLETE',
+      facets: [
+        { facet: 'CONTROL', disposition: 'APPLIED' },
+        { facet: 'CONTRIBUTION', disposition: 'NO_MATCH' },
+      ],
+    });
+    expect(
+      await fixture.prisma.communityPointEntry.findUniqueOrThrow({
+        where: { id: legacy.id },
+      }),
+    ).toEqual(legacy);
+    expect(
+      await fixture.prisma.communityPointEntry.count({
+        where: { userId: preCutoff.recipientId },
+      }),
+    ).toBe(2);
+    expect(
+      await fixture.prisma.communityPointEntry.aggregate({
+        where: { userId: preCutoff.recipientId },
+        _sum: { points: true },
+      }),
+    ).toMatchObject({ _sum: { points: 0 } });
+    expect(await points.advance(seal.inputs.POINTS.command)).toMatchObject({
+      status: 'COMPLETE',
+      facets: [{ replayed: true }, { replayed: true }],
+    });
+    expect(
+      await fixture.prisma.communityPointEntry.count({
+        where: { userId: preCutoff.recipientId },
+      }),
+    ).toBe(2);
+    expect(
+      await fixture.prisma.gamificationDelivery.count({
+        where: { eventId: preCutoff.eventId },
+      }),
+    ).toBe(0);
+  });
+
+  it('attests real producer award and withdrawal into exact qualified Points effects', async () => {
+    const s = await source();
+    const points = app.get<QualifiedPointsConsumer>(QUALIFIED_POINTS_CONSUMER);
+    const positive = await sealed(s.eventId);
+    expect(await points.advance(positive.inputs.POINTS.command)).toMatchObject({
+      status: 'COMPLETE',
+      facets: [{ facet: 'CONTRIBUTION', disposition: 'APPLIED' }],
+    });
+    const balance = async () =>
+      (
+        await fixture.prisma.communityPointEntry.aggregate({
+          where: { userId: s.recipientId },
+          _sum: { points: true },
+        })
+      )._sum.points ?? 0;
+    expect(await balance()).toBe(10);
+    const moderator = await subject();
+    const reversal = await reputation.reverse(
+      s.entry.id,
+      moderator,
+      s.recipientId,
+      -1,
+      'Synthetic approved reversal',
+    );
+    if (!reversal) throw new Error('Expected reversal.');
+    const event = await fixture.prisma.outboxEvent.findFirstOrThrow({
+      where: {
+        producer: 'dss.api.reputation',
+        aggregateId: reversal.id,
+        eventName: 'reputation.direct.reversed.v1',
+      },
+    });
+    const withdrawn = await sealed(event.id);
+    expect(withdrawn.inputs.POINTS.command.event.actorId).toBe(moderator);
+    expect(await points.advance(withdrawn.inputs.POINTS.command)).toMatchObject(
+      {
+        status: 'COMPLETE',
+        facets: [
+          { facet: 'CONTROL', disposition: 'APPLIED' },
+          { facet: 'CONTRIBUTION', disposition: 'NO_MATCH' },
+        ],
+      },
+    );
+    expect(await balance()).toBe(0);
+    expect(await points.advance(positive.inputs.POINTS.command)).toMatchObject({
+      status: 'COMPLETE',
+      facets: [{ replayed: true }],
+    });
+    expect(await balance()).toBe(0);
+    expect(
+      await fixture.prisma.communityPointEntry.count({
+        where: { userId: s.recipientId },
+      }),
+    ).toBe(2);
+  });
+
+  it('withdrawal consumed before an older sealed award prevents its late contribution', async () => {
+    const s = await source();
+    const points = app.get<QualifiedPointsConsumer>(QUALIFIED_POINTS_CONSUMER);
+    const delayed = await sealed(s.eventId);
+    const reversal = await reputation.reverse(
+      s.entry.id,
+      await subject(),
+      s.recipientId,
+      -1,
+      'Synthetic earlier withdrawal',
+    );
+    if (!reversal) throw new Error('Expected reversal.');
+    const event = await fixture.prisma.outboxEvent.findFirstOrThrow({
+      where: {
+        producer: 'dss.api.reputation',
+        aggregateId: reversal.id,
+        eventName: 'reputation.direct.reversed.v1',
+      },
+    });
+    const withdrawn = await sealed(event.id);
+    expect((await points.advance(withdrawn.inputs.POINTS.command)).status).toBe(
+      'COMPLETE',
+    );
+    expect(await points.advance(delayed.inputs.POINTS.command)).toMatchObject({
+      status: 'COMPLETE',
+      facets: [{ disposition: 'SOURCE_REVOKED' }],
+    });
+    expect(
+      await fixture.prisma.communityPointEntry.count({
+        where: { userId: s.recipientId },
+      }),
+    ).toBe(0);
+  });
+
+  it('reuses an original version-1 seal without adding Points work or rewriting bytes', async () => {
+    const s = await source();
+    const claim = await claimed(s.eventId);
+    const prepared = await producer.prepare(s.eventId);
+    if (prepared.status !== 'READY')
+      throw new Error('Expected verified legacy projection.');
+    const event = prepared.command.event;
+    const canonical = {
+      eventId: event.eventId,
+      eventName: event.eventName,
+      eventVersion: event.eventVersion,
+      producer: event.producer,
+      sourceType: event.sourceType,
+      sourceId: event.sourceId,
+      occurredAt: event.occurredAt,
+    };
+    const encoded = encodeAdmissionSeal({
+      codecVersion: 1,
+      destination: 'gamification.v1',
+      descriptor: { id: 'reputation.qualification', version: 1 },
+      canonical,
+      applicability: { POINTS: false, LEVELS: false, ACHIEVEMENTS: true },
+      inputs: {
+        ACHIEVEMENTS: {
+          codec: 'achievements.qualified.v1',
+          command: prepared.command,
+        },
+      },
+    });
+    const activation =
+      await fixture.prisma.gamificationActivation.findUniqueOrThrow({
+        where: { destination: 'gamification.v1' },
+      });
+    const id = randomUUID();
+    await fixture.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`INSERT INTO gamification_admissions (id,destination,"eventId",cutoff,"descriptorId","descriptorVersion","codecVersion",projection,"projectionDigest","encodedBytes") VALUES (${id}::uuid,'gamification.v1',${s.eventId}::uuid,${activation.cutoff},'reputation.qualification',1,1,${encoded.bytes.toString('utf8')}::jsonb,${encoded.digest},${encoded.encodedBytes})`;
+      await tx.gamificationConsumptionReceipt.create({
+        data: {
+          admissionId: id,
+          destination: 'gamification.v1',
+          availableAt: new Date(),
+          pointsDone: true,
+          levelsDone: true,
+          achievementsDone: false,
+        },
+      });
+    });
+    const before = await fixture.prisma.gamificationAdmission.findUniqueOrThrow(
+      { where: { id }, include: { receipt: true } },
+    );
+    expect((await admission.prepare(claim)).status).toBe('REUSED');
+    expect(
+      await fixture.prisma.gamificationAdmission.findUniqueOrThrow({
+        where: { id },
+        include: { receipt: true },
+      }),
+    ).toEqual(before);
+    expect(
+      verifyAdmissionSeal(
+        before.projection,
+        before.projectionDigest,
+        before.encodedBytes,
+      ).applicability.POINTS,
+    ).toBe(false);
+    expect(
+      await fixture.prisma.communityPointEntry.count({
+        where: { userId: s.recipientId },
+      }),
+    ).toBe(0);
   });
 
   it('reuses an existing seal after withdrawal without recomputing its producer view', async () => {

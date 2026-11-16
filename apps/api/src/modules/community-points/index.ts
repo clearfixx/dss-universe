@@ -14,6 +14,7 @@
 
 export { CommunityPointsModule } from './community-points.module';
 export { CommunityPointsRuntimeModule } from './community-points-runtime.module';
+export { isQualifiedPointCommand } from './contracts/qualified-points-validation.contract';
 export {
   QUALIFIED_POINTS_CONSUMER,
   type QualifiedPointsConsumer,

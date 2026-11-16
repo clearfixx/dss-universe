@@ -763,6 +763,7 @@ for (const [moduleName, expected] of [
       "PointsRecipientExistence",
       "QUALIFIED_POINTS_CONSUMER",
       "QualifiedPointsConsumer",
+      "isQualifiedPointCommand",
       "QualifiedPointCommand",
       "QualifiedPointOutcome",
       "QualifiedPointEvent",
