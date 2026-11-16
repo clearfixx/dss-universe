@@ -39,7 +39,7 @@ if ($Kind -eq 'full') {
         & pnpm quality:full *> $activityLog
         $activityCode = $LASTEXITCODE
     } finally {
-        $activityReceipt = Join-Path $PSScriptRoot ('full-' + [Guid]::NewGuid().ToString('N') + '.local.json')
+        $activityReceipt = Join-Path (Split-Path $PSScriptRoot -Parent) ('debt067-full-' + [Guid]::NewGuid().ToString('N') + '.local.json')
         [ordered]@{ head=$activityHead; startedAt=$activityStart; endedAt=[DateTime]::UtcNow.ToString('o'); exitCode=$activityCode; log=$activityLog; node='24.18.0' } |
             ConvertTo-Json | Set-Content -LiteralPath $activityReceipt
         Write-Host "Activity full receipt: $activityReceipt"
