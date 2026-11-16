@@ -26,13 +26,18 @@
  * ===============================================================
  */
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 
 import { AuditWriterService } from '@api/core/audit';
 import { PrismaService, type TransactionClient } from '@api/core/database';
 import { createEventEnvelope, OutboxWriterService } from '@api/core/events';
 import { PointQualificationBlockedError } from '../../domain/errors/point-qualification-blocked.error';
 import { lockPointSources } from './point-source-locks';
+import {
+  POINT_RULE_DELIVERY_GUARD,
+  type PointRuleDeliveryGuard,
+} from '../rule-delivery-guard';
 
 import type { CommunityPointsRepository } from '../../domain/repositories/community-points.repository.interface';
 import type {
@@ -86,6 +91,8 @@ export class PrismaCommunityPointsRepository implements CommunityPointsRepositor
     private readonly prisma: PrismaService,
     private readonly audit: AuditWriterService,
     private readonly outbox: OutboxWriterService,
+    @Inject(POINT_RULE_DELIVERY_GUARD)
+    private readonly deliveryGuard: PointRuleDeliveryGuard,
   ) {}
 
   async balance(userId: string): Promise<number> {
@@ -141,9 +148,13 @@ export class PrismaCommunityPointsRepository implements CommunityPointsRepositor
     return this.prisma.$transaction(async (transaction) => {
       const exists = await transaction.communityPointRule.findUnique({
         where: { key },
-        select: { key: true },
+        select: { key: true, eventName: true },
       });
       if (!exists) return null;
+      await this.deliveryGuard.assert(transaction, {
+        eventName: exists.eventName,
+        enabled,
+      });
       const rule = await transaction.communityPointRule.update({
         where: { key },
         data: { points, dailyLimit, enabled, updatedById },
@@ -503,6 +514,14 @@ export class PrismaCommunityPointsRepository implements CommunityPointsRepositor
         producer: CONSUMER_NAME,
         ...(entry.actorId ? { actorId: entry.actorId } : {}),
         aggregate: { type: 'CommunityPointEntry', id: entry.id },
+        ...(eventName === REVERSED_EVENT
+          ? {
+              metadata: {
+                qualificationContractVersion: 1,
+                contributionFactId: randomUUID(),
+              },
+            }
+          : {}),
         payload: metadata,
       }),
     );

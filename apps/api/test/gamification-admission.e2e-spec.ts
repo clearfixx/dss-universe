@@ -195,9 +195,15 @@ describe('Inactive gamification admission (real producer)', () => {
       stored.projectionDigest,
       stored.encodedBytes,
     );
-    if (seal.codecVersion !== 2)
+    if (seal.codecVersion !== 2 || !('POINTS' in seal.inputs))
       throw new Error('Expected Points-enabled seal.');
-    return seal;
+    return {
+      ...seal,
+      inputs: {
+        ACHIEVEMENTS: seal.inputs.ACHIEVEMENTS,
+        POINTS: seal.inputs.POINTS,
+      },
+    };
   }
 
   it('retires a pre-cutoff legacy grant from a new attested withdrawal without historical replay', async () => {

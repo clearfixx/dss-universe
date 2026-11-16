@@ -803,6 +803,7 @@ for (const [moduleName, expected] of [
       "ManualAchievementAward",
       "QUALIFIED_ACHIEVEMENT_CONSUMER",
       "QualifiedAchievementConsumer",
+      "isQualifiedAchievementCommand",
       "QualifiedAchievementCommand",
       "QualifiedAchievementOutcome",
       "QualifiedAchievementFact",
@@ -1087,7 +1088,24 @@ test("owners publish only the intended guarded technical symbols", () => {
         "mapAuthorizationAssignmentFacts",
       ],
     ],
-    ["achievements", ["PrismaManualAwardWriter"]],
+    [
+      "achievements",
+      [
+        "PrismaManualAwardWriter",
+        "ACHIEVEMENT_RULE_DELIVERY_GUARD",
+        "AchievementRuleDeliveryGuard",
+        "AchievementRuleDeliveryConfigurationError",
+      ],
+    ],
+    [
+      "news",
+      [
+        "PrismaNewsDeliveryRepository",
+        "NewsDeliveryContent",
+        "PrismaNewsSearchSession",
+        "PrismaPublicationEvidenceReader",
+      ],
+    ],
     [
       "custom-titles",
       [
@@ -1098,7 +1116,14 @@ test("owners publish only the intended guarded technical symbols", () => {
     ],
     [
       "community-points",
-      ["leaderboardPointsAggregate", "PrismaTransactionalPointsBalanceReader"],
+      [
+        "leaderboardPointsAggregate",
+        "PrismaTransactionalPointsBalanceReader",
+        "PrismaPointLedgerEvidenceReader",
+        "POINT_RULE_DELIVERY_GUARD",
+        "PointRuleDeliveryGuard",
+        "PointRuleDeliveryConfigurationError",
+      ],
     ],
     ["levels", ["leaderboardLevelLookup", "PrismaLevelSynchronizationWriter"]],
     [
@@ -1112,6 +1137,7 @@ test("owners publish only the intended guarded technical symbols", () => {
         "PrismaCommentWriter",
         "CommentRecipientResolver",
         "PrismaInteractionDeliveryReader",
+        "PrismaCommentLifetimeReader",
         "InteractionDeliveryComment",
       ],
     ],

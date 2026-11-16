@@ -13,3 +13,9 @@
  */
 export { leaderboardPointsAggregate } from './infrastructure/repositories/leaderboard-points.sql';
 export { PrismaTransactionalPointsBalanceReader } from './infrastructure/repositories/prisma-transactional-points-balance.reader';
+export { PrismaPointLedgerEvidenceReader } from './infrastructure/repositories/prisma-point-ledger-evidence.reader';
+export {
+  POINT_RULE_DELIVERY_GUARD,
+  type PointRuleDeliveryGuard,
+} from './infrastructure/rule-delivery-guard';
+export { PointRuleDeliveryConfigurationError } from './domain/errors/rule-delivery-configuration.error';

@@ -52,6 +52,10 @@ import { AchievementRuleAwardWriter } from './achievement-rule-award.writer';
 import { QualificationBlockedError } from '../../domain/errors/qualification-blocked.error';
 import { achievementLegacyCoordinates } from './achievement-qualified-facts';
 import {
+  ACHIEVEMENT_RULE_DELIVERY_GUARD,
+  type AchievementRuleDeliveryGuard,
+} from '../rule-delivery-guard';
+import {
   lockAchievementCompatibilitySources,
   lockAchievementQualifiedSources,
   lockAchievementAwardPairs,
@@ -74,6 +78,8 @@ export class PrismaAchievementsRepository implements AchievementsRepository {
     outbox: OutboxWriterService,
     @Inject(MANUAL_AWARD_TRANSACTION)
     private readonly manualAwards: ManualAwardTransaction,
+    @Inject(ACHIEVEMENT_RULE_DELIVERY_GUARD)
+    private readonly deliveryGuard: AchievementRuleDeliveryGuard,
   ) {
     this.evidence = new AchievementEvidenceWriter(audit, outbox);
     this.ruleAwards = new AchievementRuleAwardWriter(this.evidence);
@@ -163,6 +169,7 @@ export class PrismaAchievementsRepository implements AchievementsRepository {
   ): Promise<AchievementWriteResult<AchievementRule>> {
     try {
       return await this.prisma.$transaction(async (transaction) => {
+        await this.deliveryGuard.assert(transaction, input);
         await this.lock(transaction, 'achievements:rules');
         const [achievement, existing] = await Promise.all([
           transaction.achievementDefinition.findUnique({

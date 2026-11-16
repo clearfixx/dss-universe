@@ -56,4 +56,48 @@ export type ReputationOwnersAdmissionSeal = Readonly<{
 
 export type GamificationAdmissionSeal =
   | ReputationAdmissionSeal
-  | ReputationOwnersAdmissionSeal;
+  | ReputationOwnersAdmissionSeal
+  | SourceAdmissionSeal;
+
+type SourceSealHeader = Readonly<{
+  codecVersion: 2;
+  destination: 'gamification.v1';
+  canonical: ReputationAdmissionSeal['canonical'];
+}>;
+export type LevelsAdmissionCommand = ReputationAdmissionSeal['canonical'] & {
+  userId: string;
+};
+
+export type SourceAdmissionSeal = SourceSealHeader &
+  (
+    | Readonly<{
+        descriptor: Readonly<{
+          id: 'news.publication' | 'comments.lifetime';
+          version: 1;
+        }>;
+        applicability: Readonly<{
+          POINTS: true;
+          LEVELS: false;
+          ACHIEVEMENTS: true;
+        }>;
+        inputs: Readonly<{
+          POINTS: ReputationOwnersAdmissionSeal['inputs']['POINTS'];
+          ACHIEVEMENTS: ReputationAdmissionSeal['inputs']['ACHIEVEMENTS'];
+        }>;
+      }>
+    | Readonly<{
+        descriptor: Readonly<{ id: 'points.ledger'; version: 1 }>;
+        applicability: Readonly<{
+          POINTS: false;
+          LEVELS: true;
+          ACHIEVEMENTS: true;
+        }>;
+        inputs: Readonly<{
+          LEVELS: Readonly<{
+            codec: 'levels.event.v1';
+            command: LevelsAdmissionCommand;
+          }>;
+          ACHIEVEMENTS: ReputationAdmissionSeal['inputs']['ACHIEVEMENTS'];
+        }>;
+      }>
+  );

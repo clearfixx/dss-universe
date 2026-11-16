@@ -150,6 +150,13 @@ export class PrismaCommentWriter {
     actorId: string,
     reason: string | null,
   ): Promise<Comment> {
+    // Same owned lock as edit. The one-way lifetime emits its withdrawal once,
+    // including two requests that both passed the application's earlier read.
+    await transaction.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${commentId}))`;
+    const current = await transaction.comment.findUniqueOrThrow({
+      where: { id: commentId },
+    });
+    if (current.deletedAt !== null) return mapPersistedComment(current);
     const comment = await transaction.comment.update({
       where: { id: commentId },
       data: {
@@ -200,6 +207,14 @@ export class PrismaCommentWriter {
         producer: PRODUCER,
         actorId,
         aggregate: { type: 'Comment', id: comment.id },
+        ...(action === 'tombstoned'
+          ? {
+              metadata: {
+                qualificationContractVersion: 1,
+                contributionFactId: randomUUID(),
+              },
+            }
+          : {}),
         payload: {
           commentId: comment.id,
           interactionTargetId: comment.interactionTargetId,

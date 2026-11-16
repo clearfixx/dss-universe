@@ -10,7 +10,7 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { Prisma } from '@prisma/client';
 import { PrismaService, type TransactionClient } from '@api/core/database';
@@ -19,6 +19,12 @@ import {
   type CanonicalOutboxEvidence,
 } from '@api/core/events/infrastructure';
 import { ReputationQualificationAdapter } from '../../reputation/infrastructure/reputation-qualification.adapter';
+import {
+  SourceProducerAdapter,
+  type PreparedSourceSeal,
+} from './source-producer.adapter';
+import { profileForEvent } from '../contracts/producer-catalog';
+import type { GamificationAdmissionSeal } from '../contracts/admission-seal.types';
 import type {
   AdmissionIdentity,
   AdmissionPreparation,
@@ -38,7 +44,6 @@ import {
   verifyAdmissionSeal,
 } from './admission-seal.codec';
 
-const allowedKeys = ['recipientId', 'value', 'reversesEntryId'] as const;
 type StoredAdmission = {
   id: string;
   eventId: string;
@@ -63,12 +68,11 @@ function identity(row: StoredAdmission): AdmissionIdentity {
   };
 }
 function supported(event: CanonicalOutboxEvidence): boolean {
+  const profile = profileForEvent(event.name);
   return (
-    event.producer === 'dss.api.reputation' &&
-    event.category === 'integration' &&
-    ['reputation.direct.changed.v1', 'reputation.direct.reversed.v1'].includes(
-      event.name,
-    )
+    !!profile &&
+    event.producer === profile.producer &&
+    event.category === profile.category
   );
 }
 
@@ -78,6 +82,9 @@ export class PrismaAdmissionRepository implements GamificationAdmission {
     private readonly prisma: PrismaService,
     private readonly producer: ReputationQualificationAdapter,
     private readonly canonical: CanonicalOutboxReader,
+    @Optional()
+    @Inject(SourceProducerAdapter)
+    private readonly sources?: SourceProducerAdapter,
   ) {}
 
   async prepare(claim: PublicationClaim): Promise<AdmissionPreparation> {
@@ -99,10 +106,10 @@ export class PrismaAdmissionRepository implements GamificationAdmission {
         // Reuse the original seal before consulting a producer's newer mutable view.
         if (existing)
           return this.reuse(transaction, claim, activation.cutoff, existing);
-        const event = await this.canonical.read(
+        const event = await this.canonical.readSelected(
           transaction,
           claim.eventId,
-          allowedKeys,
+          [],
         );
         let rejection: AdmissionRejectionCode | null = null;
         if (!event) rejection = 'CANONICAL_EVIDENCE_MISSING';
@@ -111,53 +118,24 @@ export class PrismaAdmissionRepository implements GamificationAdmission {
         else if (Date.parse(event.createdAt) < activation.cutoff.getTime())
           rejection = 'CANONICAL_EVIDENCE_MISMATCH';
         if (rejection) return this.rejected(transaction, claim, rejection);
-        const prepared = await this.producer.prepareOwnersInTransaction(
+        const prepared = await this.producerSeal(
           transaction,
           claim.eventId,
+          event!.producer,
         );
         if (prepared.status === 'BLOCKED') {
-          const code: AdmissionRejectionCode =
-            prepared.code === 'MISSING_PRODUCER_EVIDENCE'
-              ? 'PRODUCER_EVIDENCE_MISSING'
-              : prepared.code === 'INVALID_EVENT_ID'
-                ? 'INVALID_QUALIFIED_PROJECTION'
-                : prepared.code;
-          return this.rejected(transaction, claim, code);
+          return this.rejected(transaction, claim, prepared.code);
         }
-        const source = prepared.achievements.event;
         let encoded: ReturnType<typeof encodeAdmissionSeal>;
         try {
-          encoded = encodeAdmissionSeal({
-            codecVersion: 2,
-            destination,
-            descriptor: { id: 'reputation.qualification', version: 2 },
-            canonical: {
-              eventId: source.eventId,
-              eventName: source.eventName,
-              eventVersion: source.eventVersion,
-              producer: source.producer,
-              sourceType: source.sourceType,
-              sourceId: source.sourceId,
-              occurredAt: source.occurredAt,
-            },
-            applicability: { POINTS: true, LEVELS: false, ACHIEVEMENTS: true },
-            inputs: {
-              POINTS: {
-                codec: 'points.qualified.v1',
-                command: prepared.points,
-              },
-              ACHIEVEMENTS: {
-                codec: 'achievements.qualified.v1',
-                command: prepared.achievements,
-              },
-            },
-          });
+          encoded = encodeAdmissionSeal(prepared.seal);
         } catch (error) {
           if (!(error instanceof AdmissionCodecError)) throw error;
           return this.rejected(transaction, claim, error.code);
         }
         const id = randomUUID();
         const seal = encoded.projection;
+        const source = seal.canonical;
         await transaction.$executeRaw`INSERT INTO gamification_admissions
         (id,destination,"eventId",cutoff,"descriptorId","descriptorVersion","codecVersion",projection,"projectionDigest","encodedBytes")
         VALUES (${id}::uuid,${destination},${claim.eventId}::uuid,${activation.cutoff},
@@ -182,6 +160,61 @@ export class PrismaAdmissionRepository implements GamificationAdmission {
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
     );
+  }
+
+  private async producerSeal(
+    transaction: TransactionClient,
+    eventId: string,
+    producer: string,
+  ): Promise<
+    | { status: 'READY'; seal: GamificationAdmissionSeal }
+    | Extract<PreparedSourceSeal, { status: 'BLOCKED' }>
+  > {
+    if (producer !== 'dss.api.reputation') {
+      return this.sources
+        ? this.sources.prepare(transaction, eventId)
+        : { status: 'BLOCKED', code: 'PRODUCER_EVIDENCE_MISSING' };
+    }
+    const prepared = await this.producer.prepareOwnersInTransaction(
+      transaction,
+      eventId,
+    );
+    if (prepared.status === 'BLOCKED')
+      return {
+        status: 'BLOCKED',
+        code:
+          prepared.code === 'MISSING_PRODUCER_EVIDENCE'
+            ? 'PRODUCER_EVIDENCE_MISSING'
+            : prepared.code === 'INVALID_EVENT_ID'
+              ? 'INVALID_QUALIFIED_PROJECTION'
+              : prepared.code,
+      };
+    const event = prepared.achievements.event;
+    return {
+      status: 'READY',
+      seal: {
+        codecVersion: 2,
+        destination,
+        descriptor: { id: 'reputation.qualification', version: 2 },
+        canonical: {
+          eventId: event.eventId,
+          eventName: event.eventName,
+          eventVersion: event.eventVersion,
+          producer: event.producer,
+          sourceType: event.sourceType,
+          sourceId: event.sourceId,
+          occurredAt: event.occurredAt,
+        },
+        applicability: { POINTS: true, LEVELS: false, ACHIEVEMENTS: true },
+        inputs: {
+          POINTS: { codec: 'points.qualified.v1', command: prepared.points },
+          ACHIEVEMENTS: {
+            codec: 'achievements.qualified.v1',
+            command: prepared.achievements,
+          },
+        },
+      },
+    };
   }
 
   async rejectAdmission(
@@ -247,12 +280,19 @@ export class PrismaAdmissionRepository implements GamificationAdmission {
         row.codecVersion !== seal.codecVersion
       )
         return this.rejected(transaction, claim, 'SEALED_IDENTITY_CONFLICT');
-      const current = await this.canonical.read(
-        transaction,
-        row.eventId,
-        allowedKeys,
-      );
       const expected = seal.inputs.ACHIEVEMENTS.command.event;
+      const current =
+        seal.descriptor.id === 'reputation.qualification'
+          ? await this.canonical.read(transaction, row.eventId, [
+              'recipientId',
+              'value',
+              'reversesEntryId',
+            ])
+          : await this.canonical.readSelected(
+              transaction,
+              row.eventId,
+              Object.keys(expected.payload),
+            );
       if (
         !current ||
         !supported(current) ||

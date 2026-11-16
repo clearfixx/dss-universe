@@ -24,6 +24,7 @@ import {
   assertOperator,
   assertRevision,
 } from '../contracts/routing-validation';
+import { lockGamificationConfiguration } from './configuration-lock';
 
 @Injectable()
 export class PrismaRoutingControlRepository implements RoutingControl {
@@ -106,6 +107,7 @@ export class PrismaRoutingControlRepository implements RoutingControl {
     tx: TransactionClient,
     revision: bigint,
   ): Promise<ActivationView> {
+    await lockGamificationConfiguration(tx, true);
     const rows = await tx.$queryRaw<ActivationView[]>`
       SELECT state,cutoff,revision FROM gamification_activations
       WHERE destination=${GAMIFICATION_DESTINATION} FOR UPDATE`;

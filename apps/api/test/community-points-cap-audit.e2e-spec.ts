@@ -24,6 +24,7 @@
  * ===============================================================
  */
 import { randomUUID } from 'node:crypto';
+import { PointRuleConfigurationAdapter } from '../src/composition/gamification-delivery/gamification-configuration.module';
 import type { IntegrationEventJob } from '@dss/jobs';
 import type { TransactionClient } from '../src/core/database';
 import { AuditWriterService } from '../src/core/audit/services/audit-writer.service';
@@ -67,6 +68,7 @@ describe('Community Points cap audit / DEBT-062 (e2e)', () => {
       fixture.prisma,
       new AuditWriterService(new AuditRedactionService()),
       outbox,
+      new PointRuleConfigurationAdapter(),
     );
     service = new CommunityPointsService(
       repository,

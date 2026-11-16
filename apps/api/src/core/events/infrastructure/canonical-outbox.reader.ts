@@ -120,8 +120,69 @@ export function projectCanonicalEvidence(
   };
 }
 
+function projectSelected(
+  row: StoredEvidence,
+  keys: readonly string[],
+): CanonicalOutboxEvidence {
+  const input: unknown = row.payload;
+  if (!input || typeof input !== 'object' || Array.isArray(input))
+    return projectCanonicalEvidence(row, keys);
+  const selected: Record<string, CanonicalScalar> = {};
+  for (const key of keys) {
+    if (!Object.hasOwn(input, key)) continue;
+    const value: unknown = (input as Record<string, unknown>)[key];
+    if (!scalar(value))
+      return { ...projectCanonicalEvidence(row, []), payload: null };
+    selected[key] = value;
+  }
+  return projectCanonicalEvidence({ ...row, payload: selected }, keys);
+}
+
 @Injectable()
 export class CanonicalOutboxReader {
+  async metadataSelected(
+    transaction: TransactionClient,
+    eventId: string,
+    keys: readonly string[],
+  ): Promise<Readonly<Record<string, CanonicalScalar>> | null> {
+    if (keys.length > 8 || new Set(keys).size !== keys.length)
+      throw new Error('Invalid canonical metadata descriptor.');
+    const row = await transaction.outboxEvent.findUnique({
+      where: { id: eventId },
+      select: { metadata: true },
+    });
+    const input: unknown = row?.metadata;
+    if (!input || typeof input !== 'object' || Array.isArray(input))
+      return null;
+    const selected: Record<string, CanonicalScalar> = {};
+    for (const key of keys) {
+      if (!Object.hasOwn(input, key)) continue;
+      const value: unknown = (input as Record<string, unknown>)[key];
+      if (!scalar(value)) return null;
+      selected[key] = value;
+    }
+    return selected;
+  }
+
+  /** Explicit selected-field projection for a registered descriptor. Unlike
+   * read(), unrelated producer metadata is omitted rather than reinterpreted.
+   * Required fields and their business meaning remain the root adapter's job.
+   */
+  async readSelected(
+    transaction: TransactionClient,
+    eventId: string,
+    keys: readonly string[],
+  ): Promise<CanonicalOutboxEvidence | null> {
+    if (keys.length > 8 || new Set(keys).size !== keys.length)
+      throw new Error('Invalid canonical evidence descriptor.');
+    const row = await transaction.outboxEvent.findUnique({
+      where: { id: eventId },
+      select,
+    });
+    if (!row) return null;
+    return projectSelected(row, keys);
+  }
+
   async read(
     transaction: TransactionClient,
     eventId: string,
@@ -144,5 +205,18 @@ export class CanonicalOutboxReader {
       canonicalOutboxCandidatesQuery(coordinate),
     );
     return rows.map((row) => projectCanonicalEvidence(row, keys));
+  }
+
+  async candidatesSelected(
+    transaction: TransactionClient,
+    coordinate: CanonicalCoordinate,
+    keys: readonly string[],
+  ): Promise<CanonicalOutboxEvidence[]> {
+    if (keys.length > 8 || new Set(keys).size !== keys.length)
+      throw new Error('Invalid canonical evidence descriptor.');
+    const rows = await transaction.$queryRaw<StoredEvidence[]>(
+      canonicalOutboxCandidatesQuery(coordinate),
+    );
+    return rows.map((row) => projectSelected(row, keys));
   }
 }

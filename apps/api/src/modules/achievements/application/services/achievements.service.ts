@@ -21,6 +21,7 @@
  * ===============================================================
  */
 
+import { AchievementRuleDeliveryConfigurationError } from '../../domain/errors/rule-delivery-configuration.error';
 import {
   BadRequestException,
   ConflictException,
@@ -127,7 +128,13 @@ export class AchievementsService {
     actorId: string,
   ): Promise<AchievementRule> {
     const input = this.ruleInput(draft, actorId);
-    const result = await this.achievements.writeRule(input);
+    const result = await this.achievements
+      .writeRule(input)
+      .catch((error: unknown) => {
+        if (error instanceof AchievementRuleDeliveryConfigurationError)
+          throw new BadRequestException(error.message);
+        throw error;
+      });
     if (result.status === 'NOT_FOUND') {
       throw new NotFoundException('Achievement or rule not found.');
     }

@@ -11,6 +11,7 @@
  * ===============================================================
  */
 import { randomUUID } from 'node:crypto';
+import { PointRuleConfigurationAdapter } from '../src/composition/gamification-delivery/gamification-configuration.module';
 import { Pool } from 'pg';
 import type { IntegrationEventJob } from '@dss/jobs';
 import { AuditRedactionService, AuditWriterService } from '@api/core/audit';
@@ -36,7 +37,12 @@ describe('Points source synchronization (migrated DB)', () => {
     audit = new AuditWriterService(new AuditRedactionService());
     outbox = new OutboxWriterService();
     points = new CommunityPointsService(
-      new PrismaCommunityPointsRepository(fixture.prisma, audit, outbox),
+      new PrismaCommunityPointsRepository(
+        fixture.prisma,
+        audit,
+        outbox,
+        new PointRuleConfigurationAdapter(),
+      ),
       new PrismaProfileExistenceReader(fixture.prisma),
     );
     await fixture.prisma.communityPointRule.create({

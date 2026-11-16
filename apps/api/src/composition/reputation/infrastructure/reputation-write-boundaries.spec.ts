@@ -300,6 +300,9 @@ describe('Root Reputation write transaction', () => {
     const canonical = {
       read: jest.fn(),
       candidates: jest.fn().mockResolvedValue([]),
+      readSelected: jest.fn(),
+      candidatesSelected: jest.fn(),
+      metadataSelected: jest.fn(),
     };
     const unit = new PrismaReputationWriteTransaction(
       { $transaction: transaction } as unknown as PrismaService,
