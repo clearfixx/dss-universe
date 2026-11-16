@@ -16,7 +16,7 @@ import type {
   CONSUMPTION_TECHNICAL_CODES,
 } from './consumption.constants';
 import type { PublicationClaim } from './routing.types';
-import type { ReputationAdmissionSeal } from './admission-seal.types';
+import type { GamificationAdmissionSeal } from './admission-seal.types';
 
 export type AdmissionRejectionCode = (typeof ADMISSION_REJECTION_CODES)[number];
 export type ConsumptionTechnicalCode =
@@ -79,7 +79,7 @@ export type ClaimSettlement = 'APPLIED' | 'STALE';
 
 export type ConsumptionWork = Readonly<{
   admissionId: string;
-  projection: ReputationAdmissionSeal;
+  projection: GamificationAdmissionSeal;
   done: Readonly<{ POINTS: boolean; LEVELS: boolean; ACHIEVEMENTS: boolean }>;
   progress: AchievementContinuation['progress'] | null;
 }>;

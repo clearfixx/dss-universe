@@ -18,6 +18,11 @@ import {
   type CanonicalOutboxEvidence,
 } from '@api/core/events/infrastructure';
 import type { QualifiedAchievementCommand } from '@api/modules/achievements';
+import type {
+  QualifiedPointCommand,
+  QualifiedPointFact,
+  PointQualificationProjection,
+} from '@api/modules/community-points';
 import type { ReputationQualificationEvent } from '@api/modules/reputation';
 import {
   PrismaReputationQualificationReader,
@@ -106,6 +111,14 @@ export type PreparedReputationCommand =
         | 'CANONICAL_EVIDENCE_MISMATCH';
     };
 
+export type PreparedReputationOwners =
+  | {
+      status: 'READY';
+      achievements: QualifiedAchievementCommand;
+      points: QualifiedPointCommand;
+    }
+  | Extract<PreparedReputationCommand, { status: 'BLOCKED' }>;
+
 @Injectable()
 export class ReputationQualificationAdapter {
   constructor(
@@ -113,6 +126,69 @@ export class ReputationQualificationAdapter {
     private readonly owned: PrismaReputationQualificationReader,
     private readonly core: CanonicalOutboxReader,
   ) {}
+
+  /** Caller holds one Repeatable Read snapshot, as admission already does.
+   * The legacy preparation remains unchanged; the second owned view is read
+   * from that same snapshot, never from a later independently opened transaction.
+   */
+  async prepareOwnersInTransaction(
+    transaction: TransactionClient,
+    eventId: string,
+  ): Promise<PreparedReputationOwners> {
+    const prepared = await this.prepareInTransaction(transaction, eventId);
+    if (prepared.status === 'BLOCKED') return prepared;
+    const view = await this.owned.read(transaction, eventId);
+    if (!view || view.blocked)
+      return { status: 'BLOCKED', code: 'MISSING_PRODUCER_EVIDENCE' };
+    const pointsEvent = {
+      eventId: view.event.eventId,
+      eventName: prepared.command.event.eventName,
+      eventVersion: 1,
+      producer: 'dss.api.reputation',
+      sourceType: 'ReputationEntry',
+      sourceId: view.event.entryId,
+      actorId: view.event.actorId,
+      occurredAt: view.event.occurredAt,
+      value: view.event.value,
+    };
+    const facts: QualifiedPointFact[] = [];
+    for (const fact of prepared.command.facts) {
+      const original = view.facts.find(
+        (candidate) => candidate.factId === fact.qualificationFactId,
+      );
+      if (!original || original.action !== 'QUALIFY')
+        return { status: 'BLOCKED', code: 'MISSING_PRODUCER_EVIDENCE' };
+      const evidence = original.evidence;
+      const qualification: PointQualificationProjection = {
+        eventName:
+          evidence.kind === 'DIRECT'
+            ? 'reputation.direct.changed.v1'
+            : 'reputation.direct.reversed.v1',
+        eventVersion: 1,
+        sourceType: 'ReputationEntry',
+        sourceId: evidence.entryId,
+        actorId: evidence.actorId,
+        occurredAt: evidence.occurredAt,
+        value: evidence.value,
+        recipientId: evidence.recipientId,
+      };
+      facts.push({ ...fact, qualification });
+    }
+    return {
+      status: 'READY',
+      achievements: prepared.command,
+      points: {
+        contractVersion: 1,
+        event: pointsEvent,
+        recipientId: view.event.recipientId,
+        facts,
+        contribution: prepared.command.contribution,
+        facets: facts.some((fact) => fact.action === 'WITHDRAW')
+          ? ['CONTROL', 'CONTRIBUTION']
+          : ['CONTRIBUTION'],
+      },
+    };
+  }
 
   async prepare(eventId: string): Promise<PreparedReputationCommand> {
     if (

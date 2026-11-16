@@ -16,6 +16,7 @@ import {
 } from './admission-seal.codec';
 import { AdmissionCodecError } from './admission-codec.error';
 import type { VerifiedAchievementMapping } from '@api/modules/achievements';
+import type { QualifiedPointCommand } from '@api/modules/community-points';
 
 const eventId = '10000000-0000-0000-0000-000000000001';
 const factId = '20000000-0000-0000-0000-000000000001';
@@ -84,6 +85,115 @@ function rejects(value: unknown, code = 'INVALID_QUALIFIED_PROJECTION') {
   }
   throw new Error('Expected controlled seal rejection.');
 }
+
+function ownersFixture() {
+  const old = fixture();
+  const achievements = old.inputs.ACHIEVEMENTS.command;
+  achievements.facts[0].sourceId = old.canonical.sourceId;
+  const event = { ...old.canonical, actorId: 'opaque-voter', value: 1 };
+  const points: QualifiedPointCommand = {
+    contractVersion: 1,
+    event,
+    recipientId: achievements.event.payload.recipientId,
+    facets: ['CONTRIBUTION'],
+    contribution: achievements.contribution,
+    facts: achievements.facts.map((fact) => ({
+      ...fact,
+      action: 'QUALIFY',
+      contractVersion: 1,
+      qualification: {
+        eventName: event.eventName,
+        eventVersion: 1,
+        sourceType: event.sourceType,
+        sourceId: event.sourceId,
+        actorId: event.actorId,
+        occurredAt: event.occurredAt,
+        value: 1,
+        recipientId: achievements.event.payload.recipientId,
+      },
+    })),
+  };
+  return {
+    ...old,
+    codecVersion: 2,
+    descriptor: { id: 'reputation.qualification', version: 2 },
+    applicability: { POINTS: true, LEVELS: false, ACHIEVEMENTS: true },
+    inputs: {
+      ...old.inputs,
+      POINTS: { codec: 'points.qualified.v1', command: points },
+    },
+  };
+}
+
+describe('Versioned Reputation Points admission', () => {
+  it('copies and verifies version 2 without changing version 1 applicability', () => {
+    const input = ownersFixture();
+    const encoded = encodeAdmissionSeal(input);
+    expect(
+      verifyAdmissionSeal(
+        encoded.projection,
+        encoded.digest,
+        encoded.encodedBytes,
+      ),
+    ).toEqual(encoded.projection);
+    expect(encoded.projection.codecVersion).toBe(2);
+    expect(encoded.projection.applicability.POINTS).toBe(true);
+    input.inputs.POINTS.command.recipientId = 'changed-after-encoding';
+    expect(JSON.stringify(encoded.projection)).not.toContain(
+      'changed-after-encoding',
+    );
+    const legacy = encodeAdmissionSeal(fixture());
+    expect(
+      verifyAdmissionSeal(legacy.projection, legacy.digest, legacy.encodedBytes)
+        .applicability.POINTS,
+    ).toBe(false);
+  });
+
+  it.each([
+    'recipient',
+    'value',
+    'source',
+    'fact',
+    'contribution',
+    'facets',
+    'descriptor',
+    'codec',
+    'applicability',
+  ])('rejects cross-owner or version mismatch: %s', (changed) => {
+    const input = ownersFixture();
+    const points = input.inputs.POINTS.command;
+    if (changed === 'recipient') points.recipientId = 'another-recipient';
+    if (changed === 'value') points.event.value = -1;
+    if (changed === 'source') points.event.sourceId = 'another-source';
+    if (changed === 'fact')
+      points.facts[0].factId = '30000000-0000-0000-0000-000000000001';
+    if (changed === 'contribution') points.contribution = null;
+    if (changed === 'facets') points.facets = ['CONTROL'];
+    if (changed === 'descriptor') input.descriptor.version = 1;
+    if (changed === 'codec') input.inputs.POINTS.codec = 'points.qualified.v2';
+    if (changed === 'applicability') input.applicability.POINTS = false;
+    rejects(input);
+  });
+
+  it('rejects getters and over-deep or sparse Points inputs without evaluating accessors', () => {
+    const input = ownersFixture();
+    const getter = jest.fn(() => 'must-not-run');
+    Object.defineProperty(input.inputs.POINTS.command, 'recipientId', {
+      enumerable: true,
+      get: getter,
+    });
+    rejects(input);
+    expect(getter).not.toHaveBeenCalled();
+    const deep = ownersFixture();
+    Object.assign(deep.inputs.POINTS.command, {
+      extra: { a: { b: { c: { d: { e: { f: { g: {} } } } } } } },
+    });
+    rejects(deep);
+    const sparse = ownersFixture();
+    Reflect.deleteProperty(sparse.inputs.POINTS.command.facts, '0');
+    rejects(sparse);
+  });
+});
 
 describe('Inactive Reputation admission seal codec', () => {
   it('emits lexically ordered keys rather than relying on producer insertion order', () => {
