@@ -1825,6 +1825,13 @@ boundary approval is pending; no runtime fix is claimed.
 
 ### DEBT-067 — Wall Activity retraction before creation is lost (Medium, OPEN, separate correction approval requested)
 
+Final directive authorizes the bounded correction. Candidate implementation adds
+projection-owned durable retraction evidence and serializes Wall create/retract
+under one source transaction lock. Real migrated Worker regression coverage and
+migration backfill are in the [correction report](../audits/DEBT_067_ACTIVITY_ORDERING.md).
+This is not yet full-gate/CI/package acceptance; historical discovery below is
+retained rather than claimed to describe a new regression.
+
 Actual current Worker projector with migrated disposable PostgreSQL: deliver
 synthetic Wall retraction at 01:01 before the older creation at 01:00. Retraction
 has no existing row to update; later create inserts one active projection with
