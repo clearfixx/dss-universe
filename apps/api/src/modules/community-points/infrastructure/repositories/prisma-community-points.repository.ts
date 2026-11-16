@@ -31,6 +31,8 @@ import { Injectable } from '@nestjs/common';
 import { AuditWriterService } from '@api/core/audit';
 import { PrismaService, type TransactionClient } from '@api/core/database';
 import { createEventEnvelope, OutboxWriterService } from '@api/core/events';
+import { PointQualificationBlockedError } from '../../domain/errors/point-qualification-blocked.error';
+import { lockPointSources } from './point-source-locks';
 
 import type { CommunityPointsRepository } from '../../domain/repositories/community-points.repository.interface';
 import type {
@@ -104,7 +106,19 @@ export class PrismaCommunityPointsRepository implements CommunityPointsRepositor
     eventName: string,
     payloadValue?: number,
   ): Promise<CommunityPointRule[]> {
-    return this.prisma.communityPointRule.findMany({
+    return this.matchingRulesInTransaction(
+      this.prisma,
+      eventName,
+      payloadValue,
+    );
+  }
+
+  matchingRulesInTransaction(
+    transaction: Pick<TransactionClient, 'communityPointRule'>,
+    eventName: string,
+    payloadValue?: number,
+  ): Promise<CommunityPointRule[]> {
+    return transaction.communityPointRule.findMany({
       where: {
         eventName,
         enabled: true,
@@ -149,90 +163,109 @@ export class PrismaCommunityPointsRepository implements CommunityPointsRepositor
   async award(
     input: CommunityPointAwardInput,
   ): Promise<CommunityPointConsumption> {
-    return this.prisma.$transaction(async (transaction) => {
-      await this.lock(transaction, `community-points:${input.event.eventId}`);
-      const processed = await transaction.processedEvent.findUnique({
+    return this.prisma.$transaction((transaction) =>
+      this.awardInTransaction(transaction, input, 'LEGACY'),
+    );
+  }
+
+  /** Infrastructure-only reuse: caller owns qualification guards and receipt commit. */
+  async awardInTransaction(
+    transaction: TransactionClient,
+    input: CommunityPointAwardInput,
+    mode: 'LEGACY' | 'QUALIFIED',
+  ): Promise<CommunityPointConsumption> {
+    await this.lock(transaction, `community-points:${input.event.eventId}`);
+    const processed = await transaction.processedEvent.findUnique({
+      where: {
+        eventId_consumerName: {
+          eventId: input.event.eventId,
+          consumerName: CONSUMER_NAME,
+        },
+      },
+      select: { id: true },
+    });
+    if (processed && mode === 'LEGACY')
+      return { status: 'DUPLICATE', entry: null };
+
+    const sources = [{ sourceKind: '@event', sourceId: input.event.eventId }];
+    if (input.event.aggregateType && input.event.aggregateId)
+      sources.push({
+        sourceKind: input.event.aggregateType,
+        sourceId: input.event.aggregateId,
+      });
+    await lockPointSources(transaction, sources);
+    if (
+      mode === 'LEGACY' &&
+      (await transaction.communityPointSourceCursor.findFirst({
+        where: { OR: sources },
+        select: { id: true },
+      }))
+    )
+      throw new PointQualificationBlockedError('LEGACY_EVIDENCE_REQUIRED');
+
+    if (
+      mode === 'LEGACY' &&
+      input.event.aggregateType &&
+      input.event.aggregateId &&
+      (await transaction.communityPointRevokedSource.findUnique({
         where: {
-          eventId_consumerName: {
-            eventId: input.event.eventId,
-            consumerName: CONSUMER_NAME,
+          sourceType_sourceId: {
+            sourceType: input.event.aggregateType,
+            sourceId: input.event.aggregateId,
           },
         },
         select: { id: true },
-      });
-      if (processed) return { status: 'DUPLICATE', entry: null };
+      }))
+    ) {
+      if (mode === 'LEGACY') await this.markProcessed(transaction, input);
+      return { status: 'IGNORED', entry: null };
+    }
 
-      if (input.event.aggregateType && input.event.aggregateId) {
-        await this.lockSource(
-          transaction,
-          input.event.aggregateType,
-          input.event.aggregateId,
-        );
-      }
-
-      if (
-        input.event.aggregateType &&
-        input.event.aggregateId &&
-        (await transaction.communityPointRevokedSource.findUnique({
-          where: {
-            sourceType_sourceId: {
-              sourceType: input.event.aggregateType,
-              sourceId: input.event.aggregateId,
-            },
-          },
-          select: { id: true },
-        }))
-      ) {
-        await this.markProcessed(transaction, input);
-        return { status: 'IGNORED', entry: null };
-      }
-
-      if (input.rule.dailyLimit !== null) {
-        await this.lock(
-          transaction,
-          JSON.stringify([
-            'community-points-daily-cap',
-            input.userId,
-            input.rule.key,
-            input.event.occurredAt.getUTCFullYear(),
-            input.event.occurredAt.getUTCMonth(),
-            input.event.occurredAt.getUTCDate(),
-          ]),
-        );
-      }
-
-      if (
-        input.rule.dailyLimit !== null &&
-        (await this.dailyAwardCount(
-          transaction,
+    if (input.rule.dailyLimit !== null) {
+      await this.lock(
+        transaction,
+        JSON.stringify([
+          'community-points-daily-cap',
           input.userId,
           input.rule.key,
-          input.event.occurredAt,
-        )) >= input.rule.dailyLimit
-      ) {
-        await this.markProcessed(transaction, input);
-        return { status: 'CAPPED', entry: null };
-      }
+          input.event.occurredAt.getUTCFullYear(),
+          input.event.occurredAt.getUTCMonth(),
+          input.event.occurredAt.getUTCDate(),
+        ]),
+      );
+    }
 
-      const entry = await transaction.communityPointEntry.create({
-        data: {
-          userId: input.userId,
-          ruleKey: input.rule.key,
-          points: input.rule.points,
-          reason: input.reason,
-          sourceEventId: input.event.eventId,
-          sourceEventName: input.event.eventName,
-          sourceType: input.event.aggregateType,
-          sourceId: input.event.aggregateId,
-          actorId: input.event.actorId,
-          occurredAt: input.event.occurredAt,
-        },
-        include: entryInclude,
-      });
-      await this.markProcessed(transaction, input);
-      await this.appendEvidence(transaction, entry, AWARDED_EVENT);
-      return { status: 'AWARDED', entry: this.toDomain(entry) };
+    if (
+      input.rule.dailyLimit !== null &&
+      (await this.dailyAwardCount(
+        transaction,
+        input.userId,
+        input.rule.key,
+        input.event.occurredAt,
+      )) >= input.rule.dailyLimit
+    ) {
+      if (mode === 'LEGACY') await this.markProcessed(transaction, input);
+      return { status: 'CAPPED', entry: null };
+    }
+
+    const entry = await transaction.communityPointEntry.create({
+      data: {
+        userId: input.userId,
+        ruleKey: input.rule.key,
+        points: input.rule.points,
+        reason: input.reason,
+        sourceEventId: input.event.eventId,
+        sourceEventName: input.event.eventName,
+        sourceType: input.event.aggregateType,
+        sourceId: input.event.aggregateId,
+        actorId: input.event.actorId,
+        occurredAt: input.event.occurredAt,
+      },
+      include: entryInclude,
     });
+    if (mode === 'LEGACY') await this.markProcessed(transaction, input);
+    await this.appendEvidence(transaction, entry, AWARDED_EVENT);
+    return { status: 'AWARDED', entry: this.toDomain(entry) };
   }
 
   async findOriginalById(id: string): Promise<CommunityPointEntry | null> {
@@ -249,26 +282,43 @@ export class PrismaCommunityPointsRepository implements CommunityPointsRepositor
     reason: string,
     occurredAt: Date,
   ): Promise<CommunityPointEntry | null> {
-    return this.prisma.$transaction(async (transaction) => {
-      await this.lock(transaction, `community-points-reversal:${entryId}`);
-      const original = await transaction.communityPointEntry.findFirst({
-        where: { id: entryId, reversesEntryId: null },
-        select: { id: true, userId: true, ruleKey: true, points: true },
-      });
-      if (!original) return null;
-      const exists = await transaction.communityPointEntry.findUnique({
-        where: { reversesEntryId: entryId },
-        select: { id: true },
-      });
-      if (exists) return null;
-      return this.appendReversal(
+    return this.prisma.$transaction((transaction) =>
+      this.reverseInTransaction(
         transaction,
-        original,
+        entryId,
         actorId,
         reason,
         occurredAt,
-      );
+      ),
+    );
+  }
+
+  /** Private infrastructure surface, not exported through the business repository port. */
+  async reverseInTransaction(
+    transaction: TransactionClient,
+    entryId: string,
+    actorId: string | undefined,
+    reason: string,
+    occurredAt: Date,
+  ): Promise<CommunityPointEntry | null> {
+    await this.lock(transaction, `community-points-reversal:${entryId}`);
+    const original = await transaction.communityPointEntry.findFirst({
+      where: { id: entryId, reversesEntryId: null },
+      select: { id: true, userId: true, ruleKey: true, points: true },
     });
+    if (!original) return null;
+    const exists = await transaction.communityPointEntry.findUnique({
+      where: { reversesEntryId: entryId },
+      select: { id: true },
+    });
+    if (exists) return null;
+    return this.appendReversal(
+      transaction,
+      original,
+      actorId,
+      reason,
+      occurredAt,
+    );
   }
 
   async reverseSource(
@@ -281,6 +331,13 @@ export class PrismaCommunityPointsRepository implements CommunityPointsRepositor
   ): Promise<CommunityPointSourceReversal> {
     return this.prisma.$transaction(async (transaction) => {
       await this.lockSource(transaction, sourceType, sourceId);
+      if (
+        await transaction.communityPointSourceCursor.findFirst({
+          where: { sourceKind: sourceType, sourceId },
+          select: { id: true },
+        })
+      )
+        throw new PointQualificationBlockedError('LEGACY_EVIDENCE_REQUIRED');
       const revoked = await transaction.communityPointRevokedSource.findUnique({
         where: { sourceType_sourceId: { sourceType, sourceId } },
         select: { id: true },

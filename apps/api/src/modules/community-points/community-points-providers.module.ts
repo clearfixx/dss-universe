@@ -26,6 +26,9 @@ import { AuditModule } from '@api/core/audit';
 import { PrismaModule } from '@api/core/database';
 import { EventsModule } from '@api/core/events';
 import { CommunityPointsService } from './application/services/community-points.service';
+import { QualifiedPointsService } from './application/services/qualified-points.service';
+import { QUALIFIED_POINTS_REPOSITORY } from './domain/repositories/qualified-points.repository.interface';
+import { PrismaQualifiedPointsRepository } from './infrastructure/repositories/prisma-qualified-points.repository';
 import {
   COMMUNITY_POINTS_REPOSITORY,
   type CommunityPointsRepository,
@@ -39,6 +42,11 @@ export const COMMUNITY_POINTS_INTERNAL_BALANCE_READER = Symbol(
   imports: [PrismaModule, AuditModule, EventsModule],
   providers: [
     CommunityPointsService,
+    QualifiedPointsService,
+    {
+      provide: QUALIFIED_POINTS_REPOSITORY,
+      useClass: PrismaQualifiedPointsRepository,
+    },
     {
       provide: COMMUNITY_POINTS_REPOSITORY,
       useClass: PrismaCommunityPointsRepository,
@@ -52,6 +60,10 @@ export const COMMUNITY_POINTS_INTERNAL_BALANCE_READER = Symbol(
         }),
     },
   ],
-  exports: [CommunityPointsService, COMMUNITY_POINTS_INTERNAL_BALANCE_READER],
+  exports: [
+    CommunityPointsService,
+    QualifiedPointsService,
+    COMMUNITY_POINTS_INTERNAL_BALANCE_READER,
+  ],
 })
 export class CommunityPointsProvidersModule {}

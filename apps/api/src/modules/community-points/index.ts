@@ -15,6 +15,18 @@
 export { CommunityPointsModule } from './community-points.module';
 export { CommunityPointsRuntimeModule } from './community-points-runtime.module';
 export {
+  QUALIFIED_POINTS_CONSUMER,
+  type QualifiedPointsConsumer,
+} from './contracts/qualified-points.contract';
+export type {
+  QualifiedPointCommand,
+  QualifiedPointOutcome,
+  QualifiedPointEvent,
+  QualifiedPointFact,
+  PointQualificationProjection,
+  PointFacetResult,
+} from './domain/types/qualified-points.type';
+export {
   COMMUNITY_POINTS_EVENT_CONSUMER,
   type CommunityPointsEventConsumer,
 } from './contracts/event-consumer.contract';

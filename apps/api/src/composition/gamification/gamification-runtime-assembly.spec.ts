@@ -35,6 +35,9 @@ import {
   COMMUNITY_POINTS_EVENT_CONSUMER,
   COMMUNITY_POINTS_BALANCE_READER,
   POINTS_RECIPIENT_EXISTENCE,
+  QUALIFIED_POINTS_CONSUMER,
+  type QualifiedPointsConsumer,
+  type QualifiedPointCommand,
   type CommunityPointsBalanceReader,
 } from '@api/modules/community-points';
 import {
@@ -55,6 +58,8 @@ import {
   MANUAL_AWARD_TRANSACTION,
 } from '@api/modules/achievements';
 import { CommunityPointsService } from '@api/modules/community-points/application/services/community-points.service';
+import { QualifiedPointsService } from '@api/modules/community-points/application/services/qualified-points.service';
+import { PrismaQualifiedPointsRepository } from '@api/modules/community-points/infrastructure/repositories/prisma-qualified-points.repository';
 import { LevelsService } from '@api/modules/levels/application/services/levels.service';
 import { AchievementsService } from '@api/modules/achievements/application/services/achievements.service';
 import { QualifiedAchievementsService } from '@api/modules/achievements/application/services/qualified-achievements.service';
@@ -184,6 +189,7 @@ describe('gamification runtime assembly', () => {
     ).toEqual([
       COMMUNITY_POINTS_EVENT_CONSUMER,
       COMMUNITY_POINTS_BALANCE_READER,
+      QUALIFIED_POINTS_CONSUMER,
     ]);
     expect(
       Reflect.getMetadata(MODULE_METADATA.EXPORTS, LevelsRuntimeModule),
@@ -236,6 +242,43 @@ describe('gamification runtime assembly', () => {
     await expect(capability.advance(command)).resolves.toBe(result);
     expect(advance).toHaveBeenCalledWith(command);
     const failure = new Error('synthetic qualified failure');
+    advance.mockRejectedValueOnce(failure);
+    await expect(capability.advance(command)).rejects.toBe(failure);
+    expect(database.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('forwards the narrow qualified Points command without bootstrap IO or changed failure identity', async () => {
+    const service = context.get(QualifiedPointsService);
+    const capability = context.get<QualifiedPointsConsumer>(
+      QUALIFIED_POINTS_CONSUMER,
+    );
+    const command: QualifiedPointCommand = {
+      contractVersion: 1,
+      event: {
+        eventId: 'synthetic-forwarding-only',
+        eventName: 'synthetic.v1',
+        eventVersion: 1,
+        producer: 'synthetic',
+        sourceType: null,
+        sourceId: null,
+        actorId: null,
+        occurredAt: '2026-11-16T00:00:00.000Z',
+        value: null,
+      },
+      recipientId: 'subject',
+      facts: [],
+      contribution: null,
+      facets: ['CONTROL'],
+    };
+    const result = { status: 'COMPLETE' as const, facets: [] };
+    const advance = jest
+      .spyOn(service, 'advance')
+      .mockResolvedValueOnce(result);
+    expect(Object.keys(capability)).toEqual(['advance']);
+    expect(Object.isFrozen(capability)).toBe(true);
+    await expect(capability.advance(command)).resolves.toBe(result);
+    expect(advance).toHaveBeenCalledWith(command);
+    const failure = new Error('synthetic qualified Points failure');
     advance.mockRejectedValueOnce(failure);
     await expect(capability.advance(command)).rejects.toBe(failure);
     expect(database.$transaction).not.toHaveBeenCalled();
@@ -318,6 +361,8 @@ describe('gamification runtime assembly', () => {
       );
       for (const type of [
         CommunityPointsService,
+        QualifiedPointsService,
+        PrismaQualifiedPointsRepository,
         LevelsService,
         AchievementsService,
         QualifiedAchievementsService,
