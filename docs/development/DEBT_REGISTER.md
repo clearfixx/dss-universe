@@ -248,6 +248,14 @@ acceptance remain open; this does not fold the separate Mailpit task into B/C.
 
 ### DEBT-007 — Automatic gamification delivery (High, runtime B and C1 design accepted; C/D open)
 
+Final-closure progress, 2026-11-16: the
+[qualified Points owner implementation](DEBT_007_C22_POINTS_FACETS_RUNTIME.md)
+passed full local verification on47506cf and same-head CI8/8 (API1591,
+E2E913, build6/6, Web15/15 without retries). This is the inactive owner boundary,
+not automatic delivery or closure of007/090. Producer/root admission, delivery,
+recovery and activation preflight remain required. Earlier checkpoints below
+retain their historical acceptance scope.
+
 After accepted A/A.1 PR101 and routing design/protocol PR102/103, the owner approved
 an isolated B persistence package: additive destination storage, atomic discovery,
 fenced publication claims/recovery and audited explicit control transitions.
