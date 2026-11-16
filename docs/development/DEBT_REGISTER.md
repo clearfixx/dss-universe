@@ -1823,14 +1823,16 @@ Proposed boundary and acceptance matrix are in
 no content truncation, compatibility assessment before implementation. Exact
 boundary approval is pending; no runtime fix is claimed.
 
-### DEBT-067 — Wall Activity retraction before creation is lost (Medium, OPEN, separate correction approval requested)
+### DEBT-067 — Wall Activity retraction before creation is lost (Medium, FIXED_VERIFIED scoped runtime)
 
 Final directive authorizes the bounded correction. Candidate implementation adds
 projection-owned durable retraction evidence and serializes Wall create/retract
 under one source transaction lock. Real migrated Worker regression coverage and
 migration backfill are in the [correction report](../audits/DEBT_067_ACTIVITY_ORDERING.md).
-This is not yet full-gate/CI/package acceptance; historical discovery below is
-retained rather than claimed to describe a new regression.
+Runtime headc90443f passed CI8/8 and exact local quality:full exit0: API1547,
+E2E888/888 without skips/todo, build6/6 and Web15/15 without retries. Final
+publication/merge is tracked in PR163. Historical discovery below is retained,
+not a claim of a new regression; final D7 acceptance remains separate.
 
 Actual current Worker projector with migrated disposable PostgreSQL: deliver
 synthetic Wall retraction at 01:01 before the older creation at 01:00. Retraction

@@ -1,6 +1,6 @@
 # DEBT-067 — Durable Activity retraction
 
-Status: implemented candidate; full gate, CI and package review pending.
+Status: runtime verified; publication/merge tracked in PR163. Not final D7 closure.
 Base: accepted main790f098 plus the approved finite Phase A reconciliation.
 
 The Wall projector used to UPDATE existing entries only. A retraction arriving
@@ -40,7 +40,28 @@ read a timestamp-without-time-zone using pg's local timezone conversion; its
 assertion was corrected to select an explicit UTC instant. The failure is
 retained in the focused log; no production timestamp logic was changed to make
 that assertion pass. Final focused verification passed Worker55/55, Worker
-typecheck/lint and migrated DB/actual-Worker16/16. Full gate and CI remain pending.
+typecheck/lint and migrated DB/actual-Worker16/16 before the full acceptance run below.
+
+Acceptance evidence2026-11-16: runtime/helper head `c90443f33625d9c5ca19094d6025c4233613e446`
+passed exact local quality:full, exit0, 06:30:04–06:50:43 UTC. API1547/1547,
+E2E888/888 across78 suites with zero pending/todo, coverage5/5 executable
+workspaces, build6/6 and fresh Web15/15 without retries. System Kernel-Power42/107
+query succeeded with zero events in that exact interval. CI8/8 on the same head
+also passed; actual logs confirm API1547, E2E888, build6, Web15 and native48 on
+Windows/Linux/macOS. Main job133131816293, Web133131816294;
+workflow runs43817148159/43817148119/43817148154.
+
+The initial full attempt stopped at native build because PYTHON was not supplied;
+the next stopped on formatting a generated receipt in the wrong helper subfolder.
+Both are local verification-preparation failures, not Activity runtime defects.
+Existing Python3.12.14 was selected without installation or host changes; helper
+receipts now use the established ignored root location. Raw failed attempts are
+preserved in `tools/agent-helpers/debt067-preflight-failures-02d82a290fb745fb976d1c8623d4f044.local.zip`,
+SHA256 `17A25014C24BA7EF222D32598950E969C5114087A382B803DDEFBE4C88246FD0`.
+The successful receipt is `tools/agent-helpers/debt067-full-881f856ccea3490aa54c14cde936ec61.local.json`;
+full reports are in `node_modules/.cache/quality-full-ZznDte/`.
+Final report updates change documentation only; they do not claim a second local
+full run on the documentation commit. Final-head CI remains a publication check.
 
 Local verification helper: `tools/agent-helpers/activity/run-debt067-verification.ps1`.
 It reads disposable credentials from local configuration without printing them,
