@@ -85,6 +85,10 @@ describe('Prisma and historical migration alignment (e2e)', () => {
         ...routingDefaults,
         ...qualificationDefaults,
         ...consumptionDefaults,
+        {
+          table_name: 'community_point_source_cursors',
+          column_default: 'CURRENT_TIMESTAMP',
+        },
       ].sort((left, right) =>
         left.table_name < right.table_name
           ? -1

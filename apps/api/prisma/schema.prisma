@@ -1750,6 +1750,10 @@ model CommunityPointEntry {
   reverses CommunityPointEntry? @relation("CommunityPointReversal", fields: [reversesEntryId], references: [id], onDelete: Restrict)
   reversal CommunityPointEntry? @relation("CommunityPointReversal")
 
+  qualification CommunityPointQualification?
+  activeCursor  CommunityPointSourceCursor? @relation("ActivePointQualification")
+  facetReceipt  CommunityPointFacetReceipt?
+
   @@index([userId, occurredAt, id])
   @@index([userId, ruleKey, occurredAt])
   @@index([occurredAt, userId])
@@ -1786,6 +1790,87 @@ model CommunityPointRevokedSource {
   @@unique([sourceType, sourceId])
   @@index([occurredAt])
   @@map("community_point_revoked_sources")
+}
+
+model CommunityPointSourceCursor {
+  id                          String   @id @default(uuid())
+  producer                    String
+  sourceKind                  String
+  sourceId                    String
+  retiredThroughRevision      BigInt   @default(0)
+  activeQualificationId       String?
+  activeQualificationRevision BigInt   @default(0)
+  activeEntryId               String?  @unique
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @default(now()) @updatedAt
+
+  activeEntry CommunityPointEntry? @relation("ActivePointQualification", fields: [activeEntryId], references: [id], onDelete: Restrict)
+  facts       CommunityPointSourceFact[]
+
+  @@unique([producer, sourceKind, sourceId])
+  @@index([sourceKind, sourceId])
+  @@map("community_point_source_cursors")
+}
+
+model CommunityPointSourceFact {
+  producer                    String
+  factId                      String
+  cursorId                    String
+  canonicalEventId            String
+  revision                    BigInt
+  action                      String
+  qualificationId             String
+  qualificationRevision       BigInt
+  qualificationEventId        String
+  qualificationFactId         String
+  retiredThroughRevision      BigInt
+  predecessorWithdrawalFactId String?
+  contractVersion             Int
+  factDigest                  String
+  qualificationProjection     Json
+  createdAt                   DateTime @default(now())
+
+  cursor         CommunityPointSourceCursor @relation(fields: [cursorId], references: [id], onDelete: Restrict)
+  qualifications CommunityPointQualification[]
+  controlReceipts CommunityPointFacetReceipt[]
+
+  @@id([producer, factId])
+  @@unique([cursorId, revision])
+  @@index([cursorId, canonicalEventId], map: "community_point_source_fact_canonical_idx")
+  @@map("community_point_source_facts")
+}
+
+model CommunityPointQualification {
+  entryId             String   @id
+  producer            String
+  qualificationFactId String
+  createdAt           DateTime @default(now())
+
+  entry CommunityPointEntry @relation(fields: [entryId], references: [id], onDelete: Restrict)
+  fact  CommunityPointSourceFact @relation(fields: [producer, qualificationFactId], references: [producer, factId], onDelete: Restrict)
+
+  @@unique([producer, qualificationFactId])
+  @@map("community_point_qualifications")
+}
+
+model CommunityPointFacetReceipt {
+  eventId             String
+  facet               String
+  contractVersion     Int
+  commandDigest       String
+  recipientId         String
+  disposition         String
+  ruleKey             String?
+  contributionEntryId String? @unique
+  sourceFactProducer  String?
+  sourceFactId        String?
+  createdAt           DateTime @default(now())
+
+  contributionEntry CommunityPointEntry? @relation(fields: [contributionEntryId], references: [id], onDelete: Restrict)
+  sourceFact CommunityPointSourceFact? @relation(fields: [sourceFactProducer, sourceFactId], references: [producer, factId], onDelete: Restrict)
+
+  @@id([eventId, facet])
+  @@map("community_point_facet_receipts")
 }
 
 model LevelDefinition {
