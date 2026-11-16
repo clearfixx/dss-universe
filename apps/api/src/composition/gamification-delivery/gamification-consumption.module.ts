@@ -24,10 +24,18 @@ import type {
 } from './contracts/consumption.types';
 import { PrismaAdmissionRepository } from './infrastructure/prisma-admission.repository';
 import { PrismaConsumptionRepository } from './infrastructure/prisma-consumption.repository';
+import { SourceProducerAdapter } from './infrastructure/source-producer.adapter';
+import { PrismaPublicationEvidenceReader } from '@api/modules/news/infrastructure';
+import { PrismaCommentLifetimeReader } from '@api/modules/interactions/infrastructure';
+import { PrismaPointLedgerEvidenceReader } from '@api/modules/community-points/infrastructure';
 
 @Module({
   imports: [PrismaModule, EventsModule, ReputationQualificationReadModule],
   providers: [
+    PrismaPublicationEvidenceReader,
+    PrismaCommentLifetimeReader,
+    PrismaPointLedgerEvidenceReader,
+    SourceProducerAdapter,
     PrismaAdmissionRepository,
     PrismaConsumptionRepository,
     {

@@ -3,6 +3,7 @@
  * Synthetic producer facts are explicitly supplied through the inactive port.
  */
 import { randomUUID } from 'node:crypto';
+import { PointRuleConfigurationAdapter } from '../src/composition/gamification-delivery/gamification-configuration.module';
 import { Pool } from 'pg';
 import { AuditRedactionService, AuditWriterService } from '@api/core/audit';
 import { OutboxWriterService } from '@api/core/events';
@@ -35,6 +36,7 @@ describe('Qualified Points facets and source cycles (e2e)', () => {
       fixture.prisma,
       new AuditWriterService(new AuditRedactionService()),
       new OutboxWriterService(),
+      new PointRuleConfigurationAdapter(),
     );
     const existence = new PrismaProfileExistenceReader(fixture.prisma);
     legacy = new CommunityPointsService(ledger, existence);

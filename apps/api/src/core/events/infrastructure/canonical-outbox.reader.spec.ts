@@ -29,6 +29,69 @@ const row = {
 };
 
 describe('Canonical Outbox evidence', () => {
+  it('projects selected payload and metadata without exposing unrelated fields', async () => {
+    const findUnique = jest.fn().mockResolvedValue({
+      ...row,
+      payload: { recipientId: 'subject', privateText: { secret: true } },
+      metadata: { contributionFactId: 'fact', privateText: 'secret' },
+    });
+    const transaction = {
+      outboxEvent: { findUnique },
+    } as unknown as TransactionClient;
+    const reader = new CanonicalOutboxReader();
+    expect(
+      (await reader.readSelected(transaction, 'event', ['recipientId']))
+        ?.payload,
+    ).toEqual({ recipientId: 'subject' });
+    expect(
+      await reader.metadataSelected(transaction, 'event', [
+        'contributionFactId',
+      ]),
+    ).toEqual({ contributionFactId: 'fact' });
+    expect(findUnique).toHaveBeenLastCalledWith({
+      where: { id: 'event' },
+      select: { metadata: true },
+    });
+  });
+
+  it('preserves ambiguous candidates including malformed selected values', async () => {
+    const query = jest.fn().mockResolvedValue([
+      { ...row, payload: { recipientId: 'subject', secret: 'omitted' } },
+      { ...row, id: 'other', payload: { recipientId: {} } },
+    ]);
+    const transaction = { $queryRaw: query } as unknown as TransactionClient;
+    const result = await new CanonicalOutboxReader().candidatesSelected(
+      transaction,
+      {
+        producer: 'synthetic',
+        aggregateType: 'Synthetic',
+        aggregateId: 'entry',
+        eventName: 'synthetic.v1',
+      },
+      ['recipientId'],
+    );
+    expect(result.map((entry) => entry.payload)).toEqual([
+      { recipientId: 'subject' },
+      null,
+    ]);
+    expect(query).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects invalid selected descriptors before querying storage', async () => {
+    const findUnique = jest.fn();
+    const transaction = {
+      outboxEvent: { findUnique },
+    } as unknown as TransactionClient;
+    const reader = new CanonicalOutboxReader();
+    await expect(
+      reader.readSelected(transaction, 'event', ['id', 'id']),
+    ).rejects.toThrow('Invalid canonical evidence descriptor');
+    await expect(
+      reader.metadataSelected(transaction, 'event', ['id', 'id']),
+    ).rejects.toThrow('Invalid canonical metadata descriptor');
+    expect(findUnique).not.toHaveBeenCalled();
+  });
+
   it('keeps scalar types and excludes unknown envelope fields', () => {
     const evidence = projectCanonicalEvidence(
       { ...row, payload: { value: '1', recipientId: 'subject' } },

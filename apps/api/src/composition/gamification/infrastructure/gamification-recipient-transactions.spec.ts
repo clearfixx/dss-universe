@@ -33,6 +33,7 @@ import {
   type GrantRow,
 } from '../../../modules/custom-titles/infrastructure/repositories/title-grant.shape';
 import { PrismaAchievementsRepository } from '../../../modules/achievements/infrastructure/repositories/prisma-achievements.repository';
+import { AchievementRuleConfigurationAdapter } from '../../gamification-delivery/gamification-configuration.module';
 import { PrismaCustomTitlesRepository } from '../../../modules/custom-titles/infrastructure/repositories/prisma-custom-titles.repository';
 
 const input = {
@@ -374,9 +375,15 @@ describe('Root lifetime and owned delegation', () => {
     const prisma = {} as PrismaService;
     const audit = {} as AuditWriterService;
     const outbox = {} as OutboxWriterService;
-    const awards = new PrismaAchievementsRepository(prisma, audit, outbox, {
-      award: awardCommand,
-    });
+    const awards = new PrismaAchievementsRepository(
+      prisma,
+      audit,
+      outbox,
+      {
+        award: awardCommand,
+      },
+      new AchievementRuleConfigurationAdapter(),
+    );
     const titles = new PrismaCustomTitlesRepository(prisma, audit, outbox, {
       grant: grantCommand,
     });

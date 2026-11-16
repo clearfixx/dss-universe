@@ -24,6 +24,7 @@
  * ===============================================================
  */
 import { randomUUID } from 'node:crypto';
+import { AchievementRuleConfigurationAdapter } from '../src/composition/gamification-delivery/gamification-configuration.module';
 import type { TransactionClient } from '../src/core/database';
 import { AuditWriterService } from '../src/core/audit/services/audit-writer.service';
 import { AuditRedactionService } from '../src/core/audit/services/audit-redaction.service';
@@ -87,6 +88,7 @@ describe('Achievement award atomicity (e2e)', () => {
           throw new Error('Manual path must not be called');
         },
       },
+      new AchievementRuleConfigurationAdapter(),
     );
   }, 60000);
   afterEach(async () => {

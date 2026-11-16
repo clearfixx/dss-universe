@@ -46,6 +46,7 @@ import type {
   CommunityPointHistory,
   CommunityPointRule,
 } from '../../domain/types/community-points.type';
+import { PointRuleDeliveryConfigurationError } from '../../domain/errors/rule-delivery-configuration.error';
 
 const MIN_REASON_LENGTH = 3;
 const MAX_REASON_LENGTH = 500;
@@ -91,13 +92,13 @@ export class CommunityPointsService {
         'Daily limit must be null or an integer between 1 and 10000.',
       );
     }
-    const rule = await this.points.updateRule(
-      key,
-      points,
-      dailyLimit,
-      enabled,
-      updatedById,
-    );
+    const rule = await this.points
+      .updateRule(key, points, dailyLimit, enabled, updatedById)
+      .catch((error: unknown) => {
+        if (error instanceof PointRuleDeliveryConfigurationError)
+          throw new BadRequestException(error.message);
+        throw error;
+      });
     if (!rule) throw new NotFoundException('Community Points rule not found.');
     return rule;
   }

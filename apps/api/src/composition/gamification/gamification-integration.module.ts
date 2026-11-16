@@ -52,9 +52,11 @@ import { LevelPointsBalanceAdapter } from './infrastructure/level-points-balance
 import { PrismaManualAwardTransaction } from './infrastructure/prisma-manual-award.transaction';
 import { PrismaTitleGrantTransaction } from './infrastructure/prisma-title-grant.transaction';
 import { LevelSynchronizationCompositionModule } from './level-synchronization-composition.module';
+import { GamificationConfigurationModule } from '../gamification-delivery/gamification-configuration.module';
 @Global()
 @Module({
   imports: [
+    GamificationConfigurationModule,
     PrismaModule,
     AuditModule,
     EventsModule,

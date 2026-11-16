@@ -26,10 +26,18 @@ import type {
 import { PrismaRoutingControlRepository } from './infrastructure/prisma-routing-control.repository';
 import { PrismaRoutingDiscoveryRepository } from './infrastructure/prisma-routing-discovery.repository';
 import { PrismaRoutingPublicationRepository } from './infrastructure/prisma-routing-publication.repository';
+import {
+  CURRENT_PRODUCER_COORDINATES,
+  ROUTING_ELIGIBLE_COORDINATES,
+} from './contracts/producer-catalog';
 
 @Module({
   imports: [PrismaModule, AuditModule],
   providers: [
+    {
+      provide: ROUTING_ELIGIBLE_COORDINATES,
+      useValue: CURRENT_PRODUCER_COORDINATES,
+    },
     PrismaRoutingControlRepository,
     PrismaRoutingDiscoveryRepository,
     PrismaRoutingPublicationRepository,

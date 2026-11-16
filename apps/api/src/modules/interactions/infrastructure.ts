@@ -12,6 +12,7 @@
  * ===============================================================
  */
 // Not a business API. Feature consumers and application layers may not import this entry.
+export { PrismaCommentLifetimeReader } from './infrastructure/repositories/prisma-comment-lifetime.reader';
 export { PrismaInteractionTargetWriter } from './infrastructure/repositories/prisma-interaction-target.writer';
 export {
   PrismaCommentWriter,

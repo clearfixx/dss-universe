@@ -18,11 +18,17 @@ import type {
   QualifiedAchievementFact,
   VerifiedAchievementMapping,
 } from '@api/modules/achievements';
+import { isQualifiedAchievementCommand } from '@api/modules/achievements';
 import { isQualifiedPointCommand } from '@api/modules/community-points';
 import type {
   ReputationAdmissionSeal,
   GamificationAdmissionSeal,
+  SourceAdmissionSeal,
 } from '../contracts/admission-seal.types';
+import {
+  PRODUCER_PROFILES,
+  type ProducerProfile,
+} from '../contracts/producer-catalog';
 import { ADMISSION_MAX_BYTES } from '../contracts/consumption.constants';
 import { GAMIFICATION_DESTINATION } from '../contracts/routing.constants';
 import {
@@ -93,15 +99,26 @@ function event(value: unknown): QualifiedAchievementEvent {
   };
 }
 
-function reference(value: unknown): AchievementFactReference {
+function reference(
+  value: unknown,
+  producer = 'dss.api.reputation',
+): AchievementFactReference {
   const row = exactRecord(value, ['producer', 'factId']);
   return {
-    producer: sealLiteral(row.producer, 'dss.api.reputation'),
+    producer: sealLiteral(row.producer, producer),
     factId: sealUuid(row.factId),
   };
 }
 
 function fact(value: unknown): QualifiedAchievementFact {
+  return sourceFact(value, 'dss.api.reputation', ['ReputationEntry', '@event']);
+}
+
+function sourceFact(
+  value: unknown,
+  producer: string,
+  kinds: readonly string[],
+): QualifiedAchievementFact {
   const row = exactRecord(value, [
     'producer',
     'sourceKind',
@@ -119,8 +136,8 @@ function fact(value: unknown): QualifiedAchievementFact {
     'contractVersion',
   ]);
   return {
-    producer: sealLiteral(row.producer, 'dss.api.reputation'),
-    sourceKind: sealChoice(row.sourceKind, ['ReputationEntry', '@event']),
+    producer: sealLiteral(row.producer, producer),
+    sourceKind: sealChoice(row.sourceKind, kinds),
     sourceId: sealText(row.sourceId),
     factId: sealUuid(row.factId),
     canonicalEventId: sealUuid(row.canonicalEventId),
@@ -261,6 +278,8 @@ function projection(value: unknown): GamificationAdmissionSeal {
   if (row.codecVersion === 1) return legacyProjection(value);
   sealLiteral(row.codecVersion, 2);
   const descriptor = exactRecord(row.descriptor, ['id', 'version']);
+  if (descriptor.id !== 'reputation.qualification')
+    return sourceProjection(row, descriptor);
   const applicability = exactRecord(row.applicability, [
     'POINTS',
     'LEVELS',
@@ -329,6 +348,156 @@ function projection(value: unknown): GamificationAdmissionSeal {
         ),
         command: achievements,
       },
+    },
+  };
+}
+
+function sourceHeader(
+  value: unknown,
+  profile: ProducerProfile,
+): ReputationAdmissionSeal['canonical'] {
+  const row = exactRecord(value, canonicalKeys);
+  const occurredAt = sealText(row.occurredAt);
+  const time = Date.parse(occurredAt);
+  if (!Number.isFinite(time) || new Date(time).toISOString() !== occurredAt)
+    invalidSeal();
+  return {
+    eventId: sealUuid(row.eventId),
+    eventName: sealChoice(row.eventName, profile.events),
+    eventVersion: sealLiteral(row.eventVersion, 1),
+    producer: sealLiteral(row.producer, profile.producer),
+    sourceType: sealLiteral(row.sourceType, profile.sourceType),
+    sourceId: sealText(row.sourceId),
+    occurredAt,
+  };
+}
+
+function sourceAchievementCommand(
+  value: unknown,
+  profile: ProducerProfile,
+): QualifiedAchievementCommand {
+  const row = exactRecord(value, ['event', 'facts', 'contribution']);
+  const inputEvent = exactRecord(row.event, [...canonicalKeys, 'payload']);
+  const header = sourceHeader(
+    Object.fromEntries(canonicalKeys.map((key) => [key, inputEvent[key]])),
+    profile,
+  );
+  const payload = exactRecord(inputEvent.payload, profile.recipients);
+  const command = {
+    event: {
+      ...header,
+      payload: Object.fromEntries(
+        Object.entries(payload).map(([key, value]) => [key, sealText(value)]),
+      ),
+    },
+    facts: denseArray(row.facts, 3).map((item) =>
+      sourceFact(item, profile.producer, [profile.sourceType, '@event']),
+    ),
+    contribution: reference(row.contribution, profile.producer),
+  };
+  if (!isQualifiedAchievementCommand(command)) invalidSeal();
+  return command;
+}
+
+function sourceProjection(
+  row: Record<string, unknown>,
+  descriptor: Record<string, unknown>,
+): SourceAdmissionSeal {
+  const profile = PRODUCER_PROFILES.find(
+    (item) =>
+      item.id === descriptor.id && item.id !== 'reputation.qualification',
+  );
+  if (!profile) invalidSeal();
+  sealLiteral(descriptor.version, 1);
+  const applicability = exactRecord(row.applicability, [
+    'POINTS',
+    'LEVELS',
+    'ACHIEVEMENTS',
+  ]);
+  sealLiteral(applicability.POINTS, profile.points);
+  sealLiteral(applicability.LEVELS, profile.levels);
+  sealLiteral(applicability.ACHIEVEMENTS, true);
+  const inputs = exactRecord(
+    row.inputs,
+    profile.points ? ['POINTS', 'ACHIEVEMENTS'] : ['LEVELS', 'ACHIEVEMENTS'],
+  );
+  const owned = exactRecord(inputs.ACHIEVEMENTS, ['codec', 'command']);
+  sealLiteral(owned.codec, 'achievements.qualified.v1');
+  const achievements = sourceAchievementCommand(owned.command, profile);
+  const canonical = sourceHeader(row.canonical, profile);
+  for (const key of canonicalKeys)
+    if (canonical[key] !== achievements.event[key]) invalidSeal();
+  const common = {
+    codecVersion: 2 as const,
+    destination: sealLiteral(row.destination, GAMIFICATION_DESTINATION),
+    canonical,
+  };
+  const achievementsInput = {
+    codec: 'achievements.qualified.v1' as const,
+    command: achievements,
+  };
+  if (
+    profile.points &&
+    (profile.id === 'news.publication' || profile.id === 'comments.lifetime')
+  ) {
+    const input = exactRecord(inputs.POINTS, ['codec', 'command']);
+    sealLiteral(input.codec, 'points.qualified.v1');
+    const points = copyPointInput(input.command);
+    if (!isQualifiedPointCommand(points)) invalidSeal();
+    for (const key of canonicalKeys)
+      if (canonical[key] !== points.event[key]) invalidSeal();
+    if (
+      points.recipientId !== achievements.event.payload.authorId ||
+      points.event.value !== null ||
+      points.facts.length !== achievements.facts.length ||
+      points.contribution?.factId !== achievements.contribution?.factId ||
+      points.contribution?.producer !== achievements.contribution?.producer
+    )
+      invalidSeal();
+    for (const fact of achievements.facts) {
+      const corresponding = points.facts.find(
+        (item) =>
+          item.producer === fact.producer && item.factId === fact.factId,
+      );
+      if (!corresponding) invalidSeal();
+      for (const key of Object.keys(fact) as (keyof QualifiedAchievementFact)[])
+        if (fact[key] !== corresponding[key]) invalidSeal();
+    }
+    if (
+      !points.facets.includes('CONTRIBUTION') ||
+      points.facets.includes('CONTROL') !==
+        achievements.facts.some((fact) => fact.action === 'WITHDRAW')
+    )
+      invalidSeal();
+    return {
+      ...common,
+      descriptor: { id: profile.id, version: 1 },
+      applicability: { POINTS: true, LEVELS: false, ACHIEVEMENTS: true },
+      inputs: {
+        POINTS: { codec: 'points.qualified.v1', command: points },
+        ACHIEVEMENTS: achievementsInput,
+      },
+    };
+  }
+  if (profile.id !== 'points.ledger') invalidSeal();
+  const input = exactRecord(inputs.LEVELS, ['codec', 'command']);
+  sealLiteral(input.codec, 'levels.event.v1');
+  const command = exactRecord(input.command, [...canonicalKeys, 'userId']);
+  const levelHeader = sourceHeader(
+    Object.fromEntries(canonicalKeys.map((key) => [key, command[key]])),
+    profile,
+  );
+  for (const key of canonicalKeys)
+    if (canonical[key] !== levelHeader[key]) invalidSeal();
+  const userId = sealText(command.userId);
+  if (userId !== achievements.event.payload.userId) invalidSeal();
+  return {
+    ...common,
+    descriptor: { id: 'points.ledger', version: 1 },
+    applicability: { POINTS: false, LEVELS: true, ACHIEVEMENTS: true },
+    inputs: {
+      LEVELS: { codec: 'levels.event.v1', command: { ...levelHeader, userId } },
+      ACHIEVEMENTS: achievementsInput,
     },
   };
 }
