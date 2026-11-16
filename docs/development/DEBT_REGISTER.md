@@ -2,6 +2,10 @@
 
 > Status: Active
 >
+> Phase A proposal (2026-11-15): [complete 95-ID disposition matrix](../audits/FINAL_D7_PHASE_A.md).
+> Owner approved this finite work list, with047 deferred to the owner-model phase.
+> Phase B067/007/090 may proceed; this does not itself close D7.
+>
 > Updated: 2026-11-08 (accepted Media intake; qualified-owner design candidate)
 >
 > Historical candidate checkpoints and the original table below are retained.
@@ -1227,6 +1231,16 @@ broader acceptance and required CI remain open.
 
 ### DEBT-047 — Assignment protection does not ensure administrator availability (High, OPEN / scope approval required, D3.4)
 
+Final closure decision2026-11-15: **DEFERRED** to the owner-model product phase.
+Owner explicitly rejected the need for an interim last-administrator solution.
+The unique owner must not be deleted, banned, deactivated or deprived of its
+authority through DSS commands. SQL injection protection and least-privileged
+database access are required; no guarantee against an unrestricted external DBA.
+No recovery backdoor, hidden account or automatic resurrection is requested.
+The current availability gap remains documented, not fixed; it no longer blocks
+this audit's finite067/007/090 work. The historical proposals below are not
+implementation authority.
+
 Source review at `c9659e0` found that protected-role revocation counts inactive
 holders, while Auth self-deactivation changes eligibility without consulting an
 availability policy. IAM critical permission rename/delete and role-permission
@@ -1809,7 +1823,16 @@ Proposed boundary and acceptance matrix are in
 no content truncation, compatibility assessment before implementation. Exact
 boundary approval is pending; no runtime fix is claimed.
 
-### DEBT-067 — Wall Activity retraction before creation is lost (Medium, OPEN, separate correction approval requested)
+### DEBT-067 — Wall Activity retraction before creation is lost (Medium, FIXED_VERIFIED scoped runtime)
+
+Final directive authorizes the bounded correction. Candidate implementation adds
+projection-owned durable retraction evidence and serializes Wall create/retract
+under one source transaction lock. Real migrated Worker regression coverage and
+migration backfill are in the [correction report](../audits/DEBT_067_ACTIVITY_ORDERING.md).
+Runtime headc90443f passed CI8/8 and exact local quality:full exit0: API1547,
+E2E888/888 without skips/todo, build6/6 and Web15/15 without retries. Final
+publication/merge is tracked in PR163. Historical discovery below is retained,
+not a claim of a new regression; final D7 acceptance remains separate.
 
 Actual current Worker projector with migrated disposable PostgreSQL: deliver
 synthetic Wall retraction at 01:01 before the older creation at 01:00. Retraction

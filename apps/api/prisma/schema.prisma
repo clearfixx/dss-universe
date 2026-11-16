@@ -1607,6 +1607,15 @@ model ActivityEntry {
   @@map("activity_entries")
 }
 
+model ActivityRetraction {
+  subjectType String
+  subjectId   String
+  retractedAt DateTime
+
+  @@id([subjectType, subjectId])
+  @@map("activity_retractions")
+}
+
 model ActivityFeedState {
   userId        String   @id
   lastVisitedAt DateTime @default(now())

@@ -24,8 +24,10 @@
  */
 import { execFile } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { Pool } from 'pg';
 import type { IntegrationEventJob } from '@dss/jobs';
 import { createEventEnvelope, OutboxWriterService } from '../src/core/events';
 import { OutboxDispatcherService } from '../src/core/queue/services/outbox-dispatcher.service';
@@ -47,11 +49,20 @@ type ProbeResult = {
 
 describe('Core to Worker actual persistence boundary (e2e)', () => {
   let fixture: Awaited<ReturnType<typeof createIsolatedApiSchemaFixture>>;
+  let controls: Pool;
   beforeEach(async () => {
     fixture = await createIsolatedApiSchemaFixture();
+    controls = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      options: `-c search_path=${fixture.schema},public`,
+    });
   }, 60000);
   afterEach(async () => {
-    await fixture?.close();
+    try {
+      await controls?.end();
+    } finally {
+      await fixture?.close();
+    }
   });
 
   async function dispatch(
@@ -324,6 +335,198 @@ describe('Core to Worker actual persistence boundary (e2e)', () => {
     expect(await fixture.prisma.activityEntry.findMany()).toEqual([row]);
     expect(await fixture.prisma.processedEvent.count()).toBe(2);
   });
+  it('preserves a retraction received before creation, including replay and independent sources', async () => {
+    const created = await dispatch('users.profile-wall.post-created.v1', {
+      profileOwnerId: randomUUID(),
+    });
+    const retracted = await dispatch(
+      'users.profile-wall.post-retracted.v1',
+      {},
+      'UserWallPost',
+      created.aggregateId,
+    );
+    expect((await probe(retracted)).outcomes[0].ok).toBe(true);
+    expect(await fixture.prisma.activityEntry.count()).toBe(0);
+    expect((await probe(created)).outcomes[0].ok).toBe(true);
+    expect((await probe(created)).outcomes[0]).toMatchObject({
+      ok: true,
+      result: { duplicate: true },
+    });
+    const replacement = { ...created, eventId: randomUUID() };
+    expect((await probe(replacement)).outcomes[0].ok).toBe(true);
+    expect(
+      await fixture.prisma.activityEntry.count({
+        where: { retractedAt: null },
+      }),
+    ).toBe(0);
+    const other = await dispatch('users.profile-wall.post-created.v1', {});
+    expect((await probe(other)).outcomes[0].ok).toBe(true);
+    expect(
+      await fixture.prisma.activityEntry.count({
+        where: { retractedAt: null },
+      }),
+    ).toBe(1);
+    expect(await fixture.prisma.activityEntry.count()).toBe(3);
+  });
+
+  for (const first of ['create', 'retract'] as const) {
+    it(`serializes ${first}-first concurrent delivery under the same source lock`, async () => {
+      const created = await dispatch('users.profile-wall.post-created.v1', {});
+      const retracted = await dispatch(
+        'users.profile-wall.post-retracted.v1',
+        {},
+        'UserWallPost',
+        created.aggregateId,
+      );
+      const table =
+        first === 'create' ? 'activity_entries' : 'activity_retractions';
+      const coordinate = `activity-test:${randomUUID()}`;
+      if (
+        !/^api_boundary_[a-f0-9]{32}$/.test(fixture.schema) ||
+        !/^[a-f0-9-]{36}$/.test(created.aggregateId!)
+      )
+        throw new Error('Unsafe test identifiers');
+      await controls.query(`CREATE FUNCTION "${fixture.schema}".hold_activity() RETURNS trigger LANGUAGE plpgsql AS $body$
+        BEGIN IF NEW."subjectId" = '${created.aggregateId}' THEN
+        PERFORM pg_advisory_xact_lock(hashtextextended('${coordinate}',0)); END IF; RETURN NEW; END $body$`);
+      await controls.query(
+        `CREATE TRIGGER hold_activity BEFORE INSERT ON "${fixture.schema}"."${table}" FOR EACH ROW EXECUTE FUNCTION "${fixture.schema}".hold_activity()`,
+      );
+      const holder = await controls.connect();
+      const inFlight: Promise<ProbeResult>[] = [];
+      try {
+        await holder.query('BEGIN');
+        await holder.query(
+          'SELECT pg_advisory_xact_lock(hashtextextended($1,0))',
+          [coordinate],
+        );
+        const {
+          rows: [owner],
+        } = await holder.query<{ pid: number }>(
+          'SELECT pg_backend_pid()::int AS pid',
+        );
+        async function blockedBy(pid: number) {
+          const deadline = performance.now() + 2000;
+          do {
+            const { rows } = await controls.query<{ pid: number }>(
+              "SELECT pid FROM pg_stat_activity WHERE application_name=$1 AND state='active' AND $2::int=ANY(pg_blocking_pids(pid))",
+              [fixture.schema, pid],
+            );
+            if (rows[0]) return rows[0].pid;
+          } while (performance.now() < deadline);
+          throw new Error('Expected physical Activity lock contention');
+        }
+        inFlight.push(probe(first === 'create' ? created : retracted));
+        const winner = await blockedBy(owner.pid);
+        inFlight.push(probe(first === 'create' ? retracted : created));
+        await blockedBy(winner);
+        await holder.query('ROLLBACK');
+        const results = await Promise.all(inFlight);
+        expect(results.map((result) => result.outcomes[0].ok)).toEqual([
+          true,
+          true,
+        ]);
+        const entry = await fixture.prisma.activityEntry.findUniqueOrThrow({
+          where: { sourceEventId: created.eventId },
+        });
+        expect(entry.retractedAt).toEqual(new Date(retracted.occurredAt));
+        expect(
+          await fixture.prisma.activityEntry.count({
+            where: { retractedAt: null },
+          }),
+        ).toBe(0);
+      } finally {
+        await holder.query('ROLLBACK');
+        holder.release();
+        await Promise.allSettled(inFlight);
+      }
+    });
+  }
+
+  it('rolls back deletion evidence on projection failure and permits an exact retry', async () => {
+    const created = await dispatch('users.profile-wall.post-created.v1', {});
+    expect((await probe(created)).outcomes[0].ok).toBe(true);
+    const retracted = await dispatch(
+      'users.profile-wall.post-retracted.v1',
+      {},
+      'UserWallPost',
+      created.aggregateId,
+    );
+    await controls.query(
+      `CREATE FUNCTION "${fixture.schema}".fail_activity_update() RETURNS trigger LANGUAGE plpgsql AS $body$ BEGIN RAISE EXCEPTION 'synthetic update failure'; END $body$`,
+    );
+    await controls.query(
+      `CREATE TRIGGER fail_activity_update BEFORE UPDATE ON "${fixture.schema}"."activity_entries" FOR EACH ROW EXECUTE FUNCTION "${fixture.schema}".fail_activity_update()`,
+    );
+    expect((await probe(retracted)).outcomes).toEqual([{ ok: false }]);
+    const {
+      rows: [row],
+    } = await controls.query<{ count: string }>(
+      'SELECT COUNT(*)::text AS count FROM "activity_retractions"',
+    );
+    expect(row.count).toBe('0');
+    expect(
+      await fixture.prisma.processedEvent.count({
+        where: { eventId: retracted.eventId },
+      }),
+    ).toBe(0);
+    expect(
+      await fixture.prisma.activityEntry.count({
+        where: { retractedAt: null },
+      }),
+    ).toBe(1);
+    await controls.query(
+      `DROP TRIGGER fail_activity_update ON "${fixture.schema}"."activity_entries"`,
+    );
+    expect((await probe(retracted)).outcomes[0].ok).toBe(true);
+    expect(
+      await fixture.prisma.activityEntry.count({
+        where: { retractedAt: null },
+      }),
+    ).toBe(0);
+  });
+
+  it('backfills only known Wall retractions when upgrading the existing projection', async () => {
+    const created = await dispatch('users.profile-wall.post-created.v1', {});
+    expect((await probe(created)).outcomes[0].ok).toBe(true);
+    const retractedAt = new Date('2026-10-21T01:00:00.000Z');
+    await fixture.prisma.activityEntry.update({
+      where: { sourceEventId: created.eventId },
+      data: { retractedAt },
+    });
+    await controls.query('DROP TABLE "activity_retractions"');
+    const migration = await readFile(
+      resolve(
+        __dirname,
+        '../prisma/migrations/20261115170000_preserve_activity_retractions/migration.sql',
+      ),
+      'utf8',
+    );
+    await controls.query(migration);
+    const { rows } = await controls.query<{
+      subjectType: string;
+      subjectId: string;
+      retractedAt: Date;
+    }>(
+      'SELECT "subjectType", "subjectId", "retractedAt" AT TIME ZONE \'UTC\' AS "retractedAt" FROM "activity_retractions"',
+    );
+    expect(rows).toEqual([
+      {
+        subjectType: 'UserWallPost',
+        subjectId: created.aggregateId,
+        retractedAt,
+      },
+    ]);
+    expect(
+      (await probe({ ...created, eventId: randomUUID() })).outcomes[0].ok,
+    ).toBe(true);
+    expect(
+      await fixture.prisma.activityEntry.count({
+        where: { retractedAt: null },
+      }),
+    ).toBe(0);
+  });
+
   it('leaves failed projection unmarked and retains the actual DLQ envelope separately', async () => {
     const event = await dispatch(
       'news.article.published.v1',
