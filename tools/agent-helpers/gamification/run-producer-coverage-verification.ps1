@@ -4,7 +4,7 @@ $ErrorActionPreference = 'Stop'
 $producerRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../..'))
 Set-Location -LiteralPath $producerRoot
 $producerNode = Join-Path $producerRoot 'node_modules/.cache/c21-node24'
-if ((& (Join-Path $producerNode 'node.exe') --version).Trim() -cne 'v24.18.0') { throw 'Unexpected Node runtime.' }
+if ((& (Join-Path $producerNode 'node.exe') --version).Trim() -cne 'v24.22.3') { throw 'Unexpected Node runtime.' }
 $env:PATH = $producerNode + ';' + (Join-Path $PSScriptRoot 'bin') + ';' + $env:PATH
 $producerPnpm = Join-Path $PSScriptRoot 'bin/pnpm.cmd'
 $producerCredential = [regex]::Match((Get-Content docker-compose.test.yml -Raw),'(?m)^\s+POSTGRES_PASSWORD:\s*([A-Za-z0-9_]+)\s*$')

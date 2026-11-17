@@ -17,7 +17,7 @@ $browserRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../..'))
 Set-Location -LiteralPath $browserRoot
 if ((& git rev-parse HEAD).Trim() -cne $ExpectedHead) { throw 'Unexpected source head.' }
 $browserNodeDirectory = Join-Path $browserRoot 'node_modules/.cache/c21-node24'
-if ((& (Join-Path $browserNodeDirectory 'node.exe') --version).Trim() -cne 'v24.18.0') { throw 'Unexpected Node runtime.' }
+if ((& (Join-Path $browserNodeDirectory 'node.exe') --version).Trim() -cne 'v24.22.3') { throw 'Unexpected Node runtime.' }
 $env:PATH = $browserNodeDirectory + ';' + (Join-Path $PSScriptRoot 'bin') + ';' + $env:PATH
 $browserNonce = [Guid]::NewGuid().ToString('N')
 $browserEvidence = Join-Path $browserRoot ('tools/agent-helpers/debt007-c22-browser-missing-' + $browserNonce + '.local.zip')

@@ -30,7 +30,7 @@ const head = spawnSync("git", ["rev-parse", "HEAD"], {
 });
 if (head.status !== 0 || head.stdout.trim() !== expected)
   throw new Error("Unexpected source HEAD.");
-if (process.version !== "v24.18.0") throw new Error("Pinned Node required.");
+if (process.version !== "v24.22.3") throw new Error("Pinned Node required.");
 const credential = readFileSync(
   resolve(root, "docker-compose.test.yml"),
   "utf8",

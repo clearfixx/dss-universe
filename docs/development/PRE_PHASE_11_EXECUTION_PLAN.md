@@ -193,7 +193,7 @@ Branch: `debt/d0-environment`.
 
 Scope:
 
-- Node 24.18.0 and pnpm 11.9.0 verification;
+- Node 24.22.3 and pnpm 11.9.0 verification;
 - healthy Docker Desktop;
 - canonical env inventory for API, Worker and Web;
 - aligned API/Web ports;

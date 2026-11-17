@@ -14,7 +14,7 @@
 $ErrorActionPreference = 'Stop'
 $c21Root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../..'))
 $c21Version = (Get-Content (Join-Path $c21Root '.node-version') -Raw).Trim()
-if ($c21Version -cne '24.18.0') { throw 'Review toolchain recovery for the new repository pin.' }
+if ($c21Version -cne '24.22.3') { throw 'Review toolchain recovery for the new repository pin.' }
 $c21Artifact = Join-Path $c21Root 'node_modules/.cache/c21-node24'
 [IO.Directory]::CreateDirectory($c21Artifact) | Out-Null
 $c21Base = 'https://nodejs.org/dist/v' + $c21Version

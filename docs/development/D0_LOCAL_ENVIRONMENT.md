@@ -20,7 +20,7 @@ together if moving the local storage directory.
 
 ## Bootstrap
 
-Use exactly Node **24.18.0** and pnpm **11.9.0**, not an unspecified latest release.
+Use exactly Node **24.22.3** and pnpm **11.9.0**, not an unspecified latest release.
 Start Docker Desktop, then run from the repository root:
 
 ```powershell

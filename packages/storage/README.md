@@ -25,7 +25,7 @@ retain the lexical contract above; the prototype does not establish physical
 containment, root/ACL admission, mount policy or a production adapter.
 
 `pnpm --filter @dss/storage native:verify` builds and tests actual OS resources.
-The full quality gate now requires this verification. It needs pinned Node24.18.0,
+The full quality gate now requires this verification. It needs pinned Node24.22.3,
 node-gyp13.1.0, an installed compatible Python (local3.12.14; CI3.14.10) and an existing native compiler: Visual Studio2022
 C++ tools locally on Windows, or the platform compiler on Linux/macOS. Set PYTHON
 to an installed interpreter path when it is not discoverable. No compiler is
