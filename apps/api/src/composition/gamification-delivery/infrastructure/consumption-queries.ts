@@ -14,15 +14,18 @@ import { Prisma } from '@prisma/client';
 import type { ConsumptionClaim } from '../contracts/consumption.types';
 import { GAMIFICATION_DESTINATION as destination } from '../contracts/routing.constants';
 
-export function dueConsumptionQuery(limit: number): Prisma.Sql {
+export function dueConsumptionQuery(
+  limit: number,
+  lockRows = true,
+): Prisma.Sql {
   return Prisma.sql`WITH tick AS MATERIALIZED (SELECT timezone('UTC',clock_timestamp())::timestamp(3) AS now), ready AS MATERIALIZED (
     SELECT "admissionId","availableAt" FROM gamification_consumption_receipts
     WHERE destination=${destination} AND state='READY' AND "availableAt"<=(SELECT now FROM tick)
-    ORDER BY "availableAt","admissionId" LIMIT ${limit} FOR UPDATE SKIP LOCKED
+    ORDER BY "availableAt","admissionId" LIMIT ${limit} ${lockRows ? Prisma.sql`FOR UPDATE SKIP LOCKED` : Prisma.empty}
   ), retry AS MATERIALIZED (
     SELECT "admissionId","availableAt" FROM gamification_consumption_receipts
     WHERE destination=${destination} AND state='RETRY_DUE' AND "availableAt"<=(SELECT now FROM tick)
-    ORDER BY "availableAt","admissionId" LIMIT ${limit} FOR UPDATE SKIP LOCKED
+    ORDER BY "availableAt","admissionId" LIMIT ${limit} ${lockRows ? Prisma.sql`FOR UPDATE SKIP LOCKED` : Prisma.empty}
   ) SELECT "admissionId" FROM (SELECT * FROM ready UNION ALL SELECT * FROM retry) candidates
     ORDER BY "availableAt","admissionId" LIMIT ${limit}`;
 }

@@ -100,3 +100,17 @@ importable without initializing deployment configuration.
 
 Final full acceptance remains pending. No successful full gate, deployed
 activation, D7 closure or stack-audit completion is claimed by this checkpoint.
+
+The first full gate at `518bcad` passed all1632 API unit tests but finished
+936/938 E2E: the broker withdrawal timed out, then its dependent assertion failed.
+The retained receipt is `runtime-delivery-full-a66cf6e834d04a81bea4f3b426842722`.
+The pending receipt was READY with no owner completion or technical failures.
+A deterministic PostgreSQL control subsequently demonstrated that wake inventory
+using the claim query's row locks can make a simultaneous SKIP LOCKED claim see
+no work. Inventory now reads without those locks; actual claims retain them.
+The regression checks both the blocking control and concurrent read-only case.
+The real broker fixture now runs the production periodic runner for hint repair
+and owner continuations, while preserving the deliberate lost-initial-wake
+prefix. This establishes a concrete interference defect and its correction;
+it does not establish the cause of every earlier timeout. Deadlines, assertions
+and failure budgets remain unchanged. A new full gate is required for this fix.

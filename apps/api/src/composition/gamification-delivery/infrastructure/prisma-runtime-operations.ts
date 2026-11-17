@@ -58,7 +58,7 @@ export class PrismaRuntimeOperations {
       const rows = await tx.$queryRaw<
         { admissionId: string; epoch: bigint; sequence: bigint }[]
       >`
-        WITH due AS (${dueConsumptionQuery(limit)})
+        WITH due AS (${dueConsumptionQuery(limit, false)})
         SELECT r."admissionId",r.epoch,r."claimSequence" AS sequence
         FROM gamification_consumption_receipts r JOIN due USING ("admissionId")
         WHERE r.destination=${destination} ORDER BY r."availableAt",r."admissionId"`;

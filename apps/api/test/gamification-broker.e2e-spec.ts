@@ -56,6 +56,7 @@ import {
 } from '../src/composition/gamification-delivery/infrastructure/gamification-broker';
 import { verifyAdmissionSeal } from '../src/composition/gamification-delivery/infrastructure/admission-seal.codec';
 import { PrismaRuntimeOperations } from '../src/composition/gamification-delivery/infrastructure/prisma-runtime-operations';
+import { GamificationRuntimeRunner } from '../src/composition/gamification-delivery/infrastructure/gamification-runner';
 import { ActivationPreflightAdapter } from '../src/composition/gamification-delivery/infrastructure/activation-preflight.adapter';
 import { PrismaInteractionTargetWriter } from '../src/modules/interactions/infrastructure/repositories/prisma-interaction-target.writer';
 import {
@@ -70,6 +71,8 @@ describe('Dedicated gamification broker with real owner effects', () => {
   let app: INestApplication;
   let broker: GamificationBroker;
   let pump: GamificationDeliveryPump;
+  let runner: GamificationRuntimeRunner;
+  let observeWaiting: () => Promise<void>;
   let discovery: RoutingDiscovery;
   let redis: IORedis;
   let comments: CommentWriteTransaction;
@@ -131,6 +134,12 @@ describe('Dedicated gamification broker with real owner effects', () => {
       operations,
       broker,
     );
+    runner = new GamificationRuntimeRunner(
+      new ConfigService({ DSS_GAMIFICATION_ENABLED: '1' }),
+      operations,
+      broker,
+      pump,
+    );
     const processOne = coordinator.processOne.bind(
       coordinator,
     ) as GamificationCoordinator['processOne'];
@@ -138,35 +147,46 @@ describe('Dedicated gamification broker with real owner effects', () => {
     jest.spyOn(coordinator, 'processOne').mockImplementation(async () => {
       try {
         const result = await processOne();
-        if (result === 'CONTINUED') await pump.tick();
-        const pending = waiting;
-        if (pending) {
-          const admission =
-            await fixture.prisma.gamificationAdmission.findUnique({
-              where: {
-                destination_eventId: {
-                  destination: 'gamification.v1',
-                  eventId: pending.eventId,
-                },
-              },
-              select: { id: true },
-            });
-          const receipt =
-            admission &&
-            (await fixture.prisma.gamificationConsumptionReceipt.findUnique({
-              where: { admissionId: admission.id },
-            }));
-          if (receipt?.state === 'COMPLETE') {
-            waiting = undefined;
-            pending.resolve();
-          }
-        }
+        await observeWaiting();
         return result;
       } catch (error) {
         waiting?.reject(error);
         throw error;
       }
     });
+    observeWaiting = async () => {
+      const pending = waiting;
+      if (pending) {
+        const admission = await fixture.prisma.gamificationAdmission.findUnique(
+          {
+            where: {
+              destination_eventId: {
+                destination: 'gamification.v1',
+                eventId: pending.eventId,
+              },
+            },
+            select: { id: true },
+          },
+        );
+        const receipt =
+          admission &&
+          (await fixture.prisma.gamificationConsumptionReceipt.findUnique({
+            where: { admissionId: admission.id },
+          }));
+        if (receipt?.state === 'COMPLETE') {
+          waiting = undefined;
+          pending.resolve();
+        } else if (
+          receipt?.state === 'BLOCKED' ||
+          (receipt?.technicalFailures ?? 0) > 0
+        ) {
+          waiting = undefined;
+          pending.reject(
+            new Error('Synthetic delivery failed before completion.'),
+          );
+        }
+      }
+    };
     const control = app.get<RoutingControl>(GAMIFICATION_ROUTING_CONTROL);
     const operator = {
       actorId: 'synthetic:broker-proof',
@@ -222,10 +242,10 @@ describe('Dedicated gamification broker with real owner effects', () => {
       }),
     );
     comments = app.get(COMMENT_WRITE_TRANSACTION);
-    await broker.start();
   }, 60000);
   afterAll(async () => {
     try {
+      await runner?.onApplicationShutdown();
       if (waiting && fixture) {
         console.error('Pending synthetic broker phase', {
           deliveries: await fixture.prisma.gamificationDelivery.findMany({
@@ -292,8 +312,8 @@ describe('Dedicated gamification broker with real owner effects', () => {
     }
     if (waiting)
       throw new Error('Only one observed delivery phase may be pending.');
-    // A manual fixture pump has no periodic runner. Complete any old finite
-    // sweep, then a fresh sweep whose upper bound includes this committed event.
+    // Complete any old finite sweep, then a fresh sweep whose upper bound
+    // includes this committed event. The real runner repairs wake hints.
     // One tick alone is not a discovery guarantee for a late-committing row.
     let sweep = await discovery.reconcile();
     while (sweep.status === 'SCANNED' && !sweep.epochClosed)
@@ -305,6 +325,7 @@ describe('Dedicated gamification broker with real owner effects', () => {
       waiting = { eventId, resolve, reject };
     });
     await pump.tick();
+    await observeWaiting();
     await complete;
     const admission =
       await fixture.prisma.gamificationAdmission.findUniqueOrThrow({
@@ -369,6 +390,7 @@ describe('Dedicated gamification broker with real owner effects', () => {
         where: { admissionId: stored.id },
       }),
     ).toMatchObject({ pointsDone: false, state: 'READY' });
+    await runner.start();
     await delivered(event.id);
     expect(await publication.acknowledge(claimed)).toBe(true);
     expect(

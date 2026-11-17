@@ -7,6 +7,7 @@ import { ActivationPreflightAdapter } from '../src/composition/gamification-deli
 import { PrismaRuntimeOperations } from '../src/composition/gamification-delivery/infrastructure/prisma-runtime-operations';
 import { PrismaRoutingPublicationRepository } from '../src/composition/gamification-delivery/infrastructure/prisma-routing-publication.repository';
 import { createConsumptionFixture } from './helpers/gamification-consumption.fixture';
+import { dueConsumptionQuery } from '../src/composition/gamification-delivery/infrastructure/consumption-queries';
 
 describe('Gamification operational retry and readiness', () => {
   let f: Awaited<ReturnType<typeof createConsumptionFixture>>;
@@ -14,7 +15,7 @@ describe('Gamification operational retry and readiness', () => {
   let operations: PrismaRuntimeOperations;
   let config: ConfigService;
   beforeAll(async () => {
-    f = await createConsumptionFixture();
+    f = await createConsumptionFixture({ captureQueries: true });
     audit = new AuditWriterService(new AuditRedactionService());
     config = new ConfigService({ DSS_GAMIFICATION_DEPLOYMENT_CONFIRMED: '1' });
     operations = new PrismaRuntimeOperations(
@@ -168,6 +169,53 @@ describe('Gamification operational retry and readiness', () => {
       (await operations.dueWakes()).map((item) => item.admissionId),
     ).toContain(source.id);
     await finish();
+  });
+  it('does not let wake inventory hide eligible work from a simultaneous worker claim', async () => {
+    const source = await f.add();
+    const from = f.queries.length;
+    expect(
+      (await operations.dueWakes()).map((row) => row.admissionId),
+    ).toContain(source.id);
+    const inventory = f.queries
+      .slice(from)
+      .find((query) => query.includes('WITH due AS'));
+    expect(inventory).toBeDefined();
+    expect(inventory).not.toMatch(/FOR UPDATE/i);
+    const reader = await f.pool.connect();
+    await reader.query('BEGIN');
+    try {
+      const legacy = dueConsumptionQuery(1);
+      expect(
+        (
+          await reader.query<{ admissionId: string }>(
+            legacy.text,
+            legacy.values,
+          )
+        ).rows,
+      ).toEqual([{ admissionId: source.id }]);
+      // Physical counterexample: a claim-style inventory consumes no work but
+      // makes the independent SKIP LOCKED worker report an empty queue.
+      expect(await f.consumption.claim(1)).toEqual([]);
+      await reader.query('ROLLBACK');
+      await reader.query('BEGIN');
+      const sql = dueConsumptionQuery(1, false);
+      expect(
+        (await reader.query<{ admissionId: string }>(sql.text, sql.values))
+          .rows,
+      ).toEqual([{ admissionId: source.id }]);
+      // The real worker must claim it while the inventory transaction stays open.
+      const [claim] = await f.consumption.claim(1);
+      expect(claim?.admissionId).toBe(source.id);
+      expect(
+        await f.consumption.completeOwner(claim, {
+          owner: 'ACHIEVEMENTS',
+          disposition: 'COMPLETE',
+        }),
+      ).toBe('APPLIED');
+    } finally {
+      await reader.query('ROLLBACK');
+      reader.release();
+    }
   });
   it('retries only the blocked publication cycle and keeps all five failure records', async () => {
     const source = await f.add();
