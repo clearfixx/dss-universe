@@ -1,5 +1,7 @@
 # D7 — Individual debt review matrix
 
+> Historical checkpoint. Current authoritative statuses and completion: [Final D7 closure](FINAL_D7_CLOSURE.md), 2026-11-17.
+
 > Historical 91-entry matrix from `81e0a65`, integrated on 2026-11-15 for
 > traceability. These routes and counts are not a current closure verdict.
 > Later debts and owner decisions are recorded in the

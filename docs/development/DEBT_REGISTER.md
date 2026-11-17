@@ -1,19 +1,12 @@
 # DSS Universe — Engineering Debt Register
 
-> Status: Active
->
-> Phase A proposal (2026-11-15): [complete 95-ID disposition matrix](../audits/FINAL_D7_PHASE_A.md).
-> Owner approved this finite work list, with047 deferred to the owner-model phase.
-> Phase B067/007/090 may proceed; this does not itself close D7.
->
-> Updated: 2026-11-08 (accepted Media intake; qualified-owner design candidate)
->
-> Historical candidate checkpoints and the original table below are retained.
-> Read entry-specific acceptance updates and the
-> [current D7 reconciliation](../audits/D7_CURRENT_ACCEPTANCE_RECONCILIATION.md)
-> before interpreting an old OPEN/candidate label. This is not final D7 acceptance.
+> Status: finite D7 audit CLOSED, 2026-11-17.
+> Authoritative current dispositions: [final95-ID matrix and acceptance report](../audits/FINAL_D7_CLOSURE.md).
+> 79 FIXED_VERIFIED;2 CONFIRMED_NON_BLOCKER;7 HISTORICAL_EVIDENCE;7 DEFERRED;0 blockers/decisions.
+> Original entries/checkpoints below are retained historical evidence; their OPEN/candidate labels do not override the final matrix.
+> Deferred owner047 is not fixed. [Bounded Phase E stack review](../audits/STACK_AUDIT_RESULT_2026-11-17.md) is complete; its maintenance and production-security actions remain explicit backlog.
 
-### DEBT-095 — IAM permission-denial E2E exceeds its deadline (Medium, OPEN cause/diagnostic scope)
+### DEBT-095 — IAM permission-denial E2E exceeds its deadline (HISTORICAL_EVIDENCE; see final D7 disposition)
 
 PR144 head `35aec05` has CI8/8 and E2E699/699, but its local full gate ended
 698/699, exit1. The existing IAM permission-management/audit-rollback case
@@ -134,7 +127,7 @@ Exact accepted runtime/test sources passed full gate0 and CI8/8, E2E688/688,
 build6/6 and Web15/15 without retries. OS/crypto latency and unrelated historical
 timeouts, including DEBT-086, are not declared resolved.
 
-### DEBT-084 — Keyboard smoke pointer interception (Medium, diagnostic evidence / retention open)
+### DEBT-084 — Keyboard smoke pointer interception (HISTORICAL_EVIDENCE; see final D7 disposition)
 
 Restored from the retained D7 checkpoint; this ID was missing from the main
 register. Accepted PR87 adds first-failure evidence collection; it does not
@@ -153,7 +146,7 @@ DEBT-084's historical attribution limits are not erased. Restored register ID;
 no frontend change in this reconciliation. See
 [production evidence and lifecycle](../audits/DEBT_085_EARLY_KEYBOARD_ARRIVAL_LIFECYCLE.md).
 
-### DEBT-086 — Credential-rotation E2E deadline (Medium, OPEN cause; diagnostics accepted)
+### DEBT-086 — Credential-rotation E2E deadline (HISTORICAL_EVIDENCE; see final D7 disposition)
 
 Owner accepted diagnostic PR97, merged `8e3c4c7`; the accepted CI/full gate
 passed, but the original5003ms timeout's cause was not reproduced or corrected.
@@ -199,7 +192,9 @@ no fragments or other parameters. Pure validation preserves authority/Redis
 guards and safe errors; six isolated regressions pass. Full gate/CI and acceptance
 remain pending. [Policy, evidence and limits](DEBT_091_BOOTSTRAP_TARGET_POLICY.md).
 
-### DEBT-090 — Achievements rollback before late original (High, OPEN policy gap)
+### DEBT-090 — Achievements rollback before late original (High, FIXED_VERIFIED scoped cycles)
+
+Final2026-11-17: accepted qualified owner/producers and PR164–167 integration close old-cycle restoration while permitting legitimate new cycles. Real broker withdrawal, DB ordering/replay and continuation regressions pass. [Final acceptance](../audits/FINAL_D7_CLOSURE.md). No historical backfill or automatic deployment activation. Older checkpoints below are historical.
 
 DEBT-007 C characterization on migrated owned schema confirms empty source
 rollback followed by a matching original produces an active Achievement until
@@ -246,7 +241,9 @@ no Windows reservation or dev DB is changed. See
 [scope and evidence](DEBT_088_DEV_PORT_READINESS.md). Full startup/quality/CI and
 acceptance remain open; this does not fold the separate Mailpit task into B/C.
 
-### DEBT-007 — Automatic gamification delivery (High, runtime B and C1 design accepted; C/D open)
+### DEBT-007 — Automatic gamification delivery (High, FIXED_VERIFIED scoped runtime)
+
+Final2026-11-17: PR164–167 complete qualified owner/admission/producer/delivery/recovery and explicit preflight. Main a4a5451 matches accepted13010c1; exact local full gate exit0, API1632/E2E939, CI8/8. Deployment activation remains off and historical replay excluded. [Final acceptance and limits](../audits/FINAL_D7_CLOSURE.md). Older partial checkpoints below are historical.
 
 Final-closure progress, 2026-11-16: the
 [qualified Points owner implementation](DEBT_007_C22_POINTS_FACETS_RUNTIME.md)
@@ -1237,7 +1234,7 @@ both privileged roles. See the report's implementation section for exact gates.
 This protects IAM role revocation, not every path to administrator ineligibility;
 broader acceptance and required CI remain open.
 
-### DEBT-047 — Assignment protection does not ensure administrator availability (High, OPEN / scope approval required, D3.4)
+### DEBT-047 — Administrator availability (High, DEFERRED to owner-model phase)
 
 Final closure decision2026-11-15: **DEFERRED** to the owner-model product phase.
 Owner explicitly rejected the need for an interim last-administrator solution.
@@ -1279,7 +1276,7 @@ must be scheduled in their relevant phases, not implemented now. See
 availability finding requiring explicit disposition at security acceptance;
 deferral of new product functionality is not proof that the risk is resolved.
 
-### DEBT-048 — Broad GraphQL registration test repeatedly exceeds its timeout (Medium, OPEN, D6)
+### DEBT-048 — Broad GraphQL registration test repeatedly exceeds its timeout (HISTORICAL_EVIDENCE; see final D7 disposition)
 
 During registration atomicity verification, selecting five tests from
 `app.e2e-spec.ts` twice yielded four passes and one five-second timeout in
@@ -1602,7 +1599,7 @@ client compatibility in a separate reviewed package; do not insert a fabricated
 body or silently change schema during SQL ownership migration. Owner was notified.
 No correction is authorized by the D4 snapshot or DEBT-056 approval.
 
-### DEBT-058 — Existing Web document-tool test exceeds unchanged five-second deadline (Medium, OPEN, D6 / frontend test owner)
+### DEBT-058 — Existing Web document-tool test exceeds unchanged five-second deadline (HISTORICAL_EVIDENCE; see final D7 disposition)
 
 On 2026-10-16, the D4 gamification transaction package's adjacent full Web coverage
 run reports 58 PASS / 1 FAIL across 25 suites. The unchanged test
@@ -1626,7 +1623,7 @@ frontend code is changed. Passing that bounded repeat neither closes the initial
 failure nor establishes host contention as its cause. Separate raw evidence:
 `node_modules/.cache/dss-d4-gamification-web-repeat.log`.
 
-### DEBT-059 — API E2E schema output intermittently fails to open on Windows (Medium, OPEN, D6)
+### DEBT-059 — API E2E schema output intermittently fails to open on Windows (HISTORICAL_EVIDENCE; see final D7 disposition)
 
 2026-10-16 Authorization read transfer full E2E: 436 PASS / 6 FAIL out of 442.
 One assertion is the known DEBT-045 News null/zero mismatch. Five cases in
@@ -1915,7 +1912,7 @@ all dependency risk. Full quality/build/CI and owner acceptance remain open.
 The existing Apollo Playground server4-vs-server5 peer warning is unchanged.
 See [package evidence](../audits/DEBT_016_DEPENDENCY_SECURITY.md).
 
-### DEBT-083 — React demo no-retry smoke failure (Medium, ACCEPTED investigation, OPEN)
+### DEBT-083 — React demo no-retry smoke failure (HISTORICAL_EVIDENCE; see final D7 disposition)
 
 2026-10-28 integration checkpoint: the approved diagnostic infrastructure is being
 updated against accepted maina715ece, including accepted runtime081/085 and the
