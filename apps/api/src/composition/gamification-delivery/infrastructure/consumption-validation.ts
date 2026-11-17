@@ -45,6 +45,7 @@ export function assertOwnerCompletion(outcome: OwnerCompletion): void {
     !(
       (outcome.owner === 'POINTS' &&
         [
+          'COMPLETE',
           'APPLIED',
           'ALREADY_PROCESSED',
           'NO_MATCH',
@@ -64,13 +65,21 @@ export function assertOwnerCompletion(outcome: OwnerCompletion): void {
 export function assertOwnerBlock(outcome: OwnerBlock): void {
   if (
     !outcome ||
-    outcome.owner !== 'ACHIEVEMENTS' ||
-    ![
-      'INVALID_QUALIFICATION',
-      'FACT_CONFLICT',
-      'LEGACY_FACT_REQUIRED',
-      'BLOCKED_LEGACY_MAPPING',
-    ].includes(outcome.code)
+    !(
+      (outcome.owner === 'ACHIEVEMENTS' &&
+        [
+          'INVALID_QUALIFICATION',
+          'FACT_CONFLICT',
+          'LEGACY_FACT_REQUIRED',
+          'BLOCKED_LEGACY_MAPPING',
+        ].includes(outcome.code)) ||
+      (outcome.owner === 'POINTS' &&
+        [
+          'INVALID_QUALIFICATION',
+          'FACT_CONFLICT',
+          'LEGACY_EVIDENCE_REQUIRED',
+        ].includes(outcome.code))
+    )
   )
     throw new TypeError('Invalid owner block.');
 }

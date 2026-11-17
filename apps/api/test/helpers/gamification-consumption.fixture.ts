@@ -20,8 +20,10 @@ import { encodeAdmissionSeal } from '../../src/composition/gamification-delivery
 import type { ConsumptionClaim } from '../../src/composition/gamification-delivery/contracts/consumption.types';
 import { createIsolatedApiSchemaFixture } from './migrated-api-schema.fixture';
 
-export async function createConsumptionFixture() {
-  const base = await createIsolatedApiSchemaFixture();
+export async function createConsumptionFixture(
+  options: { captureQueries?: boolean } = {},
+) {
+  const base = await createIsolatedApiSchemaFixture(options);
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     options: `-c search_path=${base.schema},public`,

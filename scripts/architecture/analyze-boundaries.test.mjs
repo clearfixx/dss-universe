@@ -1095,6 +1095,7 @@ test("owners publish only the intended guarded technical symbols", () => {
         "ACHIEVEMENT_RULE_DELIVERY_GUARD",
         "AchievementRuleDeliveryGuard",
         "AchievementRuleDeliveryConfigurationError",
+        "PrismaAchievementRuleConfigurationReader",
       ],
     ],
     [
@@ -1120,6 +1121,7 @@ test("owners publish only the intended guarded technical symbols", () => {
         "leaderboardPointsAggregate",
         "PrismaTransactionalPointsBalanceReader",
         "PrismaPointLedgerEvidenceReader",
+        "PrismaPointRuleConfigurationReader",
         "POINT_RULE_DELIVERY_GUARD",
         "PointRuleDeliveryGuard",
         "PointRuleDeliveryConfigurationError",
