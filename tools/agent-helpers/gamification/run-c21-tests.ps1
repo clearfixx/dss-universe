@@ -18,7 +18,7 @@ Set-Location -LiteralPath $c21Root
 $c21NodeDirectory = Join-Path $c21Root 'node_modules/.cache/c21-node24'
 $c21Node = Join-Path $c21NodeDirectory 'node.exe'
 if (-not (Test-Path -LiteralPath $c21Node)) { throw 'Run prepare-pinned-node.ps1 first.' }
-if ((& $c21Node --version).Trim() -cne 'v24.18.0') { throw 'Unexpected Node runtime.' }
+if ((& $c21Node --version).Trim() -cne 'v24.22.3') { throw 'Unexpected Node runtime.' }
 $env:PATH = $c21NodeDirectory + ';' + (Join-Path $PSScriptRoot 'bin') + ';' + $env:PATH
 $c21Credential = [regex]::Match((Get-Content docker-compose.test.yml -Raw), '(?m)^\s+POSTGRES_PASSWORD:\s*([A-Za-z0-9_]+)\s*$')
 if (-not $c21Credential.Success) { throw 'Disposable credential unavailable.' }
@@ -57,7 +57,7 @@ try {
     }
     $c21Code = $LASTEXITCODE
 } finally {
-    [ordered]@{ head=$c21Head; kind=$Kind; startedAt=$c21Start; endedAt=[DateTime]::UtcNow.ToString('o'); exitCode=$c21Code; log=$c21Log; node='24.18.0'; trackedDiff=(& git diff --stat | Out-String).Trim() } |
+    [ordered]@{ head=$c21Head; kind=$Kind; startedAt=$c21Start; endedAt=[DateTime]::UtcNow.ToString('o'); exitCode=$c21Code; log=$c21Log; node='24.22.3'; trackedDiff=(& git diff --stat | Out-String).Trim() } |
         ConvertTo-Json | Set-Content -LiteralPath $c21Receipt
 }
 exit $c21Code

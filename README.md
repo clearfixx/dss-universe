@@ -109,7 +109,7 @@ Read the [Engineering Handbook](ENGINEERING.md), [Project Constitution](CONSTITU
 
 This repository is intended for contributors and local development, not a production one-click installation.
 
-**Prerequisites:** Node.js **24.18.0**, pnpm **11.9.0**, and Docker with Compose for local services. Follow the [environment guide](docs/development/environment.md) for current setup requirements.
+**Prerequisites:** Node.js **24.22.3**, pnpm **11.9.0**, and Docker with Compose for local services. Follow the [environment guide](docs/development/environment.md) for current setup requirements.
 
 ```bash
 git clone https://github.com/clearfixx/dss-universe.git

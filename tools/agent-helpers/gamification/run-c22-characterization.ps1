@@ -16,7 +16,7 @@ $ErrorActionPreference = 'Stop'
 $c22Root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../..'))
 Set-Location -LiteralPath $c22Root
 $c22NodeDirectory = Join-Path $c22Root 'node_modules/.cache/c21-node24'
-if ((& (Join-Path $c22NodeDirectory 'node.exe') --version).Trim() -cne 'v24.18.0') { throw 'Unexpected Node runtime.' }
+if ((& (Join-Path $c22NodeDirectory 'node.exe') --version).Trim() -cne 'v24.22.3') { throw 'Unexpected Node runtime.' }
 $env:PATH = $c22NodeDirectory + ';' + (Join-Path $PSScriptRoot 'bin') + ';' + $env:PATH
 $c22Credential = [regex]::Match((Get-Content docker-compose.test.yml -Raw), '(?m)^\s+POSTGRES_PASSWORD:\s*([A-Za-z0-9_]+)\s*$')
 if (-not $c22Credential.Success) { throw 'Disposable credential unavailable.' }
@@ -40,7 +40,7 @@ try {
     }
     $c22Code = $LASTEXITCODE
 } finally {
-    [ordered]@{ head=(& git rev-parse HEAD).Trim(); kind=$Kind; startedAt=$c22Start; endedAt=[DateTime]::UtcNow.ToString('o'); exitCode=$c22Code; log=$c22Log; node='24.18.0'; workingStatus=(& git status --porcelain | Out-String).Trim() } |
+    [ordered]@{ head=(& git rev-parse HEAD).Trim(); kind=$Kind; startedAt=$c22Start; endedAt=[DateTime]::UtcNow.ToString('o'); exitCode=$c22Code; log=$c22Log; node='24.22.3'; workingStatus=(& git status --porcelain | Out-String).Trim() } |
         ConvertTo-Json | Set-Content -LiteralPath $c22Receipt
 }
 exit $c22Code

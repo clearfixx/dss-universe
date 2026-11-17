@@ -221,7 +221,7 @@ COMPLETED — 2026-07-18
 
 ## Delivered
 
-- Node.js 24.18.0 and pnpm 11.9.0 are pinned;
+- Node.js 24.22.3 and pnpm 11.9.0 are pinned;
 - root commands and workspace filters are normalized;
 - shared TypeScript and ESLint packages contain reusable configurations;
 - GitHub Actions validates architecture, Prisma, lint, types, tests, coverage and builds;

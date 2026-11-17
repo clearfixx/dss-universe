@@ -8,7 +8,7 @@ $ErrorActionPreference = 'Stop'
 $qualifiedRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../..'))
 Set-Location -LiteralPath $qualifiedRoot
 $qualifiedNode = Join-Path $qualifiedRoot 'node_modules/.cache/c21-node24'
-if ((& (Join-Path $qualifiedNode 'node.exe') --version).Trim() -cne 'v24.18.0') { throw 'Unexpected Node runtime.' }
+if ((& (Join-Path $qualifiedNode 'node.exe') --version).Trim() -cne 'v24.22.3') { throw 'Unexpected Node runtime.' }
 $env:PATH = $qualifiedNode + ';' + (Join-Path $PSScriptRoot 'bin') + ';' + $env:PATH
 $qualifiedPnpm = Join-Path $PSScriptRoot 'bin/pnpm.cmd'
 $qualifiedCredential = [regex]::Match((Get-Content docker-compose.test.yml -Raw),'(?m)^\s+POSTGRES_PASSWORD:\s*([A-Za-z0-9_]+)\s*$')

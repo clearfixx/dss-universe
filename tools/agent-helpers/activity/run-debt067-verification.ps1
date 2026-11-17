@@ -8,7 +8,7 @@ $ErrorActionPreference = 'Stop'
 $activityRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../..'))
 Set-Location -LiteralPath $activityRoot
 $activityNode = Join-Path $activityRoot 'node_modules/.cache/c21-node24'
-if ((& (Join-Path $activityNode 'node.exe') --version).Trim() -cne 'v24.18.0') { throw 'Unexpected pinned Node runtime.' }
+if ((& (Join-Path $activityNode 'node.exe') --version).Trim() -cne 'v24.22.3') { throw 'Unexpected pinned Node runtime.' }
 $env:PATH = $activityNode + ';' + (Join-Path $activityRoot 'tools/agent-helpers/gamification/bin') + ';' + $env:PATH
 $activityCredential = [regex]::Match((Get-Content docker-compose.test.yml -Raw), '(?m)^\s+POSTGRES_PASSWORD:\s*([A-Za-z0-9_]+)\s*$')
 if (-not $activityCredential.Success) { throw 'Disposable credential unavailable.' }
@@ -40,7 +40,7 @@ if ($Kind -eq 'full') {
         $activityCode = $LASTEXITCODE
     } finally {
         $activityReceipt = Join-Path (Split-Path $PSScriptRoot -Parent) ('debt067-full-' + [Guid]::NewGuid().ToString('N') + '.local.json')
-        [ordered]@{ head=$activityHead; startedAt=$activityStart; endedAt=[DateTime]::UtcNow.ToString('o'); exitCode=$activityCode; log=$activityLog; node='24.18.0' } |
+        [ordered]@{ head=$activityHead; startedAt=$activityStart; endedAt=[DateTime]::UtcNow.ToString('o'); exitCode=$activityCode; log=$activityLog; node='24.22.3' } |
             ConvertTo-Json | Set-Content -LiteralPath $activityReceipt
         Write-Host "Activity full receipt: $activityReceipt"
     }
