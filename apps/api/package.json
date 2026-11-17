@@ -49,7 +49,7 @@
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.2.7",
-    "@nestjs/swagger": "^11.4.7",
+    "@nestjs/swagger": "^11.4.8",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/auto-instrumentations-node": "^0.80.0",
     "@opentelemetry/resources": "^2.12.0",
