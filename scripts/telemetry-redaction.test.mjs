@@ -34,6 +34,7 @@ test("real incoming and outgoing HTTP spans redact credentials", () => {
         OTEL_METRICS_EXPORTER: "none",
         OTEL_LOGS_EXPORTER: "none",
         OTEL_SEMCONV_STABILITY_OPT_IN: "http",
+        OTEL_NODE_RESOURCE_DETECTORS: "env,process,host",
       },
       encoding: "utf8",
       input: source,
