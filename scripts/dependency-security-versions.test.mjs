@@ -104,3 +104,20 @@ test("actual CLI and jsdom paths use patched undici 7", () => {
   for (const consumer of [cli.require, jsdom.require])
     atLeast(resolvedPackage(consumer, "undici").version, "7.30.1");
 });
+
+test("actual telemetry consumers use patched HTTP and database instrumentations", () => {
+  const bundle = resolvedPackage(
+    api,
+    "@opentelemetry/auto-instrumentations-node",
+  );
+  atLeast(
+    resolvedPackage(bundle.require, "@opentelemetry/instrumentation-http")
+      .version,
+    "0.222.0",
+  );
+  atLeast(
+    resolvedPackage(bundle.require, "@opentelemetry/instrumentation-pg")
+      .version,
+    "0.73.0",
+  );
+});

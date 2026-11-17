@@ -37,13 +37,40 @@ const enabled =
     process.env.OTEL_TRACES_EXPORTER === 'console');
 
 if (enabled) {
+  const redactedQueryParams = [
+    'sig',
+    'Signature',
+    'AWSAccessKeyId',
+    'X-Goog-Signature',
+    'X-Amz-Signature',
+    'X-Amz-Credential',
+    'X-Amz-Security-Token',
+    'token',
+    'access_token',
+    'refresh_token',
+    'password',
+    'secret',
+    'code',
+    'api_key',
+    'apikey',
+  ];
   const telemetry = new NodeSDK({
     resource: resourceFromAttributes({
       [ATTR_SERVICE_NAME]: 'dss-api',
       [ATTR_SERVICE_VERSION]: process.env.npm_package_version ?? '0.1.0',
       'deployment.environment.name': process.env.NODE_ENV ?? 'development',
     }),
-    instrumentations: [getNodeAutoInstrumentations()],
+    instrumentations: [
+      getNodeAutoInstrumentations({
+        '@opentelemetry/instrumentation-http': {
+          redactedQueryParams,
+          redactedQueryParamsServer: redactedQueryParams,
+        },
+        '@opentelemetry/instrumentation-pg': {
+          enhancedDatabaseReporting: false,
+        },
+      }),
+    ],
   });
 
   telemetry.start();
