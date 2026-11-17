@@ -114,3 +114,7 @@ and owner continuations, while preserving the deliberate lost-initial-wake
 prefix. This establishes a concrete interference defect and its correction;
 it does not establish the cause of every earlier timeout. Deadlines, assertions
 and failure budgets remain unchanged. A new full gate is required for this fix.
+
+## Final acceptance — 2026-11-17
+
+PR167 head13010c1 was accepted and merged as main a4a5451. Exact local quality:full exit0, API1632/1632, E2E939/939 without skips/todo, build6/6, Web15/15 without retries; CI8/8 and native48/48 on three OSes. The prior pending checkpoint above is historical. [Final D7 report and retained failures](../audits/FINAL_D7_CLOSURE.md). Developer/production activation was not performed.

@@ -1,5 +1,7 @@
 # D7 — Accepted history and register reconciliation
 
+> Historical checkpoint. Current authoritative statuses and completion: [Final D7 closure](FINAL_D7_CLOSURE.md), 2026-11-17.
+
 Update2026-11-15: the owner requested integration of the outstanding agent work
 before a new working policy. The retained review/matrix and diagnostic documents
 are integrated as explicitly historical snapshots. See the

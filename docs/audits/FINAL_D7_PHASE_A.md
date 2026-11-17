@@ -1,5 +1,7 @@
 # Final D7 reconciliation — Phase A
 
+> Historical checkpoint. Current authoritative statuses and completion: [Final D7 closure](FINAL_D7_CLOSURE.md), 2026-11-17.
+
 Date: 2026-11-15. Baseline: `790f098f5c17a92e32ecf58465a90e924a1869f2`.
 Status: owner approved the finite work list after discussing047. This is not D7
 acceptance. The owner chose implementation of047 with the future owner model,
