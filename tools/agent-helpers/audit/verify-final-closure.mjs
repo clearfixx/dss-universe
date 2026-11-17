@@ -5,7 +5,9 @@ import { execFileSync } from "node:child_process";
 const root = resolve(import.meta.dirname, "../../..");
 const read = (path) => readFileSync(resolve(root, path), "utf8");
 const report = read("docs/audits/FINAL_D7_CLOSURE.md");
-const rows = report
+const matrix = report.split("## Complete final disposition matrix")[1];
+if (!matrix) throw new Error("Final matrix section missing.");
+const rows = matrix
   .split(/\r?\n/)
   .filter((line) => /^\| \d{3}\s*\|/.test(line));
 const expected = {
