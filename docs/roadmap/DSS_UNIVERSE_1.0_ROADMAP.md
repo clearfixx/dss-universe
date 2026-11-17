@@ -44,7 +44,7 @@ The platform allows users to:
 - create a professional and social profile;
 - follow people and community activity;
 - publish and discuss news;
-- collaborate in Knowledge Forge;
+- collaborate in Research Lab;
 - publish research and technical material;
 - participate in structured forum discussions;
 - learn and publish courses;
@@ -73,7 +73,7 @@ Administrators operate the platform through Mission Control, Security Deck, CMS 
 ### Feature modules
 
 - News;
-- Knowledge Forge;
+- Research Lab;
 - Research Lab;
 - Community Hub / Forum;
 - Academy;
@@ -449,7 +449,7 @@ See [D1 decisions](../development/D1_SCOPE_DECISIONS.md).
 - custom access groups separated from system roles;
 - allowlisted delegable permission builder;
 - group display name, color, badge, icon, visibility and membership period;
-- example groups: Editors, Knowledge Forge Guardians, Premium, Trusted Contributors, Trusted Instructors, Beta Testers;
+- example groups: Editors, Research Lab Guardians, Premium, Trusted Contributors, Trusted Instructors, Beta Testers;
 - no custom group may grant generic moderation/admin/security capabilities;
 - explicit authority policy for sanctions and protected actors.
 
@@ -752,7 +752,7 @@ Delivered in the Community Points Ledger foundation package:
   Reputation, reactions and Users;
 - event-derived, immutable PostgreSQL ledger with rebuildable balances;
 - configurable activity weights, enabled flags and UTC-day anti-abuse limits;
-- initial rules for comments, Community Hub topics, News, Knowledge Forge and
+- initial rules for comments, Community Hub topics, News, Research Lab and
   positive/negative direct reputation;
 - advisory-lock serialization and transactional processed-event markers;
 - duplicate deliveries and capped events remain idempotent;
@@ -860,7 +860,7 @@ Initial configurable events:
 - comment: +1;
 - forum topic: +5;
 - published news: +10;
-- published Knowledge Forge article: +50;
+- published Research Lab article: +50;
 - direct reputation +1: +10;
 - direct reputation -1: -10.
 
@@ -902,13 +902,13 @@ All points use a reversible ledger. Deleted/moderated/unpublished content may re
 # Phase 9 — Interaction Platform, Shared Content, Editor, Content Gates and Activity Feed
 
 **Status: historically delivered; current acceptance pending.** The reusable platform foundations and Phase 9 acceptance
-criteria are implemented. Product-owned News, Forum, Knowledge Forge, Academy
+criteria are implemented. Product-owned News, Forum, Research Lab, Academy
 and Moderation integrations remain in their scheduled phases.
 
 ## Interaction Target Registry
 
 - one canonical target identity for News, Community Hub, Research Lab,
-  Knowledge Forge, Academy, profile walls and future modules;
+  Research Lab, Academy, profile walls and future modules;
 - real foreign-key ownership for shared interactions instead of unconstrained
   `targetType + targetId` records;
 - domain modules register targets and remain responsible for their own
@@ -940,7 +940,7 @@ Delivered foundation:
 
 ## Cross-module architecture rules
 
-- News, Community Hub, Research Lab, Knowledge Forge and Academy must not
+- News, Community Hub, Research Lab and Academy must not
   create private duplicate comment, reaction or bookmark tables;
 - the first forum post, news body, article revision and lesson content remain
   entities of their owning modules rather than generic comments;
@@ -1000,7 +1000,7 @@ Delivered DSS Editor foundation:
 - document-grade `WIKI`/`ADMIN` extensions for structured tables, task lists,
   paired footnotes and one heading-derived table of contents, with strict
   profile boundaries and safe server rendering;
-- News, Community Hub, Research Lab and Knowledge Forge add their own draft
+- News, Community Hub, Research Lab add their own draft
   stores when their canonical domain models arrive.
 
 ## Comments, reactions and bookmarks
@@ -1228,7 +1228,11 @@ restart of Phase 5.
 
 ---
 
-# Phase 11 — Knowledge Forge
+# Phase 11 — Research Lab (Wiki)
+
+Research Lab is the single Wiki module. Knowledge Forge is a historical alias,
+not another product module. This naming correction does not rename technical
+identifiers, routes or Guardian capabilities.
 
 ## Scope
 
@@ -1246,7 +1250,7 @@ restart of Phase 5.
 ## Workflow
 
 - ordinary user edits always require review;
-- Knowledge Forge Guardians may review/publish/reject/rollback revisions without becoming moderators;
+- Research Lab Guardians may review/publish/reject/rollback revisions without becoming moderators;
 - every revision is preserved;
 - realtime collaborative editing is not required for 1.0.
 
@@ -1258,11 +1262,14 @@ restart of Phase 5.
 
 ---
 
-# Phase 12 — Research Lab
+# Phase 12 — Research Lab extensions (reserved planning slot)
 
 ## Scope
 
-Long-form analytical and technical publishing distinct from News and collaborative Knowledge Forge.
+The former separate Research Lab proposal is superseded by the owner's decision
+to keep one Wiki module in Phase 11. The candidate features below belong to that
+same module and require allocation during its brainstorm. This slot does not
+authorize a second publishing module or renumber later phases.
 
 - research entries;
 - technical articles;
@@ -1436,7 +1443,7 @@ Combine the structured organization of IPB/XenForo/vBulletin with selected Reddi
 Admin notifications include:
 
 - News awaiting review;
-- Knowledge Forge revisions awaiting review;
+- Research Lab revisions awaiting review;
 - Academy courses awaiting review;
 - new support tickets;
 - moderation/security alerts;
@@ -1620,7 +1627,7 @@ Allowed statuses depend on request type.
 ## Universe Feed
 
 - activity since last visit;
-- new topics, posts, comments, News, Knowledge Forge, Research and courses;
+- new topics, posts, comments, News, Research Lab and courses;
 - mentions, replies and reputation changes;
 - subscriptions/followed users/categories/topics;
 - unread markers and filters;
@@ -1904,7 +1911,7 @@ DSS Universe 1.0 is complete when:
 - Auth, sessions, IAM, access groups and security are complete;
 - Media Platform is the only file lifecycle boundary;
 - profiles, social graph, reputation, points, levels and titles work;
-- News, Knowledge Forge, Research Lab, Community Hub, Academy, Downloads, Communications and Support provide their approved 1.0 core flows;
+- News, Research Lab, Community Hub, Academy, Downloads, Communications and Support provide their approved 1.0 core flows;
 - Universe Feed and Command Deck are functional and distinct;
 - Mission Control, Security Deck, CMS Builder, Media Library and Maintenance Center can operate the platform;
 - CMS, Themes and SEO work;
@@ -1956,7 +1963,7 @@ Current work:
   D2 architecture contracts and report-only inventory in verification/review
 
 Next product phase:
-  Phase 11 — Knowledge Forge, not started
+  Phase 11 — Research Lab (Wiki), not started
   Only after D7 acceptance, the post-preparation stack audit and its acceptance,
   and an approved Phase 11 brainstorm
 ```
