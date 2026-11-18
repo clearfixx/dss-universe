@@ -1,4 +1,4 @@
-import { BadRequestException, UseGuards } from '@nestjs/common';
+import { BadRequestException, Inject, UseGuards } from '@nestjs/common';
 import {
   Args,
   Context,
@@ -11,7 +11,10 @@ import {
 } from '@nestjs/graphql';
 import type { AuthenticatedUser } from '@api/core/auth';
 import { OptionalViewerJwtGuard } from '@api/core/auth/guards/optional-viewer-jwt.guard';
-import { PrismaNewsSearchSession } from '@api/modules/news/infrastructure';
+import {
+  NEWS_SEARCH_SOURCE,
+  type NewsSearchSource,
+} from './news-search-source';
 
 @ObjectType()
 class SearchHit {
@@ -37,7 +40,9 @@ class SearchPage {
 @Resolver()
 @UseGuards(OptionalViewerJwtGuard)
 export class SharedSearchResolver {
-  constructor(private readonly news: PrismaNewsSearchSession) {}
+  constructor(
+    @Inject(NEWS_SEARCH_SOURCE) private readonly news: NewsSearchSource,
+  ) {}
 
   @Query(() => SearchPage)
   async search(

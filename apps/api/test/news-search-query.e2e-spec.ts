@@ -131,7 +131,7 @@ describe('Viewer-safe live News search (e2e)', () => {
       password: 'synthetic-query-password-123',
     });
   }
-  async function gate(groupKey?: string, threshold = 100) {
+  async function gate(groupKey?: string, threshold = 100, text = secret) {
     const result = await app.get(ContentGatesService).create({
       ownerId: author.user.id,
       operator: 'ALL',
@@ -151,7 +151,7 @@ describe('Viewer-safe live News search (e2e)', () => {
     return {
       type: 'contentGate',
       attrs: { gateId: result.id },
-      content: [paragraph(secret)],
+      content: [paragraph(text)],
     } satisfies EditorNode;
   }
   async function article(
@@ -326,7 +326,10 @@ describe('Viewer-safe live News search (e2e)', () => {
     const premium = await prisma.accessGroup.findUniqueOrThrow({
       where: { key: 'premium' },
     });
-    await article([await gate(group.key)]);
+    const sharedTerm = 'shared-' + randomUUID();
+    const groupedArticle = await article([
+      await gate(group.key, 100, secret + ' ' + sharedTerm),
+    ]);
     const paid = await grant(premium.id);
     expect(result(await search(secret, viewer.tokens.accessToken)).total).toBe(
       0,
@@ -334,7 +337,30 @@ describe('Viewer-safe live News search (e2e)', () => {
     expect(result(await search(secret, author.tokens.accessToken)).total).toBe(
       0,
     );
+    const shared = async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/graphql')
+        .set('Authorization', 'Bearer ' + viewer.tokens.accessToken)
+        .send({
+          query:
+            'query Shared($term:String!){search(term:$term){total items{id excerpt} categories{slug total}}}',
+          variables: { term: sharedTerm },
+        });
+      const body = response.body as {
+        errors?: unknown;
+        data: { search: unknown };
+      };
+      expect(body.errors).toBeUndefined();
+      return body.data.search;
+    };
+    const empty = { total: 0, items: [], categories: [] };
+    expect(await shared()).toEqual(empty);
     const member = await grant(group.id);
+    expect(await shared()).toEqual({
+      total: 1,
+      items: [{ id: groupedArticle.id, excerpt: 'Synthetic public summary' }],
+      categories: [{ slug: category.slug, total: 1 }],
+    });
     expect(result(await search(secret, viewer.tokens.accessToken)).total).toBe(
       1,
     );
@@ -358,7 +384,9 @@ describe('Viewer-safe live News search (e2e)', () => {
     expect(result(await search(secret, viewer.tokens.accessToken)).total).toBe(
       0,
     );
+    expect(await shared()).toEqual(empty);
     await grant(group.id, true);
+    expect(await shared()).toEqual(empty);
     expect(result(await search(secret, viewer.tokens.accessToken)).total).toBe(
       0,
     );
