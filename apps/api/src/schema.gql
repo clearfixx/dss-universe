@@ -1339,6 +1339,7 @@ type Query {
   reactionSummary(interactionTargetId: ID!): ReactionSummary!
   reputationHistory(pagination: ReputationPageInput, userId: ID!): ReputationHistory!
   reputationPolicy: ReputationPolicy!
+  search(page: Int! = 1, pageSize: Int! = 20, term: String!): SearchPage!
   user(id: ID!): User!
   userAchievementHistory(userId: ID!): [AchievementAward!]!
   userAchievements(userId: ID!): [AchievementAward!]!
@@ -1568,6 +1569,27 @@ input ScheduleNewsInput {
   articleId: ID!
   displayPublishedAt: DateTime
   scheduledFor: DateTime!
+}
+
+type SearchCategoryCount {
+  slug: String!
+  total: Int!
+}
+
+type SearchHit {
+  excerpt: String!
+  id: ID!
+  language: String!
+  publishedAt: DateTime!
+  slug: String!
+  source: String!
+  title: String!
+}
+
+type SearchPage {
+  categories: [SearchCategoryCount!]!
+  items: [SearchHit!]!
+  total: Int!
 }
 
 input SetNewsPinInput {
