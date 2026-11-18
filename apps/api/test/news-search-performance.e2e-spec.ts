@@ -41,6 +41,7 @@ import {
 import { AppModule } from '../src/app.module';
 import { AuthenticationPresentationService } from '../src/composition/identity/application/authentication-presentation.service';
 import { NewsDeliveryService } from '../src/modules/news/application/services/news-delivery.service';
+import { PrismaNewsSearchSession } from '../src/modules/news/infrastructure';
 import { EditorContentDeliveryService } from '../src/modules/editor/application/services/editor-content-delivery.service';
 import { ContentGateViewerFactsService } from '../src/modules/content-access/application/services/content-gate-viewer-facts.service';
 import {
@@ -409,6 +410,7 @@ describe('Hybrid News search bounded work and pagination (e2e)', () => {
       page: 10,
       pageSize: 100,
     });
+
     expect(last.items.map(({ id }) => id)).toEqual(corpus.ids.slice(900));
     const first = await service.browseShort(
       { ...filters, first: 37 },
@@ -439,6 +441,37 @@ describe('Hybrid News search bounded work and pagination (e2e)', () => {
       corpus.ids.slice(0, 2),
     );
   }, 30000);
+
+  it('keeps shared-search totals, category facets and deep pages exact on the 1000-article corpus', async () => {
+    const corpus = corpora.get(1000)!;
+    const smallerCorpus = corpora.get(250)!;
+    const search = app.get(PrismaNewsSearchSession);
+    const start = performance.now();
+    const page = await search.searchArticles({
+      term: 'alpha gamma',
+      page: 6,
+      pageSize: 50,
+      viewerId,
+    });
+
+    expect(page.total).toBe(1250);
+    expect(page.items.map(({ id }) => id)).toEqual(
+      [...corpus.pinnedIds, ...corpus.ids].slice(250, 300),
+    );
+    expect(page.categories).toEqual([
+      { slug: corpus.slug, total: 1000 },
+      { slug: smallerCorpus.slug, total: 250 },
+    ]);
+    console.info(
+      'Shared News search performance',
+      JSON.stringify({
+        articles: 1250,
+        page: 6,
+        pageSize: 50,
+        elapsedMs: Math.round(performance.now() - start),
+      }),
+    );
+  }, 60000);
 
   it('keeps two concurrent viewer snapshots and batch scopes separate without raising transaction timeouts', async () => {
     const corpus = corpora.get(1000)!;
