@@ -44,6 +44,7 @@ import {
 } from '../src/modules/content-access/domain/ports/content-audience-reader.interface';
 import { AppModule } from '../src/app.module';
 import { AuthenticationPresentationService } from '../src/composition/identity/application/authentication-presentation.service';
+import { PrismaNewsSearchSession } from '../src/modules/news/infrastructure';
 import { NewsService } from '../src/modules/news/application/services/news.service';
 import { NewsDeliveryService } from '../src/modules/news/application/services/news-delivery.service';
 import { NewsSearchBackfillService } from '../src/modules/news/application/services/news-search-backfill.service';
@@ -227,6 +228,22 @@ describe('Viewer-safe live News search (e2e)', () => {
     });
   }
 
+  it('uses literal search terms and counts authorized categories before shared pagination', async () => {
+    const source = app.get(PrismaNewsSearchSession);
+    const term = 'вартість 10%_UA';
+    const hit = await article([paragraph('open')], term);
+    await article([paragraph('open')], 'вартість 100xUA');
+    const request = { term, page: 1, pageSize: 1 };
+    const first = await source.searchArticles(request);
+    expect(first.items.map((item) => item.id)).toEqual([hit.id]);
+    expect(first.items[0].excerpt).toBe('Synthetic public summary');
+    expect(first.total).toBe(1);
+    expect(first.categories).toEqual([{ slug: category.slug, total: 1 }]);
+    expect(await source.searchArticles({ ...request, page: 2 })).toEqual({
+      ...first,
+      items: [],
+    });
+  });
   it('keeps hidden-only guest matches out of pins, items and total without policy calls', async () => {
     const post = await article([
       paragraph('alpha'),
