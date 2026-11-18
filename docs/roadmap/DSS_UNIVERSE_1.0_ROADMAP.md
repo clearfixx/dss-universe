@@ -1234,6 +1234,9 @@ Research Lab is the single Wiki module. Knowledge Forge is a historical alias,
 not another product module. This naming correction does not rename technical
 identifiers, routes or Guardian capabilities.
 
+The accepted design and ordered delivery contract are maintained in the
+[Phase 11 Research Lab brainstorm](../development/PHASE_11_RESEARCH_LAB_BRAINSTORM.md).
+
 ## Scope
 
 - hierarchical categories and navigation;

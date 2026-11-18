@@ -14,7 +14,7 @@ scope before Phase 11; this does not authorize unrelated implementation in D3.
 The staged [D3 Auth boundary plan](D3_AUTH_BOUNDARY_PLAN.md) tracks current work.
 
 Establish one reproducible, secure and architecturally approved baseline from
-which Phase 11 — Knowledge Forge can begin without knowingly forcing a later
+which Phase 11 — Research Lab can begin without knowingly forcing a later
 rewrite.
 
 This plan does not authorize Phase 11 implementation. The Phase 11 brainstorm,
@@ -578,7 +578,7 @@ not started or completed, and is not silently bundled into DEBT-053 or D7.
 
 ### Brainstorm branch
 
-Create `phase/11-knowledge-forge-brainstorm` only after D7 and stack-audit
+Create `phase/11-research-lab-brainstorm` only after D7 and stack-audit
 acceptance. It contains product
 decisions, architecture, threat model, data lifecycle, package breakdown and
 acceptance matrix—no feature implementation.
@@ -600,7 +600,7 @@ Model: `gpt-6.1-sol` xhigh.
 
 ### Implementation branch
 
-Create `phase/11-knowledge-forge` only after the brainstorm PR is approved. Each
+Create `phase/11-research-lab` only after the brainstorm PR is approved. Each
 implementation package must state its model recommendation and pass the full
 package Definition of Done before the next package begins.
 
