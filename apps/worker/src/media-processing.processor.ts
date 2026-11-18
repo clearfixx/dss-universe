@@ -23,6 +23,7 @@
  * ===============================================================
  */
 
+import type { RemoteMediaAttempt } from "./s3-media-attempt.js";
 import type { Job } from "bullmq";
 import { isMediaProcessingJob, type MediaProcessingJob } from "@dss/jobs";
 import type {
@@ -35,6 +36,7 @@ export function createMediaProcessingProcessor(
   store: MediaProcessingStore,
   files: MediaFileProcessor,
   scanner: MediaMalwareScanner,
+  openRemote?: (job: MediaProcessingJob) => Promise<RemoteMediaAttempt>,
 ): (
   job: Job<MediaProcessingJob>,
 ) => Promise<{ mediaId: string; duplicate: boolean; quarantined: boolean }> {
@@ -65,12 +67,16 @@ export function createMediaProcessingProcessor(
       throw new Error(`Media retry claim unavailable for ${job.data.mediaId}.`);
     }
 
+    let remote: RemoteMediaAttempt | undefined;
     let quarantinedDuringAttempt = false;
     try {
+      if (job.data.storageProvider !== "LOCAL" && openRemote)
+        remote = await openRemote(job.data);
+      const attemptFiles = remote?.files ?? files;
       if (job.data.scanRequired) {
         let scan;
         try {
-          scan = await scanner.scan(job.data);
+          scan = await (remote?.scanner ?? scanner).scan(job.data);
         } catch (error: unknown) {
           const reason =
             error instanceof Error ? error.message : "Malware scan failed.";
@@ -98,9 +104,9 @@ export function createMediaProcessingProcessor(
       if (status === "QUARANTINED") {
         await store.markProcessing(job.data.mediaId);
       }
-      const result = await files.transform(job.data);
+      const result = await attemptFiles.transform(job.data);
       await store.markReady(job.data, result);
-      await files.cleanupSource(job.data).catch(() => undefined);
+      await attemptFiles.cleanupSource(job.data).catch(() => undefined);
       return {
         mediaId: job.data.mediaId,
         duplicate: false,
@@ -117,6 +123,8 @@ export function createMediaProcessingProcessor(
           .catch(() => undefined);
       }
       throw error;
+    } finally {
+      await remote?.close();
     }
   };
 }

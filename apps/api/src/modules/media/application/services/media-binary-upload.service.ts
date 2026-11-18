@@ -27,7 +27,6 @@ import {
   UnsupportedMediaTypeException,
 } from '@nestjs/common';
 import { createHash } from 'node:crypto';
-import { basename, dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import {
   DSS_JOB_NAMES,
@@ -99,16 +98,17 @@ export class MediaBinaryUploadService {
     }
 
     await this.sessions.claimUpload(session.id);
+    const location = {
+      storageProvider: session.storageProvider,
+      bucket: session.bucket,
+      storageKey: session.temporaryKey,
+    };
     let stored = false;
     let queued = false;
     let mediaId: string | null = null;
 
     try {
-      await this.storage.save({
-        buffer: file.buffer,
-        directory: dirname(session.temporaryKey),
-        filename: basename(session.temporaryKey),
-      });
+      await this.storage.saveObject(location, file.buffer, actualMimeType);
       stored = true;
 
       mediaId = randomUUID();
@@ -191,7 +191,7 @@ export class MediaBinaryUploadService {
         this.sessions.updateStatus(session.id, MediaUploadStatus.FAILED),
       ];
       if (stored) {
-        compensations.push(this.storage.delete(session.temporaryKey));
+        compensations.push(this.storage.deleteObject(location));
       }
       if (queued) {
         compensations.push(this.queues.mediaProcessing.remove(session.id));

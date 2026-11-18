@@ -12,6 +12,7 @@
  * ===============================================================
  */
 
+import type { MediaStorageProvider } from '../enums/media-storage-provider.enum';
 import { MediaStatus } from '../enums/media-status.enum';
 import { MediaVisibility } from '../enums/media-visibility.enum';
 
@@ -21,6 +22,9 @@ export type MediaDeliveryCandidate = {
   status: MediaStatus;
   visibility: MediaVisibility;
   variantName: string;
+  storageProvider: MediaStorageProvider;
+  bucket: string;
+  size: number;
   storageKey: string;
   mimeType: string;
   checksum: string;

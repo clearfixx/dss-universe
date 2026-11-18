@@ -14,5 +14,9 @@
 
 export type MediaCleanupCandidate = {
   mediaId: string;
-  storageKeys: string[];
+  objects: Array<{
+    storageProvider: 'LOCAL' | 'MINIO' | 'S3';
+    bucket: string;
+    storageKey: string;
+  }>;
 };

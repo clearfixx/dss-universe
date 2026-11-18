@@ -1,0 +1,64 @@
+diff --git a/lib/parse.js b/lib/parse.js
+index 57d994a87896b384ecf2f5260f7ffa5814628162..64cbb3eda5b3bf3e0191f19bf61126e6ce84237b 100644
+--- a/lib/parse.js
++++ b/lib/parse.js
+@@ -139,6 +139,48 @@ const normalizeSimpleBranch = branch => {
+   return value.replace(/\\(.)/g, '$1');
+ };
+ 
++const hasMixedWildcards = branch => {
++  let escaped = false;
++  let bracket = 0;
++  let paren = 0;
++  let star = false;
++  let qmark = false;
++
++  for (let i = 0; i < branch.length; i++) {
++    const ch = branch[i];
++    if (escaped === true) {
++      escaped = false;
++      continue;
++    }
++    if (ch === '\\') {
++      escaped = true;
++      continue;
++    }
++    if (ch === '[') {
++      bracket++;
++      continue;
++    }
++    if (ch === ']' && bracket > 0) {
++      bracket--;
++      continue;
++    }
++    if (ch === '(') {
++      paren++;
++      continue;
++    }
++    if (ch === ')' && paren > 0) {
++      paren--;
++      continue;
++    }
++    if (bracket > 0 || paren > 0) continue;
++    if ((ch === '*' || ch === '?') && branch[i + 1] !== '(') {
++      if (ch === '*') star = true;
++      else qmark = true;
++    }
++  }
++  return star === true && qmark === true;
++};
++
+ const hasRepeatedCharPrefixOverlap = branches => {
+   const values = branches.map(normalizeSimpleBranch).filter(Boolean);
+ 
+@@ -292,6 +334,10 @@ const analyzeRepeatedExtglob = (body, options) => {
+ 
+   const branches = splitTopLevel(body).map(branch => branch.trim());
+ 
++  if (branches.some(hasMixedWildcards)) {
++    return { risky: true };
++  }
++
+   if (branches.length > 1) {
+     if (
+       branches.some(branch => branch === '') ||

@@ -30,7 +30,7 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 
-import { MediaStorageProvider } from '../../domain/enums/media-storage-provider.enum';
+import type { MediaStorageProvider } from '../../domain/enums/media-storage-provider.enum';
 import { MediaUploadStatus } from '../../domain/enums/media-upload-status.enum';
 import {
   MEDIA_UPLOAD_SESSION_REPOSITORY,
@@ -41,6 +41,8 @@ import type { MediaMetadata } from '../../domain/types/media-metadata.type';
 import type { InitiateMediaUpload } from '../types/initiate-media-upload.type';
 import { MediaUploadPolicyService } from './media-upload-policy.service';
 
+export const MEDIA_UPLOAD_DESTINATION = Symbol('MEDIA_UPLOAD_DESTINATION');
+
 const UPLOAD_SESSION_TTL_MS = 15 * 60 * 1000;
 
 @Injectable()
@@ -49,6 +51,11 @@ export class MediaUploadSessionService {
     @Inject(MEDIA_UPLOAD_SESSION_REPOSITORY)
     private readonly sessions: MediaUploadSessionRepository,
     private readonly policies: MediaUploadPolicyService,
+    @Inject(MEDIA_UPLOAD_DESTINATION)
+    private readonly destination: Readonly<{
+      storageProvider: MediaStorageProvider;
+      bucket: string;
+    }>,
   ) {}
 
   initiate(
@@ -62,8 +69,7 @@ export class MediaUploadSessionService {
     return this.sessions.create({
       ownerId,
       policyKey: validated.policy.key,
-      storageProvider: MediaStorageProvider.LOCAL,
-      bucket: 'media',
+      ...this.destination,
       temporaryKey: `temporary/${ownerId}/${uploadId}`,
       originalFilename: input.originalFilename,
       declaredMimeType: validated.normalizedMimeType,
