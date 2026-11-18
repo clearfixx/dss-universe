@@ -106,6 +106,7 @@ import { MediaModule } from './modules/media/media.module';
 import { NewsModule } from './modules/news';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ReputationModule } from './modules/reputation';
+import { ResearchLabModule } from './modules/research-lab';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
@@ -154,6 +155,7 @@ import { UsersModule } from './modules/users/users.module';
     AiCoreModule,
     AchievementsModule,
     LeaderboardsModule,
+    ResearchLabModule,
   ],
   providers: [
     {
