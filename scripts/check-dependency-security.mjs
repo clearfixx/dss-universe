@@ -6,10 +6,10 @@
  * 📄 File: scripts/check-dependency-security.mjs
  *
  * 🎯 Purpose:
- * Enforces high/critical audit failures with one owner-approved patched advisory.
+ * Enforces high/critical audit failures with exact locally patched advisories.
  *
  * 🧠 Responsibilities:
- * • verifies the exact local braces patch and every installed braces copy;
+ * • verifies exact braces/picomatch patches and every installed affected copy;
  * • runs real patch regressions before applying the narrowly scoped exception;
  * • fails closed for registry errors, invalid audit data or other high findings.
  *
@@ -28,6 +28,17 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 const patchHash =
   "95ac7e525b684535e9ed6ec0f95f0d7d05499378694d007bc43ca94c16f4b7b1";
 const advisoryId = "GHSA-vfj7-8cjw-p6xm";
+const picomatchAdvisoryId = "GHSA-fc5q-39xc-vjpf";
+const picomatchPatchHashes = {
+  "2.3.2": "a0b16d833ca9941aa24dfa771788cc1865716737846a49225a5e168c365b7048",
+  "4.0.4": "7a701434010212eede2d18628a2a130dfef1ee0e4cc52ec7184bcee5956997c1",
+  "4.0.7": "5c550c187257391c0335a988cc84c6744bd8318d6c0bbac96066c77fd60d5cab",
+};
+const picomatchSourceHashes = {
+  "2.3.2": "0a1f0fd2034a97929c4e90c8bc9ca0b6cabddd4ccbc7a93bf999a5a5aad5cae7",
+  "4.0.4": "79ed64ef1beac83203fbf1a28fb4125070d776df0dabf442a80d6193b60b5120",
+  "4.0.7": "fb4a6a0647c95d8424ce3060f571e47ef3e1c2b6d731d1ab1b210d2313c3bc37",
+};
 const hashes = {
   "parse.js":
     "5e440c97a8f5d33c72b931b45de5980636a06543a5265dd901fec4651bd7415b",
@@ -64,15 +75,28 @@ export function evaluateAudit(report, patchVerified) {
     if (advisory.severity === "high") high++;
     if (advisory.severity === "critical") critical++;
     if (!["high", "critical"].includes(advisory.severity)) continue;
-    const excepted =
+    const findings = Array.isArray(advisory.findings) ? advisory.findings : [];
+    const findingVersions = new Set(findings.map(({ version }) => version));
+    const bracesExcepted =
       patchVerified &&
       advisory.github_advisory_id === advisoryId &&
       advisory.module_name === "braces" &&
       advisory.severity === "high" &&
-      Array.isArray(advisory.findings) &&
-      advisory.findings.length > 0 &&
-      advisory.findings.every((finding) => finding.version === "3.0.3");
-    (excepted ? exceptions : blocking).push(advisory);
+      findings.length > 0 &&
+      findings.every((finding) => finding.version === "3.0.3");
+    const picomatchExcepted =
+      patchVerified &&
+      advisory.github_advisory_id === picomatchAdvisoryId &&
+      advisory.module_name === "picomatch" &&
+      advisory.severity === "high" &&
+      findings.length > 0 &&
+      findingVersions.size === 3 &&
+      Object.keys(picomatchPatchHashes).every((version) =>
+        findingVersions.has(version),
+      );
+    (bracesExcepted || picomatchExcepted ? exceptions : blocking).push(
+      advisory,
+    );
   }
   if (
     report.metadata.vulnerabilities.high !== high ||
@@ -121,6 +145,51 @@ function verifyPatch() {
   console.log(
     `Verified approved braces patch and ${copies.length} installed copy/copies.`,
   );
+
+  for (const [version, expected] of Object.entries(picomatchPatchHashes)) {
+    const actual = digest(
+      readFileSync(resolve(root, `patches/picomatch@${version}.patch`)),
+    );
+    if (actual !== expected)
+      throw new Error(`Unapproved picomatch ${version} patch digest`);
+  }
+  const picomatchCopies = readdirSync(store).filter((name) =>
+    name.startsWith("picomatch@"),
+  );
+  if (!picomatchCopies.length)
+    throw new Error("No installed picomatch evidence");
+  const installedVersions = new Set();
+  for (const copy of picomatchCopies) {
+    const directory = resolve(store, copy, "node_modules/picomatch");
+    const pkg = JSON.parse(
+      readFileSync(resolve(directory, "package.json"), "utf8"),
+    );
+    const expected = picomatchSourceHashes[pkg.version];
+    if (!expected)
+      throw new Error(
+        `Reassess picomatch exception for changed installed version ${pkg.version}`,
+      );
+    installedVersions.add(pkg.version);
+    if (digest(readFileSync(resolve(directory, "lib/parse.js"))) !== expected)
+      throw new Error(`Installed picomatch patch mismatch: ${copy}/parse.js`);
+  }
+  if (
+    installedVersions.size !== Object.keys(picomatchSourceHashes).length ||
+    !Object.keys(picomatchSourceHashes).every((version) =>
+      installedVersions.has(version),
+    )
+  )
+    throw new Error("Installed picomatch patch inventory is incomplete");
+  const picomatchRegressions = spawnSync(
+    process.execPath,
+    ["--test", "scripts/picomatch-patch.test.mjs"],
+    { cwd: root, stdio: "inherit" },
+  );
+  if (picomatchRegressions.error || picomatchRegressions.status !== 0)
+    throw new Error("picomatch regressions failed");
+  console.log(
+    `Verified approved picomatch patches and ${picomatchCopies.length} installed copy/copies.`,
+  );
 }
 
 function main() {
@@ -139,7 +208,7 @@ function main() {
   const result = evaluateAudit(report, true);
   for (const advisory of result.exceptions)
     console.warn(
-      `OWNER-APPROVED EXCEPTION: ${advisory.github_advisory_id}, braces3.0.3, exact patched files +14 regressions. Upstream advisory remains OPEN.`,
+      `OWNER-APPROVED EXCEPTION: ${advisory.github_advisory_id}, ${advisory.module_name}, exact patches and regressions verified. Upstream advisory remains OPEN.`,
     );
   for (const advisory of result.blocking)
     console.error(
