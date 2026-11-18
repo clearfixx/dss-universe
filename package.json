@@ -24,7 +24,7 @@
     "test:unit": "turbo test:unit",
     "test:e2e": "turbo test:e2e",
     "test:cov": "turbo test:cov",
-    "test:dependency-patches": "node --test scripts/braces-patch.test.mjs",
+    "test:dependency-patches": "node --test scripts/braces-patch.test.mjs scripts/picomatch-patch.test.mjs",
     "security:check": "node scripts/check-dependency-security.mjs",
     "test:security-policy": "node --test scripts/check-dependency-security.test.mjs scripts/dependency-security-versions.test.mjs scripts/node-runtime-pin.test.mjs scripts/telemetry-redaction.test.mjs scripts/nodemailer-security.test.mjs",
     "db:validate": "pnpm --filter @dss/api db:validate",

@@ -44,3 +44,38 @@ Maintenance:
 The generated patch preserves upstream code style. The newly authored guard
 has a DSS Passport identifying this patch as its maintained source artifact.
 No third-party license is changed; braces remains MIT.
+
+## picomatch 2.3.2, 4.0.4 and 4.0.7 — GHSA-fc5q-39xc-vjpf
+
+The registry currently has no fixed picomatch release for this high-severity
+advisory. The three patch files backport only the mixed-wildcard mitigation
+from upstream pull request 194 to every version present in the frozen graph.
+They do not rename versions or make the raw audit finding disappear.
+
+The guard detects the vulnerable single-branch repeated-extglob shape that
+mixes top-level `?` and `*` wildcards. It rejects that unsafe optimization path
+while preserving ordinary wildcard, bracket and nested-extglob behavior. This
+is a narrow ReDoS mitigation, not a general promise that arbitrary hostile
+glob expressions are cheap.
+
+Verification is fail-closed:
+
+- every patch file has an approved SHA-256 digest;
+- every installed `lib/parse.js` must match its reviewed post-patch digest;
+- the installed version set must remain exactly 2.3.2, 4.0.4 and 4.0.7;
+- `scripts/picomatch-patch.test.mjs` executes each installed copy in a bounded
+  child process and also checks normal matching behavior;
+- only the exact advisory, package, severity and reviewed version set can be
+  reported as an owner-approved exception; every other high or critical
+  advisory remains blocking.
+
+Maintenance:
+
+1. Track the advisory and upstream pull request until a fixed release exists.
+2. Upgrade the owning dependency graph to fixed versions when available.
+3. Remove all three patchedDependencies entries and patch files only after the
+   upstream release passes frozen install, patch regressions and the full gate.
+4. Remove the exact audit exception at the same time; do not leave a stale
+   exception for a changed version or advisory.
+
+Picomatch remains MIT; the patches do not alter its license.
