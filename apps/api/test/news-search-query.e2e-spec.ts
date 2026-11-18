@@ -233,13 +233,33 @@ describe('Viewer-safe live News search (e2e)', () => {
     const term = 'вартість 10%_UA';
     const hit = await article([paragraph('open')], term);
     await article([paragraph('open')], 'вартість 100xUA');
-    const request = { term, page: 1, pageSize: 1 };
-    const first = await source.searchArticles(request);
+    const query = { term, page: 1, pageSize: 1 };
+    const first = await source.searchArticles(query);
     expect(first.items.map((item) => item.id)).toEqual([hit.id]);
     expect(first.items[0].excerpt).toBe('Synthetic public summary');
     expect(first.total).toBe(1);
+    const response = await requestHttp();
+    const body = response.body as {
+      errors?: unknown;
+      data: { search: unknown };
+    };
+    expect(body.errors).toBeUndefined();
+    expect(body.data.search).toEqual({
+      total: 1,
+      items: [
+        { id: hit.id, source: 'NEWS', excerpt: 'Synthetic public summary' },
+      ],
+      categories: [{ slug: category.slug, total: 1 }],
+    });
+    function requestHttp() {
+      return request(app.getHttpServer()).post('/api/graphql').send({
+        query:
+          'query Shared($term:String!){search(term:$term){total items{id source excerpt} categories{slug total}}}',
+        variables: { term },
+      });
+    }
     expect(first.categories).toEqual([{ slug: category.slug, total: 1 }]);
-    expect(await source.searchArticles({ ...request, page: 2 })).toEqual({
+    expect(await source.searchArticles({ ...query, page: 2 })).toEqual({
       ...first,
       items: [],
     });

@@ -21,6 +21,7 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+import { SharedSearchResolver } from './shared-search.resolver';
 import { Global, Module } from '@nestjs/common';
 import { PrismaModule } from '@api/core/database';
 import { NEWS_DELIVERY_READER } from '@api/modules/news';
@@ -36,6 +37,7 @@ import { PrismaNewsDeliveryReadUnit } from './infrastructure/prisma-news-deliver
 @Module({
   imports: [PrismaModule],
   providers: [
+    SharedSearchResolver,
     PrismaNewsSearchSession,
     PrismaNewsDeliveryRepository,
     PrismaPublicProfileReader,
