@@ -84,7 +84,7 @@ export async function openRemoteMediaAttempt(
             };
           };
           const original = await publish(result.original, job.destinationKey);
-          const variants = [];
+          const variants: typeof result.variants = [];
           for (const [index, file] of result.variants.entries()) {
             variants.push(await publish(file, job.variants[index]!.storageKey));
           }
