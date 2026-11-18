@@ -78,6 +78,8 @@ describe('Media cleanup conflict boundary', () => {
         findMany: jest.fn().mockResolvedValue([
           {
             id: 'media',
+            storageProvider: 'LOCAL',
+            bucket: 'media',
             storageKey: 'original',
             metadata: null,
             variants: [],
@@ -90,7 +92,12 @@ describe('Media cleanup conflict boundary', () => {
       run(transaction),
     );
     await expect(library.claimCleanupCandidates(cutoff, 50)).resolves.toEqual([
-      { mediaId: 'media', storageKeys: ['original'] },
+      {
+        mediaId: 'media',
+        objects: [
+          { storageProvider: 'LOCAL', bucket: 'media', storageKey: 'original' },
+        ],
+      },
     ]);
     expect(append).toHaveBeenCalledWith(transaction, {
       action: 'media.cleanup.claimed',
