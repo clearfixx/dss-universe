@@ -52,7 +52,7 @@ export class MediaDeliveryService {
     }
 
     return {
-      content: await this.storage.read(variant.storageKey),
+      content: await this.storage.readObject(variant),
       mimeType: variant.mimeType,
       checksum: variant.checksum,
       originalFilename: variant.originalFilename,
@@ -70,7 +70,7 @@ export class MediaDeliveryService {
     }
 
     return {
-      content: await this.storage.read(variant.storageKey),
+      content: await this.storage.readObject(variant),
       mimeType: variant.mimeType,
       checksum: variant.checksum,
     };

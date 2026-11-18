@@ -29,7 +29,7 @@ describe('MediaRetentionService', () => {
     recordCleanupFailure,
   } as unknown as MediaRepository;
   const remove = jest.fn();
-  const storage = { delete: remove } as unknown as StorageService;
+  const storage = { deleteObject: remove } as unknown as StorageService;
   const config = new ConfigService({
     MEDIA_RETENTION_DAYS: 30,
     MEDIA_CLEANUP_INTERVAL_MS: 0,
@@ -41,7 +41,11 @@ describe('MediaRetentionService', () => {
     claimCleanupCandidates.mockResolvedValue([
       {
         mediaId: 'media-1',
-        storageKeys: ['original.webp', 'avatar.webp', 'avatar.webp'],
+        objects: ['first', 'second', 'first'].map((bucket) => ({
+          storageProvider: 'S3',
+          bucket,
+          storageKey: 'same.webp',
+        })),
       },
     ]);
     remove.mockResolvedValue(undefined);

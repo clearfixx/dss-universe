@@ -78,8 +78,16 @@ export class MediaRetentionService
       let completed = 0;
       for (const candidate of candidates) {
         try {
-          for (const storageKey of new Set(candidate.storageKeys)) {
-            await this.storage.delete(storageKey);
+          const deleted = new Set<string>();
+          for (const object of candidate.objects) {
+            const identity = JSON.stringify([
+              object.storageProvider,
+              object.bucket,
+              object.storageKey,
+            ]);
+            if (deleted.has(identity)) continue;
+            await this.storage.deleteObject(object);
+            deleted.add(identity);
           }
           await this.media.completeCleanup(candidate.mediaId);
           completed += 1;

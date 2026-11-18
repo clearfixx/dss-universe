@@ -57,6 +57,7 @@ describe('MediaUploadSessionService', () => {
     service = new MediaUploadSessionService(
       repository,
       new MediaUploadPolicyService(),
+      { storageProvider: MediaStorageProvider.LOCAL, bucket: 'media' },
     );
   });
 

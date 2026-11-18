@@ -127,9 +127,13 @@ describe('Media profile predicate characterization', () => {
       { id: 'lost', storageKey: 'lost', metadata: null, variants: [] },
       {
         id: 'won',
+        storageProvider: 'LOCAL',
+        bucket: 'media',
         storageKey: 'original',
         metadata: null,
-        variants: [{ storageKey: 'variant' }],
+        variants: [
+          { storageProvider: 'S3', bucket: 'variants', storageKey: 'variant' },
+        ],
       },
     ]);
     updateMany
@@ -138,7 +142,13 @@ describe('Media profile predicate characterization', () => {
     await expect(
       repository.claimCleanupCandidates(olderThan, 5),
     ).resolves.toEqual([
-      { mediaId: 'won', storageKeys: ['original', 'variant'] },
+      {
+        mediaId: 'won',
+        objects: [
+          { storageProvider: 'LOCAL', bucket: 'media', storageKey: 'original' },
+          { storageProvider: 'S3', bucket: 'variants', storageKey: 'variant' },
+        ],
+      },
     ]);
     expect(transact.mock.calls[0]?.[1]).toEqual({
       isolationLevel: 'Serializable',
@@ -154,7 +164,11 @@ describe('Media profile predicate characterization', () => {
         ],
         ...absentBindings,
       },
-      include: { variants: { select: { storageKey: true } } },
+      include: {
+        variants: {
+          select: { storageProvider: true, bucket: true, storageKey: true },
+        },
+      },
       orderBy: { createdAt: 'asc' },
       take: 5,
     });

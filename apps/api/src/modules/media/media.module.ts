@@ -34,7 +34,12 @@ import { StorageModule } from '@api/core/storage';
 import { MEDIA_PROFILE_ASSET_COMMANDS } from './contracts/profile-asset-commands.contract';
 
 import { MediaUploadPolicyService } from './application/services/media-upload-policy.service';
-import { MediaUploadSessionService } from './application/services/media-upload-session.service';
+import { s3StorageConfiguration } from '@dss/storage';
+import { MediaStorageProvider } from './domain/enums/media-storage-provider.enum';
+import {
+  MEDIA_UPLOAD_DESTINATION,
+  MediaUploadSessionService,
+} from './application/services/media-upload-session.service';
 import { MediaBinaryUploadService } from './application/services/media-binary-upload.service';
 import { MediaMimeInspectionService } from './application/services/media-mime-inspection.service';
 import { MEDIA_UPLOAD_SESSION_REPOSITORY } from './domain/repositories/media-upload-session.repository.interface';
@@ -61,6 +66,21 @@ import { PrismaCoverRepository } from './infrastructure/repositories/prisma-cove
 @Module({
   imports: [StorageModule],
   providers: [
+    {
+      provide: MEDIA_UPLOAD_DESTINATION,
+      useFactory: () => {
+        const provider =
+          process.env.DSS_MEDIA_STORAGE_PROVIDER ?? MediaStorageProvider.LOCAL;
+        if (provider === 'LOCAL')
+          return { storageProvider: provider, bucket: 'media' };
+        if (provider !== 'S3' && provider !== 'MINIO')
+          throw new Error('Unknown DSS_MEDIA_STORAGE_PROVIDER.');
+        return {
+          storageProvider: provider,
+          bucket: s3StorageConfiguration(process.env).bucket,
+        };
+      },
+    },
     {
       provide: MEDIA_PUBLIC_ATTACHMENT_READER,
       useClass: PrismaPublicAttachmentReader,
