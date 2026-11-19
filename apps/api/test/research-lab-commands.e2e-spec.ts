@@ -24,16 +24,21 @@ describe('Research Lab commands (e2e)', () => {
   let fixture: Awaited<ReturnType<typeof createIsolatedApiSchemaFixture>>;
   let service: ResearchLabService;
   const authenticated = new Set<string>();
+  const memberships = new Map<string, string[]>();
+  const deniedDocuments = new Set<string>();
   const guardians = new Set<string>();
+  const moderators = new Set<string>();
   const document = createEmptyEditorDocument('WIKI');
 
   beforeAll(async () => {
     fixture = await createIsolatedApiSchemaFixture();
     const authority: ResearchLabAuthorityDecisions = {
+      canModerate: (id) =>
+        Promise.resolve(authenticated.has(id) && moderators.has(id)),
       viewerFacts: (subjectId) =>
         Promise.resolve({
           authenticated: !!subjectId && authenticated.has(subjectId),
-          groups: [],
+          groups: memberships.get(subjectId ?? '') ?? [],
           premium: false,
           guardian: !!subjectId && guardians.has(subjectId),
         }),
@@ -54,6 +59,23 @@ describe('Research Lab commands (e2e)', () => {
       authority,
       new AuditWriterService(new AuditRedactionService()),
       new OutboxWriterService(),
+      {
+        project: (documentJson, actorId) =>
+          Promise.resolve({
+            documentJson,
+            gates: deniedDocuments.has(actorId)
+              ? [
+                  {
+                    gateId: 'fixture',
+                    allowed: false,
+                    bypassed: false,
+                    unmet: [],
+                    notice: '',
+                  },
+                ]
+              : [],
+          }),
+      },
     );
   }, 60000);
 
@@ -119,6 +141,105 @@ describe('Research Lab commands (e2e)', () => {
     const stored = await service.ownDraft(author, created.pageId);
     expect(stored?.version).toBe(2);
   });
+
+  it('checks current audience before reading, saving or submitting a private draft', async () => {
+    const actorId = await user(true);
+    const input = content('audience-' + randomUUID());
+    const { pageId, draftId } = await service.createDraft({
+      actorId,
+      ...input,
+    });
+    await fixture.prisma.researchPage.update({
+      where: { id: pageId },
+      data: {
+        visibility: 'GROUPS',
+        audienceGroups: { create: { groupKey: 'lab' } },
+      },
+    });
+    memberships.set(actorId, ['group:lab']);
+    expect(await service.ownDraft(actorId, pageId)).toMatchObject({
+      id: draftId,
+    });
+    memberships.set(actorId, ['role:lab', 'lab']);
+    expect(await service.ownDraft(actorId, pageId)).toBeNull();
+    await expect(
+      service.saveDraft({ actorId, pageId, expectedVersion: 1, ...input }),
+    ).rejects.toMatchObject({ code: 'DRAFT_CONFLICT' });
+    await expect(
+      service.submitDraft({
+        actorId,
+        pageId,
+        expectedVersion: 1,
+        editSummary: 'Review',
+        policySnapshotHash: 'policy',
+        correlationId: randomUUID(),
+      }),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    expect(
+      await fixture.prisma.researchDraft.findUniqueOrThrow({
+        where: { id: draftId },
+      }),
+    ).toMatchObject({ version: 1 });
+    expect(
+      await fixture.prisma.researchRevision.count({ where: { pageId } }),
+    ).toBe(0);
+  });
+  it.each(['submitDraft', 'selfPublishDraft'] as const)(
+    '%s preserves an autosave committed after its draft read',
+    async (operation) => {
+      const actorId = await user(operation === 'selfPublishDraft');
+      const { pageId, draftId } = await service.createDraft({
+        actorId,
+        ...content('race-' + randomUUID()),
+      });
+      let result: Promise<void> | undefined;
+      await fixture.prisma.$transaction(async (tx) => {
+        await tx.researchDraft.update({
+          where: { id: draftId },
+          data: { version: { increment: 1 }, title: 'Concurrent autosave' },
+        });
+        result = expect(
+          service[operation]({
+            actorId,
+            pageId,
+            expectedVersion: 1,
+            editSummary: 'Submission',
+            policySnapshotHash: 'policy-v1',
+            correlationId: randomUUID(),
+          }),
+        ).rejects.toMatchObject({ code: 'DRAFT_CONFLICT' });
+        // Release the autosave only once PostgreSQL confirms the conflicting write.
+        const [blocker] = await tx.$queryRaw<
+          { pid: number }[]
+        >`SELECT pg_backend_pid() AS pid`;
+        for (;;) {
+          const [row] = await fixture.prisma.$queryRaw<{ waiting: boolean }[]>`
+            SELECT EXISTS (SELECT 1 FROM pg_stat_activity
+              WHERE ${blocker.pid}::int = ANY(pg_blocking_pids(pid))
+              AND query ILIKE '%DELETE%research_drafts%') AS waiting`;
+          if (row.waiting) break;
+        }
+      });
+      await result;
+      expect(await service.ownDraft(actorId, pageId)).toMatchObject({
+        version: 2,
+        title: 'Concurrent autosave',
+      });
+      expect(
+        await fixture.prisma.researchRevision.count({ where: { pageId } }),
+      ).toBe(0);
+      expect(
+        await fixture.prisma.researchReviewDecision.count({
+          where: { pageId },
+        }),
+      ).toBe(0);
+      expect(
+        await fixture.prisma.researchPage.findUniqueOrThrow({
+          where: { id: pageId },
+        }),
+      ).toMatchObject({ publishedRevisionId: null, publicationGeneration: 0 });
+    },
+  );
 
   it('freezes a submission and serializes concurrent Guardian decisions', async () => {
     const author = await user();
@@ -236,11 +357,187 @@ describe('Research Lab commands (e2e)', () => {
     ).resolves.toMatchObject({ state: 'CHANGES_REQUESTED' });
   });
 
+  it('preserves the removal reason and published pointer when rollback follows a tombstone', async () => {
+    const actorId = await user(true);
+    const { pageId } = await service.createDraft({
+      actorId,
+      ...content('rollback-' + randomUUID()),
+    });
+    const command = {
+      actorId,
+      pageId,
+      policySnapshotHash: 'policy-v1',
+      correlationId: randomUUID(),
+    };
+    const { revisionId } = await service.selfPublishDraft({
+      ...command,
+      expectedVersion: 1,
+      editSummary: 'Initial publication',
+    });
+    await expect(
+      service.tombstone({
+        ...command,
+        expectedPublicationGeneration: 1,
+        reason: 'Removed by reviewer',
+      }),
+    ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+    const moderator = await user();
+    moderators.add(moderator);
+    await service.tombstone({
+      ...command,
+      actorId: moderator,
+      expectedPublicationGeneration: 1,
+      reason: 'Removed by reviewer',
+    });
+    const removed = await fixture.prisma.researchPage.findUniqueOrThrow({
+      where: { id: pageId },
+    });
+    await expect(
+      service.rollback({
+        ...command,
+        revisionId,
+        expectedPublicationGeneration: removed.publicationGeneration,
+      }),
+    ).rejects.toMatchObject({ code: 'INVALID_STATE' });
+    expect(
+      await fixture.prisma.researchPage.findUniqueOrThrow({
+        where: { id: pageId },
+      }),
+    ).toEqual(removed);
+    expect(
+      await fixture.prisma.auditRecord.findFirstOrThrow({
+        where: { targetId: pageId, action: 'research_lab.page_tombstoned' },
+      }),
+    ).toMatchObject({
+      actorId: moderator,
+      reason: 'Removed by reviewer',
+      correlationId: command.correlationId,
+    });
+    const event = await fixture.prisma.outboxEvent.findFirstOrThrow({
+      where: {
+        aggregateId: pageId,
+        eventName: 'research-lab.page.tombstoned.v1',
+      },
+    });
+    expect(event.payload).toEqual({ pageId, publicationGeneration: 1 });
+    expect(removed).toMatchObject({
+      state: 'TOMBSTONED',
+      publishedRevisionId: revisionId,
+      tombstonedById: moderator,
+      tombstoneReason: 'Removed by reviewer',
+    });
+    expect(
+      await fixture.prisma.researchRevision.count({ where: { pageId } }),
+    ).toBe(1);
+  });
+
   it('fails closed when Guardian authority is revoked before a read', async () => {
     const guardian = await user(true);
     guardians.delete(guardian);
     await expect(service.reviewQueue(guardian)).rejects.toMatchObject({
       code: 'ACCESS_DENIED',
     });
+  });
+  it('preserves direct aliases across slug changes and serializes competing claims', async () => {
+    const actorId = await user(true);
+    const first = 'first-' + randomUUID(),
+      other = 'other-' + randomUUID(),
+      shared = 'shared-' + randomUUID();
+    const publish = async (slug: string) => {
+      const { pageId } = await service.createDraft({
+        actorId,
+        ...content(slug),
+      });
+      await service.selfPublishDraft({
+        actorId,
+        pageId,
+        expectedVersion: 1,
+        editSummary: 'Initial',
+        policySnapshotHash: 'policy',
+        correlationId: randomUUID(),
+      });
+      return pageId;
+    };
+    const rename = async (pageId: string, slug: string) => {
+      const draft = await service.startDraft(actorId, pageId);
+      const saved = await service.saveDraft({
+        actorId,
+        pageId,
+        expectedVersion: draft.version,
+        ...content(slug),
+      });
+      return service.selfPublishDraft({
+        actorId,
+        pageId,
+        expectedVersion: saved.version,
+        editSummary: 'Rename',
+        policySnapshotHash: 'policy',
+        correlationId: randomUUID(),
+      });
+    };
+    const ids = await Promise.all([publish(first), publish(other)]);
+    const result = await Promise.allSettled(
+      ids.map((id) => rename(id, shared)),
+    );
+    expect(result.filter((row) => row.status === 'fulfilled')).toHaveLength(1);
+    expect(result.find((row) => row.status === 'rejected')).toMatchObject({
+      reason: { code: 'REVISION_CONFLICT' },
+    });
+    const winner = result.findIndex((row) => row.status === 'fulfilled');
+    const original = [first, other][winner],
+      pageId = ids[winner];
+    expect(
+      await fixture.prisma.researchSlugAlias.findUniqueOrThrow({
+        where: { language_slug: { language: 'uk', slug: original } },
+      }),
+    ).toMatchObject({ pageId });
+    await expect(
+      service.createDraft({ actorId, ...content(original) }),
+    ).rejects.toMatchObject({ code: 'REVISION_CONFLICT' });
+    await rename(pageId, original);
+    expect(
+      await fixture.prisma.researchSlugAlias.findMany({
+        where: { pageId },
+        select: { slug: true },
+      }),
+    ).toEqual([{ slug: shared }]);
+    expect(
+      await fixture.prisma.researchPage.findUniqueOrThrow({
+        where: { id: pageId },
+      }),
+    ).toMatchObject({ slug: original, publicationGeneration: 3 });
+  });
+  it('rechecks block access on a previously created draft and preserves its contents after denial', async () => {
+    const actorId = await user(true);
+    const input = content('gated-' + randomUUID());
+    const { pageId, draftId } = await service.createDraft({
+      actorId,
+      ...input,
+    });
+    deniedDocuments.add(actorId);
+    await expect(service.ownDraft(actorId, pageId)).rejects.toMatchObject({
+      code: 'ACCESS_DENIED',
+    });
+    await expect(
+      service.saveDraft({ actorId, pageId, expectedVersion: 1, ...input }),
+    ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+    await expect(
+      service.selfPublishDraft({
+        actorId,
+        pageId,
+        expectedVersion: 1,
+        editSummary: 'Publish',
+        policySnapshotHash: 'policy',
+        correlationId: randomUUID(),
+      }),
+    ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+    expect(
+      await fixture.prisma.researchDraft.findUniqueOrThrow({
+        where: { id: draftId },
+      }),
+    ).toMatchObject({ document, version: 1 });
+    expect(
+      await fixture.prisma.researchRevision.count({ where: { pageId } }),
+    ).toBe(0);
   });
 });

@@ -17,6 +17,7 @@
 import type { ResearchViewerFacts } from '../domain/types/research-lab.type';
 
 export interface ResearchLabAuthorityDecisions {
+  canModerate(subjectId: string, at: Date): Promise<boolean>;
   viewerFacts(subjectId: string | null, at: Date): Promise<ResearchViewerFacts>;
 }
 

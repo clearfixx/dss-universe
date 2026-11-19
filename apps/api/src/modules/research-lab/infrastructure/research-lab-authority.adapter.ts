@@ -6,6 +6,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
   ACCESS_CAPABILITY_DECISIONS,
+  SUBJECT_ACCESS_READER,
+  Permission,
+  type SubjectAccessReader,
   type AccessCapabilityDecisions,
 } from '@api/core/authorization';
 import type { ResearchLabAuthorityDecisions } from '../contracts/research-lab-authority.contract';
@@ -16,7 +19,15 @@ export class ResearchLabAuthorityAdapter implements ResearchLabAuthorityDecision
   constructor(
     @Inject(ACCESS_CAPABILITY_DECISIONS)
     private readonly access: AccessCapabilityDecisions,
+    @Inject(SUBJECT_ACCESS_READER)
+    private readonly subjects: SubjectAccessReader,
   ) {}
+
+  async canModerate(subjectId: string, at: Date): Promise<boolean> {
+    if (!(await this.access.audience(subjectId, at))) return false;
+    const profile = await this.subjects.getAccessProfileByUserId(subjectId);
+    return profile.permissions.includes(Permission.ResearchLabModerate);
+  }
 
   async viewerFacts(
     subjectId: string | null,

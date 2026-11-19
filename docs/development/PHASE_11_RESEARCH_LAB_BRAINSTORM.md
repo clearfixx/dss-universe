@@ -189,8 +189,9 @@ author. They drive notifications only; they do not change page visibility.
 - `ACTIVE`: has a published revision and may be delivered to its audience.
 - `ARCHIVED`: published history remains addressable, but the page is excluded
   from normal navigation, recommendations and new edits unless restored.
-- `TOMBSTONED`: ordinary viewers receive a stable removal surface; owner sees
-  the content inline with a deleted marker and complete audit facts.
+- `TOMBSTONED`: Phase 11 hides the page from every viewer, including staff.
+  Revision and audit records are retained. Inline owner access with a deleted
+  marker is deferred to the canonical owner model in DEBT-047.
 
 ### Revision states
 
@@ -434,7 +435,7 @@ and no unauthorized draft/review disclosure.
 
 - atomic publication pointer/generation, redirects and immutable rollback;
 - viewer-safe page, history and diff queries;
-- archive/restore/tombstone and owner inline deleted marker;
+- archive/restore/tombstone with tombstoned pages inaccessible to all viewers;
 - Audit/Outbox and projection repair.
 
 Acceptance: concurrent publish/rollback tests, historical integrity, deletion

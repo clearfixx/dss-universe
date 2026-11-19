@@ -152,6 +152,11 @@ export const PERMISSIONS = {
     label: 'Use AI Editor assistance',
     description: 'Allows requesting human-confirmed AI Editor suggestions.',
   },
+  ResearchLabModerate: {
+    key: 'research-lab.moderate',
+    label: 'Moderate Research Lab',
+    description: 'Allows hiding Research Lab pages.',
+  },
   NewsReview: {
     key: 'news.review',
     label: 'Review News',

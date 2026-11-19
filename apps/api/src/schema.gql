@@ -836,6 +836,7 @@ input ModerationPageInput {
 type Mutation {
   abortMediaUpload(id: String!): MediaUploadSession!
   approveNews(input: NewsDecisionInput!): NewsEditorialTransition!
+  archiveResearchPage(input: ResearchLifecycleInput!): Boolean!
   awardAchievement(input: ManualAchievementAwardInput!): AchievementAward!
   beginViewerTwoFactorSetup: TwoFactorSetupModel!
   blockUser(userId: ID!): UserBlockResult!
@@ -850,6 +851,7 @@ type Mutation {
   createModerationAnnotation(input: CreateModerationAnnotationInput!): ModerationAnnotation!
   createNewsDraft(input: CreateNewsDraftInput!): NewsEditorialArticle!
   createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
+  createResearchDraft(input: ResearchDraftInput!): ResearchDraftReceipt!
   deactivateAccount(input: DeactivateAccountInput!): LogoutResultModel!
   disableViewerTwoFactor(input: DisableTwoFactorInput!): LogoutResultModel!
   discardCommentDraft(draftId: ID!): Boolean!
@@ -862,12 +864,14 @@ type Mutation {
   logout: LogoutResultModel!
   markActivityFeedVisited: ActivityFeedVisit!
   publishNews(input: PublishNewsInput!): NewsEditorialTransition!
+  publishResearchRevision(input: ResearchDecisionInput!): ResearchRevisionReceipt!
   reactivateAccount(input: LoginInput!): AuthPayloadModel!
   recordInteractionShare(input: RecordShareInput!): AudienceEngagement!
   recordInteractionView(input: RecordViewInput!): AudienceEngagement!
   refreshTokens(input: RefreshTokenInput!): AuthPayloadModel!
   register(input: RegisterInput!): AuthPayloadModel!
   rejectQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
+  rejectResearchRevision(input: ResearchDecisionInput!): ResearchRevisionReceipt!
   removeBookmark(interactionTargetId: ID!): BookmarkMutationPayload!
   removeComment(commentId: ID!, reason: String): Comment!
   removeNewsPin(articleId: ID!): RemoveNewsPinResult!
@@ -878,8 +882,10 @@ type Mutation {
   requestEmailVerification: LogoutResultModel!
   requestNewsChanges(input: NewsDecisionInput!): NewsEditorialTransition!
   requestPasswordRecovery(input: RequestPasswordRecoveryInput!): LogoutResultModel!
+  requestResearchChanges(input: ResearchDecisionInput!): ResearchRevisionReceipt!
   rescanQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
   resetPassword(input: ResetPasswordInput!): LogoutResultModel!
+  restoreResearchPage(input: ResearchLifecycleInput!): Boolean!
   retryFailedMedia(mediaId: ID!): MediaLibraryItem!
   reverseCommunityPoints(input: ReverseCommunityPointsInput!): CommunityPointEntry!
   reverseReputation(input: ReverseReputationInput!): ReputationEntry!
@@ -890,19 +896,25 @@ type Mutation {
   revokeOtherViewerSessions: RevokeSessionsResultModel!
   revokeViewerSession(sessionId: ID!): LogoutResultModel!
   rollbackAchievementSource(input: RollbackAchievementSourceInput!): [AchievementAward!]!
+  rollbackResearchPage(input: ResearchRollbackInput!): ResearchRevisionReceipt!
   runEditorAiCommand(input: RunEditorAiCommandInput!): EditorAiCommandResult!
   saveAchievement(input: SaveAchievementInput!): Achievement!
   saveAchievementRule(input: SaveAchievementRuleInput!): AchievementRule!
   saveBookmark(interactionTargetId: ID!): BookmarkMutationPayload!
   saveCommentDraft(input: SaveCommentDraftInput!): CommentDraft!
   saveNewsDraft(input: SaveNewsDraftInput!): NewsEditorialArticle!
+  saveResearchDraft(input: ResearchSaveDraftInput!): ResearchDraftReceipt!
   scheduleNews(input: ScheduleNewsInput!): NewsEditorialTransition!
   selectCustomTitle(grantId: ID!): UserTitleGrant!
+  selfPublishResearchDraft(input: ResearchSubmitInput!): ResearchRevisionReceipt!
   setNewsPin(input: SetNewsPinInput!): ManagedNewsPin!
   setReaction(input: SetReactionInput!): SetReactionPayload!
   setViewerAvatar(mediaId: ID!): Viewer!
   setViewerCover(mediaId: ID!): Viewer!
+  startResearchDraft(pageId: ID!): ResearchDraftReceipt!
   submitNewsForReview(articleId: ID!): NewsEditorialTransition!
+  submitResearchDraft(input: ResearchSubmitInput!): ResearchRevisionReceipt!
+  tombstoneResearchPage(input: ResearchLifecycleInput!): Boolean!
   unblockUser(userId: ID!): UserBlockResult!
   unfollowUser(userId: ID!): UserSocialGraphSummary!
   updateCommunityPointRule(input: UpdateCommunityPointRuleInput!): CommunityPointRule!
@@ -916,6 +928,7 @@ type Mutation {
   updateViewerProfile(input: UpdateViewerProfileInput!): Viewer!
   updateViewerSocialLinks(input: UpdateViewerSocialLinksInput!): [UserSocialLink!]!
   verifyEmail(input: VerifyEmailInput!): LogoutResultModel!
+  withdrawResearchRevision(input: ResearchDecisionInput!): ResearchRevisionReceipt!
 }
 
 enum NewsArticleStatus {
@@ -1339,7 +1352,14 @@ type Query {
   reactionSummary(interactionTargetId: ID!): ReactionSummary!
   reputationHistory(pagination: ReputationPageInput, userId: ID!): ReputationHistory!
   reputationPolicy: ReputationPolicy!
-  search(page: Int! = 1, pageSize: Int! = 20, term: String!): SearchPage!
+  researchPage(id: ID!): ResearchPublishedPage
+  researchPageByRoute(language: String!, slug: String!): ResearchPublishedPage
+  researchPageSeo(pageId: ID!): ResearchPublicIndexEntry
+  researchRelatedPages(limit: Int! = 10, pageId: ID!): [ResearchRelatedPage!]!
+  researchRevisionDiff(from: ID!, pageId: ID!, to: ID!): ResearchRevisionComparison
+  researchRevisionHistory(limit: Int! = 20, offset: Int! = 0, pageId: ID!): [ResearchHistoryEntry!]!
+  researchSitemap(after: ID, limit: Int! = 50): [ResearchPublicIndexEntry!]!
+  search(page: Int! = 1, pageSize: Int! = 20, source: SharedSearchSource! = NEWS, term: String!): SearchPage!
   user(id: ID!): User!
   userAchievementHistory(userId: ID!): [AchievementAward!]!
   userAchievements(userId: ID!): [AchievementAward!]!
@@ -1471,6 +1491,102 @@ input RequestPasswordRecoveryInput {
   email: String!
 }
 
+input ResearchDecisionInput {
+  pageId: ID!
+  reason: String
+  revisionId: ID!
+}
+
+input ResearchDraftInput {
+  documentJson: String!
+  proposedSlug: String!
+  summary: String!
+  title: String!
+}
+
+type ResearchDraftReceipt {
+  draftId: ID!
+  pageId: ID!
+  version: Int!
+}
+
+type ResearchHistoryEntry {
+  authorId: ID!
+  createdAt: DateTime!
+  editSummary: String!
+  id: ID!
+  number: Int!
+  state: String!
+}
+
+input ResearchLifecycleInput {
+  expectedPublicationGeneration: Int!
+  pageId: ID!
+  reason: String
+}
+
+type ResearchPublicIndexEntry {
+  description: String!
+  id: ID!
+  language: String!
+  slug: String!
+  title: String!
+  updatedAt: DateTime!
+}
+
+type ResearchPublishedPage {
+  documentJson: String!
+  generation: Int!
+  id: ID!
+  language: String!
+  revisionId: ID!
+  slug: String!
+  state: String!
+  summary: String!
+  title: String!
+}
+
+type ResearchRelatedPage {
+  id: ID!
+  language: String!
+  slug: String!
+  title: String!
+}
+
+type ResearchRevisionComparison {
+  fromDocumentJson: String!
+  toDocumentJson: String!
+}
+
+type ResearchRevisionReceipt {
+  number: Int!
+  pageId: ID!
+  revisionId: ID!
+  state: String!
+}
+
+input ResearchRollbackInput {
+  expectedPublicationGeneration: Int!
+  pageId: ID!
+  reason: String
+  revisionId: ID!
+}
+
+input ResearchSaveDraftInput {
+  documentJson: String!
+  expectedVersion: Int!
+  pageId: ID!
+  proposedSlug: String!
+  summary: String!
+  title: String!
+}
+
+input ResearchSubmitInput {
+  editSummary: String!
+  expectedVersion: Int!
+  pageId: ID!
+}
+
 input ResetPasswordInput {
   password: String!
   token: String!
@@ -1579,8 +1695,10 @@ type SearchCategoryCount {
 type SearchHit {
   excerpt: String!
   id: ID!
+  kind: String
   language: String!
   publishedAt: DateTime!
+  revisionId: ID
   slug: String!
   source: String!
   title: String!
@@ -1623,6 +1741,11 @@ enum ShareChannel {
 type ShareChannelCount {
   channel: ShareChannel!
   count: Int!
+}
+
+enum SharedSearchSource {
+  NEWS
+  RESEARCH_LAB
 }
 
 type ShortNews {

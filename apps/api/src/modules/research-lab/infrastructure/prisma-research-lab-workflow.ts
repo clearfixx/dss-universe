@@ -14,6 +14,7 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+import { researchAudience } from './research-audience';
 import { createHash, randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { Prisma, type ResearchRevision } from '@prisma/client';
@@ -24,6 +25,8 @@ import {
   EDITOR_DOCUMENT_NORMALIZER,
   type EditorDocumentNormalizer,
   type ValidatedEditorDocument,
+  EDITOR_DELIVERY_READER,
+  type EditorDeliveryReader,
 } from '@api/modules/editor';
 import {
   RESEARCH_LAB_AUTHORITY_DECISIONS,
@@ -36,6 +39,8 @@ import type {
   ResearchDraftResult,
   ResearchRevisionResult,
   ReviewResearchRevision,
+  ResearchPublicationCommand,
+  RollbackResearchPage,
   SaveResearchDraft,
   SubmitResearchDraft,
 } from '../application/research-lab.commands';
@@ -52,6 +57,8 @@ export class ResearchLabService {
     private readonly authority: ResearchLabAuthorityDecisions,
     private readonly audit: AuditWriterService,
     private readonly outbox: OutboxWriterService,
+    @Inject(EDITOR_DELIVERY_READER)
+    private readonly delivery: EditorDeliveryReader,
   ) {}
 
   async createDraft(
@@ -59,10 +66,14 @@ export class ResearchLabService {
   ): Promise<ResearchDraftResult> {
     await this.requireAuthenticated(command.actorId);
     const content = this.normalize(command);
+    await this.requireDocumentAccess(command.actorId, content.document);
     const pageId = randomUUID();
     const targetId = randomUUID();
     const draftId = randomUUID();
     return this.prisma.$transaction(async (tx) => {
+      const language = this.language(command.language);
+      const slug = this.slug(command.proposedSlug);
+      await this.reserveRoute(tx, pageId, language, slug);
       await tx.interactionTarget.create({
         data: {
           id: targetId,
@@ -78,8 +89,8 @@ export class ResearchLabService {
           interactionTargetId: targetId,
           creatorId: command.actorId,
           kind: command.kind ?? 'WIKI',
-          language: this.language(command.language),
-          slug: this.slug(command.proposedSlug),
+          language,
+          slug,
           protectionLevel: command.protectionLevel ?? 'OPEN',
           visibility: command.visibility ?? 'PUBLIC',
         },
@@ -102,14 +113,31 @@ export class ResearchLabService {
   }
 
   async saveDraft(command: SaveResearchDraft): Promise<ResearchDraftResult> {
-    await this.requireAuthenticated(command.actorId);
+    const facts = await this.requireAuthenticated(command.actorId);
     const content = this.normalize(command);
-    const updated = await this.prisma.researchDraft.updateManyAndReturn({
-      where: {
-        pageId: command.pageId,
-        authorId: command.actorId,
-        version: command.expectedVersion,
+    const where: Prisma.ResearchDraftWhereInput = {
+      pageId: command.pageId,
+      authorId: command.actorId,
+      version: command.expectedVersion,
+      page: {
+        state: { in: ['DRAFT', 'ACTIVE'] },
+        protectionLevel: facts.guardian ? { not: 'LOCKED' } : 'OPEN',
+        ...researchAudience(facts.groups, true),
       },
+    };
+    const stored = await this.prisma.researchDraft.findFirst({
+      where,
+      select: { id: true, document: true },
+    });
+    if (!stored)
+      throw new ResearchLabCommandError(
+        'DRAFT_CONFLICT',
+        'The Research Lab draft changed or is no longer available.',
+      );
+    await this.requireDocumentAccess(command.actorId, stored.document);
+    await this.requireDocumentAccess(command.actorId, content.document);
+    const updated = await this.prisma.researchDraft.updateManyAndReturn({
+      where: { ...where, id: stored.id },
       data: {
         ...this.draftData(command, content),
         version: { increment: 1 },
@@ -131,43 +159,58 @@ export class ResearchLabService {
   }
 
   async ownDraft(actorId: string, pageId: string) {
-    await this.requireAuthenticated(actorId);
-    return this.prisma.researchDraft.findUnique({
-      where: { pageId_authorId: { pageId, authorId: actorId } },
+    const facts = await this.requireAuthenticated(actorId);
+    const draft = await this.prisma.researchDraft.findFirst({
+      where: {
+        pageId,
+        authorId: actorId,
+        page: {
+          state: { in: ['DRAFT', 'ACTIVE'] },
+          ...researchAudience(facts.groups, true),
+        },
+      },
     });
+    if (draft) await this.requireDocumentAccess(actorId, draft.document);
+    return draft;
   }
 
   async startDraft(
     actorId: string,
     pageId: string,
   ): Promise<ResearchDraftResult> {
-    const facts = await this.authority.viewerFacts(actorId, new Date());
-    if (!facts.authenticated) {
-      throw new ResearchLabCommandError(
-        'ACCESS_DENIED',
-        'Authentication required.',
-      );
-    }
     return this.prisma.$transaction(async (tx) => {
       await this.lockPage(tx, pageId);
-      const existing = await tx.researchDraft.findUnique({
-        where: { pageId_authorId: { pageId, authorId: actorId } },
-        select: { id: true, version: true },
-      });
-      if (existing)
-        return { pageId, draftId: existing.id, version: existing.version };
-      const page = await tx.researchPage.findUnique({
-        where: { id: pageId },
+      const facts = await this.authority.viewerFacts(actorId, new Date());
+      if (!facts.authenticated) {
+        throw new ResearchLabCommandError(
+          'ACCESS_DENIED',
+          'Authentication required.',
+        );
+      }
+      const page = await tx.researchPage.findFirst({
+        where: {
+          id: pageId,
+          state: 'ACTIVE',
+          ...researchAudience(facts.groups, true),
+        },
         include: { publishedRevision: true },
       });
       if (!page || !page.publishedRevision) this.notFound('Published page');
+      this.assertPublishable(page);
       if (page.protectionLevel !== 'OPEN' && !facts.guardian) {
         throw new ResearchLabCommandError(
           'ACCESS_DENIED',
           'This Research Lab page requires Guardian edit authority.',
         );
       }
+      const existing = await tx.researchDraft.findUnique({
+        where: { pageId_authorId: { pageId, authorId: actorId } },
+        select: { id: true, version: true },
+      });
+      if (existing)
+        return { pageId, draftId: existing.id, version: existing.version };
       const revision = page.publishedRevision;
+      await this.requireDocumentAccess(actorId, revision.document);
       const draft = await tx.researchDraft.create({
         data: {
           pageId,
@@ -191,12 +234,21 @@ export class ResearchLabService {
   async submitDraft(
     command: SubmitResearchDraft,
   ): Promise<ResearchRevisionResult> {
-    await this.requireAuthenticated(command.actorId);
     return this.prisma.$transaction(async (tx) => {
       await this.lockPage(tx, command.pageId);
-      const page = await tx.researchPage.findUnique({
-        where: { id: command.pageId },
-        select: { id: true, publishedRevisionId: true },
+      const facts = await this.requireAuthenticated(command.actorId);
+      const page = await tx.researchPage.findFirst({
+        where: {
+          id: command.pageId,
+          protectionLevel: facts.guardian ? { not: 'LOCKED' } : 'OPEN',
+          ...researchAudience(facts.groups, true),
+        },
+        select: {
+          id: true,
+          state: true,
+          protectionLevel: true,
+          publishedRevisionId: true,
+        },
       });
       const draft = await tx.researchDraft.findUnique({
         where: {
@@ -207,6 +259,8 @@ export class ResearchLabService {
         },
       });
       if (!page || !draft) this.notFound('Draft');
+      await this.requireDocumentAccess(command.actorId, draft.document);
+      this.assertPublishable(page);
       if (
         draft.version !== command.expectedVersion ||
         draft.basePublishedRevisionId !== page.publishedRevisionId
@@ -244,17 +298,16 @@ export class ResearchLabService {
           revisionId: revision.id,
           actorId: command.actorId,
           action: 'SUBMITTED',
-          policySnapshotHash: this.required(
-            command.policySnapshotHash,
-            'Policy snapshot hash',
-          ),
+          policySnapshotHash:
+            command.policySnapshotHash ??
+            (await this.policySnapshotHash(tx, command.pageId)),
           auditCorrelationId: this.required(
             command.correlationId,
             'Correlation ID',
           ),
         },
       });
-      await tx.researchDraft.delete({ where: { id: draft.id } });
+      await this.consumeDraft(tx, draft.id, command.expectedVersion);
       await this.record(tx, command.actorId, page.id, 'revision.submitted', {
         revisionId: revision.id,
         number: revision.number,
@@ -278,14 +331,18 @@ export class ResearchLabService {
   async withdrawRevision(
     command: ReviewResearchRevision,
   ): Promise<ResearchRevisionResult> {
-    await this.requireAuthenticated(command.actorId);
     return this.prisma.$transaction(async (tx) => {
       await this.lockPage(tx, command.pageId);
+      const facts = await this.requireAuthenticated(command.actorId);
       const revision = await tx.researchRevision.findFirst({
         where: {
           id: command.revisionId,
           pageId: command.pageId,
           authorId: command.actorId,
+          page: {
+            state: { in: ['DRAFT', 'ACTIVE'] },
+            ...researchAudience(facts.groups, true),
+          },
         },
       });
       if (!revision) this.notFound('Revision');
@@ -296,16 +353,24 @@ export class ResearchLabService {
   async publishRevision(
     command: ReviewResearchRevision,
   ): Promise<ResearchRevisionResult> {
-    await this.requireGuardian(command.actorId);
     return this.prisma.$transaction(async (tx) => {
       await this.lockPage(tx, command.pageId);
-      const page = await tx.researchPage.findUnique({
-        where: { id: command.pageId },
+      const facts = await this.requireGuardian(command.actorId);
+      const page = await tx.researchPage.findFirst({
+        where: { id: command.pageId, ...researchAudience(facts.groups, true) },
       });
       const revision = await tx.researchRevision.findFirst({
         where: { id: command.revisionId, pageId: command.pageId },
       });
       if (!page || !revision) this.notFound('Revision');
+      this.assertPublishable(page);
+      if (revision.basePublishedRevisionId !== page.publishedRevisionId) {
+        throw new ResearchLabCommandError(
+          'REVISION_CONFLICT',
+          'The reviewed revision is based on a stale publication.',
+        );
+      }
+      await this.requireDocumentAccess(command.actorId, revision.document);
       this.assertTransition(revision.state, 'PUBLISHED');
       if (page.publishedRevisionId) {
         await tx.researchRevision.update({
@@ -322,7 +387,14 @@ export class ResearchLabService {
         where: { id: page.id },
         data: {
           state: 'ACTIVE',
-          slug: this.slug(revision.proposedSlug),
+          slug: await this.reserveRoute(
+            tx,
+            page.id,
+            page.language,
+            this.slug(revision.proposedSlug),
+            page.slug,
+            !!page.publishedRevisionId,
+          ),
           publishedRevisionId: revision.id,
           publicationGeneration: { increment: 1 },
           firstPublishedAt: page.firstPublishedAt ?? now,
@@ -341,11 +413,11 @@ export class ResearchLabService {
   async selfPublishDraft(
     command: SubmitResearchDraft,
   ): Promise<ResearchRevisionResult> {
-    await this.requireGuardian(command.actorId);
     return this.prisma.$transaction(async (tx) => {
       await this.lockPage(tx, command.pageId);
-      const page = await tx.researchPage.findUnique({
-        where: { id: command.pageId },
+      const facts = await this.requireGuardian(command.actorId);
+      const page = await tx.researchPage.findFirst({
+        where: { id: command.pageId, ...researchAudience(facts.groups, true) },
       });
       const draft = await tx.researchDraft.findUnique({
         where: {
@@ -356,6 +428,8 @@ export class ResearchLabService {
         },
       });
       if (!page || !draft) this.notFound('Draft');
+      await this.requireDocumentAccess(command.actorId, draft.document);
+      this.assertPublishable(page);
       if (
         draft.version !== command.expectedVersion ||
         draft.basePublishedRevisionId !== page.publishedRevisionId
@@ -399,10 +473,9 @@ export class ResearchLabService {
         pageId: page.id,
         revisionId: revision.id,
         actorId: command.actorId,
-        policySnapshotHash: this.required(
-          command.policySnapshotHash,
-          'Policy snapshot hash',
-        ),
+        policySnapshotHash:
+          command.policySnapshotHash ??
+          (await this.policySnapshotHash(tx, command.pageId)),
         auditCorrelationId: this.required(
           command.correlationId,
           'Correlation ID',
@@ -418,14 +491,21 @@ export class ResearchLabService {
         where: { id: page.id },
         data: {
           state: 'ACTIVE',
-          slug: this.slug(revision.proposedSlug),
+          slug: await this.reserveRoute(
+            tx,
+            page.id,
+            page.language,
+            this.slug(revision.proposedSlug),
+            page.slug,
+            !!page.publishedRevisionId,
+          ),
           publishedRevisionId: revision.id,
           publicationGeneration: { increment: 1 },
           firstPublishedAt: page.firstPublishedAt ?? now,
           lastPublishedAt: now,
         },
       });
-      await tx.researchDraft.delete({ where: { id: draft.id } });
+      await this.consumeDraft(tx, draft.id, command.expectedVersion);
       await this.record(
         tx,
         command.actorId,
@@ -441,10 +521,169 @@ export class ResearchLabService {
   }
 
   async reviewQueue(actorId: string) {
-    await this.requireGuardian(actorId);
+    const facts = await this.requireGuardian(actorId);
     return this.prisma.researchRevision.findMany({
-      where: { state: 'IN_REVIEW' },
+      where: {
+        state: 'IN_REVIEW',
+        page: {
+          state: { in: ['DRAFT', 'ACTIVE'] },
+          ...researchAudience(facts.groups, true),
+        },
+      },
+      select: { id: true, pageId: true, number: true, createdAt: true },
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+    });
+  }
+
+  async rollback(
+    command: RollbackResearchPage,
+  ): Promise<ResearchRevisionResult> {
+    return this.prisma.$transaction(async (tx) => {
+      await this.lockPage(tx, command.pageId);
+      const facts = await this.requireGuardian(command.actorId);
+      const page = await tx.researchPage.findFirst({
+        where: { id: command.pageId, ...researchAudience(facts.groups, true) },
+      });
+      const source = await tx.researchRevision.findFirst({
+        where: {
+          id: command.revisionId,
+          pageId: command.pageId,
+          state: { in: ['PUBLISHED', 'SUPERSEDED'] },
+        },
+      });
+      if (!page || !source || !page.publishedRevisionId) {
+        this.notFound('Published revision');
+      }
+      if (page.state !== 'ACTIVE' || page.protectionLevel === 'LOCKED') {
+        throw new ResearchLabCommandError(
+          'INVALID_STATE',
+          'Rollback requires an active, unlocked Research Lab page.',
+        );
+      }
+      await this.requireDocumentAccess(command.actorId, source.document);
+      this.assertGeneration(
+        page.publicationGeneration,
+        command.expectedPublicationGeneration,
+      );
+      const latest = await tx.researchRevision.aggregate({
+        where: { pageId: page.id },
+        _max: { number: true },
+      });
+      const revision = await tx.researchRevision.create({
+        data: {
+          pageId: page.id,
+          number: (latest._max.number ?? 0) + 1,
+          authorId: command.actorId,
+          state: 'PUBLISHED',
+          basePublishedRevisionId: page.publishedRevisionId,
+          rollbackFromRevisionId: source.id,
+          title: source.title,
+          summary: source.summary,
+          proposedSlug: page.slug,
+          document: source.document as Prisma.InputJsonValue,
+          plainText: source.plainText,
+          searchText: source.searchText,
+          metadata: source.metadata as Prisma.InputJsonValue,
+          coverMediaId: source.coverMediaId,
+          editSummary: this.required(
+            command.reason ?? 'Rollback',
+            'Rollback reason',
+          ),
+          contentHash: source.contentHash,
+        },
+      });
+      await tx.researchRevision.update({
+        where: { id: page.publishedRevisionId },
+        data: { state: 'SUPERSEDED' },
+      });
+      await tx.researchPage.update({
+        where: { id: page.id },
+        data: {
+          state: 'ACTIVE',
+          publishedRevisionId: revision.id,
+          publicationGeneration: { increment: 1 },
+          lastPublishedAt: new Date(),
+          archivedAt: null,
+          tombstonedAt: null,
+          tombstonedById: null,
+          tombstoneReason: null,
+        },
+      });
+      await tx.interactionTarget.update({
+        where: { id: page.interactionTargetId },
+        data: { status: 'ACTIVE' },
+      });
+      await this.appendLifecycleDecision(
+        tx,
+        command,
+        revision.id,
+        'ROLLED_BACK',
+      );
+      await this.record(tx, command.actorId, page.id, 'revision.rolled_back', {
+        revisionId: revision.id,
+        rollbackFromRevisionId: source.id,
+        publicationGeneration: page.publicationGeneration + 1,
+      });
+      return this.revisionResult(revision);
+    });
+  }
+
+  async archive(command: ResearchPublicationCommand): Promise<void> {
+    await this.changePageState(command, 'ARCHIVED');
+  }
+
+  async restore(command: ResearchPublicationCommand): Promise<void> {
+    await this.changePageState(command, 'ACTIVE');
+  }
+
+  async tombstone(command: ResearchPublicationCommand): Promise<void> {
+    const reason = this.required(command.reason ?? '', 'Tombstone reason');
+    await this.prisma.$transaction(async (tx) => {
+      await this.lockPage(tx, command.pageId);
+      if (!(await this.authority.canModerate(command.actorId, new Date()))) {
+        throw new ResearchLabCommandError(
+          'ACCESS_DENIED',
+          'Research Lab moderation permission required.',
+        );
+      }
+      const page = await tx.researchPage.findUnique({
+        where: { id: command.pageId },
+      });
+      if (!page || !page.publishedRevisionId) this.notFound('Published page');
+      this.assertGeneration(
+        page.publicationGeneration,
+        command.expectedPublicationGeneration,
+      );
+      if (page.state === 'TOMBSTONED') {
+        throw new ResearchLabCommandError(
+          'REVISION_CONFLICT',
+          'Research Lab page is already tombstoned.',
+        );
+      }
+      await tx.researchPage.update({
+        where: { id: page.id },
+        data: {
+          state: 'TOMBSTONED',
+          tombstonedAt: new Date(),
+          tombstonedById: command.actorId,
+          tombstoneReason: reason,
+        },
+      });
+      await tx.interactionTarget.update({
+        where: { id: page.interactionTargetId },
+        data: { status: 'RETIRED' },
+      });
+      await this.record(
+        tx,
+        command.actorId,
+        page.id,
+        'page.tombstoned',
+        { publicationGeneration: page.publicationGeneration },
+        {
+          reason,
+          correlationId: this.required(command.correlationId, 'Correlation ID'),
+        },
+      );
     });
   }
 
@@ -452,11 +691,18 @@ export class ResearchLabService {
     command: ReviewResearchRevision,
     state: 'CHANGES_REQUESTED' | 'REJECTED',
   ): Promise<ResearchRevisionResult> {
-    await this.requireGuardian(command.actorId);
     return this.prisma.$transaction(async (tx) => {
       await this.lockPage(tx, command.pageId);
+      const facts = await this.requireGuardian(command.actorId);
       const revision = await tx.researchRevision.findFirst({
-        where: { id: command.revisionId, pageId: command.pageId },
+        where: {
+          id: command.revisionId,
+          pageId: command.pageId,
+          page: {
+            state: { in: ['DRAFT', 'ACTIVE'] },
+            ...researchAudience(facts.groups, true),
+          },
+        },
       });
       if (!revision) this.notFound('Revision');
       return this.transition(tx, command, revision, state);
@@ -497,7 +743,8 @@ export class ResearchLabService {
       command.actorId,
       revision.pageId,
       'revision.' + state.toLowerCase(),
-      { revisionId: revision.id, reason: command.reason ?? null },
+      { revisionId: revision.id },
+      { reason: command.reason, correlationId: command.correlationId },
     );
     return this.revisionResult(updated);
   }
@@ -514,10 +761,9 @@ export class ResearchLabService {
         actorId: command.actorId,
         action,
         reason: command.reason?.trim() || null,
-        policySnapshotHash: this.required(
-          command.policySnapshotHash,
-          'Policy snapshot hash',
-        ),
+        policySnapshotHash:
+          command.policySnapshotHash ??
+          (await this.policySnapshotHash(tx, command.pageId)),
         auditCorrelationId: this.required(
           command.correlationId,
           'Correlation ID',
@@ -526,6 +772,175 @@ export class ResearchLabService {
     });
   }
 
+  private async appendLifecycleDecision(
+    tx: TransactionClient,
+    command: ResearchPublicationCommand,
+    revisionId: string,
+    action: 'ROLLED_BACK' | 'RESTORED',
+  ): Promise<void> {
+    await tx.researchReviewDecision.create({
+      data: {
+        pageId: command.pageId,
+        revisionId,
+        actorId: command.actorId,
+        action,
+        reason: command.reason?.trim() || null,
+        policySnapshotHash:
+          command.policySnapshotHash ??
+          (await this.policySnapshotHash(tx, command.pageId)),
+        auditCorrelationId: this.required(
+          command.correlationId,
+          'Correlation ID',
+        ),
+      },
+    });
+  }
+
+  private async changePageState(
+    command: ResearchPublicationCommand,
+    state: 'ARCHIVED' | 'ACTIVE',
+  ): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      await this.lockPage(tx, command.pageId);
+      const facts = await this.requireGuardian(command.actorId);
+      const page = await tx.researchPage.findFirst({
+        where: { id: command.pageId, ...researchAudience(facts.groups, true) },
+      });
+      if (!page || !page.publishedRevisionId) this.notFound('Published page');
+      this.assertGeneration(
+        page.publicationGeneration,
+        command.expectedPublicationGeneration,
+      );
+      const expected = state === 'ARCHIVED' ? 'ACTIVE' : 'ARCHIVED';
+      if (page.state !== expected) {
+        throw new ResearchLabCommandError(
+          'REVISION_CONFLICT',
+          `Research Lab page cannot transition from ${page.state} to ${state}.`,
+        );
+      }
+      await tx.researchPage.update({
+        where: { id: page.id },
+        data: {
+          state,
+          archivedAt: state === 'ARCHIVED' ? new Date() : null,
+        },
+      });
+      await tx.interactionTarget.update({
+        where: { id: page.interactionTargetId },
+        data: { status: state === 'ARCHIVED' ? 'LOCKED' : 'ACTIVE' },
+      });
+      if (state === 'ACTIVE') {
+        await this.appendLifecycleDecision(
+          tx,
+          command,
+          page.publishedRevisionId,
+          'RESTORED',
+        );
+      }
+      await this.record(
+        tx,
+        command.actorId,
+        page.id,
+        state === 'ARCHIVED' ? 'page.archived' : 'page.restored',
+        { publicationGeneration: page.publicationGeneration },
+      );
+    });
+  }
+
+  private assertPublishable(page: {
+    state: string;
+    protectionLevel: string;
+  }): void {
+    if (
+      page.state === 'ARCHIVED' ||
+      page.state === 'TOMBSTONED' ||
+      page.protectionLevel === 'LOCKED'
+    ) {
+      throw new ResearchLabCommandError(
+        'INVALID_STATE',
+        'This Research Lab page is closed to publication.',
+      );
+    }
+  }
+
+  private assertGeneration(current: number, expected: number): void {
+    if (current !== expected) {
+      throw new ResearchLabCommandError(
+        'REVISION_CONFLICT',
+        `Research Lab publication generation changed from ${expected} to ${current}.`,
+      );
+    }
+  }
+
+  private async consumeDraft(
+    tx: TransactionClient,
+    id: string,
+    version: number,
+  ): Promise<void> {
+    const removed = await tx.researchDraft.deleteMany({
+      where: { id, version },
+    });
+    if (removed.count !== 1) {
+      throw new ResearchLabCommandError(
+        'DRAFT_CONFLICT',
+        'Draft changed during submission.',
+      );
+    }
+  }
+
+  private async reserveRoute(
+    tx: TransactionClient,
+    pageId: string,
+    language: string,
+    slug: string,
+    previous?: string,
+    published = false,
+  ): Promise<string> {
+    if (previous === slug) return slug;
+    const routes = Array.from(
+      new Set(previous ? [previous, slug] : [slug]),
+    ).sort();
+    for (const route of routes) {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'research-lab:route:' + language + ':' + route},0))`;
+    }
+    const alias = await tx.researchSlugAlias.findUnique({
+      where: { language_slug: { language, slug } },
+      select: { id: true, pageId: true },
+    });
+    const canonical = await tx.researchPage.findUnique({
+      where: { language_slug: { language, slug } },
+      select: { id: true },
+    });
+    if (
+      (alias && alias.pageId !== pageId) ||
+      (canonical && canonical.id !== pageId)
+    ) {
+      throw new ResearchLabCommandError(
+        'REVISION_CONFLICT',
+        'This Research Lab route is already reserved.',
+      );
+    }
+    if (alias) await tx.researchSlugAlias.delete({ where: { id: alias.id } });
+    if (previous && published)
+      await tx.researchSlugAlias.create({
+        data: { pageId, language, slug: previous },
+      });
+    return slug;
+  }
+  private async policySnapshotHash(tx: TransactionClient, pageId: string) {
+    const policy = await tx.researchPage.findUniqueOrThrow({
+      where: { id: pageId },
+      select: {
+        visibility: true,
+        protectionLevel: true,
+        audienceGroups: {
+          orderBy: { groupKey: 'asc' },
+          select: { groupKey: true },
+        },
+      },
+    });
+    return createHash('sha256').update(JSON.stringify(policy)).digest('hex');
+  }
   private async lockPage(tx: TransactionClient, pageId: string): Promise<void> {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'research-lab:page:' + pageId}, 0))`;
   }
@@ -547,7 +962,7 @@ export class ResearchLabService {
     }
   }
 
-  private async requireAuthenticated(actorId: string): Promise<void> {
+  private async requireAuthenticated(actorId: string) {
     const facts = await this.authority.viewerFacts(actorId, new Date());
     if (!facts.authenticated) {
       throw new ResearchLabCommandError(
@@ -555,9 +970,10 @@ export class ResearchLabService {
         'Authentication required.',
       );
     }
+    return facts;
   }
 
-  private async requireGuardian(actorId: string): Promise<void> {
+  private async requireGuardian(actorId: string) {
     const facts = await this.authority.viewerFacts(actorId, new Date());
     if (!facts.authenticated || !facts.guardian) {
       throw new ResearchLabCommandError(
@@ -565,8 +981,21 @@ export class ResearchLabService {
         'Research Lab Guardian authority required.',
       );
     }
+    return facts;
   }
 
+  private async requireDocumentAccess(
+    actorId: string,
+    document: unknown,
+  ): Promise<void> {
+    const view = await this.delivery.project(JSON.stringify(document), actorId);
+    if (view.gates.some((gate) => !gate.allowed)) {
+      throw new ResearchLabCommandError(
+        'ACCESS_DENIED',
+        'Full document access is required to edit this revision.',
+      );
+    }
+  }
   private normalize(input: { documentJson: string }): ValidatedEditorDocument {
     return this.editor.normalizeWiki(input.documentJson);
   }
@@ -656,6 +1085,7 @@ export class ResearchLabService {
     pageId: string,
     action: string,
     metadata: Record<string, string | number | boolean | null>,
+    auditContext?: { reason?: string; correlationId: string },
   ): Promise<void> {
     await this.audit.append(tx, {
       action: 'research_lab.' + action.replaceAll('.', '_'),
@@ -663,6 +1093,7 @@ export class ResearchLabService {
       actorId,
       targetType: 'ResearchPage',
       targetId: pageId,
+      ...auditContext,
       metadata,
     });
     await this.outbox.append(

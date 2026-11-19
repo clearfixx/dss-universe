@@ -21,6 +21,8 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+import { ResearchLabModule } from '@api/modules/research-lab';
+import { ResearchInteractionBinding } from './research-interaction-binding';
 import { Module } from '@nestjs/common';
 import { InteractionsModule } from '@api/modules/interactions';
 import { NewsModule } from '@api/modules/news';
@@ -28,7 +30,7 @@ import { UsersModule } from '@api/modules/users';
 import { InteractionOwnerBindingsService } from './interaction-owner-bindings.service';
 
 @Module({
-  imports: [InteractionsModule, NewsModule, UsersModule],
-  providers: [InteractionOwnerBindingsService],
+  imports: [InteractionsModule, NewsModule, UsersModule, ResearchLabModule],
+  providers: [InteractionOwnerBindingsService, ResearchInteractionBinding],
 })
 export class InteractionPolicyCompositionModule {}
