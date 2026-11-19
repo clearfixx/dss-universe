@@ -21,14 +21,16 @@ describe('EditorDocumentNormalizerService', () => {
   const service = new EditorDocumentNormalizerService(
     new EditorService({} as EditorHtmlRenderer),
   );
-  it.each(['NEWS', 'COMMENT'] as const)(
+  it.each(['NEWS', 'COMMENT', 'WIKI'] as const)(
     'normalizes only its pinned %s profile',
     (profile) => {
       const document = createEmptyEditorDocument(profile);
       const normalize = (documentJson: string) =>
         profile === 'NEWS'
           ? service.normalizeNews(documentJson)
-          : service.normalizeComment(documentJson);
+          : profile === 'COMMENT'
+            ? service.normalizeComment(documentJson)
+            : service.normalizeWiki(documentJson);
       expect(normalize(JSON.stringify(document))).toEqual({
         document,
         canonicalJson: JSON.stringify(document),
