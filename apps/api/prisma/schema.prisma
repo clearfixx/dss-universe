@@ -249,6 +249,62 @@ enum NewsPinScope {
   CATEGORY
 }
 
+enum ResearchPageKind {
+  WIKI
+  MANUAL
+  RESEARCH
+  GUIDE
+  CASE_STUDY
+  NOTE
+  REPORT
+}
+
+enum ResearchPageState {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+  TOMBSTONED
+}
+
+enum ResearchRevisionState {
+  IN_REVIEW
+  CHANGES_REQUESTED
+  REJECTED
+  PUBLISHED
+  SUPERSEDED
+  WITHDRAWN
+}
+
+enum ResearchReviewAction {
+  SUBMITTED
+  CHANGES_REQUESTED
+  REJECTED
+  PUBLISHED
+  WITHDRAWN
+  ROLLED_BACK
+  RESTORED
+}
+
+enum ResearchProtectionLevel {
+  OPEN
+  TRUSTED
+  GUARDIAN_ONLY
+  LOCKED
+}
+
+enum ResearchVisibility {
+  PUBLIC
+  MEMBERS
+  GROUPS
+}
+
+enum ResearchInternalLinkType {
+  RELATED
+  CONTEXTUAL
+  PREREQUISITE
+  SEE_ALSO
+}
+
 model User {
   id                  String     @id @default(uuid())
   email               String     @unique
@@ -321,6 +377,11 @@ model User {
   newsSettingsUpdated     NewsSettings[]               @relation("NewsSettingsUpdater")
   newsLinksCreated        NewsInternalLink[]           @relation("NewsLinkCreator")
   newsPins                NewsPin[]                    @relation("NewsPinActor")
+  researchPagesCreated    ResearchPage[]               @relation("ResearchPageCreator")
+  researchPagesTombstoned ResearchPage[]               @relation("ResearchPageTombstoneActor")
+  researchDrafts          ResearchDraft[]
+  researchRevisions       ResearchRevision[]           @relation("ResearchRevisionAuthor")
+  researchReviewDecisions ResearchReviewDecision[]     @relation("ResearchReviewActor")
 
   refreshTokenHash String?
   emailVerifiedAt  DateTime?
@@ -441,6 +502,7 @@ model InteractionTarget {
   reports               ContentReport[]
   moderationAnnotations ModerationAnnotation[]
   newsArticle           NewsArticle?
+  researchPage          ResearchPage?
 
   @@unique([ownerType, ownerId])
   @@index([kind, status])
@@ -750,6 +812,335 @@ model NewsEditorialDecision {
   @@index([articleId, createdAt, id])
   @@index([actorId, action, createdAt])
   @@map("news_editorial_decisions")
+}
+
+model ResearchPage {
+  id                    String                  @id @default(uuid())
+  interactionTargetId   String                  @unique
+  creatorId             String
+  kind                  ResearchPageKind        @default(WIKI)
+  state                 ResearchPageState       @default(DRAFT)
+  protectionLevel       ResearchProtectionLevel @default(OPEN)
+  visibility            ResearchVisibility      @default(PUBLIC)
+  language              String                  @default("uk")
+  slug                  String
+  publicationGeneration Int                     @default(0)
+  publishedRevisionId   String?
+  primaryCategoryId     String?
+  allowComments         Boolean                 @default(true)
+  allowRating           Boolean                 @default(true)
+  allowIndexing         Boolean                 @default(true)
+  featured              Boolean                 @default(false)
+  firstPublishedAt      DateTime?
+  lastPublishedAt       DateTime?
+  archivedAt            DateTime?
+  tombstonedAt          DateTime?
+  tombstonedById        String?
+  tombstoneReason       String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+
+  interactionTarget InteractionTarget           @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
+  creator           User                        @relation("ResearchPageCreator", fields: [creatorId], references: [id], onDelete: Restrict)
+  publishedRevision ResearchRevision?           @relation("ResearchPublishedRevision", fields: [publishedRevisionId, id], references: [id, pageId], onDelete: Restrict)
+  primaryCategory   ResearchCategory?           @relation("ResearchPrimaryCategory", fields: [primaryCategoryId], references: [id], onDelete: Restrict)
+  tombstonedBy      User?                       @relation("ResearchPageTombstoneActor", fields: [tombstonedById], references: [id], onDelete: Restrict)
+  revisions         ResearchRevision[]          @relation("ResearchPageRevisions")
+  drafts            ResearchDraft[]
+  reviewDecisions   ResearchReviewDecision[]
+  audienceGroups    ResearchPageAudienceGroup[]
+  categories        ResearchPageCategory[]
+  tags              ResearchPageTag[]
+  technologies      ResearchPageTechnology[]
+  manualChapters    ResearchManualChapter[]
+  collectionItems   ResearchCollectionItem[]
+  slugAliases       ResearchSlugAlias[]
+  outgoingLinks     ResearchInternalLink[]      @relation("ResearchOutgoingLinks")
+  incomingLinks     ResearchInternalLink[]      @relation("ResearchIncomingLinks")
+
+  @@unique([language, slug])
+  @@unique([publishedRevisionId, id])
+  @@index([state, lastPublishedAt, id])
+  @@index([creatorId, state, updatedAt])
+  @@index([kind, state, lastPublishedAt])
+  @@index([primaryCategoryId, state, lastPublishedAt])
+  @@map("research_pages")
+}
+
+model ResearchDraft {
+  id                      String   @id @default(uuid())
+  pageId                  String
+  authorId                String
+  basePublishedRevisionId String?
+  title                   String
+  summary                 String
+  proposedSlug            String
+  document                Json     @db.JsonB
+  plainText               String
+  searchText              String
+  metadata                Json     @default("{}") @db.JsonB
+  coverMediaId            String?
+  version                 Int      @default(1)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  page                  ResearchPage      @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  author                User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  basePublishedRevision ResearchRevision? @relation("ResearchDraftBaseRevision", fields: [basePublishedRevisionId, pageId], references: [id, pageId], onDelete: Restrict)
+
+  @@unique([pageId, authorId])
+  @@index([authorId, updatedAt, id])
+  @@index([pageId, updatedAt])
+  @@map("research_drafts")
+}
+
+model ResearchRevision {
+  id                      String                @id @default(uuid())
+  pageId                  String
+  number                  Int
+  authorId                String
+  state                   ResearchRevisionState @default(IN_REVIEW)
+  basePublishedRevisionId String?
+  rollbackFromRevisionId  String?
+  title                   String
+  summary                 String
+  proposedSlug            String
+  document                Json                  @db.JsonB
+  plainText               String
+  searchText              String
+  metadata                Json                  @default("{}") @db.JsonB
+  coverMediaId            String?
+  editSummary             String
+  contentHash             String
+  createdAt               DateTime              @default(now())
+
+  page                  ResearchPage             @relation("ResearchPageRevisions", fields: [pageId], references: [id], onDelete: Restrict)
+  author                User                     @relation("ResearchRevisionAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  basePublishedRevision ResearchRevision?        @relation("ResearchRevisionBase", fields: [basePublishedRevisionId, pageId], references: [id, pageId], onDelete: Restrict)
+  basedRevisions        ResearchRevision[]       @relation("ResearchRevisionBase")
+  rollbackFromRevision  ResearchRevision?        @relation("ResearchRevisionRollback", fields: [rollbackFromRevisionId, pageId], references: [id, pageId], onDelete: Restrict)
+  rollbackRevisions     ResearchRevision[]       @relation("ResearchRevisionRollback")
+  draftsBasedOn         ResearchDraft[]          @relation("ResearchDraftBaseRevision")
+  publishedByPage       ResearchPage?            @relation("ResearchPublishedRevision")
+  reviewDecisions       ResearchReviewDecision[]
+
+  @@unique([pageId, number])
+  @@unique([id, pageId])
+  @@index([pageId, state, createdAt, id])
+  @@index([authorId, createdAt, id])
+  @@index([basePublishedRevisionId])
+  @@index([rollbackFromRevisionId])
+  @@map("research_revisions")
+}
+
+model ResearchReviewDecision {
+  id                 String               @id @default(uuid())
+  pageId             String
+  revisionId         String
+  actorId            String
+  action             ResearchReviewAction
+  reason             String?
+  policySnapshotHash String
+  auditCorrelationId String
+  createdAt          DateTime             @default(now())
+
+  page     ResearchPage     @relation(fields: [pageId], references: [id], onDelete: Restrict)
+  revision ResearchRevision @relation(fields: [revisionId, pageId], references: [id, pageId], onDelete: Restrict)
+  actor    User             @relation("ResearchReviewActor", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([pageId, createdAt, id])
+  @@index([revisionId, createdAt, id])
+  @@index([actorId, action, createdAt])
+  @@map("research_review_decisions")
+}
+
+model ResearchPageAudienceGroup {
+  pageId   String
+  groupKey String
+
+  page ResearchPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@id([pageId, groupKey])
+  @@index([groupKey, pageId])
+  @@map("research_page_audience_groups")
+}
+
+model ResearchCategory {
+  id          String   @id @default(uuid())
+  parentId    String?
+  name        String
+  slug        String
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  parent       ResearchCategory?      @relation("ResearchCategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children     ResearchCategory[]     @relation("ResearchCategoryTree")
+  primaryPages ResearchPage[]         @relation("ResearchPrimaryCategory")
+  pages        ResearchPageCategory[]
+
+  @@unique([parentId, slug])
+  @@index([parentId, isActive, sortOrder, id])
+  @@map("research_categories")
+}
+
+model ResearchPageCategory {
+  pageId     String
+  categoryId String
+  position   Int    @default(0)
+
+  page     ResearchPage     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  category ResearchCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@id([pageId, categoryId])
+  @@index([categoryId, position, pageId])
+  @@map("research_page_categories")
+}
+
+model ResearchTag {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pages ResearchPageTag[]
+
+  @@map("research_tags")
+}
+
+model ResearchPageTag {
+  pageId String
+  tagId  String
+
+  page ResearchPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  tag  ResearchTag  @relation(fields: [tagId], references: [id], onDelete: Restrict)
+
+  @@id([pageId, tagId])
+  @@index([tagId, pageId])
+  @@map("research_page_tags")
+}
+
+model ResearchTechnology {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  website     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  pages ResearchPageTechnology[]
+
+  @@map("research_technologies")
+}
+
+model ResearchPageTechnology {
+  pageId       String
+  technologyId String
+
+  page       ResearchPage       @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  technology ResearchTechnology @relation(fields: [technologyId], references: [id], onDelete: Restrict)
+
+  @@id([pageId, technologyId])
+  @@index([technologyId, pageId])
+  @@map("research_page_technologies")
+}
+
+model ResearchManual {
+  id          String   @id @default(uuid())
+  language    String   @default("uk")
+  slug        String
+  title       String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  chapters ResearchManualChapter[]
+
+  @@unique([language, slug])
+  @@index([isActive, title, id])
+  @@map("research_manuals")
+}
+
+model ResearchManualChapter {
+  manualId String
+  pageId   String
+  position Int
+
+  manual ResearchManual @relation(fields: [manualId], references: [id], onDelete: Cascade)
+  page   ResearchPage   @relation(fields: [pageId], references: [id], onDelete: Restrict)
+
+  @@id([manualId, pageId])
+  @@unique([manualId, position])
+  @@index([pageId, manualId])
+  @@map("research_manual_chapters")
+}
+
+model ResearchCollection {
+  id          String   @id @default(uuid())
+  language    String   @default("uk")
+  slug        String
+  title       String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items ResearchCollectionItem[]
+
+  @@unique([language, slug])
+  @@index([isActive, title, id])
+  @@map("research_collections")
+}
+
+model ResearchCollectionItem {
+  collectionId String
+  pageId       String
+  position     Int
+
+  collection ResearchCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  page       ResearchPage       @relation(fields: [pageId], references: [id], onDelete: Restrict)
+
+  @@id([collectionId, pageId])
+  @@unique([collectionId, position])
+  @@index([pageId, collectionId])
+  @@map("research_collection_items")
+}
+
+model ResearchSlugAlias {
+  id        String   @id @default(uuid())
+  pageId    String
+  language  String
+  slug      String
+  createdAt DateTime @default(now())
+
+  page ResearchPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@unique([language, slug])
+  @@index([pageId, createdAt])
+  @@map("research_slug_aliases")
+}
+
+model ResearchInternalLink {
+  id           String                   @id @default(uuid())
+  sourcePageId String
+  targetPageId String
+  type         ResearchInternalLinkType @default(RELATED)
+  anchorText   String
+  position     Int                      @default(0)
+  createdAt    DateTime                 @default(now())
+
+  sourcePage ResearchPage @relation("ResearchOutgoingLinks", fields: [sourcePageId], references: [id], onDelete: Cascade)
+  targetPage ResearchPage @relation("ResearchIncomingLinks", fields: [targetPageId], references: [id], onDelete: Restrict)
+
+  @@unique([sourcePageId, targetPageId, type])
+  @@index([sourcePageId, position, id])
+  @@index([targetPageId, type, id])
+  @@map("research_internal_links")
 }
 
 model Reaction {
@@ -1751,7 +2142,7 @@ model CommunityPointEntry {
   reversal CommunityPointEntry? @relation("CommunityPointReversal")
 
   qualification CommunityPointQualification?
-  activeCursor  CommunityPointSourceCursor? @relation("ActivePointQualification")
+  activeCursor  CommunityPointSourceCursor?  @relation("ActivePointQualification")
   facetReceipt  CommunityPointFacetReceipt?
 
   @@index([userId, occurredAt, id])
@@ -1804,7 +2195,7 @@ model CommunityPointSourceCursor {
   createdAt                   DateTime @default(now())
   updatedAt                   DateTime @default(now()) @updatedAt
 
-  activeEntry CommunityPointEntry? @relation("ActivePointQualification", fields: [activeEntryId], references: [id], onDelete: Restrict)
+  activeEntry CommunityPointEntry?       @relation("ActivePointQualification", fields: [activeEntryId], references: [id], onDelete: Restrict)
   facts       CommunityPointSourceFact[]
 
   @@unique([producer, sourceKind, sourceId])
@@ -1830,8 +2221,8 @@ model CommunityPointSourceFact {
   qualificationProjection     Json
   createdAt                   DateTime @default(now())
 
-  cursor         CommunityPointSourceCursor @relation(fields: [cursorId], references: [id], onDelete: Restrict)
-  qualifications CommunityPointQualification[]
+  cursor          CommunityPointSourceCursor    @relation(fields: [cursorId], references: [id], onDelete: Restrict)
+  qualifications  CommunityPointQualification[]
   controlReceipts CommunityPointFacetReceipt[]
 
   @@id([producer, factId])
@@ -1846,7 +2237,7 @@ model CommunityPointQualification {
   qualificationFactId String
   createdAt           DateTime @default(now())
 
-  entry CommunityPointEntry @relation(fields: [entryId], references: [id], onDelete: Restrict)
+  entry CommunityPointEntry      @relation(fields: [entryId], references: [id], onDelete: Restrict)
   fact  CommunityPointSourceFact @relation(fields: [producer, qualificationFactId], references: [producer, factId], onDelete: Restrict)
 
   @@unique([producer, qualificationFactId])
@@ -1861,13 +2252,13 @@ model CommunityPointFacetReceipt {
   recipientId         String
   disposition         String
   ruleKey             String?
-  contributionEntryId String? @unique
+  contributionEntryId String?  @unique
   sourceFactProducer  String?
   sourceFactId        String?
   createdAt           DateTime @default(now())
 
-  contributionEntry CommunityPointEntry? @relation(fields: [contributionEntryId], references: [id], onDelete: Restrict)
-  sourceFact CommunityPointSourceFact? @relation(fields: [sourceFactProducer, sourceFactId], references: [producer, factId], onDelete: Restrict)
+  contributionEntry CommunityPointEntry?      @relation(fields: [contributionEntryId], references: [id], onDelete: Restrict)
+  sourceFact        CommunityPointSourceFact? @relation(fields: [sourceFactProducer, sourceFactId], references: [producer, factId], onDelete: Restrict)
 
   @@id([eventId, facet])
   @@map("community_point_facet_receipts")
