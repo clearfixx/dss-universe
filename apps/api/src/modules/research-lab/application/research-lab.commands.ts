@@ -39,7 +39,7 @@ export type SubmitResearchDraft = Readonly<{
   pageId: string;
   expectedVersion: number;
   editSummary: string;
-  policySnapshotHash: string;
+  policySnapshotHash?: string;
   correlationId: string;
 }>;
 
@@ -48,9 +48,21 @@ export type ReviewResearchRevision = Readonly<{
   pageId: string;
   revisionId: string;
   reason?: string;
-  policySnapshotHash: string;
+  policySnapshotHash?: string;
   correlationId: string;
 }>;
+
+export type ResearchPublicationCommand = Readonly<{
+  actorId: string;
+  pageId: string;
+  expectedPublicationGeneration: number;
+  reason?: string;
+  policySnapshotHash?: string;
+  correlationId: string;
+}>;
+
+export type RollbackResearchPage = ResearchPublicationCommand &
+  Readonly<{ revisionId: string }>;
 
 export type ResearchDraftResult = Readonly<{
   pageId: string;

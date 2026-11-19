@@ -1,3 +1,7 @@
+import {
+  RESEARCH_SEARCH_SOURCE,
+  type ResearchSearchSource,
+} from '@api/modules/research-lab';
 import { BadRequestException, Inject, UseGuards } from '@nestjs/common';
 import {
   Args,
@@ -8,6 +12,7 @@ import {
   ObjectType,
   Query,
   Resolver,
+  registerEnumType,
 } from '@nestjs/graphql';
 import type { AuthenticatedUser } from '@api/core/auth';
 import { OptionalViewerJwtGuard } from '@api/core/auth/guards/optional-viewer-jwt.guard';
@@ -16,8 +21,15 @@ import {
   type NewsSearchSource,
 } from './news-search-source';
 
+enum SharedSearchSource {
+  NEWS = 'NEWS',
+  RESEARCH_LAB = 'RESEARCH_LAB',
+}
+registerEnumType(SharedSearchSource, { name: 'SharedSearchSource' });
 @ObjectType()
 class SearchHit {
+  @Field(() => ID, { nullable: true }) revisionId?: string;
+  @Field(() => String, { nullable: true }) kind?: string;
   @Field() source!: string;
   @Field(() => ID) id!: string;
   @Field() title!: string;
@@ -41,6 +53,8 @@ class SearchPage {
 @UseGuards(OptionalViewerJwtGuard)
 export class SharedSearchResolver {
   constructor(
+    @Inject(RESEARCH_SEARCH_SOURCE)
+    private readonly research: ResearchSearchSource,
     @Inject(NEWS_SEARCH_SOURCE) private readonly news: NewsSearchSource,
   ) {}
 
@@ -50,6 +64,11 @@ export class SharedSearchResolver {
     @Args('term') term: string,
     @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
     @Args('pageSize', { type: () => Int, defaultValue: 20 }) pageSize: number,
+    @Args('source', {
+      type: () => SharedSearchSource,
+      defaultValue: SharedSearchSource.NEWS,
+    })
+    source: SharedSearchSource,
   ): Promise<SearchPage> {
     if (
       !term.trim() ||
@@ -60,15 +79,19 @@ export class SharedSearchResolver {
     ) {
       throw new BadRequestException('Invalid search query.');
     }
-    const result = await this.news.searchArticles({
+    const query = {
       term,
       page,
       pageSize,
       viewerId: context.req.user?.id,
-    });
+    };
+    const result =
+      source === SharedSearchSource.RESEARCH_LAB
+        ? await this.research.search(query)
+        : await this.news.searchArticles(query);
     return {
       ...result,
-      items: result.items.map((item) => ({ ...item, source: 'NEWS' })),
+      items: result.items.map((item) => ({ ...item, source })),
     };
   }
 }

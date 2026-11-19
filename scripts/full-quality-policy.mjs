@@ -27,9 +27,9 @@ import { resolveWebSmokeEndpoint } from "./web-smoke-endpoint.mjs";
 export function createQualityEnvironment(source) {
   const env = policy.createFullTestEnvironment(source);
   const database = new URL(env.DATABASE_URL);
-  if (!["5434", "5435"].includes(database.port) || database.search) {
+  if (!["5434", "5435", "15434"].includes(database.port) || database.search) {
     throw new Error(
-      "Full quality requires disposable DB port 5434/5435 without URL options.",
+      "Full quality requires disposable DB port 5434/5435/15434 without URL options.",
     );
   }
   if (

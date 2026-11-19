@@ -11,6 +11,12 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+import { ResearchLabCommandResolver } from './research-lab-command.resolver';
+import { ResearchLabReadResolver } from './research-lab-read.resolver';
+import { ResearchLabDelivery } from './infrastructure/research-lab-delivery';
+import { RESEARCH_INTERACTION_DECISIONS } from './contracts/research-interaction-decisions';
+import { RESEARCH_SEARCH_SOURCE } from './contracts/research-search-source';
+import { ResearchLabSearch } from './infrastructure/research-lab-search';
 import { Module } from '@nestjs/common';
 import { AuthorizationModule } from '@api/core/authorization';
 import { EditorModule } from '@api/modules/editor';
@@ -21,6 +27,14 @@ import { ResearchLabAuthorityAdapter } from './infrastructure/research-lab-autho
 @Module({
   imports: [AuthorizationModule, EditorModule],
   providers: [
+    { provide: RESEARCH_SEARCH_SOURCE, useClass: ResearchLabSearch },
+    {
+      provide: RESEARCH_INTERACTION_DECISIONS,
+      useExisting: ResearchLabDelivery,
+    },
+    ResearchLabCommandResolver,
+    ResearchLabReadResolver,
+    ResearchLabDelivery,
     ResearchLabService,
     ResearchLabAuthorityAdapter,
     {
@@ -28,6 +42,10 @@ import { ResearchLabAuthorityAdapter } from './infrastructure/research-lab-autho
       useExisting: ResearchLabAuthorityAdapter,
     },
   ],
-  exports: [ResearchLabService],
+  exports: [
+    RESEARCH_SEARCH_SOURCE,
+    ResearchLabService,
+    RESEARCH_INTERACTION_DECISIONS,
+  ],
 })
 export class ResearchLabModule {}
