@@ -475,15 +475,13 @@ describe('Research Lab public delivery (GraphQL)', () => {
     expect(submitted.errors).toBeUndefined();
     const { revisionId, state } = submitted.data.submitResearchDraft;
     expect(state).toBe('IN_REVIEW');
-    expect(
+    const decision =
       await fixture.prisma.researchReviewDecision.findFirstOrThrow({
         where: { revisionId },
-      }),
-    ).toMatchObject({
-      actorId: member.user.id,
-      policySnapshotHash: expect.stringMatching(/^[a-f0-9]{64}$/),
-      auditCorrelationId: expect.any(String),
-    });
+      });
+    expect(decision.actorId).toBe(member.user.id);
+    expect(decision.policySnapshotHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(decision.auditCorrelationId).toMatch(/^[0-9a-f-]{36}$/);
     const denied = await send(
       'mutation($input:ResearchDecisionInput!){publishResearchRevision(input:$input){state}}',
       { pageId, revisionId },
