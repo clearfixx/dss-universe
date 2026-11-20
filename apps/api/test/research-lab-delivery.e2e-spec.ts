@@ -1,3 +1,7 @@
+import {
+  EDITOR_VIEWER_DOCUMENT_PROJECTOR,
+  type EditorViewerDocumentProjector,
+} from '../src/modules/editor';
 import { ResearchLabDelivery } from '../src/modules/research-lab/infrastructure/research-lab-delivery';
 import { AuthenticationPresentationService } from '../src/composition/identity/application/authentication-presentation.service';
 import { ResearchLabService } from '../src/modules/research-lab/infrastructure/prisma-research-lab-workflow';
@@ -460,6 +464,70 @@ describe('Research Lab public delivery (GraphQL)', () => {
     } finally {
       await client.end();
     }
+    // Publish a replacement for the last row after the first batch was read.
+    const last = rows.find((row) => row.id === visible.at(-1))!;
+    const projector = app.get<EditorViewerDocumentProjector>(
+      EDITOR_VIEWER_DOCUMENT_PROJECTOR,
+    );
+    const project = projector.project.bind(projector);
+    const intercept = jest
+      .spyOn(projector, 'project')
+      .mockImplementationOnce(async (...args) => {
+        await db.$transaction(async (tx) => {
+          const revision = await tx.researchRevision.create({
+            data: {
+              pageId: last.id,
+              number: 2,
+              authorId: author,
+              title: 'Replacement',
+              summary: '',
+              proposedSlug: 'cursor-' + last.id,
+              document,
+              plainText: '',
+              searchText: '',
+              editSummary: 'Replace title',
+              contentHash: 'b'.repeat(64),
+              state: 'PUBLISHED',
+            },
+          });
+          await tx.researchPage.update({
+            where: { id: last.id },
+            data: {
+              publishedRevisionId: revision.id,
+              publicationGeneration: { increment: 1 },
+              lastPublishedAt: new Date(),
+            },
+          });
+        });
+        return project(...args);
+      });
+    const lastPage = async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/graphql')
+        .send({
+          query:
+            'query($term:String!){search(source:RESEARCH_LAB,term:$term,page:2,pageSize:50){items{id} total categories{slug total}}}',
+          variables: { term },
+        })
+        .expect(200);
+      expect(payload(response).errors).toBeUndefined();
+      return payload(response).data.search;
+    };
+    try {
+      expect(await lastPage()).toEqual({
+        items: visible.slice(50).map((id) => ({ id })),
+        total: 66,
+        categories: [{ slug: category.slug, total: 66 }],
+      });
+      expect(intercept).toHaveBeenCalled();
+    } finally {
+      intercept.mockRestore();
+    }
+    expect(await lastPage()).toEqual({
+      items: visible.slice(50, -1).map((id) => ({ id })),
+      total: 65,
+      categories: [{ slug: category.slug, total: 65 }],
+    });
   });
   it('submits an authenticated Wiki draft with server-side decision evidence and requires Guardian for publication', async () => {
     const suffix = randomUUID();
