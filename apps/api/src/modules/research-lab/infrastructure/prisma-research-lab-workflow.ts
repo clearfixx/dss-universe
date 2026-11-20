@@ -271,6 +271,53 @@ export class ResearchLabService {
     };
   }
 
+  async discardDraft(
+    actorId: string,
+    pageId: string,
+    draftId: string,
+    expectedVersion: number,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      await this.lockPage(tx, pageId);
+      const scope = await this.ownDraftScope(actorId);
+      const removed = await tx.researchDraft.deleteMany({
+        where: { ...scope, pageId, id: draftId, version: expectedVersion },
+      });
+      if (removed.count !== 1) {
+        throw new ResearchLabCommandError(
+          'DRAFT_CONFLICT',
+          'Draft changed or is no longer available.',
+        );
+      }
+      const emptyPage = await tx.researchPage.findFirst({
+        where: {
+          id: pageId,
+          state: 'DRAFT',
+          publicationGeneration: 0,
+          firstPublishedAt: null,
+          publishedRevisionId: null,
+          revisions: { none: {} },
+          drafts: { none: {} },
+        },
+        select: { interactionTargetId: true, language: true, slug: true },
+      });
+      if (emptyPage) {
+        await this.lockRoute(tx, emptyPage.language, emptyPage.slug);
+        await tx.researchPage.delete({ where: { id: pageId } });
+        await tx.interactionTarget.update({
+          where: { id: emptyPage.interactionTargetId },
+          data: { status: 'RETIRED' },
+        });
+      }
+      await this.record(tx, actorId, pageId, 'draft.discarded', {
+        draftId,
+        version: expectedVersion,
+        routeReleased: !!emptyPage,
+      });
+      return { pageId, draftId, routeReleased: !!emptyPage };
+    });
+  }
+
   async ownDrafts(actorId: string, offset: number, limit: number) {
     return this.prisma.researchDraft.findMany({
       where: await this.ownDraftScope(actorId),
@@ -1048,6 +1095,14 @@ export class ResearchLabService {
     }
   }
 
+  private async lockRoute(
+    tx: TransactionClient,
+    language: string,
+    route: string,
+  ) {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'research-lab:route:' + language + ':' + route},0))`;
+  }
+
   private async reserveRoute(
     tx: TransactionClient,
     pageId: string,
@@ -1061,7 +1116,7 @@ export class ResearchLabService {
       new Set(previous ? [previous, slug] : [slug]),
     ).sort();
     for (const route of routes) {
-      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'research-lab:route:' + language + ':' + route},0))`;
+      await this.lockRoute(tx, language, route);
     }
     const alias = await tx.researchSlugAlias.findUnique({
       where: { language_slug: { language, slug } },
