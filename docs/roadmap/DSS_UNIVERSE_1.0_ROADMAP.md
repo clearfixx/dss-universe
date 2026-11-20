@@ -1303,6 +1303,11 @@ authorize a second publishing module or renumber later phases.
 
 Combine the structured organization of IPB/XenForo/vBulletin with selected Reddit-style voting and discovery.
 
+The owner decisions and ordered delivery contract are maintained in the
+[Phase 13 Community Hub brainstorm](../development/PHASE_13_COMMUNITY_HUB_BRAINSTORM.md).
+Where this section and the brainstorm differ, the brainstorm's owner decisions
+govern.
+
 ## Structure
 
 - categories;
@@ -1343,15 +1348,18 @@ Combine the structured organization of IPB/XenForo/vBulletin with selected Reddi
 - edit first post;
 - hide/delete replies with tombstones;
 - lock/unlock topic;
-- no general sanction, IAM or security capabilities;
+- verbal warnings inside the topic only; no read-only, ban, IAM or security
+  capabilities;
 - all actions audited.
 
 ## Definition of Done
 
 - approved list/topic mockups are implemented;
-- votes and reputation remain separate;
+- forum votes follow the owner-approved reputation rules; direct profile
+  reputation keeps its own reason-based rules;
 - curator scope cannot escape its topic;
-- moderation, Feed, Search, Notifications and Gamification work.
+- moderation, Feed, Search and Gamification work; Notifications emit events,
+  with delivery completed in Phase 15.
 
 ---
 
