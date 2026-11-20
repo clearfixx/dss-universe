@@ -22,28 +22,30 @@ Documentation has exactly five types. Each has one place and one lifetime.
 | Spec      | `docs/specs/`                             | owner decisions, behavior, boundaries, packages of a phase | until the phase ships; then archived |
 | Plan      | section of the spec or the PR description | scope and approach of one package                          | until the PR merges                  |
 | Reference | module `README.md`, `docs/architecture/`  | current contracts, invariants, ownership                   | updated in the same PR as the code   |
-| Status    | `docs/STATUS.md` (≤ 80 lines)             | current phase, open PRs, top risks                         | overwritten, never appended          |
+| Status    | `docs/STATUS.md` (≤ 80 lines)             | each active phase (parallel phases), open PRs, top risks   | overwritten, never appended          |
 
 Rules:
 
 1. Verification evidence (test counts, hashes, logs, timings) belongs in the PR
    description and CI, never in `docs/`.
-2. A decision that changes behavior, ownership or a boundary is an ADR, not a
-   paragraph in a plan.
+2. Long-lived cross-module or security decisions are ADRs. A behavior change
+   local to one module stays in its spec or reference; no document is created
+   only to satisfy CI.
 3. One debt is one GitHub issue labelled `debt`; designs live in the issue or,
    when large, in one spec section.
 4. Change an existing document before creating a new one.
 5. Every document starts with front matter:
    `type`, `owner`, `status` (`draft | accepted | superseded | archived`),
    `updated`, optional `supersedes`.
-6. Size guides: ADR ≤ 80 lines, Status ≤ 80, Spec ≤ 600; longer means split or cut.
+6. Size guides (warnings, not limits): ADR ≤ 80 lines, Status ≤ 80, Spec ≤ 600.
 7. History is git history. Archived documents move unchanged to `docs/archive/`.
 
-`pnpm docs:check` runs in CI and fails on: missing or invalid front matter,
-broken relative links, Status older than the last merged phase PR, size limits,
-and evidence patterns (for example `PASS 972/972`) in Spec or Reference. It
-warns when a PR changes a module's `index.ts` or `contracts/` without touching
-that module's `README.md`, and when Reference is older than 60 days.
+`pnpm docs:check` runs in CI over new and active documents; unchanged archived
+documents are excluded. It **fails** on missing or invalid front matter and
+broken relative links. It **warns** on size guides, Reference older than 60
+days, evidence patterns (for example `PASS 972/972`) in Spec or Reference, and
+a PR that changes a module's `index.ts` or `contracts/` without touching that
+module's `README.md`.
 
 `AGENTS.md` repeats rules 1–4 for every agent.
 
@@ -55,7 +57,9 @@ that module's `README.md`, and when Reference is older than 60 days.
    issue links.
 4. Add front matter to active documents; add `docs:check` to CI.
 
-Active Research Lab evidence moves only with its owner's agreement.
+Before an active spec is archived, its access, tombstone, revision-history and
+authority rules must have a live Reference source and regression tests. Active
+Research Lab material moves only with its owner's agreement.
 
 ## Consequences
 
@@ -69,3 +73,5 @@ Active Research Lab evidence moves only with its owner's agreement.
 - Keep the current practice: readers keep paying to separate stale from current.
 - Delete audits outright: loses context some open debts still reference.
 - Wiki outside the repository: drifts from code and loses review.
+- Hard size limits and blocking staleness: would create documents to satisfy
+  CI (review by Codex, 2026-11-21).
