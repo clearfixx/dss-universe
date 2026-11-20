@@ -35,6 +35,10 @@ import {
   GATE_REPUTATION_TOTAL,
   type GateReputationTotalReader,
 } from '../../domain/ports/gate-reputation-total.interface';
+import {
+  GATE_VIEWER_RESTRICTION,
+  type GateViewerRestrictionReader,
+} from '../../domain/ports/gate-viewer-restriction.interface';
 @Injectable()
 export class ContentGateViewerFactsService {
   constructor(
@@ -44,6 +48,8 @@ export class ContentGateViewerFactsService {
     private readonly comments: GateCommentCountReader,
     @Inject(GATE_REPUTATION_TOTAL)
     private readonly reputation: GateReputationTotalReader,
+    @Inject(GATE_VIEWER_RESTRICTION)
+    private readonly restriction: GateViewerRestrictionReader,
   ) {}
   async read(
     subjectId: string,
@@ -51,9 +57,10 @@ export class ContentGateViewerFactsService {
   ): Promise<Omit<ContentGateViewerFacts, 'groups'> | null> {
     const account = await this.accounts.find(subjectId);
     if (!account || !account.active) return null;
-    const [comments, reputation] = await Promise.all([
+    const [comments, reputation, readOnly] = await Promise.all([
       this.comments.countByAuthor(subjectId),
       this.reputation.totalFor(subjectId),
+      this.restriction.isReadOnly(subjectId, now),
     ]);
     return {
       accountAgeDays: Math.max(
@@ -65,6 +72,7 @@ export class ContentGateViewerFactsService {
       forumPosts: 0,
       publications: 0,
       reputation,
+      readOnly,
     };
   }
 }

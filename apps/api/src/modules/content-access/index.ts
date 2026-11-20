@@ -47,6 +47,10 @@ export {
   type GateReputationTotalReader,
 } from './domain/ports/gate-reputation-total.interface';
 export {
+  GATE_VIEWER_RESTRICTION,
+  type GateViewerRestrictionReader,
+} from './domain/ports/gate-viewer-restriction.interface';
+export {
   CONTENT_GATE_DECISIONS,
   type ContentGateDecisions,
   type ContentGateDecision,

@@ -142,6 +142,36 @@ export const PERMISSIONS = {
     label: 'Manage moderation annotations',
     description: 'Allows publishing and revoking moderation annotations.',
   },
+  ModerationSanctionsView: {
+    key: 'moderation.sanctions.view',
+    label: 'View sanction journals',
+    description: "Allows reading any user's private sanctions journal.",
+  },
+  ModerationWarningsIssue: {
+    key: 'moderation.warnings.issue',
+    label: 'Issue verbal warnings',
+    description: 'Allows issuing expiring verbal warnings.',
+  },
+  ModerationReadOnlyIssue: {
+    key: 'moderation.read-only.issue',
+    label: 'Issue read-only sanctions',
+    description: 'Allows issuing temporary read-only sanctions.',
+  },
+  ModerationSanctionsRevoke: {
+    key: 'moderation.sanctions.revoke',
+    label: 'Revoke sanctions',
+    description: 'Allows revoking active sanctions with a recorded reason.',
+  },
+  ModerationSanctionsStaff: {
+    key: 'moderation.sanctions.staff',
+    label: 'Sanction staff',
+    description: 'Allows sanctioning users who can issue sanctions themselves.',
+  },
+  ModerationPolicyManage: {
+    key: 'moderation.policy.manage',
+    label: 'Manage sanction policy',
+    description: 'Allows changing warning lifetime and escalation thresholds.',
+  },
   ContentGatesConfigure: {
     key: 'content-gates.configure',
     label: 'Configure Content Gates',
