@@ -211,6 +211,7 @@ export class ResearchLabService {
         return { pageId, draftId: existing.id, version: existing.version };
       const revision = page.publishedRevision;
       await this.requireDocumentAccess(actorId, revision.document);
+      const projection = await this.repairRevisionText(tx, revision);
       const draft = await tx.researchDraft.create({
         data: {
           pageId,
@@ -220,8 +221,8 @@ export class ResearchLabService {
           summary: revision.summary,
           proposedSlug: revision.proposedSlug,
           document: revision.document as Prisma.InputJsonValue,
-          plainText: revision.plainText,
-          searchText: revision.searchText,
+          plainText: projection.plainText,
+          searchText: projection.searchText,
           metadata: revision.metadata as Prisma.InputJsonValue,
           coverMediaId: revision.coverMediaId,
         },
@@ -561,6 +562,7 @@ export class ResearchLabService {
         );
       }
       await this.requireDocumentAccess(command.actorId, source.document);
+      const projection = await this.repairRevisionText(tx, source);
       this.assertGeneration(
         page.publicationGeneration,
         command.expectedPublicationGeneration,
@@ -581,8 +583,8 @@ export class ResearchLabService {
           summary: source.summary,
           proposedSlug: page.slug,
           document: source.document as Prisma.InputJsonValue,
-          plainText: source.plainText,
-          searchText: source.searchText,
+          plainText: projection.plainText,
+          searchText: projection.searchText,
           metadata: source.metadata as Prisma.InputJsonValue,
           coverMediaId: source.coverMediaId,
           editSummary: this.required(
@@ -940,6 +942,30 @@ export class ResearchLabService {
       },
     });
     return createHash('sha256').update(JSON.stringify(policy)).digest('hex');
+  }
+  private async repairRevisionText(
+    tx: TransactionClient,
+    revision: ResearchRevision,
+  ) {
+    if (this.contentHash(revision.document) !== revision.contentHash) {
+      throw new ResearchLabCommandError(
+        'REVISION_CONFLICT',
+        'The stored Research Lab revision does not match its publication hash.',
+      );
+    }
+    const { plainText, searchText } = this.editor.normalizeWiki(
+      JSON.stringify(revision.document),
+    );
+    if (
+      plainText !== revision.plainText ||
+      searchText !== revision.searchText
+    ) {
+      await tx.researchRevision.update({
+        where: { id: revision.id, contentHash: revision.contentHash },
+        data: { plainText, searchText },
+      });
+    }
+    return { plainText, searchText };
   }
   private async lockPage(tx: TransactionClient, pageId: string): Promise<void> {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'research-lab:page:' + pageId}, 0))`;
