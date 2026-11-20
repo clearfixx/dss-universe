@@ -225,14 +225,14 @@ describe('Research Lab public delivery (GraphQL)', () => {
         .expect(200);
       return payload(res);
     };
-    const access = async (targetId: string) => {
+    const access = async (targetId: string, capability = 'READ') => {
       const res = await request(app.getHttpServer())
         .post('/api/graphql')
         .set('Authorization', 'Bearer ' + member.tokens.accessToken)
         .send({
           query:
-            'query($id:ID!){interactionTargetAccess(targetId:$id,capability:READ){allowed target{ownerId}}}',
-          variables: { id: targetId },
+            'query($id:ID!,$capability:InteractionCapability!){interactionTargetAccess(targetId:$id,capability:$capability){allowed target{ownerId}}}',
+          variables: { id: targetId, capability },
         })
         .expect(200);
       return payload(res);
@@ -247,6 +247,23 @@ describe('Research Lab public delivery (GraphQL)', () => {
           target: { ownerId: childId },
         },
       },
+    });
+    await fixture.prisma.interactionTarget.update({
+      where: { id: target.id },
+      data: { status: 'LOCKED' },
+    });
+    expect((await access(childTarget.id)).data).toMatchObject({
+      interactionTargetAccess: { allowed: true },
+    });
+    expect((await access(childTarget.id, 'REACT')).data).toMatchObject({
+      interactionTargetAccess: { allowed: false },
+    });
+    await fixture.prisma.interactionTarget.update({
+      where: { id: target.id },
+      data: { status: 'ACTIVE' },
+    });
+    expect((await access(childTarget.id, 'REACT')).data).toMatchObject({
+      interactionTargetAccess: { allowed: true },
     });
     const delivery = app.get(ResearchLabDelivery);
     expect(await delivery.history(author, id, 0, 10)).toEqual([
