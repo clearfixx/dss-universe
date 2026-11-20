@@ -172,6 +172,23 @@ export const PERMISSIONS = {
     label: 'Manage sanction policy',
     description: 'Allows changing warning lifetime and escalation thresholds.',
   },
+  ForumStructureManage: {
+    key: 'forum.structure.manage',
+    label: 'Manage forum structure',
+    description:
+      'Allows managing forum categories, forums, subforums and category visibility; holders see every category.',
+  },
+  ForumModeratorsAssign: {
+    key: 'forum.moderators.assign',
+    label: 'Assign forum moderators',
+    description: 'Allows assigning and revoking category moderators.',
+  },
+  ForumModerateAll: {
+    key: 'forum.moderate.all',
+    label: 'Moderate every forum category',
+    description:
+      'Supermoderator scope: moderation authority in every forum category.',
+  },
   ContentGatesConfigure: {
     key: 'content-gates.configure',
     label: 'Configure Content Gates',

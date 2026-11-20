@@ -108,6 +108,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { ReputationModule } from './modules/reputation';
 import { ResearchLabModule } from './modules/research-lab';
 import { ModerationModule } from './modules/moderation';
+import { ForumModule } from './modules/forum';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
@@ -158,6 +159,7 @@ import { UsersModule } from './modules/users/users.module';
     LeaderboardsModule,
     ResearchLabModule,
     ModerationModule,
+    ForumModule,
   ],
   providers: [
     {

@@ -186,6 +186,12 @@ enum PollVisibility {
   ANONYMOUS
 }
 
+enum ForumVisibility {
+  PUBLIC
+  MEMBERS
+  RESTRICTED
+}
+
 enum ContentGateOperator {
   ALL
   ANY
@@ -391,6 +397,9 @@ model User {
   sanctionPolicyUpdates   ModerationSanctionPolicy[]
   pollsCreated            Poll[]
   pollBallots             PollBallot[]
+  forumModeratorRoles     ForumModeratorAssignment[]   @relation("ForumModerator")
+  forumModeratorsAssigned ForumModeratorAssignment[]   @relation("ForumModeratorAssigner")
+  forumModeratorsRevoked  ForumModeratorAssignment[]   @relation("ForumModeratorRevoker")
   contentGates            ContentGate[]
   newsArticles            NewsArticle[]                @relation("NewsAuthor")
   newsRevisions           NewsRevision[]               @relation("NewsRevisionEditor")
@@ -2642,4 +2651,75 @@ model AchievementAwardQualification {
 
   @@index([cursorId, qualificationRevision, awardId], map: "achievement_qualification_retirement_idx")
   @@map("achievement_award_qualifications")
+}
+
+model ForumCategory {
+  id          String          @id @default(uuid())
+  slug        String          @unique
+  title       String
+  description String?
+  position    Int             @default(0)
+  visibility  ForumVisibility @default(PUBLIC)
+  active      Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  audience   ForumCategoryAudience[]
+  forums     Forum[]
+  moderators ForumModeratorAssignment[]
+
+  @@index([active, position, id])
+  @@map("forum_categories")
+}
+
+model ForumCategoryAudience {
+  categoryId String
+  subjectKey String
+
+  category ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([categoryId, subjectKey])
+  @@index([subjectKey, categoryId])
+  @@map("forum_category_audience")
+}
+
+model Forum {
+  id                 String   @id @default(uuid())
+  categoryId         String
+  parentId           String?
+  slug               String
+  title              String
+  description        String?
+  position           Int      @default(0)
+  active             Boolean  @default(true)
+  allowsGatedContent Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  category  ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  parent    Forum?        @relation("ForumSubforums", fields: [parentId], references: [id], onDelete: Restrict)
+  subforums Forum[]       @relation("ForumSubforums")
+
+  @@unique([categoryId, slug])
+  @@index([categoryId, parentId, position, id])
+  @@map("forums")
+}
+
+model ForumModeratorAssignment {
+  id           String    @id @default(uuid())
+  categoryId   String
+  moderatorId  String
+  assignedById String
+  assignedAt   DateTime  @default(now())
+  revokedAt    DateTime?
+  revokedById  String?
+
+  category   ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  moderator  User          @relation("ForumModerator", fields: [moderatorId], references: [id], onDelete: Restrict)
+  assignedBy User          @relation("ForumModeratorAssigner", fields: [assignedById], references: [id], onDelete: Restrict)
+  revokedBy  User?         @relation("ForumModeratorRevoker", fields: [revokedById], references: [id], onDelete: Restrict)
+
+  @@index([moderatorId, revokedAt])
+  @@index([categoryId, revokedAt])
+  @@map("forum_moderator_assignments")
 }
