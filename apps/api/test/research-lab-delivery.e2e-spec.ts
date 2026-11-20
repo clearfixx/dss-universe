@@ -435,6 +435,34 @@ describe('Research Lab public delivery (GraphQL)', () => {
     };
     expect(await related(rows[0].id)).toEqual([]);
     expect(await related(rows[1].id)).toEqual([{ id: rows[2].id }]);
+    const source = rows[1].id;
+    const linked = rows[2].id;
+    const fallback = visible.find((id) => id !== source && id !== linked);
+    expect(fallback).toBeDefined();
+    for (const change of [
+      { visibility: 'MEMBERS' as const },
+      { visibility: 'PUBLIC' as const, state: 'ARCHIVED' as const },
+      {
+        state: 'TOMBSTONED' as const,
+        tombstonedAt: new Date(),
+        tombstonedById: author,
+        tombstoneReason: 'Remove linked page',
+      },
+    ]) {
+      await db.researchPage.update({ where: { id: linked }, data: change });
+      expect(await related(source)).toEqual([{ id: fallback }]);
+      expect(await related(linked)).toEqual([]);
+    }
+    await db.researchPage.update({
+      where: { id: linked },
+      data: {
+        state: 'ACTIVE',
+        tombstonedAt: null,
+        tombstonedById: null,
+        tombstoneReason: null,
+      },
+    });
+    expect(await related(source)).toEqual([{ id: linked }]);
     const seoQuery =
       'query($public:ID!,$members:ID!){open:researchPageSeo(pageId:$public){id slug} closed:researchPageSeo(pageId:$members){id} researchSitemap(limit:100){id}}';
     const seo = await request(app.getHttpServer())
