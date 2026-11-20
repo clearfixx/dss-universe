@@ -540,4 +540,50 @@ describe('Research Lab commands (e2e)', () => {
       await fixture.prisma.researchRevision.count({ where: { pageId } }),
     ).toBe(0);
   });
+  it('repairs stale derived fields from the published source before opening an editable draft', async () => {
+    const actorId = await user(true);
+    const { pageId } = await service.createDraft({
+      actorId,
+      ...content('repair-' + randomUUID()),
+    });
+    const { revisionId } = await service.selfPublishDraft({
+      actorId,
+      pageId,
+      expectedVersion: 1,
+      editSummary: 'Initial',
+      policySnapshotHash: 'policy',
+      correlationId: randomUUID(),
+    });
+    const before = await fixture.prisma.researchRevision.findUniqueOrThrow({
+      where: { id: revisionId },
+    });
+    await fixture.prisma.researchRevision.update({
+      where: { id: revisionId },
+      data: { plainText: 'stale', searchText: 'stale' },
+    });
+    for (const contributor of [await user(), await user()]) {
+      const { draftId } = await service.startDraft(contributor, pageId);
+      expect(
+        await fixture.prisma.researchDraft.findUniqueOrThrow({
+          where: { id: draftId },
+        }),
+      ).toMatchObject({
+        plainText: before.plainText,
+        searchText: before.searchText,
+        basePublishedRevisionId: revisionId,
+      });
+      expect(
+        await fixture.prisma.researchRevision.findUniqueOrThrow({
+          where: { id: revisionId },
+        }),
+      ).toEqual(before);
+    }
+    await fixture.prisma.researchRevision.update({
+      where: { id: revisionId },
+      data: { contentHash: '0'.repeat(64) },
+    });
+    await expect(
+      service.startDraft(await user(), pageId),
+    ).rejects.toMatchObject({ code: 'REVISION_CONFLICT' });
+  });
 });

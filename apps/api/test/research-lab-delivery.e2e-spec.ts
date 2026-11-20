@@ -3,6 +3,7 @@ import { AuthenticationPresentationService } from '../src/composition/identity/a
 import { ResearchLabService } from '../src/modules/research-lab/infrastructure/prisma-research-lab-workflow';
 import type { App } from 'supertest/types';
 import type { Prisma } from '@prisma/client';
+import { Client } from 'pg';
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
@@ -26,7 +27,7 @@ describe('Research Lab public delivery (GraphQL)', () => {
   let app: INestApplication<App>;
   let fixture: Awaited<ReturnType<typeof createIsolatedApiSchemaFixture>>;
   beforeAll(async () => {
-    fixture = await createIsolatedApiSchemaFixture();
+    fixture = await createIsolatedApiSchemaFixture({ captureQueries: true });
     const module = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
       .useValue(fixture.prisma)
@@ -363,22 +364,9 @@ describe('Research Lab public delivery (GraphQL)', () => {
         state: 'PUBLISHED' as const,
       })),
     });
-    const date = new Date();
-    await db.$transaction(
-      rows.map((row, index) =>
-        db.researchPage.update({
-          where: { id: row.id },
-          data: {
-            state: 'ACTIVE',
-            visibility: index === 0 ? 'MEMBERS' : 'PUBLIC',
-            publishedRevisionId: row.revision,
-            firstPublishedAt: date,
-            lastPublishedAt: date,
-            publicationGeneration: 1,
-          },
-        }),
-      ),
-    );
+    await db.$executeRaw`UPDATE research_pages p SET state='ACTIVE', visibility=CASE WHEN p.id=${rows[0].id} THEN 'MEMBERS'::"ResearchVisibility" ELSE 'PUBLIC'::"ResearchVisibility" END,
+      "publishedRevisionId"=r.id, "publicationGeneration"=1,"firstPublishedAt"=CURRENT_TIMESTAMP,"lastPublishedAt"=CURRENT_TIMESTAMP
+      FROM research_revisions r WHERE r."pageId"=p.id AND p."creatorId"=${author}`;
     const visible = rows
       .slice(1)
       .map((row) => row.id)
@@ -421,6 +409,18 @@ describe('Research Lab public delivery (GraphQL)', () => {
     expect(payload(seo).data.researchSitemap).toEqual(
       visible.map((id) => ({ id })),
     );
+    const scans: { query: string; values: unknown[] }[] = [];
+    fixture.prisma.$on('query', ({ query, params }) => {
+      if (
+        scans.length < 2 &&
+        query.startsWith('SELECT') &&
+        query.includes('"research_pages"') &&
+        query.includes('ORDER BY') &&
+        query.includes('LIMIT')
+      ) {
+        scans.push({ query, values: JSON.parse(params) as unknown[] });
+      }
+    });
     for (const page of [1, 2, 3]) {
       const response = await request(app.getHttpServer())
         .post('/api/graphql')
@@ -436,6 +436,29 @@ describe('Research Lab public delivery (GraphQL)', () => {
         total: 66,
         categories: [{ slug: category.slug, total: 66 }],
       });
+    }
+    expect(scans).toHaveLength(2);
+    const client = new Client({
+      connectionString: process.env.DATABASE_URL,
+      options: '-c search_path=' + fixture.schema + ',public',
+    });
+    await client.connect();
+    try {
+      for (const [batch, scan] of scans.entries()) {
+        const result = await client.query<{
+          'QUERY PLAN': {
+            Plan: { 'Actual Rows': number; 'Node Type': string };
+            'Execution Time': number;
+          }[];
+        }>('EXPLAIN (ANALYZE,BUFFERS,FORMAT JSON) ' + scan.query, scan.values);
+        const plan = result.rows[0]['QUERY PLAN'][0];
+        expect(plan.Plan['Actual Rows']).toBe(batch === 0 ? 64 : 2);
+        expect(plan['Execution Time']).toBeGreaterThanOrEqual(0);
+        if (process.env.DSS_RESEARCH_PLAN_OUTPUT === '1')
+          console.info('Research Lab search plan', JSON.stringify(plan));
+      }
+    } finally {
+      await client.end();
     }
   });
   it('submits an authenticated Wiki draft with server-side decision evidence and requires Guardian for publication', async () => {

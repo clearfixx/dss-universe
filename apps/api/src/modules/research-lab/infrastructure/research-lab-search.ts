@@ -33,14 +33,28 @@ export class ResearchLabSearch implements ResearchSearchSource {
     return this.prisma.$transaction(
       async (tx) => {
         const batchSize = 64;
-        let cursor: string | undefined;
+        let cursor: { id: string; publishedAt: Date } | undefined;
         for (;;) {
           const pages = await tx.researchPage.findMany({
             take: batchSize,
-            ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+
             where: {
               state: 'ACTIVE',
               allowIndexing: true,
+              lastPublishedAt: { not: null },
+              AND: cursor
+                ? [
+                    {
+                      OR: [
+                        { lastPublishedAt: { lt: cursor.publishedAt } },
+                        {
+                          lastPublishedAt: cursor.publishedAt,
+                          id: { gt: cursor.id },
+                        },
+                      ],
+                    },
+                  ]
+                : undefined,
               publishedRevision: { is: { state: 'PUBLISHED' } },
               ...researchAudience(facts.groups, facts.authenticated),
             },
@@ -94,7 +108,10 @@ export class ResearchLabSearch implements ResearchSearchSource {
             total++;
           }
           if (pages.length < batchSize) break;
-          cursor = pages[pages.length - 1].id;
+          const last = pages[pages.length - 1];
+          if (!last.lastPublishedAt)
+            throw new Error('Missing Research Lab publication timestamp.');
+          cursor = { id: last.id, publishedAt: last.lastPublishedAt };
         }
         return {
           items,
