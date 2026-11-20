@@ -1,8 +1,7 @@
 # Phase 13 — Forum as a qualified Community Points producer (design)
 
-Status: design proposed for owner approval. No runtime, migration, rule change
-or activation is part of this document. Implementation follows in separate
-packages after approval.
+Status: approved by the owner (2026-11-20). No runtime, migration, rule change
+or activation is part of this document; implementation follows in package G2.
 
 ## Owner decisions this design implements
 
@@ -105,16 +104,16 @@ not create, move or revoke points. A topic created by **split** has no
   limits, idempotent replay;
 - preflight accepts the new rules; activation remains manual.
 
-## Questions for the owner
+## Owner answers (2026-11-20)
 
-1. **Daily limits** for replies (+1) and accepted answers (+10). Proposed: 50
-   replies/day (same as comments) and 10 accepted answers/day.
-2. **Changing an accepted answer:** the first answer author keeps their +10
-   (no revocation). Proposed: the new answer author also gets +10, but a given
-   post can earn the answer bonus only once, even if re-accepted.
-3. **Administrator purge** (legal/security removal): proposed to keep the
-   points too, consistent with "no revocation on deletion". Confirm, or revoke
-   only on purge.
-4. **Replies in one's own topic** earn +1 like any reply (proposed yes).
+All four proposals were accepted:
+
+1. **Daily limits:** replies +1 up to 50 per day; accepted answers +10 up to 10
+   per day; topics keep +5 up to 10 per day.
+2. **Changing an accepted answer:** the first answer author keeps their +10; the
+   new answer author also gets +10. A given post earns the answer bonus only
+   once (source = the post, one revision), even if it is accepted again.
+3. **Administrator purge** keeps the points, like any other deletion.
+4. **Replies in one's own topic** earn +1 like any reply.
 
 🪙 Points reward contributions; the ledger remembers why.
