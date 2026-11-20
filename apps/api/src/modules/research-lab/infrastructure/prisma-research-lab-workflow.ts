@@ -258,17 +258,32 @@ export class ResearchLabService {
     };
   }
 
-  async ownDraft(actorId: string, pageId: string) {
+  private async ownDraftScope(
+    actorId: string,
+  ): Promise<Prisma.ResearchDraftWhereInput> {
     const facts = await this.requireAuthenticated(actorId);
-    const draft = await this.prisma.researchDraft.findFirst({
-      where: {
-        pageId,
-        authorId: actorId,
-        page: {
-          state: { in: ['DRAFT', 'ACTIVE'] },
-          ...researchAudience(facts.groups, true),
-        },
+    return {
+      authorId: actorId,
+      page: {
+        state: { in: ['DRAFT', 'ACTIVE'] },
+        ...researchAudience(facts.groups, true),
       },
+    };
+  }
+
+  async ownDrafts(actorId: string, offset: number, limit: number) {
+    return this.prisma.researchDraft.findMany({
+      where: await this.ownDraftScope(actorId),
+      select: { id: true, pageId: true, version: true, updatedAt: true },
+      orderBy: [{ updatedAt: 'desc' }, { id: 'asc' }],
+      skip: offset,
+      take: limit,
+    });
+  }
+
+  async ownDraft(actorId: string, pageId: string) {
+    const draft = await this.prisma.researchDraft.findFirst({
+      where: { ...(await this.ownDraftScope(actorId)), pageId },
     });
     if (draft) await this.requireDocumentAccess(actorId, draft.document);
     return draft;

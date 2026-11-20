@@ -18,6 +18,8 @@ Guardians can inspect the current mode and list with `researchEditPolicy` and sw
 
 Guardians use `researchReviewQueue` to list pending submissions and `researchPendingRevision` to read one. Both check the current page audience. Editor filters gated document blocks for the reviewer before delivery.
 
+Authors can list their drafts through `researchOwnDrafts` and reopen a saved Wiki document through `researchOwnDraft`. The returned version is the expected version for the next save.
+
 Editor validates Wiki documents and projects content for the viewer. IAM supplies
 group and Guardian evidence. Research Lab supplies page access decisions to
 Interactions and published results to shared Search. Each search reads published

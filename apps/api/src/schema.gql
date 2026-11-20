@@ -1355,6 +1355,8 @@ type Query {
   reputationHistory(pagination: ReputationPageInput, userId: ID!): ReputationHistory!
   reputationPolicy: ReputationPolicy!
   researchEditPolicy(pageId: ID!): ResearchEditPolicy!
+  researchOwnDraft(pageId: ID!): ResearchOwnDraft
+  researchOwnDrafts(limit: Int! = 50, offset: Int! = 0): [ResearchOwnDraftItem!]!
   researchPage(id: ID!): ResearchPublishedPage
   researchPageByRoute(language: String!, slug: String!): ResearchPublishedPage
   researchPageSeo(pageId: ID!): ResearchPublicIndexEntry
@@ -1541,6 +1543,25 @@ input ResearchLifecycleInput {
   expectedPublicationGeneration: Int!
   pageId: ID!
   reason: String
+}
+
+type ResearchOwnDraft {
+  basePublishedRevisionId: ID
+  documentJson: String!
+  id: ID!
+  pageId: ID!
+  proposedSlug: String!
+  summary: String!
+  title: String!
+  updatedAt: DateTime!
+  version: Int!
+}
+
+type ResearchOwnDraftItem {
+  id: ID!
+  pageId: ID!
+  updatedAt: DateTime!
+  version: Int!
 }
 
 type ResearchPendingRevision {
