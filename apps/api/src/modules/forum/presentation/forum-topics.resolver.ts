@@ -118,6 +118,13 @@ class EditForumPostInput {
   title?: string | null;
 }
 
+@ObjectType('ForumTopicTag')
+class ForumTopicTagModel {
+  @Field(() => ID) id!: string;
+  @Field() slug!: string;
+  @Field() label!: string;
+}
+
 @ObjectType('ForumTopic')
 export class ForumTopicModel {
   @Field(() => ID) id!: string;
@@ -142,6 +149,8 @@ export class ForumTopicModel {
     description: 'Furthest post number read by the viewer; null for guests.',
   })
   viewerLastReadNumber!: number | null;
+  @Field(() => ID, { nullable: true }) acceptedAnswerPostId!: string | null;
+  @Field(() => [ForumTopicTagModel]) tags!: ForumTopicTagModel[];
 }
 
 @ObjectType('ForumTopicPage')
@@ -226,6 +235,8 @@ export class ForumTopicsResolver {
     scope: ForumTopicScope,
     @Args('topPeriod', { type: () => TopPeriodEnum, defaultValue: 'WEEK' })
     topPeriod: ForumTopPeriod,
+    @Args('tagSlug', { type: () => String, nullable: true })
+    tagSlug: string | null,
   ): Promise<ForumPage<ForumTopicModel>> {
     return this.execute(
       this.topics.topics(
@@ -236,6 +247,7 @@ export class ForumTopicsResolver {
         limit,
         scope,
         topPeriod,
+        tagSlug ?? null,
       ),
     );
   }

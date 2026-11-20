@@ -2735,6 +2735,7 @@ model Forum {
   updatedAt          DateTime @updatedAt
 
   topics    ForumTopic[]
+  tags      ForumTag[]
   category  ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   parent    Forum?        @relation("ForumSubforums", fields: [parentId], references: [id], onDelete: Restrict)
   subforums Forum[]       @relation("ForumSubforums")
@@ -2764,25 +2765,28 @@ model ForumModeratorAssignment {
 }
 
 model ForumTopic {
-  id                  String           @id @default(uuid())
-  forumId             String
-  interactionTargetId String           @unique
-  authorId            String
-  kind                ForumTopicKind   @default(DISCUSSION)
-  title               String
-  state               ForumTopicState  @default(OPEN)
-  stateBeforeTrash    ForumTopicState?
-  pinned              Boolean          @default(false)
-  curatorId           String?
-  postCount           Int              @default(1)
-  ratingUp            Int              @default(0)
-  ratingDown          Int              @default(0)
-  viewCount           Int              @default(0)
-  lastPostNumber      Int              @default(1)
-  lastPostAt          DateTime         @default(now())
-  lastPostAuthorId    String
-  createdAt           DateTime         @default(now())
-  updatedAt           DateTime         @updatedAt
+  id                   String           @id @default(uuid())
+  forumId              String
+  interactionTargetId  String           @unique
+  authorId             String
+  kind                 ForumTopicKind   @default(DISCUSSION)
+  title                String
+  state                ForumTopicState  @default(OPEN)
+  stateBeforeTrash     ForumTopicState?
+  pinned               Boolean          @default(false)
+  curatorId            String?
+  acceptedAnswerPostId String?          @unique
+  acceptedAt           DateTime?
+  acceptedById         String?
+  postCount            Int              @default(1)
+  ratingUp             Int              @default(0)
+  ratingDown           Int              @default(0)
+  viewCount            Int              @default(0)
+  lastPostNumber       Int              @default(1)
+  lastPostAt           DateTime         @default(now())
+  lastPostAuthorId     String
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
 
   forum             Forum                 @relation(fields: [forumId], references: [id], onDelete: Restrict)
   interactionTarget InteractionTarget     @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
@@ -2791,6 +2795,8 @@ model ForumTopic {
   posts             ForumPost[]
   views             ForumTopicView[]
   readStates        ForumTopicReadState[]
+  tags              ForumTopicTag[]
+  acceptedAnswer    ForumPost?            @relation("ForumAcceptedAnswer", fields: [acceptedAnswerPostId], references: [id], onDelete: Restrict)
 
   @@index([forumId, pinned, lastPostAt, id])
   @@index([forumId, pinned, createdAt, id])
@@ -2822,11 +2828,12 @@ model ForumPost {
   purgedById       String?
   purgeReason      String?
 
-  topic      ForumTopic           @relation(fields: [topicId], references: [id], onDelete: Restrict)
-  author     User                 @relation("ForumPostAuthor", fields: [authorId], references: [id], onDelete: Restrict)
-  revisions  ForumPostRevision[]
-  staffNotes ForumPostStaffNote[]
-  votes      ForumPostVote[]
+  topic       ForumTopic           @relation(fields: [topicId], references: [id], onDelete: Restrict)
+  author      User                 @relation("ForumPostAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  revisions   ForumPostRevision[]
+  staffNotes  ForumPostStaffNote[]
+  votes       ForumPostVote[]
+  acceptedFor ForumTopic?          @relation("ForumAcceptedAnswer")
 
   @@unique([topicId, number])
   @@index([authorId, createdAt])
@@ -2927,4 +2934,31 @@ model ForumTopicReadState {
 
   @@id([userId, topicId])
   @@map("forum_topic_read_states")
+}
+
+model ForumTag {
+  id        String   @id @default(uuid())
+  forumId   String
+  slug      String
+  label     String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  forum  Forum           @relation(fields: [forumId], references: [id], onDelete: Restrict)
+  topics ForumTopicTag[]
+
+  @@unique([forumId, slug])
+  @@map("forum_tags")
+}
+
+model ForumTopicTag {
+  topicId String
+  tagId   String
+
+  topic ForumTopic @relation(fields: [topicId], references: [id], onDelete: Restrict)
+  tag   ForumTag   @relation(fields: [tagId], references: [id], onDelete: Restrict)
+
+  @@id([topicId, tagId])
+  @@index([tagId, topicId])
+  @@map("forum_topic_tags")
 }

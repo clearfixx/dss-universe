@@ -328,6 +328,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     limit: number,
     scope: ForumTopicScope = 'ACTIVE',
     topPeriod: ForumTopPeriod = 'WEEK',
+    tagSlug: string | null = null,
   ): Promise<ForumPage<ForumTopicSummary>> {
     const viewer = await this.viewers.read(viewerId, new Date());
     const forum = await this.visibleForum(forumId, viewer);
@@ -352,6 +353,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     };
     const since = sort === 'TOP' ? topPeriodStart(topPeriod, new Date()) : null;
     if (since) where.createdAt = { gte: since };
+    if (tagSlug) where.tags = { some: { tag: { slug: tagSlug, forumId } } };
     const [rows, total] = await Promise.all([
       sort === 'HOT' || sort === 'TOP'
         ? this.rankedTopics(
@@ -360,6 +362,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
               ? ['OPEN', 'CLOSED']
               : [scope === 'ARCHIVED' ? 'ARCHIVED' : 'TRASHED'],
             since,
+            tagSlug,
             sort,
             skip,
             take,
@@ -376,13 +379,16 @@ export class ForumTopicsService implements ForumInteractionDecisions {
           }),
       this.prisma.forumTopic.count({ where }),
     ]);
-    const reads = await this.readStates(
-      viewer,
-      rows.map(({ id }) => id),
-    );
+    const ids = rows.map(({ id }) => id);
+    const reads = await this.readStates(viewer, ids);
+    const tags = await this.topicTags(ids);
     return {
       items: rows.map((row) =>
-        this.toSummary(row, viewer.subjectId ? (reads.get(row.id) ?? 0) : null),
+        this.toSummary(
+          row,
+          viewer.subjectId ? (reads.get(row.id) ?? 0) : null,
+          tags.get(row.id) ?? [],
+        ),
       ),
       total,
       page: safePage,
@@ -397,9 +403,11 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     const viewer = await this.viewers.read(viewerId, new Date());
     const { topic } = await this.visibleTopic(topicId, viewer);
     const reads = await this.readStates(viewer, [topic.id]);
+    const tags = await this.topicTags([topic.id]);
     return this.toSummary(
       topic,
       viewer.subjectId ? (reads.get(topic.id) ?? 0) : null,
+      tags.get(topic.id) ?? [],
     );
   }
 
@@ -711,6 +719,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     forumId: string,
     states: ForumTopicState[],
     since: Date | null,
+    tagSlug: string | null,
     sort: 'HOT' | 'TOP',
     skip: number,
     take: number,
@@ -733,6 +742,11 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       WHERE "forumId" = ${forumId}
         AND "state"::text IN (${Prisma.join(states)})
         AND (${since}::timestamp IS NULL OR "createdAt" >= ${since})
+        AND (${tagSlug}::text IS NULL OR EXISTS (
+          SELECT 1 FROM "forum_topic_tags" tt
+          JOIN "forum_tags" g ON g."id" = tt."tagId"
+          WHERE tt."topicId" = "forum_topics"."id" AND g."slug" = ${tagSlug}
+        ))
       ORDER BY "pinned" DESC, ${order} DESC, "createdAt" DESC, "id" DESC
       LIMIT ${take} OFFSET ${skip}`;
     const rows = await this.prisma.forumTopic.findMany({
@@ -754,9 +768,34 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     return new Map(rows.map((row) => [row.topicId, row.lastReadNumber]));
   }
 
+  /** Public form of the forum visibility check for sibling Forum services. */
+  visibleForumFor(forumId: string, viewer: ForumViewerFacts) {
+    return this.visibleForum(forumId, viewer);
+  }
+
+  private async topicTags(
+    topicIds: string[],
+  ): Promise<Map<string, ForumTopicSummary['tags']>> {
+    if (topicIds.length === 0) return new Map();
+    const rows = await this.prisma.forumTopicTag.findMany({
+      where: { topicId: { in: topicIds }, tag: { active: true } },
+      select: {
+        topicId: true,
+        tag: { select: { id: true, slug: true, label: true } },
+      },
+      orderBy: { tag: { label: 'asc' } },
+    });
+    const map = new Map<string, ForumTopicSummary['tags']>();
+    for (const row of rows) {
+      map.set(row.topicId, [...(map.get(row.topicId) ?? []), row.tag]);
+    }
+    return map;
+  }
+
   private toSummary(
     row: ForumTopic,
     lastRead?: number | null,
+    tags: ForumTopicSummary['tags'] = [],
   ): ForumTopicSummary {
     return {
       id: row.id,
@@ -776,6 +815,8 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       ratingDown: row.ratingDown,
       viewCount: row.viewCount,
       viewerLastReadNumber: lastRead ?? null,
+      acceptedAnswerPostId: row.acceptedAnswerPostId,
+      tags,
       createdAt: row.createdAt,
     };
   }
