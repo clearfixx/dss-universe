@@ -44,4 +44,14 @@ CH-0).
   of stored hidden blocks, continued media rejection;
 - lint and typecheck clean.
 
+Recorded local results (2026-11-21, Node 24.22.3, dedicated `5435`/Redis `6381`):
+
+- no schema or GraphQL change; application boot e2e passes;
+- API unit suite: 1662 passed, 106 skipped by the existing opt-in policy;
+- full API e2e: 90 suites, 977/977 (five Redis-6380-pinned suites excluded;
+  covered by PR #192);
+- architecture inventory: 0 findings.
+
+GitHub CI on the committed PR head remains the acceptance gate.
+
 🔐 A lock with no server-side key is decorative. This one is not.
