@@ -37,6 +37,11 @@ import type { ForumInteractionDecisions } from '../contracts/forum-interaction-d
 import { ForumCommandError } from '../domain/errors/forum-command.error';
 import { canSeeCategory } from '../domain/forum-structure.rules';
 import {
+  DEFAULT_FORUM_RANKING,
+  topPeriodStart,
+  type ForumTopPeriod,
+} from '../domain/forum-rating.rules';
+import {
   canCloseTopic,
   canEditPost,
   canReopenTopic,
@@ -52,6 +57,7 @@ import {
   type ForumStaffNoteView,
   type ForumTopicScope,
   type ForumTopicSort,
+  type ForumTopicState,
   type ForumTopicSummary,
 } from '../domain/types/forum-topic.type';
 import { ForumStructureService } from './prisma-forum-structure';
@@ -321,6 +327,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     page: number,
     limit: number,
     scope: ForumTopicScope = 'ACTIVE',
+    topPeriod: ForumTopPeriod = 'WEEK',
   ): Promise<ForumPage<ForumTopicSummary>> {
     const viewer = await this.viewers.read(viewerId, new Date());
     const forum = await this.visibleForum(forumId, viewer);
@@ -343,21 +350,40 @@ export class ForumTopicsService implements ForumInteractionDecisions {
             ? 'ARCHIVED'
             : 'TRASHED',
     };
+    const since = sort === 'TOP' ? topPeriodStart(topPeriod, new Date()) : null;
+    if (since) where.createdAt = { gte: since };
     const [rows, total] = await Promise.all([
-      this.prisma.forumTopic.findMany({
-        where,
-        orderBy: [
-          { pinned: 'desc' },
-          sort === 'NEW' ? { createdAt: 'desc' } : { lastPostAt: 'desc' },
-          { id: 'desc' },
-        ],
-        skip,
-        take,
-      }),
+      sort === 'HOT' || sort === 'TOP'
+        ? this.rankedTopics(
+            forumId,
+            scope === 'ACTIVE'
+              ? ['OPEN', 'CLOSED']
+              : [scope === 'ARCHIVED' ? 'ARCHIVED' : 'TRASHED'],
+            since,
+            sort,
+            skip,
+            take,
+          )
+        : this.prisma.forumTopic.findMany({
+            where,
+            orderBy: [
+              { pinned: 'desc' },
+              sort === 'NEW' ? { createdAt: 'desc' } : { lastPostAt: 'desc' },
+              { id: 'desc' },
+            ],
+            skip,
+            take,
+          }),
       this.prisma.forumTopic.count({ where }),
     ]);
+    const reads = await this.readStates(
+      viewer,
+      rows.map(({ id }) => id),
+    );
     return {
-      items: rows.map((row) => this.toSummary(row)),
+      items: rows.map((row) =>
+        this.toSummary(row, viewer.subjectId ? (reads.get(row.id) ?? 0) : null),
+      ),
       total,
       page: safePage,
       limit: take,
@@ -370,7 +396,11 @@ export class ForumTopicsService implements ForumInteractionDecisions {
   ): Promise<ForumTopicSummary> {
     const viewer = await this.viewers.read(viewerId, new Date());
     const { topic } = await this.visibleTopic(topicId, viewer);
-    return this.toSummary(topic);
+    const reads = await this.readStates(viewer, [topic.id]);
+    return this.toSummary(
+      topic,
+      viewer.subjectId ? (reads.get(topic.id) ?? 0) : null,
+    );
   }
 
   async posts(
@@ -676,7 +706,58 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     );
   }
 
-  private toSummary(row: ForumTopic): ForumTopicSummary {
+  /** Pinned first, then the hot score or the net rating, newest on ties. */
+  private async rankedTopics(
+    forumId: string,
+    states: ForumTopicState[],
+    since: Date | null,
+    sort: 'HOT' | 'TOP',
+    skip: number,
+    take: number,
+  ): Promise<ForumTopic[]> {
+    const settings = await this.prisma.forumRankingSettings.findUnique({
+      where: { id: 'default' },
+    });
+    const gravity =
+      settings?.hotGravitySeconds ?? DEFAULT_FORUM_RANKING.hotGravitySeconds;
+    const replyWeight =
+      settings?.hotReplyWeight ?? DEFAULT_FORUM_RANKING.hotReplyWeight;
+    const order =
+      sort === 'HOT'
+        ? Prisma.sql`SIGN("ratingUp" - "ratingDown") * LOG(GREATEST(ABS("ratingUp" - "ratingDown"), 1))
+            + ${replyWeight} * LOG(GREATEST("postCount", 1))
+            + EXTRACT(EPOCH FROM "createdAt") / ${gravity}`
+        : Prisma.sql`("ratingUp" - "ratingDown")`;
+    const ranked = await this.prisma.$queryRaw<Array<{ id: string }>>`
+      SELECT "id" FROM "forum_topics"
+      WHERE "forumId" = ${forumId}
+        AND "state"::text IN (${Prisma.join(states)})
+        AND (${since}::timestamp IS NULL OR "createdAt" >= ${since})
+      ORDER BY "pinned" DESC, ${order} DESC, "createdAt" DESC, "id" DESC
+      LIMIT ${take} OFFSET ${skip}`;
+    const rows = await this.prisma.forumTopic.findMany({
+      where: { id: { in: ranked.map(({ id }) => id) } },
+    });
+    const byId = new Map(rows.map((row) => [row.id, row]));
+    return ranked.map(({ id }) => byId.get(id)!).filter(Boolean);
+  }
+
+  private async readStates(
+    viewer: ForumViewerFacts,
+    topicIds: string[],
+  ): Promise<Map<string, number>> {
+    if (viewer.subjectId === null || topicIds.length === 0) return new Map();
+    const rows = await this.prisma.forumTopicReadState.findMany({
+      where: { userId: viewer.subjectId, topicId: { in: topicIds } },
+      select: { topicId: true, lastReadNumber: true },
+    });
+    return new Map(rows.map((row) => [row.topicId, row.lastReadNumber]));
+  }
+
+  private toSummary(
+    row: ForumTopic,
+    lastRead?: number | null,
+  ): ForumTopicSummary {
     return {
       id: row.id,
       forumId: row.forumId,
@@ -691,6 +772,10 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       lastPostNumber: row.lastPostNumber,
       lastPostAt: row.lastPostAt,
       lastPostAuthorId: row.lastPostAuthorId,
+      ratingUp: row.ratingUp,
+      ratingDown: row.ratingDown,
+      viewCount: row.viewCount,
+      viewerLastReadNumber: lastRead ?? null,
       createdAt: row.createdAt,
     };
   }
@@ -713,6 +798,8 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       replyToNumber: row.replyToNumber,
       quotedNumbers: row.quotedNumbers,
       revision: row.revision,
+      ratingUp: row.ratingUp,
+      ratingDown: row.ratingDown,
       createdAt: row.createdAt,
       editedAt: row.editedAt,
       moderation:

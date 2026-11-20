@@ -46,6 +46,8 @@ import { GateAccountEvidenceAdapter } from './infrastructure/gate-account-eviden
 import { GateCommentCountAdapter } from './infrastructure/gate-comment-count.adapter';
 import { GateReputationTotalAdapter } from './infrastructure/gate-reputation-total.adapter';
 import { GateViewerRestrictionAdapter } from './infrastructure/gate-viewer-restriction.adapter';
+import { FORUM_ACCOUNT_EVIDENCE } from '@api/modules/forum';
+import { ForumAccountEvidenceAdapter } from './infrastructure/forum-account-evidence.adapter';
 import { WallImageEligibilityAdapter } from './infrastructure/wall-image-eligibility.adapter';
 import { NewsMediaEvidenceAdapter } from './infrastructure/news-media-evidence.adapter';
 import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapter';
@@ -75,6 +77,7 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
       useClass: GateViewerRestrictionAdapter,
     },
     { provide: WALL_IMAGE_ELIGIBILITY, useClass: WallImageEligibilityAdapter },
+    { provide: FORUM_ACCOUNT_EVIDENCE, useClass: ForumAccountEvidenceAdapter },
     { provide: NEWS_MEDIA_EVIDENCE, useClass: NewsMediaEvidenceAdapter },
     { provide: PROFILE_ACTIVITY_READER, useClass: ProfileActivityAdapter },
   ],
@@ -88,6 +91,7 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
     GATE_REPUTATION_TOTAL,
     GATE_VIEWER_RESTRICTION,
     WALL_IMAGE_ELIGIBILITY,
+    FORUM_ACCOUNT_EVIDENCE,
   ],
 })
 export class ContentReadIntegrationModule {}

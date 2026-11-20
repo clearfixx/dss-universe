@@ -433,6 +433,10 @@ model User {
   forumPostingCooldown    ForumPostingCooldown?
   forumStaffNotes         ForumPostStaffNote[]         @relation("ForumStaffNoteAuthor")
   forumStaffNotesRemoved  ForumPostStaffNote[]         @relation("ForumStaffNoteRemover")
+  forumVotes              ForumPostVote[]              @relation("ForumVoter")
+  forumVotesReversed      ForumPostVote[]              @relation("ForumVoteReverser")
+  forumTopicViews         ForumTopicView[]
+  forumTopicReadStates    ForumTopicReadState[]
   contentGates            ContentGate[]
   newsArticles            NewsArticle[]                @relation("NewsAuthor")
   newsRevisions           NewsRevision[]               @relation("NewsRevisionEditor")
@@ -2771,17 +2775,22 @@ model ForumTopic {
   pinned              Boolean          @default(false)
   curatorId           String?
   postCount           Int              @default(1)
+  ratingUp            Int              @default(0)
+  ratingDown          Int              @default(0)
+  viewCount           Int              @default(0)
   lastPostNumber      Int              @default(1)
   lastPostAt          DateTime         @default(now())
   lastPostAuthorId    String
   createdAt           DateTime         @default(now())
   updatedAt           DateTime         @updatedAt
 
-  forum             Forum             @relation(fields: [forumId], references: [id], onDelete: Restrict)
-  interactionTarget InteractionTarget @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
-  author            User              @relation("ForumTopicAuthor", fields: [authorId], references: [id], onDelete: Restrict)
-  curator           User?             @relation("ForumTopicCurator", fields: [curatorId], references: [id], onDelete: Restrict)
+  forum             Forum                 @relation(fields: [forumId], references: [id], onDelete: Restrict)
+  interactionTarget InteractionTarget     @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
+  author            User                  @relation("ForumTopicAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  curator           User?                 @relation("ForumTopicCurator", fields: [curatorId], references: [id], onDelete: Restrict)
   posts             ForumPost[]
+  views             ForumTopicView[]
+  readStates        ForumTopicReadState[]
 
   @@index([forumId, pinned, lastPostAt, id])
   @@index([forumId, pinned, createdAt, id])
@@ -2800,6 +2809,8 @@ model ForumPost {
   searchText       String
   replyToNumber    Int?
   quotedNumbers    Int[]          @default([])
+  ratingUp         Int            @default(0)
+  ratingDown       Int            @default(0)
   revision         Int            @default(1)
   createdAt        DateTime       @default(now())
   editedAt         DateTime?
@@ -2815,6 +2826,7 @@ model ForumPost {
   author     User                 @relation("ForumPostAuthor", fields: [authorId], references: [id], onDelete: Restrict)
   revisions  ForumPostRevision[]
   staffNotes ForumPostStaffNote[]
+  votes      ForumPostVote[]
 
   @@unique([topicId, number])
   @@index([authorId, createdAt])
@@ -2862,4 +2874,57 @@ model ForumPostStaffNote {
 
   @@index([postId, createdAt, id])
   @@map("forum_post_staff_notes")
+}
+
+model ForumPostVote {
+  postId         String
+  voterId        String
+  value          Int
+  createdAt      DateTime  @default(now())
+  reversedAt     DateTime?
+  reversedById   String?
+  reversalReason String?
+
+  post       ForumPost @relation(fields: [postId], references: [id], onDelete: Restrict)
+  voter      User      @relation("ForumVoter", fields: [voterId], references: [id], onDelete: Restrict)
+  reversedBy User?     @relation("ForumVoteReverser", fields: [reversedById], references: [id], onDelete: Restrict)
+
+  @@id([postId, voterId])
+  @@index([postId, createdAt])
+  @@map("forum_post_votes")
+}
+
+model ForumRankingSettings {
+  id                String   @id @default("default")
+  hotGravitySeconds Int      @default(45000)
+  hotReplyWeight    Int      @default(0)
+  updatedById       String?
+  updatedAt         DateTime @default(now()) @updatedAt
+
+  @@map("forum_ranking_settings")
+}
+
+model ForumTopicView {
+  topicId       String
+  userId        String
+  firstViewedAt DateTime @default(now())
+
+  topic ForumTopic @relation(fields: [topicId], references: [id], onDelete: Restrict)
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([topicId, userId])
+  @@map("forum_topic_views")
+}
+
+model ForumTopicReadState {
+  userId         String
+  topicId        String
+  lastReadNumber Int
+  updatedAt      DateTime @updatedAt
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic ForumTopic @relation(fields: [topicId], references: [id], onDelete: Restrict)
+
+  @@id([userId, topicId])
+  @@map("forum_topic_read_states")
 }

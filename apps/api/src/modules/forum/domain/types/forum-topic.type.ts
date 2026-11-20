@@ -41,7 +41,12 @@ export type ForumStaffRole = (typeof FORUM_STAFF_ROLES)[number];
 export const FORUM_TOPIC_SCOPES = ['ACTIVE', 'ARCHIVED', 'TRASHED'] as const;
 export type ForumTopicScope = (typeof FORUM_TOPIC_SCOPES)[number];
 
-export const FORUM_TOPIC_SORTS = ['LAST_ACTIVITY', 'NEW'] as const;
+export const FORUM_TOPIC_SORTS = [
+  'LAST_ACTIVITY',
+  'NEW',
+  'HOT',
+  'TOP',
+] as const;
 export type ForumTopicSort = (typeof FORUM_TOPIC_SORTS)[number];
 
 /** Owner decisions: reply edit window and global posting cooldown. */
@@ -63,6 +68,11 @@ export type ForumTopicSummary = {
   lastPostAt: Date;
   lastPostAuthorId: string;
   createdAt: Date;
+  ratingUp: number;
+  ratingDown: number;
+  viewCount: number;
+  /** Furthest post number the viewer has read; null for guests. */
+  viewerLastReadNumber: number | null;
 };
 
 export type ForumPostView = {
@@ -76,6 +86,8 @@ export type ForumPostView = {
   replyToNumber: number | null;
   quotedNumbers: number[];
   revision: number;
+  ratingUp: number;
+  ratingDown: number;
   createdAt: Date;
   editedAt: Date | null;
   /** Moderation facts, returned only to staff of the topic. */
