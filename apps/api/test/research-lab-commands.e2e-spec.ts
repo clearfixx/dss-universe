@@ -409,6 +409,61 @@ describe('Research Lab commands (e2e)', () => {
     });
   });
 
+  it('records a change request while preserving the newer private draft', async () => {
+    const guardian = await user(true);
+    const author = await user();
+    const input = content('review-' + randomUUID());
+    const { pageId } = await service.createDraft({
+      actorId: guardian,
+      ...input,
+    });
+    await service.selfPublishDraft({
+      actorId: guardian,
+      pageId,
+      expectedVersion: 1,
+      editSummary: 'Initial',
+      correlationId: randomUUID(),
+    });
+    await service.startDraft(author, pageId);
+    const submitted = await service.submitDraft({
+      actorId: author,
+      pageId,
+      expectedVersion: 1,
+      editSummary: 'Proposal',
+      correlationId: randomUUID(),
+    });
+    await service.startDraft(author, pageId);
+    await service.saveDraft({
+      actorId: author,
+      pageId,
+      expectedVersion: 1,
+      ...input,
+      title: 'Unsubmitted work',
+    });
+    const before = await service.ownDraft(author, pageId);
+    expect(before).toMatchObject({ version: 2, title: 'Unsubmitted work' });
+    const correlationId = randomUUID();
+    await expect(
+      service.requestChanges({
+        actorId: guardian,
+        pageId,
+        revisionId: submitted.revisionId,
+        reason: 'Add sources',
+        correlationId,
+      }),
+    ).resolves.toMatchObject({ state: 'CHANGES_REQUESTED' });
+    expect(await service.ownDraft(author, pageId)).toEqual(before);
+    expect(
+      await fixture.prisma.researchReviewDecision.count({
+        where: {
+          revisionId: submitted.revisionId,
+          action: 'CHANGES_REQUESTED',
+          auditCorrelationId: correlationId,
+        },
+      }),
+    ).toBe(1);
+  });
+
   it('opens a fresh private draft when a Guardian requests changes', async () => {
     const author = await user();
     const guardian = await user(true);
