@@ -909,6 +909,7 @@ type Mutation {
   selfPublishResearchDraft(input: ResearchSubmitInput!): ResearchRevisionReceipt!
   setNewsPin(input: SetNewsPinInput!): ManagedNewsPin!
   setReaction(input: SetReactionInput!): SetReactionPayload!
+  setResearchEditProtection(level: ResearchEditProtection!, pageId: ID!): ResearchEditPolicy!
   setResearchTrustedEditors(groupKeys: [String!]!, pageId: ID!): [String!]!
   setViewerAvatar(mediaId: ID!): Viewer!
   setViewerCover(mediaId: ID!): Viewer!
@@ -1353,6 +1354,7 @@ type Query {
   reactionSummary(interactionTargetId: ID!): ReactionSummary!
   reputationHistory(pagination: ReputationPageInput, userId: ID!): ReputationHistory!
   reputationPolicy: ReputationPolicy!
+  researchEditPolicy(pageId: ID!): ResearchEditPolicy!
   researchPage(id: ID!): ResearchPublishedPage
   researchPageByRoute(language: String!, slug: String!): ResearchPublishedPage
   researchPageSeo(pageId: ID!): ResearchPublicIndexEntry
@@ -1509,6 +1511,18 @@ type ResearchDraftReceipt {
   draftId: ID!
   pageId: ID!
   version: Int!
+}
+
+type ResearchEditPolicy {
+  protectionLevel: ResearchEditProtection!
+  trustedEditGroupKeys: [String!]!
+}
+
+enum ResearchEditProtection {
+  GUARDIAN_ONLY
+  LOCKED
+  OPEN
+  TRUSTED
 }
 
 type ResearchHistoryEntry {

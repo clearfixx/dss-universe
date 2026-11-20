@@ -14,6 +14,7 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+import type { ResearchProtectionLevel } from '../domain/types/research-lab.type';
 import { researchAudience } from './research-audience';
 import { createHash, randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
@@ -84,6 +85,48 @@ export class ResearchLabService {
         };
   }
 
+  private async protectionScope(
+    actorId: string,
+    pageId: string,
+  ): Promise<Prisma.ResearchPageWhereInput> {
+    const facts = await this.requireGuardian(actorId);
+    return {
+      id: pageId,
+      state: { in: ['ACTIVE', 'DRAFT'] },
+      ...researchAudience(facts.groups, true),
+    };
+  }
+
+  async editPolicy(actorId: string, pageId: string) {
+    const page = await this.prisma.researchPage.findFirst({
+      where: await this.protectionScope(actorId, pageId),
+      select: { protectionLevel: true, trustedEditGroupKeys: true },
+    });
+    if (!page) this.notFound('Research page');
+    return page;
+  }
+
+  async setEditProtection(
+    actorId: string,
+    pageId: string,
+    level: ResearchProtectionLevel,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      await this.lockPage(tx, pageId);
+      const [page] = await tx.researchPage.updateManyAndReturn({
+        where: await this.protectionScope(actorId, pageId),
+        data: { protectionLevel: level },
+        select: { protectionLevel: true, trustedEditGroupKeys: true },
+      });
+      if (!page) this.notFound('Research page');
+      await this.record(tx, actorId, pageId, 'protection.updated', {
+        protectionLevel: level,
+        policySnapshotHash: await this.policySnapshotHash(tx, pageId),
+      });
+      return page;
+    });
+  }
+
   async setTrustedEditors(
     actorId: string,
     pageId: string,
@@ -91,13 +134,8 @@ export class ResearchLabService {
   ) {
     return this.prisma.$transaction(async (tx) => {
       await this.lockPage(tx, pageId);
-      const facts = await this.requireGuardian(actorId);
       const page = await tx.researchPage.findFirst({
-        where: {
-          id: pageId,
-          state: { in: ['ACTIVE', 'DRAFT'] },
-          ...researchAudience(facts.groups, true),
-        },
+        where: await this.protectionScope(actorId, pageId),
         select: { id: true },
       });
       if (!page) this.notFound('Research page');
