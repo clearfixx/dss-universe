@@ -342,6 +342,32 @@ describe('Research Lab commands (e2e)', () => {
       pages.push({ pageId, input });
     }
     const [database, design] = pages;
+    const policy = {
+      protectionLevel: 'TRUSTED',
+      trustedEditGroupKeys: ['database-editors'],
+    };
+    expect(await service.editPolicy(guardian, database.pageId)).toEqual(policy);
+    await expect(
+      service.editPolicy(editor, database.pageId),
+    ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+    await expect(
+      service.setEditProtection(editor, database.pageId, 'OPEN'),
+    ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+    await service.setEditProtection(guardian, database.pageId, 'LOCKED');
+    await expect(
+      service.startDraft(guardian, database.pageId),
+    ).rejects.toMatchObject({ code: 'INVALID_STATE' });
+    await service.setEditProtection(guardian, database.pageId, 'GUARDIAN_ONLY');
+    await expect(
+      service.startDraft(editor, database.pageId),
+    ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+    await service.setEditProtection(guardian, database.pageId, 'OPEN');
+    await expect(
+      service.startDraft(editor, database.pageId),
+    ).resolves.toMatchObject({ version: 1 });
+    expect(
+      await service.setEditProtection(guardian, database.pageId, 'TRUSTED'),
+    ).toEqual(policy);
     memberships.set(editor, ['group:database-editors']);
     await expect(
       service.setTrustedEditors(editor, design.pageId, ['database-editors']),

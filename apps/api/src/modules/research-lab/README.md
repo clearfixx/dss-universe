@@ -14,6 +14,8 @@ Guardians can configure each page's trusted edit groups through
 that page. The audience policy still applies, and a Guardian reviews submissions.
 An empty list reserves edits on the trusted page to Guardians.
 
+Guardians can inspect the current mode and list with `researchEditPolicy` and switch modes with `setResearchEditProtection`. The list is preserved when a page is locked and applies again when its mode returns to `TRUSTED`.
+
 Editor validates Wiki documents and projects content for the viewer. IAM supplies
 group and Guardian evidence. Research Lab supplies page access decisions to
 Interactions and published results to shared Search. Each search reads published

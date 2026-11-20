@@ -13,6 +13,8 @@ import {
   InputType,
   Int,
   Mutation,
+  Query,
+  registerEnumType,
   ObjectType,
   Resolver,
 } from '@nestjs/graphql';
@@ -20,6 +22,20 @@ import { IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
 import { ResearchLabService } from './infrastructure/prisma-research-lab-workflow';
 import { ResearchLabCommandError } from './domain/errors/research-lab-command.error';
+
+enum ResearchEditProtection {
+  OPEN = 'OPEN',
+  TRUSTED = 'TRUSTED',
+  GUARDIAN_ONLY = 'GUARDIAN_ONLY',
+  LOCKED = 'LOCKED',
+}
+registerEnumType(ResearchEditProtection, { name: 'ResearchEditProtection' });
+
+@ObjectType()
+class ResearchEditPolicy {
+  @Field(() => ResearchEditProtection) protectionLevel!: ResearchEditProtection;
+  @Field(() => [String]) trustedEditGroupKeys!: string[];
+}
 
 @InputType()
 class ResearchDraftInput {
@@ -95,6 +111,24 @@ export class ResearchLabCommandResolver {
           throw new ConflictException(error.message);
       }
     }
+  }
+  @Query(() => ResearchEditPolicy)
+  researchEditPolicy(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('pageId', { type: () => ID }) pageId: string,
+  ) {
+    return this.execute(this.workflow.editPolicy(actor.id, pageId));
+  }
+  @Mutation(() => ResearchEditPolicy)
+  setResearchEditProtection(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('pageId', { type: () => ID }) pageId: string,
+    @Args('level', { type: () => ResearchEditProtection })
+    level: ResearchEditProtection,
+  ) {
+    return this.execute(
+      this.workflow.setEditProtection(actor.id, pageId, level),
+    );
   }
   @Mutation(() => [String])
   setResearchTrustedEditors(
