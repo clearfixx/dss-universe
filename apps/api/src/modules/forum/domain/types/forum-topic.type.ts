@@ -74,6 +74,8 @@ export type ForumTopicSummary = {
   /** Furthest post number the viewer has read; null for guests. */
   viewerLastReadNumber: number | null;
   acceptedAnswerPostId: string | null;
+  /** Set when this topic was merged; clients redirect to the target. */
+  mergedIntoTopicId: string | null;
   tags: Array<{ id: string; slug: string; label: string }>;
 };
 

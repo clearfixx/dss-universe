@@ -150,6 +150,7 @@ export class ForumTopicModel {
   })
   viewerLastReadNumber!: number | null;
   @Field(() => ID, { nullable: true }) acceptedAnswerPostId!: string | null;
+  @Field(() => ID, { nullable: true }) mergedIntoTopicId!: string | null;
   @Field(() => [ForumTopicTagModel]) tags!: ForumTopicTagModel[];
 }
 

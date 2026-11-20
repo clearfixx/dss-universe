@@ -2775,6 +2775,7 @@ model ForumTopic {
   stateBeforeTrash     ForumTopicState?
   pinned               Boolean          @default(false)
   curatorId            String?
+  mergedIntoTopicId    String?
   acceptedAnswerPostId String?          @unique
   acceptedAt           DateTime?
   acceptedById         String?
@@ -2796,6 +2797,8 @@ model ForumTopic {
   views             ForumTopicView[]
   readStates        ForumTopicReadState[]
   tags              ForumTopicTag[]
+  mergedInto        ForumTopic?           @relation("ForumTopicMerge", fields: [mergedIntoTopicId], references: [id], onDelete: Restrict)
+  mergedFrom        ForumTopic[]          @relation("ForumTopicMerge")
   acceptedAnswer    ForumPost?            @relation("ForumAcceptedAnswer", fields: [acceptedAnswerPostId], references: [id], onDelete: Restrict)
 
   @@index([forumId, pinned, lastPostAt, id])
@@ -2815,6 +2818,8 @@ model ForumPost {
   searchText       String
   replyToNumber    Int?
   quotedNumbers    Int[]          @default([])
+  originalTopicId  String?
+  originalNumber   Int?
   ratingUp         Int            @default(0)
   ratingDown       Int            @default(0)
   revision         Int            @default(1)

@@ -15,6 +15,9 @@ import { Module } from '@nestjs/common';
 import { AuthorizationModule } from '@api/core/authorization';
 import { EditorModule } from '@api/modules/editor';
 import { InteractionsModule } from '@api/modules/interactions';
+import { ModerationModule } from '@api/modules/moderation';
+import { ForumOperationsService } from './infrastructure/prisma-forum-operations';
+import { ForumOperationsResolver } from './presentation/forum-operations.resolver';
 import { ForumCurationService } from './infrastructure/prisma-forum-curation';
 import { ForumCurationResolver } from './presentation/forum-curation.resolver';
 import { FORUM_INTERACTION_DECISIONS } from './contracts/forum-interaction-decisions.contract';
@@ -30,7 +33,12 @@ import { ForumStructureService } from './infrastructure/prisma-forum-structure';
 import { ForumStructureResolver } from './presentation/forum-structure.resolver';
 
 @Module({
-  imports: [AuthorizationModule, EditorModule, InteractionsModule],
+  imports: [
+    AuthorizationModule,
+    EditorModule,
+    InteractionsModule,
+    ModerationModule,
+  ],
   providers: [
     ForumViewerFactsAdapter,
     { provide: FORUM_VIEWER_FACTS, useExisting: ForumViewerFactsAdapter },
@@ -44,6 +52,8 @@ import { ForumStructureResolver } from './presentation/forum-structure.resolver'
     ForumRatingsResolver,
     ForumCurationService,
     ForumCurationResolver,
+    ForumOperationsService,
+    ForumOperationsResolver,
     { provide: FORUM_INTERACTION_DECISIONS, useExisting: ForumTopicsService },
   ],
   exports: [FORUM_INTERACTION_DECISIONS],
