@@ -371,6 +371,20 @@ input CreateCustomTitleInput {
   name: String!
 }
 
+input CreateForumReplyInput {
+  documentJson: String!
+  quotedNumbers: [Int!]! = []
+  replyToNumber: Int
+  topicId: ID!
+}
+
+input CreateForumTopicInput {
+  documentJson: String!
+  forumId: ID!
+  kind: ForumTopicKind! = DISCUSSION
+  title: String!
+}
+
 input CreateModerationAnnotationInput {
   commentId: ID
   expiresAt: String
@@ -433,6 +447,13 @@ input EditCommentInput {
   body: String
   commentId: ID!
   documentJson: String
+}
+
+input EditForumPostInput {
+  documentJson: String!
+  expectedRevision: Int!
+  postId: ID!
+  title: String
 }
 
 enum EditorAiCommand {
@@ -533,6 +554,42 @@ type ForumModeratorAssignment {
   revokedAt: DateTime
 }
 
+type ForumPost {
+  authorId: ID!
+  createdAt: DateTime!
+
+  """Null for tombstones the viewer may not read."""
+  documentJson: String
+  editedAt: DateTime
+  id: ID!
+  number: Int!
+  quotedNumbers: [Int!]!
+  replyToNumber: Int
+  revision: Int!
+  state: ForumPostState!
+  topicId: ID!
+}
+
+type ForumPostPage {
+  items: [ForumPost!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+}
+
+type ForumPostRevision {
+  createdAt: DateTime!
+  editorId: ID!
+  revision: Int!
+}
+
+enum ForumPostState {
+  DELETED
+  HIDDEN
+  PURGED
+  VISIBLE
+}
+
 type ForumSubforum {
   active: Boolean!
   allowsGatedContent: Boolean!
@@ -543,6 +600,52 @@ type ForumSubforum {
   position: Int!
   slug: String!
   title: String!
+}
+
+type ForumTopic {
+  authorId: ID!
+  createdAt: DateTime!
+  curatorId: ID
+  forumId: ID!
+  id: ID!
+  interactionTargetId: ID!
+  kind: ForumTopicKind!
+  lastPostAt: DateTime!
+  lastPostAuthorId: ID!
+  lastPostNumber: Int!
+  pinned: Boolean!
+  postCount: Int!
+  state: ForumTopicState!
+  title: String!
+}
+
+type ForumTopicCreated {
+  firstPostId: ID!
+  topic: ForumTopic!
+}
+
+enum ForumTopicKind {
+  DISCUSSION
+  QUESTION
+}
+
+type ForumTopicPage {
+  items: [ForumTopic!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+}
+
+enum ForumTopicSort {
+  LAST_ACTIVITY
+  NEW
+}
+
+enum ForumTopicState {
+  ARCHIVED
+  CLOSED
+  OPEN
+  TRASHED
 }
 
 enum ForumVisibility {
@@ -985,12 +1088,15 @@ type Mutation {
   changeViewerEmail(input: ChangeEmailInput!): LogoutResultModel!
   changeViewerPassword(input: ChangePasswordInput!): LogoutResultModel!
   clearReaction(interactionTargetId: ID!): ReactionSummary!
+  closeForumTopic(topicId: ID!): ForumTopic!
   confirmViewerTwoFactorSetup(input: ConfirmTwoFactorInput!): TwoFactorConfirmationModel!
   createComment(input: CreateCommentInput!): Comment!
   createContentGate(input: CreateContentGateInput!): ContentGateModel!
   createCustomTitle(input: CreateCustomTitleInput!): CustomTitle!
   createForum(input: ForumInput!): Forum!
   createForumCategory(input: ForumCategoryInput!): ForumCategory!
+  createForumReply(input: CreateForumReplyInput!): ForumPost!
+  createForumTopic(input: CreateForumTopicInput!): ForumTopicCreated!
   createModerationAnnotation(input: CreateModerationAnnotationInput!): ModerationAnnotation!
   createNewsDraft(input: CreateNewsDraftInput!): NewsEditorialArticle!
   createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
@@ -999,6 +1105,7 @@ type Mutation {
   disableViewerTwoFactor(input: DisableTwoFactorInput!): LogoutResultModel!
   discardCommentDraft(draftId: ID!): Boolean!
   editComment(input: EditCommentInput!): Comment!
+  editForumPost(input: EditForumPostInput!): ForumPost!
   followUser(userId: ID!): UserSocialGraphSummary!
   giveReputation(input: GiveReputationInput!): ReputationEntry!
   grantCustomTitle(input: GrantCustomTitleInput!): UserTitleGrant!
@@ -1023,6 +1130,7 @@ type Mutation {
   removeProfileWallPost(postId: ID!, reason: String): ProfileWallPost!
   removeViewerAvatar: Viewer!
   removeViewerCover: Viewer!
+  reopenForumTopic(topicId: ID!): ForumTopic!
   reportContent(input: ReportContentInput!): ContentReport!
   requestEmailVerification: LogoutResultModel!
   requestNewsChanges(input: NewsDecisionInput!): NewsEditorialTransition!
@@ -1509,6 +1617,10 @@ type Query {
   following(pagination: UsersPageInput, userId: ID!): UsersPageModel!
   forumCategories: [ForumCategory!]!
   forumCategoryModerators(categoryId: ID!): [ForumModeratorAssignment!]!
+  forumPostRevisions(postId: ID!): [ForumPostRevision!]!
+  forumPosts(limit: Int! = 20, page: Int! = 1, topicId: ID!): ForumPostPage!
+  forumTopic(topicId: ID!): ForumTopic!
+  forumTopics(forumId: ID!, limit: Int! = 20, page: Int! = 1, sort: ForumTopicSort! = LAST_ACTIVITY): ForumTopicPage!
   fullNews(language: String!, slug: String!): FullNews
   interactionTarget(id: ID!): InteractionTarget!
   interactionTargetAccess(capability: InteractionCapability!, targetId: ID!): InteractionAccessDecision!
