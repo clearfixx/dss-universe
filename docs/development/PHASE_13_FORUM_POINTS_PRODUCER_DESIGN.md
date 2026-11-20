@@ -33,11 +33,11 @@ WITHDRAW**, because deletion does not revoke forum points.
 
 ## Proposed producer profiles
 
-| Profile id      | Producer        | Source type  | Event                      | Recipient key |
-| --------------- | --------------- | ------------ | -------------------------- | ------------- |
-| `forum.topics`  | `dss.api.forum` | `ForumTopic` | `forum.topic.created.v1`   | `authorId`    |
-| `forum.replies` | `dss.api.forum` | `ForumPost`  | `forum.post.created.v1`    | `authorId`    |
-| `forum.answers` | `dss.api.forum` | `ForumPost`  | `forum.answer.accepted.v1` | `authorId`    |
+| Profile id      | Producer        | Source type         | Event                      | Recipient key |
+| --------------- | --------------- | ------------------- | -------------------------- | ------------- |
+| `forum.topics`  | `dss.api.forum` | `ForumTopic`        | `forum.topic.created.v1`   | `authorId`    |
+| `forum.replies` | `dss.api.forum` | `ForumPost`         | `forum.post.created.v1`    | `authorId`    |
+| `forum.answers` | `dss.api.forum` | `ForumAnswerCredit` | `forum.answer.credited.v1` | `authorId`    |
 
 All three: category `integration`, version 1, `points: true`, `levels: false`.
 
@@ -51,9 +51,14 @@ exact recipient keys and stable aggregates.
 2. `forum.post.created.v1` — add `authorId` (aggregate stays `ForumPost`). Post #1
    is part of topic creation and does **not** emit this event, so a topic earns
    +5, not +6.
-3. `forum.answer.accepted.v1` — aggregate becomes the **accepted post**
-   (`ForumPost`), payload `{ topicId, postId, authorId, previousPostId }` where
-   `authorId` is the answer author. Clearing an answer keeps its own event.
+3. **Superseded during G2:** instead of re-aggregating
+   `forum.answer.accepted.v1`, the first acceptance of a post sets write-once
+   columns on `forum_posts` and emits one `forum.answer.credited.v1` on its own
+   aggregate `ForumAnswerCredit` (id = post id), payload
+   `{ postId, topicId, authorId }`. A shared `ForumPost` aggregate would
+   collide with the reply on one source cursor, and the canonical reader
+   cannot pick the first of several acceptances. `forum.answer.accepted.v1`
+   stays unchanged for Activity and audit. See `PHASE_13_G2_FORUM_POINTS.md`.
 
 Events emitted before activation are never admitted (cutoff), so this additive
 change needs no legacy rewrite.
