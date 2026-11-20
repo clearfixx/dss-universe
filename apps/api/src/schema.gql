@@ -567,6 +567,8 @@ type ForumPost {
   moderation: ForumPostModeration
   number: Int!
   quotedNumbers: [Int!]!
+  ratingDown: Int!
+  ratingUp: Int!
   replyToNumber: Int
   revision: Int!
   staffNotes: [ForumStaffNote!]!
@@ -592,6 +594,12 @@ type ForumPostPage {
   total: Int!
 }
 
+type ForumPostRating {
+  postId: ID!
+  ratingDown: Int!
+  ratingUp: Int!
+}
+
 type ForumPostRevision {
   createdAt: DateTime!
   editorId: ID!
@@ -605,8 +613,32 @@ enum ForumPostState {
   VISIBLE
 }
 
+type ForumPostVote {
+  createdAt: DateTime!
+  reversed: Boolean!
+  value: Int!
+  voterId: ID!
+}
+
+type ForumPostVotePage {
+  items: [ForumPostVote!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+}
+
 type ForumPurgeResult {
   postId: ID!
+}
+
+type ForumRankingSettings {
+  hotGravitySeconds: Int!
+  hotReplyWeight: Int!
+}
+
+input ForumRankingSettingsInput {
+  hotGravitySeconds: Int!
+  hotReplyWeight: Int!
 }
 
 type ForumStaffNote {
@@ -636,6 +668,14 @@ type ForumSubforum {
   title: String!
 }
 
+enum ForumTopPeriod {
+  ALL
+  DAY
+  MONTH
+  WEEK
+  YEAR
+}
+
 type ForumTopic {
   authorId: ID!
   createdAt: DateTime!
@@ -649,8 +689,14 @@ type ForumTopic {
   lastPostNumber: Int!
   pinned: Boolean!
   postCount: Int!
+  ratingDown: Int!
+  ratingUp: Int!
   state: ForumTopicState!
   title: String!
+  viewCount: Int!
+
+  """Furthest post number read by the viewer; null for guests."""
+  viewerLastReadNumber: Int
 }
 
 type ForumTopicCreated {
@@ -677,8 +723,10 @@ enum ForumTopicScope {
 }
 
 enum ForumTopicSort {
+  HOT
   LAST_ACTIVITY
   NEW
+  TOP
 }
 
 enum ForumTopicState {
@@ -1159,10 +1207,12 @@ type Mutation {
   login(input: LoginInput!): AuthPayloadModel!
   logout: LogoutResultModel!
   markActivityFeedVisited: ActivityFeedVisit!
+  markForumTopicRead(topicId: ID!, upToNumber: Int!): Int!
   publishNews(input: PublishNewsInput!): NewsEditorialTransition!
   publishResearchRevision(input: ResearchDecisionInput!): ResearchRevisionReceipt!
   purgeForumPost(postId: ID!, reason: String!): ForumPurgeResult!
   reactivateAccount(input: LoginInput!): AuthPayloadModel!
+  recordForumTopicView(topicId: ID!): Boolean!
   recordInteractionShare(input: RecordShareInput!): AudienceEngagement!
   recordInteractionView(input: RecordViewInput!): AudienceEngagement!
   refreshTokens(input: RefreshTokenInput!): AuthPayloadModel!
@@ -1189,6 +1239,7 @@ type Mutation {
   restoreResearchPage(input: ResearchLifecycleInput!): Boolean!
   retryFailedMedia(mediaId: ID!): MediaLibraryItem!
   reverseCommunityPoints(input: ReverseCommunityPointsInput!): CommunityPointEntry!
+  reverseForumPostVote(postId: ID!, reason: String!, voterId: ID!): ForumPostRating!
   reverseReputation(input: ReverseReputationInput!): ReputationEntry!
   reviewContentReport(input: ReviewContentReportInput!): ContentReport!
   revokeAchievementAward(input: RevokeAchievementAwardInput!): AchievementAward!
@@ -1228,6 +1279,7 @@ type Mutation {
   updateCustomTitleSettings(input: UpdateCustomTitleSettingsInput!): CustomTitleSettings!
   updateForum(forumId: ID!, input: ForumInput!): Forum!
   updateForumCategory(categoryId: ID!, input: ForumCategoryInput!): ForumCategory!
+  updateForumRankingSettings(input: ForumRankingSettingsInput!): ForumRankingSettings!
   updateLevelDefinition(input: UpdateLevelDefinitionInput!): LevelDefinition!
   updateModerationSanctionPolicy(input: ModerationSanctionPolicyInput!): ModerationSanctionPolicy!
   updateNewsSettings(input: UpdateNewsSettingsInput!): NewsSettings!
@@ -1237,6 +1289,7 @@ type Mutation {
   updateViewerProfile(input: UpdateViewerProfileInput!): Viewer!
   updateViewerSocialLinks(input: UpdateViewerSocialLinksInput!): [UserSocialLink!]!
   verifyEmail(input: VerifyEmailInput!): LogoutResultModel!
+  voteForumPost(postId: ID!, value: Int!): ForumPostRating!
   withdrawResearchRevision(input: ResearchDecisionInput!): ResearchRevisionReceipt!
 }
 
@@ -1669,9 +1722,11 @@ type Query {
   forumCategories: [ForumCategory!]!
   forumCategoryModerators(categoryId: ID!): [ForumModeratorAssignment!]!
   forumPostRevisions(postId: ID!): [ForumPostRevision!]!
+  forumPostVotes(limit: Int! = 50, page: Int! = 1, postId: ID!): ForumPostVotePage!
   forumPosts(limit: Int! = 20, page: Int! = 1, topicId: ID!): ForumPostPage!
+  forumRankingSettings: ForumRankingSettings!
   forumTopic(topicId: ID!): ForumTopic!
-  forumTopics(forumId: ID!, limit: Int! = 20, page: Int! = 1, scope: ForumTopicScope! = ACTIVE, sort: ForumTopicSort! = LAST_ACTIVITY): ForumTopicPage!
+  forumTopics(forumId: ID!, limit: Int! = 20, page: Int! = 1, scope: ForumTopicScope! = ACTIVE, sort: ForumTopicSort! = LAST_ACTIVITY, topPeriod: ForumTopPeriod! = WEEK): ForumTopicPage!
   fullNews(language: String!, slug: String!): FullNews
   interactionTarget(id: ID!): InteractionTarget!
   interactionTargetAccess(capability: InteractionCapability!, targetId: ID!): InteractionAccessDecision!
