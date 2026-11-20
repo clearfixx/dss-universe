@@ -128,4 +128,15 @@ The owner role receives every permission through the existing seed rule.
 - interceptor unit tests and Content Gate override tests;
 - API lint, typecheck and architecture checks.
 
+Recorded local results (2026-11-20, Node 24.22.3, disposable `dss_test`):
+
+- migration applied to `dss_test`; zero Prisma schema drift;
+- API unit suite: 1589 passed, 106 skipped by the existing opt-in policy;
+- moderation e2e 11/11 and application-level read-only enforcement e2e 1/1;
+- full API e2e suite: 88 suites, 972/972 passed;
+- architecture inventory: 0 findings, baseline unchanged; API lint and
+  typecheck clean; generated Web GraphQL client unchanged.
+
+GitHub CI on the committed PR head remains the acceptance gate.
+
 ⚖️ A sanction without a record is a rumour; a record without an expiry is a grudge.
