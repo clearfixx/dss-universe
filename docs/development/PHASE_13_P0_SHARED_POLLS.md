@@ -71,4 +71,14 @@ supported and the product UI decides which to expose.
   counts, open voter listing, anonymous evidence, immutability, cross-poll
   choices and one poll per target.
 
+Recorded local results (2026-11-20, Node 24.22.3, disposable `dss_test`):
+
+- migration applied to `dss_test`; zero Prisma schema drift;
+- API unit suite: 1614 passed, 106 skipped by the existing opt-in policy;
+- shared polls e2e 7/7; full API e2e: 89 suites, 979/979 passed;
+- architecture inventory: 0 findings; lint and typecheck clean; generated
+  Web GraphQL client unchanged.
+
+GitHub CI on the committed PR head remains the acceptance gate.
+
 🗳️ A poll is a question asked once and answered once — by each of us.
