@@ -76,4 +76,18 @@ and 10. Ranking is computed in SQL for the requested page.
   moderator reversal, TOP/HOT ordering with pinning, unique views and monotonic
   unread state.
 
+Recorded local results (2026-11-21, Node 24.22.3, dedicated `5435`/Redis `6381`):
+
+- migrations applied; zero Prisma schema drift;
+- API unit suite: 1658 passed, 106 skipped by the existing opt-in policy;
+- forum e2e (structure, topics, moderation, ratings) and schema alignment: 29/29;
+- full API e2e: 88 suites, 968/968. Five Redis-guarded suites (`queue`,
+  `gamification-broker`, `gamification-activation`,
+  `gamification-consumption`, `media-intake-concurrency`) were excluded because
+  `main` pins them to Redis `6380`; with the allowlist from PR #192 they pass
+  37/37 on `6381`;
+- architecture inventory: 0 findings; lint and typecheck clean.
+
+GitHub CI on the committed PR head remains the acceptance gate.
+
 ⭐ Rate the words, not the writer.
