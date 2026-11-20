@@ -59,4 +59,15 @@ Targets (topics) and comments; per-post reporting is part of CH-5 integration.
   listing exclusion (including HOT), split, scoped sanction routing;
 - lint and typecheck clean.
 
+Recorded local results (2026-11-21, Node 24.22.3, dedicated `5435`/Redis `6381`):
+
+- migrations applied; zero Prisma schema drift; application boot passes;
+- API unit suite: 1662 passed, 106 skipped by the existing opt-in policy;
+- forum e2e (all seven suites): 41/41;
+- full API e2e: 91 suites, 983/983 (five Redis-6380-pinned suites excluded;
+  covered by PR #192);
+- architecture inventory: 0 findings.
+
+GitHub CI on the committed PR head remains the acceptance gate.
+
 🧭 Posts may change rooms; they always remember where they were born.
