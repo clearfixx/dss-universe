@@ -18,7 +18,7 @@ Guardians can inspect the current mode and list with `researchEditPolicy` and sw
 
 Guardians use `researchReviewQueue` to list pending submissions and `researchPendingRevision` to read one. Both check the current page audience. Editor filters gated document blocks for the reviewer before delivery.
 
-Authors can list their drafts through `researchOwnDrafts` and reopen a saved Wiki document through `researchOwnDraft`. The returned version is the expected version for the next save.
+Authors can list their drafts through `researchOwnDrafts` and reopen a saved Wiki document through `researchOwnDraft`. The returned version is the expected version for the next save. Discard requires the current draft ID and version. Discarding the last never-submitted draft releases the page address. Once a revision has been submitted, the address and review history are retained.
 
 Editor validates Wiki documents and projects content for the viewer. IAM supplies
 group and Guardian evidence. Research Lab supplies page access decisions to

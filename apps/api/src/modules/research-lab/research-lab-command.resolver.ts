@@ -110,6 +110,12 @@ class ResearchOwnDraft extends ResearchOwnDraftItem {
   @Field(() => ID, { nullable: true }) basePublishedRevisionId!: string | null;
 }
 @ObjectType()
+class ResearchDiscardReceipt {
+  @Field(() => ID) pageId!: string;
+  @Field(() => ID) draftId!: string;
+  @Field() routeReleased!: boolean;
+}
+@ObjectType()
 class ResearchDraftReceipt {
   @Field(() => ID) pageId!: string;
   @Field(() => ID) draftId!: string;
@@ -144,6 +150,18 @@ export class ResearchLabCommandResolver {
       }
     }
   }
+  @Mutation(() => ResearchDiscardReceipt)
+  discardResearchDraft(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('pageId', { type: () => ID }) pageId: string,
+    @Args('draftId', { type: () => ID }) draftId: string,
+    @Args('expectedVersion', { type: () => Int }) expectedVersion: number,
+  ) {
+    return this.execute(
+      this.workflow.discardDraft(actor.id, pageId, draftId, expectedVersion),
+    );
+  }
+
   @Query(() => [ResearchOwnDraftItem])
   researchOwnDrafts(
     @AuthUser() actor: AuthenticatedUser,

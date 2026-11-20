@@ -855,6 +855,7 @@ type Mutation {
   deactivateAccount(input: DeactivateAccountInput!): LogoutResultModel!
   disableViewerTwoFactor(input: DisableTwoFactorInput!): LogoutResultModel!
   discardCommentDraft(draftId: ID!): Boolean!
+  discardResearchDraft(draftId: ID!, expectedVersion: Int!, pageId: ID!): ResearchDiscardReceipt!
   editComment(input: EditCommentInput!): Comment!
   followUser(userId: ID!): UserSocialGraphSummary!
   giveReputation(input: GiveReputationInput!): ReputationEntry!
@@ -1502,6 +1503,12 @@ input ResearchDecisionInput {
   pageId: ID!
   reason: String
   revisionId: ID!
+}
+
+type ResearchDiscardReceipt {
+  draftId: ID!
+  pageId: ID!
+  routeReleased: Boolean!
 }
 
 input ResearchDraftInput {

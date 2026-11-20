@@ -107,6 +107,80 @@ describe('Research Lab commands (e2e)', () => {
     };
   }
 
+  it('releases an unsubmitted route only for the current draft and version', async () => {
+    const author = await user(),
+      other = await user();
+    const input = content('discard-' + randomUUID());
+    const { pageId, draftId } = await service.createDraft({
+      actorId: author,
+      ...input,
+    });
+    await service.saveDraft({
+      actorId: author,
+      pageId,
+      expectedVersion: 1,
+      ...input,
+    });
+    for (const [actor, id, version] of [
+      [other, draftId, 2],
+      [author, draftId, 1],
+      [author, randomUUID(), 2],
+    ] as const) {
+      await expect(
+        service.discardDraft(actor, pageId, id, version),
+      ).rejects.toMatchObject({ code: 'DRAFT_CONFLICT' });
+    }
+    expect(await service.ownDraft(author, pageId)).toMatchObject({
+      id: draftId,
+      version: 2,
+    });
+    expect(
+      await service.discardDraft(author, pageId, draftId, 2),
+    ).toMatchObject({ routeReleased: true });
+    const replacement = await service.createDraft({ actorId: other, ...input });
+    expect(replacement.pageId).not.toBe(pageId);
+  });
+
+  it('keeps the route and first submitted revision when a returned draft is discarded', async () => {
+    const author = await user(),
+      guardian = await user(true);
+    const input = content('reviewed-discard-' + randomUUID());
+    const { pageId, draftId } = await service.createDraft({
+      actorId: author,
+      ...input,
+    });
+    const { revisionId } = await service.submitDraft({
+      actorId: author,
+      pageId,
+      expectedVersion: 1,
+      editSummary: 'Review',
+      correlationId: randomUUID(),
+    });
+    await service.requestChanges({
+      actorId: guardian,
+      pageId,
+      revisionId,
+      reason: 'More context',
+      correlationId: randomUUID(),
+    });
+    const returned = await service.ownDraft(author, pageId);
+    expect(returned).toMatchObject({ version: 1 });
+    await expect(
+      service.discardDraft(author, pageId, draftId, 1),
+    ).rejects.toMatchObject({ code: 'DRAFT_CONFLICT' });
+    expect(
+      await service.discardDraft(author, pageId, returned!.id, 1),
+    ).toMatchObject({ routeReleased: false });
+    expect(
+      await fixture.prisma.researchRevision.findUnique({
+        where: { id: revisionId },
+      }),
+    ).toMatchObject({ pageId, state: 'CHANGES_REQUESTED' });
+    await expect(
+      service.createDraft({ actorId: guardian, ...input }),
+    ).rejects.toMatchObject({ code: 'REVISION_CONFLICT' });
+  });
+
   it('keeps drafts private and permits only one compare-and-swap save', async () => {
     const author = await user();
     const stranger = await user();
