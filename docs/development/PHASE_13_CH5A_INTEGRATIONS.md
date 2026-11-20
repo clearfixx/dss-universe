@@ -47,6 +47,11 @@ The brainstorm's CH-5 is delivered in parts:
   replacement, one-topic-per-article conflict, unpublished articles rejected,
   unlink with events, visibility-aware discussion link, public-only topic
   counting; gate/wall owner evidence e2e through the real application;
-- lint and typecheck clean.
+- lint and typecheck clean;
+- full API e2e on the dedicated PostgreSQL 5435 / Redis 6381 (Redis-6380-pinned
+  suites excluded until #192 lands): 986/987 tests, 90/92 suites. The two
+  failing suites (`qualified-points`, `achievement-qualification-storage`)
+  hit 5 s hook/test timeouts while lint and typecheck ran in parallel on the
+  same machine; rerun alone they pass 32/32.
 
 🔗 Every article deserves one place to talk about it.
