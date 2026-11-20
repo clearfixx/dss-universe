@@ -79,7 +79,10 @@ class ForumTopicPollInput {
   @ArrayMaxSize(20)
   @IsString({ each: true })
   options!: string[];
-  @Field({ defaultValue: 'OPEN', description: 'OPEN or ANONYMOUS' })
+  @Field(() => String, {
+    defaultValue: 'OPEN',
+    description: 'OPEN or ANONYMOUS',
+  })
   @IsIn(['OPEN', 'ANONYMOUS'])
   visibility!: PollVisibility;
   @Field(() => Int, { defaultValue: 1 }) @IsInt() @Min(1) maxChoices!: number;
