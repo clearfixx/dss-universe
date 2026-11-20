@@ -43,6 +43,11 @@ Status: implementation package under review. Stacked on CH-5a
   confirmed against current visibility (restricted, hidden post, unknown,
   trashed);
 - application boot e2e confirms the wiring has no dependency cycle;
-- lint, typecheck and architecture checks clean.
+- lint, typecheck and architecture checks clean;
+- full API e2e (5435/6381, Redis-6380-pinned suites excluded): 984/990 on the
+  first run. The six failures were Activity e2e fixtures that inserted
+  synthetic `FORUM` rows with nonexistent subjects, now correctly hidden by the
+  fail-closed owner check; the fixtures use the unchecked `BLOG` module and
+  both suites pass 20/20.
 
 🔎 Find the discussion, never the secret.
