@@ -40,6 +40,7 @@ describe('Forum structure (e2e)', () => {
             seesAllCategories: false,
             moderatesAllCategories: false,
             canAssignModerators: false,
+            canPurgeContent: false,
             ...(subjectId ? facts.get(subjectId) : {}),
           }),
       },

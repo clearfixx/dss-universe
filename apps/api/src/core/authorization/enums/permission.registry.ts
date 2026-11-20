@@ -183,6 +183,12 @@ export const PERMISSIONS = {
     label: 'Assign forum moderators',
     description: 'Allows assigning and revoking category moderators.',
   },
+  ForumContentPurge: {
+    key: 'forum.content.purge',
+    label: 'Purge forum content',
+    description:
+      'Allows physically erasing forum post content for legal, security or privacy reasons.',
+  },
   ForumModerateAll: {
     key: 'forum.moderate.all',
     label: 'Moderate every forum category',

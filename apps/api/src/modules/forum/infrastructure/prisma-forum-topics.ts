@@ -49,6 +49,8 @@ import {
   type ForumPage,
   type ForumPostView,
   type ForumTopicKind,
+  type ForumStaffNoteView,
+  type ForumTopicScope,
   type ForumTopicSort,
   type ForumTopicSummary,
 } from '../domain/types/forum-topic.type';
@@ -199,7 +201,8 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     });
     return this.postView(
       await this.prisma.forumPost.findUniqueOrThrow({ where: { id: postId } }),
-      true,
+      false,
+      [],
     );
   }
 
@@ -289,9 +292,11 @@ export class ForumTopicsService implements ForumInteractionDecisions {
         byModerator: actor.moderator && actorId !== post.authorId,
       });
     });
+    const staffNotes = await this.staffNotes([post.id]);
     return this.postView(
       await this.prisma.forumPost.findUniqueOrThrow({ where: { id: post.id } }),
-      true,
+      false,
+      staffNotes.get(post.id) ?? [],
     );
   }
 
@@ -315,13 +320,28 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     sort: ForumTopicSort,
     page: number,
     limit: number,
+    scope: ForumTopicScope = 'ACTIVE',
   ): Promise<ForumPage<ForumTopicSummary>> {
     const viewer = await this.viewers.read(viewerId, new Date());
-    await this.visibleForum(forumId, viewer);
+    const forum = await this.visibleForum(forumId, viewer);
+    if (
+      scope === 'TRASHED' &&
+      !(await this.isModerator(viewer, forum.categoryId))
+    ) {
+      throw new ForumCommandError(
+        'ACCESS_DENIED',
+        'Only moderators can open the trash.',
+      );
+    }
     const { skip, take, safePage } = this.paging(page, limit);
     const where: Prisma.ForumTopicWhereInput = {
       forumId,
-      state: { in: ['OPEN', 'CLOSED'] },
+      state:
+        scope === 'ACTIVE'
+          ? { in: ['OPEN', 'CLOSED'] }
+          : scope === 'ARCHIVED'
+            ? 'ARCHIVED'
+            : 'TRASHED',
     };
     const [rows, total] = await Promise.all([
       this.prisma.forumTopic.findMany({
@@ -360,7 +380,11 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     limit: number,
   ): Promise<ForumPage<ForumPostView>> {
     const viewer = await this.viewers.read(viewerId, new Date());
-    await this.visibleTopic(topicId, viewer);
+    const { topic, categoryId } = await this.visibleTopic(topicId, viewer);
+    const staff =
+      viewer.subjectId !== null &&
+      (topic.curatorId === viewer.subjectId ||
+        (await this.isModerator(viewer, categoryId)));
     const { skip, take, safePage } = this.paging(page, limit);
     const [rows, total] = await Promise.all([
       this.prisma.forumPost.findMany({
@@ -371,8 +395,11 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       }),
       this.prisma.forumPost.count({ where: { topicId } }),
     ]);
+    const notes = await this.staffNotes(rows.map(({ id }) => id));
     return {
-      items: rows.map((row) => this.postView(row, row.state === 'VISIBLE')),
+      items: rows.map((row) =>
+        this.postView(row, staff, notes.get(row.id) ?? []),
+      ),
       total,
       page: safePage,
       limit: take,
@@ -495,21 +522,38 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     return forum;
   }
 
-  private async visibleTopic(
+  /** Resolves a topic the viewer may see; trashed topics only for moderators. */
+  async visibleTopic(
     topicId: string,
     viewer: ForumViewerFacts,
   ): Promise<VisibleTopic> {
     const topic = await this.prisma.forumTopic.findUnique({
       where: { id: topicId },
     });
-    if (!topic || topic.state === 'TRASHED') this.notFound('Topic');
+    if (!topic) this.notFound('Topic');
     const forum = await this.visibleForum(topic.forumId, viewer).catch(
       (error: unknown) => {
         if (error instanceof ForumCommandError) this.notFound('Topic');
         throw error;
       },
     );
+    if (
+      topic.state === 'TRASHED' &&
+      !(await this.isModerator(viewer, forum.categoryId))
+    ) {
+      this.notFound('Topic');
+    }
     return { topic, categoryId: forum.categoryId, viewer };
+  }
+
+  /** Category moderator, supermoderator or structure manager. */
+  async isModerator(
+    viewer: ForumViewerFacts,
+    categoryId: string,
+  ): Promise<boolean> {
+    if (viewer.subjectId === null) return false;
+    if (viewer.seesAllCategories || viewer.moderatesAllCategories) return true;
+    return this.structure.canModerateCategory(viewer.subjectId, categoryId);
   }
 
   private async authenticated(actorId: string): Promise<ForumViewerFacts> {
@@ -651,7 +695,14 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     };
   }
 
-  private postView(row: ForumPost, showContent: boolean): ForumPostView {
+  private postView(
+    row: ForumPost,
+    staff: boolean,
+    staffNotes: ForumStaffNoteView[],
+  ): ForumPostView {
+    const showContent =
+      row.state === 'VISIBLE' ||
+      (staff && (row.state === 'HIDDEN' || row.state === 'DELETED'));
     return {
       id: row.id,
       topicId: row.topicId,
@@ -664,7 +715,40 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       revision: row.revision,
       createdAt: row.createdAt,
       editedAt: row.editedAt,
+      moderation:
+        staff && row.moderatedAt && row.moderatedById && row.moderationReason
+          ? {
+              at: row.moderatedAt,
+              byId: row.moderatedById,
+              reason: row.moderationReason,
+            }
+          : null,
+      staffNotes,
     };
+  }
+
+  private async staffNotes(
+    postIds: string[],
+  ): Promise<Map<string, ForumStaffNoteView[]>> {
+    const notes = postIds.length
+      ? await this.prisma.forumPostStaffNote.findMany({
+          where: { postId: { in: postIds }, removedAt: null },
+          orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+        })
+      : [];
+    const grouped = new Map<string, ForumStaffNoteView[]>();
+    for (const note of notes) {
+      const list = grouped.get(note.postId) ?? [];
+      list.push({
+        id: note.id,
+        authorId: note.authorId,
+        role: note.role,
+        body: note.body,
+        createdAt: note.createdAt,
+      });
+      grouped.set(note.postId, list);
+    }
+    return grouped;
   }
 
   private paging(page: number, limit: number) {

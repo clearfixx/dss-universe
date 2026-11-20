@@ -30,6 +30,17 @@ export const FORUM_POST_STATES = [
 ] as const;
 export type ForumPostState = (typeof FORUM_POST_STATES)[number];
 
+export const FORUM_STAFF_ROLES = [
+  'CURATOR',
+  'MODERATOR',
+  'SUPERMODERATOR',
+  'ADMINISTRATOR',
+] as const;
+export type ForumStaffRole = (typeof FORUM_STAFF_ROLES)[number];
+
+export const FORUM_TOPIC_SCOPES = ['ACTIVE', 'ARCHIVED', 'TRASHED'] as const;
+export type ForumTopicScope = (typeof FORUM_TOPIC_SCOPES)[number];
+
 export const FORUM_TOPIC_SORTS = ['LAST_ACTIVITY', 'NEW'] as const;
 export type ForumTopicSort = (typeof FORUM_TOPIC_SORTS)[number];
 
@@ -67,6 +78,21 @@ export type ForumPostView = {
   revision: number;
   createdAt: Date;
   editedAt: Date | null;
+  /** Moderation facts, returned only to staff of the topic. */
+  moderation: {
+    at: Date;
+    byId: string;
+    reason: string;
+  } | null;
+  staffNotes: ForumStaffNoteView[];
+};
+
+export type ForumStaffNoteView = {
+  id: string;
+  authorId: string;
+  role: ForumStaffRole;
+  body: string;
+  createdAt: Date;
 };
 
 export type ForumPage<T> = {

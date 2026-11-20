@@ -104,6 +104,7 @@ const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     Permission.ForumStructureManage,
     Permission.ForumModeratorsAssign,
     Permission.ForumModerateAll,
+    Permission.ForumContentPurge,
     Permission.NewsReview,
     Permission.NewsPublish,
     Permission.NewsTaxonomyManage,
