@@ -12,11 +12,12 @@
  * ===============================================================
  */
 const start = jest.fn();
+const autoInstrumentations = jest.fn(() => []);
 jest.mock('@opentelemetry/sdk-node', () => ({
   NodeSDK: jest.fn().mockImplementation(() => ({ start, shutdown: jest.fn() })),
 }));
 jest.mock('@opentelemetry/auto-instrumentations-node', () => ({
-  getNodeAutoInstrumentations: jest.fn(() => []),
+  getNodeAutoInstrumentations: autoInstrumentations,
 }));
 
 describe('telemetry startup', () => {
@@ -59,6 +60,37 @@ describe('telemetry startup', () => {
     process.env.OTEL_EXPORTER_OTLP_ENDPOINT = 'http://localhost:4318';
     load();
     expect(start).toHaveBeenCalledTimes(1);
+    const configuration = (
+      autoInstrumentations.mock.calls as unknown as Array<
+        [
+          Record<
+            string,
+            {
+              redactedQueryParams?: string[];
+              redactedQueryParamsServer?: string[];
+              enhancedDatabaseReporting?: boolean;
+            }
+          >,
+        ]
+      >
+    ).at(-1)![0];
+    const http = configuration['@opentelemetry/instrumentation-http'];
+    expect(http.redactedQueryParamsServer).toEqual(http.redactedQueryParams);
+    expect(http.redactedQueryParams).toEqual(
+      expect.arrayContaining([
+        'token',
+        'access_token',
+        'refresh_token',
+        'password',
+        'code',
+        'X-Amz-Signature',
+        'X-Goog-Signature',
+        'sig',
+      ]),
+    );
+    expect(configuration['@opentelemetry/instrumentation-pg']).toEqual({
+      enhancedDatabaseReporting: false,
+    });
   });
 
   it('does not choose an implicit OTLP endpoint from an exporter name', () => {

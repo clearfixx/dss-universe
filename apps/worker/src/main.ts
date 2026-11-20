@@ -43,6 +43,7 @@ import { DeadLetterService } from "./dead-letter.service.js";
 import { createIntegrationEventProcessor } from "./integration-event.processor.js";
 import { INTEGRATION_EVENT_CONSUMER_NAME } from "./integration-event-consumer.js";
 import { PostgresProcessedEventStore } from "./processed-event.store.js";
+import { openRemoteMediaAttempt } from "./s3-media-attempt.js";
 import { LocalMediaFileProcessor } from "./local-media-file.processor.js";
 import { createMediaProcessingProcessor } from "./media-processing.processor.js";
 import { PostgresMediaProcessingStore } from "./postgres-media-processing.store.js";
@@ -164,6 +165,7 @@ const mediaWorker = new Worker<MediaProcessingJob>(
     new PostgresMediaProcessingStore(pool),
     new LocalMediaFileProcessor(),
     new ClamAvMediaMalwareScanner(),
+    openRemoteMediaAttempt,
   ),
   { connection },
 );

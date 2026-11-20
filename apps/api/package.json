@@ -11,6 +11,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/src/main",
+    "start:gamification": "node --env-file-if-exists=.env --env-file-if-exists=.env.local dist/src/gamification-main",
     "build": "nest build",
     "lint": "eslint \"{src,test}/**/*.ts\"",
     "lint:fix": "eslint \"{src,test}/**/*.ts\" --fix",
@@ -48,11 +49,11 @@
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.2.7",
-    "@nestjs/swagger": "^11.4.7",
+    "@nestjs/swagger": "^11.4.8",
     "@opentelemetry/api": "^1.9.1",
-    "@opentelemetry/auto-instrumentations-node": "^0.78.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.80.0",
     "@opentelemetry/resources": "^2.12.0",
-    "@opentelemetry/sdk-node": "^0.220.0",
+    "@opentelemetry/sdk-node": "^0.222.0",
     "@opentelemetry/semantic-conventions": "^1.43.0",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
@@ -127,6 +128,12 @@
     ],
     "coverageDirectory": "../coverage",
     "coverageThreshold": {
+      "src/modules/community-points/application/services/qualified-points.service.ts": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      },
       "src/modules/auth/presentation/mappers/map-auth-failure.ts": {
         "branches": 100,
         "functions": 100,

@@ -12,7 +12,7 @@
  * ===============================================================
  */
 
-import { UseGuards } from '@nestjs/common';
+import { NotFoundException, UseGuards } from '@nestjs/common';
 import { Args, ID, Query, Resolver } from '@nestjs/graphql';
 
 import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
@@ -35,9 +35,17 @@ export class InteractionTargetsResolver {
 
   @Query(() => InteractionTargetModel)
   async interactionTarget(
+    @AuthUser() actor: AuthenticatedUser,
     @Args('id', { type: () => ID }) id: string,
   ): Promise<InteractionTargetModel> {
-    return this.toTarget(await this.targets.getById(id));
+    const decision = await this.targets.authorize(
+      id,
+      { kind: 'AUTHENTICATED', subjectId: actor.id },
+      'READ',
+    );
+    if (!decision.allowed)
+      throw new NotFoundException('Interaction target was not found.');
+    return this.toTarget(decision.target);
   }
 
   @Query(() => InteractionAccessDecisionModel)
@@ -47,15 +55,21 @@ export class InteractionTargetsResolver {
     @Args('capability', { type: () => InteractionCapabilityInput })
     capability: InteractionCapabilityInput,
   ): Promise<InteractionAccessDecisionModel> {
-    return this.toDecision(
-      await this.targets.authorize(
-        targetId,
-        { kind: 'AUTHENTICATED', subjectId: actor.id },
-        capability,
-      ),
-    );
+    const viewer = { kind: 'AUTHENTICATED', subjectId: actor.id } as const;
+    const decision = await this.targets.authorize(targetId, viewer, capability);
+    if (
+      decision.target.kind === 'research-lab.page' ||
+      decision.target.kind === 'comment'
+    ) {
+      const read =
+        capability === InteractionCapabilityInput.READ
+          ? decision
+          : await this.targets.authorize(targetId, viewer, 'READ');
+      if (!read.allowed)
+        throw new NotFoundException('Interaction target was not found.');
+    }
+    return this.toDecision(decision);
   }
-
   private toDecision(
     decision: InteractionAccessDecision,
   ): InteractionAccessDecisionModel {

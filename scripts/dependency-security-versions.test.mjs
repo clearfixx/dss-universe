@@ -104,3 +104,35 @@ test("actual CLI and jsdom paths use patched undici 7", () => {
   for (const consumer of [cli.require, jsdom.require])
     atLeast(resolvedPackage(consumer, "undici").version, "7.30.1");
 });
+
+test("actual telemetry consumers use patched HTTP and database instrumentations", () => {
+  const bundle = resolvedPackage(
+    api,
+    "@opentelemetry/auto-instrumentations-node",
+  );
+  atLeast(
+    resolvedPackage(bundle.require, "@opentelemetry/instrumentation-http")
+      .version,
+    "0.222.0",
+  );
+  atLeast(
+    resolvedPackage(bundle.require, "@opentelemetry/instrumentation-pg")
+      .version,
+    "0.73.0",
+  );
+});
+
+test("actual API and schema consumers use patched parser utilities", () => {
+  const swagger = resolvedPackage(api, "@nestjs/swagger");
+  const platform = resolvedPackage(api, "@nestjs/platform-express");
+  const express = resolvedPackage(platform.require, "express");
+  const loader = resolvedPackage(api, "ts-loader");
+  const webpack = resolvedPackage(loader.require, "webpack");
+  const schemas = resolvedPackage(webpack.require, "schema-utils");
+  const ajv = resolvedPackage(schemas.require, "ajv");
+
+  atLeast(swagger.version, "11.4.8");
+  atLeast(resolvedPackage(swagger.require, "js-yaml").version, "5.4.1");
+  atLeast(resolvedPackage(express.require, "qs").version, "6.16.1");
+  atLeast(resolvedPackage(ajv.require, "fast-uri").version, "3.1.9");
+});

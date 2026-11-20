@@ -27,6 +27,10 @@ import { randomUUID } from 'node:crypto';
 import { PrismaService } from '@api/core/database';
 import { PermissionsRepository } from '@api/core/authorization';
 import { AppModule } from '../src/app.module';
+import {
+  RESEARCH_LAB_AUTHORITY_DECISIONS,
+  type ResearchLabAuthorityDecisions,
+} from '@api/modules/research-lab';
 import { EDITOR_CODE_HIGHLIGHTER } from '../src/modules/editor/application/contracts/editor-code-highlighter.interface';
 import { createIsolatedApiSchemaFixture } from './helpers/migrated-api-schema.fixture';
 
@@ -96,6 +100,29 @@ describe('Authorization read ownership (e2e)', () => {
   afterAll(async () => {
     await app?.close();
     await fixture?.close();
+  });
+  it('reads current Research Lab moderation grants independently of Guardian', async () => {
+    const authority = app.get<ResearchLabAuthorityDecisions>(
+      RESEARCH_LAB_AUTHORITY_DECISIONS,
+    );
+    const userId = ids[0];
+    const permission = await fixture.prisma.permission.upsert({
+      where: { key: 'research-lab.moderate' },
+      update: {},
+      create: { key: 'research-lab.moderate', label: 'Moderate Research Lab' },
+    });
+    const grant = { userId, permissionId: permission.id };
+    expect(await authority.canModerate(userId, new Date())).toBe(false);
+    await fixture.prisma.userPermission.create({ data: grant });
+    try {
+      expect(await authority.canModerate(userId, new Date())).toBe(true);
+      expect((await authority.viewerFacts(userId, new Date())).guardian).toBe(
+        false,
+      );
+    } finally {
+      await fixture.prisma.userPermission.deleteMany({ where: grant });
+    }
+    expect(await authority.canModerate(userId, new Date())).toBe(false);
   });
   it.each(states)(
     'reads only assignment facts for existing %s anchor',

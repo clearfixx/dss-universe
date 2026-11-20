@@ -12,7 +12,7 @@
  * ===============================================================
  */
 
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Pool } from "pg";
 import type { IntegrationEventJob } from "@dss/jobs";
 
@@ -20,9 +20,13 @@ import { PostgresActivityProjector } from "../src/postgres-activity.projector";
 
 describe("PostgresActivityProjector", () => {
   const query = vi.fn(async () => ({ rowCount: 1 }));
+  const release = vi.fn();
+  const connect = vi.fn(async () => ({ query, release }));
   const projector = new PostgresActivityProjector({
     query,
+    connect,
   } as unknown as Pool);
+  beforeEach(() => vi.clearAllMocks());
 
   it("projects a profile-wall event without copying post content", async () => {
     const event: IntegrationEventJob = {
@@ -44,7 +48,9 @@ describe("PostgresActivityProjector", () => {
 
     await projector.project(event);
 
-    const values = query.mock.calls[0]?.[1] as unknown[];
+    const values = query.mock.calls.find(([sql]) =>
+      String(sql).includes('INSERT INTO "activity_entries"'),
+    )?.[1] as unknown[];
     expect(values).toContain("PROFILE_WALL_POST_CREATED");
     expect(JSON.stringify(values)).not.toContain("must not be projected");
   });
@@ -62,7 +68,34 @@ describe("PostgresActivityProjector", () => {
       occurredAt: "2026-07-27T01:00:00.000Z",
     });
 
-    expect(query.mock.calls.at(-1)?.[0]).toContain('SET "retractedAt"');
+    const statements = query.mock.calls.map(([sql]) => String(sql));
+    expect(statements[0]).toBe("BEGIN");
+    expect(statements[1]).toContain("pg_advisory_xact_lock");
+    expect(statements[2]).toContain('INSERT INTO "activity_retractions"');
+    expect(statements[3]).toContain('SET "retractedAt"');
+    expect(statements[4]).toBe("COMMIT");
+    expect(release).toHaveBeenCalledOnce();
+  });
+
+  it("rolls back and releases the client when projection fails", async () => {
+    const failure = new Error("synthetic projection failure");
+    query.mockResolvedValueOnce({ rowCount: 1 }).mockRejectedValueOnce(failure);
+    await expect(
+      projector.project({
+        eventId: "failed-event",
+        eventName: "users.profile-wall.post-retracted.v1",
+        eventVersion: 1,
+        category: "integration",
+        producer: "synthetic",
+        aggregateType: "UserWallPost",
+        aggregateId: "post-1",
+        payload: {},
+        occurredAt: "2026-07-27T01:00:00.000Z",
+      }),
+    ).rejects.toBe(failure);
+    expect(query.mock.calls.at(-1)?.[0]).toBe("ROLLBACK");
+    expect(release).toHaveBeenCalledWith(false);
+    expect(release).toHaveBeenCalledOnce();
   });
 
   it("projects a published News signal with allow-listed discovery metadata", async () => {

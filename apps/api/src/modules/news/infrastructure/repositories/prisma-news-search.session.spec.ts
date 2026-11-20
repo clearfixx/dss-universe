@@ -31,19 +31,34 @@ function harness() {
     gaps: [] as { id: string }[],
     pins: [] as { id: string }[],
     page: [] as { id: string }[],
+    sharedItems: [] as Array<{
+      id: string;
+      title: string;
+      language: string;
+      slug: string;
+      excerpt: string;
+      publishedAt: Date;
+    }>,
+    categories: [] as { slug: string; total: number }[],
     total: 0,
     batches: [] as { id: string; documentJson: string }[][],
   };
   const query = jest
     .fn<Promise<unknown>, [Prisma.Sql]>()
     .mockImplementation((sql) => {
-      if (sql.text.includes('LEFT JOIN')) return Promise.resolve(state.gaps);
-      if (sql.text.includes('AS "documentJson"'))
+      const text = Array.isArray(sql)
+        ? (sql as unknown as readonly string[]).join('?')
+        : sql.text;
+      if (text.includes('LEFT JOIN')) return Promise.resolve(state.gaps);
+      if (text.includes('AS "documentJson"'))
         return Promise.resolve(state.batches.shift() ?? []);
-      if (sql.text.includes('JOIN "news_pins"'))
-        return Promise.resolve(state.pins);
-      if (sql.text.includes('COUNT(*)'))
+      if (text.includes('JOIN "news_pins"')) return Promise.resolve(state.pins);
+      if (text.toUpperCase().includes('COUNT(*)'))
         return Promise.resolve([{ total: state.total }]);
+      if (text.includes('GROUP BY c.slug'))
+        return Promise.resolve(state.categories);
+      if (text.includes('left(a."shortText",240)'))
+        return Promise.resolve(state.sharedItems);
       return Promise.resolve(state.page);
     });
   const execute = jest.fn<Promise<number>, [Prisma.Sql]>().mockResolvedValue(1);
@@ -87,6 +102,67 @@ describe('PrismaNewsSearchSession', () => {
     expect(() =>
       h.session.run({ first: 10 }, () => Promise.resolve(null)),
     ).toThrow('requires a search expression');
+    expect(h.transaction).not.toHaveBeenCalled();
+  });
+
+  it('returns literal shared hits, totals and facets from one repeatable snapshot', async () => {
+    const h = harness();
+    const publishedAt = new Date('2026-11-18T00:00:00Z');
+    h.state.total = 3;
+    h.state.sharedItems = [
+      {
+        id: 'news-1',
+        title: 'Literal marker',
+        language: 'uk',
+        slug: 'literal-marker',
+        excerpt: 'Visible excerpt',
+        publishedAt,
+      },
+    ];
+    h.state.categories = [{ slug: 'platform', total: 3 }];
+
+    await expect(
+      h.session.searchArticles({
+        term: '  10%_UA\\marker  ',
+        page: 2,
+        pageSize: 1,
+        viewerId: 'viewer',
+      }),
+    ).resolves.toEqual({
+      items: h.state.sharedItems,
+      total: 3,
+      categories: h.state.categories,
+    });
+    expect(h.transaction).toHaveBeenCalledWith(expect.any(Function), {
+      isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+    });
+    expect(h.execute.mock.calls[1][0].values).toContain('10\\%\\_UA\\\\marker');
+    expect(
+      h.query.mock.calls
+        .find(([sql]) =>
+          (Array.isArray(sql)
+            ? (sql as unknown as readonly string[]).join('?')
+            : sql.text
+          ).includes('left(a."shortText",240)'),
+        )!
+        .slice(-2),
+    ).toEqual([1, 1]);
+  });
+
+  it.each([
+    { term: ' ', page: 1, pageSize: 20 },
+    { term: 'x'.repeat(101), page: 1, pageSize: 20 },
+    { term: 'x', page: 0, pageSize: 20 },
+    { term: 'x', page: 1.5, pageSize: 20 },
+    { term: 'x', page: 1, pageSize: 0 },
+    { term: 'x', page: 1, pageSize: 51 },
+    { term: 'x', page: 1, pageSize: 1.5 },
+    { term: 'x', page: Number.MAX_SAFE_INTEGER, pageSize: 50 },
+  ])('rejects invalid shared query %# before SQL', async (query) => {
+    const h = harness();
+    await expect(h.session.searchArticles(query)).rejects.toThrow(
+      'Invalid search query.',
+    );
     expect(h.transaction).not.toHaveBeenCalled();
   });
 

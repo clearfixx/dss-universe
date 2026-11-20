@@ -150,7 +150,9 @@ export class PrismaMediaLibraryOperations {
         ...externalAbsence,
       },
       include: {
-        variants: { select: { storageKey: true } },
+        variants: {
+          select: { storageProvider: true, bucket: true, storageKey: true },
+        },
       },
       orderBy: { createdAt: 'asc' },
       take: limit,
@@ -185,10 +187,16 @@ export class PrismaMediaLibraryOperations {
       });
       claimed.push({
         mediaId: candidate.id,
-        storageKeys: [
-          candidate.storageKey,
-          ...this.temporaryStorageKeys(candidate.metadata),
-          ...candidate.variants.map(({ storageKey }) => storageKey),
+        objects: [
+          ...[
+            candidate.storageKey,
+            ...this.temporaryStorageKeys(candidate.metadata),
+          ].map((storageKey) => ({
+            storageProvider: candidate.storageProvider,
+            bucket: candidate.bucket,
+            storageKey,
+          })),
+          ...candidate.variants,
         ],
       });
     }

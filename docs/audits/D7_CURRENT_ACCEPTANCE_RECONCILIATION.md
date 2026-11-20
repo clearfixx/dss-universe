@@ -1,5 +1,15 @@
 # D7 — Accepted history and register reconciliation
 
+> Historical checkpoint. Current authoritative statuses and completion: [Final D7 closure](FINAL_D7_CLOSURE.md), 2026-11-17.
+
+Update2026-11-15: the owner requested integration of the outstanding agent work
+before a new working policy. The retained review/matrix and diagnostic documents
+are integrated as explicitly historical snapshots. See the
+[integration checkpoint](D7_INTEGRATION_CHECKPOINT_2026-11-15.md) for accepted
+L1/source-guard scope, remaining delivery work and the unchanged trusted-writer
+decision. This is not final D7 acceptance; the older dated observations below
+remain evidence of their own checkpoints.
+
 Date:2026-11-06. Accepted source baseline: `f1a1bcc` (R3 / PR133).
 Status: scoped reconciliation, **not final D7 acceptance**. Runtime, migrations,
 API/Worker, application data and frontend are unchanged by this packet.
@@ -97,7 +107,9 @@ separate from the requested accepted baseline and retained checkpoint.
   build6/6, Web15/15 without retries and native48/48 on three OSes. This accepts
   owner tables/commands, not activation or a real producer/admission implementation.
   The next [P1 producer design](../development/DEBT_090_REPUTATION_PRODUCER_DESIGN.md)
-  remains a separate design/characterization candidate. DEBT-007/090 and D7 remain open.
+  was accepted in PR148 at `0d77960`, merged as `3fc470f`. Its separately authorized
+  [inactive runtime candidate](../development/DEBT_090_REPUTATION_PRODUCER_RUNTIME.md)
+  has not received runtime acceptance or activation. DEBT-007/090 and D7 remain open.
 - Dispose the remaining administrator-availability047 and Activity/source067
   policy questions; keep unresolved timing/retention evidence explicit, including
   058/059/083/084/086. Later passing gates do not universally identify old causes.

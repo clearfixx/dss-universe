@@ -27,8 +27,9 @@ describe('MediaDeliveryService', () => {
       }),
       findPublicVariant: jest.fn(),
     } as unknown as jest.Mocked<MediaRepository>;
+    const readObject = jest.fn().mockResolvedValue(Buffer.from('file'));
     const storage = {
-      read: jest.fn().mockResolvedValue(Buffer.from('file')),
+      readObject,
     } as unknown as jest.Mocked<StorageService>;
     const service = new MediaDeliveryService(
       media,
@@ -40,6 +41,13 @@ describe('MediaDeliveryService', () => {
       expect.objectContaining({
         mimeType: 'application/pdf',
         originalFilename: 'guide.pdf',
+      }),
+    );
+    expect(readObject).toHaveBeenCalledWith(
+      expect.objectContaining({
+        storageProvider: 'LOCAL',
+        bucket: 'media',
+        storageKey: 'media/media-1/original.pdf',
       }),
     );
     expect(media.findPublicOriginal.mock.calls[0]).toEqual(['media-1']);

@@ -18,19 +18,26 @@
  * Community Points-owned transactional persistence adapter.
  *
  * ⚠️ Important:
- * Acquire the event lock before the user/rule/UTC-day quota lock.
- * Hold both through ledger, processed marker, Audit and Outbox commit.
+ * Acquire event, optional source, then user/rule/UTC-day quota locks.
+ * Hold them through ledger, processed marker, Audit and Outbox commit.
  * Quota reads rely on the existing Read Committed statement snapshots.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 
 import { AuditWriterService } from '@api/core/audit';
 import { PrismaService, type TransactionClient } from '@api/core/database';
 import { createEventEnvelope, OutboxWriterService } from '@api/core/events';
+import { PointQualificationBlockedError } from '../../domain/errors/point-qualification-blocked.error';
+import { lockPointSources } from './point-source-locks';
+import {
+  POINT_RULE_DELIVERY_GUARD,
+  type PointRuleDeliveryGuard,
+} from '../rule-delivery-guard';
 
 import type { CommunityPointsRepository } from '../../domain/repositories/community-points.repository.interface';
 import type {
@@ -84,6 +91,8 @@ export class PrismaCommunityPointsRepository implements CommunityPointsRepositor
     private readonly prisma: PrismaService,
     private readonly audit: AuditWriterService,
     private readonly outbox: OutboxWriterService,
+    @Inject(POINT_RULE_DELIVERY_GUARD)
+    private readonly deliveryGuard: PointRuleDeliveryGuard,
   ) {}
 
   async balance(userId: string): Promise<number> {
@@ -104,7 +113,19 @@ export class PrismaCommunityPointsRepository implements CommunityPointsRepositor
     eventName: string,
     payloadValue?: number,
   ): Promise<CommunityPointRule[]> {
-    return this.prisma.communityPointRule.findMany({
+    return this.matchingRulesInTransaction(
+      this.prisma,
+      eventName,
+      payloadValue,
+    );
+  }
+
+  matchingRulesInTransaction(
+    transaction: Pick<TransactionClient, 'communityPointRule'>,
+    eventName: string,
+    payloadValue?: number,
+  ): Promise<CommunityPointRule[]> {
+    return transaction.communityPointRule.findMany({
       where: {
         eventName,
         enabled: true,
@@ -127,9 +148,13 @@ export class PrismaCommunityPointsRepository implements CommunityPointsRepositor
     return this.prisma.$transaction(async (transaction) => {
       const exists = await transaction.communityPointRule.findUnique({
         where: { key },
-        select: { key: true },
+        select: { key: true, eventName: true },
       });
       if (!exists) return null;
+      await this.deliveryGuard.assert(transaction, {
+        eventName: exists.eventName,
+        enabled,
+      });
       const rule = await transaction.communityPointRule.update({
         where: { key },
         data: { points, dailyLimit, enabled, updatedById },
@@ -149,82 +174,109 @@ export class PrismaCommunityPointsRepository implements CommunityPointsRepositor
   async award(
     input: CommunityPointAwardInput,
   ): Promise<CommunityPointConsumption> {
-    return this.prisma.$transaction(async (transaction) => {
-      await this.lock(transaction, `community-points:${input.event.eventId}`);
-      const processed = await transaction.processedEvent.findUnique({
+    return this.prisma.$transaction((transaction) =>
+      this.awardInTransaction(transaction, input, 'LEGACY'),
+    );
+  }
+
+  /** Infrastructure-only reuse: caller owns qualification guards and receipt commit. */
+  async awardInTransaction(
+    transaction: TransactionClient,
+    input: CommunityPointAwardInput,
+    mode: 'LEGACY' | 'QUALIFIED',
+  ): Promise<CommunityPointConsumption> {
+    await this.lock(transaction, `community-points:${input.event.eventId}`);
+    const processed = await transaction.processedEvent.findUnique({
+      where: {
+        eventId_consumerName: {
+          eventId: input.event.eventId,
+          consumerName: CONSUMER_NAME,
+        },
+      },
+      select: { id: true },
+    });
+    if (processed && mode === 'LEGACY')
+      return { status: 'DUPLICATE', entry: null };
+
+    const sources = [{ sourceKind: '@event', sourceId: input.event.eventId }];
+    if (input.event.aggregateType && input.event.aggregateId)
+      sources.push({
+        sourceKind: input.event.aggregateType,
+        sourceId: input.event.aggregateId,
+      });
+    await lockPointSources(transaction, sources);
+    if (
+      mode === 'LEGACY' &&
+      (await transaction.communityPointSourceCursor.findFirst({
+        where: { OR: sources },
+        select: { id: true },
+      }))
+    )
+      throw new PointQualificationBlockedError('LEGACY_EVIDENCE_REQUIRED');
+
+    if (
+      mode === 'LEGACY' &&
+      input.event.aggregateType &&
+      input.event.aggregateId &&
+      (await transaction.communityPointRevokedSource.findUnique({
         where: {
-          eventId_consumerName: {
-            eventId: input.event.eventId,
-            consumerName: CONSUMER_NAME,
+          sourceType_sourceId: {
+            sourceType: input.event.aggregateType,
+            sourceId: input.event.aggregateId,
           },
         },
         select: { id: true },
-      });
-      if (processed) return { status: 'DUPLICATE', entry: null };
+      }))
+    ) {
+      if (mode === 'LEGACY') await this.markProcessed(transaction, input);
+      return { status: 'IGNORED', entry: null };
+    }
 
-      if (
-        input.event.aggregateType &&
-        input.event.aggregateId &&
-        (await transaction.communityPointRevokedSource.findUnique({
-          where: {
-            sourceType_sourceId: {
-              sourceType: input.event.aggregateType,
-              sourceId: input.event.aggregateId,
-            },
-          },
-          select: { id: true },
-        }))
-      ) {
-        await this.markProcessed(transaction, input);
-        return { status: 'IGNORED', entry: null };
-      }
-
-      if (input.rule.dailyLimit !== null) {
-        await this.lock(
-          transaction,
-          JSON.stringify([
-            'community-points-daily-cap',
-            input.userId,
-            input.rule.key,
-            input.event.occurredAt.getUTCFullYear(),
-            input.event.occurredAt.getUTCMonth(),
-            input.event.occurredAt.getUTCDate(),
-          ]),
-        );
-      }
-
-      if (
-        input.rule.dailyLimit !== null &&
-        (await this.dailyAwardCount(
-          transaction,
+    if (input.rule.dailyLimit !== null) {
+      await this.lock(
+        transaction,
+        JSON.stringify([
+          'community-points-daily-cap',
           input.userId,
           input.rule.key,
-          input.event.occurredAt,
-        )) >= input.rule.dailyLimit
-      ) {
-        await this.markProcessed(transaction, input);
-        return { status: 'CAPPED', entry: null };
-      }
+          input.event.occurredAt.getUTCFullYear(),
+          input.event.occurredAt.getUTCMonth(),
+          input.event.occurredAt.getUTCDate(),
+        ]),
+      );
+    }
 
-      const entry = await transaction.communityPointEntry.create({
-        data: {
-          userId: input.userId,
-          ruleKey: input.rule.key,
-          points: input.rule.points,
-          reason: input.reason,
-          sourceEventId: input.event.eventId,
-          sourceEventName: input.event.eventName,
-          sourceType: input.event.aggregateType,
-          sourceId: input.event.aggregateId,
-          actorId: input.event.actorId,
-          occurredAt: input.event.occurredAt,
-        },
-        include: entryInclude,
-      });
-      await this.markProcessed(transaction, input);
-      await this.appendEvidence(transaction, entry, AWARDED_EVENT);
-      return { status: 'AWARDED', entry: this.toDomain(entry) };
+    if (
+      input.rule.dailyLimit !== null &&
+      (await this.dailyAwardCount(
+        transaction,
+        input.userId,
+        input.rule.key,
+        input.event.occurredAt,
+      )) >= input.rule.dailyLimit
+    ) {
+      if (mode === 'LEGACY') await this.markProcessed(transaction, input);
+      return { status: 'CAPPED', entry: null };
+    }
+
+    const entry = await transaction.communityPointEntry.create({
+      data: {
+        userId: input.userId,
+        ruleKey: input.rule.key,
+        points: input.rule.points,
+        reason: input.reason,
+        sourceEventId: input.event.eventId,
+        sourceEventName: input.event.eventName,
+        sourceType: input.event.aggregateType,
+        sourceId: input.event.aggregateId,
+        actorId: input.event.actorId,
+        occurredAt: input.event.occurredAt,
+      },
+      include: entryInclude,
     });
+    if (mode === 'LEGACY') await this.markProcessed(transaction, input);
+    await this.appendEvidence(transaction, entry, AWARDED_EVENT);
+    return { status: 'AWARDED', entry: this.toDomain(entry) };
   }
 
   async findOriginalById(id: string): Promise<CommunityPointEntry | null> {
@@ -241,26 +293,43 @@ export class PrismaCommunityPointsRepository implements CommunityPointsRepositor
     reason: string,
     occurredAt: Date,
   ): Promise<CommunityPointEntry | null> {
-    return this.prisma.$transaction(async (transaction) => {
-      await this.lock(transaction, `community-points-reversal:${entryId}`);
-      const original = await transaction.communityPointEntry.findFirst({
-        where: { id: entryId, reversesEntryId: null },
-        select: { id: true, userId: true, ruleKey: true, points: true },
-      });
-      if (!original) return null;
-      const exists = await transaction.communityPointEntry.findUnique({
-        where: { reversesEntryId: entryId },
-        select: { id: true },
-      });
-      if (exists) return null;
-      return this.appendReversal(
+    return this.prisma.$transaction((transaction) =>
+      this.reverseInTransaction(
         transaction,
-        original,
+        entryId,
         actorId,
         reason,
         occurredAt,
-      );
+      ),
+    );
+  }
+
+  /** Private infrastructure surface, not exported through the business repository port. */
+  async reverseInTransaction(
+    transaction: TransactionClient,
+    entryId: string,
+    actorId: string | undefined,
+    reason: string,
+    occurredAt: Date,
+  ): Promise<CommunityPointEntry | null> {
+    await this.lock(transaction, `community-points-reversal:${entryId}`);
+    const original = await transaction.communityPointEntry.findFirst({
+      where: { id: entryId, reversesEntryId: null },
+      select: { id: true, userId: true, ruleKey: true, points: true },
     });
+    if (!original) return null;
+    const exists = await transaction.communityPointEntry.findUnique({
+      where: { reversesEntryId: entryId },
+      select: { id: true },
+    });
+    if (exists) return null;
+    return this.appendReversal(
+      transaction,
+      original,
+      actorId,
+      reason,
+      occurredAt,
+    );
   }
 
   async reverseSource(
@@ -272,10 +341,14 @@ export class PrismaCommunityPointsRepository implements CommunityPointsRepositor
     occurredAt: Date,
   ): Promise<CommunityPointSourceReversal> {
     return this.prisma.$transaction(async (transaction) => {
-      await this.lock(
-        transaction,
-        `community-points-source-reversal:${sourceType}:${sourceId}`,
-      );
+      await this.lockSource(transaction, sourceType, sourceId);
+      if (
+        await transaction.communityPointSourceCursor.findFirst({
+          where: { sourceKind: sourceType, sourceId },
+          select: { id: true },
+        })
+      )
+        throw new PointQualificationBlockedError('LEGACY_EVIDENCE_REQUIRED');
       const revoked = await transaction.communityPointRevokedSource.findUnique({
         where: { sourceType_sourceId: { sourceType, sourceId } },
         select: { id: true },
@@ -441,8 +514,27 @@ export class PrismaCommunityPointsRepository implements CommunityPointsRepositor
         producer: CONSUMER_NAME,
         ...(entry.actorId ? { actorId: entry.actorId } : {}),
         aggregate: { type: 'CommunityPointEntry', id: entry.id },
+        ...(eventName === REVERSED_EVENT
+          ? {
+              metadata: {
+                qualificationContractVersion: 1,
+                contributionFactId: randomUUID(),
+              },
+            }
+          : {}),
         payload: metadata,
       }),
+    );
+  }
+
+  private lockSource(
+    transaction: TransactionClient,
+    sourceType: string,
+    sourceId: string,
+  ): Promise<number> {
+    return this.lock(
+      transaction,
+      `community-points-source-reversal:${sourceType}:${sourceId}`,
     );
   }
 

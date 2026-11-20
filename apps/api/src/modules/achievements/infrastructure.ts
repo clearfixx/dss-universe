@@ -12,3 +12,9 @@
  * ===============================================================
  */
 export { PrismaManualAwardWriter } from './infrastructure/repositories/prisma-manual-award.writer';
+export {
+  ACHIEVEMENT_RULE_DELIVERY_GUARD,
+  type AchievementRuleDeliveryGuard,
+} from './infrastructure/rule-delivery-guard';
+export { AchievementRuleDeliveryConfigurationError } from './domain/errors/rule-delivery-configuration.error';
+export { PrismaAchievementRuleConfigurationReader } from './infrastructure/repositories/prisma-achievement-rule-configuration.reader';

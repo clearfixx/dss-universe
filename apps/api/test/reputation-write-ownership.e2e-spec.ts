@@ -89,6 +89,15 @@ describe('Reputation write ownership (e2e)', () => {
       ledger: await prisma.reputationEntry.findMany({ orderBy: { id: 'asc' } }),
       audit: await prisma.auditRecord.count(),
       outbox: await prisma.outboxEvent.count(),
+      qualificationEvents: await prisma.reputationQualificationEvent.findMany({
+        orderBy: { id: 'asc' },
+      }),
+      qualificationFacts: await prisma.reputationQualificationFact.findMany({
+        orderBy: { id: 'asc' },
+      }),
+      qualificationStates: await prisma.reputationQualificationState.findMany({
+        orderBy: { originalEntryId: 'asc' },
+      }),
     };
   }
   function assertSchedule() {
@@ -412,6 +421,21 @@ describe('Reputation write ownership (e2e)', () => {
     expect(
       await prisma.reputationEntry.count({
         where: { reversesEntryId: original!.id },
+      }),
+    ).toBe(1);
+    expect(
+      await prisma.reputationQualificationState.findUnique({
+        where: { originalEntryId: original!.id },
+      }),
+    ).toMatchObject({ status: 'WITHDRAWN', revision: 2n });
+    expect(
+      await prisma.reputationQualificationFact.count({
+        where: { scopeEntryId: original!.id },
+      }),
+    ).toBe(2);
+    expect(
+      await prisma.reputationQualificationEvent.count({
+        where: { originalEntryId: original!.id },
       }),
     ).toBe(1);
   });

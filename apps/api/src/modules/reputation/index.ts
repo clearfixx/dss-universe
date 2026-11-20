@@ -13,6 +13,11 @@
  */
 
 export { ReputationModule } from './reputation.module';
+export type {
+  ReputationQualificationEvent,
+  ReputationProducerFact,
+  ReputationQualificationView,
+} from './domain/types/reputation-qualification.type';
 export {
   REPUTATION_WRITE_TRANSACTION,
   type ReputationWriteTransaction,

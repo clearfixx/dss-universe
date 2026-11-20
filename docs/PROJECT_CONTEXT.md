@@ -311,7 +311,7 @@ Access, Activity and News. Directory presence alone is not proof of completion.
 
 ## Runtime and local services
 
-- Node **24.18.0**, pnpm **11.9.0**, pinned in repository configuration.
+- Node **24.22.3**, pnpm **11.9.0**, pinned in repository configuration.
 - NestJS 11, Next.js 16, React 19, TypeScript, Prisma 7, PostgreSQL 17.
 - GraphQL/Apollo for product operations; REST for binary/operational endpoints.
 - Redis/BullMQ with transactional Outbox; Pino/OpenTelemetry foundations.

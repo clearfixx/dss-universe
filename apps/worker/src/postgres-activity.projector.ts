@@ -18,7 +18,7 @@
  */
 
 import { randomUUID } from "node:crypto";
-import type { Pool } from "pg";
+import type { Pool, PoolClient } from "pg";
 import type { IntegrationEventJob } from "@dss/jobs";
 
 const WALL_POST_CREATED_EVENT = "users.profile-wall.post-created.v1";
@@ -95,30 +95,34 @@ export class PostgresActivityProjector {
       throw new Error("Invalid profile-wall activity event.");
     }
     const payload = this.payload(event.payload);
-    await this.pool.query(
-      `INSERT INTO "activity_entries"
+    await this.withWallSource(event, async (client) =>
+      client.query(
+        `INSERT INTO "activity_entries"
        ("id", "sourceEventId", "actorId", "module", "action",
         "subjectType", "subjectId", "visibility", "metadata",
-        "occurredAt", "createdAt", "updatedAt")
+        "occurredAt", "createdAt", "updatedAt", "retractedAt")
        VALUES (
          $1, $2, $3, $4, $5, $6, $7, 'MEMBERS', $8::jsonb,
-         $9::timestamptz AT TIME ZONE 'UTC', NOW(), NOW()
+         $9::timestamptz AT TIME ZONE 'UTC', NOW(), NOW(),
+         (SELECT "retractedAt" FROM "activity_retractions"
+          WHERE "subjectType" = $6 AND "subjectId" = $7)
        )
        ON CONFLICT ("sourceEventId") DO NOTHING`,
-      [
-        randomUUID(),
-        event.eventId,
-        event.actorId,
-        "PROFILE",
-        "PROFILE_WALL_POST_CREATED",
-        event.aggregateType,
-        event.aggregateId,
-        JSON.stringify({
-          profileOwnerId: this.optionalString(payload.profileOwnerId),
-          hasImage: payload.hasImage === true,
-        }),
-        event.occurredAt,
-      ],
+        [
+          randomUUID(),
+          event.eventId,
+          event.actorId,
+          "PROFILE",
+          "PROFILE_WALL_POST_CREATED",
+          event.aggregateType,
+          event.aggregateId,
+          JSON.stringify({
+            profileOwnerId: this.optionalString(payload.profileOwnerId),
+            hasImage: payload.hasImage === true,
+          }),
+          event.occurredAt,
+        ],
+      ),
     );
   }
 
@@ -126,14 +130,52 @@ export class PostgresActivityProjector {
     if (event.aggregateType !== "UserWallPost" || !event.aggregateId) {
       throw new Error("Invalid profile-wall retraction event.");
     }
-    await this.pool.query(
-      `UPDATE "activity_entries"
-       SET "retractedAt" = COALESCE(
+    await this.withWallSource(event, async (client) => {
+      await client.query(
+        `INSERT INTO "activity_retractions" ("subjectType", "subjectId", "retractedAt")
+         VALUES ($1, $2, $3::timestamptz AT TIME ZONE 'UTC')
+         ON CONFLICT ("subjectType", "subjectId") DO UPDATE
+         SET "retractedAt" = LEAST("activity_retractions"."retractedAt", EXCLUDED."retractedAt")`,
+        [event.aggregateType, event.aggregateId, event.occurredAt],
+      );
+      await client.query(
+        `UPDATE "activity_entries"
+       SET "retractedAt" = LEAST(
          "retractedAt", $1::timestamptz AT TIME ZONE 'UTC'
        ), "updatedAt" = NOW()
        WHERE "subjectType" = $2 AND "subjectId" = $3`,
-      [event.occurredAt, event.aggregateType, event.aggregateId],
-    );
+        [event.occurredAt, event.aggregateType, event.aggregateId],
+      );
+    });
+  }
+
+  private async withWallSource(
+    event: IntegrationEventJob,
+    action: (client: PoolClient) => Promise<unknown>,
+  ): Promise<void> {
+    const client = await this.pool.connect();
+    let discard = false;
+    try {
+      await client.query("BEGIN");
+      try {
+        await client.query(
+          "SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",
+          [`activity-wall:${event.aggregateType}:${event.aggregateId}`],
+        );
+        await action(client);
+        await client.query("COMMIT");
+      } catch (error) {
+        try {
+          await client.query("ROLLBACK");
+        } catch {
+          // A rollback failure must not replace the projection failure.
+          discard = true;
+        }
+        throw error;
+      }
+    } finally {
+      client.release(discard);
+    }
   }
 
   private payload(value: unknown): Record<string, unknown> {

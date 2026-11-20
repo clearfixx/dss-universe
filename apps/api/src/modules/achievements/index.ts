@@ -14,6 +14,7 @@
 
 export { AchievementsModule } from './achievements.module';
 export { AchievementsRuntimeModule } from './achievements-runtime.module';
+export { isQualifiedAchievementCommand } from './contracts/qualified-validation.contract';
 export {
   QUALIFIED_ACHIEVEMENT_CONSUMER,
   type QualifiedAchievementConsumer,

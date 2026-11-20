@@ -74,6 +74,21 @@ const valid = {
   DATABASE_URL: "postgresql://dss_test:dss_test@127.0.0.1:5435/dss_test",
 };
 
+test("alternate disposable port retains database identity and URL guards", () => {
+  const url = valid.DATABASE_URL.replace(":5435/", ":15434/");
+  assert.equal(
+    createQualityEnvironment({ DATABASE_URL: url }).DATABASE_URL,
+    url,
+  );
+  for (const invalid of [
+    url.replace("127.0.0.1", "db.example"),
+    url.replace("//dss_test:", "//other:"),
+    url.replace(/dss_test$/, "production"),
+    url + "?schema=public",
+    url.replace(":15434/", ":15435/"),
+  ])
+    assert.throws(() => createQualityEnvironment({ DATABASE_URL: invalid }));
+});
 test("browser reporter rejects empty, skipped and retried runs", () => {
   for (const tests of [
     [],

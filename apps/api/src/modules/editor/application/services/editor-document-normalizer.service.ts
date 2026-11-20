@@ -37,4 +37,7 @@ export class EditorDocumentNormalizerService implements EditorDocumentNormalizer
   normalizeComment(documentJson: string): ValidatedEditorDocument {
     return this.editor.normalize(documentJson, 'COMMENT');
   }
+  normalizeWiki(documentJson: string): ValidatedEditorDocument {
+    return this.editor.normalize(documentJson, 'WIKI');
+  }
 }

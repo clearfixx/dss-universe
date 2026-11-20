@@ -45,13 +45,17 @@ import { PrismaManualAwardWriter } from '@api/modules/achievements/infrastructur
 import { RecipientExistenceAdapter } from './infrastructure/recipient-existence.adapter';
 import { LevelPointsBalanceAdapter } from './infrastructure/level-points-balance.adapter';
 import { PrismaManualAwardTransaction } from './infrastructure/prisma-manual-award.transaction';
+import { LevelSynchronizationCompositionModule } from './level-synchronization-composition.module';
+import { GamificationConfigurationModule } from '../gamification-delivery/gamification-configuration.module';
 
 @Global()
 @Module({
   imports: [
+    GamificationConfigurationModule,
     PrismaModule,
     AuditModule,
     EventsModule,
+    LevelSynchronizationCompositionModule,
     UsersExistenceModule,
     CommunityPointsRuntimeModule,
     LevelsRuntimeModule,

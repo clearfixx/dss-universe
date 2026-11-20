@@ -202,6 +202,33 @@ describe('Reputation Ledger (e2e)', () => {
     });
 
     const historyAfter = await history(recipient.id, recipient.accessToken);
+    expect(
+      await prisma.reputationQualificationState.findUnique({
+        where: { originalEntryId: entryId },
+      }),
+    ).toMatchObject({ status: 'WITHDRAWN', revision: 2n });
+    const bindings = await prisma.reputationQualificationEvent.findMany({
+      where: { originalEntryId: entryId },
+    });
+    expect(bindings).toHaveLength(1);
+    expect(bindings[0]).toMatchObject({
+      kind: 'REVERSAL',
+      actorId: actor.id,
+      recipientId: recipient.id,
+      value: -1,
+      provenance: 'NATIVE',
+    });
+    expect(
+      (
+        await prisma.outboxEvent.findUniqueOrThrow({
+          where: { id: bindings[0].eventId },
+        })
+      ).payload,
+    ).toEqual({
+      recipientId: recipient.id,
+      value: -1,
+      reversesEntryId: entryId,
+    });
     expect(historyAfter).toMatchObject({
       score: 0,
       total: 1,

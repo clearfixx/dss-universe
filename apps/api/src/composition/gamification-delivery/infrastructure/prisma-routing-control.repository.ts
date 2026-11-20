@@ -10,7 +10,11 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, Optional } from '@nestjs/common';
+import {
+  GAMIFICATION_ACTIVATION_PREFLIGHT,
+  type ActivationPreflight,
+} from './activation-preflight.port';
 import { PrismaService, type TransactionClient } from '@api/core/database';
 import { AuditWriterService } from '@api/core/audit';
 import type {
@@ -24,12 +28,16 @@ import {
   assertOperator,
   assertRevision,
 } from '../contracts/routing-validation';
+import { lockGamificationConfiguration } from './configuration-lock';
 
 @Injectable()
 export class PrismaRoutingControlRepository implements RoutingControl {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditWriterService,
+    @Optional()
+    @Inject(GAMIFICATION_ACTIVATION_PREFLIGHT)
+    private readonly preflight?: ActivationPreflight,
   ) {}
   async prepare(operator: RoutingOperator): Promise<ActivationView> {
     assertOperator(operator);
@@ -59,6 +67,7 @@ export class PrismaRoutingControlRepository implements RoutingControl {
     return this.prisma.$transaction(async (tx) => {
       const current = await this.lock(tx, revision);
       if (current.state !== 'PREPARED') throw new Error('ALREADY_ACTIVATED');
+      await this.preflight?.assert(tx);
       const [result] = await tx.$queryRaw<ActivationView[]>`
         UPDATE gamification_activations SET state='ACTIVE',
           cutoff=timezone('UTC',clock_timestamp()), "activatedBy"=${operator.actorId},
@@ -106,6 +115,7 @@ export class PrismaRoutingControlRepository implements RoutingControl {
     tx: TransactionClient,
     revision: bigint,
   ): Promise<ActivationView> {
+    await lockGamificationConfiguration(tx, true);
     const rows = await tx.$queryRaw<ActivationView[]>`
       SELECT state,cutoff,revision FROM gamification_activations
       WHERE destination=${GAMIFICATION_DESTINATION} FOR UPDATE`;

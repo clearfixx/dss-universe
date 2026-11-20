@@ -15,10 +15,11 @@
 import { Global, Module } from '@nestjs/common';
 
 import { OutboxWriterService } from './services/outbox-writer.service';
+import { CanonicalOutboxReader } from './infrastructure/canonical-outbox.reader';
 
 @Global()
 @Module({
-  providers: [OutboxWriterService],
-  exports: [OutboxWriterService],
+  providers: [OutboxWriterService, CanonicalOutboxReader],
+  exports: [OutboxWriterService, CanonicalOutboxReader],
 })
 export class EventsModule {}

@@ -24,6 +24,11 @@
 import { Module } from '@nestjs/common';
 import type { IntegrationEventJob } from '@dss/jobs';
 import { CommunityPointsService } from './application/services/community-points.service';
+import { QualifiedPointsService } from './application/services/qualified-points.service';
+import {
+  QUALIFIED_POINTS_CONSUMER,
+  type QualifiedPointsConsumer,
+} from './contracts/qualified-points.contract';
 import {
   CommunityPointsProvidersModule,
   COMMUNITY_POINTS_INTERNAL_BALANCE_READER,
@@ -37,6 +42,16 @@ import { COMMUNITY_POINTS_BALANCE_READER } from './contracts/balance-reader.cont
 @Module({
   imports: [CommunityPointsProvidersModule],
   providers: [
+    {
+      provide: QUALIFIED_POINTS_CONSUMER,
+      inject: [QualifiedPointsService],
+      useFactory: (service: QualifiedPointsService): QualifiedPointsConsumer =>
+        Object.freeze({
+          advance: (
+            command: Parameters<QualifiedPointsConsumer['advance']>[0],
+          ) => service.advance(command),
+        }),
+    },
     {
       provide: COMMUNITY_POINTS_EVENT_CONSUMER,
       inject: [CommunityPointsService],
@@ -54,6 +69,10 @@ import { COMMUNITY_POINTS_BALANCE_READER } from './contracts/balance-reader.cont
       useExisting: COMMUNITY_POINTS_INTERNAL_BALANCE_READER,
     },
   ],
-  exports: [COMMUNITY_POINTS_EVENT_CONSUMER, COMMUNITY_POINTS_BALANCE_READER],
+  exports: [
+    COMMUNITY_POINTS_EVENT_CONSUMER,
+    COMMUNITY_POINTS_BALANCE_READER,
+    QUALIFIED_POINTS_CONSUMER,
+  ],
 })
 export class CommunityPointsRuntimeModule {}

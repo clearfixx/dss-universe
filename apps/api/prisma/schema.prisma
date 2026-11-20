@@ -264,6 +264,62 @@ model PlatformAppearanceSettings {
   @@map("platform_appearance_settings")
 }
 
+enum ResearchPageKind {
+  WIKI
+  MANUAL
+  RESEARCH
+  GUIDE
+  CASE_STUDY
+  NOTE
+  REPORT
+}
+
+enum ResearchPageState {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+  TOMBSTONED
+}
+
+enum ResearchRevisionState {
+  IN_REVIEW
+  CHANGES_REQUESTED
+  REJECTED
+  PUBLISHED
+  SUPERSEDED
+  WITHDRAWN
+}
+
+enum ResearchReviewAction {
+  SUBMITTED
+  CHANGES_REQUESTED
+  REJECTED
+  PUBLISHED
+  WITHDRAWN
+  ROLLED_BACK
+  RESTORED
+}
+
+enum ResearchProtectionLevel {
+  OPEN
+  TRUSTED
+  GUARDIAN_ONLY
+  LOCKED
+}
+
+enum ResearchVisibility {
+  PUBLIC
+  MEMBERS
+  GROUPS
+}
+
+enum ResearchInternalLinkType {
+  RELATED
+  CONTEXTUAL
+  PREREQUISITE
+  SEE_ALSO
+}
+
 model User {
   id                  String     @id @default(uuid())
   email               String     @unique
@@ -336,6 +392,11 @@ model User {
   newsSettingsUpdated     NewsSettings[]               @relation("NewsSettingsUpdater")
   newsLinksCreated        NewsInternalLink[]           @relation("NewsLinkCreator")
   newsPins                NewsPin[]                    @relation("NewsPinActor")
+  researchPagesCreated    ResearchPage[]               @relation("ResearchPageCreator")
+  researchPagesTombstoned ResearchPage[]               @relation("ResearchPageTombstoneActor")
+  researchDrafts          ResearchDraft[]
+  researchRevisions       ResearchRevision[]           @relation("ResearchRevisionAuthor")
+  researchReviewDecisions ResearchReviewDecision[]     @relation("ResearchReviewActor")
 
   refreshTokenHash String?
   emailVerifiedAt  DateTime?
@@ -456,6 +517,7 @@ model InteractionTarget {
   reports               ContentReport[]
   moderationAnnotations ModerationAnnotation[]
   newsArticle           NewsArticle?
+  researchPage          ResearchPage?
 
   @@unique([ownerType, ownerId])
   @@index([kind, status])
@@ -765,6 +827,335 @@ model NewsEditorialDecision {
   @@index([articleId, createdAt, id])
   @@index([actorId, action, createdAt])
   @@map("news_editorial_decisions")
+}
+
+model ResearchPage {
+  id                    String                  @id @default(uuid())
+  interactionTargetId   String                  @unique
+  creatorId             String
+  kind                  ResearchPageKind        @default(WIKI)
+  state                 ResearchPageState       @default(DRAFT)
+  protectionLevel       ResearchProtectionLevel @default(OPEN)
+  visibility            ResearchVisibility      @default(PUBLIC)
+  language              String                  @default("uk")
+  slug                  String
+  publicationGeneration Int                     @default(0)
+  publishedRevisionId   String?
+  primaryCategoryId     String?
+  allowComments         Boolean                 @default(true)
+  allowRating           Boolean                 @default(true)
+  allowIndexing         Boolean                 @default(true)
+  featured              Boolean                 @default(false)
+  firstPublishedAt      DateTime?
+  lastPublishedAt       DateTime?
+  archivedAt            DateTime?
+  tombstonedAt          DateTime?
+  tombstonedById        String?
+  tombstoneReason       String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+
+  interactionTarget InteractionTarget           @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
+  creator           User                        @relation("ResearchPageCreator", fields: [creatorId], references: [id], onDelete: Restrict)
+  publishedRevision ResearchRevision?           @relation("ResearchPublishedRevision", fields: [publishedRevisionId, id], references: [id, pageId], onDelete: Restrict)
+  primaryCategory   ResearchCategory?           @relation("ResearchPrimaryCategory", fields: [primaryCategoryId], references: [id], onDelete: Restrict)
+  tombstonedBy      User?                       @relation("ResearchPageTombstoneActor", fields: [tombstonedById], references: [id], onDelete: Restrict)
+  revisions         ResearchRevision[]          @relation("ResearchPageRevisions")
+  drafts            ResearchDraft[]
+  reviewDecisions   ResearchReviewDecision[]
+  audienceGroups    ResearchPageAudienceGroup[]
+  categories        ResearchPageCategory[]
+  tags              ResearchPageTag[]
+  technologies      ResearchPageTechnology[]
+  manualChapters    ResearchManualChapter[]
+  collectionItems   ResearchCollectionItem[]
+  slugAliases       ResearchSlugAlias[]
+  outgoingLinks     ResearchInternalLink[]      @relation("ResearchOutgoingLinks")
+  incomingLinks     ResearchInternalLink[]      @relation("ResearchIncomingLinks")
+
+  @@unique([language, slug])
+  @@unique([publishedRevisionId, id])
+  @@index([state, lastPublishedAt, id])
+  @@index([creatorId, state, updatedAt])
+  @@index([kind, state, lastPublishedAt])
+  @@index([primaryCategoryId, state, lastPublishedAt])
+  @@map("research_pages")
+}
+
+model ResearchDraft {
+  id                      String   @id @default(uuid())
+  pageId                  String
+  authorId                String
+  basePublishedRevisionId String?
+  title                   String
+  summary                 String
+  proposedSlug            String
+  document                Json     @db.JsonB
+  plainText               String
+  searchText              String
+  metadata                Json     @default("{}") @db.JsonB
+  coverMediaId            String?
+  version                 Int      @default(1)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  page                  ResearchPage      @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  author                User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  basePublishedRevision ResearchRevision? @relation("ResearchDraftBaseRevision", fields: [basePublishedRevisionId, pageId], references: [id, pageId], onDelete: Restrict)
+
+  @@unique([pageId, authorId])
+  @@index([authorId, updatedAt, id])
+  @@index([pageId, updatedAt])
+  @@map("research_drafts")
+}
+
+model ResearchRevision {
+  id                      String                @id @default(uuid())
+  pageId                  String
+  number                  Int
+  authorId                String
+  state                   ResearchRevisionState @default(IN_REVIEW)
+  basePublishedRevisionId String?
+  rollbackFromRevisionId  String?
+  title                   String
+  summary                 String
+  proposedSlug            String
+  document                Json                  @db.JsonB
+  plainText               String
+  searchText              String
+  metadata                Json                  @default("{}") @db.JsonB
+  coverMediaId            String?
+  editSummary             String
+  contentHash             String
+  createdAt               DateTime              @default(now())
+
+  page                  ResearchPage             @relation("ResearchPageRevisions", fields: [pageId], references: [id], onDelete: Restrict)
+  author                User                     @relation("ResearchRevisionAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  basePublishedRevision ResearchRevision?        @relation("ResearchRevisionBase", fields: [basePublishedRevisionId, pageId], references: [id, pageId], onDelete: Restrict)
+  basedRevisions        ResearchRevision[]       @relation("ResearchRevisionBase")
+  rollbackFromRevision  ResearchRevision?        @relation("ResearchRevisionRollback", fields: [rollbackFromRevisionId, pageId], references: [id, pageId], onDelete: Restrict)
+  rollbackRevisions     ResearchRevision[]       @relation("ResearchRevisionRollback")
+  draftsBasedOn         ResearchDraft[]          @relation("ResearchDraftBaseRevision")
+  publishedByPage       ResearchPage?            @relation("ResearchPublishedRevision")
+  reviewDecisions       ResearchReviewDecision[]
+
+  @@unique([pageId, number])
+  @@unique([id, pageId])
+  @@index([pageId, state, createdAt, id])
+  @@index([authorId, createdAt, id])
+  @@index([basePublishedRevisionId])
+  @@index([rollbackFromRevisionId])
+  @@map("research_revisions")
+}
+
+model ResearchReviewDecision {
+  id                 String               @id @default(uuid())
+  pageId             String
+  revisionId         String
+  actorId            String
+  action             ResearchReviewAction
+  reason             String?
+  policySnapshotHash String
+  auditCorrelationId String
+  createdAt          DateTime             @default(now())
+
+  page     ResearchPage     @relation(fields: [pageId], references: [id], onDelete: Restrict)
+  revision ResearchRevision @relation(fields: [revisionId, pageId], references: [id, pageId], onDelete: Restrict)
+  actor    User             @relation("ResearchReviewActor", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([pageId, createdAt, id])
+  @@index([revisionId, createdAt, id])
+  @@index([actorId, action, createdAt])
+  @@map("research_review_decisions")
+}
+
+model ResearchPageAudienceGroup {
+  pageId   String
+  groupKey String
+
+  page ResearchPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@id([pageId, groupKey])
+  @@index([groupKey, pageId])
+  @@map("research_page_audience_groups")
+}
+
+model ResearchCategory {
+  id          String   @id @default(uuid())
+  parentId    String?
+  name        String
+  slug        String
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  parent       ResearchCategory?      @relation("ResearchCategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children     ResearchCategory[]     @relation("ResearchCategoryTree")
+  primaryPages ResearchPage[]         @relation("ResearchPrimaryCategory")
+  pages        ResearchPageCategory[]
+
+  @@unique([parentId, slug])
+  @@index([parentId, isActive, sortOrder, id])
+  @@map("research_categories")
+}
+
+model ResearchPageCategory {
+  pageId     String
+  categoryId String
+  position   Int    @default(0)
+
+  page     ResearchPage     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  category ResearchCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@id([pageId, categoryId])
+  @@index([categoryId, position, pageId])
+  @@map("research_page_categories")
+}
+
+model ResearchTag {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pages ResearchPageTag[]
+
+  @@map("research_tags")
+}
+
+model ResearchPageTag {
+  pageId String
+  tagId  String
+
+  page ResearchPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  tag  ResearchTag  @relation(fields: [tagId], references: [id], onDelete: Restrict)
+
+  @@id([pageId, tagId])
+  @@index([tagId, pageId])
+  @@map("research_page_tags")
+}
+
+model ResearchTechnology {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  website     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  pages ResearchPageTechnology[]
+
+  @@map("research_technologies")
+}
+
+model ResearchPageTechnology {
+  pageId       String
+  technologyId String
+
+  page       ResearchPage       @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  technology ResearchTechnology @relation(fields: [technologyId], references: [id], onDelete: Restrict)
+
+  @@id([pageId, technologyId])
+  @@index([technologyId, pageId])
+  @@map("research_page_technologies")
+}
+
+model ResearchManual {
+  id          String   @id @default(uuid())
+  language    String   @default("uk")
+  slug        String
+  title       String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  chapters ResearchManualChapter[]
+
+  @@unique([language, slug])
+  @@index([isActive, title, id])
+  @@map("research_manuals")
+}
+
+model ResearchManualChapter {
+  manualId String
+  pageId   String
+  position Int
+
+  manual ResearchManual @relation(fields: [manualId], references: [id], onDelete: Cascade)
+  page   ResearchPage   @relation(fields: [pageId], references: [id], onDelete: Restrict)
+
+  @@id([manualId, pageId])
+  @@unique([manualId, position])
+  @@index([pageId, manualId])
+  @@map("research_manual_chapters")
+}
+
+model ResearchCollection {
+  id          String   @id @default(uuid())
+  language    String   @default("uk")
+  slug        String
+  title       String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items ResearchCollectionItem[]
+
+  @@unique([language, slug])
+  @@index([isActive, title, id])
+  @@map("research_collections")
+}
+
+model ResearchCollectionItem {
+  collectionId String
+  pageId       String
+  position     Int
+
+  collection ResearchCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  page       ResearchPage       @relation(fields: [pageId], references: [id], onDelete: Restrict)
+
+  @@id([collectionId, pageId])
+  @@unique([collectionId, position])
+  @@index([pageId, collectionId])
+  @@map("research_collection_items")
+}
+
+model ResearchSlugAlias {
+  id        String   @id @default(uuid())
+  pageId    String
+  language  String
+  slug      String
+  createdAt DateTime @default(now())
+
+  page ResearchPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@unique([language, slug])
+  @@index([pageId, createdAt])
+  @@map("research_slug_aliases")
+}
+
+model ResearchInternalLink {
+  id           String                   @id @default(uuid())
+  sourcePageId String
+  targetPageId String
+  type         ResearchInternalLinkType @default(RELATED)
+  anchorText   String
+  position     Int                      @default(0)
+  createdAt    DateTime                 @default(now())
+
+  sourcePage ResearchPage @relation("ResearchOutgoingLinks", fields: [sourcePageId], references: [id], onDelete: Cascade)
+  targetPage ResearchPage @relation("ResearchIncomingLinks", fields: [targetPageId], references: [id], onDelete: Restrict)
+
+  @@unique([sourcePageId, targetPageId, type])
+  @@index([sourcePageId, position, id])
+  @@index([targetPageId, type, id])
+  @@map("research_internal_links")
 }
 
 model Reaction {
@@ -1343,6 +1734,7 @@ model OutboxEvent {
   @@index([createdAt, id], map: "outbox_routing_coordinate_idx")
   @@index([status, availableAt])
   @@index([aggregateType, aggregateId])
+  @@index([producer, aggregateType, aggregateId, eventName, id], map: "outbox_producer_evidence_idx")
   @@index([correlationId])
   @@map("outbox_events")
 }
@@ -1417,6 +1809,8 @@ model GamificationDelivery {
   activation    GamificationActivation           @relation(fields: [destination], references: [destination], onDelete: Restrict, onUpdate: Restrict)
   source        OutboxEvent                      @relation(fields: [eventId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   failures      GamificationPublicationFailure[]
+  admission     GamificationAdmission?
+  rejections    GamificationAdmissionRejection[]
 
   @@id([destination, eventId])
   @@index([destination, state, availableAt, eventId], map: "gamification_delivery_due_idx")
@@ -1437,6 +1831,109 @@ model GamificationPublicationFailure {
 
   @@index([destination, failedAt, id], map: "gamification_publication_failure_time_idx")
   @@map("gamification_publication_failures")
+}
+
+/// DSS File Passport: immutable root-owned delivery seal; no automatic consumer activation.
+model GamificationAdmission {
+  id                String   @id @db.Uuid
+  destination       String   @db.VarChar(64)
+  eventId           String   @db.Uuid
+  cutoff            DateTime @db.Timestamp(3)
+  descriptorId      String   @db.VarChar(128)
+  descriptorVersion Int
+  codecVersion      Int
+  projection        Json
+  projectionDigest  Bytes
+  encodedBytes      Int
+  createdAt         DateTime @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @db.Timestamp(3)
+
+  delivery GamificationDelivery             @relation(fields: [destination, eventId], references: [destination, eventId], onDelete: Restrict, onUpdate: Restrict)
+  receipt  GamificationConsumptionReceipt?
+  attempts GamificationConsumptionAttempt[]
+  progress GamificationOwnerProgress[]
+
+  @@unique([destination, eventId], map: "gamification_admission_event_key")
+  @@unique([id, destination], map: "gamification_admission_destination_key")
+  @@map("gamification_admissions")
+}
+
+/// DSS File Passport: fenced technical work state; owner effects remain owner-local.
+model GamificationConsumptionReceipt {
+  admissionId       String    @id @db.Uuid
+  destination       String    @db.VarChar(64)
+  state             String    @default("READY") @db.VarChar(16)
+  epoch             BigInt    @default(0)
+  claimSequence     BigInt    @default(0)
+  technicalFailures Int       @default(0)
+  claimToken        String?   @unique @db.Uuid
+  claimedAt         DateTime? @db.Timestamp(3)
+  leaseUntil        DateTime? @db.Timestamp(3)
+  availableAt       DateTime? @db.Timestamp(3)
+  blockCode         String?   @db.VarChar(64)
+  pointsDone        Boolean
+  levelsDone        Boolean
+  achievementsDone  Boolean
+  createdAt         DateTime  @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @db.Timestamp(3)
+  updatedAt         DateTime  @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @updatedAt @db.Timestamp(3)
+
+  admission GamificationAdmission @relation(fields: [admissionId, destination], references: [id, destination], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([admissionId, destination], map: "gamification_receipt_destination_key")
+  @@index([destination, state, availableAt, admissionId], map: "gamification_consumption_due_idx")
+  @@index([destination, state, leaseUntil, admissionId], map: "gamification_consumption_lease_idx")
+  @@map("gamification_consumption_receipts")
+}
+
+/// DSS File Passport: one open-to-terminal technical attempt; settled history is immutable.
+model GamificationConsumptionAttempt {
+  id            String    @id @db.Uuid
+  admissionId   String    @db.Uuid
+  epoch         BigInt
+  claimSequence BigInt
+  claimToken    String    @unique @db.Uuid
+  state         String    @default("OPEN") @db.VarChar(16)
+  code          String?   @db.VarChar(64)
+  startedAt     DateTime  @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @db.Timestamp(3)
+  finishedAt    DateTime? @db.Timestamp(3)
+
+  admission GamificationAdmission @relation(fields: [admissionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([admissionId, epoch, claimSequence], map: "gamification_consumption_attempt_key")
+  @@map("gamification_consumption_attempts")
+}
+
+/// DSS File Passport: bounded owner-local resume coordinates, persisted with receipt CAS.
+model GamificationOwnerProgress {
+  admissionId  String   @db.Uuid
+  owner        String   @db.VarChar(16)
+  codecVersion Int
+  coordinates  Json
+  updatedAt    DateTime @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @updatedAt @db.Timestamp(3)
+
+  admission GamificationAdmission @relation(fields: [admissionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([admissionId, owner])
+  @@map("gamification_owner_progress")
+}
+
+/// DSS File Passport: append-only projection rejection, distinct from queue publication failure.
+model GamificationAdmissionRejection {
+  id                String   @id @db.Uuid
+  destination       String   @db.VarChar(64)
+  eventId           String   @db.Uuid
+  claimToken        String   @unique @db.Uuid
+  cycle             Int
+  cycleAttempt      Int
+  descriptorId      String?  @db.VarChar(128)
+  descriptorVersion Int?
+  code              String   @db.VarChar(64)
+  observedAt        DateTime @default(dbgenerated("timezone('UTC'::text, clock_timestamp())")) @db.Timestamp(3)
+
+  delivery GamificationDelivery @relation(fields: [destination, eventId], references: [destination, eventId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([destination, observedAt, id], map: "gamification_admission_rejection_time_idx")
+  @@index([destination, eventId, cycle, cycleAttempt], map: "gamification_rejection_delivery_idx")
+  @@map("gamification_admission_rejections")
 }
 
 model ProcessedEvent {
@@ -1516,6 +2013,15 @@ model ActivityEntry {
   @@map("activity_entries")
 }
 
+model ActivityRetraction {
+  subjectType String
+  subjectId   String
+  retractedAt DateTime
+
+  @@id([subjectType, subjectId])
+  @@map("activity_retractions")
+}
+
 model ActivityFeedState {
   userId        String   @id
   lastVisitedAt DateTime @default(now())
@@ -1542,11 +2048,82 @@ model ReputationEntry {
   reverses ReputationEntry? @relation("ReputationReversal", fields: [reversesEntryId], references: [id], onDelete: Restrict)
   reversal ReputationEntry? @relation("ReputationReversal")
 
+  qualificationEvent     ReputationQualificationEvent?  @relation("ReputationQualificationEntry")
+  qualificationReversals ReputationQualificationEvent[] @relation("ReputationQualificationOriginal")
+  qualificationFacts     ReputationQualificationFact[]
+  qualificationState     ReputationQualificationState?
+
   @@index([recipientId, createdAt, id])
   @@index([actorId, recipientId, createdAt])
   @@index([createdAt, recipientId])
   @@index([reversesEntryId])
   @@map("reputation_entries")
+}
+
+/// DSS File Passport: private producer provenance; no automatic gamification activation.
+model ReputationQualificationEvent {
+  id              String   @id @default(uuid()) @db.Uuid
+  eventId         String   @unique @db.Uuid
+  entryId         String   @unique
+  kind            String
+  actorId         String
+  recipientId     String
+  value           Int
+  originalEntryId String?
+  occurredAt      DateTime
+  provenance      String
+  contractVersion Int      @default(1)
+  createdAt       DateTime @default(now())
+
+  entry    ReputationEntry               @relation("ReputationQualificationEntry", fields: [entryId], references: [id], onDelete: Restrict)
+  original ReputationEntry?              @relation("ReputationQualificationOriginal", fields: [originalEntryId], references: [id], onDelete: Restrict)
+  facts    ReputationQualificationFact[]
+
+  @@index([originalEntryId, kind])
+  @@map("reputation_qualification_events")
+}
+
+/// DSS File Passport: immutable ENTRY lifecycle and independent EVENT contributions.
+model ReputationQualificationFact {
+  id                  String   @id @default(uuid()) @db.Uuid
+  eventBindingId      String   @db.Uuid
+  scope               String
+  scopeEntryId        String?
+  revision            BigInt
+  action              String
+  qualificationFactId String   @db.Uuid
+  contractVersion     Int      @default(1)
+  createdAt           DateTime @default(now())
+
+  eventBinding    ReputationQualificationEvent   @relation(fields: [eventBindingId], references: [id], onDelete: Restrict)
+  entry           ReputationEntry?               @relation(fields: [scopeEntryId], references: [id], onDelete: Restrict)
+  qualification   ReputationQualificationFact    @relation("ReputationQualificationSelf", fields: [qualificationFactId], references: [id], onDelete: Restrict)
+  withdrawals     ReputationQualificationFact[]  @relation("ReputationQualificationSelf")
+  qualifiedStates ReputationQualificationState[] @relation("ReputationQualifiedState")
+  currentStates   ReputationQualificationState[] @relation("ReputationCurrentState")
+
+  @@unique([scopeEntryId, revision], map: "reputation_qualification_revision_key")
+  @@unique([id, scopeEntryId], map: "reputation_qualification_scope_key")
+  @@unique([eventBindingId, scope], map: "reputation_qualification_event_scope_key")
+  @@index([qualificationFactId])
+  @@map("reputation_qualification_facts")
+}
+
+/// DSS File Passport: current owned pointer, never a consumer eligibility or delivery cursor.
+model ReputationQualificationState {
+  originalEntryId     String   @id
+  status              String
+  revision            BigInt?
+  qualificationFactId String?  @db.Uuid
+  currentFactId       String?  @db.Uuid
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @default(now()) @updatedAt
+
+  entry         ReputationEntry              @relation(fields: [originalEntryId], references: [id], onDelete: Restrict)
+  qualification ReputationQualificationFact? @relation("ReputationQualifiedState", fields: [qualificationFactId, originalEntryId], references: [id, scopeEntryId], onDelete: Restrict)
+  current       ReputationQualificationFact? @relation("ReputationCurrentState", fields: [currentFactId, originalEntryId], references: [id, scopeEntryId], onDelete: Restrict)
+
+  @@map("reputation_qualification_states")
 }
 
 model ReputationPolicy {
@@ -1578,6 +2155,10 @@ model CommunityPointEntry {
 
   reverses CommunityPointEntry? @relation("CommunityPointReversal", fields: [reversesEntryId], references: [id], onDelete: Restrict)
   reversal CommunityPointEntry? @relation("CommunityPointReversal")
+
+  qualification CommunityPointQualification?
+  activeCursor  CommunityPointSourceCursor?  @relation("ActivePointQualification")
+  facetReceipt  CommunityPointFacetReceipt?
 
   @@index([userId, occurredAt, id])
   @@index([userId, ruleKey, occurredAt])
@@ -1615,6 +2196,87 @@ model CommunityPointRevokedSource {
   @@unique([sourceType, sourceId])
   @@index([occurredAt])
   @@map("community_point_revoked_sources")
+}
+
+model CommunityPointSourceCursor {
+  id                          String   @id @default(uuid())
+  producer                    String
+  sourceKind                  String
+  sourceId                    String
+  retiredThroughRevision      BigInt   @default(0)
+  activeQualificationId       String?
+  activeQualificationRevision BigInt   @default(0)
+  activeEntryId               String?  @unique
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @default(now()) @updatedAt
+
+  activeEntry CommunityPointEntry?       @relation("ActivePointQualification", fields: [activeEntryId], references: [id], onDelete: Restrict)
+  facts       CommunityPointSourceFact[]
+
+  @@unique([producer, sourceKind, sourceId])
+  @@index([sourceKind, sourceId])
+  @@map("community_point_source_cursors")
+}
+
+model CommunityPointSourceFact {
+  producer                    String
+  factId                      String
+  cursorId                    String
+  canonicalEventId            String
+  revision                    BigInt
+  action                      String
+  qualificationId             String
+  qualificationRevision       BigInt
+  qualificationEventId        String
+  qualificationFactId         String
+  retiredThroughRevision      BigInt
+  predecessorWithdrawalFactId String?
+  contractVersion             Int
+  factDigest                  String
+  qualificationProjection     Json
+  createdAt                   DateTime @default(now())
+
+  cursor          CommunityPointSourceCursor    @relation(fields: [cursorId], references: [id], onDelete: Restrict)
+  qualifications  CommunityPointQualification[]
+  controlReceipts CommunityPointFacetReceipt[]
+
+  @@id([producer, factId])
+  @@unique([cursorId, revision])
+  @@index([cursorId, canonicalEventId], map: "community_point_source_fact_canonical_idx")
+  @@map("community_point_source_facts")
+}
+
+model CommunityPointQualification {
+  entryId             String   @id
+  producer            String
+  qualificationFactId String
+  createdAt           DateTime @default(now())
+
+  entry CommunityPointEntry      @relation(fields: [entryId], references: [id], onDelete: Restrict)
+  fact  CommunityPointSourceFact @relation(fields: [producer, qualificationFactId], references: [producer, factId], onDelete: Restrict)
+
+  @@unique([producer, qualificationFactId])
+  @@map("community_point_qualifications")
+}
+
+model CommunityPointFacetReceipt {
+  eventId             String
+  facet               String
+  contractVersion     Int
+  commandDigest       String
+  recipientId         String
+  disposition         String
+  ruleKey             String?
+  contributionEntryId String?  @unique
+  sourceFactProducer  String?
+  sourceFactId        String?
+  createdAt           DateTime @default(now())
+
+  contributionEntry CommunityPointEntry?      @relation(fields: [contributionEntryId], references: [id], onDelete: Restrict)
+  sourceFact        CommunityPointSourceFact? @relation(fields: [sourceFactProducer, sourceFactId], references: [producer, factId], onDelete: Restrict)
+
+  @@id([eventId, facet])
+  @@map("community_point_facet_receipts")
 }
 
 model LevelDefinition {

@@ -55,7 +55,7 @@ describe('MediaBinaryUploadService', () => {
     updateStatus: jest.fn(),
   };
   const mimeInspection = { inspect: jest.fn() };
-  const storage = { save: jest.fn(), delete: jest.fn() };
+  const storage = { saveObject: jest.fn(), deleteObject: jest.fn() };
   const queueAdd = jest.fn();
   const queueRemove = jest.fn();
   const queues = {
@@ -80,11 +80,11 @@ describe('MediaBinaryUploadService', () => {
         Promise.resolve({ ...SESSION, status }),
     );
     mimeInspection.inspect.mockReturnValue('text/plain');
-    storage.save.mockResolvedValue({
+    storage.saveObject.mockResolvedValue({
       path: SESSION.temporaryKey,
       url: `/uploads/${SESSION.temporaryKey}`,
     });
-    storage.delete.mockResolvedValue(undefined);
+    storage.deleteObject.mockResolvedValue(undefined);
     queueAdd.mockResolvedValue({ id: SESSION.id });
     queueRemove.mockResolvedValue(1);
     media.create.mockResolvedValue(undefined);
@@ -106,11 +106,15 @@ describe('MediaBinaryUploadService', () => {
       ),
     ).resolves.toMatchObject({ status: MediaUploadStatus.COMPLETED });
 
-    expect(storage.save).toHaveBeenCalledWith({
-      buffer: CONTENT,
-      directory: 'temporary/owner-1',
-      filename: 'upload-1',
-    });
+    expect(storage.saveObject).toHaveBeenCalledWith(
+      {
+        storageProvider: SESSION.storageProvider,
+        bucket: SESSION.bucket,
+        storageKey: SESSION.temporaryKey,
+      },
+      CONTENT,
+      'text/plain',
+    );
     expect(queueAdd).toHaveBeenCalledWith(
       'process-media-upload.v1',
       expect.objectContaining({
@@ -147,7 +151,7 @@ describe('MediaBinaryUploadService', () => {
     ).rejects.toThrow(BadRequestException);
 
     expect(sessions.claimUpload).not.toHaveBeenCalled();
-    expect(storage.save).not.toHaveBeenCalled();
+    expect(storage.saveObject).not.toHaveBeenCalled();
     expect(queueAdd).not.toHaveBeenCalled();
   });
 
@@ -168,7 +172,11 @@ describe('MediaBinaryUploadService', () => {
       ),
     ).rejects.toThrow('Redis unavailable');
 
-    expect(storage.delete).toHaveBeenCalledWith(SESSION.temporaryKey);
+    expect(storage.deleteObject).toHaveBeenCalledWith({
+      storageProvider: SESSION.storageProvider,
+      bucket: SESSION.bucket,
+      storageKey: SESSION.temporaryKey,
+    });
     expect(sessions.updateStatus).toHaveBeenLastCalledWith(
       SESSION.id,
       MediaUploadStatus.FAILED,
@@ -197,8 +205,8 @@ describe('MediaBinaryUploadService', () => {
       ),
     ).rejects.toBe(conflict);
 
-    expect(storage.save).not.toHaveBeenCalled();
-    expect(storage.delete).not.toHaveBeenCalled();
+    expect(storage.saveObject).not.toHaveBeenCalled();
+    expect(storage.deleteObject).not.toHaveBeenCalled();
     expect(queueAdd).not.toHaveBeenCalled();
     expect(queueRemove).not.toHaveBeenCalled();
     expect(media.create).not.toHaveBeenCalled();
@@ -229,6 +237,10 @@ describe('MediaBinaryUploadService', () => {
     ).rejects.toThrow('Database unavailable');
 
     expect(queueRemove).toHaveBeenCalledWith(SESSION.id);
-    expect(storage.delete).toHaveBeenCalledWith(SESSION.temporaryKey);
+    expect(storage.deleteObject).toHaveBeenCalledWith({
+      storageProvider: SESSION.storageProvider,
+      bucket: SESSION.bucket,
+      storageKey: SESSION.temporaryKey,
+    });
   });
 });

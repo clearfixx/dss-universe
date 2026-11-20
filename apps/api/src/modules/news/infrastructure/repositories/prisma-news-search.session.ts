@@ -78,41 +78,8 @@ export class PrismaNewsSearchSession {
     transaction: Prisma.TransactionClient,
     input: SearchInput,
   ): Promise<SearchSelection> {
-    const search = input.search;
-    if (!search) throw new Error('News search requires a search expression.');
     const now = new Date();
-    const eligible = newsSearchEligibility(input);
-    const metadataMatch = newsSearchMetadataMatch(search);
-    const gaps = await transaction.$queryRaw<{ id: string }[]>(Prisma.sql`
-        SELECT a."id" FROM "news_articles" a
-        LEFT JOIN "news_search_projections" p ON p."articleId" = a."id"
-        WHERE ${eligible} AND (p."articleId" IS NULL
-          OR p."sourceVersion" <> a."currentVersion"
-          OR p."projectionVersion" <> ${NEWS_SEARCH_PROJECTION_VERSION}) LIMIT 1
-      `);
-    if (gaps.length) throw new Error('News search index requires maintenance.');
-    await transaction.$executeRaw(Prisma.sql`
-        CREATE TEMP TABLE "dss_news_search_matches" (
-          "id" text PRIMARY KEY, "publishedAt" timestamp(3) NOT NULL
-        ) ON COMMIT DROP
-      `);
-    await transaction.$executeRaw(Prisma.sql`
-        INSERT INTO pg_temp."dss_news_search_matches" ("id", "publishedAt")
-        SELECT a."id", a."publishedAt" FROM "news_articles" a
-        JOIN "news_search_projections" p ON p."articleId" = a."id"
-        WHERE ${eligible} AND (${metadataMatch} OR (
-          ${input.viewerId ? Prisma.sql`NOT p."hasContentGates"` : Prisma.sql`TRUE`}
-          AND p."publicSearchText" ILIKE ('%' || ${search} || '%')))
-      `);
-    if (input.viewerId) {
-      await this.matchGated(
-        transaction,
-        eligible,
-        metadataMatch,
-        search,
-        input.viewerId,
-      );
-    }
+    await this.populateMatches(transaction, input);
     const pins = await transaction.$queryRaw<{ id: string }[]>(Prisma.sql`
         SELECT m."id" FROM pg_temp."dss_news_search_matches" m
         JOIN "news_pins" pin ON pin."articleId" = m."id"
@@ -155,6 +122,107 @@ export class PrismaNewsSearchSession {
       total: count.total,
       hasNextPage: !numbered && rows.length > size,
     };
+  }
+
+  /** Shared search counts each article once, including feed pins. */
+  async searchArticles(query: {
+    term: string;
+    page: number;
+    pageSize: number;
+    viewerId?: string;
+  }) {
+    const { page, pageSize, viewerId } = query;
+    const term = query.term.trim();
+    if (
+      !term ||
+      term.length > 100 ||
+      !Number.isSafeInteger(page) ||
+      page < 1 ||
+      !Number.isSafeInteger(pageSize) ||
+      pageSize < 1 ||
+      pageSize > 50 ||
+      !Number.isSafeInteger((page - 1) * pageSize)
+    )
+      throw new Error('Invalid search query.');
+    const search = term.replace(/[\\%_]/g, '\\$&');
+    return this.prisma.$transaction(
+      async (transaction) => {
+        await this.populateMatches(transaction, {
+          search,
+          page,
+          pageSize,
+          viewerId,
+        });
+        const [count] = await transaction.$queryRaw<{ total: number }[]>`
+        SELECT count(*)::integer AS total FROM pg_temp."dss_news_search_matches"
+      `;
+        const items = await transaction.$queryRaw<
+          {
+            id: string;
+            title: string;
+            language: string;
+            slug: string;
+            excerpt: string;
+            publishedAt: Date;
+          }[]
+        >`
+        SELECT a.id,a.title,a.language,a.slug,left(a."shortText",240) AS excerpt,m."publishedAt"
+        FROM pg_temp."dss_news_search_matches" m JOIN news_articles a ON a.id=m.id
+        ORDER BY m."publishedAt" DESC,m.id DESC LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}
+      `;
+        const categories = await transaction.$queryRaw<
+          { slug: string; total: number }[]
+        >`
+        SELECT c.slug,count(DISTINCT m.id)::integer AS total
+        FROM pg_temp."dss_news_search_matches" m
+        JOIN news_article_categories ac ON ac."articleId"=m.id
+        JOIN news_categories c ON c.id=ac."categoryId" AND c."isActive"
+        GROUP BY c.slug ORDER BY total DESC,c.slug ASC
+      `;
+        return { items, total: count.total, categories };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+    );
+  }
+
+  private async populateMatches(
+    transaction: Prisma.TransactionClient,
+    input: SearchInput,
+  ) {
+    const search = input.search;
+    if (!search) throw new Error('News search requires a search expression.');
+    const eligible = newsSearchEligibility(input);
+    const metadataMatch = newsSearchMetadataMatch(search);
+    const gaps = await transaction.$queryRaw<{ id: string }[]>(Prisma.sql`
+        SELECT a."id" FROM "news_articles" a
+        LEFT JOIN "news_search_projections" p ON p."articleId" = a."id"
+        WHERE ${eligible} AND (p."articleId" IS NULL
+          OR p."sourceVersion" <> a."currentVersion"
+          OR p."projectionVersion" <> ${NEWS_SEARCH_PROJECTION_VERSION}) LIMIT 1
+      `);
+    if (gaps.length) throw new Error('News search index requires maintenance.');
+    await transaction.$executeRaw(Prisma.sql`
+        CREATE TEMP TABLE "dss_news_search_matches" (
+          "id" text PRIMARY KEY, "publishedAt" timestamp(3) NOT NULL
+        ) ON COMMIT DROP
+      `);
+    await transaction.$executeRaw(Prisma.sql`
+        INSERT INTO pg_temp."dss_news_search_matches" ("id", "publishedAt")
+        SELECT a."id", a."publishedAt" FROM "news_articles" a
+        JOIN "news_search_projections" p ON p."articleId" = a."id"
+        WHERE ${eligible} AND (${metadataMatch} OR (
+          ${input.viewerId ? Prisma.sql`NOT p."hasContentGates"` : Prisma.sql`TRUE`}
+          AND p."publicSearchText" ILIKE ('%' || ${search} || '%')))
+      `);
+    if (input.viewerId) {
+      await this.matchGated(
+        transaction,
+        eligible,
+        metadataMatch,
+        search,
+        input.viewerId,
+      );
+    }
   }
 
   private async matchGated(

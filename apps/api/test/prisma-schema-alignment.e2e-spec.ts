@@ -12,7 +12,7 @@
  * Full historical migrations in an owned disposable schema; no repair DDL.
  *
  * ⚠️ Important:
- * Catalog checks cover twelve legacy, three routing and one qualification default; CRUD checks are representative,
+ * Catalog checks cover twelve legacy, three routing, two qualification and two consumption defaults; CRUD checks are representative,
  * not a claim that every model/business use case was exercised here.
  *
  * 🚀 Build. Share. Grow.
@@ -45,7 +45,7 @@ describe('Prisma and historical migration alignment (e2e)', () => {
           'gamification_activations', 'gamification_deliveries',
           'gamification_discovery', 'gamification_consumption_receipts',
           'gamification_owner_progress', 'achievement_source_cursors',
-          'reputation_qualification_states'
+          'reputation_qualification_states', 'community_point_source_cursors'
         )
       ORDER BY table_name`;
     const legacyDefaults = [
@@ -69,8 +69,6 @@ describe('Prisma and historical migration alignment (e2e)', () => {
       'gamification_activations',
       'gamification_deliveries',
       'gamification_discovery',
-      'gamification_consumption_receipts',
-      'gamification_owner_progress',
     ].map((table_name) => ({
       table_name,
       column_default: "timezone('UTC'::text, clock_timestamp())",
@@ -85,14 +83,29 @@ describe('Prisma and historical migration alignment (e2e)', () => {
         column_default: 'CURRENT_TIMESTAMP',
       },
     ];
+    const consumptionDefaults = [
+      'gamification_consumption_receipts',
+      'gamification_owner_progress',
+    ].map((table_name) => ({
+      table_name,
+      column_default: "timezone('UTC'::text, clock_timestamp())",
+    }));
     expect(columns).toEqual(
-      [...legacyDefaults, ...routingDefaults, ...qualificationDefaults].sort(
-        (left, right) =>
-          left.table_name < right.table_name
-            ? -1
-            : left.table_name > right.table_name
-              ? 1
-              : 0,
+      [
+        ...legacyDefaults,
+        ...routingDefaults,
+        ...qualificationDefaults,
+        ...consumptionDefaults,
+        {
+          table_name: 'community_point_source_cursors',
+          column_default: 'CURRENT_TIMESTAMP',
+        },
+      ].sort((left, right) =>
+        left.table_name < right.table_name
+          ? -1
+          : left.table_name > right.table_name
+            ? 1
+            : 0,
       ),
     );
     const indexes = await fixture.prisma.$queryRaw<

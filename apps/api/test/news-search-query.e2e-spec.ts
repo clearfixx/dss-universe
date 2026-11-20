@@ -44,6 +44,7 @@ import {
 } from '../src/modules/content-access/domain/ports/content-audience-reader.interface';
 import { AppModule } from '../src/app.module';
 import { AuthenticationPresentationService } from '../src/composition/identity/application/authentication-presentation.service';
+import { PrismaNewsSearchSession } from '../src/modules/news/infrastructure';
 import { NewsService } from '../src/modules/news/application/services/news.service';
 import { NewsDeliveryService } from '../src/modules/news/application/services/news-delivery.service';
 import { NewsSearchBackfillService } from '../src/modules/news/application/services/news-search-backfill.service';
@@ -130,7 +131,7 @@ describe('Viewer-safe live News search (e2e)', () => {
       password: 'synthetic-query-password-123',
     });
   }
-  async function gate(groupKey?: string, threshold = 100) {
+  async function gate(groupKey?: string, threshold = 100, text = secret) {
     const result = await app.get(ContentGatesService).create({
       ownerId: author.user.id,
       operator: 'ALL',
@@ -150,7 +151,7 @@ describe('Viewer-safe live News search (e2e)', () => {
     return {
       type: 'contentGate',
       attrs: { gateId: result.id },
-      content: [paragraph(secret)],
+      content: [paragraph(text)],
     } satisfies EditorNode;
   }
   async function article(
@@ -227,6 +228,42 @@ describe('Viewer-safe live News search (e2e)', () => {
     });
   }
 
+  it('uses literal search terms and counts authorized categories before shared pagination', async () => {
+    const source = app.get(PrismaNewsSearchSession);
+    const term = 'вартість 10%_UA';
+    const hit = await article([paragraph('open')], term);
+    await article([paragraph('open')], 'вартість 100xUA');
+    const query = { term, page: 1, pageSize: 1 };
+    const first = await source.searchArticles(query);
+    expect(first.items.map((item) => item.id)).toEqual([hit.id]);
+    expect(first.items[0].excerpt).toBe('Synthetic public summary');
+    expect(first.total).toBe(1);
+    const response = await requestHttp();
+    const body = response.body as {
+      errors?: unknown;
+      data: { search: unknown };
+    };
+    expect(body.errors).toBeUndefined();
+    expect(body.data.search).toEqual({
+      total: 1,
+      items: [
+        { id: hit.id, source: 'NEWS', excerpt: 'Synthetic public summary' },
+      ],
+      categories: [{ slug: category.slug, total: 1 }],
+    });
+    function requestHttp() {
+      return request(app.getHttpServer()).post('/api/graphql').send({
+        query:
+          'query Shared($term:String!){search(term:$term){total items{id source excerpt} categories{slug total}}}',
+        variables: { term },
+      });
+    }
+    expect(first.categories).toEqual([{ slug: category.slug, total: 1 }]);
+    expect(await source.searchArticles({ ...query, page: 2 })).toEqual({
+      ...first,
+      items: [],
+    });
+  });
   it('keeps hidden-only guest matches out of pins, items and total without policy calls', async () => {
     const post = await article([
       paragraph('alpha'),
@@ -289,7 +326,10 @@ describe('Viewer-safe live News search (e2e)', () => {
     const premium = await prisma.accessGroup.findUniqueOrThrow({
       where: { key: 'premium' },
     });
-    await article([await gate(group.key)]);
+    const sharedTerm = 'shared-' + randomUUID();
+    const groupedArticle = await article([
+      await gate(group.key, 100, secret + ' ' + sharedTerm),
+    ]);
     const paid = await grant(premium.id);
     expect(result(await search(secret, viewer.tokens.accessToken)).total).toBe(
       0,
@@ -297,7 +337,30 @@ describe('Viewer-safe live News search (e2e)', () => {
     expect(result(await search(secret, author.tokens.accessToken)).total).toBe(
       0,
     );
+    const shared = async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/graphql')
+        .set('Authorization', 'Bearer ' + viewer.tokens.accessToken)
+        .send({
+          query:
+            'query Shared($term:String!){search(term:$term){total items{id excerpt} categories{slug total}}}',
+          variables: { term: sharedTerm },
+        });
+      const body = response.body as {
+        errors?: unknown;
+        data: { search: unknown };
+      };
+      expect(body.errors).toBeUndefined();
+      return body.data.search;
+    };
+    const empty = { total: 0, items: [], categories: [] };
+    expect(await shared()).toEqual(empty);
     const member = await grant(group.id);
+    expect(await shared()).toEqual({
+      total: 1,
+      items: [{ id: groupedArticle.id, excerpt: 'Synthetic public summary' }],
+      categories: [{ slug: category.slug, total: 1 }],
+    });
     expect(result(await search(secret, viewer.tokens.accessToken)).total).toBe(
       1,
     );
@@ -321,7 +384,9 @@ describe('Viewer-safe live News search (e2e)', () => {
     expect(result(await search(secret, viewer.tokens.accessToken)).total).toBe(
       0,
     );
+    expect(await shared()).toEqual(empty);
     await grant(group.id, true);
+    expect(await shared()).toEqual(empty);
     expect(result(await search(secret, viewer.tokens.accessToken)).total).toBe(
       0,
     );

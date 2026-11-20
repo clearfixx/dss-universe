@@ -18,7 +18,7 @@ Before starting, make sure the workstation has:
 
 - Git
 - GitHub CLI
-- Node.js 24.18.0 (see `.node-version` and `.nvmrc`)
+- Node.js 24.22.3 (see `.node-version` and `.nvmrc`)
 - pnpm 11.9.0 (managed through Corepack)
 - Docker Desktop
 - Visual Studio Code

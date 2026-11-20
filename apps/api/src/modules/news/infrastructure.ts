@@ -16,3 +16,4 @@ export {
   type NewsDeliveryContent,
 } from './infrastructure/repositories/prisma-news-delivery.repository';
 export { PrismaNewsSearchSession } from './infrastructure/repositories/prisma-news-search.session';
+export { PrismaPublicationEvidenceReader } from './infrastructure/repositories/prisma-publication-evidence.reader';

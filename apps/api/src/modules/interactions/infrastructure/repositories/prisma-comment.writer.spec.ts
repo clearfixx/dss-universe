@@ -262,6 +262,29 @@ describe('Owned comment writer', () => {
       }),
     );
   });
+  it('keeps an already withdrawn lifetime unchanged without a second event or audit', async () => {
+    const h = harness();
+    h.comment.findUniqueOrThrow.mockResolvedValue({
+      ...row,
+      body: null,
+      document: null,
+      searchText: null,
+      deletedAt: new Date(2),
+      deletedById: 'first-actor',
+    });
+    expect(
+      await h.writer.tombstone(
+        h.transaction,
+        'comment',
+        'later-actor',
+        'Later',
+      ),
+    ).toMatchObject({ isDeleted: true, body: null });
+    expect(h.comment.update).not.toHaveBeenCalled();
+    expect(h.audit).not.toHaveBeenCalled();
+    expect(h.outbox).not.toHaveBeenCalled();
+    expect(h.mentions.findMany).not.toHaveBeenCalled();
+  });
   it('does not re-retract already inactive mentions during a tombstone', async () => {
     const h = harness([{ ...mention, retractedAt: new Date(1) }]);
     await h.writer.tombstone(h.transaction, 'comment', 'moderator', null);

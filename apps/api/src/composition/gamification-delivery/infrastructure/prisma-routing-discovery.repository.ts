@@ -10,7 +10,7 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService, type TransactionClient } from '@api/core/database';
 import {
@@ -27,10 +27,19 @@ import {
 } from '../contracts/routing.constants';
 import { assertBatch } from '../contracts/routing-validation';
 import { lockActivation } from './activation-lock';
+import { ROUTING_ELIGIBLE_COORDINATES } from '../contracts/producer-catalog';
 
 @Injectable()
 export class PrismaRoutingDiscoveryRepository implements RoutingDiscovery {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional()
+    @Inject(ROUTING_ELIGIBLE_COORDINATES)
+    private readonly coordinates?: readonly Readonly<{
+      producer: string;
+      eventName: string;
+    }>[],
+  ) {}
   forward(limit = ROUTING_SOURCE_BATCH): Promise<DiscoveryResult> {
     return this.scan(false, limit);
   }
@@ -84,7 +93,13 @@ export class PrismaRoutingDiscoveryRepository implements RoutingDiscovery {
       const upper = reconcile
         ? Prisma.sql`(SELECT "upperAt","upperId" FROM gamification_discovery WHERE destination=${destination})`
         : undefined;
-      const window = outboxRoutingWindow({ cutoff, after, upper, limit });
+      const window = outboxRoutingWindow({
+        cutoff,
+        after,
+        upper,
+        limit,
+        coordinates: this.coordinates,
+      });
       const coordinateUpdate = reconcile
         ? Prisma.sql`"sweepAt"=last_key."sourceAt", "sweepId"=last_key."eventId"`
         : Prisma.sql`"forwardAt"=last_key."sourceAt", "forwardId"=last_key."eventId"`;
@@ -94,7 +109,9 @@ export class PrismaRoutingDiscoveryRepository implements RoutingDiscovery {
         WITH candidates AS MATERIALIZED (${window}),
         inserted AS (
           INSERT INTO gamification_deliveries (destination,"eventId")
-          SELECT ${destination},"eventId" FROM candidates ON CONFLICT DO NOTHING RETURNING "eventId"
+          SELECT ${destination},"eventId" FROM candidates
+          ${this.coordinates ? Prisma.sql`WHERE eligible` : Prisma.empty}
+          ON CONFLICT DO NOTHING RETURNING "eventId"
         ), last_key AS (
           SELECT * FROM candidates ORDER BY "sourceAt" DESC,"eventId" DESC LIMIT 1
         ), progress AS (
