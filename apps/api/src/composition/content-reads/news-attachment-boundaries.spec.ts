@@ -18,6 +18,7 @@ import {
   MEDIA_PUBLIC_ATTACHMENT_READER,
   MEDIA_PROFILE_ASSET_COMMANDS,
   MEDIA_PUBLICATION_EVIDENCE,
+  MEDIA_ATTACHMENT_POLICY,
   MEDIA_IMAGE_ELIGIBILITY,
   type MediaPublicAttachmentReader,
 } from '@api/modules/media';
@@ -186,6 +187,7 @@ describe('Published News attachment boundaries', () => {
       MEDIA_PUBLIC_ATTACHMENT_READER,
       MEDIA_PROFILE_ASSET_COMMANDS,
       MEDIA_PUBLICATION_EVIDENCE,
+      MEDIA_ATTACHMENT_POLICY,
       MEDIA_IMAGE_ELIGIBILITY,
     ]);
   });

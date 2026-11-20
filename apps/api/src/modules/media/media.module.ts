@@ -29,6 +29,8 @@ import { MEDIA_IMAGE_ELIGIBILITY } from './contracts/media-image-eligibility.con
 import { PrismaMediaImageEligibilityReader } from './infrastructure/repositories/prisma-media-image-eligibility.reader';
 import { MEDIA_PUBLICATION_EVIDENCE } from './contracts/media-publication-evidence.contract';
 import { PrismaMediaPublicationEvidenceReader } from './infrastructure/repositories/prisma-media-publication-evidence.reader';
+import { MEDIA_ATTACHMENT_POLICY } from './contracts/media-attachment-policy.contract';
+import { PrismaMediaAttachmentPolicy } from './infrastructure/repositories/prisma-media-attachment-policy';
 
 import { StorageModule } from '@api/core/storage';
 import { MEDIA_PROFILE_ASSET_COMMANDS } from './contracts/profile-asset-commands.contract';
@@ -93,6 +95,7 @@ import { PrismaCoverRepository } from './infrastructure/repositories/prisma-cove
       provide: MEDIA_PUBLICATION_EVIDENCE,
       useClass: PrismaMediaPublicationEvidenceReader,
     },
+    { provide: MEDIA_ATTACHMENT_POLICY, useClass: PrismaMediaAttachmentPolicy },
     {
       provide: MEDIA_PROFILE_ASSET_COMMANDS,
       inject: [AvatarService, CoverService],
@@ -142,6 +145,7 @@ import { PrismaCoverRepository } from './infrastructure/repositories/prisma-cove
     MEDIA_PUBLIC_ATTACHMENT_READER,
     MEDIA_PROFILE_ASSET_COMMANDS,
     MEDIA_PUBLICATION_EVIDENCE,
+    MEDIA_ATTACHMENT_POLICY,
     MEDIA_IMAGE_ELIGIBILITY,
   ],
 })
