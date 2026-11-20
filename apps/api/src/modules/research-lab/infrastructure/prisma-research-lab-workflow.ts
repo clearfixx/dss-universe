@@ -832,8 +832,15 @@ export class ResearchLabService {
       data: { state },
     });
     if (state === 'CHANGES_REQUESTED') {
-      await tx.researchDraft.create({
-        data: {
+      await tx.researchDraft.upsert({
+        where: {
+          pageId_authorId: {
+            pageId: revision.pageId,
+            authorId: revision.authorId,
+          },
+        },
+        update: {},
+        create: {
           pageId: revision.pageId,
           authorId: revision.authorId,
           basePublishedRevisionId: revision.basePublishedRevisionId,
