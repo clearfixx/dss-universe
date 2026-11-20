@@ -63,4 +63,17 @@ is `forum.moderate.all` or an active category assignment.
   across categories with revocation, supermoderator scope, permissions and
   duplicate slugs.
 
+Recorded local results (2026-11-20, Node 24.22.3, disposable `dss_test`):
+
+- migration applied to `dss_test`; zero Prisma schema drift;
+- API unit suite: 1635 passed, 106 skipped by the existing opt-in policy;
+- forum structure e2e 7/7;
+- full API e2e: 985/986. The one failure was a 5-second timeout in the
+  unrelated `achievements-foundation` suite while other local test runs
+  loaded the machine; rerun alone it passed 1/1. It is recorded, not waived;
+- architecture inventory: 0 findings; lint and typecheck clean; generated
+  Web GraphQL client unchanged.
+
+GitHub CI on the committed PR head remains the acceptance gate.
+
 🧭 Structure first: every later conversation needs a room to happen in.
