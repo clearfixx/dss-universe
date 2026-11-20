@@ -1,0 +1,711 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Forum (Community Hub)
+ * 📄 File: apps/api/src/modules/forum/infrastructure/prisma-forum-topics.ts
+ *
+ * 🎯 Purpose:
+ * Implements CH-1a: topics, numbered posts, immutable revisions, edit windows,
+ * close/reopen, the global posting cooldown and owner interaction decisions.
+ *
+ * ⚠️ Important:
+ * • replies lock the topic row so post numbers stay gap-free and unique;
+ * • the 60-second cooldown is one atomic conditional upsert;
+ * • media and Content Gate nodes are rejected until CH-3 delivers ownership
+ *   checks and server-side redaction for Forum.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
+import { randomUUID } from 'node:crypto';
+import { Inject, Injectable } from '@nestjs/common';
+import { Prisma, type ForumPost, type ForumTopic } from '@prisma/client';
+import { AuditWriterService } from '@api/core/audit';
+import { PrismaService, type TransactionClient } from '@api/core/database';
+import { createEventEnvelope, OutboxWriterService } from '@api/core/events';
+import {
+  EDITOR_DOCUMENT_NORMALIZER,
+  type EditorDocumentNormalizer,
+  type ValidatedEditorDocument,
+} from '@api/modules/editor';
+import {
+  FORUM_VIEWER_FACTS,
+  type ForumViewerFactsReader,
+} from '../contracts/forum-viewer-facts.contract';
+import type { ForumInteractionDecisions } from '../contracts/forum-interaction-decisions.contract';
+import { ForumCommandError } from '../domain/errors/forum-command.error';
+import { canSeeCategory } from '../domain/forum-structure.rules';
+import {
+  canCloseTopic,
+  canEditPost,
+  canReopenTopic,
+  normalizePostReferences,
+  normalizeTopicTitle,
+} from '../domain/forum-topic.rules';
+import type { ForumViewerFacts } from '../domain/types/forum-structure.type';
+import {
+  FORUM_POSTING_COOLDOWN_SECONDS,
+  type ForumPage,
+  type ForumPostView,
+  type ForumTopicKind,
+  type ForumTopicSort,
+  type ForumTopicSummary,
+} from '../domain/types/forum-topic.type';
+import { ForumStructureService } from './prisma-forum-structure';
+
+const PRODUCER = 'dss.api.forum';
+const TOPIC_KIND = 'forum.topic';
+const MAX_PAGE = 50;
+const DEFERRED_NODES = new Set(['contentGate', 'mediaReference', 'attachment']);
+
+type VisibleTopic = {
+  topic: ForumTopic;
+  categoryId: string;
+  viewer: ForumViewerFacts;
+};
+
+@Injectable()
+export class ForumTopicsService implements ForumInteractionDecisions {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly audit: AuditWriterService,
+    private readonly outbox: OutboxWriterService,
+    @Inject(FORUM_VIEWER_FACTS)
+    private readonly viewers: ForumViewerFactsReader,
+    @Inject(EDITOR_DOCUMENT_NORMALIZER)
+    private readonly editor: EditorDocumentNormalizer,
+    private readonly structure: ForumStructureService,
+  ) {}
+
+  async createTopic(
+    actorId: string,
+    input: {
+      forumId: string;
+      kind: ForumTopicKind;
+      title: string;
+      documentJson: string;
+    },
+  ): Promise<{ topic: ForumTopicSummary; firstPostId: string }> {
+    const viewer = await this.authenticated(actorId);
+    const forum = await this.visibleForum(input.forumId, viewer);
+    const title = normalizeTopicTitle(input.title);
+    const content = this.content(input.documentJson, 'topic');
+    const exempt = await this.cooldownExempt(viewer, forum.categoryId);
+    const topicId = randomUUID();
+    const postId = randomUUID();
+    const now = new Date();
+    await this.prisma.$transaction(async (tx) => {
+      await this.cooldown(tx, actorId, now, exempt);
+      const targetId = randomUUID();
+      await tx.interactionTarget.create({
+        data: {
+          id: targetId,
+          kind: TOPIC_KIND,
+          ownerModule: 'forum',
+          ownerType: 'ForumTopic',
+          ownerId: topicId,
+        },
+      });
+      await tx.forumTopic.create({
+        data: {
+          id: topicId,
+          forumId: forum.id,
+          interactionTargetId: targetId,
+          authorId: actorId,
+          kind: input.kind,
+          title,
+          lastPostAt: now,
+          lastPostAuthorId: actorId,
+          createdAt: now,
+        },
+      });
+      await this.insertPost(tx, {
+        id: postId,
+        topicId,
+        number: 1,
+        authorId: actorId,
+        content,
+        replyToNumber: null,
+        quotedNumbers: [],
+        createdAt: now,
+      });
+      await this.record(tx, actorId, 'ForumTopic', topicId, 'topic.created', {
+        forumId: forum.id,
+        categoryId: forum.categoryId,
+        kind: input.kind,
+        firstPostId: postId,
+      });
+    });
+    return { topic: await this.summary(topicId), firstPostId: postId };
+  }
+
+  async reply(
+    actorId: string,
+    input: {
+      topicId: string;
+      documentJson: string;
+      replyToNumber: number | null;
+      quotedNumbers: number[];
+    },
+  ): Promise<ForumPostView> {
+    const viewer = await this.authenticated(actorId);
+    const { categoryId } = await this.visibleTopic(input.topicId, viewer);
+    const content = this.content(input.documentJson, 'reply');
+    const exempt = await this.cooldownExempt(viewer, categoryId);
+    const postId = randomUUID();
+    const now = new Date();
+    await this.prisma.$transaction(async (tx) => {
+      const [locked] = await tx.$queryRaw<
+        Array<{ state: string; lastPostNumber: number }>
+      >`SELECT "state", "lastPostNumber" FROM "forum_topics" WHERE "id" = ${input.topicId} FOR UPDATE`;
+      if (!locked) this.notFound('Topic');
+      if (locked.state !== 'OPEN') {
+        throw new ForumCommandError(
+          'CONFLICT',
+          'Replies are allowed only in open topics.',
+        );
+      }
+      const number = locked.lastPostNumber + 1;
+      const references = normalizePostReferences(
+        input.replyToNumber,
+        input.quotedNumbers,
+        number,
+      );
+      await this.cooldown(tx, actorId, now, exempt);
+      await this.insertPost(tx, {
+        id: postId,
+        topicId: input.topicId,
+        number,
+        authorId: actorId,
+        content,
+        ...references,
+        createdAt: now,
+      });
+      await tx.forumTopic.update({
+        where: { id: input.topicId },
+        data: {
+          postCount: { increment: 1 },
+          lastPostNumber: number,
+          lastPostAt: now,
+          lastPostAuthorId: actorId,
+        },
+      });
+      await this.record(tx, actorId, 'ForumPost', postId, 'post.created', {
+        topicId: input.topicId,
+        number,
+        replyToNumber: references.replyToNumber,
+      });
+    });
+    return this.postView(
+      await this.prisma.forumPost.findUniqueOrThrow({ where: { id: postId } }),
+      true,
+    );
+  }
+
+  async editPost(
+    actorId: string,
+    input: {
+      postId: string;
+      expectedRevision: number;
+      documentJson: string;
+      title?: string | null;
+    },
+  ): Promise<ForumPostView> {
+    const viewer = await this.authenticated(actorId);
+    const post = await this.prisma.forumPost.findUnique({
+      where: { id: input.postId },
+    });
+    if (!post) this.notFound('Post');
+    const { topic, categoryId } = await this.visibleTopic(post.topicId, viewer);
+    const actor = {
+      id: actorId,
+      moderator: await this.structure.canModerateCategory(actorId, categoryId),
+    };
+    if (
+      post.state !== 'VISIBLE' ||
+      !canEditPost(topic, post, actor, new Date())
+    ) {
+      throw new ForumCommandError(
+        'ACCESS_DENIED',
+        'You can no longer edit this post.',
+      );
+    }
+    if (input.title != null && post.number !== 1) {
+      throw new ForumCommandError(
+        'INVALID_INPUT',
+        'Only the first post can change the topic title.',
+      );
+    }
+    const title = input.title != null ? normalizeTopicTitle(input.title) : null;
+    const content = this.content(
+      input.documentJson,
+      post.number === 1 ? 'topic' : 'reply',
+    );
+    const now = new Date();
+    await this.prisma.$transaction(async (tx) => {
+      const nextRevision = input.expectedRevision + 1;
+      const updated = await tx.forumPost.updateMany({
+        where: {
+          id: post.id,
+          revision: input.expectedRevision,
+          state: 'VISIBLE',
+        },
+        data: {
+          document: content.document as unknown as Prisma.InputJsonValue,
+          plainText: content.plainText,
+          searchText: content.searchText,
+          revision: nextRevision,
+          editedAt: now,
+          lastEditorId: actorId,
+        },
+      });
+      if (updated.count !== 1) {
+        throw new ForumCommandError(
+          'CONFLICT',
+          'The post changed since you opened it.',
+        );
+      }
+      await tx.forumPostRevision.create({
+        data: {
+          postId: post.id,
+          revision: nextRevision,
+          document: content.document as unknown as Prisma.InputJsonValue,
+          plainText: content.plainText,
+          editorId: actorId,
+          createdAt: now,
+        },
+      });
+      if (title !== null) {
+        await tx.forumTopic.update({
+          where: { id: topic.id },
+          data: { title },
+        });
+      }
+      await this.record(tx, actorId, 'ForumPost', post.id, 'post.edited', {
+        topicId: topic.id,
+        number: post.number,
+        revision: nextRevision,
+        byModerator: actor.moderator && actorId !== post.authorId,
+      });
+    });
+    return this.postView(
+      await this.prisma.forumPost.findUniqueOrThrow({ where: { id: post.id } }),
+      true,
+    );
+  }
+
+  async closeTopic(
+    actorId: string,
+    topicId: string,
+  ): Promise<ForumTopicSummary> {
+    return this.transition(actorId, topicId, 'CLOSED');
+  }
+
+  async reopenTopic(
+    actorId: string,
+    topicId: string,
+  ): Promise<ForumTopicSummary> {
+    return this.transition(actorId, topicId, 'OPEN');
+  }
+
+  async topics(
+    viewerId: string | null,
+    forumId: string,
+    sort: ForumTopicSort,
+    page: number,
+    limit: number,
+  ): Promise<ForumPage<ForumTopicSummary>> {
+    const viewer = await this.viewers.read(viewerId, new Date());
+    await this.visibleForum(forumId, viewer);
+    const { skip, take, safePage } = this.paging(page, limit);
+    const where: Prisma.ForumTopicWhereInput = {
+      forumId,
+      state: { in: ['OPEN', 'CLOSED'] },
+    };
+    const [rows, total] = await Promise.all([
+      this.prisma.forumTopic.findMany({
+        where,
+        orderBy: [
+          { pinned: 'desc' },
+          sort === 'NEW' ? { createdAt: 'desc' } : { lastPostAt: 'desc' },
+          { id: 'desc' },
+        ],
+        skip,
+        take,
+      }),
+      this.prisma.forumTopic.count({ where }),
+    ]);
+    return {
+      items: rows.map((row) => this.toSummary(row)),
+      total,
+      page: safePage,
+      limit: take,
+    };
+  }
+
+  async topic(
+    viewerId: string | null,
+    topicId: string,
+  ): Promise<ForumTopicSummary> {
+    const viewer = await this.viewers.read(viewerId, new Date());
+    const { topic } = await this.visibleTopic(topicId, viewer);
+    return this.toSummary(topic);
+  }
+
+  async posts(
+    viewerId: string | null,
+    topicId: string,
+    page: number,
+    limit: number,
+  ): Promise<ForumPage<ForumPostView>> {
+    const viewer = await this.viewers.read(viewerId, new Date());
+    await this.visibleTopic(topicId, viewer);
+    const { skip, take, safePage } = this.paging(page, limit);
+    const [rows, total] = await Promise.all([
+      this.prisma.forumPost.findMany({
+        where: { topicId },
+        orderBy: { number: 'asc' },
+        skip,
+        take,
+      }),
+      this.prisma.forumPost.count({ where: { topicId } }),
+    ]);
+    return {
+      items: rows.map((row) => this.postView(row, row.state === 'VISIBLE')),
+      total,
+      page: safePage,
+      limit: take,
+    };
+  }
+
+  async revisions(
+    viewerId: string | null,
+    postId: string,
+  ): Promise<Array<{ revision: number; editorId: string; createdAt: Date }>> {
+    const viewer = await this.viewers.read(viewerId, new Date());
+    const post = await this.prisma.forumPost.findUnique({
+      where: { id: postId },
+      select: { topicId: true, state: true },
+    });
+    if (!post || post.state !== 'VISIBLE') this.notFound('Post');
+    await this.visibleTopic(post.topicId, viewer);
+    return this.prisma.forumPostRevision.findMany({
+      where: { postId },
+      orderBy: { revision: 'asc' },
+      select: { revision: true, editorId: true, createdAt: true },
+    });
+  }
+
+  /** Owner policy for the `forum.topic` Interaction Target kind. */
+  async permits(
+    topicId: string,
+    targetId: string,
+    viewerId: string | null,
+    capability: 'READ' | 'COMMENT' | 'REACT' | 'BOOKMARK' | 'SHARE',
+  ): Promise<boolean> {
+    if (capability === 'COMMENT') return false; // Forum replies are posts.
+    const viewer = await this.viewers.read(viewerId, new Date());
+    let visible: VisibleTopic;
+    try {
+      visible = await this.visibleTopic(topicId, viewer);
+    } catch (error) {
+      if (error instanceof ForumCommandError) return false;
+      throw error;
+    }
+    if (visible.topic.interactionTargetId !== targetId) return false;
+    if (capability === 'READ' || capability === 'SHARE') return true;
+    if (viewer.subjectId === null) return false;
+    return capability === 'BOOKMARK' || visible.topic.state === 'OPEN';
+  }
+
+  private async transition(
+    actorId: string,
+    topicId: string,
+    to: 'OPEN' | 'CLOSED',
+  ): Promise<ForumTopicSummary> {
+    const viewer = await this.authenticated(actorId);
+    const { topic, categoryId } = await this.visibleTopic(topicId, viewer);
+    const actor = {
+      id: actorId,
+      moderator: await this.structure.canModerateCategory(actorId, categoryId),
+    };
+    const allowed =
+      to === 'CLOSED'
+        ? canCloseTopic(topic, actor)
+        : canReopenTopic(topic, actor);
+    if (!allowed) {
+      throw new ForumCommandError(
+        'ACCESS_DENIED',
+        to === 'CLOSED'
+          ? 'You cannot close this topic.'
+          : 'Only curators and moderators can reopen a topic.',
+      );
+    }
+    await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.forumTopic.updateMany({
+        where: { id: topicId, state: to === 'CLOSED' ? 'OPEN' : 'CLOSED' },
+        data: { state: to },
+      });
+      if (updated.count !== 1) {
+        throw new ForumCommandError('CONFLICT', 'The topic state changed.');
+      }
+      await this.record(
+        tx,
+        actorId,
+        'ForumTopic',
+        topicId,
+        to === 'CLOSED' ? 'topic.closed' : 'topic.reopened',
+        { byModerator: actor.moderator && actorId !== topic.authorId },
+      );
+    });
+    return this.summary(topicId);
+  }
+
+  private async visibleForum(forumId: string, viewer: ForumViewerFacts) {
+    const forum = await this.prisma.forum.findUnique({
+      where: { id: forumId },
+      include: {
+        category: { include: { audience: { select: { subjectKey: true } } } },
+      },
+    });
+    if (
+      !forum ||
+      (!viewer.seesAllCategories &&
+        (!forum.active || !forum.category.active)) ||
+      !canSeeCategory(
+        {
+          visibility: forum.category.visibility,
+          audienceKeys: forum.category.audience.map(
+            ({ subjectKey }) => subjectKey,
+          ),
+        },
+        viewer,
+      )
+    ) {
+      this.notFound('Forum');
+    }
+    if (forum.parentId && !viewer.seesAllCategories) {
+      const parent = await this.prisma.forum.findUnique({
+        where: { id: forum.parentId },
+        select: { active: true },
+      });
+      if (!parent?.active) this.notFound('Forum');
+    }
+    return forum;
+  }
+
+  private async visibleTopic(
+    topicId: string,
+    viewer: ForumViewerFacts,
+  ): Promise<VisibleTopic> {
+    const topic = await this.prisma.forumTopic.findUnique({
+      where: { id: topicId },
+    });
+    if (!topic || topic.state === 'TRASHED') this.notFound('Topic');
+    const forum = await this.visibleForum(topic.forumId, viewer).catch(
+      (error: unknown) => {
+        if (error instanceof ForumCommandError) this.notFound('Topic');
+        throw error;
+      },
+    );
+    return { topic, categoryId: forum.categoryId, viewer };
+  }
+
+  private async authenticated(actorId: string): Promise<ForumViewerFacts> {
+    const viewer = await this.viewers.read(actorId, new Date());
+    if (viewer.subjectId === null) {
+      throw new ForumCommandError('ACCESS_DENIED', 'Sign in to post.');
+    }
+    return viewer;
+  }
+
+  private async cooldownExempt(
+    viewer: ForumViewerFacts,
+    categoryId: string,
+  ): Promise<boolean> {
+    if (viewer.moderatesAllCategories || viewer.seesAllCategories) return true;
+    return this.structure.canModerateCategory(viewer.subjectId!, categoryId);
+  }
+
+  private async cooldown(
+    tx: TransactionClient,
+    userId: string,
+    now: Date,
+    exempt: boolean,
+  ): Promise<void> {
+    if (exempt) return;
+    const threshold = new Date(
+      now.getTime() - FORUM_POSTING_COOLDOWN_SECONDS * 1000,
+    );
+    const rows = await tx.$queryRaw<Array<{ userId: string }>>`
+      INSERT INTO "forum_posting_cooldowns" ("userId", "lastPostAt")
+      VALUES (${userId}, ${now})
+      ON CONFLICT ("userId") DO UPDATE SET "lastPostAt" = EXCLUDED."lastPostAt"
+      WHERE "forum_posting_cooldowns"."lastPostAt" <= ${threshold}
+      RETURNING "userId"`;
+    if (rows.length !== 1) {
+      throw new ForumCommandError(
+        'RATE_LIMITED',
+        `Please wait ${FORUM_POSTING_COOLDOWN_SECONDS} seconds between posts.`,
+      );
+    }
+  }
+
+  private content(
+    documentJson: string,
+    profile: 'topic' | 'reply',
+  ): ValidatedEditorDocument {
+    const content =
+      profile === 'topic'
+        ? this.editor.normalizeForumTopic(documentJson)
+        : this.editor.normalizeForumReply(documentJson);
+    if (this.containsDeferredNode(content.document)) {
+      throw new ForumCommandError(
+        'INVALID_INPUT',
+        'Media, attachments and hidden content in forum posts arrive in CH-3.',
+      );
+    }
+    if (!content.plainText.trim()) {
+      throw new ForumCommandError('INVALID_INPUT', 'A post cannot be empty.');
+    }
+    return content;
+  }
+
+  private containsDeferredNode(node: unknown): boolean {
+    if (!node || typeof node !== 'object') return false;
+    const record = node as { type?: unknown; content?: unknown };
+    if (typeof record.type === 'string' && DEFERRED_NODES.has(record.type)) {
+      return true;
+    }
+    return (
+      Array.isArray(record.content) &&
+      record.content.some((child) => this.containsDeferredNode(child))
+    );
+  }
+
+  private async insertPost(
+    tx: TransactionClient,
+    input: {
+      id: string;
+      topicId: string;
+      number: number;
+      authorId: string;
+      content: ValidatedEditorDocument;
+      replyToNumber: number | null;
+      quotedNumbers: number[];
+      createdAt: Date;
+    },
+  ): Promise<void> {
+    const document = input.content.document as unknown as Prisma.InputJsonValue;
+    await tx.forumPost.create({
+      data: {
+        id: input.id,
+        topicId: input.topicId,
+        number: input.number,
+        authorId: input.authorId,
+        document,
+        plainText: input.content.plainText,
+        searchText: input.content.searchText,
+        replyToNumber: input.replyToNumber,
+        quotedNumbers: input.quotedNumbers,
+        createdAt: input.createdAt,
+      },
+    });
+    await tx.forumPostRevision.create({
+      data: {
+        postId: input.id,
+        revision: 1,
+        document,
+        plainText: input.content.plainText,
+        editorId: input.authorId,
+        createdAt: input.createdAt,
+      },
+    });
+  }
+
+  private async summary(topicId: string): Promise<ForumTopicSummary> {
+    return this.toSummary(
+      await this.prisma.forumTopic.findUniqueOrThrow({
+        where: { id: topicId },
+      }),
+    );
+  }
+
+  private toSummary(row: ForumTopic): ForumTopicSummary {
+    return {
+      id: row.id,
+      forumId: row.forumId,
+      interactionTargetId: row.interactionTargetId,
+      authorId: row.authorId,
+      kind: row.kind,
+      title: row.title,
+      state: row.state,
+      pinned: row.pinned,
+      curatorId: row.curatorId,
+      postCount: row.postCount,
+      lastPostNumber: row.lastPostNumber,
+      lastPostAt: row.lastPostAt,
+      lastPostAuthorId: row.lastPostAuthorId,
+      createdAt: row.createdAt,
+    };
+  }
+
+  private postView(row: ForumPost, showContent: boolean): ForumPostView {
+    return {
+      id: row.id,
+      topicId: row.topicId,
+      number: row.number,
+      authorId: row.authorId,
+      state: row.state,
+      documentJson: showContent ? JSON.stringify(row.document) : null,
+      replyToNumber: row.replyToNumber,
+      quotedNumbers: row.quotedNumbers,
+      revision: row.revision,
+      createdAt: row.createdAt,
+      editedAt: row.editedAt,
+    };
+  }
+
+  private paging(page: number, limit: number) {
+    const safePage = Math.max(1, Math.trunc(page) || 1);
+    const take = Math.min(MAX_PAGE, Math.max(1, Math.trunc(limit) || 20));
+    return { skip: (safePage - 1) * take, take, safePage };
+  }
+
+  private async record(
+    tx: TransactionClient,
+    actorId: string,
+    targetType: 'ForumTopic' | 'ForumPost',
+    targetId: string,
+    action: string,
+    metadata: Record<string, string | number | boolean | null>,
+  ): Promise<void> {
+    await this.audit.append(tx, {
+      action: 'forum.' + action.replaceAll('.', '_'),
+      actorType: 'USER',
+      actorId,
+      targetType,
+      targetId,
+      metadata,
+    });
+    await this.outbox.append(
+      tx,
+      createEventEnvelope({
+        name: 'forum.' + action + '.v1',
+        version: 1,
+        category: 'integration',
+        producer: PRODUCER,
+        actorId,
+        aggregate: { type: targetType, id: targetId },
+        payload: { targetId, ...metadata },
+      }),
+    );
+  }
+
+  private notFound(target: string): never {
+    throw new ForumCommandError('NOT_FOUND', target + ' was not found.');
+  }
+}
+
+/** 💬 A forum is a promise that every reply will find its place in line. */

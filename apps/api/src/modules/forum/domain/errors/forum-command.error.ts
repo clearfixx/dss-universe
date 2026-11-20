@@ -15,7 +15,8 @@ export type ForumCommandErrorCode =
   | 'ACCESS_DENIED'
   | 'NOT_FOUND'
   | 'INVALID_INPUT'
-  | 'CONFLICT';
+  | 'CONFLICT'
+  | 'RATE_LIMITED';
 
 export class ForumCommandError extends Error {
   constructor(

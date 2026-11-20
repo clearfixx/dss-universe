@@ -192,6 +192,25 @@ enum ForumVisibility {
   RESTRICTED
 }
 
+enum ForumTopicKind {
+  DISCUSSION
+  QUESTION
+}
+
+enum ForumTopicState {
+  OPEN
+  CLOSED
+  ARCHIVED
+  TRASHED
+}
+
+enum ForumPostState {
+  VISIBLE
+  HIDDEN
+  DELETED
+  PURGED
+}
+
 enum ContentGateOperator {
   ALL
   ANY
@@ -400,6 +419,11 @@ model User {
   forumModeratorRoles     ForumModeratorAssignment[]   @relation("ForumModerator")
   forumModeratorsAssigned ForumModeratorAssignment[]   @relation("ForumModeratorAssigner")
   forumModeratorsRevoked  ForumModeratorAssignment[]   @relation("ForumModeratorRevoker")
+  forumTopics             ForumTopic[]                 @relation("ForumTopicAuthor")
+  forumTopicsCurated      ForumTopic[]                 @relation("ForumTopicCurator")
+  forumPosts              ForumPost[]                  @relation("ForumPostAuthor")
+  forumPostRevisions      ForumPostRevision[]
+  forumPostingCooldown    ForumPostingCooldown?
   contentGates            ContentGate[]
   newsArticles            NewsArticle[]                @relation("NewsAuthor")
   newsRevisions           NewsRevision[]               @relation("NewsRevisionEditor")
@@ -533,6 +557,7 @@ model InteractionTarget {
   reports               ContentReport[]
   moderationAnnotations ModerationAnnotation[]
   poll                  Poll?
+  forumTopic            ForumTopic?
   newsArticle           NewsArticle?
   researchPage          ResearchPage?
 
@@ -2696,6 +2721,7 @@ model Forum {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
+  topics    ForumTopic[]
   category  ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   parent    Forum?        @relation("ForumSubforums", fields: [parentId], references: [id], onDelete: Restrict)
   subforums Forum[]       @relation("ForumSubforums")
@@ -2722,4 +2748,84 @@ model ForumModeratorAssignment {
   @@index([moderatorId, revokedAt])
   @@index([categoryId, revokedAt])
   @@map("forum_moderator_assignments")
+}
+
+model ForumTopic {
+  id                  String           @id @default(uuid())
+  forumId             String
+  interactionTargetId String           @unique
+  authorId            String
+  kind                ForumTopicKind   @default(DISCUSSION)
+  title               String
+  state               ForumTopicState  @default(OPEN)
+  stateBeforeTrash    ForumTopicState?
+  pinned              Boolean          @default(false)
+  curatorId           String?
+  postCount           Int              @default(1)
+  lastPostNumber      Int              @default(1)
+  lastPostAt          DateTime         @default(now())
+  lastPostAuthorId    String
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  forum             Forum             @relation(fields: [forumId], references: [id], onDelete: Restrict)
+  interactionTarget InteractionTarget @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
+  author            User              @relation("ForumTopicAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  curator           User?             @relation("ForumTopicCurator", fields: [curatorId], references: [id], onDelete: Restrict)
+  posts             ForumPost[]
+
+  @@index([forumId, pinned, lastPostAt, id])
+  @@index([forumId, pinned, createdAt, id])
+  @@index([authorId, createdAt])
+  @@map("forum_topics")
+}
+
+model ForumPost {
+  id            String         @id @default(uuid())
+  topicId       String
+  number        Int
+  authorId      String
+  state         ForumPostState @default(VISIBLE)
+  document      Json
+  plainText     String
+  searchText    String
+  replyToNumber Int?
+  quotedNumbers Int[]          @default([])
+  revision      Int            @default(1)
+  createdAt     DateTime       @default(now())
+  editedAt      DateTime?
+  lastEditorId  String?
+
+  topic     ForumTopic          @relation(fields: [topicId], references: [id], onDelete: Restrict)
+  author    User                @relation("ForumPostAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  revisions ForumPostRevision[]
+
+  @@unique([topicId, number])
+  @@index([authorId, createdAt])
+  @@map("forum_posts")
+}
+
+model ForumPostRevision {
+  id        String   @id @default(uuid())
+  postId    String
+  revision  Int
+  document  Json
+  plainText String
+  editorId  String
+  createdAt DateTime @default(now())
+
+  post   ForumPost @relation(fields: [postId], references: [id], onDelete: Restrict)
+  editor User      @relation(fields: [editorId], references: [id], onDelete: Restrict)
+
+  @@unique([postId, revision])
+  @@map("forum_post_revisions")
+}
+
+model ForumPostingCooldown {
+  userId     String   @id
+  lastPostAt DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("forum_posting_cooldowns")
 }
