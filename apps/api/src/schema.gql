@@ -641,6 +641,11 @@ input ForumRankingSettingsInput {
   hotReplyWeight: Int!
 }
 
+type ForumSanctionReceipt {
+  escalatedSanctionId: ID
+  sanctionId: ID!
+}
+
 type ForumStaffNote {
   authorId: ID!
   body: String!
@@ -702,6 +707,7 @@ type ForumTopic {
   lastPostAt: DateTime!
   lastPostAuthorId: ID!
   lastPostNumber: Int!
+  mergedIntoTopicId: ID
   pinned: Boolean!
   postCount: Int!
   ratingDown: Int!
@@ -1247,6 +1253,9 @@ type Mutation {
   logout: LogoutResultModel!
   markActivityFeedVisited: ActivityFeedVisit!
   markForumTopicRead(topicId: ID!, upToNumber: Int!): Int!
+  mergeForumTopics(sourceTopicId: ID!, targetTopicId: ID!): ForumTopic!
+  moveForumPosts(numbers: [Int!]!, sourceTopicId: ID!, targetTopicId: ID!): ForumTopic!
+  moveForumTopic(targetForumId: ID!, topicId: ID!): ForumTopic!
   publishNews(input: PublishNewsInput!): NewsEditorialTransition!
   publishResearchRevision(input: ResearchDecisionInput!): ResearchRevisionReceipt!
   purgeForumPost(postId: ID!, reason: String!): ForumPurgeResult!
@@ -1276,6 +1285,7 @@ type Mutation {
   restoreForumPost(postId: ID!): ForumPostModerationResult!
   restoreForumTopic(topicId: ID!): ForumTopic!
   restoreResearchPage(input: ResearchLifecycleInput!): Boolean!
+  restrictForumPostAuthor(postId: ID!, reason: String!, until: DateTime!): ForumSanctionReceipt!
   retryFailedMedia(mediaId: ID!): MediaLibraryItem!
   reverseCommunityPoints(input: ReverseCommunityPointsInput!): CommunityPointEntry!
   reverseForumPostVote(postId: ID!, reason: String!, voterId: ID!): ForumPostRating!
@@ -1300,12 +1310,14 @@ type Mutation {
   scheduleNews(input: ScheduleNewsInput!): NewsEditorialTransition!
   selectCustomTitle(grantId: ID!): UserTitleGrant!
   selfPublishResearchDraft(input: ResearchSubmitInput!): ResearchRevisionReceipt!
+  setForumTopicCurator(curatorId: ID, topicId: ID!): ForumTopic!
   setForumTopicPinned(pinned: Boolean!, topicId: ID!): ForumTopic!
   setForumTopicTags(tagIds: [ID!]!, topicId: ID!): ForumTopic!
   setNewsPin(input: SetNewsPinInput!): ManagedNewsPin!
   setReaction(input: SetReactionInput!): SetReactionPayload!
   setViewerAvatar(mediaId: ID!): Viewer!
   setViewerCover(mediaId: ID!): Viewer!
+  splitForumTopic(numbers: [Int!]!, sourceTopicId: ID!, title: String!): ForumTopic!
   startResearchDraft(pageId: ID!): ResearchDraftReceipt!
   submitNewsForReview(articleId: ID!): NewsEditorialTransition!
   submitResearchDraft(input: ResearchSubmitInput!): ResearchRevisionReceipt!
@@ -1331,6 +1343,7 @@ type Mutation {
   updateViewerSocialLinks(input: UpdateViewerSocialLinksInput!): [UserSocialLink!]!
   verifyEmail(input: VerifyEmailInput!): LogoutResultModel!
   voteForumPost(postId: ID!, value: Int!): ForumPostRating!
+  warnForumPostAuthor(postId: ID!, reason: String!): ForumSanctionReceipt!
   withdrawResearchRevision(input: ResearchDecisionInput!): ResearchRevisionReceipt!
 }
 
