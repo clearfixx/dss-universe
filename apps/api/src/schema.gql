@@ -562,12 +562,27 @@ type ForumPost {
   documentJson: String
   editedAt: DateTime
   id: ID!
+
+  """Returned to staff of the topic only."""
+  moderation: ForumPostModeration
   number: Int!
   quotedNumbers: [Int!]!
   replyToNumber: Int
   revision: Int!
+  staffNotes: [ForumStaffNote!]!
   state: ForumPostState!
   topicId: ID!
+}
+
+type ForumPostModeration {
+  at: DateTime!
+  byId: ID!
+  reason: String!
+}
+
+type ForumPostModerationResult {
+  postId: ID!
+  state: String!
 }
 
 type ForumPostPage {
@@ -588,6 +603,25 @@ enum ForumPostState {
   HIDDEN
   PURGED
   VISIBLE
+}
+
+type ForumPurgeResult {
+  postId: ID!
+}
+
+type ForumStaffNote {
+  authorId: ID!
+  body: String!
+  createdAt: DateTime!
+  id: ID!
+  role: ForumStaffRole!
+}
+
+enum ForumStaffRole {
+  ADMINISTRATOR
+  CURATOR
+  MODERATOR
+  SUPERMODERATOR
 }
 
 type ForumSubforum {
@@ -634,6 +668,12 @@ type ForumTopicPage {
   limit: Int!
   page: Int!
   total: Int!
+}
+
+enum ForumTopicScope {
+  ACTIVE
+  ARCHIVED
+  TRASHED
 }
 
 enum ForumTopicSort {
@@ -1077,7 +1117,9 @@ type ModerationSanctionStatus {
 
 type Mutation {
   abortMediaUpload(id: String!): MediaUploadSession!
+  addForumStaffNote(body: String!, postId: ID!): ForumStaffNote!
   approveNews(input: NewsDecisionInput!): NewsEditorialTransition!
+  archiveForumTopic(topicId: ID!): ForumTopic!
   archiveResearchPage(input: ResearchLifecycleInput!): Boolean!
   assignForumCategoryModerator(categoryId: ID!, moderatorId: ID!): ForumModeratorAssignment!
   awardAchievement(input: ManualAchievementAwardInput!): AchievementAward!
@@ -1102,6 +1144,7 @@ type Mutation {
   createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
   createResearchDraft(input: ResearchDraftInput!): ResearchDraftReceipt!
   deactivateAccount(input: DeactivateAccountInput!): LogoutResultModel!
+  deleteForumPost(postId: ID!, reason: String!): ForumPostModerationResult!
   disableViewerTwoFactor(input: DisableTwoFactorInput!): LogoutResultModel!
   discardCommentDraft(draftId: ID!): Boolean!
   editComment(input: EditCommentInput!): Comment!
@@ -1109,6 +1152,7 @@ type Mutation {
   followUser(userId: ID!): UserSocialGraphSummary!
   giveReputation(input: GiveReputationInput!): ReputationEntry!
   grantCustomTitle(input: GrantCustomTitleInput!): UserTitleGrant!
+  hideForumPost(postId: ID!, reason: String!): ForumPostModerationResult!
   initiateMediaUpload(input: InitiateMediaUploadInput!): MediaUploadSession!
   issueModerationReadOnly(input: IssueModerationReadOnlyInput!): ModerationSanctionReceipt!
   issueModerationWarning(input: IssueModerationWarningInput!): ModerationSanctionReceipt!
@@ -1117,6 +1161,7 @@ type Mutation {
   markActivityFeedVisited: ActivityFeedVisit!
   publishNews(input: PublishNewsInput!): NewsEditorialTransition!
   publishResearchRevision(input: ResearchDecisionInput!): ResearchRevisionReceipt!
+  purgeForumPost(postId: ID!, reason: String!): ForumPurgeResult!
   reactivateAccount(input: LoginInput!): AuthPayloadModel!
   recordInteractionShare(input: RecordShareInput!): AudienceEngagement!
   recordInteractionView(input: RecordViewInput!): AudienceEngagement!
@@ -1126,6 +1171,7 @@ type Mutation {
   rejectResearchRevision(input: ResearchDecisionInput!): ResearchRevisionReceipt!
   removeBookmark(interactionTargetId: ID!): BookmarkMutationPayload!
   removeComment(commentId: ID!, reason: String): Comment!
+  removeForumStaffNote(noteId: ID!): Boolean!
   removeNewsPin(articleId: ID!): RemoveNewsPinResult!
   removeProfileWallPost(postId: ID!, reason: String): ProfileWallPost!
   removeViewerAvatar: Viewer!
@@ -1138,6 +1184,8 @@ type Mutation {
   requestResearchChanges(input: ResearchDecisionInput!): ResearchRevisionReceipt!
   rescanQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
   resetPassword(input: ResetPasswordInput!): LogoutResultModel!
+  restoreForumPost(postId: ID!): ForumPostModerationResult!
+  restoreForumTopic(topicId: ID!): ForumTopic!
   restoreResearchPage(input: ResearchLifecycleInput!): Boolean!
   retryFailedMedia(mediaId: ID!): MediaLibraryItem!
   reverseCommunityPoints(input: ReverseCommunityPointsInput!): CommunityPointEntry!
@@ -1162,6 +1210,7 @@ type Mutation {
   scheduleNews(input: ScheduleNewsInput!): NewsEditorialTransition!
   selectCustomTitle(grantId: ID!): UserTitleGrant!
   selfPublishResearchDraft(input: ResearchSubmitInput!): ResearchRevisionReceipt!
+  setForumTopicPinned(pinned: Boolean!, topicId: ID!): ForumTopic!
   setNewsPin(input: SetNewsPinInput!): ManagedNewsPin!
   setReaction(input: SetReactionInput!): SetReactionPayload!
   setViewerAvatar(mediaId: ID!): Viewer!
@@ -1170,6 +1219,8 @@ type Mutation {
   submitNewsForReview(articleId: ID!): NewsEditorialTransition!
   submitResearchDraft(input: ResearchSubmitInput!): ResearchRevisionReceipt!
   tombstoneResearchPage(input: ResearchLifecycleInput!): Boolean!
+  trashForumTopic(topicId: ID!): ForumTopic!
+  unarchiveForumTopic(topicId: ID!): ForumTopic!
   unblockUser(userId: ID!): UserBlockResult!
   unfollowUser(userId: ID!): UserSocialGraphSummary!
   updateCommunityPointRule(input: UpdateCommunityPointRuleInput!): CommunityPointRule!
@@ -1620,7 +1671,7 @@ type Query {
   forumPostRevisions(postId: ID!): [ForumPostRevision!]!
   forumPosts(limit: Int! = 20, page: Int! = 1, topicId: ID!): ForumPostPage!
   forumTopic(topicId: ID!): ForumTopic!
-  forumTopics(forumId: ID!, limit: Int! = 20, page: Int! = 1, sort: ForumTopicSort! = LAST_ACTIVITY): ForumTopicPage!
+  forumTopics(forumId: ID!, limit: Int! = 20, page: Int! = 1, scope: ForumTopicScope! = ACTIVE, sort: ForumTopicSort! = LAST_ACTIVITY): ForumTopicPage!
   fullNews(language: String!, slug: String!): FullNews
   interactionTarget(id: ID!): InteractionTarget!
   interactionTargetAccess(capability: InteractionCapability!, targetId: ID!): InteractionAccessDecision!
