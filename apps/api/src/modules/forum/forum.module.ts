@@ -16,6 +16,8 @@ import { AuthorizationModule } from '@api/core/authorization';
 import { EditorModule } from '@api/modules/editor';
 import { InteractionsModule } from '@api/modules/interactions';
 import { ModerationModule } from '@api/modules/moderation';
+import { ForumIntegrationsService } from './infrastructure/prisma-forum-integrations';
+import { ForumIntegrationsResolver } from './presentation/forum-integrations.resolver';
 import { ForumOperationsService } from './infrastructure/prisma-forum-operations';
 import { ForumOperationsResolver } from './presentation/forum-operations.resolver';
 import { ForumCurationService } from './infrastructure/prisma-forum-curation';
@@ -54,6 +56,8 @@ import { ForumStructureResolver } from './presentation/forum-structure.resolver'
     ForumCurationResolver,
     ForumOperationsService,
     ForumOperationsResolver,
+    ForumIntegrationsService,
+    ForumIntegrationsResolver,
     { provide: FORUM_INTERACTION_DECISIONS, useExisting: ForumTopicsService },
   ],
   exports: [FORUM_INTERACTION_DECISIONS],

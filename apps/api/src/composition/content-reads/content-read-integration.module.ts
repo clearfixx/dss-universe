@@ -41,12 +41,20 @@ import {
   GATE_COMMENT_COUNT,
   GATE_REPUTATION_TOTAL,
   GATE_VIEWER_RESTRICTION,
+  GATE_FORUM_POST_COUNT,
 } from '@api/modules/content-access';
 import { GateAccountEvidenceAdapter } from './infrastructure/gate-account-evidence.adapter';
 import { GateCommentCountAdapter } from './infrastructure/gate-comment-count.adapter';
 import { GateReputationTotalAdapter } from './infrastructure/gate-reputation-total.adapter';
 import { GateViewerRestrictionAdapter } from './infrastructure/gate-viewer-restriction.adapter';
-import { FORUM_ACCOUNT_EVIDENCE } from '@api/modules/forum';
+import {
+  FORUM_ACCOUNT_EVIDENCE,
+  FORUM_NEWS_FACTS,
+  ForumFactsModule,
+} from '@api/modules/forum';
+import { NewsDiscussionFactsModule } from '@api/modules/news';
+import { ForumNewsFactsAdapter } from './infrastructure/forum-news-facts.adapter';
+import { GateForumPostCountAdapter } from './infrastructure/gate-forum-post-count.adapter';
 import { ForumAccountEvidenceAdapter } from './infrastructure/forum-account-evidence.adapter';
 import { WallImageEligibilityAdapter } from './infrastructure/wall-image-eligibility.adapter';
 import { NewsMediaEvidenceAdapter } from './infrastructure/news-media-evidence.adapter';
@@ -62,6 +70,8 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
     InteractionsModule,
     ReputationModule,
     ModerationModule,
+    NewsDiscussionFactsModule,
+    ForumFactsModule,
   ],
   providers: [
     { provide: NEWS_ATTACHMENT_READER, useClass: NewsAttachmentAdapter },
@@ -78,6 +88,8 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
     },
     { provide: WALL_IMAGE_ELIGIBILITY, useClass: WallImageEligibilityAdapter },
     { provide: FORUM_ACCOUNT_EVIDENCE, useClass: ForumAccountEvidenceAdapter },
+    { provide: FORUM_NEWS_FACTS, useClass: ForumNewsFactsAdapter },
+    { provide: GATE_FORUM_POST_COUNT, useClass: GateForumPostCountAdapter },
     { provide: NEWS_MEDIA_EVIDENCE, useClass: NewsMediaEvidenceAdapter },
     { provide: PROFILE_ACTIVITY_READER, useClass: ProfileActivityAdapter },
   ],
@@ -92,6 +104,8 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
     GATE_VIEWER_RESTRICTION,
     WALL_IMAGE_ELIGIBILITY,
     FORUM_ACCOUNT_EVIDENCE,
+    FORUM_NEWS_FACTS,
+    GATE_FORUM_POST_COUNT,
   ],
 })
 export class ContentReadIntegrationModule {}
