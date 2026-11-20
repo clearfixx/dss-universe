@@ -2812,30 +2812,33 @@ model ForumTopic {
 }
 
 model ForumPost {
-  id               String         @id @default(uuid())
-  topicId          String
-  number           Int
-  authorId         String
-  state            ForumPostState @default(VISIBLE)
-  document         Json
-  plainText        String
-  searchText       String
-  replyToNumber    Int?
-  quotedNumbers    Int[]          @default([])
-  originalTopicId  String?
-  originalNumber   Int?
-  ratingUp         Int            @default(0)
-  ratingDown       Int            @default(0)
-  revision         Int            @default(1)
-  createdAt        DateTime       @default(now())
-  editedAt         DateTime?
-  lastEditorId     String?
-  moderatedAt      DateTime?
-  moderatedById    String?
-  moderationReason String?
-  purgedAt         DateTime?
-  purgedById       String?
-  purgeReason      String?
+  id                String         @id @default(uuid())
+  topicId           String
+  number            Int
+  authorId          String
+  state             ForumPostState @default(VISIBLE)
+  document          Json
+  plainText         String
+  searchText        String
+  replyToNumber     Int?
+  quotedNumbers     Int[]          @default([])
+  originalTopicId   String?
+  originalNumber    Int?
+  ratingUp          Int            @default(0)
+  ratingDown        Int            @default(0)
+  revision          Int            @default(1)
+  createdAt         DateTime       @default(now())
+  editedAt          DateTime?
+  lastEditorId      String?
+  moderatedAt       DateTime?
+  moderatedById     String?
+  moderationReason  String?
+  purgedAt          DateTime?
+  purgedById        String?
+  purgeReason       String?
+  /// Write-once: the first acceptance of this post as an answer (points source).
+  firstAcceptedAt   DateTime?
+  firstAcceptedById String?
 
   topic       ForumTopic           @relation(fields: [topicId], references: [id], onDelete: Restrict)
   author      User                 @relation("ForumPostAuthor", fields: [authorId], references: [id], onDelete: Restrict)
