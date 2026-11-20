@@ -249,7 +249,30 @@ describe('Research Lab public delivery (GraphQL)', () => {
       },
     });
     const delivery = app.get(ResearchLabDelivery);
-    expect(await delivery.history(author, id, 0, 10)).toHaveLength(1);
+    expect(await delivery.history(author, id, 0, 10)).toEqual([
+      expect.objectContaining({ publicationDecision: null }),
+    ]);
+    const decision = {
+      pageId: id,
+      revisionId: revision.id,
+      actorId: author,
+      policySnapshotHash: 'a'.repeat(64),
+      auditCorrelationId: randomUUID(),
+    };
+    await fixture.prisma.researchReviewDecision.createMany({
+      data: [
+        { ...decision, action: 'PUBLISHED' },
+        {
+          ...decision,
+          action: 'RESTORED',
+          reason: 'Private moderation reason',
+        },
+      ],
+    });
+    const [entry] = await delivery.history(author, id, 0, 10);
+    expect(entry.publicationDecision).toBe('PUBLISHED');
+    expect(entry).not.toHaveProperty('reviewDecisions');
+    expect(await delivery.history(null, id, 0, 10)).toEqual([]);
     expect(await delivery.permits(id, target.id, author, 'READ')).toBe(true);
     await fixture.prisma.researchPage.update({
       where: { id },
