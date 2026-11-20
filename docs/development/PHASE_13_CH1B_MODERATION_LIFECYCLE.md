@@ -77,4 +77,21 @@ topic curator.
   archive/trash/restore with moderator-only trash, pinning order, purge of post
   and revisions, purge terminality and revision immutability outside purge.
 
+Recorded local results (2026-11-21, Node 24.22.3):
+
+- migrations applied; zero Prisma schema drift;
+- API unit suite: 1645 passed, 106 skipped by the existing opt-in policy;
+- forum e2e (structure, topics, moderation): 20/20;
+- full API e2e on the shared instance (`15434`/Redis `6380`): 986/999 — hook
+  timeouts in three unrelated suites caused by concurrent runs of another agent;
+- full API e2e on a dedicated instance (`5435`/Redis `6381`): 983/999 — the
+  three suites above pass; the 16 failures are the four suites that hard-require
+  Redis on port `6380` (`queue`, `gamification-broker`,
+  `gamification-consumption`, `media-intake-concurrency`) and stop at that
+  environment guard. They passed on `6380` in the CH-1a run and CH-1b does not
+  touch queues, Media or gamification. Recorded, not waived;
+- architecture inventory: 0 findings; lint and typecheck clean.
+
+GitHub CI on the committed PR head remains the acceptance gate.
+
 🧹 Moderation should leave a trail, never a hole.
