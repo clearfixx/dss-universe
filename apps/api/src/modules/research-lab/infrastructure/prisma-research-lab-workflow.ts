@@ -630,16 +630,43 @@ export class ResearchLabService {
     });
   }
 
-  async reviewQueue(actorId: string) {
+  private async reviewScope(
+    actorId: string,
+  ): Promise<Prisma.ResearchRevisionWhereInput> {
     const facts = await this.requireGuardian(actorId);
-    return this.prisma.researchRevision.findMany({
-      where: {
-        state: 'IN_REVIEW',
-        page: {
-          state: { in: ['DRAFT', 'ACTIVE'] },
-          ...researchAudience(facts.groups, true),
-        },
+    return {
+      state: 'IN_REVIEW',
+      page: {
+        state: { in: ['DRAFT', 'ACTIVE'] },
+        ...researchAudience(facts.groups, true),
       },
+    };
+  }
+
+  async reviewRevision(actorId: string, pageId: string, revisionId: string) {
+    const revision = await this.prisma.researchRevision.findFirst({
+      where: { ...(await this.reviewScope(actorId)), pageId, id: revisionId },
+      select: {
+        id: true,
+        pageId: true,
+        number: true,
+        title: true,
+        summary: true,
+        editSummary: true,
+        document: true,
+      },
+    });
+    if (!revision) return null;
+    const { document, ...metadata } = revision;
+    const view = await this.delivery.project(JSON.stringify(document), actorId);
+    return { ...metadata, documentJson: view.documentJson };
+  }
+
+  async reviewQueue(actorId: string, offset = 0, limit = 50) {
+    return this.prisma.researchRevision.findMany({
+      where: await this.reviewScope(actorId),
+      skip: offset,
+      take: limit,
       select: { id: true, pageId: true, number: true, createdAt: true },
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     });

@@ -16,6 +16,8 @@ An empty list reserves edits on the trusted page to Guardians.
 
 Guardians can inspect the current mode and list with `researchEditPolicy` and switch modes with `setResearchEditProtection`. The list is preserved when a page is locked and applies again when its mode returns to `TRUSTED`.
 
+Guardians use `researchReviewQueue` to list pending submissions and `researchPendingRevision` to read one. Both check the current page audience. Editor filters gated document blocks for the reviewer before delivery.
+
 Editor validates Wiki documents and projects content for the viewer. IAM supplies
 group and Guardian evidence. Research Lab supplies page access decisions to
 Interactions and published results to shared Search. Each search reads published
