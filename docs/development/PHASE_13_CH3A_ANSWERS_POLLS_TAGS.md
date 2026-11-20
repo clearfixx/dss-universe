@@ -54,4 +54,17 @@ Forum never reads Poll tables; it calls the published `POLL_COMMANDS`.
   guards for discussions, tag curation and limits with filtering (including
   ranked sorts), inactive tags, one poll per topic and author-only attach.
 
+Recorded local results (2026-11-21, Node 24.22.3, dedicated `5435`/Redis `6381`):
+
+- migrations applied; zero Prisma schema drift;
+- API unit suite: 1662 passed, 106 skipped by the existing opt-in policy;
+- forum e2e (curation, ratings, topics): 18/18;
+- the application boot e2e caught a missing explicit GraphQL type on the poll
+  visibility input; fixed in this package before publication;
+- full API e2e: 89 suites, 972/972 (five Redis-6380-pinned suites excluded;
+  covered by PR #192);
+- architecture inventory: 0 findings; lint and typecheck clean.
+
+GitHub CI on the committed PR head remains the acceptance gate.
+
 🏷️ The best answer deserves a pin; the right tag deserves a curator.
