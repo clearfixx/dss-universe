@@ -58,6 +58,8 @@ is unchanged and still feeds Activity and audit.
   312/313; the one failure (`gamification-routing-persistence`, 5 s
   `afterEach` hook timeout) passes alone 20/20, with and without this change;
 - unit 678/678 (composition, Points, Achievements, Forum); lint and typecheck
-  clean; migration drift 0; architecture inventory 0 findings.
+  clean; migration drift 0; architecture inventory 0 findings;
+- full API e2e (5435/6381, Redis-6380-pinned suites excluded): 994/994, 94/94
+  suites.
 
 🪙 Points reward contributions; the ledger remembers why.
