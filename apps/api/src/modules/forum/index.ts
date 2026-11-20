@@ -1,6 +1,16 @@
 export { ForumModule } from './forum.module';
 export { ForumFactsModule } from './forum-facts.module';
 export {
+  FORUM_SEARCH_SOURCE,
+  type ForumSearchHit,
+  type ForumSearchSource,
+} from './contracts/forum-search-source.contract';
+export {
+  FORUM_SUBJECT_VISIBILITY,
+  type ForumSubjectRef,
+  type ForumSubjectVisibility,
+} from './contracts/forum-subject-visibility.contract';
+export {
   FORUM_NEWS_FACTS,
   type ForumNewsFacts,
   type ForumNewsFactsReader,

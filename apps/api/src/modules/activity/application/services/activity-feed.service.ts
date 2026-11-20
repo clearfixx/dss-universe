@@ -39,6 +39,10 @@ import {
   ACTIVITY_VIEWER_CONTEXT,
   type ActivityViewerContextReader,
 } from '../../domain/ports/activity-viewer-context.interface';
+import {
+  ACTIVITY_SUBJECT_VISIBILITY,
+  type ActivitySubjectVisibilityReader,
+} from '../../domain/ports/activity-subject-visibility.interface';
 import { ActivityFeedRankerService } from './activity-feed-ranker.service';
 
 @Injectable()
@@ -49,18 +53,22 @@ export class ActivityFeedService {
     @Inject(ACTIVITY_VIEWER_CONTEXT)
     private readonly context: ActivityViewerContextReader,
     private readonly ranker: ActivityFeedRankerService,
+    @Inject(ACTIVITY_SUBJECT_VISIBILITY)
+    private readonly subjects: ActivitySubjectVisibilityReader,
   ) {}
 
-  byActor(
+  /** Profile activity has no viewer: owner-checked entries use guest rules. */
+  async byActor(
     actorId: string,
     page = 1,
     limit = 20,
   ): Promise<PaginatedResult<ActivityEntry>> {
-    return this.activity.findByActor(
+    const result = await this.activity.findByActor(
       actorId,
       Math.max(1, page),
       Math.min(50, Math.max(1, limit)),
     );
+    return { ...result, items: await this.visible(null, result.items) };
   }
 
   publicFeed(
@@ -101,9 +109,9 @@ export class ActivityFeedService {
     const context = query.viewerId
       ? await this.context.readForViewer(query.viewerId)
       : { interests: [], followingIds: [], blockedIds: [] };
-    const candidates = await this.activity.findFeedCandidates(
-      query,
-      context.blockedIds,
+    const candidates = await this.visible(
+      query.viewerId ?? null,
+      await this.activity.findFeedCandidates(query, context.blockedIds),
     );
     return this.ranker.rank(
       candidates,
@@ -111,6 +119,22 @@ export class ActivityFeedService {
       context,
       lastVisitedAt,
       generatedAt,
+    );
+  }
+
+  private async visible(
+    viewerId: string | null,
+    entries: ActivityEntry[],
+  ): Promise<ActivityEntry[]> {
+    const checked = entries.filter((entry) =>
+      this.subjects.ownerCheckedModules.has(entry.module),
+    );
+    if (checked.length === 0) return entries;
+    const keys = await this.subjects.visibleKeys(viewerId, checked);
+    return entries.filter(
+      (entry) =>
+        !this.subjects.ownerCheckedModules.has(entry.module) ||
+        keys.has(entry.subjectType + ':' + entry.subjectId),
     );
   }
 
