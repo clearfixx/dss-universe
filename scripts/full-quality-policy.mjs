@@ -34,15 +34,17 @@ export function createQualityEnvironment(source) {
   }
   if (
     ![undefined, "127.0.0.1", "localhost", "::1"].includes(source.REDIS_HOST) ||
-    env.TEST_REDIS_PORT !== "6380" ||
-    (source.REDIS_PORT !== undefined && source.REDIS_PORT !== "6380")
+    !["6380", "6381"].includes(env.TEST_REDIS_PORT) ||
+    (source.REDIS_PORT !== undefined && source.REDIS_PORT !== env.TEST_REDIS_PORT)
   ) {
-    throw new Error("Full quality requires loopback test Redis on port 6380.");
+    throw new Error(
+      "Full quality requires loopback test Redis on port 6380/6381.",
+    );
   }
   return {
     ...env,
     REDIS_HOST: "127.0.0.1",
-    REDIS_PORT: "6380",
+    REDIS_PORT: env.TEST_REDIS_PORT,
     DSS_WEB_TEST_PORT: String(resolveWebSmokeEndpoint(source).port),
   };
 }

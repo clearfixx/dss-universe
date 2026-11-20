@@ -13,6 +13,7 @@ import {
   OutboxDispatcherService,
   QueueRegistryService,
 } from '../src/core/queue';
+import { disposableRedisPort } from './helpers/disposable-redis';
 
 describe('Outbox queue delivery (e2e)', () => {
   let app: INestApplication;
@@ -55,7 +56,7 @@ describe('Outbox queue delivery (e2e)', () => {
         return Promise.resolve(processIntegrationEvent(job.data));
       },
       {
-        connection: { host: '127.0.0.1', port: 6380 },
+        connection: { host: '127.0.0.1', port: disposableRedisPort() },
         autorun: false,
       },
     );
