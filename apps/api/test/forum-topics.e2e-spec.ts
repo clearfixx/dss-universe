@@ -82,6 +82,10 @@ describe('Forum topics and posts (e2e)', () => {
       viewers,
       editor,
       structure,
+      {
+        project: (documentJson) => Promise.resolve({ documentJson, gates: [] }),
+      },
+      { project: (documentJson) => Promise.resolve({ documentJson }) },
     );
   }, 60000);
 

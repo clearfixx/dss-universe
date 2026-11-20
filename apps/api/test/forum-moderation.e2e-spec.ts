@@ -74,6 +74,10 @@ describe('Forum moderation (e2e)', () => {
       viewers,
       editor,
       structure,
+      {
+        project: (documentJson) => Promise.resolve({ documentJson, gates: [] }),
+      },
+      { project: (documentJson) => Promise.resolve({ documentJson }) },
     );
     moderation = new ForumModerationService(
       fixture.prisma,

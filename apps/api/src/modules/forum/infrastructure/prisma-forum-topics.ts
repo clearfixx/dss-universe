@@ -25,6 +25,10 @@ import { AuditWriterService } from '@api/core/audit';
 import { PrismaService, type TransactionClient } from '@api/core/database';
 import { createEventEnvelope, OutboxWriterService } from '@api/core/events';
 import {
+  EDITOR_DELIVERY_READER,
+  EDITOR_VIEWER_DOCUMENT_PROJECTOR,
+  type EditorDeliveryReader,
+  type EditorViewerDocumentProjector,
   EDITOR_DOCUMENT_NORMALIZER,
   type EditorDocumentNormalizer,
   type ValidatedEditorDocument,
@@ -65,11 +69,13 @@ import { ForumStructureService } from './prisma-forum-structure';
 const PRODUCER = 'dss.api.forum';
 const TOPIC_KIND = 'forum.topic';
 const MAX_PAGE = 50;
-const DEFERRED_NODES = new Set(['contentGate', 'mediaReference', 'attachment']);
+const MEDIA_NODES = new Set(['mediaReference', 'attachment']);
+const GATE_NODE = 'contentGate';
 
 type VisibleTopic = {
   topic: ForumTopic;
   categoryId: string;
+  allowsGatedContent: boolean;
   viewer: ForumViewerFacts;
 };
 
@@ -84,6 +90,10 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     @Inject(EDITOR_DOCUMENT_NORMALIZER)
     private readonly editor: EditorDocumentNormalizer,
     private readonly structure: ForumStructureService,
+    @Inject(EDITOR_DELIVERY_READER)
+    private readonly gateAccess: EditorDeliveryReader,
+    @Inject(EDITOR_VIEWER_DOCUMENT_PROJECTOR)
+    private readonly projector: EditorViewerDocumentProjector,
   ) {}
 
   async createTopic(
@@ -98,7 +108,12 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     const viewer = await this.authenticated(actorId);
     const forum = await this.visibleForum(input.forumId, viewer);
     const title = normalizeTopicTitle(input.title);
-    const content = this.content(input.documentJson, 'topic');
+    const content = this.content(
+      input.documentJson,
+      'topic',
+      forum.allowsGatedContent,
+    );
+    await this.requireDocumentAccess(actorId, content.document);
     const exempt = await this.cooldownExempt(viewer, forum.categoryId);
     const topicId = randomUUID();
     const postId = randomUUID();
@@ -158,8 +173,16 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     },
   ): Promise<ForumPostView> {
     const viewer = await this.authenticated(actorId);
-    const { categoryId } = await this.visibleTopic(input.topicId, viewer);
-    const content = this.content(input.documentJson, 'reply');
+    const { categoryId, allowsGatedContent } = await this.visibleTopic(
+      input.topicId,
+      viewer,
+    );
+    const content = this.content(
+      input.documentJson,
+      'reply',
+      allowsGatedContent,
+    );
+    await this.requireDocumentAccess(actorId, content.document);
     const exempt = await this.cooldownExempt(viewer, categoryId);
     const postId = randomUUID();
     const now = new Date();
@@ -226,7 +249,10 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       where: { id: input.postId },
     });
     if (!post) this.notFound('Post');
-    const { topic, categoryId } = await this.visibleTopic(post.topicId, viewer);
+    const { topic, categoryId, allowsGatedContent } = await this.visibleTopic(
+      post.topicId,
+      viewer,
+    );
     const actor = {
       id: actorId,
       moderator: await this.structure.canModerateCategory(actorId, categoryId),
@@ -250,7 +276,11 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     const content = this.content(
       input.documentJson,
       post.number === 1 ? 'topic' : 'reply',
+      allowsGatedContent,
     );
+    // Editing must never silently drop hidden blocks the editor cannot read.
+    await this.requireDocumentAccess(actorId, post.document);
+    await this.requireDocumentAccess(actorId, content.document);
     const now = new Date();
     await this.prisma.$transaction(async (tx) => {
       const nextRevision = input.expectedRevision + 1;
@@ -434,10 +464,16 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       this.prisma.forumPost.count({ where: { topicId } }),
     ]);
     const notes = await this.staffNotes(rows.map(({ id }) => id));
-    return {
-      items: rows.map((row) =>
-        this.postView(row, staff, notes.get(row.id) ?? []),
+    const items = await Promise.all(
+      rows.map(async (row) =>
+        this.redact(
+          this.postView(row, staff, notes.get(row.id) ?? []),
+          viewer.subjectId,
+        ),
       ),
+    );
+    return {
+      items,
       total,
       page: safePage,
       limit: take,
@@ -581,7 +617,12 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     ) {
       this.notFound('Topic');
     }
-    return { topic, categoryId: forum.categoryId, viewer };
+    return {
+      topic,
+      categoryId: forum.categoryId,
+      allowsGatedContent: forum.allowsGatedContent,
+      viewer,
+    };
   }
 
   /** Category moderator, supermoderator or structure manager. */
@@ -637,15 +678,25 @@ export class ForumTopicsService implements ForumInteractionDecisions {
   private content(
     documentJson: string,
     profile: 'topic' | 'reply',
+    allowsGatedContent: boolean,
   ): ValidatedEditorDocument {
     const content =
       profile === 'topic'
         ? this.editor.normalizeForumTopic(documentJson)
         : this.editor.normalizeForumReply(documentJson);
-    if (this.containsDeferredNode(content.document)) {
+    if (this.contains(content.document, (type) => MEDIA_NODES.has(type))) {
       throw new ForumCommandError(
         'INVALID_INPUT',
-        'Media, attachments and hidden content in forum posts arrive in CH-3.',
+        'Media and attachments in forum posts are not available yet.',
+      );
+    }
+    if (
+      !allowsGatedContent &&
+      this.contains(content.document, (type) => type === GATE_NODE)
+    ) {
+      throw new ForumCommandError(
+        'INVALID_INPUT',
+        'Hidden content is allowed only in forums enabled for it.',
       );
     }
     if (!content.plainText.trim()) {
@@ -654,16 +705,47 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     return content;
   }
 
-  private containsDeferredNode(node: unknown): boolean {
+  private contains(node: unknown, match: (type: string) => boolean): boolean {
     if (!node || typeof node !== 'object') return false;
     const record = node as { type?: unknown; content?: unknown };
-    if (typeof record.type === 'string' && DEFERRED_NODES.has(record.type)) {
-      return true;
-    }
+    if (typeof record.type === 'string' && match(record.type)) return true;
     return (
       Array.isArray(record.content) &&
-      record.content.some((child) => this.containsDeferredNode(child))
+      record.content.some((child) => this.contains(child, match))
     );
+  }
+
+  /** Authors and editors must be able to read every hidden block they save. */
+  private async requireDocumentAccess(
+    actorId: string,
+    document: unknown,
+  ): Promise<void> {
+    if (!this.contains(document, (type) => type === GATE_NODE)) return;
+    const view = await this.gateAccess.project(
+      JSON.stringify(document),
+      actorId,
+    );
+    if (view.gates.some((gate) => !gate.allowed)) {
+      throw new ForumCommandError(
+        'ACCESS_DENIED',
+        'Full access to every hidden block is required to save this post.',
+      );
+    }
+  }
+
+  /** Server-side Content Gate redaction for the current viewer. */
+  private async redact(
+    view: ForumPostView,
+    viewerId: string | null,
+  ): Promise<ForumPostView> {
+    if (
+      view.documentJson === null ||
+      !view.documentJson.includes('"' + GATE_NODE + '"')
+    ) {
+      return view;
+    }
+    const projected = await this.projector.project(view.documentJson, viewerId);
+    return { ...view, documentJson: projected.documentJson };
   }
 
   private async insertPost(
