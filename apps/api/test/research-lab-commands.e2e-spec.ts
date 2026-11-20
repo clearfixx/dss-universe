@@ -321,6 +321,68 @@ describe('Research Lab commands (e2e)', () => {
     ).resolves.toMatchObject({ pageId: created.pageId, version: 1 });
   });
 
+  it('uses the trusted edit groups of each page and rechecks them on save and submission', async () => {
+    const guardian = await user(true);
+    const editor = await user();
+    const pages: { pageId: string; input: ReturnType<typeof content> }[] = [];
+    for (const group of ['database-editors', 'design-editors']) {
+      const input = content('trusted-' + randomUUID());
+      const { pageId } = await service.createDraft({
+        actorId: guardian,
+        ...input,
+      });
+      await service.selfPublishDraft({
+        actorId: guardian,
+        pageId,
+        expectedVersion: 1,
+        editSummary: 'Initial',
+        correlationId: randomUUID(),
+      });
+      await service.setTrustedEditors(guardian, pageId, [group]);
+      pages.push({ pageId, input });
+    }
+    const [database, design] = pages;
+    memberships.set(editor, ['group:database-editors']);
+    await expect(
+      service.setTrustedEditors(editor, design.pageId, ['database-editors']),
+    ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+    await expect(
+      service.startDraft(editor, design.pageId),
+    ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+    await service.startDraft(editor, database.pageId);
+    const save = {
+      actorId: editor,
+      pageId: database.pageId,
+      expectedVersion: 1,
+      ...database.input,
+    };
+    const submit = {
+      actorId: editor,
+      pageId: database.pageId,
+      expectedVersion: 2,
+      editSummary: 'Proposed edit',
+      correlationId: randomUUID(),
+    };
+    memberships.delete(editor);
+    await expect(service.saveDraft(save)).rejects.toMatchObject({
+      code: 'DRAFT_CONFLICT',
+    });
+    memberships.set(editor, ['group:database-editors']);
+    await expect(service.saveDraft(save)).resolves.toMatchObject({
+      version: 2,
+    });
+    await service.setTrustedEditors(guardian, database.pageId, []);
+    await expect(service.submitDraft(submit)).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+    });
+    await service.setTrustedEditors(guardian, database.pageId, [
+      'database-editors',
+    ]);
+    await expect(service.submitDraft(submit)).resolves.toMatchObject({
+      state: 'IN_REVIEW',
+    });
+  });
+
   it('opens a fresh private draft when a Guardian requests changes', async () => {
     const author = await user();
     const guardian = await user(true);

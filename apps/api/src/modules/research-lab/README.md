@@ -9,6 +9,11 @@ rollback, page delivery, revision history and comparison. Hiding a page requires
 the Research Lab moderation permission. Tombstoned pages are inaccessible to all
 viewers under the current owner model.
 
+Guardians can configure each page's trusted edit groups through
+`setResearchTrustedEditors`. Group keys control who can propose revisions on
+that page. The audience policy still applies, and a Guardian reviews submissions.
+An empty list reserves edits on the trusted page to Guardians.
+
 Editor validates Wiki documents and projects content for the viewer. IAM supplies
 group and Guardian evidence. Research Lab supplies page access decisions to
 Interactions and published results to shared Search. Each search reads published

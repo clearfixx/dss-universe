@@ -61,6 +61,68 @@ export class ResearchLabService {
     private readonly delivery: EditorDeliveryReader,
   ) {}
 
+  private editorGroups(groups: readonly string[]) {
+    return groups
+      .filter((key) => key.startsWith('group:'))
+      .map((key) => key.slice(6));
+  }
+
+  private editProtection(
+    groups: readonly string[],
+    guardian: boolean,
+  ): Prisma.ResearchPageWhereInput {
+    return guardian
+      ? { protectionLevel: { not: 'LOCKED' } }
+      : {
+          OR: [
+            { protectionLevel: 'OPEN' },
+            {
+              protectionLevel: 'TRUSTED',
+              trustedEditGroupKeys: { hasSome: this.editorGroups(groups) },
+            },
+          ],
+        };
+  }
+
+  async setTrustedEditors(
+    actorId: string,
+    pageId: string,
+    groupKeys: string[],
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      await this.lockPage(tx, pageId);
+      const facts = await this.requireGuardian(actorId);
+      const page = await tx.researchPage.findFirst({
+        where: {
+          id: pageId,
+          state: { in: ['ACTIVE', 'DRAFT'] },
+          ...researchAudience(facts.groups, true),
+        },
+        select: { id: true },
+      });
+      if (!page) this.notFound('Research page');
+      if (
+        groupKeys.some(
+          (key) => !/^[a-z][a-z0-9-]{0,63}$/.test(key) || key === 'premium',
+        )
+      )
+        throw new ResearchLabCommandError(
+          'INVALID_STATE',
+          'Invalid trusted edit group key.',
+        );
+      const keys = [...new Set(groupKeys)].sort();
+      await tx.researchPage.update({
+        where: { id: pageId },
+        data: { protectionLevel: 'TRUSTED', trustedEditGroupKeys: keys },
+      });
+      await this.record(tx, actorId, pageId, 'protection.updated', {
+        protectionLevel: 'TRUSTED',
+        policySnapshotHash: await this.policySnapshotHash(tx, pageId),
+      });
+      return keys;
+    });
+  }
+
   async createDraft(
     command: CreateResearchDraft,
   ): Promise<ResearchDraftResult> {
@@ -121,7 +183,7 @@ export class ResearchLabService {
       version: command.expectedVersion,
       page: {
         state: { in: ['DRAFT', 'ACTIVE'] },
-        protectionLevel: facts.guardian ? { not: 'LOCKED' } : 'OPEN',
+        AND: this.editProtection(facts.groups, facts.guardian),
         ...researchAudience(facts.groups, true),
       },
     };
@@ -197,10 +259,19 @@ export class ResearchLabService {
       });
       if (!page || !page.publishedRevision) this.notFound('Published page');
       this.assertPublishable(page);
-      if (page.protectionLevel !== 'OPEN' && !facts.guardian) {
+      if (
+        page.protectionLevel !== 'OPEN' &&
+        !facts.guardian &&
+        !(
+          page.protectionLevel === 'TRUSTED' &&
+          this.editorGroups(facts.groups).some((key) =>
+            page.trustedEditGroupKeys.includes(key),
+          )
+        )
+      ) {
         throw new ResearchLabCommandError(
           'ACCESS_DENIED',
-          'This Research Lab page requires Guardian edit authority.',
+          'You do not have edit access to this Research Lab page.',
         );
       }
       const existing = await tx.researchDraft.findUnique({
@@ -241,7 +312,7 @@ export class ResearchLabService {
       const page = await tx.researchPage.findFirst({
         where: {
           id: command.pageId,
-          protectionLevel: facts.guardian ? { not: 'LOCKED' } : 'OPEN',
+          AND: this.editProtection(facts.groups, facts.guardian),
           ...researchAudience(facts.groups, true),
         },
         select: {
@@ -935,6 +1006,7 @@ export class ResearchLabService {
       select: {
         visibility: true,
         protectionLevel: true,
+        trustedEditGroupKeys: true,
         audienceGroups: {
           orderBy: { groupKey: 'asc' },
           select: { groupKey: true },
