@@ -96,6 +96,17 @@ export class ResearchLabCommandResolver {
       }
     }
   }
+  @Mutation(() => [String])
+  setResearchTrustedEditors(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('pageId', { type: () => ID }) pageId: string,
+    @Args('groupKeys', { type: () => [String] }) groupKeys: string[],
+  ) {
+    return this.execute(
+      this.workflow.setTrustedEditors(actor.id, pageId, groupKeys),
+    );
+  }
+
   @Mutation(() => ResearchDraftReceipt)
   startResearchDraft(
     @AuthUser() actor: AuthenticatedUser,

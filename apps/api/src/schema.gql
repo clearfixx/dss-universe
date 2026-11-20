@@ -909,6 +909,7 @@ type Mutation {
   selfPublishResearchDraft(input: ResearchSubmitInput!): ResearchRevisionReceipt!
   setNewsPin(input: SetNewsPinInput!): ManagedNewsPin!
   setReaction(input: SetReactionInput!): SetReactionPayload!
+  setResearchTrustedEditors(groupKeys: [String!]!, pageId: ID!): [String!]!
   setViewerAvatar(mediaId: ID!): Viewer!
   setViewerCover(mediaId: ID!): Viewer!
   startResearchDraft(pageId: ID!): ResearchDraftReceipt!
