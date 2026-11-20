@@ -21,6 +21,7 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+import { collectEditorMediaIds } from '@dss/editor';
 import {
   BadRequestException,
   ConflictException,
@@ -221,17 +222,10 @@ export class NewsService {
     document: import('@dss/editor').EditorDocument,
     actorId: string,
   ): Promise<string[]> {
-    const ids = new Set<string>();
-    const visit = (node: import('@dss/editor').EditorNode): void => {
-      if (node.type === 'attachment') {
-        const mediaId = node.attrs?.mediaId;
-        if (typeof mediaId === 'string') ids.add(mediaId);
-      }
-      node.content?.forEach(visit);
-    };
-    visit(document.content);
+    // News claims attachments only (Content Gate payloads included).
+    const ids = collectEditorMediaIds(document, ['attachment']);
     await Promise.all(
-      [...ids].map(async (id) => {
+      ids.map(async (id) => {
         const media = await this.media.findById(id);
         if (!media || (media.ownerId !== actorId && !media.isPublic)) {
           throw new BadRequestException(
@@ -240,6 +234,6 @@ export class NewsService {
         }
       }),
     );
-    return [...ids];
+    return ids;
   }
 }
