@@ -596,6 +596,74 @@ describe('Research Lab public delivery (GraphQL)', () => {
       categories: [{ slug: category.slug, total: 65 }],
     });
   });
+  it('resumes a private draft at the saved version and removes it from discovery after audience loss', async () => {
+    const auth = app.get(AuthenticationPresentationService);
+    const register = () => {
+      const id = randomUUID();
+      return auth.register({
+        email: id + '@dss.test',
+        username: id,
+        displayName: 'Draft author',
+        password: 'research-fixture-123',
+      });
+    };
+    const author = await register();
+    const other = await register();
+    const service = app.get(ResearchLabService);
+    const document = createEmptyEditorDocument('WIKI');
+    const input = {
+      title: 'Saved title',
+      summary: 'Private summary',
+      proposedSlug: 'resume-' + randomUUID(),
+      documentJson: JSON.stringify(document),
+    };
+    const { pageId } = await service.createDraft({
+      actorId: author.user.id,
+      ...input,
+    });
+    await service.saveDraft({
+      actorId: author.user.id,
+      pageId,
+      expectedVersion: 1,
+      ...input,
+    });
+    const read = async (token: string) => {
+      const res = await request(app.getHttpServer())
+        .post('/api/graphql')
+        .set('Authorization', 'Bearer ' + token)
+        .send({
+          query:
+            'query($id:ID!){researchOwnDrafts(limit:1){pageId version} researchOwnDraft(pageId:$id){title version documentJson}}',
+          variables: { id: pageId },
+        })
+        .expect(200);
+      const result = payload<{
+        researchOwnDrafts: { pageId: string; version: number }[];
+        researchOwnDraft: {
+          title: string;
+          version: number;
+          documentJson: string;
+        } | null;
+      }>(res);
+      expect(result.errors).toBeUndefined();
+      return result.data;
+    };
+    const saved = await read(author.tokens.accessToken);
+    expect(saved.researchOwnDrafts).toEqual([{ pageId, version: 2 }]);
+    expect(saved.researchOwnDraft).toMatchObject({
+      title: input.title,
+      version: 2,
+    });
+    expect(JSON.parse(saved.researchOwnDraft!.documentJson)).toEqual(document);
+    const empty = { researchOwnDrafts: [], researchOwnDraft: null };
+    expect(await read(other.tokens.accessToken)).toEqual(empty);
+    await fixture.prisma.researchPage.update({
+      where: { id: pageId },
+      data: { visibility: 'GROUPS' },
+    });
+    expect(await read(author.tokens.accessToken)).toEqual(empty);
+  });
+
   it('submits an authenticated Wiki draft with server-side decision evidence and requires Guardian for publication', async () => {
     const suffix = randomUUID();
     const member = await app.get(AuthenticationPresentationService).register({

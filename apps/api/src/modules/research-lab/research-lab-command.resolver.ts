@@ -95,6 +95,21 @@ class ResearchPendingRevision {
   @Field() documentJson!: string;
 }
 @ObjectType()
+class ResearchOwnDraftItem {
+  @Field(() => ID) id!: string;
+  @Field(() => ID) pageId!: string;
+  @Field(() => Int) version!: number;
+  @Field() updatedAt!: Date;
+}
+@ObjectType()
+class ResearchOwnDraft extends ResearchOwnDraftItem {
+  @Field() title!: string;
+  @Field() summary!: string;
+  @Field() proposedSlug!: string;
+  @Field() documentJson!: string;
+  @Field(() => ID, { nullable: true }) basePublishedRevisionId!: string | null;
+}
+@ObjectType()
 class ResearchDraftReceipt {
   @Field(() => ID) pageId!: string;
   @Field(() => ID) draftId!: string;
@@ -129,6 +144,37 @@ export class ResearchLabCommandResolver {
       }
     }
   }
+  @Query(() => [ResearchOwnDraftItem])
+  researchOwnDrafts(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
+    @Args('limit', { type: () => Int, defaultValue: 50 }) limit: number,
+  ) {
+    if (offset < 0 || limit < 1 || limit > 100)
+      throw new BadRequestException('Invalid draft pagination.');
+    return this.execute(this.workflow.ownDrafts(actor.id, offset, limit));
+  }
+
+  @Query(() => ResearchOwnDraft, { nullable: true })
+  async researchOwnDraft(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('pageId', { type: () => ID }) pageId: string,
+  ) {
+    const draft = await this.execute(this.workflow.ownDraft(actor.id, pageId));
+    if (!draft) return null;
+    return {
+      id: draft.id,
+      pageId,
+      version: draft.version,
+      updatedAt: draft.updatedAt,
+      title: draft.title,
+      summary: draft.summary,
+      proposedSlug: draft.proposedSlug,
+      basePublishedRevisionId: draft.basePublishedRevisionId,
+      documentJson: JSON.stringify(draft.document),
+    };
+  }
+
   @Query(() => [ResearchReviewItem])
   researchReviewQueue(
     @AuthUser() actor: AuthenticatedUser,
