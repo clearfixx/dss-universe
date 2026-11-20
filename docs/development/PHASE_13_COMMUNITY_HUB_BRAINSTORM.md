@@ -18,8 +18,9 @@ The governing product rules are:
    shared Comments context. Topics and posts register as Interaction Targets
    only for shared bookmarks and reports.
 3. Organization is category → forum → at most one level of subforums.
-4. A forum post vote **is** reputation: one click, no reason, one vote per
-   voter per post. Upvotes also award Community Points.
+4. A forum vote rates the content, not its author: one click, no reason, one
+   vote per voter per post. It never changes user reputation or Community
+   Points (owner correction, 2026-11-20).
 5. Moderators are scoped to one or more categories; supermoderators are
    moderators of the whole site. Curators are scoped to one topic.
 6. Sanctions (verbal warning, read-only) live in a private per-user sanctions
@@ -39,48 +40,48 @@ The governing product rules are:
 Recorded from the owner's answers on 2026-11-19. Numbers follow the review
 question list.
 
-| #   | Topic                    | Decision                                                                                                                                                                                                          |
-| --- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Discussion shape         | Flat chronological topics; question topics rank answers by score                                                                                                                                                  |
-| 2   | Post ownership           | Forum-owned `Topic`/`Post` aggregates, not shared Comments                                                                                                                                                        |
-| 3   | Hierarchy                | Category → forum → one subforum level                                                                                                                                                                             |
-| 4   | Question topics          | Author, curator or moderator marks the accepted answer; only a moderator may change it; answer author receives bonus points; topic is not closed automatically                                                    |
-| 4   | Polls                    | Shared Polls module (also replaces News polls); anonymous/open is configurable per poll; no deadline; a vote cannot be changed                                                                                    |
-| 5   | Tags                     | Curated tag list per forum                                                                                                                                                                                        |
-| 5   | Content Gates in posts   | Allowed only in forums explicitly flagged for gated content                                                                                                                                                       |
-| 5   | Attachments in Downloads | Not shown until Phase 16                                                                                                                                                                                          |
-| 6   | Votes                    | Votes are reputation. `+`/`-` on topics and posts; registered users with account age ≥ 7 days for both; no reason; one vote per voter per post; no self-vote; moderator reversal with reason                      |
-| 6   | Vote weight              | Upvote: +1 reputation and +1 Community Point. Downvote: −1 reputation, no point change. Direct profile reputation (with mandatory reason) remains a separate mechanism                                            |
-| 6   | Score display            | Net score with breakdown, e.g. `70 (80 + / 10 −)`; clicking opens a dialog with the score scale and the list of voters with their vote                                                                            |
-| 7   | Sorting                  | Topic lists default to last activity; hot/new/top switch; pinned topics always first; hot formula documented with administrator-configurable parameters                                                           |
-| 8   | Community Points         | Topic +5, reply +1, accepted answer +10 (to the answer author). Points are not revoked when a post is deleted                                                                                                     |
-| 8   | Anti-abuse               | Moderators handle farming with read-only. Global cooldown of 60 seconds between new posts by the same user across the whole forum; new accounts use the same cooldown                                             |
-| 9   | Counters                 | Unique views with deferred writes; unread tracking in 1.0                                                                                                                                                         |
-| 10  | Moderator powers         | Within assigned categories: move topics between forums, move to trash or archive, merge/split, close, assign curators; hide, delete, edit and move posts to another topic; issue verbal warnings and read-only    |
-| 10  | Supermoderator           | Moderator of the whole site                                                                                                                                                                                       |
-| 10  | Topic author             | May close (not delete) own topic. May edit the first post only until a curator is assigned                                                                                                                        |
-| 10  | Reply author             | May edit own reply for 10 minutes after publication                                                                                                                                                               |
-| 11  | Verbal warning           | A sanction without restrictions, recorded in the journal, expires after 30 days. Three active warnings automatically apply read-only for 7 days and are consumed. Curator warnings count. Thresholds configurable |
-| 11  | Curator on topic move    | Curator moves with the topic. The appointing moderator loses authority over the curator; the target category moderator or a supermoderator may replace or remove them                                             |
-| 11  | Sanctioned curator       | Remains curator until moderators/administrators decide otherwise                                                                                                                                                  |
-| 12  | Moderation dependency    | Extract a minimal sanctions core from Phase 14 before Forum (see M-0)                                                                                                                                             |
-| 13  | Deletion                 | Tombstone; ordinary users see "post deleted"; moderators and above see content, actor and reason; unlimited restoration; authors cannot delete own posts                                                          |
-| 13  | Purge                    | Administrators only, with a dedicated permission, mandatory reason and audit                                                                                                                                      |
-| 14  | Archive and trash        | Merge/split in 1.0. Archive is a section: topic closed but visible. Trash: hidden from users, visible and restorable by moderators                                                                                |
-| 15  | News discussion          | News comments and the linked forum topic coexist. Linking is allowed to the article author, the target category moderator, supermoderators and administrators                                                     |
-| 15  | Moderator notification   | Recorded as debt until Phase 15                                                                                                                                                                                   |
-| 16  | Subscriptions            | Topic subscriptions only in 1.0; Forum emits Outbox events, delivery arrives in Phase 15                                                                                                                          |
-| 17  | Search                   | Reuse the DEBT-052/053 viewer-safe search mechanism                                                                                                                                                               |
-| 18  | `FORUM_POSTS` gate fact  | Counts topics only, created in public forums                                                                                                                                                                      |
-| 18  | Category visibility      | Category settings include a visibility section listing allowed user groups. Administrators always see every category and cannot be excluded                                                                       |
-| 19  | Activity Feed            | New topic, reply, accepted answer and poll events                                                                                                                                                                 |
-| 20  | Packages                 | Delivered as ordered packages (below)                                                                                                                                                                             |
-| 21  | Mockups                  | No final mockups yet; reference screenshots are supplied in chat                                                                                                                                                  |
-| F1  | Reopening                | A topic author cannot reopen a closed topic; only curators and staff may                                                                                                                                          |
-| F2  | Vote finality            | A forum vote cannot be changed or withdrawn by the voter; only moderator reversal applies                                                                                                                         |
-| F3  | Votes on inactive topics | No votes on closed, archived or trashed topics or their posts                                                                                                                                                     |
-| F4  | Cooldown exemption       | Moderators, supermoderators and administrators have no cooldown; curators do                                                                                                                                      |
-| F5  | Visibility subjects      | Category visibility may select both Access Groups and system roles                                                                                                                                                |
+| #   | Topic                    | Decision                                                                                                                                                                                                                          |
+| --- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Discussion shape         | Flat chronological topics; question topics rank answers by score                                                                                                                                                                  |
+| 2   | Post ownership           | Forum-owned `Topic`/`Post` aggregates, not shared Comments                                                                                                                                                                        |
+| 3   | Hierarchy                | Category → forum → one subforum level                                                                                                                                                                                             |
+| 4   | Question topics          | Author, curator or moderator marks the accepted answer; only a moderator may change it; answer author receives bonus points; topic is not closed automatically                                                                    |
+| 4   | Polls                    | Shared Polls module (also replaces News polls); anonymous/open is configurable per poll; no deadline; a vote cannot be changed                                                                                                    |
+| 5   | Tags                     | Curated tag list per forum                                                                                                                                                                                                        |
+| 5   | Content Gates in posts   | Allowed only in forums explicitly flagged for gated content                                                                                                                                                                       |
+| 5   | Attachments in Downloads | Not shown until Phase 16                                                                                                                                                                                                          |
+| 6   | Votes                    | Votes rate content. `+`/`-` on every post; the topic rating is its first post's rating; registered users with account age ≥ 7 days for both; no reason; one vote per voter per post; no self-vote; moderator reversal with reason |
+| 6   | Vote effect              | Corrected 2026-11-20: votes change only the content rating — never the author's reputation and never Community Points. User reputation changes only through direct profile reputation (mandatory reason, 24-hour rule)            |
+| 6   | Score display            | Net score with breakdown, e.g. `70 (80 + / 10 −)`; clicking opens a dialog with the score scale and the list of voters with their vote                                                                                            |
+| 7   | Sorting                  | Topic lists default to last activity; hot/new/top switch; pinned topics always first; hot formula documented with administrator-configurable parameters                                                                           |
+| 8   | Community Points         | Topic +5, reply +1, accepted answer +10 (to the answer author). Points are not revoked when a post is deleted                                                                                                                     |
+| 8   | Anti-abuse               | Moderators handle farming with read-only. Global cooldown of 60 seconds between new posts by the same user across the whole forum; new accounts use the same cooldown                                                             |
+| 9   | Counters                 | Unique views with deferred writes; unread tracking in 1.0                                                                                                                                                                         |
+| 10  | Moderator powers         | Within assigned categories: move topics between forums, move to trash or archive, merge/split, close, assign curators; hide, delete, edit and move posts to another topic; issue verbal warnings and read-only                    |
+| 10  | Supermoderator           | Moderator of the whole site                                                                                                                                                                                                       |
+| 10  | Topic author             | May close (not delete) own topic. May edit the first post only until a curator is assigned                                                                                                                                        |
+| 10  | Reply author             | May edit own reply for 10 minutes after publication                                                                                                                                                                               |
+| 11  | Verbal warning           | A sanction without restrictions, recorded in the journal, expires after 30 days. Three active warnings automatically apply read-only for 7 days and are consumed. Curator warnings count. Thresholds configurable                 |
+| 11  | Curator on topic move    | Curator moves with the topic. The appointing moderator loses authority over the curator; the target category moderator or a supermoderator may replace or remove them                                                             |
+| 11  | Sanctioned curator       | Remains curator until moderators/administrators decide otherwise                                                                                                                                                                  |
+| 12  | Moderation dependency    | Extract a minimal sanctions core from Phase 14 before Forum (see M-0)                                                                                                                                                             |
+| 13  | Deletion                 | Tombstone; ordinary users see "post deleted"; moderators and above see content, actor and reason; unlimited restoration; authors cannot delete own posts                                                                          |
+| 13  | Purge                    | Administrators only, with a dedicated permission, mandatory reason and audit                                                                                                                                                      |
+| 14  | Archive and trash        | Merge/split in 1.0. Archive is a section: topic closed but visible. Trash: hidden from users, visible and restorable by moderators                                                                                                |
+| 15  | News discussion          | News comments and the linked forum topic coexist. Linking is allowed to the article author, the target category moderator, supermoderators and administrators                                                                     |
+| 15  | Moderator notification   | Recorded as debt until Phase 15                                                                                                                                                                                                   |
+| 16  | Subscriptions            | Topic subscriptions only in 1.0; Forum emits Outbox events, delivery arrives in Phase 15                                                                                                                                          |
+| 17  | Search                   | Reuse the DEBT-052/053 viewer-safe search mechanism                                                                                                                                                                               |
+| 18  | `FORUM_POSTS` gate fact  | Counts topics only, created in public forums                                                                                                                                                                                      |
+| 18  | Category visibility      | Category settings include a visibility section listing allowed user groups. Administrators always see every category and cannot be excluded                                                                                       |
+| 19  | Activity Feed            | New topic, reply, accepted answer and poll events                                                                                                                                                                                 |
+| 20  | Packages                 | Delivered as ordered packages (below)                                                                                                                                                                                             |
+| 21  | Mockups                  | No final mockups yet; reference screenshots are supplied in chat                                                                                                                                                                  |
+| F1  | Reopening                | A topic author cannot reopen a closed topic; only curators and staff may                                                                                                                                                          |
+| F2  | Vote finality            | A forum vote cannot be changed or withdrawn by the voter; only moderator reversal applies                                                                                                                                         |
+| F3  | Votes on inactive topics | No votes on closed, archived or trashed topics or their posts                                                                                                                                                                     |
+| F4  | Cooldown exemption       | Moderators, supermoderators and administrators have no cooldown; curators do                                                                                                                                                      |
+| F5  | Visibility subjects      | Category visibility may select both Access Groups and system roles                                                                                                                                                                |
 
 ## Product model
 
@@ -138,21 +139,21 @@ Forum owns:
 
 Existing platforms retain ownership:
 
-| Concern                                | Owner               | Forum integration                                                      |
-| -------------------------------------- | ------------------- | ---------------------------------------------------------------------- |
-| Document schema, validation, rendering | Editor              | New forum profile; canonical JSON and safe projections                 |
-| Hidden blocks and viewer eligibility   | Content Access      | Only in gated forums; evaluated before delivery, snippets and counters |
-| Files                                  | Media               | Media IDs/references only                                              |
-| Bookmarks and reports                  | Interactions        | `forum.topic` and `forum.post` Interaction Targets                     |
-| Vote ledger and reputation totals      | Reputation          | New contextual vote source; Forum supplies eligibility facts           |
-| Points                                 | Community Points    | Qualified, idempotent topic/reply/answer/upvote facts                  |
-| Polls                                  | Polls (new, shared) | Topic references one poll                                              |
-| Group membership                       | IAM/Authorization   | Category visibility and permissions through narrow capabilities        |
-| Sanctions, warnings, read-only         | Moderation (M-0)    | Enforced before every write; Forum records context links only          |
-| Search                                 | Search composition  | Forum supplies authorized source hits                                  |
-| Activity                               | Activity            | Consumes forum events                                                  |
-| Notifications                          | Notifications       | Consumes subscription/mention events from Phase 15                     |
-| News discussion link                   | Forum               | Forum verifies and persists the link; News renders it                  |
+| Concern                                | Owner               | Forum integration                                                       |
+| -------------------------------------- | ------------------- | ----------------------------------------------------------------------- |
+| Document schema, validation, rendering | Editor              | New forum profile; canonical JSON and safe projections                  |
+| Hidden blocks and viewer eligibility   | Content Access      | Only in gated forums; evaluated before delivery, snippets and counters  |
+| Files                                  | Media               | Media IDs/references only                                               |
+| Bookmarks and reports                  | Interactions        | `forum.topic` and `forum.post` Interaction Targets                      |
+| Content rating votes                   | Forum               | Forum-owned vote ledger; Reputation is not involved                     |
+| Points                                 | Community Points    | Qualified, idempotent topic/reply/accepted-answer facts (no vote facts) |
+| Polls                                  | Polls (new, shared) | Topic references one poll                                               |
+| Group membership                       | IAM/Authorization   | Category visibility and permissions through narrow capabilities         |
+| Sanctions, warnings, read-only         | Moderation (M-0)    | Enforced before every write; Forum records context links only           |
+| Search                                 | Search composition  | Forum supplies authorized source hits                                   |
+| Activity                               | Activity            | Consumes forum events                                                   |
+| Notifications                          | Notifications       | Consumes subscription/mention events from Phase 15                      |
+| News discussion link                   | Forum               | Forum verifies and persists the link; News renders it                   |
 
 Forum must not import repositories or application services from these
 modules. Root composition joins narrow named contracts and owns cross-module
@@ -212,20 +213,21 @@ any → PURGED (administrator only; physical removal of content, audit retained)
 
 Points awarded for a post are not revoked by hiding or deletion.
 
-## Reputation votes
+## Content rating votes
 
-- One vote per voter per topic or post; self-votes are rejected.
+- One vote per voter per post; the topic rating is the rating of post #1;
+  self-votes are rejected.
 - Eligibility: registered, account age ≥ 7 days, not read-only, can see the
   target, and the topic is `OPEN` (no votes in closed, archived or trashed
   topics).
-- Effect: upvote +1 reputation and +1 Community Point to the author; downvote
-  −1 reputation.
-- Moderator reversal requires a reason, keeps history and reverses the
-  reputation effect.
+- Effect: `+1` or `−1` on the post rating only. The author's reputation and
+  Community Points never change because of votes.
+- Moderator reversal requires a reason, keeps history and removes the vote
+  from the rating.
 - Votes are final: the voter cannot change or withdraw them.
-- The ledger is owned by Reputation as a contextual vote source, separate
-  from direct profile reputation, which keeps its mandatory reason and 24-hour
-  rule.
+- The vote ledger is owned by Forum. Reputation is untouched: its invariant
+  "content votes do not implicitly mutate direct reputation" holds.
+- hot/top ranking uses the topic rating (post #1).
 
 ## Sanctions core (M-0)
 
@@ -323,7 +325,7 @@ edit windows, cooldown, close/archive/trash, tombstones, restore, purge.
 
 ### CH-2 — Votes, ranking and counters
 
-Reputation contextual votes, voter dialog contract, hot/new/top/last
+Forum-owned content rating votes, voter dialog contract, hot/new/top/last
 activity, unique views, unread tracking.
 
 ### CH-3 — Questions, polls, tags and attachments
@@ -352,7 +354,7 @@ browser flows; full gates.
 | ------------- | ------------------------------------------------------------------------------------ |
 | Authorization | Guest/member/author/curator/moderator/supermoderator/admin, scopes, moves, sanctions |
 | Privacy       | Restricted category, gated block, hidden/deleted/trashed leak tests in all outputs   |
-| Votes         | Eligibility, uniqueness, reversal, reputation/points idempotency                     |
+| Votes         | Eligibility, uniqueness, reversal, no reputation or points side effects              |
 | Concurrency   | Cooldown, numbering, merge/split, accepted answer, vote races                        |
 | Moderation    | Journal, warning expiry, automatic read-only, centralized enforcement                |
 | Integrations  | News link, Search, Activity, Points, Content Gates, Outbox events                    |
