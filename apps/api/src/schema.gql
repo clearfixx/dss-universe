@@ -1358,7 +1358,9 @@ type Query {
   researchPage(id: ID!): ResearchPublishedPage
   researchPageByRoute(language: String!, slug: String!): ResearchPublishedPage
   researchPageSeo(pageId: ID!): ResearchPublicIndexEntry
+  researchPendingRevision(pageId: ID!, revisionId: ID!): ResearchPendingRevision
   researchRelatedPages(limit: Int! = 10, pageId: ID!): [ResearchRelatedPage!]!
+  researchReviewQueue(limit: Int! = 50, offset: Int! = 0): [ResearchReviewItem!]!
   researchRevisionDiff(from: ID!, pageId: ID!, to: ID!): ResearchRevisionComparison
   researchRevisionHistory(limit: Int! = 20, offset: Int! = 0, pageId: ID!): [ResearchHistoryEntry!]!
   researchSitemap(after: ID, limit: Int! = 50): [ResearchPublicIndexEntry!]!
@@ -1541,6 +1543,16 @@ input ResearchLifecycleInput {
   reason: String
 }
 
+type ResearchPendingRevision {
+  documentJson: String!
+  editSummary: String!
+  id: ID!
+  number: Int!
+  pageId: ID!
+  summary: String!
+  title: String!
+}
+
 type ResearchPublicIndexEntry {
   description: String!
   id: ID!
@@ -1567,6 +1579,13 @@ type ResearchRelatedPage {
   language: String!
   slug: String!
   title: String!
+}
+
+type ResearchReviewItem {
+  createdAt: DateTime!
+  id: ID!
+  number: Int!
+  pageId: ID!
 }
 
 type ResearchRevisionComparison {

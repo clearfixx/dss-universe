@@ -645,6 +645,116 @@ describe('Research Lab public delivery (GraphQL)', () => {
       { pageId, revisionId },
     );
     expect(denied.errors[0].extensions.code).toBe('FORBIDDEN');
+    const review = async () => {
+      const result = await request(app.getHttpServer())
+        .post('/api/graphql')
+        .set('Authorization', 'Bearer ' + member.tokens.accessToken)
+        .send({
+          query:
+            'query($p:ID!,$r:ID!){researchReviewQueue(limit:1){id} researchPendingRevision(pageId:$p,revisionId:$r){documentJson}}',
+          variables: { p: pageId, r: revisionId },
+        })
+        .expect(200);
+      return payload<{
+        researchReviewQueue: { id: string }[];
+        researchPendingRevision: { documentJson: string } | null;
+      }>(result);
+    };
+    expect((await review()).errors[0].extensions.code).toBe('FORBIDDEN');
+    const group = await fixture.prisma.accessGroup.create({
+      data: {
+        key: 'guardian-' + suffix,
+        displayName: 'Wiki review',
+        createdById: member.user.id,
+        capabilities: { create: { key: 'KNOWLEDGE_FORGE_GUARDIAN' } },
+        memberships: {
+          create: { subjectId: member.user.id, grantedById: member.user.id },
+        },
+      },
+    });
+    const gate = await fixture.prisma.contentGate.create({
+      data: {
+        ownerId: member.user.id,
+        operator: 'ALL',
+        requirements: {
+          create: { kind: 'GROUP', groupKey: 'group:separate-editors' },
+        },
+      },
+    });
+    const wiki = createEmptyEditorDocument('WIKI');
+    const secret = 'gated-' + suffix;
+    wiki.content.content = [
+      {
+        type: 'contentGate',
+        attrs: { gateId: gate.id },
+        content: [
+          { type: 'paragraph', content: [{ type: 'text', text: secret }] },
+        ],
+      },
+    ];
+    await fixture.prisma.researchRevision.update({
+      where: { id: revisionId },
+      data: { document: wiki as unknown as Prisma.InputJsonValue },
+    });
+    const viewer = await app.get(AuthenticationPresentationService).register({
+      email: 'reviewer-' + suffix + '@dss.test',
+      username: 'reviewer-' + suffix,
+      displayName: 'Reviewer',
+      password: 'research-fixture-123',
+    });
+    await fixture.prisma.accessGroupMembership.create({
+      data: {
+        subjectId: viewer.user.id,
+        grantedById: member.user.id,
+        groupId: group.id,
+      },
+    });
+    const response = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + viewer.tokens.accessToken)
+      .send({
+        query:
+          'query($p:ID!,$r:ID!){researchPendingRevision(pageId:$p,revisionId:$r){documentJson}}',
+        variables: { p: pageId, r: revisionId },
+      })
+      .expect(200);
+    const projected = payload<{
+      researchPendingRevision: { documentJson: string };
+    }>(response);
+    expect(projected.errors).toBeUndefined();
+    expect(projected.data.researchPendingRevision.documentJson).not.toContain(
+      secret,
+    );
+    await fixture.prisma.accessGroup.create({
+      data: {
+        key: 'separate-editors',
+        displayName: 'Gate readers',
+        createdById: member.user.id,
+        memberships: {
+          create: { subjectId: member.user.id, grantedById: member.user.id },
+        },
+      },
+    });
+    const allowed = await review();
+    expect(allowed.errors).toBeUndefined();
+    expect(allowed.data.researchReviewQueue).toEqual([{ id: revisionId }]);
+    expect(allowed.data.researchPendingRevision?.documentJson).toContain(
+      secret,
+    );
+    await fixture.prisma.researchPage.update({
+      where: { id: pageId },
+      data: { visibility: 'GROUPS' },
+    });
+    expect((await review()).data).toEqual({
+      researchReviewQueue: [],
+      researchPendingRevision: null,
+    });
+    await fixture.prisma.accessGroup.update({
+      where: { id: group.id },
+      data: { enabled: false },
+    });
+    expect((await review()).errors[0].extensions.code).toBe('FORBIDDEN');
+
     expect(
       await fixture.prisma.researchPage.findUniqueOrThrow({
         where: { id: pageId },

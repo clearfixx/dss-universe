@@ -78,6 +78,23 @@ class ResearchRollbackInput extends ResearchLifecycleInput {
   @Field(() => ID) @IsString() revisionId!: string;
 }
 @ObjectType()
+class ResearchReviewItem {
+  @Field(() => ID) id!: string;
+  @Field(() => ID) pageId!: string;
+  @Field(() => Int) number!: number;
+  @Field() createdAt!: Date;
+}
+@ObjectType()
+class ResearchPendingRevision {
+  @Field(() => ID) id!: string;
+  @Field(() => ID) pageId!: string;
+  @Field(() => Int) number!: number;
+  @Field() title!: string;
+  @Field() summary!: string;
+  @Field() editSummary!: string;
+  @Field() documentJson!: string;
+}
+@ObjectType()
 class ResearchDraftReceipt {
   @Field(() => ID) pageId!: string;
   @Field(() => ID) draftId!: string;
@@ -111,6 +128,26 @@ export class ResearchLabCommandResolver {
           throw new ConflictException(error.message);
       }
     }
+  }
+  @Query(() => [ResearchReviewItem])
+  researchReviewQueue(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
+    @Args('limit', { type: () => Int, defaultValue: 50 }) limit: number,
+  ) {
+    if (offset < 0 || limit < 1 || limit > 100)
+      throw new BadRequestException('Invalid review pagination.');
+    return this.execute(this.workflow.reviewQueue(actor.id, offset, limit));
+  }
+  @Query(() => ResearchPendingRevision, { nullable: true })
+  researchPendingRevision(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('pageId', { type: () => ID }) pageId: string,
+    @Args('revisionId', { type: () => ID }) revisionId: string,
+  ) {
+    return this.execute(
+      this.workflow.reviewRevision(actor.id, pageId, revisionId),
+    );
   }
   @Query(() => ResearchEditPolicy)
   researchEditPolicy(
