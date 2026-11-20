@@ -69,4 +69,19 @@ yet; accepting them now would risk leaking hidden content.
   revision immutability, lifecycle authority, restricted visibility and owner
   policy, deferred node rejection, undeletable rows.
 
+Recorded local results (2026-11-21, Node 24.22.3, disposable `dss_test`):
+
+- migration applied to `dss_test`; zero Prisma schema drift;
+- API unit suite: 1641 passed, 106 skipped by the existing opt-in policy;
+- forum topics e2e 8/8;
+- full API e2e: 992/994. The two failures were timing failures in unrelated
+  suites (`gamification-activation`: transaction start timeout;
+  `notification-preferences-atomicity`: 5-second hook timeout) while local
+  typecheck/lint ran concurrently; rerun alone they passed 3/3. Recorded, not
+  waived;
+- architecture inventory: 0 findings; lint and typecheck clean; generated
+  Web GraphQL client unchanged.
+
+GitHub CI on the committed PR head remains the acceptance gate.
+
 💬 Every reply gets a number; every number keeps its place.
