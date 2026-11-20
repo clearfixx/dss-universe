@@ -1516,6 +1516,7 @@ type ResearchHistoryEntry {
   editSummary: String!
   id: ID!
   number: Int!
+  publicationDecision: String
   state: String!
 }
 
