@@ -469,7 +469,6 @@ describe('Research Lab public delivery (GraphQL)', () => {
     const projector = app.get<EditorViewerDocumentProjector>(
       EDITOR_VIEWER_DOCUMENT_PROJECTOR,
     );
-    const project = projector.project.bind(projector);
     const intercept = jest
       .spyOn(projector, 'project')
       .mockImplementationOnce(async (...args) => {
@@ -499,7 +498,7 @@ describe('Research Lab public delivery (GraphQL)', () => {
             },
           });
         });
-        return project(...args);
+        return projector.project(...args);
       });
     const lastPage = async () => {
       const response = await request(app.getHttpServer())
