@@ -342,3 +342,39 @@ query ViewerForumSanctionStatus {
     readOnlyUntil
   }
 }
+
+query ForumHub($helpLimit: Int!, $tagLimit: Int!) {
+  forumHubStats {
+    forumCount
+    topicCount
+    postCount
+    participantCount
+  }
+  help: forumDiscoverTopics(
+    filter: UNSOLVED
+    sort: NEW
+    page: 1
+    limit: $helpLimit
+  ) {
+    total
+    items {
+      ...ForumTopicSummary
+    }
+  }
+  quiet: forumDiscoverTopics(
+    filter: NO_REPLIES
+    sort: NEW
+    page: 1
+    limit: $helpLimit
+  ) {
+    total
+    items {
+      ...ForumTopicSummary
+    }
+  }
+  forumPopularTags(limit: $tagLimit) {
+    slug
+    label
+    topicCount
+  }
+}

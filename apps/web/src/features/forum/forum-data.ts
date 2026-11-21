@@ -24,6 +24,7 @@ import { cache } from "react";
 
 import {
   ForumCategoriesDocument,
+  ForumHubDocument,
   ForumPostRevisionsDocument,
   ForumPostVotesDocument,
   ForumTagsDocument,
@@ -203,4 +204,16 @@ export async function loadViewerSanctionStatus() {
     fetchPolicy: "no-cache",
   });
   return result.data?.viewerSanctionStatus ?? null;
+}
+
+/** Hub home: totals, topics needing help, unanswered topics, popular tags. */
+export async function loadForumHub() {
+  const result = await getClient().query({
+    query: ForumHubDocument,
+    variables: { helpLimit: 5, tagLimit: 12 },
+    context: await authContext(),
+    fetchPolicy: "no-cache",
+  });
+  if (!result.data) throw new Error("FORUM_HUB_UNAVAILABLE");
+  return result.data;
 }
