@@ -28,6 +28,7 @@ import { SourceProducerAdapter } from './infrastructure/source-producer.adapter'
 import { PrismaPublicationEvidenceReader } from '@api/modules/news/infrastructure';
 import { PrismaCommentLifetimeReader } from '@api/modules/interactions/infrastructure';
 import { PrismaPointLedgerEvidenceReader } from '@api/modules/community-points/infrastructure';
+import { PrismaForumContributionReader } from '@api/modules/forum/infrastructure';
 
 @Module({
   imports: [PrismaModule, EventsModule, ReputationQualificationReadModule],
@@ -35,6 +36,7 @@ import { PrismaPointLedgerEvidenceReader } from '@api/modules/community-points/i
     PrismaPublicationEvidenceReader,
     PrismaCommentLifetimeReader,
     PrismaPointLedgerEvidenceReader,
+    PrismaForumContributionReader,
     SourceProducerAdapter,
     PrismaAdmissionRepository,
     PrismaConsumptionRepository,

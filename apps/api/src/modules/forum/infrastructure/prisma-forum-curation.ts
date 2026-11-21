@@ -101,6 +101,22 @@ export class ForumCurationService {
         authorId: answer.authorId,
         previousPostId: topic.acceptedAnswerPostId,
       });
+      // A post earns the answer bonus once: only its first acceptance is
+      // recorded (write-once) and credited; later re-acceptance is not.
+      const credited = await tx.forumPost.updateMany({
+        where: { id: postId, firstAcceptedAt: null },
+        data: { firstAcceptedAt: new Date(), firstAcceptedById: actorId },
+      });
+      if (credited.count === 1) {
+        await this.record(
+          tx,
+          actorId,
+          'ForumAnswerCredit',
+          postId,
+          'answer.credited',
+          { postId, topicId, authorId: answer.authorId },
+        );
+      }
     });
     return this.topics.topic(actorId, topicId);
   }
@@ -324,7 +340,7 @@ export class ForumCurationService {
   private async record(
     tx: TransactionClient,
     actorId: string,
-    targetType: 'ForumTopic' | 'ForumTag',
+    targetType: 'ForumTopic' | 'ForumTag' | 'ForumAnswerCredit',
     targetId: string,
     action: string,
     metadata: Record<string, string | boolean | null | string[]>,
