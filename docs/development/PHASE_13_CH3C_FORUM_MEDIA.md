@@ -40,6 +40,8 @@ Scope: `(ForumPost, postId, forum.post.media)`.
   reference; hide and delete keep references, purge releases them, files stay;
 - all forum e2e suites with the shared Media e2e: 59/59; app boot e2e (schema
   adds `ForumPostAttachment` and `ForumPost.attachments`); API unit 1663/1663;
-  lint, typecheck clean; architecture inventory 0 findings.
+  lint, typecheck clean; architecture inventory 0 findings;
+- full API e2e (5435/6381, Redis-6380-pinned suites excluded): 1001/1001,
+  96/96 suites.
 
 🖼️ A picture in a post belongs to the post — until a purge says otherwise.
