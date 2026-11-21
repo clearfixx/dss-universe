@@ -542,6 +542,31 @@ input ForumCategoryInput {
   visibility: ForumVisibility!
 }
 
+"""
+NO_REPLIES: nobody replied yet; UNSOLVED: questions without an accepted answer.
+"""
+enum ForumDiscoverFilter {
+  ALL
+  NO_REPLIES
+  UNSOLVED
+}
+
+enum ForumDiscoverSort {
+  LAST_ACTIVITY
+  NEW
+}
+
+type ForumHubStats {
+  forumCount: Int!
+
+  """Distinct authors of visible posts."""
+  participantCount: Int!
+
+  """Visible posts only."""
+  postCount: Int!
+  topicCount: Int!
+}
+
 input ForumInput {
   active: Boolean! = true
   allowsGatedContent: Boolean! = false
@@ -574,6 +599,12 @@ type ForumModeratorAssignment {
   id: ID!
   moderatorId: ID!
   revokedAt: DateTime
+}
+
+type ForumPopularTag {
+  label: String!
+  slug: String!
+  topicCount: Int!
 }
 
 type ForumPost {
@@ -1840,6 +1871,13 @@ type Query {
   following(pagination: UsersPageInput, userId: ID!): UsersPageModel!
   forumCategories: [ForumCategory!]!
   forumCategoryModerators(categoryId: ID!): [ForumModeratorAssignment!]!
+
+  """
+  Open and closed topics across every forum the viewer can see (guests included).
+  """
+  forumDiscoverTopics(filter: ForumDiscoverFilter! = ALL, limit: Int! = 10, page: Int! = 1, sort: ForumDiscoverSort! = NEW): ForumTopicPage!
+  forumHubStats: ForumHubStats!
+  forumPopularTags(limit: Int! = 12): [ForumPopularTag!]!
   forumPostRevisions(postId: ID!): [ForumPostRevision!]!
   forumPostVotes(limit: Int! = 50, page: Int! = 1, postId: ID!): ForumPostVotePage!
   forumPosts(limit: Int! = 20, page: Int! = 1, topicId: ID!): ForumPostPage!
