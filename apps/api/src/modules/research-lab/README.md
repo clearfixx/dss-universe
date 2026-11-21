@@ -20,7 +20,7 @@ Guardians use `researchReviewQueue` to list pending submissions and `researchPen
 
 Authors can list their drafts through `researchOwnDrafts` and reopen a saved Wiki document through `researchOwnDraft`. The returned version is the expected version for the next save. Discard requires the current draft ID and version. Discarding the last never-submitted draft releases the page address. Once a revision has been submitted, the address and review history are retained.
 
-Moderators with current read access to a published or archived page can change its audience using `setResearchPageAudience`. The private audit record captures both audiences, including group keys.
+Moderators with current read access to a published or archived page can inspect its audience using `researchPageAudience` and change it using `setResearchPageAudience`. The private audit record captures both audiences, including group keys.
 
 Editor validates Wiki documents and projects content for the viewer. IAM supplies
 group and Guardian evidence. Research Lab supplies page access decisions to
