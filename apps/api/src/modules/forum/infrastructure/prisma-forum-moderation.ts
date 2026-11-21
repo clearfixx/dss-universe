@@ -17,7 +17,8 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, Optional } from '@nestjs/common';
+import { FORUM_POST_MEDIA, type ForumPostMedia } from './forum-post-media.port';
 import { AuditWriterService } from '@api/core/audit';
 import { PrismaService, type TransactionClient } from '@api/core/database';
 import { createEventEnvelope, OutboxWriterService } from '@api/core/events';
@@ -60,6 +61,9 @@ export class ForumModerationService {
     @Inject(FORUM_VIEWER_FACTS)
     private readonly viewers: ForumViewerFactsReader,
     private readonly topics: ForumTopicsService,
+    @Optional()
+    @Inject(FORUM_POST_MEDIA)
+    private readonly media?: ForumPostMedia,
   ) {}
 
   hidePost(actorId: string, postId: string, reason: string) {
@@ -117,6 +121,9 @@ export class ForumModerationService {
         data: { document: {}, plainText: '' },
       });
       await tx.$executeRaw`SELECT set_config('dss.forum_purge', 'off', true)`;
+      // Purge is the only removal that releases the post's files; hiding and
+      // deleting keep references. Files themselves stay with Media.
+      await this.media?.sync(tx, postId, actorId, []);
       await this.record(tx, actorId, 'ForumPost', postId, 'post.purged', {
         topicId: post.topicId,
         number: post.number,

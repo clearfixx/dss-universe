@@ -19,7 +19,8 @@
  * ===============================================================
  */
 import { randomUUID } from 'node:crypto';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
+import { collectEditorMediaIds } from '@dss/editor';
 import { Prisma, type ForumPost, type ForumTopic } from '@prisma/client';
 import { AuditWriterService } from '@api/core/audit';
 import { PrismaService, type TransactionClient } from '@api/core/database';
@@ -65,6 +66,7 @@ import {
   type ForumTopicSummary,
 } from '../domain/types/forum-topic.type';
 import { ForumStructureService } from './prisma-forum-structure';
+import { FORUM_POST_MEDIA, type ForumPostMedia } from './forum-post-media.port';
 
 const PRODUCER = 'dss.api.forum';
 const TOPIC_KIND = 'forum.topic';
@@ -94,6 +96,10 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     private readonly gateAccess: EditorDeliveryReader,
     @Inject(EDITOR_VIEWER_DOCUMENT_PROJECTOR)
     private readonly projector: EditorViewerDocumentProjector,
+    // Optional: without Media wiring, posts with media are rejected (pre-CH-3c).
+    @Optional()
+    @Inject(FORUM_POST_MEDIA)
+    private readonly media?: ForumPostMedia,
   ) {}
 
   async createTopic(
@@ -114,6 +120,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       forum.allowsGatedContent,
     );
     await this.requireDocumentAccess(actorId, content.document);
+    const mediaIds = await this.attachableMedia(actorId, content.document, []);
     const exempt = await this.cooldownExempt(viewer, forum.categoryId);
     const topicId = randomUUID();
     const postId = randomUUID();
@@ -153,6 +160,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
         quotedNumbers: [],
         createdAt: now,
       });
+      await this.syncMedia(tx, postId, actorId, mediaIds);
       await this.record(tx, actorId, 'ForumTopic', topicId, 'topic.created', {
         forumId: forum.id,
         categoryId: forum.categoryId,
@@ -185,6 +193,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       allowsGatedContent,
     );
     await this.requireDocumentAccess(actorId, content.document);
+    const mediaIds = await this.attachableMedia(actorId, content.document, []);
     const exempt = await this.cooldownExempt(viewer, categoryId);
     const postId = randomUUID();
     const now = new Date();
@@ -224,6 +233,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
           lastPostAuthorId: actorId,
         },
       });
+      await this.syncMedia(tx, postId, actorId, mediaIds);
       await this.record(tx, actorId, 'ForumPost', postId, 'post.created', {
         topicId: input.topicId,
         number,
@@ -284,6 +294,12 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     // Editing must never silently drop hidden blocks the editor cannot read.
     await this.requireDocumentAccess(actorId, post.document);
     await this.requireDocumentAccess(actorId, content.document);
+    // Files the post already references stay; only new ones need the actor's access.
+    const mediaIds = await this.attachableMedia(
+      actorId,
+      content.document,
+      this.media ? await this.media.activeMediaIds(post.id) : [],
+    );
     const now = new Date();
     await this.prisma.$transaction(async (tx) => {
       const nextRevision = input.expectedRevision + 1;
@@ -324,6 +340,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
           data: { title },
         });
       }
+      await this.syncMedia(tx, post.id, actorId, mediaIds, true);
       await this.record(tx, actorId, 'ForumPost', post.id, 'post.edited', {
         topicId: topic.id,
         number: post.number,
@@ -679,6 +696,41 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     }
   }
 
+  /** Media IDs of a validated document; new ones must be attachable by the actor. */
+  private async attachableMedia(
+    actorId: string,
+    document: unknown,
+    alreadyReferenced: readonly string[],
+  ): Promise<string[]> {
+    if (!this.media) return [];
+    const ids = collectEditorMediaIds(
+      document as Parameters<typeof collectEditorMediaIds>[0],
+    );
+    const known = new Set(alreadyReferenced);
+    const added = ids.filter((id) => !known.has(id));
+    if (added.length) {
+      const rejected = await this.media.rejectedForActor(actorId, added);
+      if (rejected.length) {
+        throw new ForumCommandError(
+          'INVALID_INPUT',
+          'Some files are unavailable: they must be ready and yours or public.',
+        );
+      }
+    }
+    return ids;
+  }
+
+  private async syncMedia(
+    tx: TransactionClient,
+    postId: string,
+    actorId: string,
+    mediaIds: readonly string[],
+    always = false,
+  ): Promise<void> {
+    if (!this.media || (!always && mediaIds.length === 0)) return;
+    await this.media.sync(tx, postId, actorId, mediaIds);
+  }
+
   private content(
     documentJson: string,
     profile: 'topic' | 'reply',
@@ -688,7 +740,10 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       profile === 'topic'
         ? this.editor.normalizeForumTopic(documentJson)
         : this.editor.normalizeForumReply(documentJson);
-    if (this.contains(content.document, (type) => MEDIA_NODES.has(type))) {
+    if (
+      !this.media &&
+      this.contains(content.document, (type) => MEDIA_NODES.has(type))
+    ) {
       throw new ForumCommandError(
         'INVALID_INPUT',
         'Media and attachments in forum posts are not available yet.',

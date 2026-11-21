@@ -63,6 +63,8 @@ import { GateForumPostCountAdapter } from './infrastructure/gate-forum-post-coun
 import { ForumAccountEvidenceAdapter } from './infrastructure/forum-account-evidence.adapter';
 import { WallImageEligibilityAdapter } from './infrastructure/wall-image-eligibility.adapter';
 import { NewsMediaEvidenceAdapter } from './infrastructure/news-media-evidence.adapter';
+import { FORUM_POST_MEDIA } from '@api/modules/forum/infrastructure';
+import { ForumPostMediaAdapter } from '../media-references/infrastructure/forum-post-media.adapter';
 import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapter';
 
 @Global()
@@ -99,10 +101,12 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
     { provide: FORUM_ACCOUNT_EVIDENCE, useClass: ForumAccountEvidenceAdapter },
     { provide: FORUM_NEWS_FACTS, useClass: ForumNewsFactsAdapter },
     { provide: GATE_FORUM_POST_COUNT, useClass: GateForumPostCountAdapter },
+    { provide: FORUM_POST_MEDIA, useClass: ForumPostMediaAdapter },
     { provide: NEWS_MEDIA_EVIDENCE, useClass: NewsMediaEvidenceAdapter },
     { provide: PROFILE_ACTIVITY_READER, useClass: ProfileActivityAdapter },
   ],
   exports: [
+    FORUM_POST_MEDIA,
     NEWS_ATTACHMENT_READER,
     ACTIVITY_VIEWER_CONTEXT,
     ACTIVITY_SUBJECT_VISIBILITY,
