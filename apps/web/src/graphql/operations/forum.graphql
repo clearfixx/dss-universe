@@ -1,0 +1,329 @@
+fragment ForumMemberCard on ForumMember {
+  id
+  username
+  displayName
+  avatarUrl
+}
+
+fragment ForumActivityStatsFields on ForumActivityStats {
+  topicCount
+  postCount
+  lastActivity {
+    topicId
+    title
+    lastPostAt
+    lastPostNumber
+    author {
+      ...ForumMemberCard
+    }
+  }
+}
+
+fragment ForumTopicSummary on ForumTopic {
+  id
+  forumId
+  interactionTargetId
+  kind
+  state
+  title
+  pinned
+  postCount
+  viewCount
+  ratingUp
+  ratingDown
+  lastPostNumber
+  lastPostAt
+  createdAt
+  acceptedAnswerPostId
+  mergedIntoTopicId
+  curatorId
+  viewerLastReadNumber
+  tags {
+    id
+    slug
+    label
+  }
+  author {
+    ...ForumMemberCard
+  }
+  lastPostAuthor {
+    ...ForumMemberCard
+  }
+}
+
+fragment ForumPostFields on ForumPost {
+  id
+  topicId
+  number
+  state
+  documentJson
+  replyToNumber
+  quotedNumbers
+  revision
+  ratingUp
+  ratingDown
+  viewerVote
+  createdAt
+  editedAt
+  author {
+    ...ForumMemberCard
+  }
+  attachments {
+    mediaId
+    filename
+    mimeType
+    size
+    downloadUrl
+  }
+  moderation {
+    at
+    byId
+    reason
+  }
+  staffNotes {
+    id
+    authorId
+    role
+    body
+    createdAt
+  }
+}
+
+fragment ForumPollFields on Poll {
+  id
+  question
+  visibility
+  maxChoices
+  totalBallots
+  viewerHasVoted
+  viewerChoiceIds
+  options {
+    id
+    label
+    position
+    voteCount
+  }
+}
+
+query ForumCategories {
+  forumCategories {
+    id
+    slug
+    title
+    description
+    visibility
+    active
+    position
+    forums {
+      id
+      categoryId
+      slug
+      title
+      description
+      position
+      active
+      allowsGatedContent
+      activity {
+        ...ForumActivityStatsFields
+      }
+      subforums {
+        id
+        slug
+        title
+        description
+        position
+        active
+        allowsGatedContent
+        activity {
+          ...ForumActivityStatsFields
+        }
+      }
+    }
+  }
+}
+
+query ForumTopics(
+  $forumId: ID!
+  $sort: ForumTopicSort!
+  $filter: ForumTopicFilter!
+  $scope: ForumTopicScope!
+  $topPeriod: ForumTopPeriod!
+  $tagSlug: String
+  $page: Int!
+  $limit: Int!
+) {
+  forumTopics(
+    forumId: $forumId
+    sort: $sort
+    filter: $filter
+    scope: $scope
+    topPeriod: $topPeriod
+    tagSlug: $tagSlug
+    page: $page
+    limit: $limit
+  ) {
+    total
+    page
+    limit
+    items {
+      ...ForumTopicSummary
+    }
+  }
+}
+
+query ViewerForumTopics(
+  $collection: ForumViewerCollection!
+  $page: Int!
+  $limit: Int!
+) {
+  viewerForumTopics(collection: $collection, page: $page, limit: $limit) {
+    total
+    page
+    limit
+    items {
+      ...ForumTopicSummary
+    }
+  }
+}
+
+query ForumTopicThread($topicId: ID!, $page: Int!, $limit: Int!) {
+  forumTopic(topicId: $topicId) {
+    ...ForumTopicSummary
+  }
+  forumPosts(topicId: $topicId, page: $page, limit: $limit) {
+    total
+    page
+    limit
+    items {
+      ...ForumPostFields
+    }
+  }
+}
+
+query ForumTopicViewerState($topicId: ID!) {
+  forumTopicSubscribed(topicId: $topicId)
+  viewerSanctionStatus {
+    activeWarnings
+    readOnlyUntil
+  }
+}
+
+query ForumTopicPoll($interactionTargetId: ID!) {
+  pollForTarget(interactionTargetId: $interactionTargetId) {
+    ...ForumPollFields
+  }
+}
+
+query ForumPostVotes($postId: ID!, $page: Int!, $limit: Int!) {
+  forumPostVotes(postId: $postId, page: $page, limit: $limit) {
+    total
+    page
+    limit
+    items {
+      value
+      reversed
+      createdAt
+      voter {
+        ...ForumMemberCard
+      }
+    }
+  }
+}
+
+query ForumTags($forumId: ID!) {
+  forumTags(forumId: $forumId) {
+    id
+    slug
+    label
+    active
+  }
+}
+
+query ForumPostRevisions($postId: ID!) {
+  forumPostRevisions(postId: $postId) {
+    revision
+    editorId
+    createdAt
+  }
+}
+
+mutation CreateForumTopic($input: CreateForumTopicInput!) {
+  createForumTopic(input: $input) {
+    firstPostId
+    topic {
+      ...ForumTopicSummary
+    }
+  }
+}
+
+mutation CreateForumReply($input: CreateForumReplyInput!) {
+  createForumReply(input: $input) {
+    ...ForumPostFields
+  }
+}
+
+mutation EditForumPost($input: EditForumPostInput!) {
+  editForumPost(input: $input) {
+    ...ForumPostFields
+  }
+}
+
+mutation VoteForumPost($postId: ID!, $value: Int!) {
+  voteForumPost(postId: $postId, value: $value) {
+    postId
+    ratingUp
+    ratingDown
+  }
+}
+
+mutation AcceptForumAnswer($topicId: ID!, $postId: ID!) {
+  acceptForumAnswer(topicId: $topicId, postId: $postId) {
+    ...ForumTopicSummary
+  }
+}
+
+mutation CloseForumTopic($topicId: ID!) {
+  closeForumTopic(topicId: $topicId) {
+    ...ForumTopicSummary
+  }
+}
+
+mutation ReopenForumTopic($topicId: ID!) {
+  reopenForumTopic(topicId: $topicId) {
+    ...ForumTopicSummary
+  }
+}
+
+mutation SubscribeForumTopic($topicId: ID!) {
+  subscribeForumTopic(topicId: $topicId)
+}
+
+mutation UnsubscribeForumTopic($topicId: ID!) {
+  unsubscribeForumTopic(topicId: $topicId)
+}
+
+mutation MarkForumTopicRead($topicId: ID!, $upToNumber: Int!) {
+  markForumTopicRead(topicId: $topicId, upToNumber: $upToNumber)
+}
+
+mutation RecordForumTopicView($topicId: ID!) {
+  recordForumTopicView(topicId: $topicId)
+}
+
+mutation CastForumPollBallot($input: CastPollBallotInput!) {
+  castPollBallot(input: $input) {
+    ...ForumPollFields
+  }
+}
+
+mutation AttachForumTopicPoll($topicId: ID!, $input: ForumTopicPollInput!) {
+  attachForumTopicPoll(topicId: $topicId, input: $input) {
+    pollId
+  }
+}
+
+mutation SetForumTopicTags($topicId: ID!, $tagIds: [ID!]!) {
+  setForumTopicTags(topicId: $topicId, tagIds: $tagIds) {
+    ...ForumTopicSummary
+  }
+}
