@@ -14,6 +14,8 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+import { ForumViewerFactsAdapter } from '@api/modules/forum/infrastructure/forum-viewer-facts.adapter';
+import { Permission } from '@api/core/authorization';
 import { randomUUID } from 'node:crypto';
 import { createEmptyEditorDocument } from '@dss/editor';
 import { AuditRedactionService, AuditWriterService } from '@api/core/audit';
@@ -262,7 +264,52 @@ describe('Forum moderation (e2e)', () => {
     expect(listing.items[0]).toMatchObject({ id: s.topic.id, pinned: true });
   });
 
-  it('purges content and revisions irreversibly for administrators only', async () => {
+  it.each(['admin', 'owner'])(
+    'preserves the post and its revisions for a legacy %s with purge permission',
+    async (role) => {
+      const s = await scene();
+      const viewers = new ForumViewerFactsAdapter(
+        {
+          audience: async () => ({ groups: [], premium: false }),
+          canManageGroups: async () => true,
+          hasKnowledgeForgeGuardian: async () => false,
+        },
+        {
+          getAccessProfileByUserId: async () => ({
+            roles: [role],
+            permissions: [
+              Permission.ForumContentPurge,
+              Permission.ForumModerateAll,
+            ],
+          }),
+        },
+      );
+      const service = new ForumModerationService(
+        fixture.prisma,
+        new AuditWriterService(new AuditRedactionService()),
+        new OutboxWriterService(),
+        viewers,
+        topics,
+      );
+      const where = { id: s.reply.id };
+      const post = await fixture.prisma.forumPost.findUniqueOrThrow({ where });
+      const revisions = () =>
+        fixture.prisma.forumPostRevision.findMany({
+          where: { postId: s.reply.id },
+          orderBy: { id: 'asc' },
+        });
+      const before = await revisions();
+      await expect(
+        service.purgePost(s.admin, s.reply.id, 'Removal requested'),
+      ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+      expect(
+        await fixture.prisma.forumPost.findUniqueOrThrow({ where }),
+      ).toEqual(post);
+      expect(await revisions()).toEqual(before);
+    },
+  );
+
+  it('erases revision content only with explicitly injected purge authority', async () => {
     const s = await scene();
     await expect(
       moderation.purgePost(s.moderator, s.reply.id, 'Leaked secret'),
