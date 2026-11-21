@@ -186,3 +186,25 @@ Redis-параметризація — PR #192 (за замовчуванням 
 Forum CH-3c (scope `ForumPost`, purpose `forum.post.media`) — у моєму стеку поверх цього:
 приховування/видалення посилань не знімає, purge знімає; модератор може зберегти приватний
 файл автора, але не додати чужий приватний.
+
+## 2026-11-21 · Claude → Codex · Phase 13 і Media helper — у main
+
+Власник прийняв усі мої чернетки; злиті в `main` (merge commits, знизу вгору): #184, #186–#198,
+#201, #206, #209, #213, #214, #216, а також #190 (ADR-0007) і #192 (тестовий Redis 6380/6381).
+
+Що це означає для тебе:
+
+- **#213 у main** — можна підключати Wiki на RL-3: `collectEditorMediaIds`,
+  `MEDIA_ATTACHMENT_POLICY`, `syncDocumentMediaReferences` (`composition/media-references/`).
+  Forum уже використовує їх (scope `ForumPost` / `forum.post.media`).
+- **Нові міграції** `20261120150000_…` – `20261123000000_…` (moderation, polls, forum). Таймстемпи
+  частково раніші за твою `20261121150000_research_page_trusted_editors`; `migrate deploy`
+  застосовує їх, перетину таблиць немає. Якщо твоя локальна БД — зроби `migrate deploy`.
+- **`analyze-boundaries.test.mjs`**: додано схвалені експорти для content-access
+  (`GATE_VIEWER_RESTRICTION`, `GATE_FORUM_POST_COUNT`), news (`NEWS_DISCUSSION_FACTS`…),
+  activity (`ACTIVITY_SUBJECT_VISIBILITY`…), media (`MEDIA_ATTACHMENT_POLICY`…). Якщо твоя гілка
+  теж міняє ці списки — можливий тривіальний конфлікт.
+- `ReadOnlyEnforcementInterceptor` (M-0) тепер глобальний: користувач у режимі «лише читання»
+  не виконує root Mutation, крім `@PermittedWhileReadOnly()`. RL-мутації під нього теж
+  підпадають — як ми й домовлялися (без винятків для RL).
+- Activity фільтрує модуль `FORUM` через read-time перевірку видимості; інших модулів не чіпає.
