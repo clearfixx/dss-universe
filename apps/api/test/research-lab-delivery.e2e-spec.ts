@@ -772,6 +772,26 @@ describe('Research Lab public delivery (GraphQL)', () => {
       }>(result);
     };
     expect((await review()).errors[0].extensions.code).toBe('FORBIDDEN');
+    const diff = async (token: string) => {
+      const result = await request(app.getHttpServer())
+        .post('/api/graphql')
+        .set('Authorization', 'Bearer ' + token)
+        .send({
+          query:
+            'query($p:ID!,$r:ID!){researchRevisionDiff(pageId:$p,from:$r,to:$r){fromDocumentJson toDocumentJson}}',
+          variables: { p: pageId, r: revisionId },
+        })
+        .expect(200);
+      const comparison = payload<{
+        researchRevisionDiff: {
+          fromDocumentJson: string;
+          toDocumentJson: string;
+        } | null;
+      }>(result);
+      expect(comparison.errors).toBeUndefined();
+      return comparison.data.researchRevisionDiff;
+    };
+    expect(await diff(member.tokens.accessToken)).toBeNull();
     const group = await fixture.prisma.accessGroup.create({
       data: {
         key: 'guardian-' + suffix,
@@ -832,6 +852,10 @@ describe('Research Lab public delivery (GraphQL)', () => {
     const projected = payload<{
       researchPendingRevision: { documentJson: string };
     }>(response);
+    expect(await diff(viewer.tokens.accessToken)).toEqual({
+      fromDocumentJson: projected.data.researchPendingRevision.documentJson,
+      toDocumentJson: projected.data.researchPendingRevision.documentJson,
+    });
     expect(projected.errors).toBeUndefined();
     expect(projected.data.researchPendingRevision.documentJson).not.toContain(
       secret,
@@ -856,6 +880,7 @@ describe('Research Lab public delivery (GraphQL)', () => {
       where: { id: pageId },
       data: { visibility: 'GROUPS' },
     });
+    expect(await diff(viewer.tokens.accessToken)).toBeNull();
     expect((await review()).data).toEqual({
       researchReviewQueue: [],
       researchPendingRevision: null,

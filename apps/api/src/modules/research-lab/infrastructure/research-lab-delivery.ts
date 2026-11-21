@@ -322,7 +322,17 @@ export class ResearchLabDelivery {
     const revisions = await this.prisma.researchRevision.findMany({
       where: {
         pageId,
-        page: scope.where,
+        page: scope.facts.guardian
+          ? {
+              OR: [
+                scope.where,
+                {
+                  state: 'DRAFT',
+                  ...researchAudience(scope.facts.groups, true),
+                },
+              ],
+            }
+          : scope.where,
         id: { in: [from, to] },
         ...(scope.facts.guardian
           ? {}
