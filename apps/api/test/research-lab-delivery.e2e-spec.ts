@@ -146,20 +146,45 @@ describe('Research Lab public delivery (GraphQL)', () => {
         categories: [],
       },
     });
-    await fixture.prisma.researchPage.update({
-      where: { id },
-      data: { visibility: 'MEMBERS' },
-    });
-    expect(await read()).toEqual({
-      researchPage: null,
-      researchRevisionHistory: [],
-      search: { items: [], total: 0, categories: [] },
-    });
     const member = await app.get(AuthenticationPresentationService).register({
       email: 'viewer-' + id + '@dss.test',
       username: 'viewer-' + id,
       displayName: 'Viewer',
       password: 'research-fixture-123',
+    });
+    const restrict = async () =>
+      request(app.getHttpServer())
+        .post('/api/graphql')
+        .set('Authorization', 'Bearer ' + member.tokens.accessToken)
+        .send({
+          query:
+            'mutation($id:ID!){setResearchPageAudience(pageId:$id,visibility:MEMBERS){visibility groupKeys}}',
+          variables: { id },
+        })
+        .expect(200);
+    expect(payload(await restrict()).errors[0].extensions.code).toBe(
+      'FORBIDDEN',
+    );
+    const permission = await fixture.prisma.permission.upsert({
+      where: { key: 'research-lab.moderate' },
+      update: {},
+      create: {
+        key: 'research-lab.moderate',
+        label: 'Research Lab moderation',
+      },
+    });
+    await fixture.prisma.userPermission.create({
+      data: { userId: member.user.id, permissionId: permission.id },
+    });
+    expect(payload(await restrict())).toEqual({
+      data: {
+        setResearchPageAudience: { visibility: 'MEMBERS', groupKeys: [] },
+      },
+    });
+    expect(await read()).toEqual({
+      researchPage: null,
+      researchRevisionHistory: [],
+      search: { items: [], total: 0, categories: [] },
     });
     const childId = randomUUID();
     const childTarget = await fixture.prisma.interactionTarget.create({
