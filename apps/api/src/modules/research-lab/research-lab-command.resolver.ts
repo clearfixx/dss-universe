@@ -13,6 +13,8 @@ import {
   InputType,
   Int,
   Mutation,
+  Query,
+  registerEnumType,
   ObjectType,
   Resolver,
 } from '@nestjs/graphql';
@@ -20,6 +22,33 @@ import { IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
 import { ResearchLabService } from './infrastructure/prisma-research-lab-workflow';
 import { ResearchLabCommandError } from './domain/errors/research-lab-command.error';
+
+enum ResearchPageAudience {
+  PUBLIC = 'PUBLIC',
+  MEMBERS = 'MEMBERS',
+  GROUPS = 'GROUPS',
+}
+registerEnumType(ResearchPageAudience, { name: 'ResearchPageAudience' });
+
+@ObjectType()
+class ResearchAudiencePolicy {
+  @Field(() => ResearchPageAudience) visibility!: ResearchPageAudience;
+  @Field(() => [String]) groupKeys!: string[];
+}
+
+enum ResearchEditProtection {
+  OPEN = 'OPEN',
+  TRUSTED = 'TRUSTED',
+  GUARDIAN_ONLY = 'GUARDIAN_ONLY',
+  LOCKED = 'LOCKED',
+}
+registerEnumType(ResearchEditProtection, { name: 'ResearchEditProtection' });
+
+@ObjectType()
+class ResearchEditPolicy {
+  @Field(() => ResearchEditProtection) protectionLevel!: ResearchEditProtection;
+  @Field(() => [String]) trustedEditGroupKeys!: string[];
+}
 
 @InputType()
 class ResearchDraftInput {
@@ -62,6 +91,44 @@ class ResearchRollbackInput extends ResearchLifecycleInput {
   @Field(() => ID) @IsString() revisionId!: string;
 }
 @ObjectType()
+class ResearchReviewItem {
+  @Field(() => ID) id!: string;
+  @Field(() => ID) pageId!: string;
+  @Field(() => Int) number!: number;
+  @Field() createdAt!: Date;
+}
+@ObjectType()
+class ResearchPendingRevision {
+  @Field(() => ID) id!: string;
+  @Field(() => ID) pageId!: string;
+  @Field(() => Int) number!: number;
+  @Field() title!: string;
+  @Field() summary!: string;
+  @Field() editSummary!: string;
+  @Field() documentJson!: string;
+}
+@ObjectType()
+class ResearchOwnDraftItem {
+  @Field(() => ID) id!: string;
+  @Field(() => ID) pageId!: string;
+  @Field(() => Int) version!: number;
+  @Field() updatedAt!: Date;
+}
+@ObjectType()
+class ResearchOwnDraft extends ResearchOwnDraftItem {
+  @Field() title!: string;
+  @Field() summary!: string;
+  @Field() proposedSlug!: string;
+  @Field() documentJson!: string;
+  @Field(() => ID, { nullable: true }) basePublishedRevisionId!: string | null;
+}
+@ObjectType()
+class ResearchDiscardReceipt {
+  @Field(() => ID) pageId!: string;
+  @Field(() => ID) draftId!: string;
+  @Field() routeReleased!: boolean;
+}
+@ObjectType()
 class ResearchDraftReceipt {
   @Field(() => ID) pageId!: string;
   @Field(() => ID) draftId!: string;
@@ -96,6 +163,112 @@ export class ResearchLabCommandResolver {
       }
     }
   }
+  @Mutation(() => ResearchDiscardReceipt)
+  discardResearchDraft(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('pageId', { type: () => ID }) pageId: string,
+    @Args('draftId', { type: () => ID }) draftId: string,
+    @Args('expectedVersion', { type: () => Int }) expectedVersion: number,
+  ) {
+    return this.execute(
+      this.workflow.discardDraft(actor.id, pageId, draftId, expectedVersion),
+    );
+  }
+
+  @Query(() => [ResearchOwnDraftItem])
+  researchOwnDrafts(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
+    @Args('limit', { type: () => Int, defaultValue: 50 }) limit: number,
+  ) {
+    if (offset < 0 || limit < 1 || limit > 100)
+      throw new BadRequestException('Invalid draft pagination.');
+    return this.execute(this.workflow.ownDrafts(actor.id, offset, limit));
+  }
+
+  @Query(() => ResearchOwnDraft, { nullable: true })
+  async researchOwnDraft(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('pageId', { type: () => ID }) pageId: string,
+  ) {
+    const draft = await this.execute(this.workflow.ownDraft(actor.id, pageId));
+    if (!draft) return null;
+    return {
+      id: draft.id,
+      pageId,
+      version: draft.version,
+      updatedAt: draft.updatedAt,
+      title: draft.title,
+      summary: draft.summary,
+      proposedSlug: draft.proposedSlug,
+      basePublishedRevisionId: draft.basePublishedRevisionId,
+      documentJson: JSON.stringify(draft.document),
+    };
+  }
+
+  @Query(() => [ResearchReviewItem])
+  researchReviewQueue(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
+    @Args('limit', { type: () => Int, defaultValue: 50 }) limit: number,
+  ) {
+    if (offset < 0 || limit < 1 || limit > 100)
+      throw new BadRequestException('Invalid review pagination.');
+    return this.execute(this.workflow.reviewQueue(actor.id, offset, limit));
+  }
+  @Query(() => ResearchPendingRevision, { nullable: true })
+  researchPendingRevision(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('pageId', { type: () => ID }) pageId: string,
+    @Args('revisionId', { type: () => ID }) revisionId: string,
+  ) {
+    return this.execute(
+      this.workflow.reviewRevision(actor.id, pageId, revisionId),
+    );
+  }
+  @Query(() => ResearchEditPolicy)
+  researchEditPolicy(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('pageId', { type: () => ID }) pageId: string,
+  ) {
+    return this.execute(this.workflow.editPolicy(actor.id, pageId));
+  }
+  @Mutation(() => ResearchAudiencePolicy)
+  setResearchPageAudience(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('pageId', { type: () => ID }) pageId: string,
+    @Args('visibility', { type: () => ResearchPageAudience })
+    visibility: ResearchPageAudience,
+    @Args('groupKeys', { type: () => [String], defaultValue: [] })
+    groupKeys: string[],
+  ) {
+    return this.execute(
+      this.workflow.setAudience(actor.id, pageId, visibility, groupKeys),
+    );
+  }
+
+  @Mutation(() => ResearchEditPolicy)
+  setResearchEditProtection(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('pageId', { type: () => ID }) pageId: string,
+    @Args('level', { type: () => ResearchEditProtection })
+    level: ResearchEditProtection,
+  ) {
+    return this.execute(
+      this.workflow.setEditProtection(actor.id, pageId, level),
+    );
+  }
+  @Mutation(() => [String])
+  setResearchTrustedEditors(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('pageId', { type: () => ID }) pageId: string,
+    @Args('groupKeys', { type: () => [String] }) groupKeys: string[],
+  ) {
+    return this.execute(
+      this.workflow.setTrustedEditors(actor.id, pageId, groupKeys),
+    );
+  }
+
   @Mutation(() => ResearchDraftReceipt)
   startResearchDraft(
     @AuthUser() actor: AuthenticatedUser,
