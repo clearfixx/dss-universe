@@ -1,3 +1,5 @@
+import { Permission } from '../src/core/authorization';
+import { ModerationSanctionsService } from '../src/modules/moderation/infrastructure/prisma-moderation-sanctions';
 import {
   EDITOR_VIEWER_DOCUMENT_PROJECTOR,
   type EditorViewerDocumentProjector,
@@ -639,6 +641,81 @@ describe('Research Lab public delivery (GraphQL)', () => {
       categories: [{ slug: category.slug, total: 65 }],
     });
   });
+  it('preserves draft reads and blocks Wiki edits until read-only is lifted', async () => {
+    const suffix = randomUUID();
+    const author = await app.get(AuthenticationPresentationService).register({
+      email: suffix + '@dss.test',
+      username: suffix,
+      displayName: 'Wiki author',
+      password: 'research-fixture-123',
+    });
+    const moderator = await fixture.prisma.user.create({
+      data: {
+        email: 'mod-' + suffix + '@dss.test',
+        username: 'mod-' + suffix,
+        passwordHash: 'fixture',
+      },
+    });
+    const input = {
+      title: 'Original title',
+      summary: 'Draft',
+      proposedSlug: 'readonly-' + suffix,
+      documentJson: JSON.stringify(createEmptyEditorDocument('WIKI')),
+    };
+    const { pageId, version } = await app
+      .get(ResearchLabService)
+      .createDraft({ actorId: author.user.id, ...input });
+    const graphql = (query: string, variables: Record<string, unknown>) =>
+      request(app.getHttpServer())
+        .post('/api/graphql')
+        .set('Authorization', 'Bearer ' + author.tokens.accessToken)
+        .send({ query, variables })
+        .expect(200);
+    const save = () =>
+      graphql(
+        'mutation($input:ResearchSaveDraftInput!){saveResearchDraft(input:$input){pageId version}}',
+        {
+          input: {
+            ...input,
+            pageId,
+            expectedVersion: version,
+            title: 'Revised title',
+          },
+        },
+      );
+    const sanctions = app.get(ModerationSanctionsService);
+    const { sanctionId } = await sanctions.issueReadOnly(
+      { id: moderator.id, permissions: [Permission.ModerationReadOnlyIssue] },
+      {
+        subjectId: author.user.id,
+        reason: 'Wiki fixture',
+        context: null,
+        expiresAt: new Date(Date.now() + 86400000),
+      },
+    );
+    const denied = payload(await save());
+    expect(denied.errors[0].extensions.code).toBe('FORBIDDEN');
+    expect(denied.errors[0].message).toContain('read-only');
+    const read = payload(
+      await graphql(
+        'query($pageId:ID!){researchOwnDraft(pageId:$pageId){title version}}',
+        { pageId },
+      ),
+    );
+    expect(read.errors).toBeUndefined();
+    expect(read.data.researchOwnDraft).toEqual({ title: input.title, version });
+    await sanctions.revoke(
+      { id: moderator.id, permissions: [Permission.ModerationSanctionsRevoke] },
+      { sanctionId, reason: 'Lifted' },
+    );
+    const saved = payload(await save());
+    expect(saved.errors).toBeUndefined();
+    expect(saved.data.saveResearchDraft).toEqual({
+      pageId,
+      version: version + 1,
+    });
+  });
+
   it('resumes a private draft at the saved version and removes it from discovery after audience loss', async () => {
     const auth = app.get(AuthenticationPresentationService);
     const register = () => {
