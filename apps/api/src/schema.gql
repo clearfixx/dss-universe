@@ -855,6 +855,7 @@ type Mutation {
   deactivateAccount(input: DeactivateAccountInput!): LogoutResultModel!
   disableViewerTwoFactor(input: DisableTwoFactorInput!): LogoutResultModel!
   discardCommentDraft(draftId: ID!): Boolean!
+  discardResearchDraft(draftId: ID!, expectedVersion: Int!, pageId: ID!): ResearchDiscardReceipt!
   editComment(input: EditCommentInput!): Comment!
   followUser(userId: ID!): UserSocialGraphSummary!
   giveReputation(input: GiveReputationInput!): ReputationEntry!
@@ -909,6 +910,9 @@ type Mutation {
   selfPublishResearchDraft(input: ResearchSubmitInput!): ResearchRevisionReceipt!
   setNewsPin(input: SetNewsPinInput!): ManagedNewsPin!
   setReaction(input: SetReactionInput!): SetReactionPayload!
+  setResearchEditProtection(level: ResearchEditProtection!, pageId: ID!): ResearchEditPolicy!
+  setResearchPageAudience(groupKeys: [String!]! = [], pageId: ID!, visibility: ResearchPageAudience!): ResearchAudiencePolicy!
+  setResearchTrustedEditors(groupKeys: [String!]!, pageId: ID!): [String!]!
   setViewerAvatar(mediaId: ID!): Viewer!
   setViewerCover(mediaId: ID!): Viewer!
   startResearchDraft(pageId: ID!): ResearchDraftReceipt!
@@ -1352,10 +1356,15 @@ type Query {
   reactionSummary(interactionTargetId: ID!): ReactionSummary!
   reputationHistory(pagination: ReputationPageInput, userId: ID!): ReputationHistory!
   reputationPolicy: ReputationPolicy!
+  researchEditPolicy(pageId: ID!): ResearchEditPolicy!
+  researchOwnDraft(pageId: ID!): ResearchOwnDraft
+  researchOwnDrafts(limit: Int! = 50, offset: Int! = 0): [ResearchOwnDraftItem!]!
   researchPage(id: ID!): ResearchPublishedPage
   researchPageByRoute(language: String!, slug: String!): ResearchPublishedPage
   researchPageSeo(pageId: ID!): ResearchPublicIndexEntry
+  researchPendingRevision(pageId: ID!, revisionId: ID!): ResearchPendingRevision
   researchRelatedPages(limit: Int! = 10, pageId: ID!): [ResearchRelatedPage!]!
+  researchReviewQueue(limit: Int! = 50, offset: Int! = 0): [ResearchReviewItem!]!
   researchRevisionDiff(from: ID!, pageId: ID!, to: ID!): ResearchRevisionComparison
   researchRevisionHistory(limit: Int! = 20, offset: Int! = 0, pageId: ID!): [ResearchHistoryEntry!]!
   researchSitemap(after: ID, limit: Int! = 50): [ResearchPublicIndexEntry!]!
@@ -1491,10 +1500,21 @@ input RequestPasswordRecoveryInput {
   email: String!
 }
 
+type ResearchAudiencePolicy {
+  groupKeys: [String!]!
+  visibility: ResearchPageAudience!
+}
+
 input ResearchDecisionInput {
   pageId: ID!
   reason: String
   revisionId: ID!
+}
+
+type ResearchDiscardReceipt {
+  draftId: ID!
+  pageId: ID!
+  routeReleased: Boolean!
 }
 
 input ResearchDraftInput {
@@ -1510,12 +1530,25 @@ type ResearchDraftReceipt {
   version: Int!
 }
 
+type ResearchEditPolicy {
+  protectionLevel: ResearchEditProtection!
+  trustedEditGroupKeys: [String!]!
+}
+
+enum ResearchEditProtection {
+  GUARDIAN_ONLY
+  LOCKED
+  OPEN
+  TRUSTED
+}
+
 type ResearchHistoryEntry {
   authorId: ID!
   createdAt: DateTime!
   editSummary: String!
   id: ID!
   number: Int!
+  publicationDecision: String
   state: String!
 }
 
@@ -1523,6 +1556,41 @@ input ResearchLifecycleInput {
   expectedPublicationGeneration: Int!
   pageId: ID!
   reason: String
+}
+
+type ResearchOwnDraft {
+  basePublishedRevisionId: ID
+  documentJson: String!
+  id: ID!
+  pageId: ID!
+  proposedSlug: String!
+  summary: String!
+  title: String!
+  updatedAt: DateTime!
+  version: Int!
+}
+
+type ResearchOwnDraftItem {
+  id: ID!
+  pageId: ID!
+  updatedAt: DateTime!
+  version: Int!
+}
+
+enum ResearchPageAudience {
+  GROUPS
+  MEMBERS
+  PUBLIC
+}
+
+type ResearchPendingRevision {
+  documentJson: String!
+  editSummary: String!
+  id: ID!
+  number: Int!
+  pageId: ID!
+  summary: String!
+  title: String!
 }
 
 type ResearchPublicIndexEntry {
@@ -1551,6 +1619,13 @@ type ResearchRelatedPage {
   language: String!
   slug: String!
   title: String!
+}
+
+type ResearchReviewItem {
+  createdAt: DateTime!
+  id: ID!
+  number: Int!
+  pageId: ID!
 }
 
 type ResearchRevisionComparison {

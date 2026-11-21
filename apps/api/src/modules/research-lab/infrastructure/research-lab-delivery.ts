@@ -281,7 +281,7 @@ export class ResearchLabDelivery {
   ) {
     const scope = await this.scope(viewerId);
     if (!scope.facts.authenticated) return [];
-    return this.prisma.researchRevision.findMany({
+    const revisions = await this.prisma.researchRevision.findMany({
       where: {
         pageId,
         page: scope.where,
@@ -293,12 +293,22 @@ export class ResearchLabDelivery {
         authorId: true,
         createdAt: true,
         editSummary: true,
+        reviewDecisions: {
+          where: { action: { in: ['PUBLISHED', 'ROLLED_BACK'] } },
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+          take: 1,
+          select: { action: true },
+        },
         state: true,
       },
       orderBy: { number: 'desc' },
       skip: offset,
       take: limit,
     });
+    return revisions.map(({ reviewDecisions, ...entry }) => ({
+      ...entry,
+      publicationDecision: reviewDecisions[0]?.action ?? null,
+    }));
   }
 
   async compare(
