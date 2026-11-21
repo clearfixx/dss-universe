@@ -590,7 +590,20 @@ type ForumMember {
   avatarUrl: String
   displayName: String
   id: ID!
+
+  """Account creation time."""
+  joinedAt: DateTime!
+  stats: ForumMemberStats!
   username: String!
+}
+
+"""Public standing shown next to forum posts."""
+type ForumMemberStats {
+  level: Int!
+
+  """Visible posts in live topics across the forum."""
+  postCount: Int!
+  reputation: Int!
 }
 
 type ForumModeratorAssignment {
@@ -708,6 +721,15 @@ type ForumRankingSettings {
 input ForumRankingSettingsInput {
   hotGravitySeconds: Int!
   hotReplyWeight: Int!
+}
+
+"""
+Order of replies; the first post always opens page 1. BEST = net rating, ties by number.
+"""
+enum ForumReplySort {
+  BEST
+  NEWEST
+  OLDEST
 }
 
 type ForumSanctionReceipt {
@@ -1901,8 +1923,13 @@ type Query {
   forumPopularTags(limit: Int! = 12): [ForumPopularTag!]!
   forumPostRevisions(postId: ID!): [ForumPostRevision!]!
   forumPostVotes(limit: Int! = 50, page: Int! = 1, postId: ID!): ForumPostVotePage!
-  forumPosts(limit: Int! = 20, page: Int! = 1, topicId: ID!): ForumPostPage!
+  forumPosts(limit: Int! = 20, page: Int! = 1, sort: ForumReplySort! = OLDEST, topicId: ID!): ForumPostPage!
   forumRankingSettings: ForumRankingSettings!
+
+  """
+  Related topics the viewer can read: shared tags, then the same section.
+  """
+  forumSimilarTopics(limit: Int! = 3, topicId: ID!): [ForumTopic!]!
   forumTags(forumId: ID!): [ForumTag!]!
   forumTopic(topicId: ID!): ForumTopic!
   forumTopicSubscribed(topicId: ID!): Boolean!

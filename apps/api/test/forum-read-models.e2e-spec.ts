@@ -27,6 +27,9 @@ import { ForumStructureService } from '@api/modules/forum/infrastructure/prisma-
 import { ForumTopicsService } from '@api/modules/forum/infrastructure/prisma-forum-topics';
 import { ForumReadLoaders } from '@api/modules/forum/presentation/forum-read-models.resolver';
 import { ForumMemberCardsAdapter } from '../src/composition/content-reads/infrastructure/forum-member-cards.adapter';
+import { ForumMemberStatsAdapter } from '../src/composition/content-reads/infrastructure/forum-member-stats.adapter';
+import { PrismaLevelCurrentReader } from '@api/modules/levels/infrastructure/repositories/prisma-level-current.reader';
+import { PrismaReputationTotalReader } from '@api/modules/reputation/infrastructure/repositories/prisma-reputation-total.reader';
 import { createIsolatedApiSchemaFixture } from './helpers/migrated-api-schema.fixture';
 
 describe('Forum UI read models (e2e)', () => {
@@ -248,6 +251,7 @@ describe('Forum UI read models (e2e)', () => {
     expect(found).toHaveLength(2);
     expect(Object.keys(found[0]).sort()).toEqual([
       'avatarUrl',
+      'createdAt',
       'displayName',
       'id',
       'username',
@@ -266,6 +270,7 @@ describe('Forum UI read models (e2e)', () => {
               username: id,
               displayName: null,
               avatarUrl: null,
+              createdAt: new Date(0),
             })),
           );
         },
@@ -355,5 +360,201 @@ describe('Forum UI read models (e2e)', () => {
     const after = await activity();
     expect(after.lastTopic?.lastPostNumber).toBe(1);
     expect(after.lastTopic?.lastPostAt).toEqual(topic.createdAt);
+  });
+
+  /** New tests post repeatedly as one member; skip the 60 s cooldown. */
+  async function rested(userId: string) {
+    await fixture.prisma.forumPostingCooldown.deleteMany({ where: { userId } });
+  }
+
+  async function openTopic(
+    author: string,
+    input: Parameters<ForumTopicsService['createTopic']>[1],
+  ) {
+    await rested(author);
+    return topics.createTopic(author, input);
+  }
+
+  async function reply(author: string, topicId: string) {
+    await rested(author);
+    return topics.reply(author, {
+      topicId,
+      documentJson: 'reply',
+      replyToNumber: null,
+      quotedNumbers: [],
+    });
+  }
+
+  it('counts an author’s visible posts in live topics only', async () => {
+    const f = await forum();
+    const author = await user();
+    const other = await user();
+    const live = (
+      await openTopic(author, {
+        forumId: f.forumId,
+        kind: 'DISCUSSION',
+        title: 'Live',
+        documentJson: 'x',
+      })
+    ).topic;
+    const kept = await reply(author, live.id);
+    const hidden = await reply(author, live.id);
+    await reply(other, live.id);
+    await moderation.hidePost(f.moderator, hidden.id, 'Off-topic');
+    const trashed = (
+      await openTopic(author, {
+        forumId: f.forumId,
+        kind: 'DISCUSSION',
+        title: 'Trashed',
+        documentJson: 'x',
+      })
+    ).topic;
+    await moderation.trashTopic(f.moderator, trashed.id);
+
+    const counts = await reads.memberPostCounts([author, other, author]);
+    expect(kept.number).toBe(2);
+    expect(counts.get(author)).toBe(2);
+    expect(counts.get(other)).toBe(1);
+    expect(await reads.memberPostCounts([])).toEqual(new Map());
+  });
+
+  it('reads reputation totals and current levels in one batch', async () => {
+    const member = await user();
+    const [up1, up2, down] = [await user(), await user(), await user()];
+    const newcomer = await user();
+    await fixture.prisma.reputationEntry.createMany({
+      data: [
+        { actorId: up1, recipientId: member, value: 1, reason: 'Help' },
+        { actorId: up2, recipientId: member, value: 1, reason: 'Help' },
+        { actorId: down, recipientId: member, value: -1, reason: 'Rude' },
+      ],
+    });
+    const at = new Date('2026-01-01T00:00:00Z');
+    await fixture.prisma.levelTransition.createMany({
+      data: [1, 2, 3].map((toLevel) => ({
+        userId: member,
+        fromLevel: toLevel - 1,
+        toLevel,
+        direction: 'UP' as const,
+        balance: toLevel * 100,
+        sourceEventId: 'up-' + member,
+        sourceEventName: 'points',
+        occurredAt: at,
+        createdAt: new Date(at.getTime() + toLevel * 1000),
+      })),
+    });
+    await fixture.prisma.levelTransition.create({
+      data: {
+        userId: member,
+        fromLevel: 3,
+        toLevel: 2,
+        direction: 'DOWN',
+        balance: 250,
+        sourceEventId: 'down-' + member,
+        sourceEventName: 'points',
+        occurredAt: at,
+        createdAt: new Date(at.getTime() + 10_000),
+      },
+    });
+
+    const adapter = new ForumMemberStatsAdapter(
+      new PrismaReputationTotalReader(fixture.prisma),
+      new PrismaLevelCurrentReader(fixture.prisma),
+    );
+    const standings = await adapter.standings([member, newcomer]);
+    expect(standings.get(member)).toEqual({ reputation: 1, level: 2 });
+    expect(standings.get(newcomer)).toEqual({ reputation: 0, level: 0 });
+    expect(await adapter.standings([])).toEqual(new Map());
+  });
+
+  it('sorts replies while the first post keeps opening page 1', async () => {
+    const f = await forum();
+    const author = await user();
+    const { topic } = await openTopic(author, {
+      forumId: f.forumId,
+      kind: 'DISCUSSION',
+      title: 'Sorted',
+      documentJson: 'x',
+    });
+    const replier = await user();
+    const posts: Array<{ id: string }> = [];
+    for (let index = 0; index < 4; index++) {
+      posts.push(await reply(replier, topic.id));
+    }
+    // Net ratings: #2 → 1, #3 → 5, #4 → -1, #5 → 5 (tie broken by number).
+    const ratings: Array<[number, number]> = [
+      [1, 0],
+      [6, 1],
+      [0, 1],
+      [5, 0],
+    ];
+    for (const [index, [up, down]] of ratings.entries()) {
+      await fixture.prisma.forumPost.update({
+        where: { id: posts[index].id },
+        data: { ratingUp: up, ratingDown: down },
+      });
+    }
+    const numbers = async (
+      sort: 'OLDEST' | 'NEWEST' | 'BEST',
+      page: number,
+      limit: number,
+    ) => {
+      const result = await topics.posts(author, topic.id, page, limit, sort);
+      expect(result.total).toBe(5);
+      return result.items.map((post) => post.number);
+    };
+
+    expect(await numbers('OLDEST', 1, 20)).toEqual([1, 2, 3, 4, 5]);
+    expect(await numbers('NEWEST', 1, 20)).toEqual([1, 5, 4, 3, 2]);
+    expect(await numbers('BEST', 1, 20)).toEqual([1, 3, 5, 2, 4]);
+    expect(await numbers('NEWEST', 1, 2)).toEqual([1, 5]);
+    expect(await numbers('NEWEST', 2, 2)).toEqual([4, 3]);
+    expect(await numbers('NEWEST', 3, 2)).toEqual([2]);
+    expect(await numbers('BEST', 2, 2)).toEqual([5, 2]);
+  });
+
+  it('suggests similar topics by shared tags, then section, never trashed ones', async () => {
+    const f = await forum();
+    const other = await forum();
+    const author = await user();
+    const make = async (forumId: string, title: string) =>
+      (
+        await openTopic(author, {
+          forumId,
+          kind: 'DISCUSSION',
+          title,
+          documentJson: 'x',
+        })
+      ).topic;
+    const source = await make(f.forumId, 'Source');
+    const sameSection = await make(f.forumId, 'Same section');
+    const twoTags = await make(other.forumId, 'Two tags');
+    const oneTag = await make(other.forumId, 'One tag');
+    const unrelated = await make(other.forumId, 'Unrelated');
+    const trashed = await make(f.forumId, 'Trashed');
+    await moderation.trashTopic(f.moderator, trashed.id);
+
+    const tag = async (forumId: string, slug: string, topicIds: string[]) => {
+      const created = await fixture.prisma.forumTag.create({
+        data: { forumId, slug, label: slug },
+      });
+      await fixture.prisma.forumTopicTag.createMany({
+        data: topicIds.map((topicId) => ({ topicId, tagId: created.id })),
+      });
+    };
+    await tag(f.forumId, 'nextjs', [source.id]);
+    await tag(f.forumId, 'cache', [source.id, trashed.id]);
+    await tag(other.forumId, 'nextjs', [twoTags.id, oneTag.id]);
+    await tag(other.forumId, 'cache', [twoTags.id]);
+    await tag(other.forumId, 'rust', [unrelated.id]);
+
+    const viewer = await user();
+    const similar = await topics.similarTopics(viewer, source.id, 5);
+    expect(similar.map(({ id }) => id)).toEqual([
+      twoTags.id,
+      oneTag.id,
+      sameSection.id,
+    ]);
+    expect(await topics.similarTopics(viewer, source.id, 1)).toHaveLength(1);
   });
 });

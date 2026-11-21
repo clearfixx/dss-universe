@@ -107,7 +107,10 @@ describe('Owner evidence read boundaries', () => {
       ),
     ).toBe(4);
     expect(
-      await new GateReputationTotalAdapter({ totalFor }).totalFor('recipient'),
+      await new GateReputationTotalAdapter({
+        totalFor,
+        totalsFor: jest.fn(),
+      }).totalFor('recipient'),
     ).toBe(-6);
     expect(
       await new WallImageEligibilityAdapter({
@@ -132,9 +135,10 @@ describe('Owner evidence read boundaries', () => {
                 countByAuthor: failure,
               }).countByAuthor('subject')
             : owner === 'reputation'
-              ? new GateReputationTotalAdapter({ totalFor: failure }).totalFor(
-                  'subject',
-                )
+              ? new GateReputationTotalAdapter({
+                  totalFor: failure,
+                  totalsFor: jest.fn(),
+                }).totalFor('subject')
               : new WallImageEligibilityAdapter({
                   isAttachableImage: failure,
                 }).isAttachableImage('media', 'subject');

@@ -15,6 +15,10 @@
 export { LevelsModule } from './levels.module';
 export { LevelsRuntimeModule } from './levels-runtime.module';
 export {
+  LEVEL_CURRENT_READER,
+  type LevelCurrentReader,
+} from './contracts/level-current-reader.contract';
+export {
   LEVEL_EVENT_CONSUMER,
   type LevelEventConsumer,
 } from './contracts/event-consumer.contract';

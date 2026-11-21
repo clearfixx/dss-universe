@@ -64,7 +64,9 @@ import { ForumAccountEvidenceAdapter } from './infrastructure/forum-account-evid
 import { WallImageEligibilityAdapter } from './infrastructure/wall-image-eligibility.adapter';
 import { NewsMediaEvidenceAdapter } from './infrastructure/news-media-evidence.adapter';
 import { FORUM_POST_MEDIA } from '@api/modules/forum/infrastructure';
-import { FORUM_MEMBER_CARDS } from '@api/modules/forum';
+import { FORUM_MEMBER_CARDS, FORUM_MEMBER_STATS } from '@api/modules/forum';
+import { LevelsModule } from '@api/modules/levels';
+import { ForumMemberStatsAdapter } from './infrastructure/forum-member-stats.adapter';
 import { ForumMemberCardsAdapter } from './infrastructure/forum-member-cards.adapter';
 import { ForumPostMediaAdapter } from '../media-references/infrastructure/forum-post-media.adapter';
 import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapter';
@@ -78,6 +80,7 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
     AuthModule,
     InteractionsModule,
     ReputationModule,
+    LevelsModule,
     ModerationModule,
     NewsDiscussionFactsModule,
     ForumFactsModule,
@@ -104,12 +107,14 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
     { provide: FORUM_NEWS_FACTS, useClass: ForumNewsFactsAdapter },
     { provide: GATE_FORUM_POST_COUNT, useClass: GateForumPostCountAdapter },
     { provide: FORUM_MEMBER_CARDS, useClass: ForumMemberCardsAdapter },
+    { provide: FORUM_MEMBER_STATS, useClass: ForumMemberStatsAdapter },
     { provide: FORUM_POST_MEDIA, useClass: ForumPostMediaAdapter },
     { provide: NEWS_MEDIA_EVIDENCE, useClass: NewsMediaEvidenceAdapter },
     { provide: PROFILE_ACTIVITY_READER, useClass: ProfileActivityAdapter },
   ],
   exports: [
     FORUM_MEMBER_CARDS,
+    FORUM_MEMBER_STATS,
     FORUM_POST_MEDIA,
     NEWS_ATTACHMENT_READER,
     ACTIVITY_VIEWER_CONTEXT,
