@@ -60,6 +60,8 @@ import {
   type ForumPostView,
   type ForumTopicKind,
   type ForumStaffNoteView,
+  type ForumTopicFilter,
+  type ForumViewerCollection,
   type ForumTopicScope,
   type ForumTopicSort,
   type ForumTopicState,
@@ -379,9 +381,17 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     scope: ForumTopicScope = 'ACTIVE',
     topPeriod: ForumTopPeriod = 'WEEK',
     tagSlug: string | null = null,
+    filter: ForumTopicFilter = 'ALL',
   ): Promise<ForumPage<ForumTopicSummary>> {
     const viewer = await this.viewers.read(viewerId, new Date());
     const forum = await this.visibleForum(forumId, viewer);
+    if (filter === 'MINE' && !viewer.subjectId) {
+      throw new ForumCommandError(
+        'ACCESS_DENIED',
+        'Sign in to see your own topics.',
+      );
+    }
+    const filterWhere = this.filterWhere(filter, viewer.subjectId);
     if (
       scope === 'TRASHED' &&
       !(await this.isModerator(viewer, forum.categoryId))
@@ -401,6 +411,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
           : scope === 'ARCHIVED'
             ? 'ARCHIVED'
             : 'TRASHED',
+      ...filterWhere,
     };
     const since = sort === 'TOP' ? topPeriodStart(topPeriod, new Date()) : null;
     if (since) where.createdAt = { gte: since };
@@ -417,6 +428,8 @@ export class ForumTopicsService implements ForumInteractionDecisions {
             sort,
             skip,
             take,
+            filter,
+            viewer.subjectId,
           )
         : this.prisma.forumTopic.findMany({
             where,
@@ -445,6 +458,96 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       page: safePage,
       limit: take,
     };
+  }
+
+  /**
+   * The signed-in viewer's own or followed topics across every forum they can
+   * see right now; trashed and merged topics are excluded.
+   */
+  async viewerTopics(
+    viewerId: string,
+    collection: ForumViewerCollection,
+    page: number,
+    limit: number,
+  ): Promise<ForumPage<ForumTopicSummary>> {
+    const viewer = await this.authenticated(viewerId);
+    const { skip, take, safePage } = this.paging(page, limit);
+    const forumIds = await this.visibleForumIds(viewer);
+    const where: Prisma.ForumTopicWhereInput = {
+      forumId: { in: forumIds },
+      mergedIntoTopicId: null,
+      state: { in: ['OPEN', 'CLOSED', 'ARCHIVED'] },
+      ...(collection === 'AUTHORED'
+        ? { authorId: viewerId }
+        : { subscriptions: { some: { userId: viewerId } } }),
+    };
+    const [rows, total] = await Promise.all([
+      this.prisma.forumTopic.findMany({
+        where,
+        orderBy: [{ lastPostAt: 'desc' }, { id: 'desc' }],
+        skip,
+        take,
+      }),
+      this.prisma.forumTopic.count({ where }),
+    ]);
+    const ids = rows.map(({ id }) => id);
+    const reads = await this.readStates(viewer, ids);
+    const tags = await this.topicTags(ids);
+    return {
+      items: rows.map((row) =>
+        this.toSummary(row, reads.get(row.id) ?? 0, tags.get(row.id) ?? []),
+      ),
+      total,
+      page: safePage,
+      limit: take,
+    };
+  }
+
+  private filterWhere(
+    filter: ForumTopicFilter,
+    viewerId: string | null,
+  ): Prisma.ForumTopicWhereInput {
+    if (filter === 'MINE') return { authorId: viewerId ?? '' };
+    if (filter === 'NO_REPLIES') return { postCount: 1 };
+    if (filter === 'UNSOLVED')
+      return { kind: 'QUESTION', acceptedAnswerPostId: null };
+    return {};
+  }
+
+  /** Forums whose category the viewer can see (same rules as browsing). */
+  private async visibleForumIds(viewer: ForumViewerFacts): Promise<string[]> {
+    const forums = await this.prisma.forum.findMany({
+      select: {
+        id: true,
+        active: true,
+        parent: { select: { active: true } },
+        category: {
+          select: {
+            active: true,
+            visibility: true,
+            audience: { select: { subjectKey: true } },
+          },
+        },
+      },
+    });
+    return forums
+      .filter(
+        (forum) =>
+          (viewer.seesAllCategories ||
+            (forum.active &&
+              forum.category.active &&
+              (forum.parent?.active ?? true))) &&
+          canSeeCategory(
+            {
+              visibility: forum.category.visibility,
+              audienceKeys: forum.category.audience.map(
+                ({ subjectKey }) => subjectKey,
+              ),
+            },
+            viewer,
+          ),
+      )
+      .map(({ id }) => id);
   }
 
   async topic(
@@ -864,7 +967,17 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     sort: 'HOT' | 'TOP',
     skip: number,
     take: number,
+    filter: ForumTopicFilter = 'ALL',
+    viewerId: string | null = null,
   ): Promise<ForumTopic[]> {
+    const filterSql =
+      filter === 'MINE'
+        ? Prisma.sql`AND "authorId" = ${viewerId}`
+        : filter === 'NO_REPLIES'
+          ? Prisma.sql`AND "postCount" = 1`
+          : filter === 'UNSOLVED'
+            ? Prisma.sql`AND "kind"::text = 'QUESTION' AND "acceptedAnswerPostId" IS NULL`
+            : Prisma.empty;
     const settings = await this.prisma.forumRankingSettings.findUnique({
       where: { id: 'default' },
     });
@@ -889,6 +1002,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
           JOIN "forum_tags" g ON g."id" = tt."tagId"
           WHERE tt."topicId" = "forum_topics"."id" AND g."slug" = ${tagSlug}
         ))
+        ${filterSql}
       ORDER BY "pinned" DESC, ${order} DESC, "createdAt" DESC, "id" DESC
       LIMIT ${take} OFFSET ${skip}`;
     const rows = await this.prisma.forumTopic.findMany({
