@@ -833,6 +833,46 @@ export class ResearchLabService {
     return { ...metadata, documentJson: view.documentJson };
   }
 
+  async reviewHistory(
+    actorId: string,
+    pageId: string,
+    revisionId: string,
+    offset = 0,
+    limit = 50,
+  ) {
+    const facts = await this.requireAuthenticated(actorId);
+    return this.prisma.researchReviewDecision.findMany({
+      where: {
+        pageId,
+        revisionId,
+        page: {
+          state: { in: ['DRAFT', 'ACTIVE', 'ARCHIVED'] },
+          ...researchAudience(facts.groups, true),
+        },
+        revision: facts.guardian ? undefined : { authorId: actorId },
+        action: {
+          in: [
+            'SUBMITTED',
+            'CHANGES_REQUESTED',
+            'REJECTED',
+            'PUBLISHED',
+            'WITHDRAWN',
+          ],
+        },
+      },
+      select: {
+        id: true,
+        actorId: true,
+        action: true,
+        reason: true,
+        createdAt: true,
+      },
+      orderBy: [{ createdAt: 'asc' }, { action: 'asc' }, { id: 'asc' }],
+      skip: offset,
+      take: limit,
+    });
+  }
+
   async reviewQueue(actorId: string, offset = 0, limit = 50) {
     return this.prisma.researchRevision.findMany({
       where: await this.reviewScope(actorId),

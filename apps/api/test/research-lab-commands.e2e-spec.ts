@@ -629,6 +629,21 @@ describe('Research Lab commands (e2e)', () => {
       version: 1,
       title: 'Research title',
     });
+    const history = (viewer: string) =>
+      service.reviewHistory(viewer, created.pageId, submitted.revisionId);
+    const decisions = await history(author);
+    expect(decisions.map(({ action }) => action)).toEqual([
+      'SUBMITTED',
+      'CHANGES_REQUESTED',
+    ]);
+    expect(decisions[1]).toMatchObject({
+      actorId: guardian,
+      reason: 'Add sources',
+    });
+    expect(await history(guardian)).toEqual(decisions);
+    expect(await history(await user())).toEqual([]);
+    guardians.delete(guardian);
+    expect(await history(guardian)).toEqual([]);
     await expect(
       fixture.prisma.researchRevision.findUniqueOrThrow({
         where: { id: submitted.revisionId },
