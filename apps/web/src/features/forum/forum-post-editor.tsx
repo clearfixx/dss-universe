@@ -29,33 +29,6 @@ import { DssEditor } from "@/features/editor/dss-editor";
 
 import { editForumPost } from "./forum-actions";
 
-export const FORUM_REPLY_EDIT_WINDOW_MS = 10 * 60 * 1000;
-
-/** Mirrors the API rule so the button only shows when editing can succeed. */
-export function canEditForumPost(input: {
-  viewerId: string | null;
-  moderator: boolean;
-  topicState: string;
-  curatorId: string | null;
-  post: { number: number; authorId: string | null; createdAt: string };
-  now?: number;
-}): boolean {
-  if (!input.viewerId) return false;
-  if (input.moderator) return true;
-  if (input.post.number === 1) {
-    if (input.curatorId !== null) return input.curatorId === input.viewerId;
-    return (
-      input.post.authorId === input.viewerId && input.topicState === "OPEN"
-    );
-  }
-  return (
-    input.post.authorId === input.viewerId &&
-    input.topicState === "OPEN" &&
-    (input.now ?? Date.now()) - new Date(input.post.createdAt).getTime() <=
-      FORUM_REPLY_EDIT_WINDOW_MS
-  );
-}
-
 export function ForumPostEditor({
   post,
   topicTitle,

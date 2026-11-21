@@ -8,7 +8,7 @@ vi.mock("./forum-actions", () => ({ castForumPollBallot: vi.fn() }));
 vi.mock("@/features/editor/dss-editor", () => ({ DssEditor: () => null }));
 
 import { ForumPoll } from "./forum-poll";
-import { canEditForumPost } from "./forum-post-editor";
+import { canEditForumPost } from "./forum-format";
 
 const now = Date.parse("2026-11-21T12:00:00Z");
 const minutesAgo = (m: number) => new Date(now - m * 60_000).toISOString();

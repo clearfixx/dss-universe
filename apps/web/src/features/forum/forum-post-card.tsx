@@ -29,8 +29,8 @@ import Link from "next/link";
 import type { ForumPostFieldsFragment } from "@/gql/graphql";
 
 import { ForumDocument } from "./forum-document";
-import { forumMemberName } from "./forum-format";
-import { canEditForumPost, ForumPostEditor } from "./forum-post-editor";
+import { canEditForumPost, forumMemberName } from "./forum-format";
+import { ForumPostEditor } from "./forum-post-editor";
 import { ForumPostRating } from "./forum-post-rating";
 import { ForumPostStaff } from "./forum-post-staff";
 import { ForumPostActions } from "./forum-topic-controls";
