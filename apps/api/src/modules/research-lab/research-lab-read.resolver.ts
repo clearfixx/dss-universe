@@ -33,6 +33,7 @@ class ResearchHistoryEntry {
   @Field(() => ID) authorId!: string;
   @Field() createdAt!: Date;
   @Field() editSummary!: string;
+  @Field(() => String, { nullable: true }) publicationDecision!: string | null;
   @Field() state!: string;
 }
 @ObjectType()
