@@ -11,7 +11,9 @@ export default async function EditNewsPage({
   const { articleId } = await params;
   const article = await loadEditorialArticle(articleId).catch(() => null);
   return (
-    <DssApplicationShell>
+    <DssApplicationShell
+      pageTitle={article ? { pathname: `/newsroom/${encodeURIComponent(articleId)}`, title: article.title } : undefined}
+    >
       {article ? (
         <NewsEditorWorkspace article={article} />
       ) : (

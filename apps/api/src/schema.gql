@@ -1400,6 +1400,7 @@ type Mutation {
   updateLevelDefinition(input: UpdateLevelDefinitionInput!): LevelDefinition!
   updateModerationSanctionPolicy(input: ModerationSanctionPolicyInput!): ModerationSanctionPolicy!
   updateNewsSettings(input: UpdateNewsSettingsInput!): NewsSettings!
+  updatePlatformAppearance(activeShellVariant: ShellVariant!): PlatformAppearance!
   updateReputationPolicy(input: UpdateReputationPolicyInput!): ReputationPolicy!
   updateViewerNotificationPreferences(input: UpdateNotificationPreferencesInput!): NotificationPreferences!
   updateViewerPrivacy(input: UpdateUserPrivacyInput!): UserPrivacySettings!
@@ -1720,6 +1721,11 @@ type NumberedNewsPage {
   totalPages: Int!
 }
 
+type PlatformAppearance {
+  activeShellVariant: ShellVariant!
+  updatedAt: DateTime!
+}
+
 type Poll {
   createdAt: DateTime!
   id: ID!
@@ -1820,6 +1826,8 @@ type Query {
   achievementRules: [AchievementRule!]!
   achievements: [Achievement!]!
   achievementsAdmin: [Achievement!]!
+  adminCommandDeckAccess: Boolean!
+  adminPlatformAppearance: PlatformAppearance!
   apiInfo: ApiInfo!
   blockedUsers(pagination: UsersPageInput): UsersPageModel!
   commentDraft(interactionTargetId: ID!, parentId: ID): CommentDraft
@@ -1870,6 +1878,7 @@ type Query {
   newsNavigation(articleId: ID!): NewsNavigation!
   newsRatingVotes(articleId: ID!, page: Int! = 1, pageSize: Int! = 20): NewsRatingVotePage!
   newsSettings: NewsSettings!
+  platformAppearance: PlatformAppearance!
   pollForTarget(interactionTargetId: ID!): Poll
   pollOptionVoters(limit: Int! = 20, optionId: ID!, page: Int! = 1, pollId: ID!): PollVoterPage!
   presenceSummary: PresenceSummary!
@@ -2368,6 +2377,12 @@ enum SharedSearchSource {
   FORUM
   NEWS
   RESEARCH_LAB
+}
+
+enum ShellVariant {
+  HORIZONTAL_NAVIGATION
+  HYBRID
+  MODULE_LAUNCHER
 }
 
 type ShortNews {

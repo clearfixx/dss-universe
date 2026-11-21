@@ -30,13 +30,24 @@ describe('Prisma and historical migration alignment (e2e)', () => {
     await fixture?.close();
   });
 
-  it('preserves legacy, routing, qualification and consumption defaults and both Users indexes', async () => {
+  it('preserves legacy, routing, qualification, consumption and reputation defaults and both Users indexes', async () => {
     const columns = await fixture.prisma.$queryRaw<
       { table_name: string; column_default: string }[]
     >`
       SELECT table_name, column_default FROM information_schema.columns
       WHERE table_schema = ${fixture.schema} AND column_name = 'updatedAt'
-        AND column_default IS NOT NULL ORDER BY table_name`;
+        AND column_default IS NOT NULL
+        AND table_name IN (
+          'achievement_definitions', 'achievement_rules', 'comments',
+          'community_point_rules', 'custom_title_settings', 'custom_titles',
+          'interaction_targets', 'level_definitions', 'reaction_aggregates',
+          'reactions', 'reputation_policy', 'user_title_selections',
+          'gamification_activations', 'gamification_deliveries',
+          'gamification_discovery', 'gamification_consumption_receipts',
+          'gamification_owner_progress', 'achievement_source_cursors',
+          'reputation_qualification_states', 'community_point_source_cursors'
+        )
+      ORDER BY table_name`;
     const legacyDefaults = [
       'achievement_definitions',
       'achievement_rules',

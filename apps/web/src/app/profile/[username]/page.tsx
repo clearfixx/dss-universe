@@ -49,7 +49,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   }
 
   return (
-    <DssApplicationShell>
+    <DssApplicationShell pageTitle={{ pathname: `/profile/${encodeURIComponent(username)}`, title: data.profile.displayName?.trim() || data.profile.username }}>
       <ProfileView {...data} />
     </DssApplicationShell>
   );

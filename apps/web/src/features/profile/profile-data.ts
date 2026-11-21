@@ -21,7 +21,6 @@ import {
   MembersDirectoryDocument,
   ProfileGamificationDocument,
   ProfileSettingsDocument,
-  ProfileViewerDocument,
   ProfileWallDocument,
   PublicProfileDocument,
   UserActivityDocument,
@@ -29,6 +28,7 @@ import {
   type LeaderboardPeriod,
 } from "@/gql/graphql";
 import { getClient } from "@/lib/apollo/rsc-client";
+import { loadSessionViewer } from "@/features/auth/session-data";
 
 async function authorizationContext() {
   const token = (await cookies()).get("dss_access_token")?.value;
@@ -36,13 +36,11 @@ async function authorizationContext() {
   return { headers: { authorization: `Bearer ${token}` } };
 }
 
-async function optionalAuthorizationContext() {
-  const token = (await cookies()).get("dss_access_token")?.value;
-  return token ? { headers: { authorization: `Bearer ${token}` } } : {};
-}
-
 export async function loadPublicProfile(username: string) {
-  const context = await optionalAuthorizationContext();
+  // A cookie alone is not proof of identity. Invalid or revoked cookies
+  // must not make otherwise public profiles inaccessible to guests.
+  const viewer = await loadSessionViewer();
+  const context = viewer ? await authorizationContext() : {};
   const profileResult = await getClient().query({
     query: PublicProfileDocument,
     variables: { username },
@@ -52,16 +50,7 @@ export async function loadPublicProfile(username: string) {
   const profile = profileResult.data?.userByUsername;
   if (!profile) throw new Error("PROFILE_NOT_FOUND");
 
-  const authenticated = "headers" in context;
-  const viewerResult = authenticated
-    ? await getClient().query({
-        query: ProfileViewerDocument,
-        context,
-        fetchPolicy: "no-cache",
-      })
-    : null;
-
-  if (!authenticated) {
+  if (!viewer) {
     return {
       viewerId: "",
       profile,
@@ -71,39 +60,51 @@ export async function loadPublicProfile(username: string) {
     };
   }
 
-  const [wallResult, activityResult, gamificationResult] = await Promise.all([
-    getClient().query({
-      query: ProfileWallDocument,
-      variables: {
-        profileOwnerId: profile.id,
-        pagination: { page: 1, limit: 10 },
-      },
-      context,
-      fetchPolicy: "no-cache",
-    }),
-    getClient().query({
-      query: UserActivityDocument,
-      variables: {
-        userId: profile.id,
-        pagination: { page: 1, limit: 12 },
-      },
-      context,
-      fetchPolicy: "no-cache",
-    }),
-    getClient().query({
-      query: ProfileGamificationDocument,
-      variables: { userId: profile.id },
-      context,
-      fetchPolicy: "no-cache",
-    }),
-  ]);
+  // Isolate optional widget failures; authorization of each projection
+  // remains the responsibility of its API resolver.
+  const [wallResult, activityResult, gamificationResult] =
+    await Promise.allSettled([
+      getClient().query({
+        query: ProfileWallDocument,
+        variables: {
+          profileOwnerId: profile.id,
+          pagination: { page: 1, limit: 10 },
+        },
+        context,
+        fetchPolicy: "no-cache",
+      }),
+      getClient().query({
+        query: UserActivityDocument,
+        variables: {
+          userId: profile.id,
+          pagination: { page: 1, limit: 12 },
+        },
+        context,
+        fetchPolicy: "no-cache",
+      }),
+      getClient().query({
+        query: ProfileGamificationDocument,
+        variables: { userId: profile.id },
+        context,
+        fetchPolicy: "no-cache",
+      }),
+    ]);
 
   return {
-    viewerId: viewerResult?.data?.viewer.id ?? "",
+    viewerId: viewer.id,
     profile,
-    wall: wallResult.data?.profileWall,
-    activity: activityResult.data?.userActivity,
-    gamification: gamificationResult.data,
+    wall:
+      wallResult.status === "fulfilled"
+        ? wallResult.value.data?.profileWall
+        : undefined,
+    activity:
+      activityResult.status === "fulfilled"
+        ? activityResult.value.data?.userActivity
+        : undefined,
+    gamification:
+      gamificationResult.status === "fulfilled"
+        ? gamificationResult.value.data
+        : undefined,
   };
 }
 

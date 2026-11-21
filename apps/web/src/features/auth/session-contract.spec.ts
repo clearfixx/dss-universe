@@ -32,6 +32,11 @@ describe("session routing contract", () => {
     expect(safeReturnTo("https://attacker.example/phish")).toBe("/");
     expect(safeReturnTo("//attacker.example/phish")).toBe("/");
     expect(safeReturnTo("/login?returnTo=/command-deck")).toBe("/");
+    expect(safeReturnTo("/news\\evil")).toBe("/");
+    expect(safeReturnTo("/news\r\nLocation: https://evil.example")).toBe("/");
+    expect(safeReturnTo("/news\t")).toBe("/");
+    expect(safeReturnTo("/register")).toBe("/");
+    expect(safeReturnTo("/settings/profile?tab=security")).toBe("/settings/profile?tab=security");
   });
 
   it("recognizes fresh, expired and malformed access tokens", () => {

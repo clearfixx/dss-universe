@@ -92,7 +92,7 @@ export function ProfileSettingsView({ settings }: { settings: Settings }) {
           </p>
         </div>
         <Button asChild variant="outline">
-          <Link href={`/profile/${viewer.username}`}>Переглянути профіль</Link>
+          <Link href={`/profile/${encodeURIComponent(viewer.username)}`}>Переглянути профіль</Link>
         </Button>
       </header>
 
