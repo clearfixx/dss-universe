@@ -49,6 +49,16 @@ export {
   type RequestAccessReader,
 } from './contracts/request-access-reader.interface';
 
+export {
+  WRITE_RESTRICTION_READER,
+  type WriteRestrictionReader,
+} from './contracts/write-restriction-reader.interface';
+export {
+  PERMITTED_WHILE_READ_ONLY_KEY,
+  PermittedWhileReadOnly,
+} from './decorators/permitted-while-read-only.decorator';
+export { ReadOnlyEnforcementInterceptor } from './interceptors/read-only-enforcement.interceptor';
+
 export type { AuthenticatedUser } from './types/authenticated-user.type';
 export type { JwtPayload } from './types/jwt-payload.type';
 export type {

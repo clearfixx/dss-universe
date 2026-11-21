@@ -170,6 +170,17 @@ enum ModerationAnnotationKind {
   REMOVAL
 }
 
+enum ModerationSanctionKind {
+  WARNING
+  READ_ONLY
+}
+
+enum ModerationSanctionOrigin {
+  MANUAL
+  SCOPED
+  ESCALATION
+}
+
 enum ContentGateOperator {
   ALL
   ANY
@@ -369,6 +380,10 @@ model User {
   contentReportsReviewed  ContentReport[]              @relation("ContentReportReviewer")
   moderationAnnotations   ModerationAnnotation[]       @relation("ModerationAnnotationActor")
   annotationsRevoked      ModerationAnnotation[]       @relation("ModerationAnnotationRevoker")
+  sanctionsReceived       ModerationSanction[]         @relation("ModerationSanctionSubject")
+  sanctionsIssued         ModerationSanction[]         @relation("ModerationSanctionIssuer")
+  sanctionsRevoked        ModerationSanction[]         @relation("ModerationSanctionRevoker")
+  sanctionPolicyUpdates   ModerationSanctionPolicy[]
   contentGates            ContentGate[]
   newsArticles            NewsArticle[]                @relation("NewsAuthor")
   newsRevisions           NewsRevision[]               @relation("NewsRevisionEditor")
@@ -1336,6 +1351,50 @@ model ModerationAnnotation {
   @@index([commentId, createdAt, id])
   @@index([revokedAt, expiresAt])
   @@map("moderation_annotations")
+}
+
+model ModerationSanction {
+  id                   String                   @id @default(uuid())
+  subjectId            String
+  kind                 ModerationSanctionKind
+  origin               ModerationSanctionOrigin
+  issuerId             String?
+  reason               String
+  contextType          String?
+  contextId            String?
+  contextPath          String?
+  issuedAt             DateTime                 @default(now())
+  expiresAt            DateTime
+  revokedAt            DateTime?
+  revokedById          String?
+  revokeReason         String?
+  consumedAt           DateTime?
+  consumedBySanctionId String?
+
+  subject     User                 @relation("ModerationSanctionSubject", fields: [subjectId], references: [id], onDelete: Restrict)
+  issuer      User?                @relation("ModerationSanctionIssuer", fields: [issuerId], references: [id], onDelete: Restrict)
+  revokedBy   User?                @relation("ModerationSanctionRevoker", fields: [revokedById], references: [id], onDelete: Restrict)
+  consumedBy  ModerationSanction?  @relation("ModerationSanctionEscalation", fields: [consumedBySanctionId], references: [id], onDelete: Restrict)
+  consumedOne ModerationSanction[] @relation("ModerationSanctionEscalation")
+
+  @@index([subjectId, kind, expiresAt])
+  @@index([subjectId, issuedAt, id])
+  @@index([consumedBySanctionId])
+  @@map("moderation_sanctions")
+}
+
+model ModerationSanctionPolicy {
+  id                     String   @id @default("default")
+  warningLifetimeDays    Int      @default(30)
+  escalationWarningCount Int      @default(3)
+  escalationReadOnlyDays Int      @default(7)
+  readOnlyMaxDays        Int      @default(365)
+  updatedById            String?
+  updatedAt              DateTime @default(now()) @updatedAt
+
+  updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: Restrict)
+
+  @@map("moderation_sanction_policy")
 }
 
 model UserFollow {

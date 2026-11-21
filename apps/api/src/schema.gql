@@ -546,6 +546,19 @@ type InteractionTarget {
   updatedAt: String!
 }
 
+input IssueModerationReadOnlyInput {
+  context: ModerationSanctionContextInput
+  expiresAt: DateTime!
+  reason: String!
+  subjectId: ID!
+}
+
+input IssueModerationWarningInput {
+  context: ModerationSanctionContextInput
+  reason: String!
+  subjectId: ID!
+}
+
 type LeaderboardEntry {
   avatarUrl: String
   communityPoints: Int!
@@ -833,6 +846,53 @@ input ModerationPageInput {
   page: Int! = 1
 }
 
+type ModerationSanctionContext {
+  id: String!
+  path: String
+  type: String!
+}
+
+input ModerationSanctionContextInput {
+  id: String!
+  path: String
+  type: String!
+}
+
+enum ModerationSanctionKind {
+  READ_ONLY
+  WARNING
+}
+
+enum ModerationSanctionOrigin {
+  ESCALATION
+  MANUAL
+  SCOPED
+}
+
+type ModerationSanctionPolicy {
+  escalationReadOnlyDays: Int!
+  escalationWarningCount: Int!
+  readOnlyMaxDays: Int!
+  warningLifetimeDays: Int!
+}
+
+input ModerationSanctionPolicyInput {
+  escalationReadOnlyDays: Int!
+  escalationWarningCount: Int!
+  readOnlyMaxDays: Int!
+  warningLifetimeDays: Int!
+}
+
+type ModerationSanctionReceipt {
+  escalatedSanctionId: ID
+  sanctionId: ID!
+}
+
+type ModerationSanctionStatus {
+  activeWarnings: Int!
+  readOnlyUntil: DateTime
+}
+
 type Mutation {
   abortMediaUpload(id: String!): MediaUploadSession!
   approveNews(input: NewsDecisionInput!): NewsEditorialTransition!
@@ -861,6 +921,8 @@ type Mutation {
   giveReputation(input: GiveReputationInput!): ReputationEntry!
   grantCustomTitle(input: GrantCustomTitleInput!): UserTitleGrant!
   initiateMediaUpload(input: InitiateMediaUploadInput!): MediaUploadSession!
+  issueModerationReadOnly(input: IssueModerationReadOnlyInput!): ModerationSanctionReceipt!
+  issueModerationWarning(input: IssueModerationWarningInput!): ModerationSanctionReceipt!
   login(input: LoginInput!): AuthPayloadModel!
   logout: LogoutResultModel!
   markActivityFeedVisited: ActivityFeedVisit!
@@ -894,6 +956,7 @@ type Mutation {
   revokeAchievementAward(input: RevokeAchievementAwardInput!): AchievementAward!
   revokeCustomTitle(input: RevokeCustomTitleInput!): UserTitleGrant!
   revokeModerationAnnotation(annotationId: ID!, reason: String!): ModerationAnnotation!
+  revokeModerationSanction(input: RevokeModerationSanctionInput!): StaffSanction!
   revokeOtherViewerSessions: RevokeSessionsResultModel!
   revokeViewerSession(sessionId: ID!): LogoutResultModel!
   rollbackAchievementSource(input: RollbackAchievementSourceInput!): [AchievementAward!]!
@@ -925,6 +988,7 @@ type Mutation {
   updateCustomTitle(input: UpdateCustomTitleInput!): CustomTitle!
   updateCustomTitleSettings(input: UpdateCustomTitleSettingsInput!): CustomTitleSettings!
   updateLevelDefinition(input: UpdateLevelDefinitionInput!): LevelDefinition!
+  updateModerationSanctionPolicy(input: ModerationSanctionPolicyInput!): ModerationSanctionPolicy!
   updateNewsSettings(input: UpdateNewsSettingsInput!): NewsSettings!
   updateReputationPolicy(input: UpdateReputationPolicyInput!): ReputationPolicy!
   updateViewerNotificationPreferences(input: UpdateNotificationPreferencesInput!): NotificationPreferences!
@@ -1342,6 +1406,9 @@ type Query {
   mediaUploadSession(id: String!): MediaUploadSession!
   members(input: MembersDirectoryInput): MembersDirectoryPage!
   moderationAnnotations(commentId: ID, interactionTargetId: ID!): [ModerationAnnotation!]!
+  moderationSanctionJournal(limit: Int! = 20, page: Int! = 1, subjectId: ID!): StaffSanctionJournal!
+  moderationSanctionPolicy: ModerationSanctionPolicy!
+  moderationSanctionStatus(subjectId: ID!): ModerationSanctionStatus!
   news(input: NewsBrowseInput): NumberedNewsPage!
   newsComments(articleId: ID!, page: Int! = 1, pageSize: Int): NewsCommentsPage!
   newsEditorialArticle(articleId: ID!): NewsEditorialArticle!
@@ -1385,6 +1452,8 @@ type Query {
   viewerNotificationPreferences: NotificationPreferences!
   viewerPrivacySettings: UserPrivacySettings!
   viewerProfileCompletion: ProfileCompletion!
+  viewerSanctionJournal(limit: Int! = 20, page: Int! = 1): ViewerSanctionJournal!
+  viewerSanctionStatus: ModerationSanctionStatus!
   viewerSessions: [AuthSession!]!
   viewerTwoFactorStatus: TwoFactorStatusModel!
 }
@@ -1703,6 +1772,11 @@ input RevokeCustomTitleInput {
   reason: String!
 }
 
+input RevokeModerationSanctionInput {
+  reason: String!
+  sanctionId: ID!
+}
+
 type RevokeSessionsResultModel {
   revokedCount: Int!
   success: Boolean!
@@ -1851,6 +1925,31 @@ type ShortNews {
   tags: [NewsTagSummary!]!
   title: String!
   visibility: NewsVisibility!
+}
+
+type StaffSanction {
+  active: Boolean!
+  consumedAt: DateTime
+  consumedBySanctionId: ID
+  context: ModerationSanctionContext
+  expiresAt: DateTime!
+  id: ID!
+  issuedAt: DateTime!
+  issuerId: ID
+  kind: ModerationSanctionKind!
+  origin: ModerationSanctionOrigin!
+  reason: String!
+  revokeReason: String
+  revokedAt: DateTime
+  revokedById: ID
+  subjectId: ID!
+}
+
+type StaffSanctionJournal {
+  items: [StaffSanction!]!
+  limit: Int!
+  page: Int!
+  total: Int!
 }
 
 type TwoFactorConfirmationModel {
@@ -2060,6 +2159,27 @@ type Viewer {
   updatedAt: String!
   username: String!
   website: String
+}
+
+type ViewerSanction {
+  active: Boolean!
+  consumedAt: DateTime
+  context: ModerationSanctionContext
+  expiresAt: DateTime!
+  id: ID!
+  issuedAt: DateTime!
+  kind: ModerationSanctionKind!
+  origin: ModerationSanctionOrigin!
+  reason: String!
+  revokeReason: String
+  revokedAt: DateTime
+}
+
+type ViewerSanctionJournal {
+  items: [ViewerSanction!]!
+  limit: Int!
+  page: Int!
+  total: Int!
 }
 
 input ViewerSocialLinkInput {

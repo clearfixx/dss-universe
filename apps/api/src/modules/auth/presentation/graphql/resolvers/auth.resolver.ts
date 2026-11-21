@@ -20,7 +20,12 @@
 import { UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 
-import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
+import {
+  AuthUser,
+  JwtAuthGuard,
+  PermittedWhileReadOnly,
+  type AuthenticatedUser,
+} from '@api/core/auth';
 
 import { AuthService } from '../../../application/services/auth.service';
 import { mapAuthFailure } from '../../mappers/map-auth-failure';
@@ -35,12 +40,14 @@ import { RevokeSessionsResultModel } from '../models/revoke-sessions-result.mode
 export class AuthResolver {
   constructor(private readonly authService: AuthService) {}
 
+  @PermittedWhileReadOnly()
   @Mutation(() => LogoutResultModel)
   @UseGuards(JwtAuthGuard)
   logout(@AuthUser() user: AuthenticatedUser): Promise<{ success: boolean }> {
     return this.authService.logout(user.id, user.sessionId);
   }
 
+  @PermittedWhileReadOnly()
   @Mutation(() => LogoutResultModel)
   @UseGuards(JwtAuthGuard)
   async deactivateAccount(
@@ -54,6 +61,7 @@ export class AuthResolver {
     }
   }
 
+  @PermittedWhileReadOnly()
   @Mutation(() => LogoutResultModel)
   @UseGuards(JwtAuthGuard)
   async changeViewerEmail(
@@ -71,6 +79,7 @@ export class AuthResolver {
     }
   }
 
+  @PermittedWhileReadOnly()
   @Mutation(() => LogoutResultModel)
   @UseGuards(JwtAuthGuard)
   async changeViewerPassword(
@@ -103,6 +112,7 @@ export class AuthResolver {
     }));
   }
 
+  @PermittedWhileReadOnly()
   @Mutation(() => LogoutResultModel)
   @UseGuards(JwtAuthGuard)
   revokeViewerSession(
@@ -112,6 +122,7 @@ export class AuthResolver {
     return this.authService.revokeSession(user.id, sessionId);
   }
 
+  @PermittedWhileReadOnly()
   @Mutation(() => RevokeSessionsResultModel)
   @UseGuards(JwtAuthGuard)
   revokeOtherViewerSessions(

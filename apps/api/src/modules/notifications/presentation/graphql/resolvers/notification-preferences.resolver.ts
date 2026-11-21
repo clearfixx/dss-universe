@@ -15,7 +15,12 @@
 import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 
-import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
+import {
+  AuthUser,
+  JwtAuthGuard,
+  PermittedWhileReadOnly,
+  type AuthenticatedUser,
+} from '@api/core/auth';
 
 import { NotificationPreferencesService } from '../../../application/services/notification-preferences.service';
 import type { NotificationPreferences } from '../../../domain/types/notification-preferences.type';
@@ -34,6 +39,7 @@ export class NotificationPreferencesResolver {
     return this.preferences.get(user.id);
   }
 
+  @PermittedWhileReadOnly()
   @Mutation(() => NotificationPreferencesModel)
   @UseGuards(JwtAuthGuard)
   updateViewerNotificationPreferences(

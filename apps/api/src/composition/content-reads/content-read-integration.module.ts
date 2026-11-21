@@ -35,14 +35,17 @@ import { ActivityViewerContextAdapter } from './infrastructure/activity-viewer-c
 import { AuthModule } from '@api/modules/auth';
 import { InteractionsModule } from '@api/modules/interactions';
 import { ReputationModule } from '@api/modules/reputation';
+import { ModerationModule } from '@api/modules/moderation';
 import {
   GATE_ACCOUNT_EVIDENCE,
   GATE_COMMENT_COUNT,
   GATE_REPUTATION_TOTAL,
+  GATE_VIEWER_RESTRICTION,
 } from '@api/modules/content-access';
 import { GateAccountEvidenceAdapter } from './infrastructure/gate-account-evidence.adapter';
 import { GateCommentCountAdapter } from './infrastructure/gate-comment-count.adapter';
 import { GateReputationTotalAdapter } from './infrastructure/gate-reputation-total.adapter';
+import { GateViewerRestrictionAdapter } from './infrastructure/gate-viewer-restriction.adapter';
 import { WallImageEligibilityAdapter } from './infrastructure/wall-image-eligibility.adapter';
 import { NewsMediaEvidenceAdapter } from './infrastructure/news-media-evidence.adapter';
 import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapter';
@@ -56,6 +59,7 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
     AuthModule,
     InteractionsModule,
     ReputationModule,
+    ModerationModule,
   ],
   providers: [
     { provide: NEWS_ATTACHMENT_READER, useClass: NewsAttachmentAdapter },
@@ -66,6 +70,10 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
     { provide: GATE_ACCOUNT_EVIDENCE, useClass: GateAccountEvidenceAdapter },
     { provide: GATE_COMMENT_COUNT, useClass: GateCommentCountAdapter },
     { provide: GATE_REPUTATION_TOTAL, useClass: GateReputationTotalAdapter },
+    {
+      provide: GATE_VIEWER_RESTRICTION,
+      useClass: GateViewerRestrictionAdapter,
+    },
     { provide: WALL_IMAGE_ELIGIBILITY, useClass: WallImageEligibilityAdapter },
     { provide: NEWS_MEDIA_EVIDENCE, useClass: NewsMediaEvidenceAdapter },
     { provide: PROFILE_ACTIVITY_READER, useClass: ProfileActivityAdapter },
@@ -78,6 +86,7 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
     GATE_ACCOUNT_EVIDENCE,
     GATE_COMMENT_COUNT,
     GATE_REPUTATION_TOTAL,
+    GATE_VIEWER_RESTRICTION,
     WALL_IMAGE_ELIGIBILITY,
   ],
 })
