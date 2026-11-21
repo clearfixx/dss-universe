@@ -19,6 +19,7 @@
  */
 import {
   CheckCircle2,
+  Clock3,
   EyeOff,
   Paperclip,
   ShieldCheck,
@@ -99,34 +100,54 @@ export function ForumPostCard({
     post.author?.id === topicAuthorId ? "Автор теми" : null,
     post.author?.id === curatorId ? "Куратор теми" : null,
   ].filter(Boolean) as string[];
+  const rating = (
+    <ForumPostRating
+      postId={post.id}
+      ratingUp={post.ratingUp}
+      ratingDown={post.ratingDown}
+      viewerVote={post.viewerVote ?? null}
+      canVote={viewerId !== null && !own}
+      disabledReason={
+        viewerId === null
+          ? "Увійдіть, щоб голосувати"
+          : own
+            ? "Свої дописи оцінювати не можна"
+            : undefined
+      }
+      path={path}
+    />
+  );
 
   return (
     <article
       id={`post-${post.number}`}
       aria-label={`Допис #${post.number}, ${name}`}
-      className={`grid scroll-mt-24 gap-0 overflow-hidden rounded-2xl border bg-[#0f1328] sm:grid-cols-[13rem_minmax(0,1fr)] ${
+      className={`grid scroll-mt-24 overflow-hidden rounded-xl border sm:grid-cols-[3.5rem_12.5rem_minmax(0,1fr)] ${
         accepted
-          ? "border-emerald-500/60 shadow-[0_0_0_1px_rgba(16,185,129,.25)]"
-          : "border-white/10"
+          ? "border-emerald-500/60 bg-emerald-950/25 shadow-[0_0_0_1px_rgba(16,185,129,.2)]"
+          : "border-[color:var(--border)] bg-card"
       }`}
     >
-      <aside className="flex items-center gap-3 border-b border-white/10 bg-white/[0.02] p-4 sm:flex-col sm:items-start sm:border-b-0 sm:border-r">
+      <div className="hidden justify-center pt-3 sm:flex">
+        {visible ? rating : null}
+      </div>
+      <aside className="flex items-start gap-3 border-b border-[color:var(--border)] p-4 sm:border-b-0 sm:border-r">
         {post.author?.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={post.author.avatarUrl}
             alt=""
-            className="size-16 rounded-full object-cover"
+            className="size-14 shrink-0 rounded-full object-cover"
           />
         ) : (
           <span
             aria-hidden="true"
-            className="flex size-16 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-700 text-lg font-bold"
+            className="flex size-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-700 text-base font-bold"
           >
             <Initials name={name} />
           </span>
         )}
-        <div className="min-w-0 space-y-1.5">
+        <div className="min-w-0 space-y-1.5 pt-1">
           {post.author ? (
             <Link
               href={`/profile/${post.author.username}`}
@@ -155,13 +176,14 @@ export function ForumPostCard({
         </div>
       </aside>
 
-      <div className="flex min-w-0 gap-4 p-4 sm:p-5">
+      <div className="flex min-w-0 gap-4 p-4">
         <div className="min-w-0 flex-1 space-y-4">
-          <header className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+          <header className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-slate-400">
+            <Clock3 className="size-3.5" aria-hidden="true" />
             <time dateTime={String(post.createdAt)}>
               {dateFormatter.format(new Date(String(post.createdAt)))}
             </time>
-            {post.editedAt ? <span>(змінено)</span> : null}
+            {post.editedAt ? <span>(відредаговано)</span> : null}
             {accepted ? (
               <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 px-2 py-0.5 font-medium text-emerald-300">
                 <CheckCircle2 className="size-3.5" aria-hidden="true" />
@@ -176,12 +198,21 @@ export function ForumPostCard({
                 у відповідь на #{post.replyToNumber}
               </a>
             ) : null}
-            <a
-              href={`#post-${post.number}`}
-              className="ml-auto font-medium text-slate-300 hover:text-white"
-            >
-              #{post.number}
-            </a>
+            <span className="ml-auto flex flex-wrap items-center gap-1">
+              <ForumPostStaff
+                topicId={topicId}
+                post={post}
+                abilities={abilities}
+                isAccepted={accepted}
+                path={path}
+              />
+              <a
+                href={`#post-${post.number}`}
+                className="px-1 font-medium text-slate-300 hover:text-white"
+              >
+                #{post.number}
+              </a>
+            </span>
           </header>
 
           {visible && post.documentJson ? (
@@ -298,14 +329,6 @@ export function ForumPostCard({
             </ul>
           ) : null}
 
-          <ForumPostStaff
-            topicId={topicId}
-            post={post}
-            abilities={abilities}
-            isAccepted={accepted}
-            path={path}
-          />
-
           {visible ? (
             <ForumPostActions
               number={post.number}
@@ -315,23 +338,7 @@ export function ForumPostCard({
           ) : null}
         </div>
 
-        {visible ? (
-          <ForumPostRating
-            postId={post.id}
-            ratingUp={post.ratingUp}
-            ratingDown={post.ratingDown}
-            viewerVote={post.viewerVote ?? null}
-            canVote={viewerId !== null && !own}
-            disabledReason={
-              viewerId === null
-                ? "Увійдіть, щоб голосувати"
-                : own
-                  ? "Свої дописи оцінювати не можна"
-                  : undefined
-            }
-            path={path}
-          />
-        ) : null}
+        {visible ? <div className="sm:hidden">{rating}</div> : null}
       </div>
     </article>
   );

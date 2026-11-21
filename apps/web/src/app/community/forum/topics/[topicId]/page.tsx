@@ -135,7 +135,7 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
               )}
             </span>
             <div className="min-w-0 flex-1 space-y-2">
-              <h1 className="flex flex-wrap items-center gap-2 text-2xl font-bold leading-tight sm:text-3xl">
+              <h1 className="flex flex-wrap items-center gap-2 text-2xl font-bold leading-tight">
                 {topic.pinned ? (
                   <Pin
                     className="size-5 text-amber-300"

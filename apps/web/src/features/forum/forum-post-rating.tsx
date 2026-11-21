@@ -86,7 +86,7 @@ export function ForumPostRating({
     "flex size-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent";
 
   return (
-    <div className="flex w-12 flex-col items-center gap-1 rounded-xl border border-white/10 bg-white/[0.03] py-1.5">
+    <div className="flex w-12 flex-col items-center gap-0.5 py-1">
       <button
         type="button"
         className={`${arrow} ${vote === 1 ? "!text-violet-300 !opacity-100" : ""}`}

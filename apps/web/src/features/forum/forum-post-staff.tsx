@@ -56,19 +56,20 @@ function Chip({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex min-h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs transition ${
+      title={label}
+      className={`inline-flex size-7 items-center justify-center rounded-md transition ${
         danger
-          ? "border-rose-500/30 text-rose-200 hover:bg-rose-500/10"
-          : "border-white/10 text-slate-300 hover:border-violet-400/40 hover:text-white"
+          ? "text-rose-300 hover:bg-rose-500/10"
+          : "text-slate-300 hover:bg-white/5 hover:text-white"
       }`}
     >
       {icon}
-      {label}
+      <span className="sr-only">{label}</span>
     </button>
   );
 }
 
-const icon = "size-3.5";
+const icon = "size-4";
 
 export function ForumPostStaff({
   topicId,
@@ -103,12 +104,10 @@ export function ForumPostStaff({
 
   return (
     <div
-      className="flex flex-wrap items-center gap-2 border-t border-white/5 pt-3"
+      role="toolbar"
+      className="flex flex-wrap items-center gap-0.5"
       aria-label={`Дії модератора для допису #${post.number}`}
     >
-      {abilities.moderate ? (
-        <span className="text-xs font-medium text-violet-300">Модерація:</span>
-      ) : null}
 
       {canAccept ? (
         <ForumActionDialog
