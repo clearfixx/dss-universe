@@ -186,31 +186,16 @@ export default async function ForumSectionRoute({
   const activity = "activity" in forum ? forum.activity : null;
 
   return (
-    <DssApplicationShell pageTitle={{ pathname: path, title: forum.title }}>
+    <DssApplicationShell pageTitle={{ pathname: path, title: forum.title }}
+      breadcrumbs={[
+        { href: "/community", label: "Спільнота" },
+        { label: "Форум" },
+        { label: category.title },
+        ...(parent ? [{ href: `/community/forum/${parent.id}`, label: parent.title }] : []),
+        { label: forum.title },
+      ]}
+    >
       <div className="mx-auto max-w-7xl space-y-5">
-        <nav
-          aria-label="Хлібні крихти"
-          className="flex flex-wrap items-center gap-2 text-sm text-slate-400"
-        >
-          <Link href="/community" className="hover:text-white">
-            Спільнота
-          </Link>
-          <span aria-hidden="true">›</span>
-          <span>{category.title}</span>
-          {parent ? (
-            <>
-              <span aria-hidden="true">›</span>
-              <Link
-                href={`/community/forum/${parent.id}`}
-                className="hover:text-white"
-              >
-                {parent.title}
-              </Link>
-            </>
-          ) : null}
-          <span aria-hidden="true">›</span>
-          <span className="text-slate-200">{forum.title}</span>
-        </nav>
 
         <header className="flex flex-wrap items-center gap-4">
           <span className="flex size-14 items-center justify-center rounded-2xl bg-violet-500/20 text-violet-200">

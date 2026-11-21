@@ -105,7 +105,19 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
     target === 1 ? path : `${path}?page=${target}`;
 
   return (
-    <DssApplicationShell pageTitle={{ pathname: path, title: topic.title }}>
+    <DssApplicationShell pageTitle={{ pathname: path, title: topic.title }}
+      breadcrumbs={[
+        { href: "/community", label: "Спільнота" },
+        { label: "Форум" },
+        ...(forum
+          ? [
+              { label: forum.category },
+              { href: `/community/forum/${forum.id}`, label: forum.title },
+            ]
+          : []),
+        { label: topic.title },
+      ]}
+    >
       <ForumTopicVisit
         topicId={topic.id}
         readUpTo={lastNumber}
@@ -113,29 +125,6 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
       />
       <div className="mx-auto grid max-w-7xl gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="min-w-0 space-y-5">
-          <nav
-            aria-label="Хлібні крихти"
-            className="flex flex-wrap items-center gap-2 text-sm text-slate-400"
-          >
-            <Link href="/community" className="hover:text-white">
-              Спільнота
-            </Link>
-            <span aria-hidden="true">›</span>
-            <span>Форум</span>
-            {forum ? (
-              <>
-                <span aria-hidden="true">›</span>
-                <span>{forum.category}</span>
-                <span aria-hidden="true">›</span>
-                <Link
-                  href={`/community/forum/${forum.id}`}
-                  className="text-slate-200 hover:text-white"
-                >
-                  {forum.title}
-                </Link>
-              </>
-            ) : null}
-          </nav>
 
           <header className="flex flex-wrap items-start gap-4">
             <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-violet-500/20 text-violet-200">

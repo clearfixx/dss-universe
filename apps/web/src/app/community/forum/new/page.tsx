@@ -16,7 +16,6 @@
  */
 import { CheckCircle2, Lock, PenLine } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { DssApplicationShell } from "@/components/shell/session-application-shell";
@@ -74,21 +73,15 @@ export default async function NewForumTopicRoute({ searchParams }: Props) {
   const readOnlyUntil = sanctions?.readOnlyUntil;
 
   return (
-    <DssApplicationShell pageTitle={{ pathname: path, title: "Нова тема" }}>
+    <DssApplicationShell pageTitle={{ pathname: path, title: "Нова тема" }}
+      breadcrumbs={[
+        { href: "/community", label: "Спільнота" },
+        { label: "Форум" },
+        { label: "Створення теми" },
+      ]}
+    >
       <div className="mx-auto grid max-w-7xl gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="min-w-0 space-y-5">
-          <nav
-            aria-label="Хлібні крихти"
-            className="flex flex-wrap items-center gap-2 text-sm text-slate-400"
-          >
-            <Link href="/community" className="hover:text-white">
-              Спільнота
-            </Link>
-            <span aria-hidden="true">›</span>
-            <span>Форум</span>
-            <span aria-hidden="true">›</span>
-            <span className="text-slate-200">Створення теми</span>
-          </nav>
           <header className="flex items-center gap-4">
             <span className="flex size-14 items-center justify-center rounded-2xl bg-violet-500/20 text-violet-200">
               <PenLine className="size-7" aria-hidden="true" />
