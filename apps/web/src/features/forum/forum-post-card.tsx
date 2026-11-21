@@ -30,6 +30,7 @@ import type { ForumPostFieldsFragment } from "@/gql/graphql";
 
 import { ForumDocument } from "./forum-document";
 import { forumMemberName } from "./forum-format";
+import { canEditForumPost, ForumPostEditor } from "./forum-post-editor";
 import { ForumPostRating } from "./forum-post-rating";
 import { ForumPostStaff } from "./forum-post-staff";
 import { ForumPostActions } from "./forum-topic-controls";
@@ -72,7 +73,11 @@ export function ForumPostCard({
   path,
   topicId,
   abilities,
+  topicState,
+  topicTitle,
 }: {
+  topicState: string;
+  topicTitle: string;
   topicId: string;
   abilities: Readonly<{
     moderate: boolean;
@@ -195,7 +200,27 @@ export function ForumPostCard({
                   ))}
                 </p>
               ) : null}
-              <ForumDocument documentJson={post.documentJson} />
+              {canEditForumPost({
+                viewerId,
+                moderator: abilities.moderate,
+                topicState,
+                curatorId,
+                post: {
+                  number: post.number,
+                  authorId: post.author?.id ?? null,
+                  createdAt: String(post.createdAt),
+                },
+              }) ? (
+                <ForumPostEditor
+                  post={{ ...post, documentJson: post.documentJson }}
+                  topicTitle={topicTitle}
+                  path={path}
+                >
+                  <ForumDocument documentJson={post.documentJson} />
+                </ForumPostEditor>
+              ) : (
+                <ForumDocument documentJson={post.documentJson} />
+              )}
             </>
           ) : (
             <div

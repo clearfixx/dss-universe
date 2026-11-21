@@ -39,6 +39,7 @@ import {
   loadForumTopicViewerState,
 } from "@/features/forum/forum-data";
 import { forumMemberName } from "@/features/forum/forum-format";
+import { ForumPoll } from "@/features/forum/forum-poll";
 import { ForumPostCard } from "@/features/forum/forum-post-card";
 import { ForumReplyComposer } from "@/features/forum/forum-reply-composer";
 import { ForumTopicModeration } from "@/features/forum/forum-topic-moderation";
@@ -248,6 +249,10 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
             </div>
           ) : null}
 
+          {poll ? (
+            <ForumPoll poll={poll} signedIn={viewer !== null} path={path} />
+          ) : null}
+
           <div className="space-y-4">
             {posts.items.map((post) => (
               <ForumPostCard
@@ -257,6 +262,8 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
                 curatorId={topic.curatorId ?? null}
                 topicId={topic.id}
                 abilities={abilities}
+                topicState={topic.state}
+                topicTitle={topic.title}
                 accepted={post.id === topic.acceptedAnswerPostId}
                 viewerId={viewer?.id ?? null}
                 canReply={canWrite}
@@ -354,42 +361,6 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
               <dd>{topic.viewCount}</dd>
             </dl>
           </section>
-
-          {poll ? (
-            <section className="rounded-2xl border border-white/10 bg-[#0f1328] p-5">
-              <h2 className="font-semibold">Опитування</h2>
-              <p className="mb-3 mt-1 text-sm text-slate-300">
-                {poll.question}
-              </p>
-              <ul className="space-y-3">
-                {poll.options.map((option) => {
-                  const share = poll.totalBallots
-                    ? Math.round((option.voteCount / poll.totalBallots) * 100)
-                    : 0;
-                  return (
-                    <li key={option.id} className="space-y-1 text-sm">
-                      <div className="flex justify-between gap-2">
-                        <span>{option.label}</span>
-                        <span className="text-slate-400">
-                          {share}% ({option.voteCount})
-                        </span>
-                      </div>
-                      <div className="h-2 rounded-full bg-white/10">
-                        <div
-                          className="h-2 rounded-full bg-violet-500"
-                          style={{ width: `${share}%` }}
-                        />
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-              <p className="mt-3 text-xs text-slate-500">
-                {poll.visibility === "ANONYMOUS" ? "Анонімне" : "Відкрите"} ·{" "}
-                {poll.totalBallots} голосів · голос не змінюється
-              </p>
-            </section>
-          ) : null}
         </aside>
       </div>
     </DssApplicationShell>
