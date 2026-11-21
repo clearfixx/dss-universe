@@ -7,8 +7,8 @@
  *
  * 🎯 Purpose:
  * One forum post in the owner-approved layout: author column, header with
- * date and permalink, body, moderator note, attachments, actions and the
- * rating column.
+ * #N and date, body, moderator note, attachments, the action bar, and the
+ * rating column on the right (owner decision 2026-11-21).
  *
  * ⚠️ Important:
  * Hidden, deleted and purged posts arrive without content for ordinary
@@ -19,7 +19,6 @@
  */
 import {
   CheckCircle2,
-  Clock3,
   EyeOff,
   Paperclip,
   ShieldCheck,
@@ -33,8 +32,8 @@ import { ForumDocument } from "./forum-document";
 import { canEditForumPost, forumMemberName } from "./forum-format";
 import { ForumPostEditor } from "./forum-post-editor";
 import { ForumPostRating } from "./forum-post-rating";
-import { ForumPostStaff } from "./forum-post-staff";
-import { ForumPostActions } from "./forum-topic-controls";
+import { ForumPostActionBar } from "./forum-post-action-bar";
+import { ForumPostEditScope } from "./forum-post-edit-scope";
 
 const dateFormatter = new Intl.DateTimeFormat("uk-UA", {
   dateStyle: "medium",
@@ -118,74 +117,100 @@ export function ForumPostCard({
     />
   );
 
+  const canEdit =
+    visible &&
+    Boolean(post.documentJson) &&
+    canEditForumPost({
+      viewerId,
+      moderator: abilities.moderate,
+      topicState,
+      curatorId,
+      post: {
+        number: post.number,
+        authorId: post.author?.id ?? null,
+        createdAt: String(post.createdAt),
+      },
+    });
+
   return (
     <article
       id={`post-${post.number}`}
       aria-label={`Допис #${post.number}, ${name}`}
-      className={`grid scroll-mt-24 overflow-hidden rounded-xl border sm:grid-cols-[3.5rem_12.5rem_minmax(0,1fr)] ${
+      className={`grid scroll-mt-24 overflow-hidden rounded-xl sm:grid-cols-[10rem_minmax(0,1fr)_3.5rem] ${
         accepted
-          ? "border-emerald-500/60 bg-emerald-950/25 shadow-[0_0_0_1px_rgba(16,185,129,.2)]"
-          : "border-[color:var(--border)] bg-card"
+          ? "bg-emerald-950/30 ring-1 ring-emerald-500/50"
+          : visible
+            ? "bg-card"
+            : "bg-card/70"
       }`}
     >
-      <div className="hidden justify-center pt-3 sm:flex">
-        {visible ? rating : null}
-      </div>
-      <aside className="flex items-start gap-3 border-b border-[color:var(--border)] p-4 sm:border-b-0 sm:border-r">
-        {post.author?.avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={post.author.avatarUrl}
-            alt=""
-            className="size-14 shrink-0 rounded-full object-cover"
-          />
-        ) : (
-          <span
-            aria-hidden="true"
-            className="flex size-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-700 text-base font-bold"
-          >
-            <Initials name={name} />
-          </span>
-        )}
-        <div className="min-w-0 space-y-1.5 pt-1">
-          {post.author ? (
-            <Link
-              href={`/profile/${post.author.username}`}
-              className="block truncate font-semibold text-white hover:text-violet-300"
-            >
-              {name}
-            </Link>
+      <aside className="flex items-start gap-3 p-3 sm:block sm:space-y-2 sm:border-r sm:border-white/[0.06] sm:p-4">
+        <div className="flex items-center gap-2.5 sm:items-start">
+          {post.author?.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={post.author.avatarUrl}
+              alt=""
+              className="size-10 shrink-0 rounded-full object-cover"
+            />
           ) : (
-            <span className="font-semibold text-slate-400">{name}</span>
-          )}
-          {post.author ? (
-            <span className="block truncate text-xs text-slate-500">
-              @{post.author.username}
+            <span
+              aria-hidden="true"
+              className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-700 text-sm font-bold"
+            >
+              <Initials name={name} />
             </span>
-          ) : null}
-          <div className="flex flex-wrap gap-1.5">
+          )}
+          <div className="min-w-0">
+            {post.author ? (
+              <Link
+                href={`/profile/${post.author.username}`}
+                className="block truncate text-sm font-semibold text-white hover:text-violet-300"
+              >
+                {name}
+              </Link>
+            ) : (
+              <span className="text-sm font-semibold text-slate-400">
+                {name}
+              </span>
+            )}
+            {post.author ? (
+              <span className="block truncate text-xs text-slate-500">
+                @{post.author.username}
+              </span>
+            ) : null}
+          </div>
+        </div>
+        {badges.length ? (
+          <div className="flex flex-wrap gap-1.5 sm:pl-[3.125rem]">
             {badges.map((badge) => (
               <span
                 key={badge}
-                className="rounded-md bg-violet-500/20 px-2 py-0.5 text-[11px] font-medium text-violet-200"
+                className="rounded bg-violet-500/20 px-1.5 py-0.5 text-[11px] font-medium text-violet-200"
               >
                 {badge}
               </span>
             ))}
           </div>
-        </div>
+        ) : null}
       </aside>
 
-      <div className="flex min-w-0 gap-4 p-4">
-        <div className="min-w-0 flex-1 space-y-4">
-          <header className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-slate-400">
-            <Clock3 className="size-3.5" aria-hidden="true" />
+      <ForumPostEditScope canEdit={canEdit}>
+        <div className="min-w-0 space-y-3 px-3 pb-3 sm:px-4 sm:pt-3.5">
+          <header className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
+            <a
+              href={`#post-${post.number}`}
+              className="font-medium text-slate-300 hover:text-white"
+            >
+              #{post.number}
+            </a>
+            <span aria-hidden="true">·</span>
             <time dateTime={String(post.createdAt)}>
               {dateFormatter.format(new Date(String(post.createdAt)))}
             </time>
             {post.editedAt ? <span>(відредаговано)</span> : null}
             {accepted ? (
-              <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 px-2 py-0.5 font-medium text-emerald-300">
+              <span className="inline-flex items-center gap-1 rounded bg-emerald-500/15 px-1.5 py-0.5 font-medium text-emerald-300">
                 <CheckCircle2 className="size-3.5" aria-hidden="true" />
                 Прийнята відповідь
               </span>
@@ -198,21 +223,6 @@ export function ForumPostCard({
                 у відповідь на #{post.replyToNumber}
               </a>
             ) : null}
-            <span className="ml-auto flex flex-wrap items-center gap-1">
-              <ForumPostStaff
-                topicId={topicId}
-                post={post}
-                abilities={abilities}
-                isAccepted={accepted}
-                path={path}
-              />
-              <a
-                href={`#post-${post.number}`}
-                className="px-1 font-medium text-slate-300 hover:text-white"
-              >
-                #{post.number}
-              </a>
-            </span>
           </header>
 
           {visible && post.documentJson ? (
@@ -231,17 +241,7 @@ export function ForumPostCard({
                   ))}
                 </p>
               ) : null}
-              {canEditForumPost({
-                viewerId,
-                moderator: abilities.moderate,
-                topicState,
-                curatorId,
-                post: {
-                  number: post.number,
-                  authorId: post.author?.id ?? null,
-                  createdAt: String(post.createdAt),
-                },
-              }) ? (
+              {canEdit ? (
                 <ForumPostEditor
                   post={{ ...post, documentJson: post.documentJson }}
                   topicTitle={topicTitle}
@@ -255,10 +255,10 @@ export function ForumPostCard({
             </>
           ) : (
             <div
-              className={`flex items-start gap-3 rounded-xl border p-4 text-sm ${
+              className={`flex items-start gap-3 rounded-lg p-3 text-sm ${
                 post.state === "HIDDEN"
-                  ? "border-violet-500/40 bg-violet-500/10 text-violet-100"
-                  : "border-rose-500/40 bg-rose-500/10 text-rose-100"
+                  ? "bg-violet-500/10 text-violet-100 ring-1 ring-violet-500/30"
+                  : "bg-rose-500/10 text-rose-100 ring-1 ring-rose-500/30"
               }`}
             >
               {post.state === "HIDDEN" ? (
@@ -278,7 +278,7 @@ export function ForumPostCard({
                 ) : null}
                 {post.documentJson && abilities.moderate ? (
                   <details className="pt-2 text-slate-200">
-                    <summary className="cursor-pointer text-violet-300">
+                    <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-md bg-white/[0.06] px-2.5 py-1 text-xs text-slate-200 hover:bg-white/10">
                       Показати зміст
                     </summary>
                     <div className="mt-3 rounded-lg border border-white/10 bg-slate-950/60 p-3">
@@ -293,7 +293,7 @@ export function ForumPostCard({
           {post.staffNotes.map((note) => (
             <aside
               key={note.id}
-              className="flex gap-3 rounded-xl border border-violet-500/40 bg-violet-500/10 p-4"
+              className="flex gap-3 rounded-lg bg-violet-500/10 p-3 ring-1 ring-violet-500/25"
             >
               <ShieldCheck
                 className="mt-0.5 size-5 shrink-0 text-violet-300"
@@ -329,17 +329,21 @@ export function ForumPostCard({
             </ul>
           ) : null}
 
-          {visible ? (
-            <ForumPostActions
-              number={post.number}
-              permalink={`${path}#post-${post.number}`}
-              canReply={canReply}
-            />
-          ) : null}
+          <ForumPostActionBar
+            topicId={topicId}
+            post={post}
+            abilities={abilities}
+            isAccepted={accepted}
+            path={path}
+            canReply={canReply}
+          />
         </div>
+      </ForumPostEditScope>
 
-        {visible ? <div className="sm:hidden">{rating}</div> : null}
+      <div className="hidden justify-center pt-3 sm:flex">
+        {visible ? rating : null}
       </div>
+      {visible ? <div className="px-3 pb-3 sm:hidden">{rating}</div> : null}
     </article>
   );
 }

@@ -7,7 +7,8 @@ vi.mock("next/navigation", () => ({
 vi.mock("./forum-actions", () => ({}));
 
 import { postNumbersFrom, topicIdFrom } from "./forum-action-dialog";
-import { ForumPostStaff } from "./forum-post-staff";
+import { ForumPostActionBar } from "./forum-post-action-bar";
+import { ForumPostEditScope } from "./forum-post-edit-scope";
 import { ForumTopicModeration } from "./forum-topic-moderation";
 
 const id = "11111111-1111-4111-8111-111111111111";
@@ -29,48 +30,58 @@ describe("moderation helpers", () => {
 const none = { moderate: false, purge: false, acceptAnswer: false };
 const post = (state: string, number = 3) => ({ id: "p", number, state });
 
-describe("ForumPostStaff", () => {
-  it("shows nothing to ordinary members", () => {
-    const { container } = render(
-      <ForumPostStaff
+function bar(
+  state: string,
+  abilities: typeof none,
+  canEdit = false,
+) {
+  return render(
+    <ForumPostEditScope canEdit={canEdit}>
+      <ForumPostActionBar
         topicId="t"
-        post={post("VISIBLE")}
-        abilities={none}
+        post={post(state)}
+        abilities={abilities}
         isAccepted={false}
         path="/t"
-      />,
-    );
-    expect(container).toBeEmptyDOMElement();
+        canReply
+      />
+    </ForumPostEditScope>,
+  );
+}
+
+describe("ForumPostActionBar", () => {
+  it("shows ordinary actions but no staff tools to members", () => {
+    bar("VISIBLE", none);
+    expect(screen.getByText("Відповісти")).toBeInTheDocument();
+    expect(screen.getByText("Цитата")).toBeInTheDocument();
+    expect(screen.queryByText("Модерація:")).toBeNull();
+    expect(screen.queryByLabelText("Інші дії з дописом #3")).toBeNull();
   });
 
-  it("lets a topic author accept an answer but not moderate", () => {
-    render(
-      <ForumPostStaff
-        topicId="t"
-        post={post("VISIBLE")}
-        abilities={{ ...none, acceptAnswer: true }}
-        isAccepted={false}
-        path="/t"
-      />,
-    );
-    expect(screen.getByText("Прийняти відповідь")).toBeInTheDocument();
-    expect(screen.queryByText("Приховати")).toBeNull();
+  it("lets a topic author reach accept via the menu without staff tools", () => {
+    bar("VISIBLE", { ...none, acceptAnswer: true });
+    expect(screen.getByLabelText("Інші дії з дописом #3")).toBeInTheDocument();
+    expect(screen.queryByText("Вид.")).toBeNull();
   });
 
-  it("offers restore instead of hide on removed posts and purge to admins", () => {
-    render(
-      <ForumPostStaff
-        topicId="t"
-        post={post("HIDDEN")}
-        abilities={{ moderate: true, purge: true, acceptAnswer: true }}
-        isAccepted={false}
-        path="/t"
-      />,
-    );
+  it("gives an author an edit button while the edit window is open", () => {
+    bar("VISIBLE", none, true);
+    expect(screen.getByText("Редагувати")).toBeInTheDocument();
+  });
+
+  it("shows the staff group, with restore instead of hide on removed posts", () => {
+    bar("VISIBLE", { moderate: true, purge: true, acceptAnswer: true }, true);
+    expect(screen.getByText("Модерація:")).toBeInTheDocument();
+    expect(screen.getByText("Вид.")).toBeInTheDocument();
+    expect(screen.getByText("Ред.").closest("button")).toBeEnabled();
+    expect(screen.getByText("IP+UA").closest("button")).toBeDisabled();
+  });
+
+  it("offers restore on hidden posts and disables reply", () => {
+    bar("HIDDEN", { moderate: true, purge: true, acceptAnswer: true });
     expect(screen.getByText("Відновити")).toBeInTheDocument();
-    expect(screen.queryByText("Приховати")).toBeNull();
-    expect(screen.queryByText("Прийняти відповідь")).toBeNull();
-    expect(screen.getByText("Назавжди")).toBeInTheDocument();
+    expect(screen.queryByText("Вид.")).toBeNull();
+    expect(screen.getByText("Відповісти").closest("button")).toBeDisabled();
   });
 });
 

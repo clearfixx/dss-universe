@@ -17,7 +17,7 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import { useState, useTransition } from "react";
 
 import {
@@ -83,10 +83,10 @@ export function ForumPostRating({
 
   const score = rating.ratingUp - rating.ratingDown;
   const arrow =
-    "flex size-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent";
+    "flex size-7 items-center justify-center rounded-md text-slate-400 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent";
 
   return (
-    <div className="flex w-12 flex-col items-center gap-0.5 py-1">
+    <div className="flex w-11 flex-col items-center gap-0.5 rounded-lg bg-white/[0.04] py-1 ring-1 ring-white/[0.08]">
       <button
         type="button"
         className={`${arrow} ${vote === 1 ? "!text-violet-300 !opacity-100" : ""}`}
@@ -96,14 +96,14 @@ export function ForumPostRating({
         aria-pressed={vote === 1}
         title={reason}
       >
-        <ChevronUp className="size-5" aria-hidden="true" />
+        <Plus className="size-4" aria-hidden="true" />
       </button>
       <button
         type="button"
         onClick={() => showVoters(true)}
         title={forumRatingBreakdown(rating)}
         aria-label={`Рейтинг ${score}: ${forumRatingBreakdown(rating)}. Показати, хто голосував`}
-        className={`min-h-8 rounded-md px-1 text-base font-bold tabular-nums hover:bg-white/10 ${
+        className={`min-h-7 rounded-md px-1 text-base font-bold tabular-nums hover:bg-white/10 ${
           score < 0 ? "text-rose-300" : "text-white"
         }`}
       >
@@ -118,7 +118,7 @@ export function ForumPostRating({
         aria-pressed={vote === -1}
         title={reason}
       >
-        <ChevronDown className="size-5" aria-hidden="true" />
+        <Minus className="size-4" aria-hidden="true" />
       </button>
       {error ? (
         <p role="alert" className="sr-only">

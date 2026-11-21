@@ -51,8 +51,13 @@ export function ForumActionDialog({
   destructive,
   run,
   redirectTo,
+  open: controlledOpen,
+  onOpenChange,
 }: {
-  trigger: (open: () => void) => ReactNode;
+  /** Omit when the dialog is opened from outside (e.g. a dropdown item). */
+  trigger?: (open: () => void) => ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   title: string;
   description?: string;
   fields?: readonly ForumDialogField[];
@@ -63,7 +68,12 @@ export function ForumActionDialog({
   redirectTo?: (values: ForumDialogValues) => string | null;
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [localOpen, setLocalOpen] = useState(false);
+  const open = controlledOpen ?? localOpen;
+  const setOpen = (next: boolean) => {
+    setLocalOpen(next);
+    onOpenChange?.(next);
+  };
   const [values, setValues] = useState<ForumDialogValues>({});
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -93,7 +103,7 @@ export function ForumActionDialog({
 
   return (
     <>
-      {trigger(() => setOpen(true))}
+      {trigger?.(() => setOpen(true))}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>

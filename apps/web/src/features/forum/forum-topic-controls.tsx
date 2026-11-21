@@ -14,7 +14,7 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import { Bell, BellRing, Link2, Quote, Reply } from "lucide-react";
+import { Bell, BellRing } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -65,62 +65,11 @@ export function ForumFollowButton({
   );
 }
 
-function target(detail: ForumReplyTarget) {
+export function targetForumReply(detail: ForumReplyTarget) {
   window.dispatchEvent(new CustomEvent(FORUM_REPLY_EVENT, { detail }));
   document
     .getElementById("forum-reply")
     ?.scrollIntoView({ behavior: "smooth", block: "center" });
-}
-
-export function ForumPostActions({
-  number,
-  permalink,
-  canReply,
-}: {
-  number: number;
-  permalink: string;
-  canReply: boolean;
-}) {
-  const [copied, setCopied] = useState(false);
-  const action =
-    "inline-flex min-h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 text-sm text-slate-300 transition hover:border-violet-400/40 hover:text-white";
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <button
-        type="button"
-        className={action}
-        onClick={() => {
-          void navigator.clipboard
-            ?.writeText(new URL(permalink, window.location.href).toString())
-            .then(() => setCopied(true));
-        }}
-        aria-label={`Скопіювати посилання на допис #${number}`}
-      >
-        <Link2 className="size-4" aria-hidden="true" />
-        {copied ? "Скопійовано" : null}
-      </button>
-      {canReply ? (
-        <span className="ml-auto flex gap-2">
-          <button
-            type="button"
-            className={action}
-            onClick={() => target({ number, quote: false })}
-          >
-            <Reply className="size-4" aria-hidden="true" />
-            Відповісти
-          </button>
-          <button
-            type="button"
-            className={action}
-            onClick={() => target({ number, quote: true })}
-          >
-            <Quote className="size-4" aria-hidden="true" />
-            Цитата
-          </button>
-        </span>
-      ) : null}
-    </div>
-  );
 }
 
 /** Records a unique view and marks the posts on screen as read. */

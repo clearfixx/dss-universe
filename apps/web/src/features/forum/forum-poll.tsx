@@ -67,7 +67,7 @@ export function ForumPoll({
   return (
     <section
       aria-labelledby={`poll-${poll.id}`}
-      className="rounded-2xl border border-violet-500/30 bg-[#140f2e] p-5"
+      className="rounded-xl bg-card p-4"
     >
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <BarChart3 className="size-5 text-violet-300" aria-hidden="true" />
@@ -75,7 +75,7 @@ export function ForumPoll({
           {poll.question}
         </h2>
         <span className="rounded-md bg-violet-500/20 px-2 py-0.5 text-xs text-violet-200">
-          {poll.visibility === "ANONYMOUS" ? "Анонімне" : "Відкрите"}
+          {poll.visibility === "ANONYMOUS" ? "Анонімне опитування" : "Відкрите опитування"}
         </span>
       </div>
 
@@ -118,7 +118,7 @@ export function ForumPoll({
           {options.map((option) => (
             <label
               key={option.id}
-              className="flex min-h-10 cursor-pointer items-center gap-3 rounded-lg border border-white/10 px-3 text-sm hover:border-violet-400/40"
+              className="flex min-h-9 cursor-pointer items-center gap-3 rounded-md bg-white/[0.04] px-3 text-sm hover:bg-white/[0.07]"
             >
               <input
                 type={single ? "radio" : "checkbox"}

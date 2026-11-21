@@ -24,6 +24,7 @@ import {
   MessageSquare,
   MessagesSquare,
   Pin,
+  Reply,
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -123,18 +124,11 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
         readUpTo={lastNumber}
         signedIn={viewer !== null}
       />
-      <div className="mx-auto grid max-w-7xl gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
-        <div className="min-w-0 space-y-5">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_19rem] 2xl:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="min-w-0 space-y-4">
 
-          <header className="flex flex-wrap items-start gap-4">
-            <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-violet-500/20 text-violet-200">
-              {topic.kind === "QUESTION" ? (
-                <HelpCircle className="size-7" aria-hidden="true" />
-              ) : (
-                <MessagesSquare className="size-7" aria-hidden="true" />
-              )}
-            </span>
-            <div className="min-w-0 flex-1 space-y-2">
+          <header className="flex flex-wrap items-end gap-4">
+            <div className="min-w-0 flex-1 space-y-2.5">
               <h1 className="flex flex-wrap items-center gap-2 text-2xl font-bold leading-tight">
                 {topic.pinned ? (
                   <Pin
@@ -145,13 +139,18 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
                 {topic.title}
                 {topic.acceptedAnswerPostId ? (
                   <CheckCircle2
-                    className="size-6 text-emerald-400"
+                    className="size-6 shrink-0 text-emerald-400"
                     aria-label="Є прийнята відповідь"
                   />
                 ) : null}
               </h1>
               <div className="flex flex-wrap gap-2 text-xs">
-                <span className="rounded-md bg-violet-500/20 px-2 py-0.5 font-medium text-violet-200">
+                <span className="inline-flex items-center gap-1 rounded-md bg-violet-500/20 px-2 py-1 font-medium text-violet-200">
+                  {topic.kind === "QUESTION" ? (
+                    <HelpCircle className="size-3.5" aria-hidden="true" />
+                  ) : (
+                    <MessagesSquare className="size-3.5" aria-hidden="true" />
+                  )}
                   {topic.kind === "QUESTION" ? "Питання" : "Обговорення"}
                 </span>
                 {topic.state !== "OPEN" ? (
@@ -163,16 +162,32 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
                 {topic.tags.map((tag) => (
                   <span
                     key={tag.id}
-                    className="rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 text-slate-300"
+                    className="rounded-md bg-white/[0.06] px-2 py-1 text-slate-300"
                   >
                     {tag.label}
                   </span>
                 ))}
               </div>
-              <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-400">
-                <span className="text-slate-200">
+              <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-400">
+                <span className="inline-flex items-center gap-2 text-slate-200">
+                  {topic.author?.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={topic.author.avatarUrl}
+                      alt=""
+                      className="size-6 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span
+                      aria-hidden="true"
+                      className="flex size-6 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-700 text-[10px] font-bold"
+                    >
+                      {forumMemberName(topic.author).slice(0, 1).toUpperCase()}
+                    </span>
+                  )}
                   {forumMemberName(topic.author)}
                 </span>
+                <span aria-hidden="true">·</span>
                 <time dateTime={String(topic.createdAt)}>
                   {dateFormatter.format(new Date(String(topic.createdAt)))}
                 </time>
@@ -196,8 +211,9 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
               {canWrite ? (
                 <a
                   href="#forum-reply"
-                  className="inline-flex min-h-9 items-center rounded-lg bg-violet-600 px-4 text-sm font-semibold text-white hover:bg-violet-500"
+                  className="inline-flex min-h-9 items-center gap-2 rounded-lg bg-violet-600 px-4 text-sm font-semibold text-white hover:bg-violet-500"
                 >
+                  <Reply className="size-4" aria-hidden="true" />
                   Відповісти
                 </a>
               ) : null}
@@ -205,7 +221,7 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
           </header>
 
           {topic.acceptedAnswerPostId ? (
-            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm">
+            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm">
               <CheckCircle2
                 className="size-5 text-emerald-400"
                 aria-hidden="true"
@@ -216,7 +232,7 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
                   href={`#post-${acceptedHere.number}`}
                   className="text-emerald-300 underline underline-offset-4"
                 >
-                  Перейти до відповіді #{acceptedHere.number}
+                  Перейти до відповіді #{acceptedHere.number} →
                 </a>
               ) : null}
             </div>
@@ -247,7 +263,12 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
             <ForumPoll poll={poll} signedIn={viewer !== null} path={path} />
           ) : null}
 
-          <div className="space-y-4">
+          <h2 className="pt-1 text-base font-semibold">
+            {Math.max(0, topic.postCount - 1)}{" "}
+            {pluralReplies(Math.max(0, topic.postCount - 1))}
+          </h2>
+
+          <div className="space-y-3">
             {posts.items.map((post) => (
               <ForumPostCard
                 key={post.id}
@@ -297,7 +318,7 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
               lastPage={pageHref(pages)}
             />
           ) : (
-            <p className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-slate-400">
+            <p className="rounded-xl bg-card px-4 py-3 text-sm text-slate-400">
               {viewer === null ? (
                 <>
                   <Link
@@ -328,7 +349,7 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
             }))}
             path={path}
           />
-          <section className="rounded-2xl border border-white/10 bg-[#0f1328] p-5">
+          <section className="rounded-xl bg-card p-4">
             <h2 className="mb-3 font-semibold">Про тему</h2>
             <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
               <dt className="text-slate-400">Розділ</dt>
@@ -359,4 +380,12 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
       </div>
     </DssApplicationShell>
   );
+}
+
+function pluralReplies(count: number) {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 === 1 && mod100 !== 11) return "відповідь";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "відповіді";
+  return "відповідей";
 }

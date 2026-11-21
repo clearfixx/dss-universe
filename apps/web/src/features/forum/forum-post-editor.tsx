@@ -8,7 +8,7 @@
  * 📄 File: apps/web/src/features/forum/forum-post-editor.tsx
  *
  * 🎯 Purpose:
- * Inline editing of a post: DSS Editor seeded with the current document,
+ * Inline editing of a post (opened from the footer "Ред." button): DSS Editor seeded with the current document,
  * the topic title for the first post, optimistic revision check.
  *
  * ⚠️ Important:
@@ -20,7 +20,6 @@
  * ===============================================================
  */
 import type { EditorDocument } from "@dss/editor";
-import { Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type ReactNode } from "react";
 
@@ -28,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { DssEditor } from "@/features/editor/dss-editor";
 
 import { editForumPost } from "./forum-actions";
+import { useForumPostEdit } from "./forum-post-edit-scope";
 
 export function ForumPostEditor({
   post,
@@ -47,7 +47,7 @@ export function ForumPostEditor({
   children: ReactNode;
 }) {
   const router = useRouter();
-  const [editing, setEditing] = useState(false);
+  const { editing, setEditing } = useForumPostEdit();
   const [document, setDocument] = useState<EditorDocument>(
     () => JSON.parse(post.documentJson) as EditorDocument,
   );
@@ -80,21 +80,7 @@ export function ForumPostEditor({
     });
   }
 
-  if (!editing) {
-    return (
-      <div className="space-y-3">
-        {children}
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-white/10 px-2.5 text-xs text-slate-300 hover:border-violet-400/40 hover:text-white"
-        >
-          <Pencil className="size-3.5" aria-hidden="true" />
-          Редагувати
-        </button>
-      </div>
-    );
-  }
+  if (!editing) return <>{children}</>;
 
   return (
     <div className="space-y-3 rounded-xl border border-violet-500/30 bg-slate-950/60 p-3">
