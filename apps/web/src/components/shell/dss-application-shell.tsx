@@ -74,7 +74,7 @@ import {
 } from "./shell-navigation";
 
 /** A route-owned breadcrumb trail; the last item is the current page. */
-export type TrustedBreadcrumb = Readonly<{ href: string; label: string }>;
+export type TrustedBreadcrumb = Readonly<{ href?: string; label: string }>;
 
 function Logo({ compact = false }: { compact?: boolean }) {
   return (
@@ -263,10 +263,12 @@ export function Breadcrumbs({
               <span aria-current="page" className="font-medium text-slate-100">
                 {part.label}
               </span>
-            ) : (
+            ) : part.href ? (
               <Link href={part.href} className="text-violet-300 hover:text-violet-200">
                 {part.label}
               </Link>
+            ) : (
+              <span>{part.label}</span>
             )}
           </li>
         ))}
