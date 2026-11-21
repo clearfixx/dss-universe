@@ -824,11 +824,47 @@ describe('Research Lab commands (e2e)', () => {
     ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
     const moderator = await user();
     moderators.add(moderator);
-    await service.tombstone({
+    memberships.set(actorId, ['group:editors']);
+    await service.setAudience(moderator, pageId, 'GROUPS', ['editors']);
+    const removal = {
       ...command,
       actorId: moderator,
       expectedPublicationGeneration: 1,
       reason: 'Removed by reviewer',
+    };
+    const before = await fixture.prisma.researchPage.findUniqueOrThrow({
+      where: { id: pageId },
+    });
+    await expect(service.tombstone(removal)).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+    });
+    expect(
+      await fixture.prisma.researchPage.findUniqueOrThrow({
+        where: { id: pageId },
+      }),
+    ).toEqual(before);
+    expect(
+      await fixture.prisma.interactionTarget.findUniqueOrThrow({
+        where: { id: before.interactionTargetId },
+      }),
+    ).toMatchObject({ status: 'ACTIVE' });
+    expect(
+      await fixture.prisma.auditRecord.count({
+        where: { targetId: pageId, action: 'research_lab.page_tombstoned' },
+      }),
+    ).toBe(0);
+    expect(
+      await fixture.prisma.outboxEvent.count({
+        where: {
+          aggregateId: pageId,
+          eventName: 'research-lab.page.tombstoned.v1',
+        },
+      }),
+    ).toBe(0);
+    memberships.set(moderator, ['group:editors']);
+    await service.tombstone(removal);
+    await expect(service.tombstone(removal)).rejects.toMatchObject({
+      code: 'NOT_FOUND',
     });
     const removed = await fixture.prisma.researchPage.findUniqueOrThrow({
       where: { id: pageId },

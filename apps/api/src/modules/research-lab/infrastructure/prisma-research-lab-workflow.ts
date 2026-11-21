@@ -1037,26 +1037,14 @@ export class ResearchLabService {
     const reason = this.required(command.reason ?? '', 'Tombstone reason');
     await this.prisma.$transaction(async (tx) => {
       await this.lockPage(tx, command.pageId);
-      if (!(await this.authority.canModerate(command.actorId, new Date()))) {
-        throw new ResearchLabCommandError(
-          'ACCESS_DENIED',
-          'Research Lab moderation permission required.',
-        );
-      }
-      const page = await tx.researchPage.findUnique({
-        where: { id: command.pageId },
+      const page = await tx.researchPage.findFirst({
+        where: await this.moderatedPageScope(command.actorId, command.pageId),
       });
-      if (!page || !page.publishedRevisionId) this.notFound('Published page');
+      if (!page) this.notFound('Published page');
       this.assertGeneration(
         page.publicationGeneration,
         command.expectedPublicationGeneration,
       );
-      if (page.state === 'TOMBSTONED') {
-        throw new ResearchLabCommandError(
-          'REVISION_CONFLICT',
-          'Research Lab page is already tombstoned.',
-        );
-      }
       await tx.researchPage.update({
         where: { id: page.id },
         data: {
