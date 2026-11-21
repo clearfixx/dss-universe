@@ -55,7 +55,7 @@ class ForumPostRatingModel {
 }
 
 @ObjectType('ForumPostVote')
-class ForumPostVoteModel {
+export class ForumPostVoteModel {
   @Field(() => ID) voterId!: string;
   @Field(() => Int) value!: number;
   @Field() createdAt!: Date;

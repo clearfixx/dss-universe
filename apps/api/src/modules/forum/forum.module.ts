@@ -34,6 +34,14 @@ import { ForumModerationService } from './infrastructure/prisma-forum-moderation
 import { ForumModerationResolver } from './presentation/forum-moderation.resolver';
 import { ForumRatingsService } from './infrastructure/prisma-forum-ratings';
 import { ForumRatingsResolver } from './presentation/forum-ratings.resolver';
+import {
+  ForumPostReadResolver,
+  ForumPostVoteReadResolver,
+  ForumStatsResolver,
+  ForumSubforumStatsResolver,
+  ForumTopicReadResolver,
+} from './presentation/forum-read-models.resolver';
+import { PrismaForumReadModels } from './infrastructure/prisma-forum-read-models';
 import { FORUM_VIEWER_FACTS } from './contracts/forum-viewer-facts.contract';
 import { ForumViewerFactsAdapter } from './infrastructure/forum-viewer-facts.adapter';
 import { ForumStructureService } from './infrastructure/prisma-forum-structure';
@@ -58,6 +66,12 @@ import { ForumStructureResolver } from './presentation/forum-structure.resolver'
     ForumModerationResolver,
     ForumRatingsService,
     ForumRatingsResolver,
+    PrismaForumReadModels,
+    ForumTopicReadResolver,
+    ForumPostReadResolver,
+    ForumPostVoteReadResolver,
+    ForumStatsResolver,
+    ForumSubforumStatsResolver,
     ForumCurationService,
     ForumCurationResolver,
     ForumOperationsService,

@@ -33,3 +33,8 @@ export type {
   ForumVisibility,
   ForumViewerFacts,
 } from './domain/types/forum-structure.type';
+export {
+  FORUM_MEMBER_CARDS,
+  type ForumMemberCard,
+  type ForumMemberCardReader,
+} from './contracts/forum-member-cards.contract';

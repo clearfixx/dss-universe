@@ -191,7 +191,7 @@ class ForumPostModerationModel {
 }
 
 @ObjectType('ForumPost')
-class ForumPostModel {
+export class ForumPostModel {
   @Field(() => ID) id!: string;
   @Field(() => ID) topicId!: string;
   @Field(() => Int) number!: number;
