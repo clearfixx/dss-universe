@@ -31,6 +31,8 @@ the forum UI needs (owner-approved list, 2026-11-21).
 - all forum e2e suites 58/58 after a test-only cooldown fix; app boot e2e
   (schema adds `ForumTopicFilter`, `ForumViewerCollection`,
   `viewerForumTopics`); Forum unit 48/48; lint, typecheck clean; architecture
-  inventory 0 findings.
+  inventory 0 findings;
+- full API e2e (5435/6381, Redis-6380-pinned suites excluded): 1003/1003,
+  97/97 suites.
 
 🗂️ The same topics, sliced the way people look for them.
