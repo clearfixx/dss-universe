@@ -113,4 +113,24 @@ export class PrismaForumReadModels {
     }
     return stats;
   }
+
+  /** Category IDs the viewer moderates by an active assignment. */
+  async assignedCategories(viewerId: string): Promise<Set<string>> {
+    const rows = await this.prisma.forumModeratorAssignment.findMany({
+      where: { moderatorId: viewerId, revokedAt: null },
+      select: { categoryId: true },
+    });
+    return new Set(rows.map(({ categoryId }) => categoryId));
+  }
+
+  async forumCategories(
+    forumIds: readonly string[],
+  ): Promise<Map<string, string>> {
+    if (forumIds.length === 0) return new Map();
+    const rows = await this.prisma.forum.findMany({
+      where: { id: { in: [...forumIds] } },
+      select: { id: true, categoryId: true },
+    });
+    return new Map(rows.map((row) => [row.id, row.categoryId]));
+  }
 }
