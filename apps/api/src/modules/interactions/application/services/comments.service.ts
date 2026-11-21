@@ -152,6 +152,7 @@ export class CommentsService {
   ): Promise<Comment> {
     const comment = await this.requireComment(commentId);
     this.assertAuthor(comment, actorId);
+    await this.assertTargetAccess(comment.interactionTargetId, actorId, 'READ');
     if (comment.isDeleted) return comment;
     return this.comments.tombstone(comment.id, actorId, reason?.trim() || null);
   }
@@ -162,6 +163,7 @@ export class CommentsService {
   ): Promise<CommentRevision[]> {
     const comment = await this.requireComment(commentId);
     this.assertAuthor(comment, actorId);
+    await this.assertTargetAccess(comment.interactionTargetId, actorId, 'READ');
     return this.comments.revisions(comment.id);
   }
 

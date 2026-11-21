@@ -391,7 +391,7 @@ describe('Research Lab public delivery (GraphQL)', () => {
       await fixture.prisma.researchRevision.count({ where: { pageId: id } }),
     ).toBe(1);
   });
-  it('removes group-only Wiki hits, snippets and facets on membership expiry or revocation', async () => {
+  it('enforces page access for Wiki search and comment history when membership changes', async () => {
     const db = fixture.prisma;
     const suffix = randomUUID();
     const register = (label: string) =>
@@ -478,6 +478,47 @@ describe('Research Lab public delivery (GraphQL)', () => {
     };
     const empty = { items: [], total: 0, categories: [] };
     expect(await search()).toEqual(visible);
+    const target = await db.researchPage.findUniqueOrThrow({
+      where: { id: draft.pageId },
+      select: { interactionTargetId: true },
+    });
+    const graphql = async <T>(
+      query: string,
+      variables: Record<string, unknown>,
+    ) =>
+      payload<T>(
+        await request(app.getHttpServer())
+          .post('/api/graphql')
+          .set('Authorization', 'Bearer ' + reader.tokens.accessToken)
+          .send({ query, variables })
+          .expect(200),
+      );
+    const add = (parentId?: string) =>
+      graphql<{ createComment: { id: string } }>(
+        'mutation($input:CreateCommentInput!){createComment(input:$input){id}}',
+        { input: { ...target, parentId, body: 'Wiki discussion' } },
+      );
+    const parent = await add();
+    expect(parent.errors).toBeUndefined();
+    const commentId = parent.data.createComment.id;
+    const history = () =>
+      graphql<{ commentRevisions: { body: string }[] }>(
+        'query($commentId:ID!){commentRevisions(commentId:$commentId){body}}',
+        { commentId },
+      );
+    await db.researchPage.update({
+      where: { id: draft.pageId },
+      data: { allowComments: false },
+    });
+    expect((await add(commentId)).errors[0].extensions.code).toBe('FORBIDDEN');
+    expect((await history()).data.commentRevisions).toEqual([
+      { body: 'Wiki discussion' },
+    ]);
+    await db.researchPage.update({
+      where: { id: draft.pageId },
+      data: { allowComments: true },
+    });
+    expect((await add(commentId)).errors).toBeUndefined();
     const where = { id: membership.id };
     const authority = app.get<ResearchLabAuthorityAdapter>(
       ResearchLabAuthorityAdapter,
@@ -502,6 +543,19 @@ describe('Research Lab public delivery (GraphQL)', () => {
       },
     });
     expect(await search()).toEqual(empty);
+    expect((await history()).errors[0].extensions.code).toBe('FORBIDDEN');
+    const removal = await graphql(
+      'mutation($commentId:ID!){removeComment(commentId:$commentId){id}}',
+      { commentId },
+    );
+    expect(removal.errors[0].extensions.code).toBe('FORBIDDEN');
+    expect(
+      await db.comment.findUniqueOrThrow({ where: { id: commentId } }),
+    ).toMatchObject({
+      deletedAt: null,
+      deletedById: null,
+      body: 'Wiki discussion',
+    });
   });
 
   it('keeps exact facets and stable ties across a search batch and on an empty deep page', async () => {
