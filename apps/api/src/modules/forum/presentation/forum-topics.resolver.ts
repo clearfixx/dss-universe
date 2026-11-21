@@ -62,9 +62,13 @@ import {
   FORUM_TOPIC_SCOPES,
   FORUM_TOPIC_SORTS,
   FORUM_TOPIC_STATES,
+  FORUM_TOPIC_FILTERS,
+  FORUM_VIEWER_COLLECTIONS,
   type ForumPage,
   type ForumPostState,
+  type ForumTopicFilter,
   type ForumTopicKind,
+  type ForumViewerCollection,
   type ForumTopicScope,
   type ForumTopicSort,
   type ForumTopicState,
@@ -90,6 +94,14 @@ registerEnumType(TopicKindEnum, { name: 'ForumTopicKind' });
 registerEnumType(TopicStateEnum, { name: 'ForumTopicState' });
 registerEnumType(PostStateEnum, { name: 'ForumPostState' });
 registerEnumType(TopicSortEnum, { name: 'ForumTopicSort' });
+const TopicFilterEnum = enumOf(FORUM_TOPIC_FILTERS);
+registerEnumType(TopicFilterEnum, {
+  name: 'ForumTopicFilter',
+  description:
+    'MINE: authored by the viewer; NO_REPLIES: no replies yet; UNSOLVED: questions without an accepted answer.',
+});
+const ViewerCollectionEnum = enumOf(FORUM_VIEWER_COLLECTIONS);
+registerEnumType(ViewerCollectionEnum, { name: 'ForumViewerCollection' });
 
 @InputType()
 class CreateForumTopicInput {
@@ -282,6 +294,8 @@ export class ForumTopicsResolver {
     topPeriod: ForumTopPeriod,
     @Args('tagSlug', { type: () => String, nullable: true })
     tagSlug: string | null,
+    @Args('filter', { type: () => TopicFilterEnum, defaultValue: 'ALL' })
+    filter: ForumTopicFilter,
   ): Promise<ForumPage<ForumTopicModel>> {
     return this.execute(
       this.topics.topics(
@@ -293,7 +307,25 @@ export class ForumTopicsResolver {
         scope,
         topPeriod,
         tagSlug ?? null,
+        filter,
       ),
+    );
+  }
+
+  @Query(() => ForumTopicPageModel, {
+    description:
+      'Signed-in viewer: own (AUTHORED) or followed (SUBSCRIBED) topics across visible forums.',
+  })
+  @UseGuards(JwtAuthGuard)
+  viewerForumTopics(
+    @AuthUser() user: AuthenticatedUser,
+    @Args('collection', { type: () => ViewerCollectionEnum })
+    collection: ForumViewerCollection,
+    @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
+    @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
+  ): Promise<ForumPage<ForumTopicModel>> {
+    return this.execute(
+      this.topics.viewerTopics(user.id, collection, page, limit),
     );
   }
 

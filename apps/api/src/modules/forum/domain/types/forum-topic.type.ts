@@ -41,6 +41,22 @@ export type ForumStaffRole = (typeof FORUM_STAFF_ROLES)[number];
 export const FORUM_TOPIC_SCOPES = ['ACTIVE', 'ARCHIVED', 'TRASHED'] as const;
 export type ForumTopicScope = (typeof FORUM_TOPIC_SCOPES)[number];
 
+/**
+ * Topic list filters: MINE = authored by the viewer; NO_REPLIES = nobody has
+ * replied yet; UNSOLVED = questions without an accepted answer.
+ */
+export const FORUM_TOPIC_FILTERS = [
+  'ALL',
+  'MINE',
+  'NO_REPLIES',
+  'UNSOLVED',
+] as const;
+export type ForumTopicFilter = (typeof FORUM_TOPIC_FILTERS)[number];
+
+/** Cross-forum personal lists of the signed-in viewer. */
+export const FORUM_VIEWER_COLLECTIONS = ['AUTHORED', 'SUBSCRIBED'] as const;
+export type ForumViewerCollection = (typeof FORUM_VIEWER_COLLECTIONS)[number];
+
 export const FORUM_TOPIC_SORTS = [
   'LAST_ACTIVITY',
   'NEW',

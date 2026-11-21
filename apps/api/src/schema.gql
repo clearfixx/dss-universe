@@ -735,6 +735,16 @@ type ForumTopicCreated {
   topic: ForumTopic!
 }
 
+"""
+MINE: authored by the viewer; NO_REPLIES: no replies yet; UNSOLVED: questions without an accepted answer.
+"""
+enum ForumTopicFilter {
+  ALL
+  MINE
+  NO_REPLIES
+  UNSOLVED
+}
+
 enum ForumTopicKind {
   DISCUSSION
   QUESTION
@@ -784,6 +794,11 @@ type ForumTopicTag {
   id: ID!
   label: String!
   slug: String!
+}
+
+enum ForumViewerCollection {
+  AUTHORED
+  SUBSCRIBED
 }
 
 enum ForumVisibility {
@@ -1799,7 +1814,7 @@ type Query {
   forumTags(forumId: ID!): [ForumTag!]!
   forumTopic(topicId: ID!): ForumTopic!
   forumTopicSubscribed(topicId: ID!): Boolean!
-  forumTopics(forumId: ID!, limit: Int! = 20, page: Int! = 1, scope: ForumTopicScope! = ACTIVE, sort: ForumTopicSort! = LAST_ACTIVITY, tagSlug: String, topPeriod: ForumTopPeriod! = WEEK): ForumTopicPage!
+  forumTopics(filter: ForumTopicFilter! = ALL, forumId: ID!, limit: Int! = 20, page: Int! = 1, scope: ForumTopicScope! = ACTIVE, sort: ForumTopicSort! = LAST_ACTIVITY, tagSlug: String, topPeriod: ForumTopPeriod! = WEEK): ForumTopicPage!
   fullNews(language: String!, slug: String!): FullNews
   interactionTarget(id: ID!): InteractionTarget!
   interactionTargetAccess(capability: InteractionCapability!, targetId: ID!): InteractionAccessDecision!
@@ -1859,6 +1874,11 @@ type Query {
   viewerActivityFeed(input: ActivityFeedInput): ActivityFeedPage!
   viewerBookmarks(pagination: BookmarksPageInput): BookmarkPage!
   viewerCommentDrafts(limit: Int! = 20): [CommentDraft!]!
+
+  """
+  Signed-in viewer: own (AUTHORED) or followed (SUBSCRIBED) topics across visible forums.
+  """
+  viewerForumTopics(collection: ForumViewerCollection!, limit: Int! = 20, page: Int! = 1): ForumTopicPage!
   viewerNotificationPreferences: NotificationPreferences!
   viewerPrivacySettings: UserPrivacySettings!
   viewerProfileCompletion: ProfileCompletion!
