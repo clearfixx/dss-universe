@@ -48,6 +48,7 @@ import {
 import {
   ArrayMaxSize,
   IsArray,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -135,16 +136,17 @@ class ForumPopularTagModel {
 }
 
 @InputType()
-class CreateForumTopicInput {
+export class CreateForumTopicInput {
   @Field(() => ID) @IsString() forumId!: string;
   @Field(() => TopicKindEnum, { defaultValue: 'DISCUSSION' })
+  @IsIn(FORUM_TOPIC_KINDS)
   kind!: ForumTopicKind;
   @Field() @IsString() title!: string;
   @Field() @IsString() documentJson!: string;
 }
 
 @InputType()
-class CreateForumReplyInput {
+export class CreateForumReplyInput {
   @Field(() => ID) @IsString() topicId!: string;
   @Field() @IsString() documentJson!: string;
   @Field(() => Int, { nullable: true })
@@ -160,7 +162,7 @@ class CreateForumReplyInput {
 }
 
 @InputType()
-class EditForumPostInput {
+export class EditForumPostInput {
   @Field(() => ID) @IsString() postId!: string;
   @Field(() => Int) @IsInt() @Min(1) expectedRevision!: number;
   @Field() @IsString() documentJson!: string;
