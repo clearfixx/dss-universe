@@ -23,6 +23,8 @@
  */
 import { ResearchLabModule } from '@api/modules/research-lab';
 import { ResearchInteractionBinding } from './research-interaction-binding';
+import { ForumModule } from '@api/modules/forum';
+import { ForumInteractionBinding } from './forum-interaction-binding';
 import { Module } from '@nestjs/common';
 import { InteractionsModule } from '@api/modules/interactions';
 import { NewsModule } from '@api/modules/news';
@@ -30,7 +32,17 @@ import { UsersModule } from '@api/modules/users';
 import { InteractionOwnerBindingsService } from './interaction-owner-bindings.service';
 
 @Module({
-  imports: [InteractionsModule, NewsModule, UsersModule, ResearchLabModule],
-  providers: [InteractionOwnerBindingsService, ResearchInteractionBinding],
+  imports: [
+    InteractionsModule,
+    NewsModule,
+    UsersModule,
+    ResearchLabModule,
+    ForumModule,
+  ],
+  providers: [
+    InteractionOwnerBindingsService,
+    ResearchInteractionBinding,
+    ForumInteractionBinding,
+  ],
 })
 export class InteractionPolicyCompositionModule {}

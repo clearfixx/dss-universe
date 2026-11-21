@@ -18,6 +18,8 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   NotFoundException,
   UseGuards,
 } from '@nestjs/common';
@@ -306,6 +308,8 @@ export class ForumStructureResolver {
           throw new BadRequestException(error.message);
         case 'CONFLICT':
           throw new ConflictException(error.message);
+        case 'RATE_LIMITED':
+          throw new HttpException(error.message, HttpStatus.TOO_MANY_REQUESTS);
       }
     }
   }
