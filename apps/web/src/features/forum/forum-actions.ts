@@ -502,3 +502,13 @@ export async function restrictForumPostAuthor(
     (d) => d.restrictForumPostAuthor,
   );
 }
+
+// ── Reads used by client components ────────────────────────────
+
+/** Who voted on a post (opened from the rating column). */
+export async function getForumPostVoters(postId: string, page = 1) {
+  return forumResult(async () => {
+    const { loadForumPostVotes } = await import("./forum-data");
+    return loadForumPostVotes(postId, page);
+  });
+}
