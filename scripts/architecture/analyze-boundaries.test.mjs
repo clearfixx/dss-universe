@@ -656,6 +656,8 @@ for (const [moduleName, expected] of [
       "GateCommentCountReader",
       "GATE_REPUTATION_TOTAL",
       "GateReputationTotalReader",
+      "GATE_VIEWER_RESTRICTION",
+      "GateViewerRestrictionReader",
     ],
   ],
   [
