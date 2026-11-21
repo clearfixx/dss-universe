@@ -788,6 +788,7 @@ type ForumTopic {
   tags: [ForumTopicTag!]!
   title: String!
   viewCount: Int!
+  viewerAbilities: ForumTopicViewerAbilities!
 
   """Furthest post number read by the viewer; null for guests."""
   viewerLastReadNumber: Int
@@ -857,6 +858,26 @@ type ForumTopicTag {
   id: ID!
   label: String!
   slug: String!
+}
+
+"""
+What the current viewer may do in this topic; the API still checks every command.
+"""
+type ForumTopicViewerAbilities {
+  acceptAnswer: Boolean!
+  close: Boolean!
+
+  """Topic and post moderation in this category."""
+  moderate: Boolean!
+
+  """Permanent removal of posts (administrators)."""
+  purge: Boolean!
+  reopen: Boolean!
+
+  """
+  Signed in and the topic is open; read-only mode is reported by viewerSanctionStatus.
+  """
+  reply: Boolean!
 }
 
 enum ForumViewerCollection {
