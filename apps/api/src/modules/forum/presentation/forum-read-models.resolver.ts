@@ -39,6 +39,12 @@ import {
   PrismaForumReadModels,
   type ForumActivityStats,
 } from '../infrastructure/prisma-forum-read-models';
+import {
+  FORUM_VIEWER_FACTS,
+  type ForumViewerFactsReader,
+} from '../contracts/forum-viewer-facts.contract';
+import type { ForumViewerFacts } from '../domain/types/forum-structure.type';
+import { canCloseTopic, canReopenTopic } from '../domain/forum-topic.rules';
 import { ForumPostVoteModel } from './forum-ratings.resolver';
 import { ForumModel, ForumSubforumModel } from './forum-structure.resolver';
 import { ForumPostModel, ForumTopicModel } from './forum-topics.resolver';
@@ -71,7 +77,30 @@ class ForumActivityStatsModel {
   lastActivity!: ForumLastActivityModel | null;
 }
 
+@ObjectType('ForumTopicViewerAbilities', {
+  description:
+    'What the current viewer may do in this topic; the API still checks every command.',
+})
+class ForumTopicViewerAbilitiesModel {
+  @Field({ description: 'Topic and post moderation in this category.' })
+  moderate!: boolean;
+  @Field({ description: 'Permanent removal of posts (administrators).' })
+  purge!: boolean;
+  @Field() acceptAnswer!: boolean;
+  @Field() close!: boolean;
+  @Field() reopen!: boolean;
+  @Field({
+    description:
+      'Signed in and the topic is open; read-only mode is reported by viewerSanctionStatus.',
+  })
+  reply!: boolean;
+}
+
+type ModerationFacts = { facts: ForumViewerFacts; assigned: Set<string> };
+
 type Loaders = {
+  moderation: () => Promise<ModerationFacts | null>;
+  forumCategory: DataLoader<string, string | null>;
   cards: DataLoader<string, ForumMemberCard | null>;
   votes: DataLoader<string, number | null>;
   stats: DataLoader<string, ForumActivityStats>;
@@ -84,13 +113,29 @@ export class ForumReadLoaders {
   constructor(
     private readonly members: ForumMemberCardReader,
     private readonly reads: PrismaForumReadModels,
+    private readonly viewers?: ForumViewerFactsReader,
   ) {}
 
   for(ctx: RequestContext): Loaders {
     let loaders = perRequest.get(ctx.req);
     if (!loaders) {
       const viewerId = ctx.req.user?.id ?? null;
+      let moderation: Promise<ModerationFacts | null> | undefined;
       loaders = {
+        moderation: () =>
+          (moderation ??= (async () => {
+            if (!viewerId || !this.viewers) return null;
+            const facts = await this.viewers.read(viewerId, new Date());
+            if (facts.subjectId === null) return null;
+            return {
+              facts,
+              assigned: await this.reads.assignedCategories(viewerId),
+            };
+          })()),
+        forumCategory: new DataLoader(async (forumIds) => {
+          const map = await this.reads.forumCategories(forumIds);
+          return forumIds.map((id) => map.get(id) ?? null);
+        }),
         cards: new DataLoader(async (ids) => {
           const cards = await this.members.cards(ids);
           const byId = new Map(cards.map((card) => [card.id, card]));
@@ -117,8 +162,12 @@ export class ForumReadLoaders {
 
 abstract class ForumReadResolverBase {
   protected readonly loaders: ForumReadLoaders;
-  constructor(members: ForumMemberCardReader, reads: PrismaForumReadModels) {
-    this.loaders = new ForumReadLoaders(members, reads);
+  constructor(
+    members: ForumMemberCardReader,
+    reads: PrismaForumReadModels,
+    viewers?: ForumViewerFactsReader,
+  ) {
+    this.loaders = new ForumReadLoaders(members, reads, viewers);
   }
 
   protected card(ctx: RequestContext, id: string | null | undefined) {
@@ -151,8 +200,52 @@ export class ForumTopicReadResolver extends ForumReadResolverBase {
   constructor(
     @Inject(FORUM_MEMBER_CARDS) members: ForumMemberCardReader,
     reads: PrismaForumReadModels,
+    @Inject(FORUM_VIEWER_FACTS) viewers: ForumViewerFactsReader,
   ) {
-    super(members, reads);
+    super(members, reads, viewers);
+  }
+
+  @ResolveField(() => ForumTopicViewerAbilitiesModel)
+  async viewerAbilities(
+    @Parent() topic: ForumTopicModel,
+    @Context() ctx: RequestContext,
+  ): Promise<ForumTopicViewerAbilitiesModel> {
+    const loaders = this.loaders.for(ctx);
+    const scope = await loaders.moderation();
+    if (!scope) {
+      return {
+        moderate: false,
+        purge: false,
+        acceptAnswer: false,
+        close: false,
+        reopen: false,
+        reply: false,
+      };
+    }
+    const { facts, assigned } = scope;
+    const categoryId = await loaders.forumCategory.load(topic.forumId);
+    const moderator =
+      facts.moderatesAllCategories ||
+      facts.seesAllCategories ||
+      (categoryId !== null && assigned.has(categoryId));
+    const actor = { id: facts.subjectId!, moderator };
+    const curator = topic.curatorId === actor.id;
+    const facts4rules = {
+      authorId: topic.authorId,
+      curatorId: topic.curatorId,
+      state: topic.state,
+    };
+    return {
+      moderate: moderator,
+      purge: facts.canPurgeContent,
+      acceptAnswer:
+        topic.kind === 'QUESTION' &&
+        (moderator || curator || topic.authorId === actor.id) &&
+        (topic.acceptedAnswerPostId === null || moderator),
+      close: canCloseTopic(facts4rules, actor),
+      reopen: canReopenTopic(facts4rules, actor),
+      reply: topic.state === 'OPEN',
+    };
   }
 
   @ResolveField(() => ForumMemberModel, { nullable: true })
