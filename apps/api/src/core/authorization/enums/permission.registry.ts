@@ -142,6 +142,59 @@ export const PERMISSIONS = {
     label: 'Manage moderation annotations',
     description: 'Allows publishing and revoking moderation annotations.',
   },
+  ModerationSanctionsView: {
+    key: 'moderation.sanctions.view',
+    label: 'View sanction journals',
+    description: "Allows reading any user's private sanctions journal.",
+  },
+  ModerationWarningsIssue: {
+    key: 'moderation.warnings.issue',
+    label: 'Issue verbal warnings',
+    description: 'Allows issuing expiring verbal warnings.',
+  },
+  ModerationReadOnlyIssue: {
+    key: 'moderation.read-only.issue',
+    label: 'Issue read-only sanctions',
+    description: 'Allows issuing temporary read-only sanctions.',
+  },
+  ModerationSanctionsRevoke: {
+    key: 'moderation.sanctions.revoke',
+    label: 'Revoke sanctions',
+    description: 'Allows revoking active sanctions with a recorded reason.',
+  },
+  ModerationSanctionsStaff: {
+    key: 'moderation.sanctions.staff',
+    label: 'Sanction staff',
+    description: 'Allows sanctioning users who can issue sanctions themselves.',
+  },
+  ModerationPolicyManage: {
+    key: 'moderation.policy.manage',
+    label: 'Manage sanction policy',
+    description: 'Allows changing warning lifetime and escalation thresholds.',
+  },
+  ForumStructureManage: {
+    key: 'forum.structure.manage',
+    label: 'Manage forum structure',
+    description:
+      'Allows managing forum categories, forums, subforums and category visibility; holders see every category.',
+  },
+  ForumModeratorsAssign: {
+    key: 'forum.moderators.assign',
+    label: 'Assign forum moderators',
+    description: 'Allows assigning and revoking category moderators.',
+  },
+  ForumContentPurge: {
+    key: 'forum.content.purge',
+    label: 'Purge forum content',
+    description:
+      'Allows physically erasing forum post content for legal, security or privacy reasons.',
+  },
+  ForumModerateAll: {
+    key: 'forum.moderate.all',
+    label: 'Moderate every forum category',
+    description:
+      'Supermoderator scope: moderation authority in every forum category.',
+  },
   ContentGatesConfigure: {
     key: 'content-gates.configure',
     label: 'Configure Content Gates',

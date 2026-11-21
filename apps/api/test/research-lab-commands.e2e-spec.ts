@@ -52,6 +52,8 @@ describe('Research Lab commands (e2e)', () => {
         plainText: '',
         searchText: '',
       }),
+      normalizeForumTopic: jest.fn(),
+      normalizeForumReply: jest.fn(),
     };
     service = new ResearchLabService(
       fixture.prisma,
@@ -107,6 +109,80 @@ describe('Research Lab commands (e2e)', () => {
     };
   }
 
+  it('releases an unsubmitted route only for the current draft and version', async () => {
+    const author = await user(),
+      other = await user();
+    const input = content('discard-' + randomUUID());
+    const { pageId, draftId } = await service.createDraft({
+      actorId: author,
+      ...input,
+    });
+    await service.saveDraft({
+      actorId: author,
+      pageId,
+      expectedVersion: 1,
+      ...input,
+    });
+    for (const [actor, id, version] of [
+      [other, draftId, 2],
+      [author, draftId, 1],
+      [author, randomUUID(), 2],
+    ] as const) {
+      await expect(
+        service.discardDraft(actor, pageId, id, version),
+      ).rejects.toMatchObject({ code: 'DRAFT_CONFLICT' });
+    }
+    expect(await service.ownDraft(author, pageId)).toMatchObject({
+      id: draftId,
+      version: 2,
+    });
+    expect(
+      await service.discardDraft(author, pageId, draftId, 2),
+    ).toMatchObject({ routeReleased: true });
+    const replacement = await service.createDraft({ actorId: other, ...input });
+    expect(replacement.pageId).not.toBe(pageId);
+  });
+
+  it('keeps the route and first submitted revision when a returned draft is discarded', async () => {
+    const author = await user(),
+      guardian = await user(true);
+    const input = content('reviewed-discard-' + randomUUID());
+    const { pageId, draftId } = await service.createDraft({
+      actorId: author,
+      ...input,
+    });
+    const { revisionId } = await service.submitDraft({
+      actorId: author,
+      pageId,
+      expectedVersion: 1,
+      editSummary: 'Review',
+      correlationId: randomUUID(),
+    });
+    await service.requestChanges({
+      actorId: guardian,
+      pageId,
+      revisionId,
+      reason: 'More context',
+      correlationId: randomUUID(),
+    });
+    const returned = await service.ownDraft(author, pageId);
+    expect(returned).toMatchObject({ version: 1 });
+    await expect(
+      service.discardDraft(author, pageId, draftId, 1),
+    ).rejects.toMatchObject({ code: 'DRAFT_CONFLICT' });
+    expect(
+      await service.discardDraft(author, pageId, returned!.id, 1),
+    ).toMatchObject({ routeReleased: false });
+    expect(
+      await fixture.prisma.researchRevision.findUnique({
+        where: { id: revisionId },
+      }),
+    ).toMatchObject({ pageId, state: 'CHANGES_REQUESTED' });
+    await expect(
+      service.createDraft({ actorId: guardian, ...input }),
+    ).rejects.toMatchObject({ code: 'REVISION_CONFLICT' });
+  });
+
   it('keeps drafts private and permits only one compare-and-swap save', async () => {
     const author = await user();
     const stranger = await user();
@@ -140,6 +216,68 @@ describe('Research Lab commands (e2e)', () => {
     );
     const stored = await service.ownDraft(author, created.pageId);
     expect(stored?.version).toBe(2);
+  });
+
+  it('requires moderation and the current audience before changing who can read a page', async () => {
+    const guardian = await user(true),
+      moderator = await user(),
+      outsider = await user();
+    moderators.add(moderator);
+    moderators.add(outsider);
+    const { pageId } = await service.createDraft({
+      actorId: guardian,
+      ...content('aud-' + randomUUID()),
+    });
+    await service.selfPublishDraft({
+      actorId: guardian,
+      pageId,
+      expectedVersion: 1,
+      editSummary: 'Initial',
+      correlationId: randomUUID(),
+    });
+    await expect(
+      service.setAudience(guardian, pageId, 'MEMBERS', []),
+    ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+    await expect(
+      service.setAudience(moderator, pageId, 'GROUPS', []),
+    ).rejects.toMatchObject({ code: 'INVALID_STATE' });
+    memberships.set(moderator, ['group:editors']);
+    expect(
+      await service.setAudience(moderator, pageId, 'GROUPS', [
+        'editors',
+        'editors',
+      ]),
+    ).toEqual({ visibility: 'GROUPS', groupKeys: ['editors'] });
+    await service.setAudience(moderator, pageId, 'GROUPS', ['editors']);
+    await expect(
+      service.setAudience(outsider, pageId, 'PUBLIC', []),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    expect(await service.audiencePolicy(moderator, pageId)).toEqual({
+      visibility: 'GROUPS',
+      groupKeys: ['editors'],
+    });
+    await expect(
+      service.audiencePolicy(outsider, pageId),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    const audit = await fixture.prisma.auditRecord.findMany({
+      where: { targetId: pageId, action: 'research_lab.audience_updated' },
+    });
+    expect(audit).toHaveLength(1);
+    expect(audit[0]).toMatchObject({
+      actorId: moderator,
+      metadata: {
+        previousVisibility: 'PUBLIC',
+        visibility: 'GROUPS',
+        groupKeys: ['editors'],
+      },
+    });
+    await service.setAudience(moderator, pageId, 'MEMBERS', []);
+    expect(
+      await fixture.prisma.researchPageAudienceGroup.count({
+        where: { pageId },
+      }),
+    ).toBe(0);
+    await service.setAudience(outsider, pageId, 'PUBLIC', []);
   });
 
   it('checks current audience before reading, saving or submitting a private draft', async () => {
@@ -321,6 +459,149 @@ describe('Research Lab commands (e2e)', () => {
     ).resolves.toMatchObject({ pageId: created.pageId, version: 1 });
   });
 
+  it('uses the trusted edit groups of each page and rechecks them on save and submission', async () => {
+    const guardian = await user(true);
+    const editor = await user();
+    const pages: { pageId: string; input: ReturnType<typeof content> }[] = [];
+    for (const group of ['database-editors', 'design-editors']) {
+      const input = content('trusted-' + randomUUID());
+      const { pageId } = await service.createDraft({
+        actorId: guardian,
+        ...input,
+      });
+      await service.selfPublishDraft({
+        actorId: guardian,
+        pageId,
+        expectedVersion: 1,
+        editSummary: 'Initial',
+        correlationId: randomUUID(),
+      });
+      await service.setTrustedEditors(guardian, pageId, [group]);
+      pages.push({ pageId, input });
+    }
+    const [database, design] = pages;
+    const policy = {
+      protectionLevel: 'TRUSTED',
+      trustedEditGroupKeys: ['database-editors'],
+    };
+    expect(await service.editPolicy(guardian, database.pageId)).toEqual(policy);
+    await expect(
+      service.editPolicy(editor, database.pageId),
+    ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+    await expect(
+      service.setEditProtection(editor, database.pageId, 'OPEN'),
+    ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+    await service.setEditProtection(guardian, database.pageId, 'LOCKED');
+    await expect(
+      service.startDraft(guardian, database.pageId),
+    ).rejects.toMatchObject({ code: 'INVALID_STATE' });
+    await service.setEditProtection(guardian, database.pageId, 'GUARDIAN_ONLY');
+    await expect(
+      service.startDraft(editor, database.pageId),
+    ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+    await service.setEditProtection(guardian, database.pageId, 'OPEN');
+    await expect(
+      service.startDraft(editor, database.pageId),
+    ).resolves.toMatchObject({ version: 1 });
+    expect(
+      await service.setEditProtection(guardian, database.pageId, 'TRUSTED'),
+    ).toEqual(policy);
+    memberships.set(editor, ['group:database-editors']);
+    await expect(
+      service.setTrustedEditors(editor, design.pageId, ['database-editors']),
+    ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+    await expect(
+      service.startDraft(editor, design.pageId),
+    ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+    await service.startDraft(editor, database.pageId);
+    const save = {
+      actorId: editor,
+      pageId: database.pageId,
+      expectedVersion: 1,
+      ...database.input,
+    };
+    const submit = {
+      actorId: editor,
+      pageId: database.pageId,
+      expectedVersion: 2,
+      editSummary: 'Proposed edit',
+      correlationId: randomUUID(),
+    };
+    memberships.delete(editor);
+    await expect(service.saveDraft(save)).rejects.toMatchObject({
+      code: 'DRAFT_CONFLICT',
+    });
+    memberships.set(editor, ['group:database-editors']);
+    await expect(service.saveDraft(save)).resolves.toMatchObject({
+      version: 2,
+    });
+    await service.setTrustedEditors(guardian, database.pageId, []);
+    await expect(service.submitDraft(submit)).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+    });
+    await service.setTrustedEditors(guardian, database.pageId, [
+      'database-editors',
+    ]);
+    await expect(service.submitDraft(submit)).resolves.toMatchObject({
+      state: 'IN_REVIEW',
+    });
+  });
+
+  it('records a change request while preserving the newer private draft', async () => {
+    const guardian = await user(true);
+    const author = await user();
+    const input = content('review-' + randomUUID());
+    const { pageId } = await service.createDraft({
+      actorId: guardian,
+      ...input,
+    });
+    await service.selfPublishDraft({
+      actorId: guardian,
+      pageId,
+      expectedVersion: 1,
+      editSummary: 'Initial',
+      correlationId: randomUUID(),
+    });
+    await service.startDraft(author, pageId);
+    const submitted = await service.submitDraft({
+      actorId: author,
+      pageId,
+      expectedVersion: 1,
+      editSummary: 'Proposal',
+      correlationId: randomUUID(),
+    });
+    await service.startDraft(author, pageId);
+    await service.saveDraft({
+      actorId: author,
+      pageId,
+      expectedVersion: 1,
+      ...input,
+      title: 'Unsubmitted work',
+    });
+    const before = await service.ownDraft(author, pageId);
+    expect(before).toMatchObject({ version: 2, title: 'Unsubmitted work' });
+    const correlationId = randomUUID();
+    await expect(
+      service.requestChanges({
+        actorId: guardian,
+        pageId,
+        revisionId: submitted.revisionId,
+        reason: 'Add sources',
+        correlationId,
+      }),
+    ).resolves.toMatchObject({ state: 'CHANGES_REQUESTED' });
+    expect(await service.ownDraft(author, pageId)).toEqual(before);
+    expect(
+      await fixture.prisma.researchReviewDecision.count({
+        where: {
+          revisionId: submitted.revisionId,
+          action: 'CHANGES_REQUESTED',
+          auditCorrelationId: correlationId,
+        },
+      }),
+    ).toBe(1);
+  });
+
   it('opens a fresh private draft when a Guardian requests changes', async () => {
     const author = await user();
     const guardian = await user(true);
@@ -350,6 +631,21 @@ describe('Research Lab commands (e2e)', () => {
       version: 1,
       title: 'Research title',
     });
+    const history = (viewer: string) =>
+      service.reviewHistory(viewer, created.pageId, submitted.revisionId);
+    const decisions = await history(author);
+    expect(decisions.map(({ action }) => action)).toEqual([
+      'SUBMITTED',
+      'CHANGES_REQUESTED',
+    ]);
+    expect(decisions[1]).toMatchObject({
+      actorId: guardian,
+      reason: 'Add sources',
+    });
+    expect(await history(guardian)).toEqual(decisions);
+    expect(await history(await user())).toEqual([]);
+    guardians.delete(guardian);
+    expect(await history(guardian)).toEqual([]);
     await expect(
       fixture.prisma.researchRevision.findUniqueOrThrow({
         where: { id: submitted.revisionId },
@@ -539,5 +835,51 @@ describe('Research Lab commands (e2e)', () => {
     expect(
       await fixture.prisma.researchRevision.count({ where: { pageId } }),
     ).toBe(0);
+  });
+  it('repairs stale derived fields from the published source before opening an editable draft', async () => {
+    const actorId = await user(true);
+    const { pageId } = await service.createDraft({
+      actorId,
+      ...content('repair-' + randomUUID()),
+    });
+    const { revisionId } = await service.selfPublishDraft({
+      actorId,
+      pageId,
+      expectedVersion: 1,
+      editSummary: 'Initial',
+      policySnapshotHash: 'policy',
+      correlationId: randomUUID(),
+    });
+    const before = await fixture.prisma.researchRevision.findUniqueOrThrow({
+      where: { id: revisionId },
+    });
+    await fixture.prisma.researchRevision.update({
+      where: { id: revisionId },
+      data: { plainText: 'stale', searchText: 'stale' },
+    });
+    for (const contributor of [await user(), await user()]) {
+      const { draftId } = await service.startDraft(contributor, pageId);
+      expect(
+        await fixture.prisma.researchDraft.findUniqueOrThrow({
+          where: { id: draftId },
+        }),
+      ).toMatchObject({
+        plainText: before.plainText,
+        searchText: before.searchText,
+        basePublishedRevisionId: revisionId,
+      });
+      expect(
+        await fixture.prisma.researchRevision.findUniqueOrThrow({
+          where: { id: revisionId },
+        }),
+      ).toEqual(before);
+    }
+    await fixture.prisma.researchRevision.update({
+      where: { id: revisionId },
+      data: { contentHash: '0'.repeat(64) },
+    });
+    await expect(
+      service.startDraft(await user(), pageId),
+    ).rejects.toMatchObject({ code: 'REVISION_CONFLICT' });
   });
 });

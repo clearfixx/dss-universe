@@ -79,6 +79,7 @@ describe('ContentGatesService', () => {
     comments: 0,
     forumPosts: 0,
     publications: 0,
+    readOnly: false,
     reputation: 0,
     groups: [] as string[],
   };
@@ -428,6 +429,7 @@ describe('ContentGatesService', () => {
       comments: 0,
       forumPosts: 0,
       publications: 0,
+      readOnly: false,
       reputation: 50,
       groups: [],
     });
@@ -445,6 +447,7 @@ describe('ContentGatesService', () => {
       comments: 0,
       forumPosts: 0,
       publications: 0,
+      readOnly: false,
       reputation: 0,
       groups: ['Premium'],
     });
@@ -454,6 +457,32 @@ describe('ContentGatesService', () => {
       bypassed: true,
     });
     expect(result.notice).toContain('Premium');
+  });
+
+  it('denies a read-only viewer even when Premium or thresholds would unlock', async () => {
+    repository.findById.mockResolvedValue(gate);
+    setFacts({
+      ...baseFacts,
+      accountAgeDays: 400,
+      reputation: 400,
+      readOnly: true,
+      groups: ['Premium'],
+    });
+    await expect(service.evaluate(gate.id, 'viewer')).resolves.toEqual({
+      gate,
+      allowed: false,
+      bypassed: false,
+      unmet: [],
+      notice: 'Hidden content is unavailable while your account is read-only.',
+    });
+  });
+
+  it('keeps author preview available to a read-only author', async () => {
+    repository.findById.mockResolvedValue(gate);
+    setFacts({ ...baseFacts, readOnly: true });
+    await expect(
+      service.evaluate(gate.id, gate.ownerId),
+    ).resolves.toMatchObject({ allowed: true, bypassed: true });
   });
 
   it('fails closed for guests without querying user facts', async () => {

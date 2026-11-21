@@ -147,6 +147,16 @@ export class ContentGatesService {
     if (!statistics || !access)
       throw new NotFoundException('Content Gate viewer was not found.');
     const facts = { ...statistics, groups: [...access.groups] };
+    if (facts.readOnly && gate.ownerId !== viewerId) {
+      return {
+        gate,
+        allowed: false,
+        bypassed: false,
+        unmet: [],
+        notice:
+          'Hidden content is unavailable while your account is read-only.',
+      };
+    }
 
     const audience = gate.requirements.filter(({ kind }) => kind === 'GROUP');
     if (audience.some((requirement) => !this.isMet(requirement, facts))) {

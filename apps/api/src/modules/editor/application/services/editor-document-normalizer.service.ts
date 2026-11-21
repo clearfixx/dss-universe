@@ -40,4 +40,10 @@ export class EditorDocumentNormalizerService implements EditorDocumentNormalizer
   normalizeWiki(documentJson: string): ValidatedEditorDocument {
     return this.editor.normalize(documentJson, 'WIKI');
   }
+  normalizeForumTopic(documentJson: string): ValidatedEditorDocument {
+    return this.editor.normalize(documentJson, 'FORUM_TOPIC');
+  }
+  normalizeForumReply(documentJson: string): ValidatedEditorDocument {
+    return this.editor.normalize(documentJson, 'FORUM_REPLY');
+  }
 }

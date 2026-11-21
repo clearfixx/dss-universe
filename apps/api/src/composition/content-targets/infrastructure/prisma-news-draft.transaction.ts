@@ -30,6 +30,7 @@ import { AuditWriterService } from '@api/core/audit';
 import { PrismaService } from '@api/core/database';
 import { createEventEnvelope, OutboxWriterService } from '@api/core/events';
 import { PrismaInteractionTargetWriter } from '@api/modules/interactions/infrastructure';
+import { syncDocumentMediaReferences } from '../../media-references/sync-document-media-references';
 import {
   NEWS_INTERACTION_KIND,
   NEWS_SEARCH_PROJECTION_VERSION,
@@ -280,44 +281,15 @@ export class PrismaNewsDraftTransaction implements NewsDraftTransaction {
     actorId: string,
     mediaIds: string[],
   ): Promise<void> {
-    await transaction.mediaReference.updateMany({
-      where: {
+    await syncDocumentMediaReferences(
+      transaction,
+      {
         targetType: OWNER_TYPE,
         targetId: articleId,
         purpose: ATTACHMENT_PURPOSE,
-        removedAt: null,
-        ...(mediaIds.length ? { mediaId: { notIn: mediaIds } } : {}),
       },
-      data: { removedAt: new Date() },
-    });
-    for (const mediaId of mediaIds) {
-      const existing = await transaction.mediaReference.findFirst({
-        where: {
-          mediaId,
-          targetType: OWNER_TYPE,
-          targetId: articleId,
-          purpose: ATTACHMENT_PURPOSE,
-        },
-        orderBy: { createdAt: 'desc' },
-      });
-      if (existing) {
-        if (existing.removedAt) {
-          await transaction.mediaReference.update({
-            where: { id: existing.id },
-            data: { removedAt: null, createdBy: actorId },
-          });
-        }
-      } else {
-        await transaction.mediaReference.create({
-          data: {
-            mediaId,
-            targetType: OWNER_TYPE,
-            targetId: articleId,
-            purpose: ATTACHMENT_PURPOSE,
-            createdBy: actorId,
-          },
-        });
-      }
-    }
+      actorId,
+      mediaIds,
+    );
   }
 }

@@ -100,6 +100,8 @@ describe('Content integration boundaries', () => {
       normalizeNews: jest.fn().mockReturnValue(projection),
       normalizeComment: jest.fn().mockReturnValue(projection),
       normalizeWiki: jest.fn().mockReturnValue(projection),
+      normalizeForumTopic: jest.fn().mockReturnValue(projection),
+      normalizeForumReply: jest.fn().mockReturnValue(projection),
     } satisfies jest.Mocked<EditorDocumentNormalizer>;
     const search = {
       projectPublic: jest.fn(() => ({
@@ -168,6 +170,8 @@ describe('Content integration boundaries', () => {
       normalizeWiki: jest.fn().mockImplementation(() => {
         throw failure;
       }),
+      normalizeForumTopic: jest.fn(),
+      normalizeForumReply: jest.fn(),
     } satisfies jest.Mocked<EditorDocumentNormalizer>;
     const search = { projectPublic: jest.fn(), projectForViewer: jest.fn() };
     expect(() =>

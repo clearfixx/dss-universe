@@ -128,6 +128,80 @@ describe("PostgresActivityProjector", () => {
     expect(JSON.stringify(values)).toContain("station-update");
     expect(JSON.stringify(values)).not.toContain("must not enter the feed");
   });
+
+  const forumEvent = (
+    eventName: string,
+    aggregateType: string,
+    payload: Record<string, unknown>,
+    producer = "dss.api.forum",
+  ): IntegrationEventJob => ({
+    eventId: "forum-" + eventName,
+    eventName,
+    eventVersion: 1,
+    category: "integration",
+    producer,
+    actorId: "actor-1",
+    aggregateType,
+    aggregateId: "aggregate-1",
+    payload,
+    occurredAt: "2026-11-21T00:00:00.000Z",
+  });
+
+  it("projects forum topics, replies and accepted answers as MEMBERS entries", async () => {
+    await projector.project(
+      forumEvent("forum.topic.created.v1", "ForumTopic", {
+        authorId: "author-1",
+        title: "Hello",
+        forumId: "forum-1",
+      }),
+    );
+    await projector.project(
+      forumEvent("forum.post.created.v1", "ForumPost", {
+        authorId: "author-2",
+        topicId: "topic-1",
+        number: 2,
+      }),
+    );
+    await projector.project(
+      forumEvent("forum.answer.accepted.v1", "ForumTopic", {
+        authorId: "author-2",
+        postId: "post-9",
+        topicId: "topic-1",
+      }),
+    );
+    const inserts = query.mock.calls
+      .filter(([sql]) => String(sql).includes('INSERT INTO "activity_entries"'))
+      .map(([sql, values]) => ({
+        sql: String(sql),
+        values: values as unknown[],
+      }));
+    expect(inserts).toHaveLength(3);
+    expect(inserts.every(({ sql }) => sql.includes("'MEMBERS'"))).toBe(true);
+    expect(inserts.map(({ values }) => values[3])).toEqual([
+      "FORUM_TOPIC_CREATED",
+      "FORUM_REPLY_CREATED",
+      "FORUM_ANSWER_ACCEPTED",
+    ]);
+    expect(inserts[2].values[5]).toBe("post-9");
+  });
+
+  it("rejects forum events from another producer or without an author", async () => {
+    await expect(
+      projector.project(
+        forumEvent(
+          "forum.topic.created.v1",
+          "ForumTopic",
+          { authorId: "a" },
+          "dss.api.other",
+        ),
+      ),
+    ).rejects.toThrow("Invalid forum activity event.");
+    await expect(
+      projector.project(
+        forumEvent("forum.post.created.v1", "ForumPost", { topicId: "t" }),
+      ),
+    ).rejects.toThrow("Forum activity metadata is incomplete.");
+  });
 });
 
 /**

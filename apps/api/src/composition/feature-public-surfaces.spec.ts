@@ -37,6 +37,7 @@ import {
   InteractionsModule,
   COMMENT_COUNT_READER,
   INTERACTION_POLICY_REGISTRATIONS,
+  POLL_COMMANDS,
 } from '@api/modules/interactions';
 import { CustomTitlesService } from '../modules/custom-titles/application/services/custom-titles.service';
 import { LeaderboardsService } from '../modules/leaderboards/application/services/leaderboards.service';
@@ -47,6 +48,7 @@ import { InteractionTargetsService } from '../modules/interactions/application/s
 import { ReactionsService } from '../modules/interactions/application/services/reactions.service';
 import { AudienceEngagementService } from '../modules/interactions/application/services/audience-engagement.service';
 import { ModerationService } from '../modules/interactions/application/services/moderation.service';
+import { PollsService } from '../modules/interactions/application/services/polls.service';
 
 describe.each([
   {
@@ -64,7 +66,11 @@ describe.each([
   {
     name: 'interactions',
     module: InteractionsModule,
-    exports: [COMMENT_COUNT_READER, INTERACTION_POLICY_REGISTRATIONS],
+    exports: [
+      COMMENT_COUNT_READER,
+      INTERACTION_POLICY_REGISTRATIONS,
+      POLL_COMMANDS,
+    ],
     providers: [
       BookmarksService,
       CommentDraftsService,
@@ -73,6 +79,7 @@ describe.each([
       ReactionsService,
       AudienceEngagementService,
       ModerationService,
+      PollsService,
     ],
   },
 ])('$name public boundary', (boundary) => {

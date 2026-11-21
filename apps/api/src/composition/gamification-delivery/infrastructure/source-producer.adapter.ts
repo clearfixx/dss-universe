@@ -10,6 +10,7 @@ import {
 import { PrismaPublicationEvidenceReader } from '@api/modules/news/infrastructure';
 import { PrismaCommentLifetimeReader } from '@api/modules/interactions/infrastructure';
 import { PrismaPointLedgerEvidenceReader } from '@api/modules/community-points/infrastructure';
+import { PrismaForumContributionReader } from '@api/modules/forum/infrastructure';
 import type {
   QualifiedAchievementCommand,
   QualifiedAchievementFact,
@@ -20,6 +21,7 @@ import type {
 } from '@api/modules/community-points';
 import type { AdmissionRejectionCode } from '../contracts/consumption.types';
 import type { SourceAdmissionSeal } from '../contracts/admission-seal.types';
+import type { SourcePointProfileId } from '../contracts/admission-seal.types';
 import { profileForEvent } from '../contracts/producer-catalog';
 
 type Canonical = CanonicalOutboxEvidence;
@@ -47,6 +49,22 @@ const pointKeys = [
   'sourceType',
   'sourceId',
 ] as const;
+const forumKeys = ['targetId', 'authorId', 'postId', 'topicId'] as const;
+const FORUM_SOURCES = {
+  'forum.topics': {
+    sourceType: 'ForumTopic',
+    eventName: 'forum.topic.created.v1',
+  },
+  'forum.replies': {
+    sourceType: 'ForumPost',
+    eventName: 'forum.post.created.v1',
+  },
+  'forum.answers': {
+    sourceType: 'ForumAnswerCredit',
+    eventName: 'forum.answer.credited.v1',
+  },
+} as const;
+type ForumProfileId = keyof typeof FORUM_SOURCES;
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function header(e: Canonical) {
@@ -107,6 +125,7 @@ export class SourceProducerAdapter {
     private readonly news: PrismaPublicationEvidenceReader,
     private readonly comments: PrismaCommentLifetimeReader,
     private readonly points: PrismaPointLedgerEvidenceReader,
+    private readonly forum: PrismaForumContributionReader,
   ) {}
 
   async prepare(
@@ -122,11 +141,17 @@ export class SourceProducerAdapter {
       return this.publication(transaction, eventId);
     if (p.id === 'comments.lifetime') return this.comment(transaction, eventId);
     if (p.id === 'points.ledger') return this.ledger(transaction, eventId);
+    if (Object.hasOwn(FORUM_SOURCES, p.id))
+      return this.forumContribution(
+        transaction,
+        eventId,
+        p.id as ForumProfileId,
+      );
     return { status: 'BLOCKED', code: 'UNSUPPORTED_DESCRIPTOR' };
   }
 
   private withPoints(
-    id: 'news.publication' | 'comments.lifetime',
+    id: SourcePointProfileId,
     event: Canonical,
     recipientId: string,
     actors: Readonly<Record<string, string>>,
@@ -350,6 +375,85 @@ export class SourceProducerAdapter {
       facts,
       contribution,
       evidence,
+    );
+  }
+
+  /**
+   * Forum contributions are one-way: exactly one canonical creation event per
+   * source, QUALIFY at revision 1 and never WITHDRAW (points are not revoked on
+   * deletion). Topic and post identity survive moves, merges and splits.
+   */
+  private async forumContribution(
+    tx: TransactionClient,
+    eventId: string,
+    id: ForumProfileId,
+  ): Promise<PreparedSourceSeal> {
+    const source = FORUM_SOURCES[id];
+    const e = await this.canonical.readSelected(tx, eventId, forumKeys);
+    if (!valid(e) || e.name !== source.eventName) return mismatch();
+    const sourceId = e.aggregateId!;
+    let authorId: string;
+    let actorId: string;
+    let revision: '1';
+    if (id === 'forum.topics') {
+      const owned = await this.forum.topic(tx, sourceId);
+      if (!owned) return missing();
+      ({ authorId } = owned);
+      actorId = owned.authorId;
+      revision = owned.qualificationRevision;
+    } else {
+      const owned = await this.forum.post(tx, sourceId);
+      if (!owned) return missing();
+      authorId = owned.authorId;
+      revision = owned.qualificationRevision;
+      if (id === 'forum.replies') {
+        // Post #1 belongs to topic creation and never earns reply points.
+        if (owned.number === 1) return mismatch();
+        actorId = owned.authorId;
+      } else {
+        if (!owned.firstAcceptedById) return missing();
+        // Nobody earns the answer bonus by accepting their own post.
+        if (owned.firstAcceptedById === owned.authorId) return mismatch();
+        actorId = owned.firstAcceptedById;
+      }
+    }
+    const candidates = await this.canonical.candidatesSelected(
+      tx,
+      {
+        producer: e.producer,
+        aggregateType: source.sourceType,
+        aggregateId: sourceId,
+        eventName: source.eventName,
+      },
+      forumKeys,
+    );
+    if (candidates.length !== 1) return missing();
+    const created = candidates[0];
+    if (
+      created.eventId !== e.eventId ||
+      !valid(created) ||
+      created.payload!.targetId !== sourceId ||
+      created.payload!.authorId !== authorId ||
+      created.actorId !== actorId ||
+      (id === 'forum.answers' && created.payload!.postId !== sourceId)
+    )
+      return mismatch();
+    const q = fact(
+      created,
+      source.sourceType,
+      sourceId,
+      created,
+      revision,
+      'QUALIFY',
+    );
+    return this.withPoints(
+      id,
+      created,
+      authorId,
+      { authorId },
+      [q],
+      q,
+      new Map([[created.eventId, created]]),
     );
   }
 

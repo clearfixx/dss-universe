@@ -19,6 +19,11 @@ export {
   type ActivityViewerContext,
 } from './domain/ports/activity-viewer-context.interface';
 export {
+  ACTIVITY_SUBJECT_VISIBILITY,
+  type ActivitySubjectRef,
+  type ActivitySubjectVisibilityReader,
+} from './domain/ports/activity-subject-visibility.interface';
+export {
   ACTOR_ACTIVITY_READER,
   type ActorActivityReader,
   type ActorActivitySummary,

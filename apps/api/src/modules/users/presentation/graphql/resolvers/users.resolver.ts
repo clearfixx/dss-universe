@@ -36,7 +36,12 @@ import {
 } from '@nestjs/graphql';
 import { OptionalUsersJwtGuard } from '../guards/optional-users-jwt.guard';
 
-import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
+import {
+  AuthUser,
+  JwtAuthGuard,
+  PermittedWhileReadOnly,
+  type AuthenticatedUser,
+} from '@api/core/auth';
 import {
   Permission,
   PermissionsGuard,
@@ -145,6 +150,7 @@ export class UsersResolver {
     return this.toPrivacyModel(await this.privacy.get(authenticated.id));
   }
 
+  @PermittedWhileReadOnly()
   @Mutation(() => UserPrivacyModel)
   @UseGuards(JwtAuthGuard)
   async updateViewerPrivacy(
@@ -214,6 +220,7 @@ export class UsersResolver {
     return this.graph.unfollow(authenticated.id, userId);
   }
 
+  @PermittedWhileReadOnly()
   @Mutation(() => UserBlockResultModel)
   @UseGuards(JwtAuthGuard)
   async blockUser(
@@ -224,6 +231,7 @@ export class UsersResolver {
     return { userId, blocked: true };
   }
 
+  @PermittedWhileReadOnly()
   @Mutation(() => UserBlockResultModel)
   @UseGuards(JwtAuthGuard)
   async unblockUser(

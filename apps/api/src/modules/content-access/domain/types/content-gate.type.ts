@@ -50,6 +50,8 @@ export type ContentGateViewerFacts = {
   forumPosts: number;
   publications: number;
   reputation: number;
+  /** Active read-only sanction: no gate may be unlocked except by its author. */
+  readOnly: boolean;
   groups: string[];
 };
 
