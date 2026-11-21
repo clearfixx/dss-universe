@@ -14,6 +14,10 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+import type {
+  ResearchProtectionLevel,
+  ResearchVisibility,
+} from '../domain/types/research-lab.type';
 import { researchAudience } from './research-audience';
 import { createHash, randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
@@ -60,6 +64,211 @@ export class ResearchLabService {
     @Inject(EDITOR_DELIVERY_READER)
     private readonly delivery: EditorDeliveryReader,
   ) {}
+
+  private editorGroups(groups: readonly string[]) {
+    return groups
+      .filter((key) => key.startsWith('group:'))
+      .map((key) => key.slice(6));
+  }
+
+  private editProtection(
+    groups: readonly string[],
+    guardian: boolean,
+  ): Prisma.ResearchPageWhereInput {
+    return guardian
+      ? { protectionLevel: { not: 'LOCKED' } }
+      : {
+          OR: [
+            { protectionLevel: 'OPEN' },
+            {
+              protectionLevel: 'TRUSTED',
+              trustedEditGroupKeys: { hasSome: this.editorGroups(groups) },
+            },
+          ],
+        };
+  }
+
+  private async protectionScope(
+    actorId: string,
+    pageId: string,
+  ): Promise<Prisma.ResearchPageWhereInput> {
+    const facts = await this.requireGuardian(actorId);
+    return {
+      id: pageId,
+      state: { in: ['ACTIVE', 'DRAFT'] },
+      ...researchAudience(facts.groups, true),
+    };
+  }
+
+  async editPolicy(actorId: string, pageId: string) {
+    const page = await this.prisma.researchPage.findFirst({
+      where: await this.protectionScope(actorId, pageId),
+      select: { protectionLevel: true, trustedEditGroupKeys: true },
+    });
+    if (!page) this.notFound('Research page');
+    return page;
+  }
+
+  async setEditProtection(
+    actorId: string,
+    pageId: string,
+    level: ResearchProtectionLevel,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      await this.lockPage(tx, pageId);
+      const [page] = await tx.researchPage.updateManyAndReturn({
+        where: await this.protectionScope(actorId, pageId),
+        data: { protectionLevel: level },
+        select: { protectionLevel: true, trustedEditGroupKeys: true },
+      });
+      if (!page) this.notFound('Research page');
+      await this.record(tx, actorId, pageId, 'protection.updated', {
+        protectionLevel: level,
+        policySnapshotHash: await this.policySnapshotHash(tx, pageId),
+      });
+      return page;
+    });
+  }
+
+  async audiencePolicy(actorId: string, pageId: string) {
+    return this.prisma.$transaction(
+      (tx) => this.readAudience(tx, actorId, pageId),
+      { isolationLevel: 'RepeatableRead' },
+    );
+  }
+
+  private async readAudience(
+    tx: TransactionClient,
+    actorId: string,
+    pageId: string,
+  ) {
+    const at = new Date();
+    if (!(await this.authority.canModerate(actorId, at))) {
+      throw new ResearchLabCommandError(
+        'ACCESS_DENIED',
+        'Research Lab moderation permission required.',
+      );
+    }
+    const facts = await this.requireAuthenticated(actorId);
+    const page = await tx.researchPage.findFirst({
+      where: {
+        id: pageId,
+        state: { in: ['ACTIVE', 'ARCHIVED'] },
+        publishedRevision: { is: { state: 'PUBLISHED' } },
+        ...researchAudience(facts.groups, true),
+      },
+      select: {
+        visibility: true,
+        audienceGroups: {
+          select: { groupKey: true },
+          orderBy: { groupKey: 'asc' },
+        },
+      },
+    });
+    if (!page) this.notFound('Published page');
+    return {
+      visibility: page.visibility,
+      groupKeys: page.audienceGroups.map((group) => group.groupKey),
+    };
+  }
+
+  async setAudience(
+    actorId: string,
+    pageId: string,
+    visibility: ResearchVisibility,
+    groupKeys: string[],
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      await this.lockPage(tx, pageId);
+      const page = await this.readAudience(tx, actorId, pageId);
+      const keys = [...new Set(groupKeys)].sort();
+      if (
+        (visibility === 'GROUPS') !== keys.length > 0 ||
+        keys.some((key) => !/^[a-z][a-z0-9-]{0,63}$/.test(key))
+      ) {
+        throw new ResearchLabCommandError(
+          'INVALID_STATE',
+          'Supply group keys only for a group audience, with at least one key.',
+        );
+      }
+      const previous = page.groupKeys;
+      if (
+        page.visibility !== visibility ||
+        previous.join(',') !== keys.join(',')
+      ) {
+        await tx.researchPage.update({
+          where: { id: pageId },
+          data: {
+            visibility,
+            audienceGroups: {
+              deleteMany: {},
+              create: keys.map((groupKey) => ({ groupKey })),
+            },
+          },
+        });
+        await this.audit.append(tx, {
+          action: 'research_lab.audience_updated',
+          actorType: 'USER',
+          actorId,
+          targetType: 'ResearchPage',
+          targetId: pageId,
+          metadata: {
+            previousVisibility: page.visibility,
+            visibility,
+            previousGroupKeys: previous,
+            groupKeys: keys,
+          },
+        });
+        await this.outbox.append(
+          tx,
+          createEventEnvelope({
+            name: 'research-lab.audience.updated.v1',
+            version: 1,
+            category: 'integration',
+            producer: PRODUCER,
+            actorId,
+            aggregate: { type: 'ResearchPage', id: pageId },
+            payload: { pageId },
+          }),
+        );
+      }
+      return { visibility, groupKeys: keys };
+    });
+  }
+
+  async setTrustedEditors(
+    actorId: string,
+    pageId: string,
+    groupKeys: string[],
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      await this.lockPage(tx, pageId);
+      const page = await tx.researchPage.findFirst({
+        where: await this.protectionScope(actorId, pageId),
+        select: { id: true },
+      });
+      if (!page) this.notFound('Research page');
+      if (
+        groupKeys.some(
+          (key) => !/^[a-z][a-z0-9-]{0,63}$/.test(key) || key === 'premium',
+        )
+      )
+        throw new ResearchLabCommandError(
+          'INVALID_STATE',
+          'Invalid trusted edit group key.',
+        );
+      const keys = [...new Set(groupKeys)].sort();
+      await tx.researchPage.update({
+        where: { id: pageId },
+        data: { protectionLevel: 'TRUSTED', trustedEditGroupKeys: keys },
+      });
+      await this.record(tx, actorId, pageId, 'protection.updated', {
+        protectionLevel: 'TRUSTED',
+        policySnapshotHash: await this.policySnapshotHash(tx, pageId),
+      });
+      return keys;
+    });
+  }
 
   async createDraft(
     command: CreateResearchDraft,
@@ -121,7 +330,7 @@ export class ResearchLabService {
       version: command.expectedVersion,
       page: {
         state: { in: ['DRAFT', 'ACTIVE'] },
-        protectionLevel: facts.guardian ? { not: 'LOCKED' } : 'OPEN',
+        AND: this.editProtection(facts.groups, facts.guardian),
         ...researchAudience(facts.groups, true),
       },
     };
@@ -158,17 +367,79 @@ export class ResearchLabService {
     };
   }
 
-  async ownDraft(actorId: string, pageId: string) {
+  private async ownDraftScope(
+    actorId: string,
+  ): Promise<Prisma.ResearchDraftWhereInput> {
     const facts = await this.requireAuthenticated(actorId);
-    const draft = await this.prisma.researchDraft.findFirst({
-      where: {
-        pageId,
-        authorId: actorId,
-        page: {
-          state: { in: ['DRAFT', 'ACTIVE'] },
-          ...researchAudience(facts.groups, true),
-        },
+    return {
+      authorId: actorId,
+      page: {
+        state: { in: ['DRAFT', 'ACTIVE'] },
+        ...researchAudience(facts.groups, true),
       },
+    };
+  }
+
+  async discardDraft(
+    actorId: string,
+    pageId: string,
+    draftId: string,
+    expectedVersion: number,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      await this.lockPage(tx, pageId);
+      const scope = await this.ownDraftScope(actorId);
+      const removed = await tx.researchDraft.deleteMany({
+        where: { ...scope, pageId, id: draftId, version: expectedVersion },
+      });
+      if (removed.count !== 1) {
+        throw new ResearchLabCommandError(
+          'DRAFT_CONFLICT',
+          'Draft changed or is no longer available.',
+        );
+      }
+      const emptyPage = await tx.researchPage.findFirst({
+        where: {
+          id: pageId,
+          state: 'DRAFT',
+          publicationGeneration: 0,
+          firstPublishedAt: null,
+          publishedRevisionId: null,
+          revisions: { none: {} },
+          drafts: { none: {} },
+        },
+        select: { interactionTargetId: true, language: true, slug: true },
+      });
+      if (emptyPage) {
+        await this.lockRoute(tx, emptyPage.language, emptyPage.slug);
+        await tx.researchPage.delete({ where: { id: pageId } });
+        await tx.interactionTarget.update({
+          where: { id: emptyPage.interactionTargetId },
+          data: { status: 'RETIRED' },
+        });
+      }
+      await this.record(tx, actorId, pageId, 'draft.discarded', {
+        draftId,
+        version: expectedVersion,
+        routeReleased: !!emptyPage,
+      });
+      return { pageId, draftId, routeReleased: !!emptyPage };
+    });
+  }
+
+  async ownDrafts(actorId: string, offset: number, limit: number) {
+    return this.prisma.researchDraft.findMany({
+      where: await this.ownDraftScope(actorId),
+      select: { id: true, pageId: true, version: true, updatedAt: true },
+      orderBy: [{ updatedAt: 'desc' }, { id: 'asc' }],
+      skip: offset,
+      take: limit,
+    });
+  }
+
+  async ownDraft(actorId: string, pageId: string) {
+    const draft = await this.prisma.researchDraft.findFirst({
+      where: { ...(await this.ownDraftScope(actorId)), pageId },
     });
     if (draft) await this.requireDocumentAccess(actorId, draft.document);
     return draft;
@@ -197,10 +468,19 @@ export class ResearchLabService {
       });
       if (!page || !page.publishedRevision) this.notFound('Published page');
       this.assertPublishable(page);
-      if (page.protectionLevel !== 'OPEN' && !facts.guardian) {
+      if (
+        page.protectionLevel !== 'OPEN' &&
+        !facts.guardian &&
+        !(
+          page.protectionLevel === 'TRUSTED' &&
+          this.editorGroups(facts.groups).some((key) =>
+            page.trustedEditGroupKeys.includes(key),
+          )
+        )
+      ) {
         throw new ResearchLabCommandError(
           'ACCESS_DENIED',
-          'This Research Lab page requires Guardian edit authority.',
+          'You do not have edit access to this Research Lab page.',
         );
       }
       const existing = await tx.researchDraft.findUnique({
@@ -211,6 +491,7 @@ export class ResearchLabService {
         return { pageId, draftId: existing.id, version: existing.version };
       const revision = page.publishedRevision;
       await this.requireDocumentAccess(actorId, revision.document);
+      const projection = await this.repairRevisionText(tx, revision);
       const draft = await tx.researchDraft.create({
         data: {
           pageId,
@@ -220,8 +501,8 @@ export class ResearchLabService {
           summary: revision.summary,
           proposedSlug: revision.proposedSlug,
           document: revision.document as Prisma.InputJsonValue,
-          plainText: revision.plainText,
-          searchText: revision.searchText,
+          plainText: projection.plainText,
+          searchText: projection.searchText,
           metadata: revision.metadata as Prisma.InputJsonValue,
           coverMediaId: revision.coverMediaId,
         },
@@ -240,7 +521,7 @@ export class ResearchLabService {
       const page = await tx.researchPage.findFirst({
         where: {
           id: command.pageId,
-          protectionLevel: facts.guardian ? { not: 'LOCKED' } : 'OPEN',
+          AND: this.editProtection(facts.groups, facts.guardian),
           ...researchAudience(facts.groups, true),
         },
         select: {
@@ -520,16 +801,83 @@ export class ResearchLabService {
     });
   }
 
-  async reviewQueue(actorId: string) {
+  private async reviewScope(
+    actorId: string,
+  ): Promise<Prisma.ResearchRevisionWhereInput> {
     const facts = await this.requireGuardian(actorId);
-    return this.prisma.researchRevision.findMany({
+    return {
+      state: 'IN_REVIEW',
+      page: {
+        state: { in: ['DRAFT', 'ACTIVE'] },
+        ...researchAudience(facts.groups, true),
+      },
+    };
+  }
+
+  async reviewRevision(actorId: string, pageId: string, revisionId: string) {
+    const revision = await this.prisma.researchRevision.findFirst({
+      where: { ...(await this.reviewScope(actorId)), pageId, id: revisionId },
+      select: {
+        id: true,
+        pageId: true,
+        number: true,
+        title: true,
+        summary: true,
+        editSummary: true,
+        document: true,
+      },
+    });
+    if (!revision) return null;
+    const { document, ...metadata } = revision;
+    const view = await this.delivery.project(JSON.stringify(document), actorId);
+    return { ...metadata, documentJson: view.documentJson };
+  }
+
+  async reviewHistory(
+    actorId: string,
+    pageId: string,
+    revisionId: string,
+    offset = 0,
+    limit = 50,
+  ) {
+    const facts = await this.requireAuthenticated(actorId);
+    return this.prisma.researchReviewDecision.findMany({
       where: {
-        state: 'IN_REVIEW',
+        pageId,
+        revisionId,
         page: {
-          state: { in: ['DRAFT', 'ACTIVE'] },
+          state: { in: ['DRAFT', 'ACTIVE', 'ARCHIVED'] },
           ...researchAudience(facts.groups, true),
         },
+        revision: facts.guardian ? undefined : { authorId: actorId },
+        action: {
+          in: [
+            'SUBMITTED',
+            'CHANGES_REQUESTED',
+            'REJECTED',
+            'PUBLISHED',
+            'WITHDRAWN',
+          ],
+        },
       },
+      select: {
+        id: true,
+        actorId: true,
+        action: true,
+        reason: true,
+        createdAt: true,
+      },
+      orderBy: [{ createdAt: 'asc' }, { action: 'asc' }, { id: 'asc' }],
+      skip: offset,
+      take: limit,
+    });
+  }
+
+  async reviewQueue(actorId: string, offset = 0, limit = 50) {
+    return this.prisma.researchRevision.findMany({
+      where: await this.reviewScope(actorId),
+      skip: offset,
+      take: limit,
       select: { id: true, pageId: true, number: true, createdAt: true },
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     });
@@ -561,6 +909,7 @@ export class ResearchLabService {
         );
       }
       await this.requireDocumentAccess(command.actorId, source.document);
+      const projection = await this.repairRevisionText(tx, source);
       this.assertGeneration(
         page.publicationGeneration,
         command.expectedPublicationGeneration,
@@ -581,8 +930,8 @@ export class ResearchLabService {
           summary: source.summary,
           proposedSlug: page.slug,
           document: source.document as Prisma.InputJsonValue,
-          plainText: source.plainText,
-          searchText: source.searchText,
+          plainText: projection.plainText,
+          searchText: projection.searchText,
           metadata: source.metadata as Prisma.InputJsonValue,
           coverMediaId: source.coverMediaId,
           editSummary: this.required(
@@ -721,8 +1070,15 @@ export class ResearchLabService {
       data: { state },
     });
     if (state === 'CHANGES_REQUESTED') {
-      await tx.researchDraft.create({
-        data: {
+      await tx.researchDraft.upsert({
+        where: {
+          pageId_authorId: {
+            pageId: revision.pageId,
+            authorId: revision.authorId,
+          },
+        },
+        update: {},
+        create: {
           pageId: revision.pageId,
           authorId: revision.authorId,
           basePublishedRevisionId: revision.basePublishedRevisionId,
@@ -888,6 +1244,14 @@ export class ResearchLabService {
     }
   }
 
+  private async lockRoute(
+    tx: TransactionClient,
+    language: string,
+    route: string,
+  ) {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'research-lab:route:' + language + ':' + route},0))`;
+  }
+
   private async reserveRoute(
     tx: TransactionClient,
     pageId: string,
@@ -901,7 +1265,7 @@ export class ResearchLabService {
       new Set(previous ? [previous, slug] : [slug]),
     ).sort();
     for (const route of routes) {
-      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'research-lab:route:' + language + ':' + route},0))`;
+      await this.lockRoute(tx, language, route);
     }
     const alias = await tx.researchSlugAlias.findUnique({
       where: { language_slug: { language, slug } },
@@ -933,6 +1297,7 @@ export class ResearchLabService {
       select: {
         visibility: true,
         protectionLevel: true,
+        trustedEditGroupKeys: true,
         audienceGroups: {
           orderBy: { groupKey: 'asc' },
           select: { groupKey: true },
@@ -940,6 +1305,30 @@ export class ResearchLabService {
       },
     });
     return createHash('sha256').update(JSON.stringify(policy)).digest('hex');
+  }
+  private async repairRevisionText(
+    tx: TransactionClient,
+    revision: ResearchRevision,
+  ) {
+    if (this.contentHash(revision.document) !== revision.contentHash) {
+      throw new ResearchLabCommandError(
+        'REVISION_CONFLICT',
+        'The stored Research Lab revision does not match its publication hash.',
+      );
+    }
+    const { plainText, searchText } = this.editor.normalizeWiki(
+      JSON.stringify(revision.document),
+    );
+    if (
+      plainText !== revision.plainText ||
+      searchText !== revision.searchText
+    ) {
+      await tx.researchRevision.update({
+        where: { id: revision.id, contentHash: revision.contentHash },
+        data: { plainText, searchText },
+      });
+    }
+    return { plainText, searchText };
   }
   private async lockPage(tx: TransactionClient, pageId: string): Promise<void> {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'research-lab:page:' + pageId}, 0))`;
