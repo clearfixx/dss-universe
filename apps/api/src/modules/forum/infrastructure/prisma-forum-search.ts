@@ -18,7 +18,7 @@
  */
 import { Inject, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { PrismaService } from '@api/core/database';
+import { PrismaService, type TransactionClient } from '@api/core/database';
 import type {
   ForumSearchHit,
   ForumSearchSource,
@@ -28,6 +28,7 @@ import {
   type ForumViewerFactsReader,
 } from '../contracts/forum-viewer-facts.contract';
 import { canSeeCategory } from '../domain/forum-structure.rules';
+import type { ForumViewerFacts } from '../domain/types/forum-structure.type';
 
 const GATE_MARKER = '%"contentGate"%';
 const EXCERPT_LENGTH = 200;
@@ -58,7 +59,20 @@ export class PrismaForumSearch implements ForumSearchSource {
     viewerId?: string;
   }) {
     const viewer = await this.viewers.read(query.viewerId ?? null, new Date());
-    const categories = await this.prisma.forumCategory.findMany({
+    // Category policy, results, total and facets come from ONE snapshot, so a
+    // visibility change between statements can never mix two states.
+    return this.prisma.$transaction(
+      (tx) => this.searchInSnapshot(tx, viewer, query),
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+    );
+  }
+
+  private async searchInSnapshot(
+    tx: TransactionClient,
+    viewer: ForumViewerFacts,
+    query: { term: string; page: number; pageSize: number },
+  ) {
+    const categories = await tx.forumCategory.findMany({
       where: viewer.seesAllCategories ? {} : { active: true },
       select: {
         id: true,
@@ -102,8 +116,8 @@ export class PrismaForumSearch implements ForumSearchSource {
       LEFT JOIN "forums" pf ON pf."id" = f."parentId"
       JOIN "forum_categories" c ON c."id" = f."categoryId"`;
     const offset = (query.page - 1) * query.pageSize;
-    const [rows, totals, byCategory] = await Promise.all([
-      this.prisma.$queryRaw<HitRow[]>`
+    // Sequential on purpose: statements of one transaction share its snapshot.
+    const rows = await tx.$queryRaw<HitRow[]>`
         SELECT t."id", t."title", t."createdAt", ex."plainText" AS "excerpt"
         ${from}
         LEFT JOIN LATERAL (
@@ -116,13 +130,14 @@ export class PrismaForumSearch implements ForumSearchSource {
         ) ex ON TRUE
         WHERE ${where}
         ORDER BY t."lastPostAt" DESC, t."id" DESC
-        LIMIT ${query.pageSize} OFFSET ${offset}`,
-      this.prisma.$queryRaw<Array<{ total: bigint }>>`
-        SELECT COUNT(*)::bigint AS "total" ${from} WHERE ${where}`,
-      this.prisma.$queryRaw<Array<{ slug: string; total: bigint }>>`
+        LIMIT ${query.pageSize} OFFSET ${offset}`;
+    const totals = await tx.$queryRaw<Array<{ total: bigint }>>`
+        SELECT COUNT(*)::bigint AS "total" ${from} WHERE ${where}`;
+    const byCategory = await tx.$queryRaw<
+      Array<{ slug: string; total: bigint }>
+    >`
         SELECT c."slug", COUNT(*)::bigint AS "total" ${from}
-        WHERE ${where} GROUP BY c."slug" ORDER BY c."slug"`,
-    ]);
+        WHERE ${where} GROUP BY c."slug" ORDER BY c."slug"`;
     const items: ForumSearchHit[] = rows.map((row) => ({
       id: row.id,
       kind: 'topic',
