@@ -918,6 +918,7 @@ model ResearchPage {
   revisions         ResearchRevision[]          @relation("ResearchPageRevisions")
   drafts            ResearchDraft[]
   reviewDecisions   ResearchReviewDecision[]
+  trustedEditGroupKeys String[] @default([])
   audienceGroups    ResearchPageAudienceGroup[]
   categories        ResearchPageCategory[]
   tags              ResearchPageTag[]
