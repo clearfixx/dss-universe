@@ -211,6 +211,13 @@ enum ForumPostState {
   PURGED
 }
 
+enum ForumStaffRole {
+  CURATOR
+  MODERATOR
+  SUPERMODERATOR
+  ADMINISTRATOR
+}
+
 enum ContentGateOperator {
   ALL
   ANY
@@ -424,6 +431,8 @@ model User {
   forumPosts              ForumPost[]                  @relation("ForumPostAuthor")
   forumPostRevisions      ForumPostRevision[]
   forumPostingCooldown    ForumPostingCooldown?
+  forumStaffNotes         ForumPostStaffNote[]         @relation("ForumStaffNoteAuthor")
+  forumStaffNotesRemoved  ForumPostStaffNote[]         @relation("ForumStaffNoteRemover")
   contentGates            ContentGate[]
   newsArticles            NewsArticle[]                @relation("NewsAuthor")
   newsRevisions           NewsRevision[]               @relation("NewsRevisionEditor")
@@ -2782,24 +2791,31 @@ model ForumTopic {
 }
 
 model ForumPost {
-  id            String         @id @default(uuid())
-  topicId       String
-  number        Int
-  authorId      String
-  state         ForumPostState @default(VISIBLE)
-  document      Json
-  plainText     String
-  searchText    String
-  replyToNumber Int?
-  quotedNumbers Int[]          @default([])
-  revision      Int            @default(1)
-  createdAt     DateTime       @default(now())
-  editedAt      DateTime?
-  lastEditorId  String?
+  id               String         @id @default(uuid())
+  topicId          String
+  number           Int
+  authorId         String
+  state            ForumPostState @default(VISIBLE)
+  document         Json
+  plainText        String
+  searchText       String
+  replyToNumber    Int?
+  quotedNumbers    Int[]          @default([])
+  revision         Int            @default(1)
+  createdAt        DateTime       @default(now())
+  editedAt         DateTime?
+  lastEditorId     String?
+  moderatedAt      DateTime?
+  moderatedById    String?
+  moderationReason String?
+  purgedAt         DateTime?
+  purgedById       String?
+  purgeReason      String?
 
-  topic     ForumTopic          @relation(fields: [topicId], references: [id], onDelete: Restrict)
-  author    User                @relation("ForumPostAuthor", fields: [authorId], references: [id], onDelete: Restrict)
-  revisions ForumPostRevision[]
+  topic      ForumTopic           @relation(fields: [topicId], references: [id], onDelete: Restrict)
+  author     User                 @relation("ForumPostAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  revisions  ForumPostRevision[]
+  staffNotes ForumPostStaffNote[]
 
   @@unique([topicId, number])
   @@index([authorId, createdAt])
@@ -2829,4 +2845,22 @@ model ForumPostingCooldown {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("forum_posting_cooldowns")
+}
+
+model ForumPostStaffNote {
+  id          String         @id @default(uuid())
+  postId      String
+  authorId    String
+  role        ForumStaffRole
+  body        String
+  createdAt   DateTime       @default(now())
+  removedAt   DateTime?
+  removedById String?
+
+  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Restrict)
+  author    User      @relation("ForumStaffNoteAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  removedBy User?     @relation("ForumStaffNoteRemover", fields: [removedById], references: [id], onDelete: Restrict)
+
+  @@index([postId, createdAt, id])
+  @@map("forum_post_staff_notes")
 }

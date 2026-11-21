@@ -50,15 +50,18 @@ import { ForumCommandError } from '../domain/errors/forum-command.error';
 import {
   FORUM_POST_STATES,
   FORUM_TOPIC_KINDS,
+  FORUM_TOPIC_SCOPES,
   FORUM_TOPIC_SORTS,
   FORUM_TOPIC_STATES,
   type ForumPage,
   type ForumPostState,
   type ForumTopicKind,
+  type ForumTopicScope,
   type ForumTopicSort,
   type ForumTopicState,
 } from '../domain/types/forum-topic.type';
 import { ForumTopicsService } from '../infrastructure/prisma-forum-topics';
+import { ForumStaffNoteModel } from './forum-shared.models';
 
 const enumOf = <T extends string>(values: readonly T[]) =>
   Object.fromEntries(values.map((value) => [value, value])) as Record<T, T>;
@@ -66,6 +69,8 @@ const TopicKindEnum = enumOf(FORUM_TOPIC_KINDS);
 const TopicStateEnum = enumOf(FORUM_TOPIC_STATES);
 const PostStateEnum = enumOf(FORUM_POST_STATES);
 const TopicSortEnum = enumOf(FORUM_TOPIC_SORTS);
+const TopicScopeEnum = enumOf(FORUM_TOPIC_SCOPES);
+registerEnumType(TopicScopeEnum, { name: 'ForumTopicScope' });
 registerEnumType(TopicKindEnum, { name: 'ForumTopicKind' });
 registerEnumType(TopicStateEnum, { name: 'ForumTopicState' });
 registerEnumType(PostStateEnum, { name: 'ForumPostState' });
@@ -108,7 +113,7 @@ class EditForumPostInput {
 }
 
 @ObjectType('ForumTopic')
-class ForumTopicModel {
+export class ForumTopicModel {
   @Field(() => ID) id!: string;
   @Field(() => ID) forumId!: string;
   @Field(() => ID) interactionTargetId!: string;
@@ -133,6 +138,13 @@ class ForumTopicPageModel {
   @Field(() => Int) limit!: number;
 }
 
+@ObjectType('ForumPostModeration')
+class ForumPostModerationModel {
+  @Field() at!: Date;
+  @Field(() => ID) byId!: string;
+  @Field() reason!: string;
+}
+
 @ObjectType('ForumPost')
 class ForumPostModel {
   @Field(() => ID) id!: string;
@@ -150,6 +162,12 @@ class ForumPostModel {
   @Field(() => Int) revision!: number;
   @Field() createdAt!: Date;
   @Field(() => Date, { nullable: true }) editedAt!: Date | null;
+  @Field(() => ForumPostModerationModel, {
+    nullable: true,
+    description: 'Returned to staff of the topic only.',
+  })
+  moderation!: ForumPostModerationModel | null;
+  @Field(() => [ForumStaffNoteModel]) staffNotes!: ForumStaffNoteModel[];
 }
 
 @ObjectType('ForumPostPage')
@@ -188,9 +206,11 @@ export class ForumTopicsResolver {
     sort: ForumTopicSort,
     @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
+    @Args('scope', { type: () => TopicScopeEnum, defaultValue: 'ACTIVE' })
+    scope: ForumTopicScope,
   ): Promise<ForumPage<ForumTopicModel>> {
     return this.execute(
-      this.topics.topics(this.viewer(ctx), forumId, sort, page, limit),
+      this.topics.topics(this.viewer(ctx), forumId, sort, page, limit, scope),
     );
   }
 

@@ -41,6 +41,7 @@ describe('Forum topics and posts (e2e)', () => {
           seesAllCategories: false,
           moderatesAllCategories: false,
           canAssignModerators: false,
+          canPurgeContent: false,
           ...(subjectId ? facts.get(subjectId) : {}),
         }),
     };

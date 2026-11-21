@@ -27,6 +27,7 @@ describe('forum structure rules', () => {
     seesAllCategories: false,
     moderatesAllCategories: false,
     canAssignModerators: false,
+    canPurgeContent: false,
   };
   const member: ForumViewerFacts = {
     ...guest,

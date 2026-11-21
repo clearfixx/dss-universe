@@ -31,6 +31,7 @@ const GUEST: ForumViewerFacts = {
   seesAllCategories: false,
   moderatesAllCategories: false,
   canAssignModerators: false,
+  canPurgeContent: false,
 };
 
 @Injectable()
@@ -54,6 +55,7 @@ export class ForumViewerFactsAdapter implements ForumViewerFactsReader {
       seesAllCategories: permissions.has(Permission.ForumStructureManage),
       moderatesAllCategories: permissions.has(Permission.ForumModerateAll),
       canAssignModerators: permissions.has(Permission.ForumModeratorsAssign),
+      canPurgeContent: permissions.has(Permission.ForumContentPurge),
     };
   }
 }

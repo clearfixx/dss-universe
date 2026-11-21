@@ -23,6 +23,7 @@ export type ForumViewerFacts = {
   seesAllCategories: boolean;
   moderatesAllCategories: boolean;
   canAssignModerators: boolean;
+  canPurgeContent: boolean;
 };
 
 export type ForumCategoryVisibilityRule = {
