@@ -156,6 +156,11 @@ input BookmarksPageInput {
   page: Int! = 1
 }
 
+input CastPollBallotInput {
+  optionIds: [ID!]!
+  pollId: ID!
+}
+
 input ChangeEmailInput {
   currentPassword: String!
   email: String!
@@ -901,6 +906,7 @@ type Mutation {
   beginViewerTwoFactorSetup: TwoFactorSetupModel!
   blockUser(userId: ID!): UserBlockResult!
   cancelNewsSchedule(input: NewsDecisionInput!): NewsEditorialTransition!
+  castPollBallot(input: CastPollBallotInput!): Poll!
   changeViewerEmail(input: ChangeEmailInput!): LogoutResultModel!
   changeViewerPassword(input: ChangePasswordInput!): LogoutResultModel!
   clearReaction(interactionTargetId: ID!): ReactionSummary!
@@ -1308,6 +1314,38 @@ type NumberedNewsPage {
   totalPages: Int!
 }
 
+type Poll {
+  createdAt: DateTime!
+  id: ID!
+  interactionTargetId: ID!
+  maxChoices: Int!
+  options: [PollOption!]!
+  question: String!
+  totalBallots: Int!
+  viewerChoiceIds: [ID!]!
+  viewerHasVoted: Boolean!
+  visibility: PollVisibility!
+}
+
+type PollOption {
+  id: ID!
+  label: String!
+  position: Int!
+  voteCount: Int!
+}
+
+enum PollVisibility {
+  ANONYMOUS
+  OPEN
+}
+
+type PollVoterPage {
+  limit: Int!
+  page: Int!
+  total: Int!
+  voterIds: [ID!]!
+}
+
 type PresenceSummary {
   onlineCrawlers: Int!
   onlineGuests: Int!
@@ -1415,6 +1453,8 @@ type Query {
   newsNavigation(articleId: ID!): NewsNavigation!
   newsRatingVotes(articleId: ID!, page: Int! = 1, pageSize: Int! = 20): NewsRatingVotePage!
   newsSettings: NewsSettings!
+  pollForTarget(interactionTargetId: ID!): Poll
+  pollOptionVoters(limit: Int! = 20, optionId: ID!, page: Int! = 1, pollId: ID!): PollVoterPage!
   presenceSummary: PresenceSummary!
   previewEditorDocument(input: PreviewEditorDocumentInput!): EditorDocumentPreview!
   profileWall(pagination: UsersPageInput, profileOwnerId: ID!): ProfileWallPage!

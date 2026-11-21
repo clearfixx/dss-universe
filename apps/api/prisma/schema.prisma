@@ -181,6 +181,11 @@ enum ModerationSanctionOrigin {
   ESCALATION
 }
 
+enum PollVisibility {
+  OPEN
+  ANONYMOUS
+}
+
 enum ContentGateOperator {
   ALL
   ANY
@@ -384,6 +389,8 @@ model User {
   sanctionsIssued         ModerationSanction[]         @relation("ModerationSanctionIssuer")
   sanctionsRevoked        ModerationSanction[]         @relation("ModerationSanctionRevoker")
   sanctionPolicyUpdates   ModerationSanctionPolicy[]
+  pollsCreated            Poll[]
+  pollBallots             PollBallot[]
   contentGates            ContentGate[]
   newsArticles            NewsArticle[]                @relation("NewsAuthor")
   newsRevisions           NewsRevision[]               @relation("NewsRevisionEditor")
@@ -516,6 +523,7 @@ model InteractionTarget {
   mentions              Mention[]
   reports               ContentReport[]
   moderationAnnotations ModerationAnnotation[]
+  poll                  Poll?
   newsArticle           NewsArticle?
   researchPage          ResearchPage?
 
@@ -1395,6 +1403,64 @@ model ModerationSanctionPolicy {
   updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: Restrict)
 
   @@map("moderation_sanction_policy")
+}
+
+model Poll {
+  id                  String         @id @default(uuid())
+  interactionTargetId String         @unique
+  question            String
+  visibility          PollVisibility
+  maxChoices          Int            @default(1)
+  createdById         String
+  createdAt           DateTime       @default(now())
+
+  interactionTarget InteractionTarget @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
+  createdBy         User              @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  options           PollOption[]
+  ballots           PollBallot[]
+
+  @@map("polls")
+}
+
+model PollOption {
+  id       String @id @default(uuid())
+  pollId   String
+  position Int
+  label    String
+
+  poll    Poll               @relation(fields: [pollId], references: [id], onDelete: Restrict)
+  choices PollBallotChoice[]
+
+  @@unique([pollId, position])
+  @@unique([id, pollId])
+  @@map("poll_options")
+}
+
+model PollBallot {
+  pollId  String
+  voterId String
+  castAt  DateTime @default(now())
+
+  poll    Poll               @relation(fields: [pollId], references: [id], onDelete: Restrict)
+  voter   User               @relation(fields: [voterId], references: [id], onDelete: Restrict)
+  choices PollBallotChoice[]
+
+  @@id([pollId, voterId])
+  @@index([voterId, castAt])
+  @@map("poll_ballots")
+}
+
+model PollBallotChoice {
+  pollId   String
+  voterId  String
+  optionId String
+
+  ballot PollBallot @relation(fields: [pollId, voterId], references: [pollId, voterId], onDelete: Restrict)
+  option PollOption @relation(fields: [optionId, pollId], references: [id, pollId], onDelete: Restrict)
+
+  @@id([pollId, voterId, optionId])
+  @@index([pollId, optionId])
+  @@map("poll_ballot_choices")
 }
 
 model UserFollow {
