@@ -294,6 +294,27 @@ describe('Research Lab public delivery (GraphQL)', () => {
         },
       },
     });
+    const vote = async (targetId: string, kind: 'UPVOTE' | 'DOWNVOTE') =>
+      payload(
+        await request(app.getHttpServer())
+          .post('/api/graphql')
+          .set('Authorization', 'Bearer ' + member.tokens.accessToken)
+          .send({
+            query:
+              'mutation($input:SetReactionInput!){setReaction(input:$input){changed summary{score total}}}',
+            variables: { input: { interactionTargetId: targetId, kind } },
+          })
+          .expect(200),
+      );
+    await app
+      .get(ResearchLabService)
+      .setInteractionSetting(member.user.id, id, 'allowRating', false);
+    expect((await vote(target.id, 'UPVOTE')).errors[0].extensions.code).toBe(
+      'FORBIDDEN',
+    );
+    expect(await vote(childTarget.id, 'UPVOTE')).toEqual({
+      data: { setReaction: { changed: true, summary: { score: 1, total: 1 } } },
+    });
     await fixture.prisma.interactionTarget.update({
       where: { id: target.id },
       data: { status: 'LOCKED' },
@@ -303,6 +324,23 @@ describe('Research Lab public delivery (GraphQL)', () => {
     });
     expect((await access(childTarget.id, 'REACT')).data).toMatchObject({
       interactionTargetAccess: { allowed: false },
+    });
+    expect(
+      (await vote(childTarget.id, 'DOWNVOTE')).errors[0].extensions.code,
+    ).toBe('FORBIDDEN');
+    const summary = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + member.tokens.accessToken)
+      .send({
+        query:
+          'query($id:ID!){reactionSummary(interactionTargetId:$id){score total viewerReaction}}',
+        variables: { id: childTarget.id },
+      })
+      .expect(200);
+    expect(payload(summary)).toEqual({
+      data: {
+        reactionSummary: { score: 1, total: 1, viewerReaction: 'UPVOTE' },
+      },
     });
     await fixture.prisma.interactionTarget.update({
       where: { id: target.id },
