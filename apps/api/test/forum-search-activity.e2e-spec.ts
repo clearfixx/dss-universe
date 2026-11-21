@@ -267,4 +267,30 @@ describe('Forum search and Activity visibility (e2e)', () => {
       new Set(),
     );
   });
+
+  it('reads results, total and facets from one snapshot', async () => {
+    const { forumId } = await forum('PUBLIC');
+    const word = term();
+    const author = await user();
+    const { topic } = await topics.createTopic(author, {
+      forumId,
+      kind: 'DISCUSSION',
+      title: 'Snapshot ' + word,
+      documentJson: 'body',
+    });
+    const spy = jest.spyOn(fixture.prisma, '$transaction');
+    try {
+      const result = await search.search({ term: word, page: 1, pageSize: 10 });
+      // REPEATABLE READ: every statement sees the snapshot of the first one,
+      // so the category policy, the page, total and facets cannot disagree.
+      expect(spy.mock.calls[0][1]).toMatchObject({
+        isolationLevel: 'RepeatableRead',
+      });
+      expect(result.items.map(({ id }) => id)).toEqual([topic.id]);
+      expect(result.total).toBe(1);
+      expect(result.categories.reduce((n, c) => n + c.total, 0)).toBe(1);
+    } finally {
+      spy.mockRestore();
+    }
+  });
 });

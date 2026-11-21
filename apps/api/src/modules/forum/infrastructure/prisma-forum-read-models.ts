@@ -65,29 +65,62 @@ export class PrismaForumReadModels {
     if (forumIds.length === 0) return new Map();
     const ids = [...forumIds];
     const visibleStates = Prisma.sql`t."state"::text IN ('OPEN', 'CLOSED', 'ARCHIVED') AND t."mergedIntoTopicId" IS NULL`;
-    const [totals, latest] = await Promise.all([
-      this.prisma.$queryRaw<
-        Array<{ forumId: string; topics: bigint; posts: bigint }>
-      >`
-        SELECT t."forumId", COUNT(*)::bigint AS "topics", COALESCE(SUM(t."postCount"), 0)::bigint AS "posts"
+    // Public counters and "last activity" come from VISIBLE posts only, not
+    // from the topic's denormalized lastPost* fields: those keep pointing at
+    // a post after it is hidden, deleted or purged. One statement, one
+    // snapshot, so totals and last activity always agree.
+    const rows = await this.prisma.$queryRaw<
+      Array<{
+        forumId: string;
+        topics: bigint;
+        posts: bigint;
+        topicId: string | null;
+        title: string | null;
+        lastPostAt: Date | null;
+        lastPostNumber: number | null;
+        lastPostAuthorId: string | null;
+      }>
+    >`
+      WITH visible_topics AS (
+        SELECT t."id", t."forumId", t."title"
         FROM "forum_topics" t
         WHERE t."forumId" IN (${Prisma.join(ids)}) AND ${visibleStates}
-        GROUP BY t."forumId"`,
-      this.prisma.$queryRaw<
-        Array<{
-          forumId: string;
-          id: string;
+      ),
+      visible_posts AS (
+        SELECT p."topicId", p."number", p."authorId", p."createdAt", vt."forumId", vt."title"
+        FROM "forum_posts" p
+        JOIN visible_topics vt ON vt."id" = p."topicId"
+        WHERE p."state" = 'VISIBLE'
+      ),
+      totals AS (
+        SELECT vt."forumId", COUNT(*)::bigint AS "topics",
+          (SELECT COUNT(*) FROM visible_posts vp WHERE vp."forumId" = vt."forumId")::bigint AS "posts"
+        FROM visible_topics vt
+        GROUP BY vt."forumId"
+      ),
+      latest AS (
+        SELECT DISTINCT ON (vp."forumId") vp."forumId", vp."topicId", vp."title",
+          vp."createdAt" AS "lastPostAt", vp."number" AS "lastPostNumber", vp."authorId" AS "lastPostAuthorId"
+        FROM visible_posts vp
+        ORDER BY vp."forumId", vp."createdAt" DESC, vp."topicId" DESC, vp."number" DESC
+      )
+      SELECT totals."forumId", totals."topics", totals."posts",
+        latest."topicId", latest."title", latest."lastPostAt", latest."lastPostNumber", latest."lastPostAuthorId"
+      FROM totals LEFT JOIN latest ON latest."forumId" = totals."forumId"`;
+    const totals = rows;
+    const latest = rows
+      .filter(
+        (
+          row,
+        ): row is typeof row & {
+          topicId: string;
           title: string;
           lastPostAt: Date;
           lastPostNumber: number;
           lastPostAuthorId: string;
-        }>
-      >`
-        SELECT DISTINCT ON (t."forumId") t."forumId", t."id", t."title", t."lastPostAt", t."lastPostNumber", t."lastPostAuthorId"
-        FROM "forum_topics" t
-        WHERE t."forumId" IN (${Prisma.join(ids)}) AND ${visibleStates}
-        ORDER BY t."forumId", t."lastPostAt" DESC, t."id" DESC`,
-    ]);
+        } => row.topicId !== null,
+      )
+      .map((row) => ({ ...row, id: row.topicId }));
     const stats = new Map<string, ForumActivityStats>(
       ids.map((id) => [id, EMPTY]),
     );
