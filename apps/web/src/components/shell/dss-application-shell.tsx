@@ -34,7 +34,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, type PropsWithChildren, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type PropsWithChildren,
+  type ReactNode,
+} from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -61,6 +67,7 @@ import { viewerDisplayName } from "./personal-hub-presentation";
 import { isDrawerOpenForPath } from "./shell-drawer-state";
 
 import {
+  COMING_SOON_MODULES,
   DEFAULT_SHELL_VARIANT,
   visibleModules,
   breadcrumbsForPath,
@@ -207,11 +214,24 @@ export function GlobalNavigation({
               aria-current={navigationCurrent(pathname, href)}
               className={cn(
                 "inline-flex shrink-0 items-center border-b-2 border-transparent px-3 text-sm text-slate-300 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-violet-400",
-                routeMatches(pathname, href) && "border-violet-500 text-violet-200",
+                routeMatches(pathname, href) &&
+                  "border-violet-500 bg-violet-500/10 text-violet-100",
               )}
             >
               {label}
             </Link>
+          ))}
+          {COMING_SOON_MODULES.map((label) => (
+            <a
+              key={label}
+              href="#"
+              title="Скоро"
+              aria-disabled="true"
+              onClick={(event) => event.preventDefault()}
+              className="inline-flex shrink-0 cursor-default items-center border-b-2 border-transparent px-3 text-sm text-slate-500"
+            >
+              {label}
+            </a>
           ))}
         </nav>
       )}
@@ -280,6 +300,17 @@ export function Breadcrumbs({
 function ShellSearch() {
   const router = useRouter();
   const [term, setTerm] = useState("");
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        input.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   return (
     <form
       role="search"
@@ -294,12 +325,14 @@ function ShellSearch() {
         <Search className="size-4 shrink-0" aria-hidden="true" />
         <span className="sr-only">Пошук у спільноті</span>
         <input
+          ref={input}
           type="search"
           value={term}
           onChange={(event) => setTerm(event.target.value)}
           placeholder="Пошук у спільноті…"
           className="min-w-0 flex-1 bg-transparent text-slate-100 outline-none placeholder:text-slate-500"
         />
+        <kbd className="rounded border border-white/10 px-1.5 text-[11px] text-slate-500">Ctrl K</kbd>
       </label>
     </form>
   );
@@ -354,7 +387,10 @@ export function DssApplicationShell({
             canAccessAdminDeck={canAccessAdminDeck}
           />
         </div>
-        <p className="px-5 pb-5 text-xs text-slate-500">Build. Inspire. Grow.</p>
+        <div className="m-3 rounded-xl bg-white/[0.04] px-4 py-3 text-xs leading-5 text-slate-400">
+          <p className="font-semibold text-slate-200">DSS Universe</p>
+          <p>Build. Inspire. Grow.</p>
+        </div>
       </aside>
 
       <div className="lg:pl-60">
