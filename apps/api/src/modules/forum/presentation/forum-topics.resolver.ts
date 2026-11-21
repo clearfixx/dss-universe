@@ -20,9 +20,16 @@ import {
   ForbiddenException,
   HttpException,
   HttpStatus,
+  Inject,
   NotFoundException,
+  Optional,
   UseGuards,
 } from '@nestjs/common';
+import { collectEditorMediaIds } from '@dss/editor';
+import {
+  FORUM_POST_MEDIA,
+  type ForumPostMedia,
+} from '../infrastructure/forum-post-media.port';
 import {
   Args,
   Context,
@@ -32,8 +39,10 @@ import {
   Int,
   Mutation,
   ObjectType,
+  Parent,
   Query,
   registerEnumType,
+  ResolveField,
   Resolver,
 } from '@nestjs/graphql';
 import {
@@ -194,6 +203,41 @@ class ForumPostModel {
   })
   moderation!: ForumPostModerationModel | null;
   @Field(() => [ForumStaffNoteModel]) staffNotes!: ForumStaffNoteModel[];
+}
+
+@ObjectType('ForumPostAttachment')
+class ForumPostAttachmentModel {
+  @Field(() => ID) mediaId!: string;
+  @Field() filename!: string;
+  @Field() mimeType!: string;
+  @Field(() => Int) size!: number;
+  @Field() downloadUrl!: string;
+}
+
+/**
+ * Files of the viewer-safe document only: gated blocks the viewer cannot read
+ * were already removed, so their files never appear here.
+ */
+@Resolver(() => ForumPostModel)
+export class ForumPostMediaResolver {
+  constructor(
+    @Optional()
+    @Inject(FORUM_POST_MEDIA)
+    private readonly media?: ForumPostMedia,
+  ) {}
+
+  @ResolveField(() => [ForumPostAttachmentModel])
+  async attachments(
+    @Parent() post: ForumPostModel,
+  ): Promise<ForumPostAttachmentModel[]> {
+    if (!this.media || !post.documentJson) return [];
+    const ids = collectEditorMediaIds(
+      JSON.parse(post.documentJson) as Parameters<
+        typeof collectEditorMediaIds
+      >[0],
+    );
+    return ids.length ? [...(await this.media.attachments(post.id, ids))] : [];
+  }
 }
 
 @ObjectType('ForumPostPage')

@@ -555,6 +555,7 @@ type ForumModeratorAssignment {
 }
 
 type ForumPost {
+  attachments: [ForumPostAttachment!]!
   authorId: ID!
   createdAt: DateTime!
 
@@ -574,6 +575,14 @@ type ForumPost {
   staffNotes: [ForumStaffNote!]!
   state: ForumPostState!
   topicId: ID!
+}
+
+type ForumPostAttachment {
+  downloadUrl: String!
+  filename: String!
+  mediaId: ID!
+  mimeType: String!
+  size: Int!
 }
 
 type ForumPostModeration {
