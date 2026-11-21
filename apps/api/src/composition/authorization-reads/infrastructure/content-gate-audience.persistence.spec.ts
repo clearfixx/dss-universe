@@ -107,6 +107,7 @@ dbSuite('Content Gate audience PostgreSQL integration', () => {
     new GateCommentCountAdapter(new PrismaCommentCountReader(prisma)),
     new GateReputationTotalAdapter(new PrismaReputationTotalReader(prisma)),
     { isReadOnly: () => Promise.resolve(false) },
+    { countByAuthor: () => Promise.resolve(0) },
   );
   const gates = new ContentGatesService(
     repository,

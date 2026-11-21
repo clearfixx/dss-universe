@@ -36,6 +36,10 @@ import {
   type GateReputationTotalReader,
 } from '../../domain/ports/gate-reputation-total.interface';
 import {
+  GATE_FORUM_POST_COUNT,
+  type GateForumPostCountReader,
+} from '../../domain/ports/gate-forum-post-count.interface';
+import {
   GATE_VIEWER_RESTRICTION,
   type GateViewerRestrictionReader,
 } from '../../domain/ports/gate-viewer-restriction.interface';
@@ -50,6 +54,8 @@ export class ContentGateViewerFactsService {
     private readonly reputation: GateReputationTotalReader,
     @Inject(GATE_VIEWER_RESTRICTION)
     private readonly restriction: GateViewerRestrictionReader,
+    @Inject(GATE_FORUM_POST_COUNT)
+    private readonly forumPosts: GateForumPostCountReader,
   ) {}
   async read(
     subjectId: string,
@@ -57,10 +63,11 @@ export class ContentGateViewerFactsService {
   ): Promise<Omit<ContentGateViewerFacts, 'groups'> | null> {
     const account = await this.accounts.find(subjectId);
     if (!account || !account.active) return null;
-    const [comments, reputation, readOnly] = await Promise.all([
+    const [comments, reputation, readOnly, forumPosts] = await Promise.all([
       this.comments.countByAuthor(subjectId),
       this.reputation.totalFor(subjectId),
       this.restriction.isReadOnly(subjectId, now),
+      this.forumPosts.countByAuthor(subjectId),
     ]);
     return {
       accountAgeDays: Math.max(
@@ -68,8 +75,8 @@ export class ContentGateViewerFactsService {
         Math.floor((now.getTime() - account.createdAt.getTime()) / 86_400_000),
       ),
       comments,
-      // Explicit existing placeholders until the Forum/publishing ledgers dock here.
-      forumPosts: 0,
+      forumPosts,
+      // Explicit placeholder until a publishing ledger docks here.
       publications: 0,
       reputation,
       readOnly,

@@ -18,11 +18,13 @@ describe('ContentGateViewerFactsService', () => {
   const comments = { countByAuthor: jest.fn() };
   const reputation = { totalFor: jest.fn() };
   const restriction = { isReadOnly: jest.fn() };
+  const forumPosts = { countByAuthor: jest.fn() };
   const service = new ContentGateViewerFactsService(
     accounts,
     comments,
     reputation,
     restriction,
+    forumPosts,
   );
   beforeEach(() => {
     jest.resetAllMocks();
@@ -35,12 +37,13 @@ describe('ContentGateViewerFactsService', () => {
     comments.countByAuthor.mockResolvedValue(12);
     reputation.totalFor.mockResolvedValue(-3);
     restriction.isReadOnly.mockResolvedValue(false);
+    forumPosts.countByAuthor.mockResolvedValue(4);
   });
   it('returns five statistics plus read-only state, floors days and retains explicit zero placeholders', async () => {
     expect(await service.read('subject', now)).toEqual({
       accountAgeDays: 3,
       comments: 12,
-      forumPosts: 0,
+      forumPosts: 4,
       publications: 0,
       reputation: -3,
       readOnly: false,

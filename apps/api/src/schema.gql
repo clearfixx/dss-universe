@@ -1250,6 +1250,7 @@ type Mutation {
   initiateMediaUpload(input: InitiateMediaUploadInput!): MediaUploadSession!
   issueModerationReadOnly(input: IssueModerationReadOnlyInput!): ModerationSanctionReceipt!
   issueModerationWarning(input: IssueModerationWarningInput!): ModerationSanctionReceipt!
+  linkNewsDiscussion(articleId: ID!, topicId: ID!): ForumTopic!
   login(input: LoginInput!): AuthPayloadModel!
   logout: LogoutResultModel!
   markActivityFeedVisited: ActivityFeedVisit!
@@ -1325,11 +1326,14 @@ type Mutation {
   startResearchDraft(pageId: ID!): ResearchDraftReceipt!
   submitNewsForReview(articleId: ID!): NewsEditorialTransition!
   submitResearchDraft(input: ResearchSubmitInput!): ResearchRevisionReceipt!
+  subscribeForumTopic(topicId: ID!): Boolean!
   tombstoneResearchPage(input: ResearchLifecycleInput!): Boolean!
   trashForumTopic(topicId: ID!): ForumTopic!
   unarchiveForumTopic(topicId: ID!): ForumTopic!
   unblockUser(userId: ID!): UserBlockResult!
   unfollowUser(userId: ID!): UserSocialGraphSummary!
+  unlinkNewsDiscussion(articleId: ID!): Boolean!
+  unsubscribeForumTopic(topicId: ID!): Boolean!
   updateCommunityPointRule(input: UpdateCommunityPointRuleInput!): CommunityPointRule!
   updateCustomTitle(input: UpdateCustomTitleInput!): CustomTitle!
   updateCustomTitleSettings(input: UpdateCustomTitleSettingsInput!): CustomTitleSettings!
@@ -1785,6 +1789,7 @@ type Query {
   forumRankingSettings: ForumRankingSettings!
   forumTags(forumId: ID!): [ForumTag!]!
   forumTopic(topicId: ID!): ForumTopic!
+  forumTopicSubscribed(topicId: ID!): Boolean!
   forumTopics(forumId: ID!, limit: Int! = 20, page: Int! = 1, scope: ForumTopicScope! = ACTIVE, sort: ForumTopicSort! = LAST_ACTIVITY, tagSlug: String, topPeriod: ForumTopPeriod! = WEEK): ForumTopicPage!
   fullNews(language: String!, slug: String!): FullNews
   interactionTarget(id: ID!): InteractionTarget!
@@ -1804,6 +1809,7 @@ type Query {
   moderationSanctionStatus(subjectId: ID!): ModerationSanctionStatus!
   news(input: NewsBrowseInput): NumberedNewsPage!
   newsComments(articleId: ID!, page: Int! = 1, pageSize: Int): NewsCommentsPage!
+  newsDiscussionTopic(articleId: ID!): ForumTopic
   newsEditorialArticle(articleId: ID!): NewsEditorialArticle!
   newsNavigation(articleId: ID!): NewsNavigation!
   newsRatingVotes(articleId: ID!, page: Int! = 1, pageSize: Int! = 20): NewsRatingVotePage!
