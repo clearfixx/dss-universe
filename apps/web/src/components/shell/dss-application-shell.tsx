@@ -204,7 +204,7 @@ export function GlobalNavigation({
   return (
     <div className="hidden min-w-0 items-stretch gap-1 self-stretch lg:flex">
       {variant !== "MODULE_LAUNCHER" && (
-        <nav aria-label="Глобальна навігація" className="flex min-w-0 items-stretch gap-1">
+        <nav aria-label="Глобальна навігація" className="flex min-w-0 items-stretch gap-0.5 overflow-hidden">
           {inline.map(({ href, label }) => (
             <Link
               key={href}
@@ -213,7 +213,7 @@ export function GlobalNavigation({
               title={label}
               aria-current={navigationCurrent(pathname, href)}
               className={cn(
-                "inline-flex shrink-0 items-center border-b-2 border-transparent px-3 text-sm text-slate-300 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-violet-400",
+                "inline-flex shrink-0 items-center border-b-2 border-transparent px-2.5 text-sm text-slate-300 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-violet-400",
                 routeMatches(pathname, href) &&
                   "border-violet-500 bg-violet-500/10 text-violet-100",
               )}
@@ -245,7 +245,9 @@ export function GlobalNavigation({
         className="self-center text-slate-300"
       >
         <Menu aria-hidden="true" />
-        {variant === "MODULE_LAUNCHER" ? "Модулі" : "Усі модулі"}
+        <span className={variant === "MODULE_LAUNCHER" ? undefined : "sr-only 2xl:not-sr-only"}>
+          {variant === "MODULE_LAUNCHER" ? "Модулі" : "Усі модулі"}
+        </span>
         <ChevronDown aria-hidden="true" className="size-3" />
       </Button>
     </div>
@@ -321,7 +323,7 @@ function ShellSearch() {
         if (value) router.push(`/community/search?q=${encodeURIComponent(value)}`);
       }}
     >
-      <label className="flex h-10 w-64 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 text-sm text-slate-400 focus-within:border-violet-400 xl:w-72">
+      <label className="flex h-10 w-56 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 text-sm text-slate-400 focus-within:border-violet-400 2xl:w-72">
         <Search className="size-4 shrink-0" aria-hidden="true" />
         <span className="sr-only">Пошук у спільноті</span>
         <input
