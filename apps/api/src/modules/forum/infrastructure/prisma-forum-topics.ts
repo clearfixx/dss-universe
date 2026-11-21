@@ -63,6 +63,7 @@ import {
   type ForumTopicFilter,
   type ForumViewerCollection,
   type ForumTopicScope,
+  type ForumReplySort,
   type ForumTopicSort,
   type ForumTopicState,
   type ForumTopicSummary,
@@ -509,6 +510,67 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     };
   }
 
+  /**
+   * Topics related to one the viewer can read: shared tag slugs (2 points
+   * each) plus the same section (1 point); only live topics in forums the
+   * viewer can see. Ties go to the most recent activity.
+   */
+  async similarTopics(
+    viewerId: string | null,
+    topicId: string,
+    limit: number,
+  ): Promise<ForumTopicSummary[]> {
+    const viewer = await this.viewers.read(viewerId, new Date());
+    const { topic } = await this.visibleTopic(topicId, viewer);
+    const forumIds = await this.visibleForumIds(viewer);
+    if (forumIds.length === 0) return [];
+    const take = Math.min(Math.max(1, Math.trunc(limit) || 1), 10);
+    const ranked = await this.prisma.$queryRaw<{ id: string }[]>(Prisma.sql`
+      WITH source_tags AS (
+        SELECT g."slug" FROM "forum_topic_tags" tt
+        JOIN "forum_tags" g ON g."id" = tt."tagId"
+        WHERE tt."topicId" = ${topic.id}
+      ),
+      scored AS (
+        SELECT t."id", t."lastPostAt",
+          2 * (
+            SELECT COUNT(DISTINCT g."slug")::int FROM "forum_topic_tags" tt
+            JOIN "forum_tags" g ON g."id" = tt."tagId"
+            WHERE tt."topicId" = t."id"
+              AND g."slug" IN (SELECT "slug" FROM source_tags)
+          ) + CASE WHEN t."forumId" = ${topic.forumId} THEN 1 ELSE 0 END AS score
+        FROM "forum_topics" t
+        WHERE t."id" <> ${topic.id}
+          AND t."forumId" IN (${Prisma.join(forumIds)})
+          AND t."mergedIntoTopicId" IS NULL
+          AND t."state"::text IN ('OPEN', 'CLOSED', 'ARCHIVED')
+      )
+      SELECT "id" FROM scored WHERE score > 0
+      ORDER BY score DESC, "lastPostAt" DESC, "id" DESC
+      LIMIT ${take}
+    `);
+    if (ranked.length === 0) return [];
+    const ids = ranked.map(({ id }) => id);
+    const [rows, reads, tags] = await Promise.all([
+      this.prisma.forumTopic.findMany({ where: { id: { in: ids } } }),
+      this.readStates(viewer, ids),
+      this.topicTags(ids),
+    ]);
+    const byId = new Map(rows.map((row) => [row.id, row]));
+    return ids.flatMap((id) => {
+      const row = byId.get(id);
+      return row
+        ? [
+            this.toSummary(
+              row,
+              viewer.subjectId ? (reads.get(id) ?? 0) : null,
+              tags.get(id) ?? [],
+            ),
+          ]
+        : [];
+    });
+  }
+
   /** Totals over the forums the viewer can see; trashed/merged never count. */
   async hubStats(viewerId: string | null): Promise<{
     forumCount: number;
@@ -695,6 +757,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     topicId: string,
     page: number,
     limit: number,
+    sort: ForumReplySort = 'OLDEST',
   ): Promise<ForumPage<ForumPostView>> {
     const viewer = await this.viewers.read(viewerId, new Date());
     const { topic, categoryId } = await this.visibleTopic(topicId, viewer);
@@ -704,12 +767,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
         (await this.isModerator(viewer, categoryId)));
     const { skip, take, safePage } = this.paging(page, limit);
     const [rows, total] = await Promise.all([
-      this.prisma.forumPost.findMany({
-        where: { topicId },
-        orderBy: { number: 'asc' },
-        skip,
-        take,
-      }),
+      this.postPage(topicId, sort, safePage, skip, take),
       this.prisma.forumPost.count({ where: { topicId } }),
     ]);
     const notes = await this.staffNotes(rows.map(({ id }) => id));
@@ -727,6 +785,60 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       page: safePage,
       limit: take,
     };
+  }
+
+  /**
+   * One page of posts. Non-chronological sorts keep the first post at the
+   * top of page 1 and order only the replies, so a page still holds
+   * `take` posts and the total stays the topic post count.
+   */
+  private async postPage(
+    topicId: string,
+    sort: ForumReplySort,
+    page: number,
+    skip: number,
+    take: number,
+  ): Promise<ForumPost[]> {
+    if (sort === 'OLDEST') {
+      return this.prisma.forumPost.findMany({
+        where: { topicId },
+        orderBy: { number: 'asc' },
+        skip,
+        take,
+      });
+    }
+    const first =
+      page === 1
+        ? await this.prisma.forumPost.findMany({
+            where: { topicId, number: 1 },
+          })
+        : [];
+    const replySkip = page === 1 ? 0 : skip - 1;
+    const replyTake = page === 1 ? take - 1 : take;
+    if (replyTake <= 0) return first;
+    if (sort === 'NEWEST') {
+      const replies = await this.prisma.forumPost.findMany({
+        where: { topicId, number: { gt: 1 } },
+        orderBy: { number: 'desc' },
+        skip: replySkip,
+        take: replyTake,
+      });
+      return [...first, ...replies];
+    }
+    const ids = await this.prisma.$queryRaw<{ id: string }[]>(Prisma.sql`
+      SELECT "id" FROM "forum_posts"
+      WHERE "topicId" = ${topicId} AND "number" > 1
+      ORDER BY ("ratingUp" - "ratingDown") DESC, "number" ASC
+      OFFSET ${replySkip} LIMIT ${replyTake}
+    `);
+    const replies = await this.prisma.forumPost.findMany({
+      where: { id: { in: ids.map(({ id }) => id) } },
+    });
+    const byId = new Map(replies.map((row) => [row.id, row]));
+    return [
+      ...first,
+      ...ids.flatMap(({ id }) => (byId.has(id) ? [byId.get(id)!] : [])),
+    ];
   }
 
   async revisions(

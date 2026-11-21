@@ -57,6 +57,8 @@ export class ForumMemberModel {
   @Field() username!: string;
   @Field(() => String, { nullable: true }) displayName!: string | null;
   @Field(() => String, { nullable: true }) avatarUrl!: string | null;
+  /** Exposed as joinedAt by ForumMemberStatsResolver. */
+  createdAt!: Date;
 }
 
 @ObjectType('ForumLastActivity')
