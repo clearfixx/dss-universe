@@ -130,9 +130,20 @@ test("accepts only prepared local disposable endpoints", () => {
     { REDIS_HOST: "remote" },
     { REDIS_PORT: "6379" },
     { TEST_REDIS_PORT: "6379" },
+    { TEST_REDIS_PORT: "6382" },
+    { TEST_REDIS_PORT: "6381", REDIS_PORT: "6380" },
     { DATABASE_URL: `${valid.DATABASE_URL}?schema=public` },
   ])
     assert.throws(() => createQualityEnvironment({ ...valid, ...overrides }));
+});
+test("accepts a second disposable Redis instance for parallel agents", () => {
+  const env = createQualityEnvironment({
+    ...valid,
+    TEST_REDIS_PORT: "6381",
+    REDIS_PORT: "6381",
+  });
+  assert.equal(env.REDIS_PORT, "6381");
+  assert.equal(env.TEST_REDIS_PORT, "6381");
 });
 test("browser environment excludes inherited secrets and disables reuse", () => {
   const env = createBrowserEnvironment({

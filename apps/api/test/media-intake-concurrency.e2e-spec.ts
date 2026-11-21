@@ -45,6 +45,7 @@ import {
 } from '../src/modules/media/domain/repositories/media-upload-session.repository.interface';
 import { UserPresenceService } from '../src/modules/users/application/services/user-presence.service';
 import { createIsolatedApiSchemaFixture } from './helpers/migrated-api-schema.fixture';
+import { disposableRedisPort } from './helpers/disposable-redis';
 
 const PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a8uoAAAAASUVORK5CYII=',
@@ -72,11 +73,9 @@ describe('Media concurrent binary intake serialization (e2e)', () => {
   const requests: Promise<Response>[] = [];
 
   beforeAll(async () => {
-    if (
-      process.env.REDIS_HOST !== '127.0.0.1' ||
-      process.env.REDIS_PORT !== '6380'
-    )
-      throw new Error('Expected disposable loopback Redis on port 6380.');
+    if (process.env.REDIS_HOST !== '127.0.0.1')
+      throw new Error('Expected disposable loopback Redis.');
+    const redisPort = disposableRedisPort();
     fixture = await createIsolatedApiSchemaFixture();
     const cache = resolve(process.cwd(), 'node_modules/.cache');
     await mkdir(cache, { recursive: true });
@@ -98,7 +97,7 @@ describe('Media concurrent binary intake serialization (e2e)', () => {
     registry = app.get(QueueRegistryService);
     sessions = app.get(MediaUploadSessionService);
     queue = new Queue<MediaProcessingJob>(`media-intake-${randomUUID()}`, {
-      connection: { host: '127.0.0.1', port: 6380 },
+      connection: { host: '127.0.0.1', port: redisPort },
     });
     await queue.waitUntilReady();
     const id = randomUUID();
