@@ -1,0 +1,242 @@
+/**
+ * ===============================================================
+ * 🚀 DSS Universe
+ * ---------------------------------------------------------------
+ * 📦 Module: Forum (Community Hub)
+ * 📄 File: apps/api/src/modules/forum/presentation/forum-read-models.resolver.ts
+ *
+ * 🎯 Purpose:
+ * Field resolvers the forum UI needs: member cards for authors and voters,
+ * the viewer's own vote, and per-forum counters with the last activity.
+ *
+ * ⚠️ Important:
+ * Every field is batched per request (DataLoader keyed on the request), so a
+ * page of 50 posts costs one card query and one vote query. Parents were
+ * already authorized by their own queries.
+ *
+ * 🚀 Build. Share. Grow.
+ * ===============================================================
+ */
+import { Inject } from '@nestjs/common';
+import {
+  Context,
+  Field,
+  ID,
+  Int,
+  ObjectType,
+  Parent,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
+import DataLoader from 'dataloader';
+import type { AuthenticatedUser } from '@api/core/auth';
+import {
+  FORUM_MEMBER_CARDS,
+  type ForumMemberCard,
+  type ForumMemberCardReader,
+} from '../contracts/forum-member-cards.contract';
+import {
+  PrismaForumReadModels,
+  type ForumActivityStats,
+} from '../infrastructure/prisma-forum-read-models';
+import { ForumPostVoteModel } from './forum-ratings.resolver';
+import { ForumModel, ForumSubforumModel } from './forum-structure.resolver';
+import { ForumPostModel, ForumTopicModel } from './forum-topics.resolver';
+
+type RequestContext = { req: { user?: AuthenticatedUser } };
+
+@ObjectType('ForumMember')
+export class ForumMemberModel {
+  @Field(() => ID) id!: string;
+  @Field() username!: string;
+  @Field(() => String, { nullable: true }) displayName!: string | null;
+  @Field(() => String, { nullable: true }) avatarUrl!: string | null;
+}
+
+@ObjectType('ForumLastActivity')
+class ForumLastActivityModel {
+  @Field(() => ID) topicId!: string;
+  @Field() title!: string;
+  @Field() lastPostAt!: Date;
+  @Field(() => Int) lastPostNumber!: number;
+  @Field(() => ForumMemberModel, { nullable: true })
+  author!: ForumMemberModel | null;
+}
+
+@ObjectType('ForumActivityStats')
+class ForumActivityStatsModel {
+  @Field(() => Int) topicCount!: number;
+  @Field(() => Int) postCount!: number;
+  @Field(() => ForumLastActivityModel, { nullable: true })
+  lastActivity!: ForumLastActivityModel | null;
+}
+
+type Loaders = {
+  cards: DataLoader<string, ForumMemberCard | null>;
+  votes: DataLoader<string, number | null>;
+  stats: DataLoader<string, ForumActivityStats>;
+};
+
+const perRequest = new WeakMap<object, Loaders>();
+
+/** Shared batching for all forum field resolvers of one request. */
+export class ForumReadLoaders {
+  constructor(
+    private readonly members: ForumMemberCardReader,
+    private readonly reads: PrismaForumReadModels,
+  ) {}
+
+  for(ctx: RequestContext): Loaders {
+    let loaders = perRequest.get(ctx.req);
+    if (!loaders) {
+      const viewerId = ctx.req.user?.id ?? null;
+      loaders = {
+        cards: new DataLoader(async (ids) => {
+          const cards = await this.members.cards(ids);
+          const byId = new Map(cards.map((card) => [card.id, card]));
+          return ids.map((id) => byId.get(id) ?? null);
+        }),
+        votes: new DataLoader(async (postIds) => {
+          if (!viewerId) return postIds.map(() => null);
+          const votes = await this.reads.viewerVotes(viewerId, postIds);
+          return postIds.map((id) => votes.get(id) ?? null);
+        }),
+        stats: new DataLoader(async (forumIds) => {
+          const stats = await this.reads.forumStats(forumIds);
+          return forumIds.map(
+            (id) =>
+              stats.get(id) ?? { topicCount: 0, postCount: 0, lastTopic: null },
+          );
+        }),
+      };
+      perRequest.set(ctx.req, loaders);
+    }
+    return loaders;
+  }
+}
+
+abstract class ForumReadResolverBase {
+  protected readonly loaders: ForumReadLoaders;
+  constructor(members: ForumMemberCardReader, reads: PrismaForumReadModels) {
+    this.loaders = new ForumReadLoaders(members, reads);
+  }
+
+  protected card(ctx: RequestContext, id: string | null | undefined) {
+    return id ? this.loaders.for(ctx).cards.load(id) : Promise.resolve(null);
+  }
+
+  protected async stats(
+    ctx: RequestContext,
+    forumId: string,
+  ): Promise<ForumActivityStatsModel> {
+    const stats = await this.loaders.for(ctx).stats.load(forumId);
+    return {
+      topicCount: stats.topicCount,
+      postCount: stats.postCount,
+      lastActivity: stats.lastTopic
+        ? {
+            topicId: stats.lastTopic.id,
+            title: stats.lastTopic.title,
+            lastPostAt: stats.lastTopic.lastPostAt,
+            lastPostNumber: stats.lastTopic.lastPostNumber,
+            author: await this.card(ctx, stats.lastTopic.lastPostAuthorId),
+          }
+        : null,
+    };
+  }
+}
+
+@Resolver(() => ForumTopicModel)
+export class ForumTopicReadResolver extends ForumReadResolverBase {
+  constructor(
+    @Inject(FORUM_MEMBER_CARDS) members: ForumMemberCardReader,
+    reads: PrismaForumReadModels,
+  ) {
+    super(members, reads);
+  }
+
+  @ResolveField(() => ForumMemberModel, { nullable: true })
+  author(@Parent() topic: ForumTopicModel, @Context() ctx: RequestContext) {
+    return this.card(ctx, topic.authorId);
+  }
+
+  @ResolveField(() => ForumMemberModel, { nullable: true })
+  lastPostAuthor(
+    @Parent() topic: ForumTopicModel,
+    @Context() ctx: RequestContext,
+  ) {
+    return this.card(ctx, topic.lastPostAuthorId);
+  }
+}
+
+@Resolver(() => ForumPostModel)
+export class ForumPostReadResolver extends ForumReadResolverBase {
+  constructor(
+    @Inject(FORUM_MEMBER_CARDS) members: ForumMemberCardReader,
+    reads: PrismaForumReadModels,
+  ) {
+    super(members, reads);
+  }
+
+  @ResolveField(() => ForumMemberModel, { nullable: true })
+  author(@Parent() post: ForumPostModel, @Context() ctx: RequestContext) {
+    return this.card(ctx, post.authorId);
+  }
+
+  @ResolveField(() => Int, {
+    nullable: true,
+    description:
+      "The signed-in viewer's active vote on this post: 1, -1 or null (none, reversed or guest).",
+  })
+  viewerVote(@Parent() post: ForumPostModel, @Context() ctx: RequestContext) {
+    return this.loaders.for(ctx).votes.load(post.id);
+  }
+}
+
+@Resolver(() => ForumPostVoteModel)
+export class ForumPostVoteReadResolver extends ForumReadResolverBase {
+  constructor(
+    @Inject(FORUM_MEMBER_CARDS) members: ForumMemberCardReader,
+    reads: PrismaForumReadModels,
+  ) {
+    super(members, reads);
+  }
+
+  @ResolveField(() => ForumMemberModel, { nullable: true })
+  voter(@Parent() vote: ForumPostVoteModel, @Context() ctx: RequestContext) {
+    return this.card(ctx, vote.voterId);
+  }
+}
+
+@Resolver(() => ForumModel)
+export class ForumStatsResolver extends ForumReadResolverBase {
+  constructor(
+    @Inject(FORUM_MEMBER_CARDS) members: ForumMemberCardReader,
+    reads: PrismaForumReadModels,
+  ) {
+    super(members, reads);
+  }
+
+  @ResolveField(() => ForumActivityStatsModel)
+  activity(@Parent() forum: ForumModel, @Context() ctx: RequestContext) {
+    return this.stats(ctx, forum.id);
+  }
+}
+
+@Resolver(() => ForumSubforumModel)
+export class ForumSubforumStatsResolver extends ForumReadResolverBase {
+  constructor(
+    @Inject(FORUM_MEMBER_CARDS) members: ForumMemberCardReader,
+    reads: PrismaForumReadModels,
+  ) {
+    super(members, reads);
+  }
+
+  @ResolveField(() => ForumActivityStatsModel)
+  activity(
+    @Parent() forum: ForumSubforumModel,
+    @Context() ctx: RequestContext,
+  ) {
+    return this.stats(ctx, forum.id);
+  }
+}

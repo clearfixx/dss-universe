@@ -500,6 +500,7 @@ type EditorDocumentPreview {
 
 type Forum {
   active: Boolean!
+  activity: ForumActivityStats!
   allowsGatedContent: Boolean!
   categoryId: ID!
   description: String
@@ -509,6 +510,12 @@ type Forum {
   slug: String!
   subforums: [ForumSubforum!]!
   title: String!
+}
+
+type ForumActivityStats {
+  lastActivity: ForumLastActivity
+  postCount: Int!
+  topicCount: Int!
 }
 
 type ForumCategory {
@@ -546,6 +553,21 @@ input ForumInput {
   title: String!
 }
 
+type ForumLastActivity {
+  author: ForumMember
+  lastPostAt: DateTime!
+  lastPostNumber: Int!
+  title: String!
+  topicId: ID!
+}
+
+type ForumMember {
+  avatarUrl: String
+  displayName: String
+  id: ID!
+  username: String!
+}
+
 type ForumModeratorAssignment {
   assignedAt: DateTime!
   categoryId: ID!
@@ -556,6 +578,7 @@ type ForumModeratorAssignment {
 
 type ForumPost {
   attachments: [ForumPostAttachment!]!
+  author: ForumMember
   authorId: ID!
   createdAt: DateTime!
 
@@ -575,6 +598,11 @@ type ForumPost {
   staffNotes: [ForumStaffNote!]!
   state: ForumPostState!
   topicId: ID!
+
+  """
+  The signed-in viewer's active vote on this post: 1, -1 or null (none, reversed or guest).
+  """
+  viewerVote: Int
 }
 
 type ForumPostAttachment {
@@ -626,6 +654,7 @@ type ForumPostVote {
   createdAt: DateTime!
   reversed: Boolean!
   value: Int!
+  voter: ForumMember
   voterId: ID!
 }
 
@@ -672,6 +701,7 @@ enum ForumStaffRole {
 
 type ForumSubforum {
   active: Boolean!
+  activity: ForumActivityStats!
   allowsGatedContent: Boolean!
   categoryId: ID!
   description: String
@@ -706,6 +736,7 @@ enum ForumTopPeriod {
 
 type ForumTopic {
   acceptedAnswerPostId: ID
+  author: ForumMember
   authorId: ID!
   createdAt: DateTime!
   curatorId: ID
@@ -714,6 +745,7 @@ type ForumTopic {
   interactionTargetId: ID!
   kind: ForumTopicKind!
   lastPostAt: DateTime!
+  lastPostAuthor: ForumMember
   lastPostAuthorId: ID!
   lastPostNumber: Int!
   mergedIntoTopicId: ID
