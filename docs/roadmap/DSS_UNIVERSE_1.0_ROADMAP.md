@@ -1355,8 +1355,8 @@ govern.
 ## Definition of Done
 
 - approved list/topic mockups are implemented;
-- forum votes follow the owner-approved reputation rules; direct profile
-  reputation keeps its own reason-based rules;
+- forum votes rate content only and never change user reputation or
+  Community Points; direct profile reputation keeps its reason-based rules;
 - curator scope cannot escape its topic;
 - moderation, Feed, Search and Gamification work; Notifications emit events,
   with delivery completed in Phase 15.
