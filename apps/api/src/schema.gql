@@ -2304,6 +2304,7 @@ type ShareChannelCount {
 }
 
 enum SharedSearchSource {
+  FORUM
   NEWS
   RESEARCH_LAB
 }

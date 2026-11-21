@@ -121,7 +121,7 @@ describe('Activity viewer context with owner contracts and PostgreSQL (e2e)', ()
         { mentionedUserId: viewer.user.id },
         null,
       ],
-      ['following', followed, 'MEMBERS', 'FORUM', { tags: 'typescript' }, null],
+      ['following', followed, 'MEMBERS', 'BLOG', { tags: 'typescript' }, null],
       [
         'interest',
         other,

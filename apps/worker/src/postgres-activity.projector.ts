@@ -24,6 +24,30 @@ import type { IntegrationEventJob } from "@dss/jobs";
 const WALL_POST_CREATED_EVENT = "users.profile-wall.post-created.v1";
 const WALL_POST_RETRACTED_EVENT = "users.profile-wall.post-retracted.v1";
 const NEWS_PUBLISHED_EVENT = "news.article.published.v1";
+const FORUM_PRODUCER = "dss.api.forum";
+/**
+ * Forum entries are always MEMBERS-level; Activity additionally asks Forum at
+ * read time whether the viewer may still see each topic or post.
+ */
+const FORUM_EVENTS: Readonly<
+  Record<string, { action: string; subjectType: string; subject: string }>
+> = {
+  "forum.topic.created.v1": {
+    action: "FORUM_TOPIC_CREATED",
+    subjectType: "ForumTopic",
+    subject: "aggregate",
+  },
+  "forum.post.created.v1": {
+    action: "FORUM_REPLY_CREATED",
+    subjectType: "ForumPost",
+    subject: "aggregate",
+  },
+  "forum.answer.accepted.v1": {
+    action: "FORUM_ANSWER_ACCEPTED",
+    subjectType: "ForumPost",
+    subject: "postId",
+  },
+};
 
 export class PostgresActivityProjector {
   constructor(private readonly pool: Pool) {}
@@ -39,7 +63,58 @@ export class PostgresActivityProjector {
     }
     if (event.eventName === NEWS_PUBLISHED_EVENT) {
       await this.projectPublishedNews(event);
+      return;
     }
+    if (Object.hasOwn(FORUM_EVENTS, event.eventName)) {
+      await this.projectForum(event, FORUM_EVENTS[event.eventName]);
+    }
+  }
+
+  private async projectForum(
+    event: IntegrationEventJob,
+    mapping: { action: string; subjectType: string; subject: string },
+  ): Promise<void> {
+    if (event.producer !== FORUM_PRODUCER || !event.aggregateId) {
+      throw new Error("Invalid forum activity event.");
+    }
+    const payload = this.payload(event.payload);
+    const actorId = this.optionalString(payload.authorId);
+    const subjectId =
+      mapping.subject === "aggregate"
+        ? event.aggregateId
+        : this.optionalString(payload[mapping.subject]);
+    const topicId =
+      mapping.subjectType === "ForumTopic"
+        ? event.aggregateId
+        : this.optionalString(payload.topicId);
+    if (!actorId || !subjectId || !topicId) {
+      throw new Error("Forum activity metadata is incomplete.");
+    }
+    await this.pool.query(
+      `INSERT INTO "activity_entries"
+       ("id", "sourceEventId", "actorId", "module", "action",
+        "subjectType", "subjectId", "visibility", "metadata",
+        "occurredAt", "createdAt", "updatedAt")
+       VALUES (
+         $1, $2, $3, 'FORUM', $4, $5, $6, 'MEMBERS', $7::jsonb,
+         $8::timestamptz AT TIME ZONE 'UTC', NOW(), NOW()
+       )
+       ON CONFLICT ("sourceEventId") DO NOTHING`,
+      [
+        randomUUID(),
+        event.eventId,
+        actorId,
+        mapping.action,
+        mapping.subjectType,
+        subjectId,
+        JSON.stringify({
+          topicId,
+          title: this.optionalString(payload.title),
+          number: typeof payload.number === "number" ? payload.number : null,
+        }),
+        event.occurredAt,
+      ],
+    );
   }
 
   private async projectPublishedNews(

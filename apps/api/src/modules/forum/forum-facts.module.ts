@@ -18,14 +18,25 @@
  */
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '@api/core/database';
+import { AuthorizationModule } from '@api/core/authorization';
+import { FORUM_SUBJECT_VISIBILITY } from './contracts/forum-subject-visibility.contract';
+import { FORUM_VIEWER_FACTS } from './contracts/forum-viewer-facts.contract';
+import { ForumViewerFactsAdapter } from './infrastructure/forum-viewer-facts.adapter';
+import { PrismaForumSubjectVisibility } from './infrastructure/prisma-forum-subject-visibility';
 import { FORUM_TOPIC_COUNTS } from './contracts/forum-topic-counts.contract';
 import { PrismaForumTopicCounts } from './infrastructure/prisma-forum-topic-counts';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, AuthorizationModule],
   providers: [
     { provide: FORUM_TOPIC_COUNTS, useClass: PrismaForumTopicCounts },
+    ForumViewerFactsAdapter,
+    { provide: FORUM_VIEWER_FACTS, useExisting: ForumViewerFactsAdapter },
+    {
+      provide: FORUM_SUBJECT_VISIBILITY,
+      useClass: PrismaForumSubjectVisibility,
+    },
   ],
-  exports: [FORUM_TOPIC_COUNTS],
+  exports: [FORUM_TOPIC_COUNTS, FORUM_SUBJECT_VISIBILITY],
 })
 export class ForumFactsModule {}

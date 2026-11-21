@@ -85,7 +85,7 @@ describe('Activity Feed (e2e)', () => {
         {
           sourceEventId: `feed-following-${suffix}`,
           actorId: ids.followed,
-          module: 'FORUM',
+          module: 'BLOG',
           action: 'topic.created',
           subjectType: 'topic',
           subjectId: randomUUID(),
@@ -176,10 +176,10 @@ describe('Activity Feed (e2e)', () => {
   });
 
   it('advances the visit cursor independently from reads', async () => {
-    const before = await feed.personalizedFeed(ids.viewer, ['FORUM'], 1, 20);
+    const before = await feed.personalizedFeed(ids.viewer, ['BLOG'], 1, 20);
     expect(before.items[0]?.isUnread).toBe(true);
     const visitedAt = await feed.markVisited(ids.viewer);
-    const after = await feed.personalizedFeed(ids.viewer, ['FORUM'], 1, 20);
+    const after = await feed.personalizedFeed(ids.viewer, ['BLOG'], 1, 20);
     expect(after.lastVisitedAt).toEqual(visitedAt);
     expect(after.items[0]?.isUnread).toBe(false);
   });

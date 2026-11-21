@@ -158,6 +158,8 @@ export class ForumTopicsService implements ForumInteractionDecisions {
         categoryId: forum.categoryId,
         kind: input.kind,
         firstPostId: postId,
+        authorId: actorId,
+        title,
       });
     });
     return { topic: await this.summary(topicId), firstPostId: postId };
@@ -226,6 +228,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
         topicId: input.topicId,
         number,
         replyToNumber: references.replyToNumber,
+        authorId: actorId,
       });
     });
     return this.postView(

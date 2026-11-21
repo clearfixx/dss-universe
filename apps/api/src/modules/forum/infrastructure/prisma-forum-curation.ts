@@ -98,7 +98,7 @@ export class ForumCurationService {
       }
       await this.record(tx, actorId, 'ForumTopic', topicId, 'answer.accepted', {
         postId,
-        answerAuthorId: answer.authorId,
+        authorId: answer.authorId,
         previousPostId: topic.acceptedAnswerPostId,
       });
     });

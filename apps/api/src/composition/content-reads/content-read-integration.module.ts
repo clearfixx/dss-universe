@@ -23,7 +23,12 @@
  */
 import { Global, Module } from '@nestjs/common';
 import { MediaModule } from '@api/modules/media';
-import { ActivityModule, ACTIVITY_VIEWER_CONTEXT } from '@api/modules/activity';
+import {
+  ActivityModule,
+  ACTIVITY_SUBJECT_VISIBILITY,
+  ACTIVITY_VIEWER_CONTEXT,
+} from '@api/modules/activity';
+import { ActivitySubjectVisibilityAdapter } from './infrastructure/activity-subject-visibility.adapter';
 import { NEWS_MEDIA_EVIDENCE, NEWS_ATTACHMENT_READER } from '@api/modules/news';
 import { NewsAttachmentAdapter } from './infrastructure/news-attachment.adapter';
 import {
@@ -76,6 +81,10 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
   providers: [
     { provide: NEWS_ATTACHMENT_READER, useClass: NewsAttachmentAdapter },
     {
+      provide: ACTIVITY_SUBJECT_VISIBILITY,
+      useClass: ActivitySubjectVisibilityAdapter,
+    },
+    {
       provide: ACTIVITY_VIEWER_CONTEXT,
       useClass: ActivityViewerContextAdapter,
     },
@@ -96,6 +105,7 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
   exports: [
     NEWS_ATTACHMENT_READER,
     ACTIVITY_VIEWER_CONTEXT,
+    ACTIVITY_SUBJECT_VISIBILITY,
     NEWS_MEDIA_EVIDENCE,
     PROFILE_ACTIVITY_READER,
     GATE_ACCOUNT_EVIDENCE,
