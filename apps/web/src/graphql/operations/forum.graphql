@@ -5,6 +5,16 @@ fragment ForumMemberCard on ForumMember {
   avatarUrl
 }
 
+fragment ForumPostAuthor on ForumMember {
+  ...ForumMemberCard
+  joinedAt
+  stats {
+    postCount
+    reputation
+    level
+  }
+}
+
 fragment ForumActivityStatsFields on ForumActivityStats {
   topicCount
   postCount
@@ -74,7 +84,7 @@ fragment ForumPostFields on ForumPost {
   createdAt
   editedAt
   author {
-    ...ForumMemberCard
+    ...ForumPostAuthor
   }
   attachments {
     mediaId
@@ -194,11 +204,19 @@ query ViewerForumTopics(
   }
 }
 
-query ForumTopicThread($topicId: ID!, $page: Int!, $limit: Int!) {
+query ForumTopicThread(
+  $topicId: ID!
+  $page: Int!
+  $limit: Int!
+  $sort: ForumReplySort!
+) {
   forumTopic(topicId: $topicId) {
     ...ForumTopicSummary
   }
-  forumPosts(topicId: $topicId, page: $page, limit: $limit) {
+  forumSimilarTopics(topicId: $topicId, limit: 3) {
+    ...ForumTopicSummary
+  }
+  forumPosts(topicId: $topicId, page: $page, limit: $limit, sort: $sort) {
     total
     page
     limit

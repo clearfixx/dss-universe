@@ -40,6 +40,7 @@ import {
   loadForumTopicViewerState,
 } from "@/features/forum/forum-data";
 import { forumMemberName } from "@/features/forum/forum-format";
+import type { ForumReplySort } from "@/gql/graphql";
 import { ForumPoll } from "@/features/forum/forum-poll";
 import { ForumPostCard } from "@/features/forum/forum-post-card";
 import { ForumReplyComposer } from "@/features/forum/forum-reply-composer";
@@ -51,7 +52,7 @@ import {
 
 type Props = {
   params: Promise<{ topicId: string }>;
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; sort?: string }>;
 };
 
 const dateFormatter = new Intl.DateTimeFormat("uk-UA", {
@@ -73,10 +74,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ForumTopicRoute({ params, searchParams }: Props) {
   const { topicId } = await params;
-  const page = Math.max(1, Number((await searchParams).page) || 1);
-  const thread = await loadForumThread(topicId, page);
+  const query = await searchParams;
+  const page = Math.max(1, Number(query.page) || 1);
+  const sort =
+    REPLY_SORTS.find((item) => item.id === query.sort)?.id ?? "OLDEST";
+  const thread = await loadForumThread(topicId, page, sort);
   if (!thread) notFound();
-  const { topic, posts } = thread;
+  const { topic, posts, similar } = thread;
   if (topic.mergedIntoTopicId) redirect(topicPath(topic.mergedIntoTopicId));
 
   const [viewer, viewerState, poll, categories] = await Promise.all([
@@ -101,9 +105,14 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
   const acceptedHere = posts.items.find(
     (post) => post.id === topic.acceptedAnswerPostId,
   );
-  const lastNumber = posts.items.at(-1)?.number ?? 0;
-  const pageHref = (target: number) =>
-    target === 1 ? path : `${path}?page=${target}`;
+  const lastNumber = Math.max(0, ...posts.items.map((post) => post.number));
+  const pageHref = (target: number, order: ForumReplySort = sort) => {
+    const next = new URLSearchParams();
+    if (order !== "OLDEST") next.set("sort", order);
+    if (target > 1) next.set("page", String(target));
+    const qs = next.toString();
+    return qs ? `${path}?${qs}` : path;
+  };
 
   return (
     <DssApplicationShell pageTitle={{ pathname: path, title: topic.title }}
@@ -263,10 +272,32 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
             <ForumPoll poll={poll} signedIn={viewer !== null} path={path} />
           ) : null}
 
-          <h2 className="pt-1 text-base font-semibold">
-            {Math.max(0, topic.postCount - 1)}{" "}
-            {pluralReplies(Math.max(0, topic.postCount - 1))}
-          </h2>
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+            <h2 className="text-base font-semibold">
+              {Math.max(0, topic.postCount - 1)}{" "}
+              {pluralReplies(Math.max(0, topic.postCount - 1))}
+            </h2>
+            <nav
+              aria-label="Сортування відповідей"
+              className="flex items-center gap-1 text-sm"
+            >
+              <span className="mr-1 text-slate-400">Сортувати:</span>
+              {REPLY_SORTS.map((item) => (
+                <Link
+                  key={item.id}
+                  href={pageHref(1, item.id)}
+                  aria-current={item.id === sort ? "true" : undefined}
+                  className={`rounded-md px-2.5 py-1 ${
+                    item.id === sort
+                      ? "bg-white/[0.08] text-white"
+                      : "text-slate-400 hover:bg-white/[0.05] hover:text-white"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
 
           <div className="space-y-3">
             {posts.items.map((post) => (
@@ -315,7 +346,7 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
             <ForumReplyComposer
               topicId={topic.id}
               path={pageHref(page)}
-              lastPage={pageHref(pages)}
+              lastPage={sort === "OLDEST" ? pageHref(pages) : pageHref(1)}
             />
           ) : (
             <p className="rounded-xl bg-card px-4 py-3 text-sm text-slate-400">
@@ -376,11 +407,55 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
               <dd>{topic.viewCount}</dd>
             </dl>
           </section>
+          {similar.length ? (
+            <section className="rounded-xl bg-card p-4">
+              <h2 className="mb-3 font-semibold">Схожі теми</h2>
+              <ul className="space-y-3">
+                {similar.map((item) => (
+                  <li key={item.id}>
+                    <Link
+                      href={topicPath(item.id)}
+                      className="group flex gap-3"
+                    >
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-violet-500/15 text-violet-300">
+                        {item.kind === "QUESTION" ? (
+                          <HelpCircle className="size-4" aria-hidden="true" />
+                        ) : (
+                          <MessagesSquare className="size-4" aria-hidden="true" />
+                        )}
+                      </span>
+                      <span className="min-w-0 space-y-1">
+                        <span className="line-clamp-2 text-sm text-slate-100 group-hover:text-violet-200">
+                          {item.title}
+                        </span>
+                        <span className="flex gap-3 text-xs text-slate-400">
+                          <span className="inline-flex items-center gap-1">
+                            <MessageSquare className="size-3.5" aria-hidden="true" />
+                            {Math.max(0, item.postCount - 1)}
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <Eye className="size-3.5" aria-hidden="true" />
+                            {item.viewCount}
+                          </span>
+                        </span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
         </aside>
       </div>
     </DssApplicationShell>
   );
 }
+
+const REPLY_SORTS: ReadonlyArray<{ id: ForumReplySort; label: string }> = [
+  { id: "OLDEST", label: "Спочатку старі" },
+  { id: "NEWEST", label: "Спочатку нові" },
+  { id: "BEST", label: "Найкращі" },
+];
 
 function pluralReplies(count: number) {
   const mod10 = count % 10;

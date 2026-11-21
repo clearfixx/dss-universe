@@ -40,6 +40,12 @@ const dateFormatter = new Intl.DateTimeFormat("uk-UA", {
   timeStyle: "short",
 });
 
+const numberFormatter = new Intl.NumberFormat("uk-UA");
+const joinedFormatter = new Intl.DateTimeFormat("uk-UA", {
+  month: "short",
+  year: "numeric",
+});
+
 const TOMBSTONE: Record<string, string> = {
   HIDDEN: "Допис приховано модератором.",
   DELETED: "Допис видалено модератором.",
@@ -199,8 +205,16 @@ export function ForumPostCard({
             ) : null}
           </div>
         </div>
-        {badges.length ? (
+        {badges.length || post.author ? (
           <div className="flex flex-wrap gap-1.5 sm:pl-[3.125rem]">
+            {post.author ? (
+              <span
+                title="Рівень учасника"
+                className="rounded bg-indigo-500/20 px-1.5 py-0.5 text-[11px] font-semibold text-indigo-200"
+              >
+                Рів. {post.author.stats.level}
+              </span>
+            ) : null}
             {badges.map((badge) => (
               <span
                 key={badge}
@@ -210,6 +224,32 @@ export function ForumPostCard({
               </span>
             ))}
           </div>
+        ) : null}
+        {post.author ? (
+          <dl className="hidden grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 text-xs text-slate-400 sm:grid">
+            <dt>Дописи:</dt>
+            <dd className="text-slate-200 tabular-nums">
+              {numberFormatter.format(post.author.stats.postCount)}
+            </dd>
+            <dt>Репутація:</dt>
+            <dd
+              className={`tabular-nums ${
+                post.author.stats.reputation < 0
+                  ? "text-rose-300"
+                  : "text-slate-200"
+              }`}
+            >
+              {numberFormatter.format(post.author.stats.reputation)}
+            </dd>
+            <dt className="col-span-2 pt-0.5">
+              На сайті з{" "}
+              <span className="text-slate-200">
+                {joinedFormatter
+                  .format(new Date(String(post.author.joinedAt)))
+                  .replace(/s*р.$/, "")}
+              </span>
+            </dt>
+          </dl>
         ) : null}
       </aside>
 

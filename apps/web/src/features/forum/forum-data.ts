@@ -35,6 +35,7 @@ import {
   ViewerForumSanctionStatusDocument,
   ViewerForumTopicsDocument,
   type ForumTopicFilter,
+  type ForumReplySort,
   type ForumTopicScope,
   type ForumTopicSort,
   type ForumTopPeriod,
@@ -120,16 +121,21 @@ export async function loadViewerForumTopics(
 }
 
 /** Topic header and one page of posts; null when missing or not visible. */
-export const loadForumThread = cache(async (topicId: string, page = 1) =>
+export const loadForumThread = cache(
+  async (topicId: string, page = 1, sort: ForumReplySort = "OLDEST") =>
   orNull(async () => {
     const result = await getClient().query({
       query: ForumTopicThreadDocument,
-      variables: { topicId, page, limit: FORUM_PAGE_SIZE },
+      variables: { topicId, page, limit: FORUM_PAGE_SIZE, sort },
       context: await authContext(),
       fetchPolicy: "no-cache",
     });
     return result.data
-      ? { topic: result.data.forumTopic, posts: result.data.forumPosts }
+      ? {
+          topic: result.data.forumTopic,
+          posts: result.data.forumPosts,
+          similar: result.data.forumSimilarTopics,
+        }
       : null;
   }),
 );
