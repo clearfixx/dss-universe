@@ -584,6 +584,10 @@ for (const [moduleName, expected] of [
       "ShortNewsItem",
       "ShortNewsNumberedQuery",
       "ShortNewsQuery",
+      "NewsDiscussionFactsModule",
+      "NEWS_DISCUSSION_FACTS",
+      "NewsDiscussionFacts",
+      "NewsDiscussionFactsReader",
     ],
   ],
   [
@@ -656,6 +660,10 @@ for (const [moduleName, expected] of [
       "GateCommentCountReader",
       "GATE_REPUTATION_TOTAL",
       "GateReputationTotalReader",
+      "GATE_VIEWER_RESTRICTION",
+      "GateViewerRestrictionReader",
+      "GATE_FORUM_POST_COUNT",
+      "GateForumPostCountReader",
     ],
   ],
   [
