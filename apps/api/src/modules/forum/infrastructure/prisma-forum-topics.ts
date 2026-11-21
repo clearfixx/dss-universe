@@ -374,6 +374,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     const { skip, take, safePage } = this.paging(page, limit);
     const where: Prisma.ForumTopicWhereInput = {
       forumId,
+      mergedIntoTopicId: null,
       state:
         scope === 'ACTIVE'
           ? { in: ['OPEN', 'CLOSED'] }
@@ -822,6 +823,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     const ranked = await this.prisma.$queryRaw<Array<{ id: string }>>`
       SELECT "id" FROM "forum_topics"
       WHERE "forumId" = ${forumId}
+        AND "mergedIntoTopicId" IS NULL
         AND "state"::text IN (${Prisma.join(states)})
         AND (${since}::timestamp IS NULL OR "createdAt" >= ${since})
         AND (${tagSlug}::text IS NULL OR EXISTS (
@@ -898,6 +900,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       viewCount: row.viewCount,
       viewerLastReadNumber: lastRead ?? null,
       acceptedAnswerPostId: row.acceptedAnswerPostId,
+      mergedIntoTopicId: row.mergedIntoTopicId,
       tags,
       createdAt: row.createdAt,
     };
