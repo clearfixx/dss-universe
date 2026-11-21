@@ -911,6 +911,7 @@ type Mutation {
   setNewsPin(input: SetNewsPinInput!): ManagedNewsPin!
   setReaction(input: SetReactionInput!): SetReactionPayload!
   setResearchEditProtection(level: ResearchEditProtection!, pageId: ID!): ResearchEditPolicy!
+  setResearchPageAudience(groupKeys: [String!]! = [], pageId: ID!, visibility: ResearchPageAudience!): ResearchAudiencePolicy!
   setResearchTrustedEditors(groupKeys: [String!]!, pageId: ID!): [String!]!
   setViewerAvatar(mediaId: ID!): Viewer!
   setViewerCover(mediaId: ID!): Viewer!
@@ -1499,6 +1500,11 @@ input RequestPasswordRecoveryInput {
   email: String!
 }
 
+type ResearchAudiencePolicy {
+  groupKeys: [String!]!
+  visibility: ResearchPageAudience!
+}
+
 input ResearchDecisionInput {
   pageId: ID!
   reason: String
@@ -1569,6 +1575,12 @@ type ResearchOwnDraftItem {
   pageId: ID!
   updatedAt: DateTime!
   version: Int!
+}
+
+enum ResearchPageAudience {
+  GROUPS
+  MEMBERS
+  PUBLIC
 }
 
 type ResearchPendingRevision {

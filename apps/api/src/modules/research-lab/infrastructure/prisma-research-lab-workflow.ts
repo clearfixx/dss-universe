@@ -14,7 +14,10 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import type { ResearchProtectionLevel } from '../domain/types/research-lab.type';
+import type {
+  ResearchProtectionLevel,
+  ResearchVisibility,
+} from '../domain/types/research-lab.type';
 import { researchAudience } from './research-audience';
 import { createHash, randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
@@ -124,6 +127,93 @@ export class ResearchLabService {
         policySnapshotHash: await this.policySnapshotHash(tx, pageId),
       });
       return page;
+    });
+  }
+
+  async setAudience(
+    actorId: string,
+    pageId: string,
+    visibility: ResearchVisibility,
+    groupKeys: string[],
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      await this.lockPage(tx, pageId);
+      const at = new Date();
+      if (!(await this.authority.canModerate(actorId, at))) {
+        throw new ResearchLabCommandError(
+          'ACCESS_DENIED',
+          'Research Lab moderation permission required.',
+        );
+      }
+      const facts = await this.requireAuthenticated(actorId);
+      const page = await tx.researchPage.findFirst({
+        where: {
+          id: pageId,
+          state: { in: ['ACTIVE', 'ARCHIVED'] },
+          publishedRevision: { is: { state: 'PUBLISHED' } },
+          ...researchAudience(facts.groups, true),
+        },
+        select: {
+          visibility: true,
+          audienceGroups: {
+            select: { groupKey: true },
+            orderBy: { groupKey: 'asc' },
+          },
+        },
+      });
+      if (!page) this.notFound('Published page');
+      const keys = [...new Set(groupKeys)].sort();
+      if (
+        (visibility === 'GROUPS') !== keys.length > 0 ||
+        keys.some((key) => !/^[a-z][a-z0-9-]{0,63}$/.test(key))
+      ) {
+        throw new ResearchLabCommandError(
+          'INVALID_STATE',
+          'Supply group keys only for a group audience, with at least one key.',
+        );
+      }
+      const previous = page.audienceGroups.map((group) => group.groupKey);
+      if (
+        page.visibility !== visibility ||
+        previous.join(',') !== keys.join(',')
+      ) {
+        await tx.researchPage.update({
+          where: { id: pageId },
+          data: {
+            visibility,
+            audienceGroups: {
+              deleteMany: {},
+              create: keys.map((groupKey) => ({ groupKey })),
+            },
+          },
+        });
+        await this.audit.append(tx, {
+          action: 'research_lab.audience_updated',
+          actorType: 'USER',
+          actorId,
+          targetType: 'ResearchPage',
+          targetId: pageId,
+          metadata: {
+            previousVisibility: page.visibility,
+            visibility,
+            previousGroupKeys: previous,
+            groupKeys: keys,
+          },
+        });
+        await this.outbox.append(
+          tx,
+          createEventEnvelope({
+            name: 'research-lab.audience.updated.v1',
+            version: 1,
+            category: 'integration',
+            producer: PRODUCER,
+            actorId,
+            aggregate: { type: 'ResearchPage', id: pageId },
+            payload: { pageId },
+          }),
+        );
+      }
+      return { visibility, groupKeys: keys };
     });
   }
 

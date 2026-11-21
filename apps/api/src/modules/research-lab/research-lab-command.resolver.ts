@@ -23,6 +23,19 @@ import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
 import { ResearchLabService } from './infrastructure/prisma-research-lab-workflow';
 import { ResearchLabCommandError } from './domain/errors/research-lab-command.error';
 
+enum ResearchPageAudience {
+  PUBLIC = 'PUBLIC',
+  MEMBERS = 'MEMBERS',
+  GROUPS = 'GROUPS',
+}
+registerEnumType(ResearchPageAudience, { name: 'ResearchPageAudience' });
+
+@ObjectType()
+class ResearchAudiencePolicy {
+  @Field(() => ResearchPageAudience) visibility!: ResearchPageAudience;
+  @Field(() => [String]) groupKeys!: string[];
+}
+
 enum ResearchEditProtection {
   OPEN = 'OPEN',
   TRUSTED = 'TRUSTED',
@@ -220,6 +233,20 @@ export class ResearchLabCommandResolver {
   ) {
     return this.execute(this.workflow.editPolicy(actor.id, pageId));
   }
+  @Mutation(() => ResearchAudiencePolicy)
+  setResearchPageAudience(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('pageId', { type: () => ID }) pageId: string,
+    @Args('visibility', { type: () => ResearchPageAudience })
+    visibility: ResearchPageAudience,
+    @Args('groupKeys', { type: () => [String], defaultValue: [] })
+    groupKeys: string[],
+  ) {
+    return this.execute(
+      this.workflow.setAudience(actor.id, pageId, visibility, groupKeys),
+    );
+  }
+
   @Mutation(() => ResearchEditPolicy)
   setResearchEditProtection(
     @AuthUser() actor: AuthenticatedUser,
