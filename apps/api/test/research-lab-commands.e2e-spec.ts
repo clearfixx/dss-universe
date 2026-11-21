@@ -216,6 +216,68 @@ describe('Research Lab commands (e2e)', () => {
     expect(stored?.version).toBe(2);
   });
 
+  it('requires moderation and the current audience before changing who can read a page', async () => {
+    const guardian = await user(true),
+      moderator = await user(),
+      outsider = await user();
+    moderators.add(moderator);
+    moderators.add(outsider);
+    const { pageId } = await service.createDraft({
+      actorId: guardian,
+      ...content('aud-' + randomUUID()),
+    });
+    await service.selfPublishDraft({
+      actorId: guardian,
+      pageId,
+      expectedVersion: 1,
+      editSummary: 'Initial',
+      correlationId: randomUUID(),
+    });
+    await expect(
+      service.setAudience(guardian, pageId, 'MEMBERS', []),
+    ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+    await expect(
+      service.setAudience(moderator, pageId, 'GROUPS', []),
+    ).rejects.toMatchObject({ code: 'INVALID_STATE' });
+    memberships.set(moderator, ['group:editors']);
+    expect(
+      await service.setAudience(moderator, pageId, 'GROUPS', [
+        'editors',
+        'editors',
+      ]),
+    ).toEqual({ visibility: 'GROUPS', groupKeys: ['editors'] });
+    await service.setAudience(moderator, pageId, 'GROUPS', ['editors']);
+    await expect(
+      service.setAudience(outsider, pageId, 'PUBLIC', []),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    expect(await service.audiencePolicy(moderator, pageId)).toEqual({
+      visibility: 'GROUPS',
+      groupKeys: ['editors'],
+    });
+    await expect(
+      service.audiencePolicy(outsider, pageId),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    const audit = await fixture.prisma.auditRecord.findMany({
+      where: { targetId: pageId, action: 'research_lab.audience_updated' },
+    });
+    expect(audit).toHaveLength(1);
+    expect(audit[0]).toMatchObject({
+      actorId: moderator,
+      metadata: {
+        previousVisibility: 'PUBLIC',
+        visibility: 'GROUPS',
+        groupKeys: ['editors'],
+      },
+    });
+    await service.setAudience(moderator, pageId, 'MEMBERS', []);
+    expect(
+      await fixture.prisma.researchPageAudienceGroup.count({
+        where: { pageId },
+      }),
+    ).toBe(0);
+    await service.setAudience(outsider, pageId, 'PUBLIC', []);
+  });
+
   it('checks current audience before reading, saving or submitting a private draft', async () => {
     const actorId = await user(true);
     const input = content('audience-' + randomUUID());
@@ -567,6 +629,21 @@ describe('Research Lab commands (e2e)', () => {
       version: 1,
       title: 'Research title',
     });
+    const history = (viewer: string) =>
+      service.reviewHistory(viewer, created.pageId, submitted.revisionId);
+    const decisions = await history(author);
+    expect(decisions.map(({ action }) => action)).toEqual([
+      'SUBMITTED',
+      'CHANGES_REQUESTED',
+    ]);
+    expect(decisions[1]).toMatchObject({
+      actorId: guardian,
+      reason: 'Add sources',
+    });
+    expect(await history(guardian)).toEqual(decisions);
+    expect(await history(await user())).toEqual([]);
+    guardians.delete(guardian);
+    expect(await history(guardian)).toEqual([]);
     await expect(
       fixture.prisma.researchRevision.findUniqueOrThrow({
         where: { id: submitted.revisionId },

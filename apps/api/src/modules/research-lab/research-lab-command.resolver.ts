@@ -23,6 +23,19 @@ import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
 import { ResearchLabService } from './infrastructure/prisma-research-lab-workflow';
 import { ResearchLabCommandError } from './domain/errors/research-lab-command.error';
 
+enum ResearchPageAudience {
+  PUBLIC = 'PUBLIC',
+  MEMBERS = 'MEMBERS',
+  GROUPS = 'GROUPS',
+}
+registerEnumType(ResearchPageAudience, { name: 'ResearchPageAudience' });
+
+@ObjectType()
+class ResearchAudiencePolicy {
+  @Field(() => ResearchPageAudience) visibility!: ResearchPageAudience;
+  @Field(() => [String]) groupKeys!: string[];
+}
+
 enum ResearchEditProtection {
   OPEN = 'OPEN',
   TRUSTED = 'TRUSTED',
@@ -84,6 +97,15 @@ class ResearchReviewItem {
   @Field(() => Int) number!: number;
   @Field() createdAt!: Date;
 }
+@ObjectType()
+class ResearchEditorialDecision {
+  @Field(() => ID) id!: string;
+  @Field(() => ID) actorId!: string;
+  @Field() action!: string;
+  @Field(() => String, { nullable: true }) reason!: string | null;
+  @Field() createdAt!: Date;
+}
+
 @ObjectType()
 class ResearchPendingRevision {
   @Field(() => ID) id!: string;
@@ -203,6 +225,21 @@ export class ResearchLabCommandResolver {
       throw new BadRequestException('Invalid review pagination.');
     return this.execute(this.workflow.reviewQueue(actor.id, offset, limit));
   }
+  @Query(() => [ResearchEditorialDecision])
+  researchRevisionReviewHistory(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('pageId', { type: () => ID }) pageId: string,
+    @Args('revisionId', { type: () => ID }) revisionId: string,
+    @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
+    @Args('limit', { type: () => Int, defaultValue: 50 }) limit: number,
+  ) {
+    if (offset < 0 || limit < 1 || limit > 100)
+      throw new BadRequestException('Invalid review pagination.');
+    return this.execute(
+      this.workflow.reviewHistory(actor.id, pageId, revisionId, offset, limit),
+    );
+  }
+
   @Query(() => ResearchPendingRevision, { nullable: true })
   researchPendingRevision(
     @AuthUser() actor: AuthenticatedUser,
@@ -220,6 +257,28 @@ export class ResearchLabCommandResolver {
   ) {
     return this.execute(this.workflow.editPolicy(actor.id, pageId));
   }
+  @Query(() => ResearchAudiencePolicy)
+  researchPageAudience(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('pageId', { type: () => ID }) pageId: string,
+  ) {
+    return this.execute(this.workflow.audiencePolicy(actor.id, pageId));
+  }
+
+  @Mutation(() => ResearchAudiencePolicy)
+  setResearchPageAudience(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('pageId', { type: () => ID }) pageId: string,
+    @Args('visibility', { type: () => ResearchPageAudience })
+    visibility: ResearchPageAudience,
+    @Args('groupKeys', { type: () => [String], defaultValue: [] })
+    groupKeys: string[],
+  ) {
+    return this.execute(
+      this.workflow.setAudience(actor.id, pageId, visibility, groupKeys),
+    );
+  }
+
   @Mutation(() => ResearchEditPolicy)
   setResearchEditProtection(
     @AuthUser() actor: AuthenticatedUser,
