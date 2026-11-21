@@ -98,7 +98,7 @@ class ForumInput {
 }
 
 @ObjectType('ForumSubforum')
-class ForumSubforumModel {
+export class ForumSubforumModel {
   @Field(() => ID) id!: string;
   @Field(() => ID) categoryId!: string;
   @Field(() => ID, { nullable: true }) parentId!: string | null;
@@ -111,7 +111,7 @@ class ForumSubforumModel {
 }
 
 @ObjectType('Forum')
-class ForumModel extends ForumSubforumModel {
+export class ForumModel extends ForumSubforumModel {
   @Field(() => [ForumSubforumModel]) subforums!: ForumSubforumModel[];
 }
 
