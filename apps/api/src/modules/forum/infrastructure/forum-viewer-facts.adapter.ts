@@ -55,7 +55,8 @@ export class ForumViewerFactsAdapter implements ForumViewerFactsReader {
       seesAllCategories: permissions.has(Permission.ForumStructureManage),
       moderatesAllCategories: permissions.has(Permission.ForumModerateAll),
       canAssignModerators: permissions.has(Permission.ForumModeratorsAssign),
-      canPurgeContent: permissions.has(Permission.ForumContentPurge),
+      // Enable only with a verified, immutable owner subject. Roles are delegable.
+      canPurgeContent: false,
     };
   }
 }

@@ -48,6 +48,7 @@ import {
 import {
   ArrayMaxSize,
   IsArray,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -102,18 +103,50 @@ registerEnumType(TopicFilterEnum, {
 });
 const ViewerCollectionEnum = enumOf(FORUM_VIEWER_COLLECTIONS);
 registerEnumType(ViewerCollectionEnum, { name: 'ForumViewerCollection' });
+const DiscoverFilterEnum = {
+  ALL: 'ALL',
+  NO_REPLIES: 'NO_REPLIES',
+  UNSOLVED: 'UNSOLVED',
+} as const;
+registerEnumType(DiscoverFilterEnum, {
+  name: 'ForumDiscoverFilter',
+  description:
+    'NO_REPLIES: nobody replied yet; UNSOLVED: questions without an accepted answer.',
+});
+const DiscoverSortEnum = {
+  NEW: 'NEW',
+  LAST_ACTIVITY: 'LAST_ACTIVITY',
+} as const;
+registerEnumType(DiscoverSortEnum, { name: 'ForumDiscoverSort' });
+
+@ObjectType('ForumHubStats')
+class ForumHubStatsModel {
+  @Field(() => Int) forumCount!: number;
+  @Field(() => Int) topicCount!: number;
+  @Field(() => Int, { description: 'Visible posts only.' }) postCount!: number;
+  @Field(() => Int, { description: 'Distinct authors of visible posts.' })
+  participantCount!: number;
+}
+
+@ObjectType('ForumPopularTag')
+class ForumPopularTagModel {
+  @Field() slug!: string;
+  @Field() label!: string;
+  @Field(() => Int) topicCount!: number;
+}
 
 @InputType()
-class CreateForumTopicInput {
+export class CreateForumTopicInput {
   @Field(() => ID) @IsString() forumId!: string;
   @Field(() => TopicKindEnum, { defaultValue: 'DISCUSSION' })
+  @IsIn(FORUM_TOPIC_KINDS)
   kind!: ForumTopicKind;
   @Field() @IsString() title!: string;
   @Field() @IsString() documentJson!: string;
 }
 
 @InputType()
-class CreateForumReplyInput {
+export class CreateForumReplyInput {
   @Field(() => ID) @IsString() topicId!: string;
   @Field() @IsString() documentJson!: string;
   @Field(() => Int, { nullable: true })
@@ -129,7 +162,7 @@ class CreateForumReplyInput {
 }
 
 @InputType()
-class EditForumPostInput {
+export class EditForumPostInput {
   @Field(() => ID) @IsString() postId!: string;
   @Field(() => Int) @IsInt() @Min(1) expectedRevision!: number;
   @Field() @IsString() documentJson!: string;
@@ -327,6 +360,40 @@ export class ForumTopicsResolver {
     return this.execute(
       this.topics.viewerTopics(user.id, collection, page, limit),
     );
+  }
+
+  @Query(() => ForumTopicPageModel, {
+    description:
+      'Open and closed topics across every forum the viewer can see (guests included).',
+  })
+  @UseGuards(OptionalViewerJwtGuard)
+  forumDiscoverTopics(
+    @Context() ctx: RequestContext,
+    @Args('filter', { type: () => DiscoverFilterEnum, defaultValue: 'ALL' })
+    filter: keyof typeof DiscoverFilterEnum,
+    @Args('sort', { type: () => DiscoverSortEnum, defaultValue: 'NEW' })
+    sort: keyof typeof DiscoverSortEnum,
+    @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
+    @Args('limit', { type: () => Int, defaultValue: 10 }) limit: number,
+  ): Promise<ForumPage<ForumTopicModel>> {
+    return this.execute(
+      this.topics.discoverTopics(this.viewer(ctx), filter, sort, page, limit),
+    );
+  }
+
+  @Query(() => ForumHubStatsModel)
+  @UseGuards(OptionalViewerJwtGuard)
+  forumHubStats(@Context() ctx: RequestContext): Promise<ForumHubStatsModel> {
+    return this.execute(this.topics.hubStats(this.viewer(ctx)));
+  }
+
+  @Query(() => [ForumPopularTagModel])
+  @UseGuards(OptionalViewerJwtGuard)
+  forumPopularTags(
+    @Context() ctx: RequestContext,
+    @Args('limit', { type: () => Int, defaultValue: 12 }) limit: number,
+  ): Promise<ForumPopularTagModel[]> {
+    return this.execute(this.topics.popularTags(this.viewer(ctx), limit));
   }
 
   @Query(() => ForumTopicModel)

@@ -12,7 +12,7 @@
  * • authors never delete their own topics or posts;
  * • curators act only on replies inside their own topic;
  * • the first post is removed by trashing the topic, not by post deletion;
- * • PURGED is terminal and reserved for forum.content.purge holders.
+ * • PURGED is terminal and reserved for the verified platform owner.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================

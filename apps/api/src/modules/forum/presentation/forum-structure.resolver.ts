@@ -40,6 +40,7 @@ import {
   ArrayMaxSize,
   IsArray,
   IsBoolean,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -62,7 +63,7 @@ const ForumVisibilityEnum = Object.fromEntries(
 registerEnumType(ForumVisibilityEnum, { name: 'ForumVisibility' });
 
 @InputType()
-class ForumCategoryInput {
+export class ForumCategoryInput {
   @Field() @IsString() slug!: string;
   @Field() @IsString() title!: string;
   @Field(() => String, { nullable: true })
@@ -70,7 +71,9 @@ class ForumCategoryInput {
   @IsString()
   description?: string | null;
   @Field(() => Int, { defaultValue: 0 }) @IsInt() @Min(0) position!: number;
-  @Field(() => ForumVisibilityEnum) visibility!: ForumVisibility;
+  @Field(() => ForumVisibilityEnum)
+  @IsIn(FORUM_VISIBILITIES)
+  visibility!: ForumVisibility;
   @Field(() => [String], { defaultValue: [] })
   @IsArray()
   @ArrayMaxSize(50)
@@ -80,7 +83,7 @@ class ForumCategoryInput {
 }
 
 @InputType()
-class ForumInput {
+export class ForumInput {
   @Field(() => ID) @IsString() categoryId!: string;
   @Field(() => ID, { nullable: true })
   @IsOptional()

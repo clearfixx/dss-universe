@@ -1,0 +1,151 @@
+mutation ClearForumAcceptedAnswer($topicId: ID!) {
+  clearForumAcceptedAnswer(topicId: $topicId) {
+    ...ForumTopicSummary
+  }
+}
+
+mutation SetForumTopicPinned($topicId: ID!, $pinned: Boolean!) {
+  setForumTopicPinned(topicId: $topicId, pinned: $pinned) {
+    ...ForumTopicSummary
+  }
+}
+
+mutation SetForumTopicCurator($topicId: ID!, $curatorId: ID) {
+  setForumTopicCurator(topicId: $topicId, curatorId: $curatorId) {
+    ...ForumTopicSummary
+  }
+}
+
+mutation ArchiveForumTopic($topicId: ID!) {
+  archiveForumTopic(topicId: $topicId) {
+    ...ForumTopicSummary
+  }
+}
+
+mutation UnarchiveForumTopic($topicId: ID!) {
+  unarchiveForumTopic(topicId: $topicId) {
+    ...ForumTopicSummary
+  }
+}
+
+mutation TrashForumTopic($topicId: ID!) {
+  trashForumTopic(topicId: $topicId) {
+    ...ForumTopicSummary
+  }
+}
+
+mutation RestoreForumTopic($topicId: ID!) {
+  restoreForumTopic(topicId: $topicId) {
+    ...ForumTopicSummary
+  }
+}
+
+mutation MoveForumTopic($topicId: ID!, $targetForumId: ID!) {
+  moveForumTopic(topicId: $topicId, targetForumId: $targetForumId) {
+    ...ForumTopicSummary
+  }
+}
+
+mutation MergeForumTopics($sourceTopicId: ID!, $targetTopicId: ID!) {
+  mergeForumTopics(
+    sourceTopicId: $sourceTopicId
+    targetTopicId: $targetTopicId
+  ) {
+    ...ForumTopicSummary
+  }
+}
+
+mutation SplitForumTopic(
+  $sourceTopicId: ID!
+  $numbers: [Int!]!
+  $title: String!
+) {
+  splitForumTopic(
+    sourceTopicId: $sourceTopicId
+    numbers: $numbers
+    title: $title
+  ) {
+    ...ForumTopicSummary
+  }
+}
+
+mutation MoveForumPosts(
+  $sourceTopicId: ID!
+  $targetTopicId: ID!
+  $numbers: [Int!]!
+) {
+  moveForumPosts(
+    sourceTopicId: $sourceTopicId
+    targetTopicId: $targetTopicId
+    numbers: $numbers
+  ) {
+    ...ForumTopicSummary
+  }
+}
+
+mutation HideForumPost($postId: ID!, $reason: String!) {
+  hideForumPost(postId: $postId, reason: $reason) {
+    postId
+    state
+  }
+}
+
+mutation DeleteForumPost($postId: ID!, $reason: String!) {
+  deleteForumPost(postId: $postId, reason: $reason) {
+    postId
+    state
+  }
+}
+
+mutation RestoreForumPost($postId: ID!) {
+  restoreForumPost(postId: $postId) {
+    postId
+    state
+  }
+}
+
+mutation PurgeForumPost($postId: ID!, $reason: String!) {
+  purgeForumPost(postId: $postId, reason: $reason) {
+    postId
+  }
+}
+
+mutation AddForumStaffNote($postId: ID!, $body: String!) {
+  addForumStaffNote(postId: $postId, body: $body) {
+    id
+    authorId
+    role
+    body
+    createdAt
+  }
+}
+
+mutation RemoveForumStaffNote($noteId: ID!) {
+  removeForumStaffNote(noteId: $noteId)
+}
+
+mutation ReverseForumPostVote($postId: ID!, $voterId: ID!, $reason: String!) {
+  reverseForumPostVote(postId: $postId, voterId: $voterId, reason: $reason) {
+    postId
+    ratingUp
+    ratingDown
+  }
+}
+
+mutation WarnForumPostAuthor($postId: ID!, $reason: String!) {
+  warnForumPostAuthor(postId: $postId, reason: $reason) {
+    sanctionId
+    escalatedSanctionId
+  }
+}
+
+mutation RestrictForumPostAuthor(
+  $postId: ID!
+  $reason: String!
+  $until: DateTime!
+) {
+  restrictForumPostAuthor(postId: $postId, reason: $reason, until: $until) {
+    sanctionId
+    escalatedSanctionId
+  }
+}

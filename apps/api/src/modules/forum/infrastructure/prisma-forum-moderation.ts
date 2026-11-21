@@ -87,7 +87,7 @@ export class ForumModerationService {
     if (!viewer.canPurgeContent) {
       throw new ForumCommandError(
         'ACCESS_DENIED',
-        'Purging requires the forum content purge permission.',
+        'Purging requires verified platform ownership.',
       );
     }
     const purgeReason = normalizeModerationReason(reason);

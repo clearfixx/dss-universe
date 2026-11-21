@@ -137,11 +137,10 @@ export class ResearchLabService {
     );
   }
 
-  private async readAudience(
-    tx: TransactionClient,
+  private async moderatedPageScope(
     actorId: string,
     pageId: string,
-  ) {
+  ): Promise<Prisma.ResearchPageWhereInput> {
     const at = new Date();
     if (!(await this.authority.canModerate(actorId, at))) {
       throw new ResearchLabCommandError(
@@ -150,13 +149,62 @@ export class ResearchLabService {
       );
     }
     const facts = await this.requireAuthenticated(actorId);
+    return {
+      id: pageId,
+      state: { in: ['ACTIVE', 'ARCHIVED'] },
+      publishedRevision: { is: { state: 'PUBLISHED' } },
+      ...researchAudience(facts.groups, true),
+    };
+  }
+
+  async interactionSettings(actorId: string, pageId: string) {
+    const page = await this.prisma.researchPage.findFirst({
+      where: await this.moderatedPageScope(actorId, pageId),
+      select: { allowComments: true, allowRating: true },
+    });
+    if (!page) this.notFound('Published page');
+    return page;
+  }
+
+  async setInteractionSetting(
+    actorId: string,
+    pageId: string,
+    setting: 'allowComments' | 'allowRating',
+    enabled: boolean,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      await this.lockPage(tx, pageId);
+      const select = { allowComments: true, allowRating: true } as const;
+      const current = await tx.researchPage.findFirst({
+        where: await this.moderatedPageScope(actorId, pageId),
+        select,
+      });
+      if (!current) this.notFound('Published page');
+      if (current[setting] === enabled) return current;
+      const updated = await tx.researchPage.update({
+        where: { id: pageId },
+        data: { [setting]: enabled },
+        select,
+      });
+      await this.audit.append(tx, {
+        action: 'research_lab.interaction_setting_updated',
+        actorType: 'USER',
+        actorId,
+        targetType: 'ResearchPage',
+        targetId: pageId,
+        metadata: { setting, previous: current[setting], enabled },
+      });
+      return updated;
+    });
+  }
+
+  private async readAudience(
+    tx: TransactionClient,
+    actorId: string,
+    pageId: string,
+  ) {
     const page = await tx.researchPage.findFirst({
-      where: {
-        id: pageId,
-        state: { in: ['ACTIVE', 'ARCHIVED'] },
-        publishedRevision: { is: { state: 'PUBLISHED' } },
-        ...researchAudience(facts.groups, true),
-      },
+      where: await this.moderatedPageScope(actorId, pageId),
       select: {
         visibility: true,
         audienceGroups: {
@@ -989,26 +1037,14 @@ export class ResearchLabService {
     const reason = this.required(command.reason ?? '', 'Tombstone reason');
     await this.prisma.$transaction(async (tx) => {
       await this.lockPage(tx, command.pageId);
-      if (!(await this.authority.canModerate(command.actorId, new Date()))) {
-        throw new ResearchLabCommandError(
-          'ACCESS_DENIED',
-          'Research Lab moderation permission required.',
-        );
-      }
-      const page = await tx.researchPage.findUnique({
-        where: { id: command.pageId },
+      const page = await tx.researchPage.findFirst({
+        where: await this.moderatedPageScope(command.actorId, command.pageId),
       });
-      if (!page || !page.publishedRevisionId) this.notFound('Published page');
+      if (!page) this.notFound('Published page');
       this.assertGeneration(
         page.publicationGeneration,
         command.expectedPublicationGeneration,
       );
-      if (page.state === 'TOMBSTONED') {
-        throw new ResearchLabCommandError(
-          'REVISION_CONFLICT',
-          'Research Lab page is already tombstoned.',
-        );
-      }
       await tx.researchPage.update({
         where: { id: page.id },
         data: {

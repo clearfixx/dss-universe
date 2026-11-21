@@ -542,6 +542,31 @@ input ForumCategoryInput {
   visibility: ForumVisibility!
 }
 
+"""
+NO_REPLIES: nobody replied yet; UNSOLVED: questions without an accepted answer.
+"""
+enum ForumDiscoverFilter {
+  ALL
+  NO_REPLIES
+  UNSOLVED
+}
+
+enum ForumDiscoverSort {
+  LAST_ACTIVITY
+  NEW
+}
+
+type ForumHubStats {
+  forumCount: Int!
+
+  """Distinct authors of visible posts."""
+  participantCount: Int!
+
+  """Visible posts only."""
+  postCount: Int!
+  topicCount: Int!
+}
+
 input ForumInput {
   active: Boolean! = true
   allowsGatedContent: Boolean! = false
@@ -574,6 +599,12 @@ type ForumModeratorAssignment {
   id: ID!
   moderatorId: ID!
   revokedAt: DateTime
+}
+
+type ForumPopularTag {
+  label: String!
+  slug: String!
+  topicCount: Int!
 }
 
 type ForumPost {
@@ -757,6 +788,7 @@ type ForumTopic {
   tags: [ForumTopicTag!]!
   title: String!
   viewCount: Int!
+  viewerAbilities: ForumTopicViewerAbilities!
 
   """Furthest post number read by the viewer; null for guests."""
   viewerLastReadNumber: Int
@@ -826,6 +858,26 @@ type ForumTopicTag {
   id: ID!
   label: String!
   slug: String!
+}
+
+"""
+What the current viewer may do in this topic; the API still checks every command.
+"""
+type ForumTopicViewerAbilities {
+  acceptAnswer: Boolean!
+  close: Boolean!
+
+  """Topic and post moderation in this category."""
+  moderate: Boolean!
+
+  """Permanent removal of posts (administrators)."""
+  purge: Boolean!
+  reopen: Boolean!
+
+  """
+  Signed in and the topic is open; read-only mode is reported by viewerSanctionStatus.
+  """
+  reply: Boolean!
 }
 
 enum ForumViewerCollection {
@@ -1374,6 +1426,7 @@ type Mutation {
   setNewsPin(input: SetNewsPinInput!): ManagedNewsPin!
   setReaction(input: SetReactionInput!): SetReactionPayload!
   setResearchEditProtection(level: ResearchEditProtection!, pageId: ID!): ResearchEditPolicy!
+  setResearchInteractionSetting(enabled: Boolean!, pageId: ID!, setting: ResearchInteractionSetting!): ResearchInteractionSettings!
   setResearchPageAudience(groupKeys: [String!]! = [], pageId: ID!, visibility: ResearchPageAudience!): ResearchAudiencePolicy!
   setResearchTrustedEditors(groupKeys: [String!]!, pageId: ID!): [String!]!
   setViewerAvatar(mediaId: ID!): Viewer!
@@ -1847,6 +1900,13 @@ type Query {
   following(pagination: UsersPageInput, userId: ID!): UsersPageModel!
   forumCategories: [ForumCategory!]!
   forumCategoryModerators(categoryId: ID!): [ForumModeratorAssignment!]!
+
+  """
+  Open and closed topics across every forum the viewer can see (guests included).
+  """
+  forumDiscoverTopics(filter: ForumDiscoverFilter! = ALL, limit: Int! = 10, page: Int! = 1, sort: ForumDiscoverSort! = NEW): ForumTopicPage!
+  forumHubStats: ForumHubStats!
+  forumPopularTags(limit: Int! = 12): [ForumPopularTag!]!
   forumPostRevisions(postId: ID!): [ForumPostRevision!]!
   forumPostVotes(limit: Int! = 50, page: Int! = 1, postId: ID!): ForumPostVotePage!
   forumPosts(limit: Int! = 20, page: Int! = 1, topicId: ID!): ForumPostPage!
@@ -1890,6 +1950,7 @@ type Query {
   reputationHistory(pagination: ReputationPageInput, userId: ID!): ReputationHistory!
   reputationPolicy: ReputationPolicy!
   researchEditPolicy(pageId: ID!): ResearchEditPolicy!
+  researchInteractionSettings(pageId: ID!): ResearchInteractionSettings!
   researchOwnDraft(pageId: ID!): ResearchOwnDraft
   researchOwnDrafts(limit: Int! = 50, offset: Int! = 0): [ResearchOwnDraftItem!]!
   researchPage(id: ID!): ResearchPublishedPage
@@ -2100,6 +2161,16 @@ type ResearchHistoryEntry {
   number: Int!
   publicationDecision: String
   state: String!
+}
+
+enum ResearchInteractionSetting {
+  COMMENTS
+  RATING
+}
+
+type ResearchInteractionSettings {
+  allowComments: Boolean!
+  allowRating: Boolean!
 }
 
 input ResearchLifecycleInput {
