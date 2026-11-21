@@ -1,3 +1,4 @@
+import { ResearchLabAuthorityAdapter } from '../src/modules/research-lab/infrastructure/research-lab-authority.adapter';
 import { Permission } from '../src/core/authorization';
 import { ModerationSanctionsService } from '../src/modules/moderation/infrastructure/prisma-moderation-sanctions';
 import {
@@ -390,6 +391,119 @@ describe('Research Lab public delivery (GraphQL)', () => {
       await fixture.prisma.researchRevision.count({ where: { pageId: id } }),
     ).toBe(1);
   });
+  it('removes group-only Wiki hits, snippets and facets on membership expiry or revocation', async () => {
+    const db = fixture.prisma;
+    const suffix = randomUUID();
+    const register = (label: string) =>
+      app.get(AuthenticationPresentationService).register({
+        email: label + suffix + '@dss.test',
+        username: label + suffix,
+        displayName: label,
+        password: 'research-fixture-123',
+      });
+    const author = await register('author');
+    const reader = await register('reader');
+    const actorId = author.user.id;
+    const key = 'wiki-' + suffix;
+    const group = await db.accessGroup.create({
+      data: {
+        key,
+        displayName: key,
+        createdById: actorId,
+        capabilities: { create: { key: 'KNOWLEDGE_FORGE_GUARDIAN' } },
+        memberships: { create: { subjectId: actorId, grantedById: actorId } },
+      },
+    });
+    const category = await db.researchCategory.create({
+      data: { slug: key, name: key },
+    });
+    const service = app.get(ResearchLabService);
+    const summary = 'Private summary ' + suffix;
+    const draft = await service.createDraft({
+      actorId,
+      title: key,
+      summary,
+      proposedSlug: key,
+      documentJson: JSON.stringify(createEmptyEditorDocument('WIKI')),
+    });
+    const published = await service.selfPublishDraft({
+      ...draft,
+      actorId,
+      expectedVersion: draft.version,
+      editSummary: 'First',
+      correlationId: randomUUID(),
+    });
+    await db.researchPage.update({
+      where: { id: draft.pageId },
+      data: {
+        visibility: 'GROUPS',
+        primaryCategoryId: category.id,
+        audienceGroups: { create: { groupKey: key } },
+      },
+    });
+    const now = Date.now();
+    const membership = await db.accessGroupMembership.create({
+      data: {
+        groupId: group.id,
+        subjectId: reader.user.id,
+        grantedById: actorId,
+        validFrom: new Date(now - 86400000),
+        validUntil: new Date(now + 86400000),
+      },
+    });
+    const search = async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/graphql')
+        .set('Authorization', 'Bearer ' + reader.tokens.accessToken)
+        .send({
+          query:
+            'query($term:String!){search(source:RESEARCH_LAB,term:$term){items{id revisionId excerpt} total categories{slug total}}}',
+          variables: { term: key },
+        })
+        .expect(200);
+      const result = payload(response);
+      expect(result.errors).toBeUndefined();
+      return result.data.search;
+    };
+    const visible = {
+      items: [
+        {
+          id: draft.pageId,
+          revisionId: published.revisionId,
+          excerpt: summary,
+        },
+      ],
+      total: 1,
+      categories: [{ slug: key, total: 1 }],
+    };
+    const empty = { items: [], total: 0, categories: [] };
+    expect(await search()).toEqual(visible);
+    const where = { id: membership.id };
+    const authority = app.get<ResearchLabAuthorityAdapter>(
+      ResearchLabAuthorityAdapter,
+    );
+    const atExpiry = jest
+      .spyOn(authority, 'viewerFacts')
+      .mockImplementationOnce((subjectId) =>
+        authority.viewerFacts(subjectId, new Date(now + 86400000)),
+      );
+    try {
+      expect(await search()).toEqual(empty);
+    } finally {
+      atExpiry.mockRestore();
+    }
+    expect(await search()).toEqual(visible);
+    await db.accessGroupMembership.update({
+      where,
+      data: {
+        revokedAt: new Date(),
+        revokedById: actorId,
+        revokeReason: 'Access withdrawn',
+      },
+    });
+    expect(await search()).toEqual(empty);
+  });
+
   it('keeps exact facets and stable ties across a search batch and on an empty deep page', async () => {
     const db = fixture.prisma;
     const author = randomUUID();
