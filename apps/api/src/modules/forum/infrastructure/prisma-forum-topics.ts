@@ -461,6 +461,131 @@ export class ForumTopicsService implements ForumInteractionDecisions {
   }
 
   /**
+   * Topics across every forum the viewer can see (guests included), for hub
+   * blocks such as "Needs help" (UNSOLVED) or "No replies yet" (NO_REPLIES).
+   * Open and closed topics only; newest first or by last activity.
+   */
+  async discoverTopics(
+    viewerId: string | null,
+    filter: Exclude<ForumTopicFilter, 'MINE'>,
+    sort: 'NEW' | 'LAST_ACTIVITY',
+    page: number,
+    limit: number,
+  ): Promise<ForumPage<ForumTopicSummary>> {
+    const viewer = await this.viewers.read(viewerId, new Date());
+    const { skip, take, safePage } = this.paging(page, limit);
+    const where: Prisma.ForumTopicWhereInput = {
+      forumId: { in: await this.visibleForumIds(viewer) },
+      mergedIntoTopicId: null,
+      state: { in: ['OPEN', 'CLOSED'] },
+      ...this.filterWhere(filter, viewer.subjectId),
+    };
+    const [rows, total] = await Promise.all([
+      this.prisma.forumTopic.findMany({
+        where,
+        orderBy: [
+          sort === 'NEW' ? { createdAt: 'desc' } : { lastPostAt: 'desc' },
+          { id: 'desc' },
+        ],
+        skip,
+        take,
+      }),
+      this.prisma.forumTopic.count({ where }),
+    ]);
+    const ids = rows.map(({ id }) => id);
+    const reads = await this.readStates(viewer, ids);
+    const tags = await this.topicTags(ids);
+    return {
+      items: rows.map((row) =>
+        this.toSummary(
+          row,
+          viewer.subjectId ? (reads.get(row.id) ?? 0) : null,
+          tags.get(row.id) ?? [],
+        ),
+      ),
+      total,
+      page: safePage,
+      limit: take,
+    };
+  }
+
+  /** Totals over the forums the viewer can see; trashed/merged never count. */
+  async hubStats(viewerId: string | null): Promise<{
+    forumCount: number;
+    topicCount: number;
+    postCount: number;
+    participantCount: number;
+  }> {
+    const viewer = await this.viewers.read(viewerId, new Date());
+    const forumIds = await this.visibleForumIds(viewer);
+    if (forumIds.length === 0) {
+      return {
+        forumCount: 0,
+        topicCount: 0,
+        postCount: 0,
+        participantCount: 0,
+      };
+    }
+    const [row] = await this.prisma.$queryRaw<
+      Array<{ topics: bigint; posts: bigint; participants: bigint }>
+    >`
+      SELECT
+        (SELECT COUNT(*) FROM "forum_topics" t
+          WHERE t."forumId" IN (${Prisma.join(forumIds)})
+            AND t."mergedIntoTopicId" IS NULL
+            AND t."state"::text IN ('OPEN', 'CLOSED', 'ARCHIVED'))::bigint AS "topics",
+        (SELECT COUNT(*) FROM "forum_posts" p JOIN "forum_topics" t ON t."id" = p."topicId"
+          WHERE t."forumId" IN (${Prisma.join(forumIds)})
+            AND t."mergedIntoTopicId" IS NULL
+            AND t."state"::text IN ('OPEN', 'CLOSED', 'ARCHIVED')
+            AND p."state" = 'VISIBLE')::bigint AS "posts",
+        (SELECT COUNT(DISTINCT p."authorId") FROM "forum_posts" p JOIN "forum_topics" t ON t."id" = p."topicId"
+          WHERE t."forumId" IN (${Prisma.join(forumIds)})
+            AND t."mergedIntoTopicId" IS NULL
+            AND t."state"::text IN ('OPEN', 'CLOSED', 'ARCHIVED')
+            AND p."state" = 'VISIBLE')::bigint AS "participants"`;
+    return {
+      forumCount: forumIds.length,
+      topicCount: Number(row?.topics ?? 0),
+      postCount: Number(row?.posts ?? 0),
+      participantCount: Number(row?.participants ?? 0),
+    };
+  }
+
+  /**
+   * Most used active tags over visible forums, merged by slug (each forum
+   * curates its own tags, so one slug may exist in several forums).
+   */
+  async popularTags(
+    viewerId: string | null,
+    limit: number,
+  ): Promise<Array<{ slug: string; label: string; topicCount: number }>> {
+    const viewer = await this.viewers.read(viewerId, new Date());
+    const forumIds = await this.visibleForumIds(viewer);
+    if (forumIds.length === 0) return [];
+    const take = Math.min(50, Math.max(1, Math.trunc(limit) || 10));
+    const rows = await this.prisma.$queryRaw<
+      Array<{ slug: string; label: string; topics: bigint }>
+    >`
+      SELECT g."slug", MIN(g."label") AS "label", COUNT(DISTINCT tt."topicId")::bigint AS "topics"
+      FROM "forum_tags" g
+      JOIN "forum_topic_tags" tt ON tt."tagId" = g."id"
+      JOIN "forum_topics" t ON t."id" = tt."topicId"
+      WHERE g."forumId" IN (${Prisma.join(forumIds)})
+        AND g."active"
+        AND t."mergedIntoTopicId" IS NULL
+        AND t."state"::text IN ('OPEN', 'CLOSED', 'ARCHIVED')
+      GROUP BY g."slug"
+      ORDER BY "topics" DESC, g."slug" ASC
+      LIMIT ${take}`;
+    return rows.map((row) => ({
+      slug: row.slug,
+      label: row.label,
+      topicCount: Number(row.topics),
+    }));
+  }
+
+  /**
    * The signed-in viewer's own or followed topics across every forum they can
    * see right now; trashed and merged topics are excluded.
    */
