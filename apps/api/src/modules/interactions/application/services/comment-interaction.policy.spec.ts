@@ -34,7 +34,9 @@ describe('CommentInteractionPolicy', () => {
     unregister: jest.fn(),
   } as unknown as InteractionPolicyRegistryService;
   const targets = {
-    authorize: jest.fn().mockResolvedValue({ allowed: true }),
+    authorize: jest
+      .fn()
+      .mockResolvedValue({ allowed: true, target: { status: 'ACTIVE' } }),
   } as unknown as jest.Mocked<InteractionTargetsService>;
   const comments = {
     findById: jest.fn().mockResolvedValue(comment),

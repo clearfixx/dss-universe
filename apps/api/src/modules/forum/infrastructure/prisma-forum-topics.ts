@@ -19,7 +19,8 @@
  * ===============================================================
  */
 import { randomUUID } from 'node:crypto';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
+import { collectEditorMediaIds } from '@dss/editor';
 import { Prisma, type ForumPost, type ForumTopic } from '@prisma/client';
 import { AuditWriterService } from '@api/core/audit';
 import { PrismaService, type TransactionClient } from '@api/core/database';
@@ -59,12 +60,15 @@ import {
   type ForumPostView,
   type ForumTopicKind,
   type ForumStaffNoteView,
+  type ForumTopicFilter,
+  type ForumViewerCollection,
   type ForumTopicScope,
   type ForumTopicSort,
   type ForumTopicState,
   type ForumTopicSummary,
 } from '../domain/types/forum-topic.type';
 import { ForumStructureService } from './prisma-forum-structure';
+import { FORUM_POST_MEDIA, type ForumPostMedia } from './forum-post-media.port';
 
 const PRODUCER = 'dss.api.forum';
 const TOPIC_KIND = 'forum.topic';
@@ -94,6 +98,10 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     private readonly gateAccess: EditorDeliveryReader,
     @Inject(EDITOR_VIEWER_DOCUMENT_PROJECTOR)
     private readonly projector: EditorViewerDocumentProjector,
+    // Optional: without Media wiring, posts with media are rejected (pre-CH-3c).
+    @Optional()
+    @Inject(FORUM_POST_MEDIA)
+    private readonly media?: ForumPostMedia,
   ) {}
 
   async createTopic(
@@ -114,6 +122,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       forum.allowsGatedContent,
     );
     await this.requireDocumentAccess(actorId, content.document);
+    const mediaIds = await this.attachableMedia(actorId, content.document, []);
     const exempt = await this.cooldownExempt(viewer, forum.categoryId);
     const topicId = randomUUID();
     const postId = randomUUID();
@@ -153,11 +162,14 @@ export class ForumTopicsService implements ForumInteractionDecisions {
         quotedNumbers: [],
         createdAt: now,
       });
+      await this.syncMedia(tx, postId, actorId, mediaIds);
       await this.record(tx, actorId, 'ForumTopic', topicId, 'topic.created', {
         forumId: forum.id,
         categoryId: forum.categoryId,
         kind: input.kind,
         firstPostId: postId,
+        authorId: actorId,
+        title,
       });
     });
     return { topic: await this.summary(topicId), firstPostId: postId };
@@ -183,6 +195,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       allowsGatedContent,
     );
     await this.requireDocumentAccess(actorId, content.document);
+    const mediaIds = await this.attachableMedia(actorId, content.document, []);
     const exempt = await this.cooldownExempt(viewer, categoryId);
     const postId = randomUUID();
     const now = new Date();
@@ -222,10 +235,12 @@ export class ForumTopicsService implements ForumInteractionDecisions {
           lastPostAuthorId: actorId,
         },
       });
+      await this.syncMedia(tx, postId, actorId, mediaIds);
       await this.record(tx, actorId, 'ForumPost', postId, 'post.created', {
         topicId: input.topicId,
         number,
         replyToNumber: references.replyToNumber,
+        authorId: actorId,
       });
     });
     return this.postView(
@@ -281,6 +296,12 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     // Editing must never silently drop hidden blocks the editor cannot read.
     await this.requireDocumentAccess(actorId, post.document);
     await this.requireDocumentAccess(actorId, content.document);
+    // Files the post already references stay; only new ones need the actor's access.
+    const mediaIds = await this.attachableMedia(
+      actorId,
+      content.document,
+      this.media ? await this.media.activeMediaIds(post.id) : [],
+    );
     const now = new Date();
     await this.prisma.$transaction(async (tx) => {
       const nextRevision = input.expectedRevision + 1;
@@ -321,6 +342,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
           data: { title },
         });
       }
+      await this.syncMedia(tx, post.id, actorId, mediaIds, true);
       await this.record(tx, actorId, 'ForumPost', post.id, 'post.edited', {
         topicId: topic.id,
         number: post.number,
@@ -359,9 +381,17 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     scope: ForumTopicScope = 'ACTIVE',
     topPeriod: ForumTopPeriod = 'WEEK',
     tagSlug: string | null = null,
+    filter: ForumTopicFilter = 'ALL',
   ): Promise<ForumPage<ForumTopicSummary>> {
     const viewer = await this.viewers.read(viewerId, new Date());
     const forum = await this.visibleForum(forumId, viewer);
+    if (filter === 'MINE' && !viewer.subjectId) {
+      throw new ForumCommandError(
+        'ACCESS_DENIED',
+        'Sign in to see your own topics.',
+      );
+    }
+    const filterWhere = this.filterWhere(filter, viewer.subjectId);
     if (
       scope === 'TRASHED' &&
       !(await this.isModerator(viewer, forum.categoryId))
@@ -381,6 +411,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
           : scope === 'ARCHIVED'
             ? 'ARCHIVED'
             : 'TRASHED',
+      ...filterWhere,
     };
     const since = sort === 'TOP' ? topPeriodStart(topPeriod, new Date()) : null;
     if (since) where.createdAt = { gte: since };
@@ -397,6 +428,8 @@ export class ForumTopicsService implements ForumInteractionDecisions {
             sort,
             skip,
             take,
+            filter,
+            viewer.subjectId,
           )
         : this.prisma.forumTopic.findMany({
             where,
@@ -425,6 +458,96 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       page: safePage,
       limit: take,
     };
+  }
+
+  /**
+   * The signed-in viewer's own or followed topics across every forum they can
+   * see right now; trashed and merged topics are excluded.
+   */
+  async viewerTopics(
+    viewerId: string,
+    collection: ForumViewerCollection,
+    page: number,
+    limit: number,
+  ): Promise<ForumPage<ForumTopicSummary>> {
+    const viewer = await this.authenticated(viewerId);
+    const { skip, take, safePage } = this.paging(page, limit);
+    const forumIds = await this.visibleForumIds(viewer);
+    const where: Prisma.ForumTopicWhereInput = {
+      forumId: { in: forumIds },
+      mergedIntoTopicId: null,
+      state: { in: ['OPEN', 'CLOSED', 'ARCHIVED'] },
+      ...(collection === 'AUTHORED'
+        ? { authorId: viewerId }
+        : { subscriptions: { some: { userId: viewerId } } }),
+    };
+    const [rows, total] = await Promise.all([
+      this.prisma.forumTopic.findMany({
+        where,
+        orderBy: [{ lastPostAt: 'desc' }, { id: 'desc' }],
+        skip,
+        take,
+      }),
+      this.prisma.forumTopic.count({ where }),
+    ]);
+    const ids = rows.map(({ id }) => id);
+    const reads = await this.readStates(viewer, ids);
+    const tags = await this.topicTags(ids);
+    return {
+      items: rows.map((row) =>
+        this.toSummary(row, reads.get(row.id) ?? 0, tags.get(row.id) ?? []),
+      ),
+      total,
+      page: safePage,
+      limit: take,
+    };
+  }
+
+  private filterWhere(
+    filter: ForumTopicFilter,
+    viewerId: string | null,
+  ): Prisma.ForumTopicWhereInput {
+    if (filter === 'MINE') return { authorId: viewerId ?? '' };
+    if (filter === 'NO_REPLIES') return { postCount: 1 };
+    if (filter === 'UNSOLVED')
+      return { kind: 'QUESTION', acceptedAnswerPostId: null };
+    return {};
+  }
+
+  /** Forums whose category the viewer can see (same rules as browsing). */
+  private async visibleForumIds(viewer: ForumViewerFacts): Promise<string[]> {
+    const forums = await this.prisma.forum.findMany({
+      select: {
+        id: true,
+        active: true,
+        parent: { select: { active: true } },
+        category: {
+          select: {
+            active: true,
+            visibility: true,
+            audience: { select: { subjectKey: true } },
+          },
+        },
+      },
+    });
+    return forums
+      .filter(
+        (forum) =>
+          (viewer.seesAllCategories ||
+            (forum.active &&
+              forum.category.active &&
+              (forum.parent?.active ?? true))) &&
+          canSeeCategory(
+            {
+              visibility: forum.category.visibility,
+              audienceKeys: forum.category.audience.map(
+                ({ subjectKey }) => subjectKey,
+              ),
+            },
+            viewer,
+          ),
+      )
+      .map(({ id }) => id);
   }
 
   async topic(
@@ -676,6 +799,41 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     }
   }
 
+  /** Media IDs of a validated document; new ones must be attachable by the actor. */
+  private async attachableMedia(
+    actorId: string,
+    document: unknown,
+    alreadyReferenced: readonly string[],
+  ): Promise<string[]> {
+    if (!this.media) return [];
+    const ids = collectEditorMediaIds(
+      document as Parameters<typeof collectEditorMediaIds>[0],
+    );
+    const known = new Set(alreadyReferenced);
+    const added = ids.filter((id) => !known.has(id));
+    if (added.length) {
+      const rejected = await this.media.rejectedForActor(actorId, added);
+      if (rejected.length) {
+        throw new ForumCommandError(
+          'INVALID_INPUT',
+          'Some files are unavailable: they must be ready and yours or public.',
+        );
+      }
+    }
+    return ids;
+  }
+
+  private async syncMedia(
+    tx: TransactionClient,
+    postId: string,
+    actorId: string,
+    mediaIds: readonly string[],
+    always = false,
+  ): Promise<void> {
+    if (!this.media || (!always && mediaIds.length === 0)) return;
+    await this.media.sync(tx, postId, actorId, mediaIds);
+  }
+
   private content(
     documentJson: string,
     profile: 'topic' | 'reply',
@@ -685,7 +843,10 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       profile === 'topic'
         ? this.editor.normalizeForumTopic(documentJson)
         : this.editor.normalizeForumReply(documentJson);
-    if (this.contains(content.document, (type) => MEDIA_NODES.has(type))) {
+    if (
+      !this.media &&
+      this.contains(content.document, (type) => MEDIA_NODES.has(type))
+    ) {
       throw new ForumCommandError(
         'INVALID_INPUT',
         'Media and attachments in forum posts are not available yet.',
@@ -806,7 +967,17 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     sort: 'HOT' | 'TOP',
     skip: number,
     take: number,
+    filter: ForumTopicFilter = 'ALL',
+    viewerId: string | null = null,
   ): Promise<ForumTopic[]> {
+    const filterSql =
+      filter === 'MINE'
+        ? Prisma.sql`AND "authorId" = ${viewerId}`
+        : filter === 'NO_REPLIES'
+          ? Prisma.sql`AND "postCount" = 1`
+          : filter === 'UNSOLVED'
+            ? Prisma.sql`AND "kind"::text = 'QUESTION' AND "acceptedAnswerPostId" IS NULL`
+            : Prisma.empty;
     const settings = await this.prisma.forumRankingSettings.findUnique({
       where: { id: 'default' },
     });
@@ -831,6 +1002,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
           JOIN "forum_tags" g ON g."id" = tt."tagId"
           WHERE tt."topicId" = "forum_topics"."id" AND g."slug" = ${tagSlug}
         ))
+        ${filterSql}
       ORDER BY "pinned" DESC, ${order} DESC, "createdAt" DESC, "id" DESC
       LIMIT ${take} OFFSET ${skip}`;
     const rows = await this.prisma.forumTopic.findMany({

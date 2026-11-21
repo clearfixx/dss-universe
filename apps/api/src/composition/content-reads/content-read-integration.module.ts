@@ -23,7 +23,12 @@
  */
 import { Global, Module } from '@nestjs/common';
 import { MediaModule } from '@api/modules/media';
-import { ActivityModule, ACTIVITY_VIEWER_CONTEXT } from '@api/modules/activity';
+import {
+  ActivityModule,
+  ACTIVITY_SUBJECT_VISIBILITY,
+  ACTIVITY_VIEWER_CONTEXT,
+} from '@api/modules/activity';
+import { ActivitySubjectVisibilityAdapter } from './infrastructure/activity-subject-visibility.adapter';
 import { NEWS_MEDIA_EVIDENCE, NEWS_ATTACHMENT_READER } from '@api/modules/news';
 import { NewsAttachmentAdapter } from './infrastructure/news-attachment.adapter';
 import {
@@ -58,6 +63,8 @@ import { GateForumPostCountAdapter } from './infrastructure/gate-forum-post-coun
 import { ForumAccountEvidenceAdapter } from './infrastructure/forum-account-evidence.adapter';
 import { WallImageEligibilityAdapter } from './infrastructure/wall-image-eligibility.adapter';
 import { NewsMediaEvidenceAdapter } from './infrastructure/news-media-evidence.adapter';
+import { FORUM_POST_MEDIA } from '@api/modules/forum/infrastructure';
+import { ForumPostMediaAdapter } from '../media-references/infrastructure/forum-post-media.adapter';
 import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapter';
 
 @Global()
@@ -76,6 +83,10 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
   providers: [
     { provide: NEWS_ATTACHMENT_READER, useClass: NewsAttachmentAdapter },
     {
+      provide: ACTIVITY_SUBJECT_VISIBILITY,
+      useClass: ActivitySubjectVisibilityAdapter,
+    },
+    {
       provide: ACTIVITY_VIEWER_CONTEXT,
       useClass: ActivityViewerContextAdapter,
     },
@@ -90,12 +101,15 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
     { provide: FORUM_ACCOUNT_EVIDENCE, useClass: ForumAccountEvidenceAdapter },
     { provide: FORUM_NEWS_FACTS, useClass: ForumNewsFactsAdapter },
     { provide: GATE_FORUM_POST_COUNT, useClass: GateForumPostCountAdapter },
+    { provide: FORUM_POST_MEDIA, useClass: ForumPostMediaAdapter },
     { provide: NEWS_MEDIA_EVIDENCE, useClass: NewsMediaEvidenceAdapter },
     { provide: PROFILE_ACTIVITY_READER, useClass: ProfileActivityAdapter },
   ],
   exports: [
+    FORUM_POST_MEDIA,
     NEWS_ATTACHMENT_READER,
     ACTIVITY_VIEWER_CONTEXT,
+    ACTIVITY_SUBJECT_VISIBILITY,
     NEWS_MEDIA_EVIDENCE,
     PROFILE_ACTIVITY_READER,
     GATE_ACCOUNT_EVIDENCE,

@@ -555,6 +555,7 @@ type ForumModeratorAssignment {
 }
 
 type ForumPost {
+  attachments: [ForumPostAttachment!]!
   authorId: ID!
   createdAt: DateTime!
 
@@ -574,6 +575,14 @@ type ForumPost {
   staffNotes: [ForumStaffNote!]!
   state: ForumPostState!
   topicId: ID!
+}
+
+type ForumPostAttachment {
+  downloadUrl: String!
+  filename: String!
+  mediaId: ID!
+  mimeType: String!
+  size: Int!
 }
 
 type ForumPostModeration {
@@ -726,6 +735,16 @@ type ForumTopicCreated {
   topic: ForumTopic!
 }
 
+"""
+MINE: authored by the viewer; NO_REPLIES: no replies yet; UNSOLVED: questions without an accepted answer.
+"""
+enum ForumTopicFilter {
+  ALL
+  MINE
+  NO_REPLIES
+  UNSOLVED
+}
+
 enum ForumTopicKind {
   DISCUSSION
   QUESTION
@@ -775,6 +794,11 @@ type ForumTopicTag {
   id: ID!
   label: String!
   slug: String!
+}
+
+enum ForumViewerCollection {
+  AUTHORED
+  SUBSCRIBED
 }
 
 enum ForumVisibility {
@@ -1240,6 +1264,7 @@ type Mutation {
   deleteForumPost(postId: ID!, reason: String!): ForumPostModerationResult!
   disableViewerTwoFactor(input: DisableTwoFactorInput!): LogoutResultModel!
   discardCommentDraft(draftId: ID!): Boolean!
+  discardResearchDraft(draftId: ID!, expectedVersion: Int!, pageId: ID!): ResearchDiscardReceipt!
   editComment(input: EditCommentInput!): Comment!
   editForumPost(input: EditForumPostInput!): ForumPost!
   followUser(userId: ID!): UserSocialGraphSummary!
@@ -1316,6 +1341,9 @@ type Mutation {
   setForumTopicTags(tagIds: [ID!]!, topicId: ID!): ForumTopic!
   setNewsPin(input: SetNewsPinInput!): ManagedNewsPin!
   setReaction(input: SetReactionInput!): SetReactionPayload!
+  setResearchEditProtection(level: ResearchEditProtection!, pageId: ID!): ResearchEditPolicy!
+  setResearchPageAudience(groupKeys: [String!]! = [], pageId: ID!, visibility: ResearchPageAudience!): ResearchAudiencePolicy!
+  setResearchTrustedEditors(groupKeys: [String!]!, pageId: ID!): [String!]!
   setViewerAvatar(mediaId: ID!): Viewer!
   setViewerCover(mediaId: ID!): Viewer!
   splitForumTopic(numbers: [Int!]!, sourceTopicId: ID!, title: String!): ForumTopic!
@@ -1786,7 +1814,7 @@ type Query {
   forumTags(forumId: ID!): [ForumTag!]!
   forumTopic(topicId: ID!): ForumTopic!
   forumTopicSubscribed(topicId: ID!): Boolean!
-  forumTopics(forumId: ID!, limit: Int! = 20, page: Int! = 1, scope: ForumTopicScope! = ACTIVE, sort: ForumTopicSort! = LAST_ACTIVITY, tagSlug: String, topPeriod: ForumTopPeriod! = WEEK): ForumTopicPage!
+  forumTopics(filter: ForumTopicFilter! = ALL, forumId: ID!, limit: Int! = 20, page: Int! = 1, scope: ForumTopicScope! = ACTIVE, sort: ForumTopicSort! = LAST_ACTIVITY, tagSlug: String, topPeriod: ForumTopPeriod! = WEEK): ForumTopicPage!
   fullNews(language: String!, slug: String!): FullNews
   interactionTarget(id: ID!): InteractionTarget!
   interactionTargetAccess(capability: InteractionCapability!, targetId: ID!): InteractionAccessDecision!
@@ -1820,12 +1848,19 @@ type Query {
   reactionSummary(interactionTargetId: ID!): ReactionSummary!
   reputationHistory(pagination: ReputationPageInput, userId: ID!): ReputationHistory!
   reputationPolicy: ReputationPolicy!
+  researchEditPolicy(pageId: ID!): ResearchEditPolicy!
+  researchOwnDraft(pageId: ID!): ResearchOwnDraft
+  researchOwnDrafts(limit: Int! = 50, offset: Int! = 0): [ResearchOwnDraftItem!]!
   researchPage(id: ID!): ResearchPublishedPage
+  researchPageAudience(pageId: ID!): ResearchAudiencePolicy!
   researchPageByRoute(language: String!, slug: String!): ResearchPublishedPage
   researchPageSeo(pageId: ID!): ResearchPublicIndexEntry
+  researchPendingRevision(pageId: ID!, revisionId: ID!): ResearchPendingRevision
   researchRelatedPages(limit: Int! = 10, pageId: ID!): [ResearchRelatedPage!]!
+  researchReviewQueue(limit: Int! = 50, offset: Int! = 0): [ResearchReviewItem!]!
   researchRevisionDiff(from: ID!, pageId: ID!, to: ID!): ResearchRevisionComparison
   researchRevisionHistory(limit: Int! = 20, offset: Int! = 0, pageId: ID!): [ResearchHistoryEntry!]!
+  researchRevisionReviewHistory(limit: Int! = 50, offset: Int! = 0, pageId: ID!, revisionId: ID!): [ResearchEditorialDecision!]!
   researchSitemap(after: ID, limit: Int! = 50): [ResearchPublicIndexEntry!]!
   search(page: Int! = 1, pageSize: Int! = 20, source: SharedSearchSource! = NEWS, term: String!): SearchPage!
   user(id: ID!): User!
@@ -1839,6 +1874,11 @@ type Query {
   viewerActivityFeed(input: ActivityFeedInput): ActivityFeedPage!
   viewerBookmarks(pagination: BookmarksPageInput): BookmarkPage!
   viewerCommentDrafts(limit: Int! = 20): [CommentDraft!]!
+
+  """
+  Signed-in viewer: own (AUTHORED) or followed (SUBSCRIBED) topics across visible forums.
+  """
+  viewerForumTopics(collection: ForumViewerCollection!, limit: Int! = 20, page: Int! = 1): ForumTopicPage!
   viewerNotificationPreferences: NotificationPreferences!
   viewerPrivacySettings: UserPrivacySettings!
   viewerProfileCompletion: ProfileCompletion!
@@ -1961,10 +2001,21 @@ input RequestPasswordRecoveryInput {
   email: String!
 }
 
+type ResearchAudiencePolicy {
+  groupKeys: [String!]!
+  visibility: ResearchPageAudience!
+}
+
 input ResearchDecisionInput {
   pageId: ID!
   reason: String
   revisionId: ID!
+}
+
+type ResearchDiscardReceipt {
+  draftId: ID!
+  pageId: ID!
+  routeReleased: Boolean!
 }
 
 input ResearchDraftInput {
@@ -1980,12 +2031,33 @@ type ResearchDraftReceipt {
   version: Int!
 }
 
+type ResearchEditPolicy {
+  protectionLevel: ResearchEditProtection!
+  trustedEditGroupKeys: [String!]!
+}
+
+enum ResearchEditProtection {
+  GUARDIAN_ONLY
+  LOCKED
+  OPEN
+  TRUSTED
+}
+
+type ResearchEditorialDecision {
+  action: String!
+  actorId: ID!
+  createdAt: DateTime!
+  id: ID!
+  reason: String
+}
+
 type ResearchHistoryEntry {
   authorId: ID!
   createdAt: DateTime!
   editSummary: String!
   id: ID!
   number: Int!
+  publicationDecision: String
   state: String!
 }
 
@@ -1993,6 +2065,41 @@ input ResearchLifecycleInput {
   expectedPublicationGeneration: Int!
   pageId: ID!
   reason: String
+}
+
+type ResearchOwnDraft {
+  basePublishedRevisionId: ID
+  documentJson: String!
+  id: ID!
+  pageId: ID!
+  proposedSlug: String!
+  summary: String!
+  title: String!
+  updatedAt: DateTime!
+  version: Int!
+}
+
+type ResearchOwnDraftItem {
+  id: ID!
+  pageId: ID!
+  updatedAt: DateTime!
+  version: Int!
+}
+
+enum ResearchPageAudience {
+  GROUPS
+  MEMBERS
+  PUBLIC
+}
+
+type ResearchPendingRevision {
+  documentJson: String!
+  editSummary: String!
+  id: ID!
+  number: Int!
+  pageId: ID!
+  summary: String!
+  title: String!
 }
 
 type ResearchPublicIndexEntry {
@@ -2021,6 +2128,13 @@ type ResearchRelatedPage {
   language: String!
   slug: String!
   title: String!
+}
+
+type ResearchReviewItem {
+  createdAt: DateTime!
+  id: ID!
+  number: Int!
+  pageId: ID!
 }
 
 type ResearchRevisionComparison {
@@ -2219,6 +2333,7 @@ type ShareChannelCount {
 }
 
 enum SharedSearchSource {
+  FORUM
   NEWS
   RESEARCH_LAB
 }

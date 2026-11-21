@@ -22,6 +22,7 @@
  * ===============================================================
  */
 import { ResearchLabModule } from '@api/modules/research-lab';
+import { ForumModule } from '@api/modules/forum';
 import { NEWS_SEARCH_SOURCE } from './news-search-source';
 import { SharedSearchResolver } from './shared-search.resolver';
 import { Global, Module } from '@nestjs/common';
@@ -37,7 +38,7 @@ import { PrismaNewsDeliveryReadUnit } from './infrastructure/prisma-news-deliver
 
 @Global()
 @Module({
-  imports: [PrismaModule, ResearchLabModule],
+  imports: [PrismaModule, ResearchLabModule, ForumModule],
   providers: [
     SharedSearchResolver,
     { provide: NEWS_SEARCH_SOURCE, useExisting: PrismaNewsSearchSession },

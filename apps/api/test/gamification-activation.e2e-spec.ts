@@ -16,6 +16,7 @@ import { PrismaRuntimeOperations } from '../src/composition/gamification-deliver
 import { PointRuleConfigurationAdapter } from '../src/composition/gamification-delivery/gamification-configuration.module';
 import { PrismaCommunityPointsRepository } from '../src/modules/community-points/infrastructure/repositories/prisma-community-points.repository';
 import { createIsolatedApiSchemaFixture } from './helpers/migrated-api-schema.fixture';
+import { disposableRedisPort } from './helpers/disposable-redis';
 
 describe('Headless operational activation', () => {
   let f: Awaited<ReturnType<typeof createIsolatedApiSchemaFixture>>;
@@ -36,7 +37,7 @@ describe('Headless operational activation', () => {
       .useValue(
         new ConfigService({
           REDIS_HOST: '127.0.0.1',
-          REDIS_PORT: 6380,
+          REDIS_PORT: disposableRedisPort(),
           DSS_GAMIFICATION_DEPLOYMENT_CONFIRMED: '1',
         }),
       )
