@@ -259,6 +259,42 @@ describe('Research Lab commands (e2e)', () => {
     await expect(
       service.audiencePolicy(outsider, pageId),
     ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    await expect(
+      service.setInteractionSetting(guardian, pageId, 'allowRating', false),
+    ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+    await expect(
+      service.setInteractionSetting(outsider, pageId, 'allowComments', false),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    await Promise.all([
+      service.setInteractionSetting(moderator, pageId, 'allowComments', false),
+      service.setInteractionSetting(moderator, pageId, 'allowRating', false),
+    ]);
+    expect(await service.interactionSettings(moderator, pageId)).toEqual({
+      allowComments: false,
+      allowRating: false,
+    });
+    await service.setInteractionSetting(
+      moderator,
+      pageId,
+      'allowComments',
+      false,
+    );
+    expect(
+      await fixture.prisma.auditRecord.count({
+        where: {
+          targetId: pageId,
+          action: 'research_lab.interaction_setting_updated',
+        },
+      }),
+    ).toBe(2);
+    expect(
+      await service.setInteractionSetting(
+        moderator,
+        pageId,
+        'allowRating',
+        true,
+      ),
+    ).toEqual({ allowComments: false, allowRating: true });
     const audit = await fixture.prisma.auditRecord.findMany({
       where: { targetId: pageId, action: 'research_lab.audience_updated' },
     });

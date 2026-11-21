@@ -1374,6 +1374,7 @@ type Mutation {
   setNewsPin(input: SetNewsPinInput!): ManagedNewsPin!
   setReaction(input: SetReactionInput!): SetReactionPayload!
   setResearchEditProtection(level: ResearchEditProtection!, pageId: ID!): ResearchEditPolicy!
+  setResearchInteractionSetting(enabled: Boolean!, pageId: ID!, setting: ResearchInteractionSetting!): ResearchInteractionSettings!
   setResearchPageAudience(groupKeys: [String!]! = [], pageId: ID!, visibility: ResearchPageAudience!): ResearchAudiencePolicy!
   setResearchTrustedEditors(groupKeys: [String!]!, pageId: ID!): [String!]!
   setViewerAvatar(mediaId: ID!): Viewer!
@@ -1881,6 +1882,7 @@ type Query {
   reputationHistory(pagination: ReputationPageInput, userId: ID!): ReputationHistory!
   reputationPolicy: ReputationPolicy!
   researchEditPolicy(pageId: ID!): ResearchEditPolicy!
+  researchInteractionSettings(pageId: ID!): ResearchInteractionSettings!
   researchOwnDraft(pageId: ID!): ResearchOwnDraft
   researchOwnDrafts(limit: Int! = 50, offset: Int! = 0): [ResearchOwnDraftItem!]!
   researchPage(id: ID!): ResearchPublishedPage
@@ -2091,6 +2093,16 @@ type ResearchHistoryEntry {
   number: Int!
   publicationDecision: String
   state: String!
+}
+
+enum ResearchInteractionSetting {
+  COMMENTS
+  RATING
+}
+
+type ResearchInteractionSettings {
+  allowComments: Boolean!
+  allowRating: Boolean!
 }
 
 input ResearchLifecycleInput {
