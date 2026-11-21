@@ -61,6 +61,10 @@ import {
   type ForumTopicState,
 } from '../domain/types/forum-topic.type';
 import { ForumTopicsService } from '../infrastructure/prisma-forum-topics';
+import {
+  FORUM_TOP_PERIODS,
+  type ForumTopPeriod,
+} from '../domain/forum-rating.rules';
 import { ForumStaffNoteModel } from './forum-shared.models';
 
 const enumOf = <T extends string>(values: readonly T[]) =>
@@ -71,6 +75,8 @@ const PostStateEnum = enumOf(FORUM_POST_STATES);
 const TopicSortEnum = enumOf(FORUM_TOPIC_SORTS);
 const TopicScopeEnum = enumOf(FORUM_TOPIC_SCOPES);
 registerEnumType(TopicScopeEnum, { name: 'ForumTopicScope' });
+const TopPeriodEnum = enumOf(FORUM_TOP_PERIODS);
+registerEnumType(TopPeriodEnum, { name: 'ForumTopPeriod' });
 registerEnumType(TopicKindEnum, { name: 'ForumTopicKind' });
 registerEnumType(TopicStateEnum, { name: 'ForumTopicState' });
 registerEnumType(PostStateEnum, { name: 'ForumPostState' });
@@ -128,6 +134,14 @@ export class ForumTopicModel {
   @Field() lastPostAt!: Date;
   @Field(() => ID) lastPostAuthorId!: string;
   @Field() createdAt!: Date;
+  @Field(() => Int) ratingUp!: number;
+  @Field(() => Int) ratingDown!: number;
+  @Field(() => Int) viewCount!: number;
+  @Field(() => Int, {
+    nullable: true,
+    description: 'Furthest post number read by the viewer; null for guests.',
+  })
+  viewerLastReadNumber!: number | null;
 }
 
 @ObjectType('ForumTopicPage')
@@ -160,6 +174,8 @@ class ForumPostModel {
   @Field(() => Int, { nullable: true }) replyToNumber!: number | null;
   @Field(() => [Int]) quotedNumbers!: number[];
   @Field(() => Int) revision!: number;
+  @Field(() => Int) ratingUp!: number;
+  @Field(() => Int) ratingDown!: number;
   @Field() createdAt!: Date;
   @Field(() => Date, { nullable: true }) editedAt!: Date | null;
   @Field(() => ForumPostModerationModel, {
@@ -208,9 +224,19 @@ export class ForumTopicsResolver {
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
     @Args('scope', { type: () => TopicScopeEnum, defaultValue: 'ACTIVE' })
     scope: ForumTopicScope,
+    @Args('topPeriod', { type: () => TopPeriodEnum, defaultValue: 'WEEK' })
+    topPeriod: ForumTopPeriod,
   ): Promise<ForumPage<ForumTopicModel>> {
     return this.execute(
-      this.topics.topics(this.viewer(ctx), forumId, sort, page, limit, scope),
+      this.topics.topics(
+        this.viewer(ctx),
+        forumId,
+        sort,
+        page,
+        limit,
+        scope,
+        topPeriod,
+      ),
     );
   }
 

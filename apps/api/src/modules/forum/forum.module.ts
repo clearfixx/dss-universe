@@ -19,6 +19,8 @@ import { ForumTopicsService } from './infrastructure/prisma-forum-topics';
 import { ForumTopicsResolver } from './presentation/forum-topics.resolver';
 import { ForumModerationService } from './infrastructure/prisma-forum-moderation';
 import { ForumModerationResolver } from './presentation/forum-moderation.resolver';
+import { ForumRatingsService } from './infrastructure/prisma-forum-ratings';
+import { ForumRatingsResolver } from './presentation/forum-ratings.resolver';
 import { FORUM_VIEWER_FACTS } from './contracts/forum-viewer-facts.contract';
 import { ForumViewerFactsAdapter } from './infrastructure/forum-viewer-facts.adapter';
 import { ForumStructureService } from './infrastructure/prisma-forum-structure';
@@ -35,6 +37,8 @@ import { ForumStructureResolver } from './presentation/forum-structure.resolver'
     ForumTopicsResolver,
     ForumModerationService,
     ForumModerationResolver,
+    ForumRatingsService,
+    ForumRatingsResolver,
     { provide: FORUM_INTERACTION_DECISIONS, useExisting: ForumTopicsService },
   ],
   exports: [FORUM_INTERACTION_DECISIONS],

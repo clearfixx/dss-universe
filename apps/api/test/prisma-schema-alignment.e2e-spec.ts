@@ -12,7 +12,7 @@
  * Full historical migrations in an owned disposable schema; no repair DDL.
  *
  * ⚠️ Important:
- * Catalog checks cover twelve legacy, three routing, two qualification, two consumption and one moderation policy default; CRUD checks are representative,
+ * Catalog checks cover twelve legacy, three routing, two qualification, two consumption, one moderation policy and one forum ranking default; CRUD checks are representative,
  * not a claim that every model/business use case was exercised here.
  *
  * 🚀 Build. Share. Grow.
@@ -91,6 +91,10 @@ describe('Prisma and historical migration alignment (e2e)', () => {
         },
         {
           table_name: 'moderation_sanction_policy',
+          column_default: 'CURRENT_TIMESTAMP',
+        },
+        {
+          table_name: 'forum_ranking_settings',
           column_default: 'CURRENT_TIMESTAMP',
         },
       ].sort((left, right) =>
