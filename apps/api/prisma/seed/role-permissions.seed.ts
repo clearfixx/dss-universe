@@ -104,7 +104,7 @@ const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     Permission.ForumStructureManage,
     Permission.ForumModeratorsAssign,
     Permission.ForumModerateAll,
-    Permission.ForumContentPurge,
+
     Permission.NewsReview,
     Permission.NewsPublish,
     Permission.NewsTaxonomyManage,
@@ -113,7 +113,9 @@ const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     Permission.NewsPinsManage,
   ],
 
-  owner: PERMISSION_LIST.map((permission) => permission.key),
+  owner: PERMISSION_LIST.map((permission) => permission.key).filter(
+    (key) => key !== Permission.ForumContentPurge,
+  ),
 };
 
 export async function seedRolePermissions(prisma: PrismaClient): Promise<void> {

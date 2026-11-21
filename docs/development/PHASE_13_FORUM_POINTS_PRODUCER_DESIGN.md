@@ -118,7 +118,7 @@ All four proposals were accepted:
 2. **Changing an accepted answer:** the first answer author keeps their +10; the
    new answer author also gets +10. A given post earns the answer bonus only
    once (source = the post, one revision), even if it is accepted again.
-3. **Administrator purge** keeps the points, like any other deletion.
+3. **Owner purge** keeps the points, like any other deletion.
 4. **Replies in one's own topic** earn +1 like any reply.
 
 🪙 Points reward contributions; the ledger remembers why.
