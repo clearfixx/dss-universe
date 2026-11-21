@@ -270,18 +270,19 @@ describe('Forum moderation (e2e)', () => {
       const s = await scene();
       const viewers = new ForumViewerFactsAdapter(
         {
-          audience: async () => ({ groups: [], premium: false }),
-          canManageGroups: async () => true,
-          hasKnowledgeForgeGuardian: async () => false,
+          audience: () => Promise.resolve({ groups: [], premium: false }),
+          canManageGroups: () => Promise.resolve(true),
+          hasKnowledgeForgeGuardian: () => Promise.resolve(false),
         },
         {
-          getAccessProfileByUserId: async () => ({
-            roles: [role],
-            permissions: [
-              Permission.ForumContentPurge,
-              Permission.ForumModerateAll,
-            ],
-          }),
+          getAccessProfileByUserId: () =>
+            Promise.resolve({
+              roles: [role],
+              permissions: [
+                Permission.ForumContentPurge,
+                Permission.ForumModerateAll,
+              ],
+            }),
         },
       );
       const service = new ForumModerationService(
