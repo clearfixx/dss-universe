@@ -477,6 +477,80 @@ type EditorDocumentPreview {
   searchText: String!
 }
 
+type Forum {
+  active: Boolean!
+  allowsGatedContent: Boolean!
+  categoryId: ID!
+  description: String
+  id: ID!
+  parentId: ID
+  position: Int!
+  slug: String!
+  subforums: [ForumSubforum!]!
+  title: String!
+}
+
+type ForumCategory {
+  active: Boolean!
+
+  """Visible to structure managers only."""
+  audienceKeys: [String!]
+  description: String
+  forums: [Forum!]!
+  id: ID!
+  position: Int!
+  slug: String!
+  title: String!
+  visibility: ForumVisibility!
+}
+
+input ForumCategoryInput {
+  active: Boolean! = true
+  audienceKeys: [String!]! = []
+  description: String
+  position: Int! = 0
+  slug: String!
+  title: String!
+  visibility: ForumVisibility!
+}
+
+input ForumInput {
+  active: Boolean! = true
+  allowsGatedContent: Boolean! = false
+  categoryId: ID!
+  description: String
+  parentId: ID
+  position: Int! = 0
+  slug: String!
+  title: String!
+}
+
+type ForumModeratorAssignment {
+  assignedAt: DateTime!
+  categoryId: ID!
+  id: ID!
+  moderatorId: ID!
+  revokedAt: DateTime
+}
+
+type ForumSubforum {
+  active: Boolean!
+  allowsGatedContent: Boolean!
+  categoryId: ID!
+  description: String
+  id: ID!
+  parentId: ID
+  position: Int!
+  slug: String!
+  title: String!
+}
+
+enum ForumVisibility {
+  MEMBERS
+  PUBLIC
+  RESTRICTED
+}
+
 type FullNews {
   allowComments: Boolean!
   allowIndexing: Boolean!
@@ -902,6 +976,7 @@ type Mutation {
   abortMediaUpload(id: String!): MediaUploadSession!
   approveNews(input: NewsDecisionInput!): NewsEditorialTransition!
   archiveResearchPage(input: ResearchLifecycleInput!): Boolean!
+  assignForumCategoryModerator(categoryId: ID!, moderatorId: ID!): ForumModeratorAssignment!
   awardAchievement(input: ManualAchievementAwardInput!): AchievementAward!
   beginViewerTwoFactorSetup: TwoFactorSetupModel!
   blockUser(userId: ID!): UserBlockResult!
@@ -914,6 +989,8 @@ type Mutation {
   createComment(input: CreateCommentInput!): Comment!
   createContentGate(input: CreateContentGateInput!): ContentGateModel!
   createCustomTitle(input: CreateCustomTitleInput!): CustomTitle!
+  createForum(input: ForumInput!): Forum!
+  createForumCategory(input: ForumCategoryInput!): ForumCategory!
   createModerationAnnotation(input: CreateModerationAnnotationInput!): ModerationAnnotation!
   createNewsDraft(input: CreateNewsDraftInput!): NewsEditorialArticle!
   createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
@@ -961,6 +1038,7 @@ type Mutation {
   reviewContentReport(input: ReviewContentReportInput!): ContentReport!
   revokeAchievementAward(input: RevokeAchievementAwardInput!): AchievementAward!
   revokeCustomTitle(input: RevokeCustomTitleInput!): UserTitleGrant!
+  revokeForumCategoryModerator(assignmentId: ID!): ForumModeratorAssignment!
   revokeModerationAnnotation(annotationId: ID!, reason: String!): ModerationAnnotation!
   revokeModerationSanction(input: RevokeModerationSanctionInput!): StaffSanction!
   revokeOtherViewerSessions: RevokeSessionsResultModel!
@@ -993,6 +1071,8 @@ type Mutation {
   updateCommunityPointRule(input: UpdateCommunityPointRuleInput!): CommunityPointRule!
   updateCustomTitle(input: UpdateCustomTitleInput!): CustomTitle!
   updateCustomTitleSettings(input: UpdateCustomTitleSettingsInput!): CustomTitleSettings!
+  updateForum(forumId: ID!, input: ForumInput!): Forum!
+  updateForumCategory(categoryId: ID!, input: ForumCategoryInput!): ForumCategory!
   updateLevelDefinition(input: UpdateLevelDefinitionInput!): LevelDefinition!
   updateModerationSanctionPolicy(input: ModerationSanctionPolicyInput!): ModerationSanctionPolicy!
   updateNewsSettings(input: UpdateNewsSettingsInput!): NewsSettings!
@@ -1431,6 +1511,8 @@ type Query {
   evaluateContentGate(id: ID!): ContentGateEvaluationModel!
   followers(pagination: UsersPageInput, userId: ID!): UsersPageModel!
   following(pagination: UsersPageInput, userId: ID!): UsersPageModel!
+  forumCategories: [ForumCategory!]!
+  forumCategoryModerators(categoryId: ID!): [ForumModeratorAssignment!]!
   fullNews(language: String!, slug: String!): FullNews
   interactionTarget(id: ID!): InteractionTarget!
   interactionTargetAccess(capability: InteractionCapability!, targetId: ID!): InteractionAccessDecision!
