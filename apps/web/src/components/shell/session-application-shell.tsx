@@ -4,12 +4,17 @@ import { loadAdminCommandDeckAccess } from "@/features/auth/admin-access";
 import { loadSessionViewer } from "@/features/auth/session-data";
 import { loadShellVariant } from "@/features/appearance/appearance-data";
 
-import { DssApplicationShell as DssApplicationShellClient } from "./dss-application-shell";
+import {
+  DssApplicationShell as DssApplicationShellClient,
+  type TrustedBreadcrumb,
+} from "./dss-application-shell";
 import type { TrustedPageTitle } from "./shell-navigation";
 
 type ShellProps = PropsWithChildren<{
   toolbar?: ReactNode;
   pageTitle?: TrustedPageTitle;
+  /** Route-owned trail for pages deeper than the shell registry knows. */
+  breadcrumbs?: readonly TrustedBreadcrumb[];
 }>;
 
 /**
@@ -21,6 +26,7 @@ export async function DssApplicationShell({
   children,
   toolbar,
   pageTitle,
+  breadcrumbs,
 }: ShellProps) {
   const [viewer, variant] = await Promise.all([
     loadSessionViewer(),
@@ -37,6 +43,7 @@ export async function DssApplicationShell({
       canAccessAdminDeck={canAccessAdminDeck}
       toolbar={toolbar}
       pageTitle={pageTitle}
+      breadcrumbs={breadcrumbs}
     >
       {children}
     </DssApplicationShellClient>
