@@ -59,6 +59,30 @@ export class PrismaForumReadModels {
     return new Map(rows.map((row) => [row.postId, row.value]));
   }
 
+  /**
+   * Visible posts per author in live topics (not trashed or merged away).
+   * Hidden, deleted and purged posts do not count.
+   */
+  async memberPostCounts(
+    authorIds: readonly string[],
+  ): Promise<Map<string, number>> {
+    const ids = [...new Set(authorIds)];
+    if (ids.length === 0) return new Map();
+    const rows = await this.prisma.forumPost.groupBy({
+      by: ['authorId'],
+      where: {
+        authorId: { in: ids },
+        state: 'VISIBLE',
+        topic: {
+          state: { in: ['OPEN', 'CLOSED', 'ARCHIVED'] },
+          mergedIntoTopicId: null,
+        },
+      },
+      _count: { _all: true },
+    });
+    return new Map(rows.map((row) => [row.authorId, row._count._all]));
+  }
+
   async forumStats(
     forumIds: readonly string[],
   ): Promise<Map<string, ForumActivityStats>> {

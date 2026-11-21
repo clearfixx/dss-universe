@@ -34,4 +34,17 @@ export class PrismaReputationTotalReader implements ReputationTotalReader {
     });
     return result._sum.value ?? 0;
   }
+
+  async totalsFor(
+    recipientIds: readonly string[],
+  ): Promise<ReadonlyMap<string, number>> {
+    const ids = [...new Set(recipientIds)];
+    if (ids.length === 0) return new Map();
+    const rows = await this.prisma.reputationEntry.groupBy({
+      by: ['recipientId'],
+      where: { recipientId: { in: ids } },
+      _sum: { value: true },
+    });
+    return new Map(rows.map((row) => [row.recipientId, row._sum.value ?? 0]));
+  }
 }

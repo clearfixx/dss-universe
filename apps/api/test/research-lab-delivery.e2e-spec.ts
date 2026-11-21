@@ -294,6 +294,27 @@ describe('Research Lab public delivery (GraphQL)', () => {
         },
       },
     });
+    const vote = async (targetId: string, kind: 'UPVOTE' | 'DOWNVOTE') =>
+      payload(
+        await request(app.getHttpServer())
+          .post('/api/graphql')
+          .set('Authorization', 'Bearer ' + member.tokens.accessToken)
+          .send({
+            query:
+              'mutation($input:SetReactionInput!){setReaction(input:$input){changed summary{score total}}}',
+            variables: { input: { interactionTargetId: targetId, kind } },
+          })
+          .expect(200),
+      );
+    await app
+      .get(ResearchLabService)
+      .setInteractionSetting(member.user.id, id, 'allowRating', false);
+    expect((await vote(target.id, 'UPVOTE')).errors[0].extensions.code).toBe(
+      'FORBIDDEN',
+    );
+    expect(await vote(childTarget.id, 'UPVOTE')).toEqual({
+      data: { setReaction: { changed: true, summary: { score: 1, total: 1 } } },
+    });
     await fixture.prisma.interactionTarget.update({
       where: { id: target.id },
       data: { status: 'LOCKED' },
@@ -303,6 +324,23 @@ describe('Research Lab public delivery (GraphQL)', () => {
     });
     expect((await access(childTarget.id, 'REACT')).data).toMatchObject({
       interactionTargetAccess: { allowed: false },
+    });
+    expect(
+      (await vote(childTarget.id, 'DOWNVOTE')).errors[0].extensions.code,
+    ).toBe('FORBIDDEN');
+    const summary = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + member.tokens.accessToken)
+      .send({
+        query:
+          'query($id:ID!){reactionSummary(interactionTargetId:$id){score total viewerReaction}}',
+        variables: { id: childTarget.id },
+      })
+      .expect(200);
+    expect(payload(summary)).toEqual({
+      data: {
+        reactionSummary: { score: 1, total: 1, viewerReaction: 'UPVOTE' },
+      },
     });
     await fixture.prisma.interactionTarget.update({
       where: { id: target.id },
@@ -391,7 +429,7 @@ describe('Research Lab public delivery (GraphQL)', () => {
       await fixture.prisma.researchRevision.count({ where: { pageId: id } }),
     ).toBe(1);
   });
-  it('removes group-only Wiki hits, snippets and facets on membership expiry or revocation', async () => {
+  it('enforces page access for Wiki search and comment history when membership changes', async () => {
     const db = fixture.prisma;
     const suffix = randomUUID();
     const register = (label: string) =>
@@ -478,6 +516,59 @@ describe('Research Lab public delivery (GraphQL)', () => {
     };
     const empty = { items: [], total: 0, categories: [] };
     expect(await search()).toEqual(visible);
+    const target = await db.researchPage.findUniqueOrThrow({
+      where: { id: draft.pageId },
+      select: { interactionTargetId: true },
+    });
+    const graphql = async <T>(
+      query: string,
+      variables: Record<string, unknown>,
+    ) =>
+      payload<T>(
+        await request(app.getHttpServer())
+          .post('/api/graphql')
+          .set('Authorization', 'Bearer ' + reader.tokens.accessToken)
+          .send({ query, variables })
+          .expect(200),
+      );
+    const saveBookmark = () =>
+      graphql<{
+        saveBookmark: { bookmark: { id: string; interactionTargetId: string } };
+      }>(
+        'mutation($id:ID!){saveBookmark(interactionTargetId:$id){bookmark{id interactionTargetId}}}',
+        { id: target.interactionTargetId },
+      );
+    const saved = await saveBookmark();
+    expect(saved.errors).toBeUndefined();
+    expect(saved.data.saveBookmark.bookmark.interactionTargetId).toBe(
+      target.interactionTargetId,
+    );
+    const add = (parentId?: string) =>
+      graphql<{ createComment: { id: string } }>(
+        'mutation($input:CreateCommentInput!){createComment(input:$input){id}}',
+        { input: { ...target, parentId, body: 'Wiki discussion' } },
+      );
+    const parent = await add();
+    expect(parent.errors).toBeUndefined();
+    const commentId = parent.data.createComment.id;
+    const history = () =>
+      graphql<{ commentRevisions: { body: string }[] }>(
+        'query($commentId:ID!){commentRevisions(commentId:$commentId){body}}',
+        { commentId },
+      );
+    await db.researchPage.update({
+      where: { id: draft.pageId },
+      data: { allowComments: false },
+    });
+    expect((await add(commentId)).errors[0].extensions.code).toBe('FORBIDDEN');
+    expect((await history()).data.commentRevisions).toEqual([
+      { body: 'Wiki discussion' },
+    ]);
+    await db.researchPage.update({
+      where: { id: draft.pageId },
+      data: { allowComments: true },
+    });
+    expect((await add(commentId)).errors).toBeUndefined();
     const where = { id: membership.id };
     const authority = app.get<ResearchLabAuthorityAdapter>(
       ResearchLabAuthorityAdapter,
@@ -502,6 +593,53 @@ describe('Research Lab public delivery (GraphQL)', () => {
       },
     });
     expect(await search()).toEqual(empty);
+    expect((await history()).errors[0].extensions.code).toBe('FORBIDDEN');
+    const list = (page: number) =>
+      graphql(
+        'query($id:ID!,$page:Int!){researchPage(id:$id){title} viewerBookmarks(pagination:{page:$page,limit:1}){items{id interactionTargetId} total totalPages}}',
+        { id: draft.pageId, page },
+      );
+    expect(await list(1)).toEqual({
+      data: {
+        researchPage: null,
+        viewerBookmarks: {
+          items: [saved.data.saveBookmark.bookmark],
+          total: 1,
+          totalPages: 1,
+        },
+      },
+    });
+    expect(await list(2)).toEqual({
+      data: {
+        researchPage: null,
+        viewerBookmarks: { items: [], total: 1, totalPages: 1 },
+      },
+    });
+    expect((await saveBookmark()).errors[0].extensions.code).toBe('FORBIDDEN');
+    expect(
+      await graphql(
+        'mutation($id:ID!){removeBookmark(interactionTargetId:$id){saved changed}}',
+        { id: target.interactionTargetId },
+      ),
+    ).toEqual({ data: { removeBookmark: { saved: false, changed: true } } });
+    expect(await list(1)).toEqual({
+      data: {
+        researchPage: null,
+        viewerBookmarks: { items: [], total: 0, totalPages: 0 },
+      },
+    });
+    const removal = await graphql(
+      'mutation($commentId:ID!){removeComment(commentId:$commentId){id}}',
+      { commentId },
+    );
+    expect(removal.errors[0].extensions.code).toBe('FORBIDDEN');
+    expect(
+      await db.comment.findUniqueOrThrow({ where: { id: commentId } }),
+    ).toMatchObject({
+      deletedAt: null,
+      deletedById: null,
+      body: 'Wiki discussion',
+    });
   });
 
   it('keeps exact facets and stable ties across a search batch and on an empty deep page', async () => {

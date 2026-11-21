@@ -59,6 +59,7 @@ import { OptionalViewerJwtGuard } from '@api/core/auth/guards/optional-viewer-jw
 import { ForumCommandError } from '../domain/errors/forum-command.error';
 import {
   FORUM_POST_STATES,
+  FORUM_REPLY_SORTS,
   FORUM_TOPIC_KINDS,
   FORUM_TOPIC_SCOPES,
   FORUM_TOPIC_SORTS,
@@ -67,6 +68,7 @@ import {
   FORUM_VIEWER_COLLECTIONS,
   type ForumPage,
   type ForumPostState,
+  type ForumReplySort,
   type ForumTopicFilter,
   type ForumTopicKind,
   type ForumViewerCollection,
@@ -95,6 +97,12 @@ registerEnumType(TopicKindEnum, { name: 'ForumTopicKind' });
 registerEnumType(TopicStateEnum, { name: 'ForumTopicState' });
 registerEnumType(PostStateEnum, { name: 'ForumPostState' });
 registerEnumType(TopicSortEnum, { name: 'ForumTopicSort' });
+const ReplySortEnum = enumOf(FORUM_REPLY_SORTS);
+registerEnumType(ReplySortEnum, {
+  name: 'ForumReplySort',
+  description:
+    'Order of replies; the first post always opens page 1. BEST = net rating, ties by number.',
+});
 const TopicFilterEnum = enumOf(FORUM_TOPIC_FILTERS);
 registerEnumType(TopicFilterEnum, {
   name: 'ForumTopicFilter',
@@ -396,6 +404,21 @@ export class ForumTopicsResolver {
     return this.execute(this.topics.popularTags(this.viewer(ctx), limit));
   }
 
+  @Query(() => [ForumTopicModel], {
+    description:
+      'Related topics the viewer can read: shared tags, then the same section.',
+  })
+  @UseGuards(OptionalViewerJwtGuard)
+  forumSimilarTopics(
+    @Context() ctx: RequestContext,
+    @Args('topicId', { type: () => ID }) topicId: string,
+    @Args('limit', { type: () => Int, defaultValue: 3 }) limit: number,
+  ) {
+    return this.execute(
+      this.topics.similarTopics(this.viewer(ctx), topicId, limit),
+    );
+  }
+
   @Query(() => ForumTopicModel)
   @UseGuards(OptionalViewerJwtGuard)
   forumTopic(
@@ -412,9 +435,11 @@ export class ForumTopicsResolver {
     @Args('topicId', { type: () => ID }) topicId: string,
     @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
+    @Args('sort', { type: () => ReplySortEnum, defaultValue: 'OLDEST' })
+    sort: ForumReplySort,
   ) {
     return this.execute(
-      this.topics.posts(this.viewer(ctx), topicId, page, limit),
+      this.topics.posts(this.viewer(ctx), topicId, page, limit, sort),
     );
   }
 

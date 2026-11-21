@@ -65,6 +65,13 @@ export const FORUM_TOPIC_SORTS = [
 ] as const;
 export type ForumTopicSort = (typeof FORUM_TOPIC_SORTS)[number];
 
+/**
+ * Order of replies inside a topic. The first post always opens page 1;
+ * BEST = net rating (up − down), ties by post number.
+ */
+export const FORUM_REPLY_SORTS = ['OLDEST', 'NEWEST', 'BEST'] as const;
+export type ForumReplySort = (typeof FORUM_REPLY_SORTS)[number];
+
 /** Owner decisions: reply edit window and global posting cooldown. */
 export const FORUM_REPLY_EDIT_WINDOW_MS = 10 * 60 * 1000;
 export const FORUM_POSTING_COOLDOWN_SECONDS = 60;

@@ -38,3 +38,8 @@ export {
   type ForumMemberCard,
   type ForumMemberCardReader,
 } from './contracts/forum-member-cards.contract';
+export {
+  FORUM_MEMBER_STATS,
+  type ForumMemberStanding,
+  type ForumMemberStatsReader,
+} from './contracts/forum-member-stats.contract';

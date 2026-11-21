@@ -792,8 +792,10 @@ for (const [moduleName, expected] of [
     [
       "LevelsModule",
       "LevelsRuntimeModule",
+      "LEVEL_CURRENT_READER",
       "LEVEL_EVENT_CONSUMER",
       "LevelEventConsumer",
+      "LevelCurrentReader",
       "LEVEL_RECIPIENT_EXISTENCE",
       "LevelRecipientExistence",
       "LEVEL_SYNCHRONIZATION",
