@@ -78,6 +78,10 @@ describe('Forum content ratings (e2e)', () => {
       viewers,
       editor,
       structure,
+      {
+        project: (documentJson) => Promise.resolve({ documentJson, gates: [] }),
+      },
+      { project: (documentJson) => Promise.resolve({ documentJson }) },
     );
     ratings = new ForumRatingsService(
       fixture.prisma,

@@ -76,6 +76,10 @@ describe('Forum curation (e2e)', () => {
       viewers,
       editor,
       structure,
+      {
+        project: (documentJson) => Promise.resolve({ documentJson, gates: [] }),
+      },
+      { project: (documentJson) => Promise.resolve({ documentJson }) },
     );
     const polls = new PrismaPollsRepository(fixture.prisma, audit, outbox);
     curation = new ForumCurationService(
