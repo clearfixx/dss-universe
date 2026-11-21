@@ -531,6 +531,18 @@ describe('Research Lab public delivery (GraphQL)', () => {
           .send({ query, variables })
           .expect(200),
       );
+    const saveBookmark = () =>
+      graphql<{
+        saveBookmark: { bookmark: { id: string; interactionTargetId: string } };
+      }>(
+        'mutation($id:ID!){saveBookmark(interactionTargetId:$id){bookmark{id interactionTargetId}}}',
+        { id: target.interactionTargetId },
+      );
+    const saved = await saveBookmark();
+    expect(saved.errors).toBeUndefined();
+    expect(saved.data.saveBookmark.bookmark.interactionTargetId).toBe(
+      target.interactionTargetId,
+    );
     const add = (parentId?: string) =>
       graphql<{ createComment: { id: string } }>(
         'mutation($input:CreateCommentInput!){createComment(input:$input){id}}',
@@ -582,6 +594,40 @@ describe('Research Lab public delivery (GraphQL)', () => {
     });
     expect(await search()).toEqual(empty);
     expect((await history()).errors[0].extensions.code).toBe('FORBIDDEN');
+    const list = (page: number) =>
+      graphql(
+        'query($id:ID!,$page:Int!){researchPage(id:$id){title} viewerBookmarks(pagination:{page:$page,limit:1}){items{id interactionTargetId} total totalPages}}',
+        { id: draft.pageId, page },
+      );
+    expect(await list(1)).toEqual({
+      data: {
+        researchPage: null,
+        viewerBookmarks: {
+          items: [saved.data.saveBookmark.bookmark],
+          total: 1,
+          totalPages: 1,
+        },
+      },
+    });
+    expect(await list(2)).toEqual({
+      data: {
+        researchPage: null,
+        viewerBookmarks: { items: [], total: 1, totalPages: 1 },
+      },
+    });
+    expect((await saveBookmark()).errors[0].extensions.code).toBe('FORBIDDEN');
+    expect(
+      await graphql(
+        'mutation($id:ID!){removeBookmark(interactionTargetId:$id){saved changed}}',
+        { id: target.interactionTargetId },
+      ),
+    ).toEqual({ data: { removeBookmark: { saved: false, changed: true } } });
+    expect(await list(1)).toEqual({
+      data: {
+        researchPage: null,
+        viewerBookmarks: { items: [], total: 0, totalPages: 0 },
+      },
+    });
     const removal = await graphql(
       'mutation($commentId:ID!){removeComment(commentId:$commentId){id}}',
       { commentId },
