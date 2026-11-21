@@ -79,8 +79,8 @@ describe("ForumPostActionBar", () => {
 
   it("offers restore on hidden posts and disables reply", () => {
     bar("HIDDEN", { moderate: true, purge: true, acceptAnswer: true });
-    expect(screen.getByText("Відновити")).toBeInTheDocument();
-    expect(screen.queryByText("Вид.")).toBeNull();
+    expect(screen.getByTitle("Відновити допис")).toBeInTheDocument();
+    expect(screen.queryByTitle("Приховати допис")).toBeNull();
     expect(screen.getByText("Відповісти").closest("button")).toBeDisabled();
   });
 });

@@ -116,6 +116,24 @@ export function ForumPostCard({
       path={path}
     />
   );
+  const ratingRow = (
+    <ForumPostRating
+      postId={post.id}
+      ratingUp={post.ratingUp}
+      ratingDown={post.ratingDown}
+      viewerVote={post.viewerVote ?? null}
+      canVote={viewerId !== null && !own}
+      disabledReason={
+        viewerId === null
+          ? "Увійдіть, щоб голосувати"
+          : own
+            ? "Свої дописи оцінювати не можна"
+            : undefined
+      }
+      path={path}
+      horizontal
+    />
+  );
 
   const canEdit =
     visible &&
@@ -343,7 +361,7 @@ export function ForumPostCard({
       <div className="hidden justify-center pt-3 sm:flex">
         {visible ? rating : null}
       </div>
-      {visible ? <div className="px-3 pb-3 sm:hidden">{rating}</div> : null}
+      {visible ? <div className="px-3 pb-3 sm:hidden">{ratingRow}</div> : null}
     </article>
   );
 }

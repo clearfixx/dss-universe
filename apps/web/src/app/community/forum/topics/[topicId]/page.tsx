@@ -127,9 +127,9 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_19rem] 2xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0 space-y-4">
 
-          <header className="flex flex-wrap items-end gap-4">
+          <header className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4">
             <div className="min-w-0 flex-1 space-y-2.5">
-              <h1 className="flex flex-wrap items-center gap-2 text-2xl font-bold leading-tight">
+              <h1 className="flex flex-wrap items-center gap-2 text-xl font-bold leading-tight sm:text-2xl">
                 {topic.pinned ? (
                   <Pin
                     className="size-5 text-amber-300"

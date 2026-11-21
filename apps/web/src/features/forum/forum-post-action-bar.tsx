@@ -294,7 +294,7 @@ export function ForumPostActionBar({
                 ) : (
                   <Eye className="size-3.5" aria-hidden="true" />
                 )}
-                {visible ? "Вид." : "Відновити"}
+                Вид.
               </button>
             ) : null}
             <button

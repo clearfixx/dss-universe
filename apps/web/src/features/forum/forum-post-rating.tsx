@@ -41,6 +41,7 @@ export function ForumPostRating({
   canVote,
   disabledReason,
   path,
+  horizontal = false,
 }: {
   postId: string;
   ratingUp: number;
@@ -49,6 +50,8 @@ export function ForumPostRating({
   canVote: boolean;
   disabledReason?: string;
   path: string;
+  /** Mobile: a compact row instead of the vertical column. */
+  horizontal?: boolean;
 }) {
   const [rating, setRating] = useState({ ratingUp, ratingDown });
   const [vote, setVote] = useState(viewerVote);
@@ -86,7 +89,11 @@ export function ForumPostRating({
     "flex size-7 items-center justify-center rounded-md text-slate-400 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent";
 
   return (
-    <div className="flex w-11 flex-col items-center gap-0.5 rounded-lg bg-white/[0.04] py-1 ring-1 ring-white/[0.08]">
+    <div
+      className={`flex items-center gap-0.5 rounded-lg bg-white/[0.04] ring-1 ring-white/[0.08] ${
+        horizontal ? "inline-flex px-1" : "w-11 flex-col py-1"
+      }`}
+    >
       <button
         type="button"
         className={`${arrow} ${vote === 1 ? "!text-violet-300 !opacity-100" : ""}`}
