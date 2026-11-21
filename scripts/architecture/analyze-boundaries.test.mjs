@@ -704,6 +704,10 @@ for (const [moduleName, expected] of [
       "MEDIA_PUBLICATION_EVIDENCE",
       "MediaPublicationEvidenceReader",
       "MediaPublicationEvidence",
+      "MEDIA_ATTACHMENT_POLICY",
+      "MediaAttachmentPolicy",
+      "MediaAttachmentDecision",
+      "MediaAttachmentRejection",
     ],
   ],
   [
