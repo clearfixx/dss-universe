@@ -38,6 +38,14 @@ fragment ForumTopicSummary on ForumTopic {
   mergedIntoTopicId
   curatorId
   viewerLastReadNumber
+  viewerAbilities {
+    moderate
+    purge
+    acceptAnswer
+    close
+    reopen
+    reply
+  }
   tags {
     id
     slug

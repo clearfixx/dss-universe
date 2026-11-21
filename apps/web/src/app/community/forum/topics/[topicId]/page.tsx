@@ -41,6 +41,7 @@ import {
 import { forumMemberName } from "@/features/forum/forum-format";
 import { ForumPostCard } from "@/features/forum/forum-post-card";
 import { ForumReplyComposer } from "@/features/forum/forum-reply-composer";
+import { ForumTopicModeration } from "@/features/forum/forum-topic-moderation";
 import {
   ForumFollowButton,
   ForumTopicVisit,
@@ -93,7 +94,8 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
   const path = topicPath(topic.id);
   const pages = Math.max(1, Math.ceil(posts.total / FORUM_PAGE_SIZE));
   const readOnlyUntil = viewerState?.sanctions.readOnlyUntil;
-  const canWrite = viewer !== null && topic.state === "OPEN" && !readOnlyUntil;
+  const abilities = topic.viewerAbilities;
+  const canWrite = abilities.reply && !readOnlyUntil;
   const acceptedHere = posts.items.find(
     (post) => post.id === topic.acceptedAnswerPostId,
   );
@@ -225,6 +227,16 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
             </div>
           ) : null}
 
+          {topic.state === "TRASHED" ? (
+            <div
+              role="status"
+              className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100"
+            >
+              Тема в кошику: учасники її не бачать. Модератори можуть її
+              відновити.
+            </div>
+          ) : null}
+
           {readOnlyUntil ? (
             <div
               role="status"
@@ -243,6 +255,8 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
                 post={post}
                 topicAuthorId={topic.author?.id ?? ""}
                 curatorId={topic.curatorId ?? null}
+                topicId={topic.id}
+                abilities={abilities}
                 accepted={post.id === topic.acceptedAnswerPostId}
                 viewerId={viewer?.id ?? null}
                 canReply={canWrite}
@@ -303,6 +317,16 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
         </div>
 
         <aside className="space-y-4">
+          <ForumTopicModeration
+            topic={topic}
+            abilities={abilities}
+            forums={forums.map((item) => ({
+              id: item.id,
+              title: item.title,
+              category: item.category,
+            }))}
+            path={path}
+          />
           <section className="rounded-2xl border border-white/10 bg-[#0f1328] p-5">
             <h2 className="mb-3 font-semibold">Про тему</h2>
             <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">

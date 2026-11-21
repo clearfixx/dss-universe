@@ -17,7 +17,13 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import { CheckCircle2, EyeOff, Paperclip, ShieldCheck } from "lucide-react";
+import {
+  CheckCircle2,
+  EyeOff,
+  Paperclip,
+  ShieldCheck,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 
 import type { ForumPostFieldsFragment } from "@/gql/graphql";
@@ -25,6 +31,7 @@ import type { ForumPostFieldsFragment } from "@/gql/graphql";
 import { ForumDocument } from "./forum-document";
 import { forumMemberName } from "./forum-format";
 import { ForumPostRating } from "./forum-post-rating";
+import { ForumPostStaff } from "./forum-post-staff";
 import { ForumPostActions } from "./forum-topic-controls";
 
 const dateFormatter = new Intl.DateTimeFormat("uk-UA", {
@@ -63,7 +70,15 @@ export function ForumPostCard({
   viewerId,
   canReply,
   path,
+  topicId,
+  abilities,
 }: {
+  topicId: string;
+  abilities: Readonly<{
+    moderate: boolean;
+    purge: boolean;
+    acceptAnswer: boolean;
+  }>;
   post: ForumPostFieldsFragment;
   topicAuthorId: string;
   curatorId: string | null;
@@ -183,14 +198,37 @@ export function ForumPostCard({
               <ForumDocument documentJson={post.documentJson} />
             </>
           ) : (
-            <div className="flex items-start gap-3 rounded-xl border border-dashed border-white/15 bg-white/[0.03] p-4 text-sm text-slate-400">
-              <EyeOff className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-              <div className="space-y-1">
-                <p>{TOMBSTONE[post.state] ?? "Допис недоступний."}</p>
+            <div
+              className={`flex items-start gap-3 rounded-xl border p-4 text-sm ${
+                post.state === "HIDDEN"
+                  ? "border-violet-500/40 bg-violet-500/10 text-violet-100"
+                  : "border-rose-500/40 bg-rose-500/10 text-rose-100"
+              }`}
+            >
+              {post.state === "HIDDEN" ? (
+                <EyeOff className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+              ) : (
+                <Trash2 className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+              )}
+              <div className="min-w-0 flex-1 space-y-1">
+                <p className="font-semibold">
+                  {TOMBSTONE[post.state] ?? "Допис недоступний."}
+                </p>
                 {post.moderation ? (
                   <p className="text-slate-300">
-                    Причина: {post.moderation.reason}
+                    Причина: {post.moderation.reason} ·{" "}
+                    {dateFormatter.format(new Date(String(post.moderation.at)))}
                   </p>
+                ) : null}
+                {post.documentJson && abilities.moderate ? (
+                  <details className="pt-2 text-slate-200">
+                    <summary className="cursor-pointer text-violet-300">
+                      Показати зміст
+                    </summary>
+                    <div className="mt-3 rounded-lg border border-white/10 bg-slate-950/60 p-3">
+                      <ForumDocument documentJson={post.documentJson} />
+                    </div>
+                  </details>
                 ) : null}
               </div>
             </div>
@@ -234,6 +272,14 @@ export function ForumPostCard({
               ))}
             </ul>
           ) : null}
+
+          <ForumPostStaff
+            topicId={topicId}
+            post={post}
+            abilities={abilities}
+            isAccepted={accepted}
+            path={path}
+          />
 
           {visible ? (
             <ForumPostActions
