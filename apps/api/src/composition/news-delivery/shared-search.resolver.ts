@@ -4,6 +4,10 @@ import {
 } from '@api/modules/research-lab';
 import { BadRequestException, Inject, UseGuards } from '@nestjs/common';
 import {
+  FORUM_SEARCH_SOURCE,
+  type ForumSearchSource,
+} from '@api/modules/forum';
+import {
   Args,
   Context,
   Field,
@@ -24,6 +28,7 @@ import {
 enum SharedSearchSource {
   NEWS = 'NEWS',
   RESEARCH_LAB = 'RESEARCH_LAB',
+  FORUM = 'FORUM',
 }
 registerEnumType(SharedSearchSource, { name: 'SharedSearchSource' });
 @ObjectType()
@@ -56,6 +61,7 @@ export class SharedSearchResolver {
     @Inject(RESEARCH_SEARCH_SOURCE)
     private readonly research: ResearchSearchSource,
     @Inject(NEWS_SEARCH_SOURCE) private readonly news: NewsSearchSource,
+    @Inject(FORUM_SEARCH_SOURCE) private readonly forum: ForumSearchSource,
   ) {}
 
   @Query(() => SearchPage)
@@ -85,10 +91,16 @@ export class SharedSearchResolver {
       pageSize,
       viewerId: context.req.user?.id,
     };
-    const result =
+    const result: {
+      items: Array<Omit<SearchHit, 'source'>>;
+      total: number;
+      categories: SearchCategoryCount[];
+    } =
       source === SharedSearchSource.RESEARCH_LAB
         ? await this.research.search(query)
-        : await this.news.searchArticles(query);
+        : source === SharedSearchSource.FORUM
+          ? await this.forum.search(query)
+          : await this.news.searchArticles(query);
     return {
       ...result,
       items: result.items.map((item) => ({ ...item, source })),

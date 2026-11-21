@@ -16,7 +16,12 @@
  */
 import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
+import {
+  AuthUser,
+  JwtAuthGuard,
+  PermittedWhileReadOnly,
+  type AuthenticatedUser,
+} from '@api/core/auth';
 import { TwoFactorService } from '../../../application/services/two-factor.service';
 import { mapAuthFailure } from '../../mappers/map-auth-failure';
 import { LogoutResultModel } from '../models/logout-result.model';
@@ -38,12 +43,14 @@ export class TwoFactorResolver {
     return this.twoFactor.status(user.id);
   }
 
+  @PermittedWhileReadOnly()
   @Mutation(() => TwoFactorSetupModel)
   @UseGuards(JwtAuthGuard)
   beginViewerTwoFactorSetup(@AuthUser() user: AuthenticatedUser) {
     return this.twoFactor.begin(user.id, user.email);
   }
 
+  @PermittedWhileReadOnly()
   @Mutation(() => TwoFactorConfirmationModel)
   @UseGuards(JwtAuthGuard)
   confirmViewerTwoFactorSetup(
@@ -53,6 +60,7 @@ export class TwoFactorResolver {
     return this.twoFactor.confirm(user.id, input.code);
   }
 
+  @PermittedWhileReadOnly()
   @Mutation(() => LogoutResultModel)
   @UseGuards(JwtAuthGuard)
   async disableViewerTwoFactor(

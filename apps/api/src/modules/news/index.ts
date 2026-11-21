@@ -56,6 +56,12 @@ export type {
   SaveNewsDraft,
 } from './domain/types/news-article.type';
 export { NewsModule } from './news.module';
+export { NewsDiscussionFactsModule } from './news-discussion-facts.module';
+export {
+  NEWS_DISCUSSION_FACTS,
+  type NewsDiscussionFacts,
+  type NewsDiscussionFactsReader,
+} from './contracts/news-discussion-facts.contract';
 export {
   NEWS_DOCUMENT_NORMALIZER,
   type NewsDocumentNormalizer,

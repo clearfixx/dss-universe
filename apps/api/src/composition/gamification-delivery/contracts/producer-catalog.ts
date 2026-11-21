@@ -34,6 +34,39 @@ export const PRODUCER_PROFILES = [
     levels: false,
   },
   {
+    id: 'forum.topics',
+    version: 1,
+    producer: 'dss.api.forum',
+    category: 'integration',
+    sourceType: 'ForumTopic',
+    events: ['forum.topic.created.v1'],
+    recipients: ['authorId'],
+    points: true,
+    levels: false,
+  },
+  {
+    id: 'forum.replies',
+    version: 1,
+    producer: 'dss.api.forum',
+    category: 'integration',
+    sourceType: 'ForumPost',
+    events: ['forum.post.created.v1'],
+    recipients: ['authorId'],
+    points: true,
+    levels: false,
+  },
+  {
+    id: 'forum.answers',
+    version: 1,
+    producer: 'dss.api.forum',
+    category: 'integration',
+    sourceType: 'ForumAnswerCredit',
+    events: ['forum.answer.credited.v1'],
+    recipients: ['authorId'],
+    points: true,
+    levels: false,
+  },
+  {
     id: 'points.ledger',
     version: 1,
     producer: 'dss.api.community-points',
@@ -60,10 +93,7 @@ export const CURRENT_PRODUCER_COORDINATES = Object.freeze(
 
 // Existing migration defaults for modules that do not yet emit these events.
 // Their implementation must register producer evidence before enabling delivery.
-export const DORMANT_POINT_EVENTS = [
-  'community.topic.created.v1',
-  'knowledge.article.published.v1',
-] as const;
+export const DORMANT_POINT_EVENTS = ['knowledge.article.published.v1'] as const;
 
 export function profileForEvent(
   eventName: string,

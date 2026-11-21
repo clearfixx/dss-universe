@@ -65,6 +65,7 @@ import {
 } from '../src/modules/interactions/contracts/comment-write-transaction.port';
 import { LevelsService } from '../src/modules/levels/application/services/levels.service';
 import { createIsolatedApiSchemaFixture } from './helpers/migrated-api-schema.fixture';
+import { isDisposableRedisPort } from './helpers/disposable-redis';
 
 describe('Dedicated gamification broker with real owner effects', () => {
   let fixture: Awaited<ReturnType<typeof createIsolatedApiSchemaFixture>>;
@@ -103,11 +104,11 @@ describe('Dedicated gamification broker with real owner effects', () => {
     await app.init();
     redis = app.get(REDIS_CONNECTION);
     if (
-      Number(redis.options.port) !== 6380 ||
+      !isDisposableRedisPort(redis.options.port) ||
       !['127.0.0.1', 'localhost'].includes(redis.options.host ?? '')
     )
       throw new Error(
-        'Real broker proof requires disposable loopback Redis6380.',
+        'Real broker proof requires disposable loopback Redis 6380/6381.',
       );
     const coordinator = new GamificationCoordinator(
       app.get<GamificationConsumption>(GAMIFICATION_CONSUMPTION),
@@ -272,7 +273,7 @@ describe('Dedicated gamification broker with real owner effects', () => {
       if (
         redis &&
         prefix.startsWith('producer-test-') &&
-        Number(redis.options.port) === 6380
+        isDisposableRedisPort(redis.options.port)
       ) {
         const cleanup = new Queue(GAMIFICATION_QUEUE_NAME, {
           connection: redis,

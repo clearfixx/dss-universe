@@ -83,6 +83,13 @@ export class CommentInteractionPolicy
       viewer,
       'READ',
     );
+    if (
+      parent.allowed &&
+      capability === 'REACT' &&
+      parent.target.status === 'LOCKED'
+    ) {
+      return { allowed: false, reason: 'TARGET_LOCKED' };
+    }
     return parent.allowed
       ? { allowed: true }
       : { allowed: false, reason: parent.reason ?? 'PARENT_TARGET_DENIED' };

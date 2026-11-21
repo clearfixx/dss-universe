@@ -68,11 +68,18 @@ export type LevelsAdmissionCommand = ReputationAdmissionSeal['canonical'] & {
   userId: string;
 };
 
+export type SourcePointProfileId =
+  | 'news.publication'
+  | 'comments.lifetime'
+  | 'forum.topics'
+  | 'forum.replies'
+  | 'forum.answers';
+
 export type SourceAdmissionSeal = SourceSealHeader &
   (
     | Readonly<{
         descriptor: Readonly<{
-          id: 'news.publication' | 'comments.lifetime';
+          id: SourcePointProfileId;
           version: 1;
         }>;
         applicability: Readonly<{

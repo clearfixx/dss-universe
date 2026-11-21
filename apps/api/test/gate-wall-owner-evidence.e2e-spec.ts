@@ -222,6 +222,7 @@ describe('Gate and Wall owner evidence with migrated PostgreSQL (e2e)', () => {
       forumPosts: 0,
       publications: 0,
       reputation: -1,
+      readOnly: false,
     });
     expect(
       await app

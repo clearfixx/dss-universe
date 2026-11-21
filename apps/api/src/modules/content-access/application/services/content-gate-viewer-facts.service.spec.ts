@@ -17,10 +17,14 @@ describe('ContentGateViewerFactsService', () => {
   const accounts = { find: jest.fn() };
   const comments = { countByAuthor: jest.fn() };
   const reputation = { totalFor: jest.fn() };
+  const restriction = { isReadOnly: jest.fn() };
+  const forumPosts = { countByAuthor: jest.fn() };
   const service = new ContentGateViewerFactsService(
     accounts,
     comments,
     reputation,
+    restriction,
+    forumPosts,
   );
   beforeEach(() => {
     jest.resetAllMocks();
@@ -32,15 +36,19 @@ describe('ContentGateViewerFactsService', () => {
     });
     comments.countByAuthor.mockResolvedValue(12);
     reputation.totalFor.mockResolvedValue(-3);
+    restriction.isReadOnly.mockResolvedValue(false);
+    forumPosts.countByAuthor.mockResolvedValue(4);
   });
-  it('returns only five statistics, floors days and retains explicit zero placeholders', async () => {
+  it('returns five statistics plus read-only state, floors days and retains explicit zero placeholders', async () => {
     expect(await service.read('subject', now)).toEqual({
       accountAgeDays: 3,
       comments: 12,
-      forumPosts: 0,
+      forumPosts: 4,
       publications: 0,
       reputation: -3,
+      readOnly: false,
     });
+    expect(restriction.isReadOnly.mock.calls).toEqual([['subject', now]]);
     expect(accounts.find.mock.calls).toEqual([['subject']]);
     expect(comments.countByAuthor.mock.calls).toEqual([['subject']]);
     expect(reputation.totalFor.mock.calls).toEqual([['subject']]);
@@ -52,8 +60,15 @@ describe('ContentGateViewerFactsService', () => {
       expect(await service.read('subject', now)).toBeNull();
       expect(comments.countByAuthor).not.toHaveBeenCalled();
       expect(reputation.totalFor).not.toHaveBeenCalled();
+      expect(restriction.isReadOnly).not.toHaveBeenCalled();
     },
   );
+  it('reports an active read-only sanction', async () => {
+    restriction.isReadOnly.mockResolvedValue(true);
+    await expect(service.read('subject', now)).resolves.toMatchObject({
+      readOnly: true,
+    });
+  });
   it.each([
     ['2026-10-14T12:00:01Z', 0],
     ['2026-10-13T12:00:00Z', 1],

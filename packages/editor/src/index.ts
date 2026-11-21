@@ -23,5 +23,6 @@ export {
 } from "./projections";
 export type { EditorPublicSearchProjection } from "./projections";
 export * from "./validation";
+export * from "./media-references";
 
 /** Canonical documents travel between modules; implementation details stay home. */

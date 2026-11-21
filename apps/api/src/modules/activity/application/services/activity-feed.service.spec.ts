@@ -27,10 +27,19 @@ describe('ActivityFeedService', () => {
   const context: jest.Mocked<ActivityViewerContextReader> = {
     readForViewer: jest.fn(),
   };
+  const visibleForumKeys = new Set<string>();
+  const subjects = {
+    ownerCheckedModules: new Set(['FORUM']),
+    visibleKeys: jest.fn<
+      Promise<ReadonlySet<string>>,
+      [string | null, readonly unknown[]]
+    >(),
+  };
   const service = new ActivityFeedService(
     activity,
     context,
     new ActivityFeedRankerService(),
+    subjects,
   );
 
   beforeEach(() => {
@@ -161,6 +170,40 @@ describe('ActivityFeedService', () => {
         [],
       ],
     ]);
+  });
+
+  it('keeps only owner-confirmed forum entries in feeds and profiles', async () => {
+    const entry = (module: string, subjectId: string) => ({
+      id: subjectId,
+      actorId: 'actor',
+      module,
+      action: 'ACTION',
+      subjectType: module === 'FORUM' ? 'ForumTopic' : 'NewsArticle',
+      subjectId,
+      visibility: 'MEMBERS' as const,
+      metadata: null,
+      occurredAt: new Date('2026-11-01T00:00:00Z'),
+    });
+    visibleForumKeys.clear();
+    visibleForumKeys.add('ForumTopic:visible');
+    subjects.visibleKeys.mockResolvedValue(visibleForumKeys);
+    activity.findByActor.mockResolvedValue({
+      items: [
+        entry('NEWS', 'n1'),
+        entry('FORUM', 'visible'),
+        entry('FORUM', 'hidden'),
+      ],
+      total: 3,
+      page: 1,
+      limit: 20,
+      totalPages: 1,
+    });
+    const profile = await service.byActor('actor');
+    expect(profile.items.map(({ subjectId }) => subjectId)).toEqual([
+      'n1',
+      'visible',
+    ]);
+    expect(subjects.visibleKeys.mock.calls[0][0]).toBeNull();
   });
 });
 

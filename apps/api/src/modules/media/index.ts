@@ -41,3 +41,9 @@ export {
   type MediaPublicationEvidenceReader,
   type MediaPublicationEvidence,
 } from './contracts/media-publication-evidence.contract';
+export {
+  MEDIA_ATTACHMENT_POLICY,
+  type MediaAttachmentPolicy,
+  type MediaAttachmentDecision,
+  type MediaAttachmentRejection,
+} from './contracts/media-attachment-policy.contract';

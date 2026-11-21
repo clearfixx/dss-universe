@@ -156,6 +156,11 @@ input BookmarksPageInput {
   page: Int! = 1
 }
 
+input CastPollBallotInput {
+  optionIds: [ID!]!
+  pollId: ID!
+}
+
 input ChangeEmailInput {
   currentPassword: String!
   email: String!
@@ -366,6 +371,20 @@ input CreateCustomTitleInput {
   name: String!
 }
 
+input CreateForumReplyInput {
+  documentJson: String!
+  quotedNumbers: [Int!]! = []
+  replyToNumber: Int
+  topicId: ID!
+}
+
+input CreateForumTopicInput {
+  documentJson: String!
+  forumId: ID!
+  kind: ForumTopicKind! = DISCUSSION
+  title: String!
+}
+
 input CreateModerationAnnotationInput {
   commentId: ID
   expiresAt: String
@@ -430,6 +449,13 @@ input EditCommentInput {
   documentJson: String
 }
 
+input EditForumPostInput {
+  documentJson: String!
+  expectedRevision: Int!
+  postId: ID!
+  title: String
+}
+
 enum EditorAiCommand {
   Expand
   Explain
@@ -470,6 +496,347 @@ type EditorDocumentPreview {
   html: String!
   plainText: String!
   searchText: String!
+}
+
+type Forum {
+  active: Boolean!
+  activity: ForumActivityStats!
+  allowsGatedContent: Boolean!
+  categoryId: ID!
+  description: String
+  id: ID!
+  parentId: ID
+  position: Int!
+  slug: String!
+  subforums: [ForumSubforum!]!
+  title: String!
+}
+
+type ForumActivityStats {
+  lastActivity: ForumLastActivity
+  postCount: Int!
+  topicCount: Int!
+}
+
+type ForumCategory {
+  active: Boolean!
+
+  """Visible to structure managers only."""
+  audienceKeys: [String!]
+  description: String
+  forums: [Forum!]!
+  id: ID!
+  position: Int!
+  slug: String!
+  title: String!
+  visibility: ForumVisibility!
+}
+
+input ForumCategoryInput {
+  active: Boolean! = true
+  audienceKeys: [String!]! = []
+  description: String
+  position: Int! = 0
+  slug: String!
+  title: String!
+  visibility: ForumVisibility!
+}
+
+input ForumInput {
+  active: Boolean! = true
+  allowsGatedContent: Boolean! = false
+  categoryId: ID!
+  description: String
+  parentId: ID
+  position: Int! = 0
+  slug: String!
+  title: String!
+}
+
+type ForumLastActivity {
+  author: ForumMember
+  lastPostAt: DateTime!
+  lastPostNumber: Int!
+  title: String!
+  topicId: ID!
+}
+
+type ForumMember {
+  avatarUrl: String
+  displayName: String
+  id: ID!
+  username: String!
+}
+
+type ForumModeratorAssignment {
+  assignedAt: DateTime!
+  categoryId: ID!
+  id: ID!
+  moderatorId: ID!
+  revokedAt: DateTime
+}
+
+type ForumPost {
+  attachments: [ForumPostAttachment!]!
+  author: ForumMember
+  authorId: ID!
+  createdAt: DateTime!
+
+  """Null for tombstones the viewer may not read."""
+  documentJson: String
+  editedAt: DateTime
+  id: ID!
+
+  """Returned to staff of the topic only."""
+  moderation: ForumPostModeration
+  number: Int!
+  quotedNumbers: [Int!]!
+  ratingDown: Int!
+  ratingUp: Int!
+  replyToNumber: Int
+  revision: Int!
+  staffNotes: [ForumStaffNote!]!
+  state: ForumPostState!
+  topicId: ID!
+
+  """
+  The signed-in viewer's active vote on this post: 1, -1 or null (none, reversed or guest).
+  """
+  viewerVote: Int
+}
+
+type ForumPostAttachment {
+  downloadUrl: String!
+  filename: String!
+  mediaId: ID!
+  mimeType: String!
+  size: Int!
+}
+
+type ForumPostModeration {
+  at: DateTime!
+  byId: ID!
+  reason: String!
+}
+
+type ForumPostModerationResult {
+  postId: ID!
+  state: String!
+}
+
+type ForumPostPage {
+  items: [ForumPost!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+}
+
+type ForumPostRating {
+  postId: ID!
+  ratingDown: Int!
+  ratingUp: Int!
+}
+
+type ForumPostRevision {
+  createdAt: DateTime!
+  editorId: ID!
+  revision: Int!
+}
+
+enum ForumPostState {
+  DELETED
+  HIDDEN
+  PURGED
+  VISIBLE
+}
+
+type ForumPostVote {
+  createdAt: DateTime!
+  reversed: Boolean!
+  value: Int!
+  voter: ForumMember
+  voterId: ID!
+}
+
+type ForumPostVotePage {
+  items: [ForumPostVote!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+}
+
+type ForumPurgeResult {
+  postId: ID!
+}
+
+type ForumRankingSettings {
+  hotGravitySeconds: Int!
+  hotReplyWeight: Int!
+}
+
+input ForumRankingSettingsInput {
+  hotGravitySeconds: Int!
+  hotReplyWeight: Int!
+}
+
+type ForumSanctionReceipt {
+  escalatedSanctionId: ID
+  sanctionId: ID!
+}
+
+type ForumStaffNote {
+  authorId: ID!
+  body: String!
+  createdAt: DateTime!
+  id: ID!
+  role: ForumStaffRole!
+}
+
+enum ForumStaffRole {
+  ADMINISTRATOR
+  CURATOR
+  MODERATOR
+  SUPERMODERATOR
+}
+
+type ForumSubforum {
+  active: Boolean!
+  activity: ForumActivityStats!
+  allowsGatedContent: Boolean!
+  categoryId: ID!
+  description: String
+  id: ID!
+  parentId: ID
+  position: Int!
+  slug: String!
+  title: String!
+}
+
+type ForumTag {
+  active: Boolean!
+  forumId: ID!
+  id: ID!
+  label: String!
+  slug: String!
+}
+
+input ForumTagInput {
+  active: Boolean! = true
+  label: String!
+  slug: String!
+}
+
+enum ForumTopPeriod {
+  ALL
+  DAY
+  MONTH
+  WEEK
+  YEAR
+}
+
+type ForumTopic {
+  acceptedAnswerPostId: ID
+  author: ForumMember
+  authorId: ID!
+  createdAt: DateTime!
+  curatorId: ID
+  forumId: ID!
+  id: ID!
+  interactionTargetId: ID!
+  kind: ForumTopicKind!
+  lastPostAt: DateTime!
+  lastPostAuthor: ForumMember
+  lastPostAuthorId: ID!
+  lastPostNumber: Int!
+  mergedIntoTopicId: ID
+  pinned: Boolean!
+  postCount: Int!
+  ratingDown: Int!
+  ratingUp: Int!
+  state: ForumTopicState!
+  tags: [ForumTopicTag!]!
+  title: String!
+  viewCount: Int!
+
+  """Furthest post number read by the viewer; null for guests."""
+  viewerLastReadNumber: Int
+}
+
+type ForumTopicCreated {
+  firstPostId: ID!
+  topic: ForumTopic!
+}
+
+"""
+MINE: authored by the viewer; NO_REPLIES: no replies yet; UNSOLVED: questions without an accepted answer.
+"""
+enum ForumTopicFilter {
+  ALL
+  MINE
+  NO_REPLIES
+  UNSOLVED
+}
+
+enum ForumTopicKind {
+  DISCUSSION
+  QUESTION
+}
+
+type ForumTopicPage {
+  items: [ForumTopic!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+}
+
+input ForumTopicPollInput {
+  maxChoices: Int! = 1
+  options: [String!]!
+  question: String!
+
+  """OPEN or ANONYMOUS"""
+  visibility: String! = "OPEN"
+}
+
+type ForumTopicPollReceipt {
+  pollId: ID!
+}
+
+enum ForumTopicScope {
+  ACTIVE
+  ARCHIVED
+  TRASHED
+}
+
+enum ForumTopicSort {
+  HOT
+  LAST_ACTIVITY
+  NEW
+  TOP
+}
+
+enum ForumTopicState {
+  ARCHIVED
+  CLOSED
+  OPEN
+  TRASHED
+}
+
+type ForumTopicTag {
+  id: ID!
+  label: String!
+  slug: String!
+}
+
+enum ForumViewerCollection {
+  AUTHORED
+  SUBSCRIBED
+}
+
+enum ForumVisibility {
+  MEMBERS
+  PUBLIC
+  RESTRICTED
 }
 
 type FullNews {
@@ -544,6 +911,19 @@ type InteractionTarget {
   ownerType: String!
   status: String!
   updatedAt: String!
+}
+
+input IssueModerationReadOnlyInput {
+  context: ModerationSanctionContextInput
+  expiresAt: DateTime!
+  reason: String!
+  subjectId: ID!
+}
+
+input IssueModerationWarningInput {
+  context: ModerationSanctionContextInput
+  reason: String!
+  subjectId: ID!
 }
 
 type LeaderboardEntry {
@@ -833,39 +1213,112 @@ input ModerationPageInput {
   page: Int! = 1
 }
 
+type ModerationSanctionContext {
+  id: String!
+  path: String
+  type: String!
+}
+
+input ModerationSanctionContextInput {
+  id: String!
+  path: String
+  type: String!
+}
+
+enum ModerationSanctionKind {
+  READ_ONLY
+  WARNING
+}
+
+enum ModerationSanctionOrigin {
+  ESCALATION
+  MANUAL
+  SCOPED
+}
+
+type ModerationSanctionPolicy {
+  escalationReadOnlyDays: Int!
+  escalationWarningCount: Int!
+  readOnlyMaxDays: Int!
+  warningLifetimeDays: Int!
+}
+
+input ModerationSanctionPolicyInput {
+  escalationReadOnlyDays: Int!
+  escalationWarningCount: Int!
+  readOnlyMaxDays: Int!
+  warningLifetimeDays: Int!
+}
+
+type ModerationSanctionReceipt {
+  escalatedSanctionId: ID
+  sanctionId: ID!
+}
+
+type ModerationSanctionStatus {
+  activeWarnings: Int!
+  readOnlyUntil: DateTime
+}
+
 type Mutation {
   abortMediaUpload(id: String!): MediaUploadSession!
+  acceptForumAnswer(postId: ID!, topicId: ID!): ForumTopic!
+  addForumStaffNote(body: String!, postId: ID!): ForumStaffNote!
   approveNews(input: NewsDecisionInput!): NewsEditorialTransition!
+  archiveForumTopic(topicId: ID!): ForumTopic!
   archiveResearchPage(input: ResearchLifecycleInput!): Boolean!
+  assignForumCategoryModerator(categoryId: ID!, moderatorId: ID!): ForumModeratorAssignment!
+  attachForumTopicPoll(input: ForumTopicPollInput!, topicId: ID!): ForumTopicPollReceipt!
   awardAchievement(input: ManualAchievementAwardInput!): AchievementAward!
   beginViewerTwoFactorSetup: TwoFactorSetupModel!
   blockUser(userId: ID!): UserBlockResult!
   cancelNewsSchedule(input: NewsDecisionInput!): NewsEditorialTransition!
+  castPollBallot(input: CastPollBallotInput!): Poll!
   changeViewerEmail(input: ChangeEmailInput!): LogoutResultModel!
   changeViewerPassword(input: ChangePasswordInput!): LogoutResultModel!
+  clearForumAcceptedAnswer(topicId: ID!): ForumTopic!
   clearReaction(interactionTargetId: ID!): ReactionSummary!
+  closeForumTopic(topicId: ID!): ForumTopic!
   confirmViewerTwoFactorSetup(input: ConfirmTwoFactorInput!): TwoFactorConfirmationModel!
   createComment(input: CreateCommentInput!): Comment!
   createContentGate(input: CreateContentGateInput!): ContentGateModel!
   createCustomTitle(input: CreateCustomTitleInput!): CustomTitle!
+  createForum(input: ForumInput!): Forum!
+  createForumCategory(input: ForumCategoryInput!): ForumCategory!
+  createForumReply(input: CreateForumReplyInput!): ForumPost!
+  createForumTag(forumId: ID!, input: ForumTagInput!): ForumTag!
+  createForumTopic(input: CreateForumTopicInput!): ForumTopicCreated!
   createModerationAnnotation(input: CreateModerationAnnotationInput!): ModerationAnnotation!
   createNewsDraft(input: CreateNewsDraftInput!): NewsEditorialArticle!
   createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
   createResearchDraft(input: ResearchDraftInput!): ResearchDraftReceipt!
   deactivateAccount(input: DeactivateAccountInput!): LogoutResultModel!
+  deleteForumPost(postId: ID!, reason: String!): ForumPostModerationResult!
   disableViewerTwoFactor(input: DisableTwoFactorInput!): LogoutResultModel!
   discardCommentDraft(draftId: ID!): Boolean!
+  discardResearchDraft(draftId: ID!, expectedVersion: Int!, pageId: ID!): ResearchDiscardReceipt!
   editComment(input: EditCommentInput!): Comment!
+  editForumPost(input: EditForumPostInput!): ForumPost!
   followUser(userId: ID!): UserSocialGraphSummary!
   giveReputation(input: GiveReputationInput!): ReputationEntry!
   grantCustomTitle(input: GrantCustomTitleInput!): UserTitleGrant!
+  hideForumPost(postId: ID!, reason: String!): ForumPostModerationResult!
   initiateMediaUpload(input: InitiateMediaUploadInput!): MediaUploadSession!
+  issueModerationReadOnly(input: IssueModerationReadOnlyInput!): ModerationSanctionReceipt!
+  issueModerationWarning(input: IssueModerationWarningInput!): ModerationSanctionReceipt!
+  linkNewsDiscussion(articleId: ID!, topicId: ID!): ForumTopic!
   login(input: LoginInput!): AuthPayloadModel!
   logout: LogoutResultModel!
   markActivityFeedVisited: ActivityFeedVisit!
+  markForumTopicRead(topicId: ID!, upToNumber: Int!): Int!
+  mergeForumTopics(sourceTopicId: ID!, targetTopicId: ID!): ForumTopic!
+  moveForumPosts(numbers: [Int!]!, sourceTopicId: ID!, targetTopicId: ID!): ForumTopic!
+  moveForumTopic(targetForumId: ID!, topicId: ID!): ForumTopic!
   publishNews(input: PublishNewsInput!): NewsEditorialTransition!
   publishResearchRevision(input: ResearchDecisionInput!): ResearchRevisionReceipt!
+  purgeForumPost(postId: ID!, reason: String!): ForumPurgeResult!
   reactivateAccount(input: LoginInput!): AuthPayloadModel!
+  recordForumTopicView(topicId: ID!): Boolean!
   recordInteractionShare(input: RecordShareInput!): AudienceEngagement!
   recordInteractionView(input: RecordViewInput!): AudienceEngagement!
   refreshTokens(input: RefreshTokenInput!): AuthPayloadModel!
@@ -874,10 +1327,12 @@ type Mutation {
   rejectResearchRevision(input: ResearchDecisionInput!): ResearchRevisionReceipt!
   removeBookmark(interactionTargetId: ID!): BookmarkMutationPayload!
   removeComment(commentId: ID!, reason: String): Comment!
+  removeForumStaffNote(noteId: ID!): Boolean!
   removeNewsPin(articleId: ID!): RemoveNewsPinResult!
   removeProfileWallPost(postId: ID!, reason: String): ProfileWallPost!
   removeViewerAvatar: Viewer!
   removeViewerCover: Viewer!
+  reopenForumTopic(topicId: ID!): ForumTopic!
   reportContent(input: ReportContentInput!): ContentReport!
   requestEmailVerification: LogoutResultModel!
   requestNewsChanges(input: NewsDecisionInput!): NewsEditorialTransition!
@@ -885,14 +1340,20 @@ type Mutation {
   requestResearchChanges(input: ResearchDecisionInput!): ResearchRevisionReceipt!
   rescanQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
   resetPassword(input: ResetPasswordInput!): LogoutResultModel!
+  restoreForumPost(postId: ID!): ForumPostModerationResult!
+  restoreForumTopic(topicId: ID!): ForumTopic!
   restoreResearchPage(input: ResearchLifecycleInput!): Boolean!
+  restrictForumPostAuthor(postId: ID!, reason: String!, until: DateTime!): ForumSanctionReceipt!
   retryFailedMedia(mediaId: ID!): MediaLibraryItem!
   reverseCommunityPoints(input: ReverseCommunityPointsInput!): CommunityPointEntry!
+  reverseForumPostVote(postId: ID!, reason: String!, voterId: ID!): ForumPostRating!
   reverseReputation(input: ReverseReputationInput!): ReputationEntry!
   reviewContentReport(input: ReviewContentReportInput!): ContentReport!
   revokeAchievementAward(input: RevokeAchievementAwardInput!): AchievementAward!
   revokeCustomTitle(input: RevokeCustomTitleInput!): UserTitleGrant!
+  revokeForumCategoryModerator(assignmentId: ID!): ForumModeratorAssignment!
   revokeModerationAnnotation(annotationId: ID!, reason: String!): ModerationAnnotation!
+  revokeModerationSanction(input: RevokeModerationSanctionInput!): StaffSanction!
   revokeOtherViewerSessions: RevokeSessionsResultModel!
   revokeViewerSession(sessionId: ID!): LogoutResultModel!
   rollbackAchievementSource(input: RollbackAchievementSourceInput!): [AchievementAward!]!
@@ -907,20 +1368,37 @@ type Mutation {
   scheduleNews(input: ScheduleNewsInput!): NewsEditorialTransition!
   selectCustomTitle(grantId: ID!): UserTitleGrant!
   selfPublishResearchDraft(input: ResearchSubmitInput!): ResearchRevisionReceipt!
+  setForumTopicCurator(curatorId: ID, topicId: ID!): ForumTopic!
+  setForumTopicPinned(pinned: Boolean!, topicId: ID!): ForumTopic!
+  setForumTopicTags(tagIds: [ID!]!, topicId: ID!): ForumTopic!
   setNewsPin(input: SetNewsPinInput!): ManagedNewsPin!
   setReaction(input: SetReactionInput!): SetReactionPayload!
+  setResearchEditProtection(level: ResearchEditProtection!, pageId: ID!): ResearchEditPolicy!
+  setResearchPageAudience(groupKeys: [String!]! = [], pageId: ID!, visibility: ResearchPageAudience!): ResearchAudiencePolicy!
+  setResearchTrustedEditors(groupKeys: [String!]!, pageId: ID!): [String!]!
   setViewerAvatar(mediaId: ID!): Viewer!
   setViewerCover(mediaId: ID!): Viewer!
+  splitForumTopic(numbers: [Int!]!, sourceTopicId: ID!, title: String!): ForumTopic!
   startResearchDraft(pageId: ID!): ResearchDraftReceipt!
   submitNewsForReview(articleId: ID!): NewsEditorialTransition!
   submitResearchDraft(input: ResearchSubmitInput!): ResearchRevisionReceipt!
+  subscribeForumTopic(topicId: ID!): Boolean!
   tombstoneResearchPage(input: ResearchLifecycleInput!): Boolean!
+  trashForumTopic(topicId: ID!): ForumTopic!
+  unarchiveForumTopic(topicId: ID!): ForumTopic!
   unblockUser(userId: ID!): UserBlockResult!
   unfollowUser(userId: ID!): UserSocialGraphSummary!
+  unlinkNewsDiscussion(articleId: ID!): Boolean!
+  unsubscribeForumTopic(topicId: ID!): Boolean!
   updateCommunityPointRule(input: UpdateCommunityPointRuleInput!): CommunityPointRule!
   updateCustomTitle(input: UpdateCustomTitleInput!): CustomTitle!
   updateCustomTitleSettings(input: UpdateCustomTitleSettingsInput!): CustomTitleSettings!
+  updateForum(forumId: ID!, input: ForumInput!): Forum!
+  updateForumCategory(categoryId: ID!, input: ForumCategoryInput!): ForumCategory!
+  updateForumRankingSettings(input: ForumRankingSettingsInput!): ForumRankingSettings!
+  updateForumTag(input: ForumTagInput!, tagId: ID!): ForumTag!
   updateLevelDefinition(input: UpdateLevelDefinitionInput!): LevelDefinition!
+  updateModerationSanctionPolicy(input: ModerationSanctionPolicyInput!): ModerationSanctionPolicy!
   updateNewsSettings(input: UpdateNewsSettingsInput!): NewsSettings!
   updatePlatformAppearance(activeShellVariant: ShellVariant!): PlatformAppearance!
   updateReputationPolicy(input: UpdateReputationPolicyInput!): ReputationPolicy!
@@ -929,6 +1407,8 @@ type Mutation {
   updateViewerProfile(input: UpdateViewerProfileInput!): Viewer!
   updateViewerSocialLinks(input: UpdateViewerSocialLinksInput!): [UserSocialLink!]!
   verifyEmail(input: VerifyEmailInput!): LogoutResultModel!
+  voteForumPost(postId: ID!, value: Int!): ForumPostRating!
+  warnForumPostAuthor(postId: ID!, reason: String!): ForumSanctionReceipt!
   withdrawResearchRevision(input: ResearchDecisionInput!): ResearchRevisionReceipt!
 }
 
@@ -1246,6 +1726,38 @@ type PlatformAppearance {
   updatedAt: DateTime!
 }
 
+type Poll {
+  createdAt: DateTime!
+  id: ID!
+  interactionTargetId: ID!
+  maxChoices: Int!
+  options: [PollOption!]!
+  question: String!
+  totalBallots: Int!
+  viewerChoiceIds: [ID!]!
+  viewerHasVoted: Boolean!
+  visibility: PollVisibility!
+}
+
+type PollOption {
+  id: ID!
+  label: String!
+  position: Int!
+  voteCount: Int!
+}
+
+enum PollVisibility {
+  ANONYMOUS
+  OPEN
+}
+
+type PollVoterPage {
+  limit: Int!
+  page: Int!
+  total: Int!
+  voterIds: [ID!]!
+}
+
 type PresenceSummary {
   onlineCrawlers: Int!
   onlineGuests: Int!
@@ -1333,6 +1845,16 @@ type Query {
   evaluateContentGate(id: ID!): ContentGateEvaluationModel!
   followers(pagination: UsersPageInput, userId: ID!): UsersPageModel!
   following(pagination: UsersPageInput, userId: ID!): UsersPageModel!
+  forumCategories: [ForumCategory!]!
+  forumCategoryModerators(categoryId: ID!): [ForumModeratorAssignment!]!
+  forumPostRevisions(postId: ID!): [ForumPostRevision!]!
+  forumPostVotes(limit: Int! = 50, page: Int! = 1, postId: ID!): ForumPostVotePage!
+  forumPosts(limit: Int! = 20, page: Int! = 1, topicId: ID!): ForumPostPage!
+  forumRankingSettings: ForumRankingSettings!
+  forumTags(forumId: ID!): [ForumTag!]!
+  forumTopic(topicId: ID!): ForumTopic!
+  forumTopicSubscribed(topicId: ID!): Boolean!
+  forumTopics(filter: ForumTopicFilter! = ALL, forumId: ID!, limit: Int! = 20, page: Int! = 1, scope: ForumTopicScope! = ACTIVE, sort: ForumTopicSort! = LAST_ACTIVITY, tagSlug: String, topPeriod: ForumTopPeriod! = WEEK): ForumTopicPage!
   fullNews(language: String!, slug: String!): FullNews
   interactionTarget(id: ID!): InteractionTarget!
   interactionTargetAccess(capability: InteractionCapability!, targetId: ID!): InteractionAccessDecision!
@@ -1346,13 +1868,19 @@ type Query {
   mediaUploadSession(id: String!): MediaUploadSession!
   members(input: MembersDirectoryInput): MembersDirectoryPage!
   moderationAnnotations(commentId: ID, interactionTargetId: ID!): [ModerationAnnotation!]!
+  moderationSanctionJournal(limit: Int! = 20, page: Int! = 1, subjectId: ID!): StaffSanctionJournal!
+  moderationSanctionPolicy: ModerationSanctionPolicy!
+  moderationSanctionStatus(subjectId: ID!): ModerationSanctionStatus!
   news(input: NewsBrowseInput): NumberedNewsPage!
   newsComments(articleId: ID!, page: Int! = 1, pageSize: Int): NewsCommentsPage!
+  newsDiscussionTopic(articleId: ID!): ForumTopic
   newsEditorialArticle(articleId: ID!): NewsEditorialArticle!
   newsNavigation(articleId: ID!): NewsNavigation!
   newsRatingVotes(articleId: ID!, page: Int! = 1, pageSize: Int! = 20): NewsRatingVotePage!
   newsSettings: NewsSettings!
   platformAppearance: PlatformAppearance!
+  pollForTarget(interactionTargetId: ID!): Poll
+  pollOptionVoters(limit: Int! = 20, optionId: ID!, page: Int! = 1, pollId: ID!): PollVoterPage!
   presenceSummary: PresenceSummary!
   previewEditorDocument(input: PreviewEditorDocumentInput!): EditorDocumentPreview!
   profileWall(pagination: UsersPageInput, profileOwnerId: ID!): ProfileWallPage!
@@ -1361,12 +1889,19 @@ type Query {
   reactionSummary(interactionTargetId: ID!): ReactionSummary!
   reputationHistory(pagination: ReputationPageInput, userId: ID!): ReputationHistory!
   reputationPolicy: ReputationPolicy!
+  researchEditPolicy(pageId: ID!): ResearchEditPolicy!
+  researchOwnDraft(pageId: ID!): ResearchOwnDraft
+  researchOwnDrafts(limit: Int! = 50, offset: Int! = 0): [ResearchOwnDraftItem!]!
   researchPage(id: ID!): ResearchPublishedPage
+  researchPageAudience(pageId: ID!): ResearchAudiencePolicy!
   researchPageByRoute(language: String!, slug: String!): ResearchPublishedPage
   researchPageSeo(pageId: ID!): ResearchPublicIndexEntry
+  researchPendingRevision(pageId: ID!, revisionId: ID!): ResearchPendingRevision
   researchRelatedPages(limit: Int! = 10, pageId: ID!): [ResearchRelatedPage!]!
+  researchReviewQueue(limit: Int! = 50, offset: Int! = 0): [ResearchReviewItem!]!
   researchRevisionDiff(from: ID!, pageId: ID!, to: ID!): ResearchRevisionComparison
   researchRevisionHistory(limit: Int! = 20, offset: Int! = 0, pageId: ID!): [ResearchHistoryEntry!]!
+  researchRevisionReviewHistory(limit: Int! = 50, offset: Int! = 0, pageId: ID!, revisionId: ID!): [ResearchEditorialDecision!]!
   researchSitemap(after: ID, limit: Int! = 50): [ResearchPublicIndexEntry!]!
   search(page: Int! = 1, pageSize: Int! = 20, source: SharedSearchSource! = NEWS, term: String!): SearchPage!
   user(id: ID!): User!
@@ -1380,9 +1915,16 @@ type Query {
   viewerActivityFeed(input: ActivityFeedInput): ActivityFeedPage!
   viewerBookmarks(pagination: BookmarksPageInput): BookmarkPage!
   viewerCommentDrafts(limit: Int! = 20): [CommentDraft!]!
+
+  """
+  Signed-in viewer: own (AUTHORED) or followed (SUBSCRIBED) topics across visible forums.
+  """
+  viewerForumTopics(collection: ForumViewerCollection!, limit: Int! = 20, page: Int! = 1): ForumTopicPage!
   viewerNotificationPreferences: NotificationPreferences!
   viewerPrivacySettings: UserPrivacySettings!
   viewerProfileCompletion: ProfileCompletion!
+  viewerSanctionJournal(limit: Int! = 20, page: Int! = 1): ViewerSanctionJournal!
+  viewerSanctionStatus: ModerationSanctionStatus!
   viewerSessions: [AuthSession!]!
   viewerTwoFactorStatus: TwoFactorStatusModel!
 }
@@ -1500,10 +2042,21 @@ input RequestPasswordRecoveryInput {
   email: String!
 }
 
+type ResearchAudiencePolicy {
+  groupKeys: [String!]!
+  visibility: ResearchPageAudience!
+}
+
 input ResearchDecisionInput {
   pageId: ID!
   reason: String
   revisionId: ID!
+}
+
+type ResearchDiscardReceipt {
+  draftId: ID!
+  pageId: ID!
+  routeReleased: Boolean!
 }
 
 input ResearchDraftInput {
@@ -1519,12 +2072,33 @@ type ResearchDraftReceipt {
   version: Int!
 }
 
+type ResearchEditPolicy {
+  protectionLevel: ResearchEditProtection!
+  trustedEditGroupKeys: [String!]!
+}
+
+enum ResearchEditProtection {
+  GUARDIAN_ONLY
+  LOCKED
+  OPEN
+  TRUSTED
+}
+
+type ResearchEditorialDecision {
+  action: String!
+  actorId: ID!
+  createdAt: DateTime!
+  id: ID!
+  reason: String
+}
+
 type ResearchHistoryEntry {
   authorId: ID!
   createdAt: DateTime!
   editSummary: String!
   id: ID!
   number: Int!
+  publicationDecision: String
   state: String!
 }
 
@@ -1532,6 +2106,41 @@ input ResearchLifecycleInput {
   expectedPublicationGeneration: Int!
   pageId: ID!
   reason: String
+}
+
+type ResearchOwnDraft {
+  basePublishedRevisionId: ID
+  documentJson: String!
+  id: ID!
+  pageId: ID!
+  proposedSlug: String!
+  summary: String!
+  title: String!
+  updatedAt: DateTime!
+  version: Int!
+}
+
+type ResearchOwnDraftItem {
+  id: ID!
+  pageId: ID!
+  updatedAt: DateTime!
+  version: Int!
+}
+
+enum ResearchPageAudience {
+  GROUPS
+  MEMBERS
+  PUBLIC
+}
+
+type ResearchPendingRevision {
+  documentJson: String!
+  editSummary: String!
+  id: ID!
+  number: Int!
+  pageId: ID!
+  summary: String!
+  title: String!
 }
 
 type ResearchPublicIndexEntry {
@@ -1560,6 +2169,13 @@ type ResearchRelatedPage {
   language: String!
   slug: String!
   title: String!
+}
+
+type ResearchReviewItem {
+  createdAt: DateTime!
+  id: ID!
+  number: Int!
+  pageId: ID!
 }
 
 type ResearchRevisionComparison {
@@ -1625,6 +2241,11 @@ input RevokeAchievementAwardInput {
 input RevokeCustomTitleInput {
   grantId: ID!
   reason: String!
+}
+
+input RevokeModerationSanctionInput {
+  reason: String!
+  sanctionId: ID!
 }
 
 type RevokeSessionsResultModel {
@@ -1753,6 +2374,7 @@ type ShareChannelCount {
 }
 
 enum SharedSearchSource {
+  FORUM
   NEWS
   RESEARCH_LAB
 }
@@ -1781,6 +2403,31 @@ type ShortNews {
   tags: [NewsTagSummary!]!
   title: String!
   visibility: NewsVisibility!
+}
+
+type StaffSanction {
+  active: Boolean!
+  consumedAt: DateTime
+  consumedBySanctionId: ID
+  context: ModerationSanctionContext
+  expiresAt: DateTime!
+  id: ID!
+  issuedAt: DateTime!
+  issuerId: ID
+  kind: ModerationSanctionKind!
+  origin: ModerationSanctionOrigin!
+  reason: String!
+  revokeReason: String
+  revokedAt: DateTime
+  revokedById: ID
+  subjectId: ID!
+}
+
+type StaffSanctionJournal {
+  items: [StaffSanction!]!
+  limit: Int!
+  page: Int!
+  total: Int!
 }
 
 type TwoFactorConfirmationModel {
@@ -1990,6 +2637,27 @@ type Viewer {
   updatedAt: String!
   username: String!
   website: String
+}
+
+type ViewerSanction {
+  active: Boolean!
+  consumedAt: DateTime
+  context: ModerationSanctionContext
+  expiresAt: DateTime!
+  id: ID!
+  issuedAt: DateTime!
+  kind: ModerationSanctionKind!
+  origin: ModerationSanctionOrigin!
+  reason: String!
+  revokeReason: String
+  revokedAt: DateTime
+}
+
+type ViewerSanctionJournal {
+  items: [ViewerSanction!]!
+  limit: Int!
+  page: Int!
+  total: Int!
 }
 
 input ViewerSocialLinkInput {

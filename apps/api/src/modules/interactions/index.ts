@@ -30,6 +30,11 @@ export type {
   InteractionCapability,
   InteractionTarget,
 } from './domain/types/interaction-target.type';
+export {
+  POLL_COMMANDS,
+  type PollCommands,
+} from './contracts/poll-commands.contract';
+export type { CreatePoll, PollVisibility } from './domain/types/poll.type';
 export type {
   AudienceEngagementResult,
   ShareChannel,

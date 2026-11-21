@@ -63,6 +63,11 @@ import { CommentsResolver } from './presentation/graphql/resolvers/comments.reso
 import { InteractionTargetsResolver } from './presentation/graphql/resolvers/interaction-targets.resolver';
 import { ModerationResolver } from './presentation/graphql/resolvers/moderation.resolver';
 import { ReactionsResolver } from './presentation/graphql/resolvers/reactions.resolver';
+import { PollsService } from './application/services/polls.service';
+import { POLLS_REPOSITORY } from './domain/repositories/polls.repository.interface';
+import { PrismaPollsRepository } from './infrastructure/repositories/prisma-polls.repository';
+import { PollsResolver } from './presentation/graphql/resolvers/polls.resolver';
+import { POLL_COMMANDS } from './contracts/poll-commands.contract';
 
 @Module({
   imports: [PrismaModule, AuditModule, EventsModule],
@@ -86,6 +91,10 @@ import { ReactionsResolver } from './presentation/graphql/resolvers/reactions.re
     CommentsResolver,
     ReactionsService,
     ReactionsResolver,
+    PollsService,
+    PollsResolver,
+    { provide: POLL_COMMANDS, useExisting: PollsService },
+    { provide: POLLS_REPOSITORY, useClass: PrismaPollsRepository },
     AudienceEngagementService,
     AudienceEngagementResolver,
     ModerationService,
@@ -119,7 +128,11 @@ import { ReactionsResolver } from './presentation/graphql/resolvers/reactions.re
       useClass: PrismaModerationRepository,
     },
   ],
-  exports: [COMMENT_COUNT_READER, INTERACTION_POLICY_REGISTRATIONS],
+  exports: [
+    COMMENT_COUNT_READER,
+    INTERACTION_POLICY_REGISTRATIONS,
+    POLL_COMMANDS,
+  ],
 })
 export class InteractionsModule {}
 

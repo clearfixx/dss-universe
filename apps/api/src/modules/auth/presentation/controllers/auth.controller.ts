@@ -31,6 +31,7 @@ import {
   Authenticated,
   AuthUser,
   JwtAuthGuard,
+  PermittedWhileReadOnly,
   type AuthenticatedUser,
 } from '@api/core/auth';
 import {
@@ -45,6 +46,7 @@ import { AuthService } from '../../application/services/auth.service';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @PermittedWhileReadOnly()
   @Post('logout')
   @Authenticated()
   logout(@AuthUser() user: AuthenticatedUser) {

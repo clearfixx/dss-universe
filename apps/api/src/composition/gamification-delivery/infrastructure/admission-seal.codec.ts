@@ -436,10 +436,7 @@ function sourceProjection(
     codec: 'achievements.qualified.v1' as const,
     command: achievements,
   };
-  if (
-    profile.points &&
-    (profile.id === 'news.publication' || profile.id === 'comments.lifetime')
-  ) {
+  if (profile.points && profile.id !== 'reputation.qualification') {
     const input = exactRecord(inputs.POINTS, ['codec', 'command']);
     sealLiteral(input.codec, 'points.qualified.v1');
     const points = copyPointInput(input.command);
