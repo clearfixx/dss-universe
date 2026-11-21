@@ -31,6 +31,7 @@ import {
   ForumTopicThreadDocument,
   ForumTopicViewerStateDocument,
   ForumTopicsDocument,
+  ViewerForumSanctionStatusDocument,
   ViewerForumTopicsDocument,
   type ForumTopicFilter,
   type ForumTopicScope,
@@ -191,4 +192,15 @@ export async function loadForumPostRevisions(postId: string) {
     });
     return result.data?.forumPostRevisions ?? null;
   });
+}
+
+/** Read-only state of the signed-in viewer (null for guests). */
+export async function loadViewerSanctionStatus() {
+  if (!(await hasSession())) return null;
+  const result = await getClient().query({
+    query: ViewerForumSanctionStatusDocument,
+    context: await authContext(),
+    fetchPolicy: "no-cache",
+  });
+  return result.data?.viewerSanctionStatus ?? null;
 }

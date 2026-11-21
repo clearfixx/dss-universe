@@ -512,3 +512,13 @@ export async function getForumPostVoters(postId: string, page = 1) {
     return loadForumPostVotes(postId, page);
   });
 }
+
+/** Curated, active tags of a section for the topic form. */
+export async function getForumSectionTags(forumId: string) {
+  return forumResult(async () => {
+    const { loadForumTags } = await import("./forum-data");
+    return (await loadForumTags(forumId))
+      .filter((tag) => tag.active)
+      .map(({ id, slug, label }) => ({ id, slug, label }));
+  });
+}

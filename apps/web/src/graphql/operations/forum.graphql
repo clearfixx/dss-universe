@@ -335,3 +335,10 @@ mutation SetForumTopicTags($topicId: ID!, $tagIds: [ID!]!) {
     ...ForumTopicSummary
   }
 }
+
+query ViewerForumSanctionStatus {
+  viewerSanctionStatus {
+    activeWarnings
+    readOnlyUntil
+  }
+}

@@ -127,7 +127,12 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
                 <span aria-hidden="true">›</span>
                 <span>{forum.category}</span>
                 <span aria-hidden="true">›</span>
-                <span className="text-slate-200">{forum.title}</span>
+                <Link
+                  href={`/community/forum/${forum.id}`}
+                  className="text-slate-200 hover:text-white"
+                >
+                  {forum.title}
+                </Link>
               </>
             ) : null}
           </nav>
