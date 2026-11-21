@@ -122,5 +122,22 @@ describe("breadcrumb rendering", () => {
     expect(settings).toContain('aria-current="page"');
     expect(settings).not.toContain('href="/settings/platform-appearance"');
   });
+  it("renders a route-owned trail with the last item as the current page", () => {
+    const html = renderToStaticMarkup(
+      createElement(Breadcrumbs, {
+        pathname: "/community/forum/topics/t1",
+        trail: [
+          { href: "/community", label: "Спільнота" },
+          { href: "/community/forum/f1", label: "Next.js" },
+          { href: "/community/forum/topics/t1", label: "Тема" },
+        ],
+      }),
+    );
+    expect(html).toContain('href="/community"');
+    expect(html).toContain('href="/community/forum/f1"');
+    expect(html).not.toContain('href="/community/forum/topics/t1"');
+    expect(html).toContain('aria-current="page"');
+    expect(html).toContain('aria-label="DSS Universe"');
+  });
 
 });
