@@ -1368,6 +1368,7 @@ type Query {
   researchReviewQueue(limit: Int! = 50, offset: Int! = 0): [ResearchReviewItem!]!
   researchRevisionDiff(from: ID!, pageId: ID!, to: ID!): ResearchRevisionComparison
   researchRevisionHistory(limit: Int! = 20, offset: Int! = 0, pageId: ID!): [ResearchHistoryEntry!]!
+  researchRevisionReviewHistory(limit: Int! = 50, offset: Int! = 0, pageId: ID!, revisionId: ID!): [ResearchEditorialDecision!]!
   researchSitemap(after: ID, limit: Int! = 50): [ResearchPublicIndexEntry!]!
   search(page: Int! = 1, pageSize: Int! = 20, source: SharedSearchSource! = NEWS, term: String!): SearchPage!
   user(id: ID!): User!
@@ -1541,6 +1542,14 @@ enum ResearchEditProtection {
   LOCKED
   OPEN
   TRUSTED
+}
+
+type ResearchEditorialDecision {
+  action: String!
+  actorId: ID!
+  createdAt: DateTime!
+  id: ID!
+  reason: String
 }
 
 type ResearchHistoryEntry {
