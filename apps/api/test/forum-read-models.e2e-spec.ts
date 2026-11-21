@@ -307,4 +307,53 @@ describe('Forum UI read models (e2e)', () => {
     await expect(loaders.for(guest).votes.load('p1')).resolves.toBeNull();
     expect(calls.votes).toBe(1);
   });
+
+  it('follows the last VISIBLE post through hide, delete, restore and purge', async () => {
+    const f = await forum();
+    const opener = await user();
+    const replier = await user();
+    const { topic } = await topics.createTopic(opener, {
+      forumId: f.forumId,
+      kind: 'DISCUSSION',
+      title: 'Activity',
+      documentJson: 'x',
+    });
+    const last = await topics.reply(replier, {
+      topicId: topic.id,
+      documentJson: 'last reply',
+      replyToNumber: null,
+      quotedNumbers: [],
+    });
+    const activity = async () =>
+      (await reads.forumStats([f.forumId])).get(f.forumId)!;
+    const expectLast = async (
+      number: number,
+      author: string,
+      posts: number,
+    ) => {
+      const stats = await activity();
+      expect(stats.postCount).toBe(posts);
+      expect(stats.lastTopic).toMatchObject({
+        id: topic.id,
+        lastPostNumber: number,
+        lastPostAuthorId: author,
+      });
+    };
+
+    await expectLast(2, replier, 2);
+    await moderation.hidePost(f.moderator, last.id, 'Off-topic');
+    await expectLast(1, opener, 1);
+    await moderation.restorePost(f.moderator, last.id);
+    await expectLast(2, replier, 2);
+    await moderation.deletePost(f.moderator, last.id, 'Spam');
+    await expectLast(1, opener, 1);
+    await moderation.restorePost(f.moderator, last.id);
+    await expectLast(2, replier, 2);
+
+    const admin = await user({ canPurgeContent: true });
+    await moderation.purgePost(admin, last.id, 'Leaked secret');
+    const after = await activity();
+    expect(after.lastTopic?.lastPostNumber).toBe(1);
+    expect(after.lastTopic?.lastPostAt).toEqual(topic.createdAt);
+  });
 });
