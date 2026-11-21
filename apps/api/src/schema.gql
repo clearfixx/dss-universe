@@ -668,6 +668,20 @@ type ForumSubforum {
   title: String!
 }
 
+type ForumTag {
+  active: Boolean!
+  forumId: ID!
+  id: ID!
+  label: String!
+  slug: String!
+}
+
+input ForumTagInput {
+  active: Boolean! = true
+  label: String!
+  slug: String!
+}
+
 enum ForumTopPeriod {
   ALL
   DAY
@@ -677,6 +691,7 @@ enum ForumTopPeriod {
 }
 
 type ForumTopic {
+  acceptedAnswerPostId: ID
   authorId: ID!
   createdAt: DateTime!
   curatorId: ID
@@ -692,6 +707,7 @@ type ForumTopic {
   ratingDown: Int!
   ratingUp: Int!
   state: ForumTopicState!
+  tags: [ForumTopicTag!]!
   title: String!
   viewCount: Int!
 
@@ -716,6 +732,19 @@ type ForumTopicPage {
   total: Int!
 }
 
+input ForumTopicPollInput {
+  maxChoices: Int! = 1
+  options: [String!]!
+  question: String!
+
+  """OPEN or ANONYMOUS"""
+  visibility: String! = "OPEN"
+}
+
+type ForumTopicPollReceipt {
+  pollId: ID!
+}
+
 enum ForumTopicScope {
   ACTIVE
   ARCHIVED
@@ -734,6 +763,12 @@ enum ForumTopicState {
   CLOSED
   OPEN
   TRASHED
+}
+
+type ForumTopicTag {
+  id: ID!
+  label: String!
+  slug: String!
 }
 
 enum ForumVisibility {
@@ -1165,11 +1200,13 @@ type ModerationSanctionStatus {
 
 type Mutation {
   abortMediaUpload(id: String!): MediaUploadSession!
+  acceptForumAnswer(postId: ID!, topicId: ID!): ForumTopic!
   addForumStaffNote(body: String!, postId: ID!): ForumStaffNote!
   approveNews(input: NewsDecisionInput!): NewsEditorialTransition!
   archiveForumTopic(topicId: ID!): ForumTopic!
   archiveResearchPage(input: ResearchLifecycleInput!): Boolean!
   assignForumCategoryModerator(categoryId: ID!, moderatorId: ID!): ForumModeratorAssignment!
+  attachForumTopicPoll(input: ForumTopicPollInput!, topicId: ID!): ForumTopicPollReceipt!
   awardAchievement(input: ManualAchievementAwardInput!): AchievementAward!
   beginViewerTwoFactorSetup: TwoFactorSetupModel!
   blockUser(userId: ID!): UserBlockResult!
@@ -1177,6 +1214,7 @@ type Mutation {
   castPollBallot(input: CastPollBallotInput!): Poll!
   changeViewerEmail(input: ChangeEmailInput!): LogoutResultModel!
   changeViewerPassword(input: ChangePasswordInput!): LogoutResultModel!
+  clearForumAcceptedAnswer(topicId: ID!): ForumTopic!
   clearReaction(interactionTargetId: ID!): ReactionSummary!
   closeForumTopic(topicId: ID!): ForumTopic!
   confirmViewerTwoFactorSetup(input: ConfirmTwoFactorInput!): TwoFactorConfirmationModel!
@@ -1186,6 +1224,7 @@ type Mutation {
   createForum(input: ForumInput!): Forum!
   createForumCategory(input: ForumCategoryInput!): ForumCategory!
   createForumReply(input: CreateForumReplyInput!): ForumPost!
+  createForumTag(forumId: ID!, input: ForumTagInput!): ForumTag!
   createForumTopic(input: CreateForumTopicInput!): ForumTopicCreated!
   createModerationAnnotation(input: CreateModerationAnnotationInput!): ModerationAnnotation!
   createNewsDraft(input: CreateNewsDraftInput!): NewsEditorialArticle!
@@ -1263,6 +1302,7 @@ type Mutation {
   selectCustomTitle(grantId: ID!): UserTitleGrant!
   selfPublishResearchDraft(input: ResearchSubmitInput!): ResearchRevisionReceipt!
   setForumTopicPinned(pinned: Boolean!, topicId: ID!): ForumTopic!
+  setForumTopicTags(tagIds: [ID!]!, topicId: ID!): ForumTopic!
   setNewsPin(input: SetNewsPinInput!): ManagedNewsPin!
   setReaction(input: SetReactionInput!): SetReactionPayload!
   setResearchEditProtection(level: ResearchEditProtection!, pageId: ID!): ResearchEditPolicy!
@@ -1284,6 +1324,7 @@ type Mutation {
   updateForum(forumId: ID!, input: ForumInput!): Forum!
   updateForumCategory(categoryId: ID!, input: ForumCategoryInput!): ForumCategory!
   updateForumRankingSettings(input: ForumRankingSettingsInput!): ForumRankingSettings!
+  updateForumTag(input: ForumTagInput!, tagId: ID!): ForumTag!
   updateLevelDefinition(input: UpdateLevelDefinitionInput!): LevelDefinition!
   updateModerationSanctionPolicy(input: ModerationSanctionPolicyInput!): ModerationSanctionPolicy!
   updateNewsSettings(input: UpdateNewsSettingsInput!): NewsSettings!
@@ -1729,8 +1770,9 @@ type Query {
   forumPostVotes(limit: Int! = 50, page: Int! = 1, postId: ID!): ForumPostVotePage!
   forumPosts(limit: Int! = 20, page: Int! = 1, topicId: ID!): ForumPostPage!
   forumRankingSettings: ForumRankingSettings!
+  forumTags(forumId: ID!): [ForumTag!]!
   forumTopic(topicId: ID!): ForumTopic!
-  forumTopics(forumId: ID!, limit: Int! = 20, page: Int! = 1, scope: ForumTopicScope! = ACTIVE, sort: ForumTopicSort! = LAST_ACTIVITY, topPeriod: ForumTopPeriod! = WEEK): ForumTopicPage!
+  forumTopics(forumId: ID!, limit: Int! = 20, page: Int! = 1, scope: ForumTopicScope! = ACTIVE, sort: ForumTopicSort! = LAST_ACTIVITY, tagSlug: String, topPeriod: ForumTopPeriod! = WEEK): ForumTopicPage!
   fullNews(language: String!, slug: String!): FullNews
   interactionTarget(id: ID!): InteractionTarget!
   interactionTargetAccess(capability: InteractionCapability!, targetId: ID!): InteractionAccessDecision!

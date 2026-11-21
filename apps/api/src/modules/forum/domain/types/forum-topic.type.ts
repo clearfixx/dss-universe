@@ -73,6 +73,8 @@ export type ForumTopicSummary = {
   viewCount: number;
   /** Furthest post number the viewer has read; null for guests. */
   viewerLastReadNumber: number | null;
+  acceptedAnswerPostId: string | null;
+  tags: Array<{ id: string; slug: string; label: string }>;
 };
 
 export type ForumPostView = {
