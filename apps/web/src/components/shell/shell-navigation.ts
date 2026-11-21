@@ -208,3 +208,13 @@ export function visibleModules(
       (!item.requiresAdminDeck || (hasSession && canAccessAdminDeck)),
   );
 }
+
+/**
+ * Owner decision (2026-11-21): planned modules appear in the navbar as inert
+ * "скоро" placeholders until their pages ship. They never become routes.
+ */
+export const COMING_SOON_MODULES: readonly string[] = [
+  "Академія",
+  "Завантаження",
+  "База знань",
+];
