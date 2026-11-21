@@ -600,6 +600,9 @@ for (const [moduleName, expected] of [
       "ACTOR_ACTIVITY_READER",
       "ActorActivityReader",
       "ActorActivitySummary",
+      "ACTIVITY_SUBJECT_VISIBILITY",
+      "ActivitySubjectRef",
+      "ActivitySubjectVisibilityReader",
     ],
   ],
   [
