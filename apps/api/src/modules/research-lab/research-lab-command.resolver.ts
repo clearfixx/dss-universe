@@ -233,6 +233,14 @@ export class ResearchLabCommandResolver {
   ) {
     return this.execute(this.workflow.editPolicy(actor.id, pageId));
   }
+  @Query(() => ResearchAudiencePolicy)
+  researchPageAudience(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('pageId', { type: () => ID }) pageId: string,
+  ) {
+    return this.execute(this.workflow.audiencePolicy(actor.id, pageId));
+  }
+
   @Mutation(() => ResearchAudiencePolicy)
   setResearchPageAudience(
     @AuthUser() actor: AuthenticatedUser,

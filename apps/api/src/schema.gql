@@ -1360,6 +1360,7 @@ type Query {
   researchOwnDraft(pageId: ID!): ResearchOwnDraft
   researchOwnDrafts(limit: Int! = 50, offset: Int! = 0): [ResearchOwnDraftItem!]!
   researchPage(id: ID!): ResearchPublishedPage
+  researchPageAudience(pageId: ID!): ResearchAudiencePolicy!
   researchPageByRoute(language: String!, slug: String!): ResearchPublishedPage
   researchPageSeo(pageId: ID!): ResearchPublicIndexEntry
   researchPendingRevision(pageId: ID!, revisionId: ID!): ResearchPendingRevision

@@ -250,6 +250,13 @@ describe('Research Lab commands (e2e)', () => {
     await expect(
       service.setAudience(outsider, pageId, 'PUBLIC', []),
     ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    expect(await service.audiencePolicy(moderator, pageId)).toEqual({
+      visibility: 'GROUPS',
+      groupKeys: ['editors'],
+    });
+    await expect(
+      service.audiencePolicy(outsider, pageId),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' });
     const audit = await fixture.prisma.auditRecord.findMany({
       where: { targetId: pageId, action: 'research_lab.audience_updated' },
     });

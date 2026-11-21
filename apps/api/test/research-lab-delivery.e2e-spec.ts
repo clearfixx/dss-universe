@@ -152,6 +152,21 @@ describe('Research Lab public delivery (GraphQL)', () => {
       displayName: 'Viewer',
       password: 'research-fixture-123',
     });
+    const currentAudience = async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/graphql')
+        .set('Authorization', 'Bearer ' + member.tokens.accessToken)
+        .send({
+          query:
+            'query($id:ID!){researchPageAudience(pageId:$id){visibility groupKeys}}',
+          variables: { id },
+        })
+        .expect(200);
+      return payload(response);
+    };
+    expect((await currentAudience()).errors[0].extensions.code).toBe(
+      'FORBIDDEN',
+    );
     const restrict = async () =>
       request(app.getHttpServer())
         .post('/api/graphql')
@@ -175,6 +190,9 @@ describe('Research Lab public delivery (GraphQL)', () => {
     });
     await fixture.prisma.userPermission.create({
       data: { userId: member.user.id, permissionId: permission.id },
+    });
+    expect(await currentAudience()).toEqual({
+      data: { researchPageAudience: { visibility: 'PUBLIC', groupKeys: [] } },
     });
     expect(payload(await restrict())).toEqual({
       data: {
