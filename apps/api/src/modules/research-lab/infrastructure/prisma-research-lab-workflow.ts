@@ -130,6 +130,48 @@ export class ResearchLabService {
     });
   }
 
+  async audiencePolicy(actorId: string, pageId: string) {
+    return this.prisma.$transaction(
+      (tx) => this.readAudience(tx, actorId, pageId),
+      { isolationLevel: 'RepeatableRead' },
+    );
+  }
+
+  private async readAudience(
+    tx: TransactionClient,
+    actorId: string,
+    pageId: string,
+  ) {
+    const at = new Date();
+    if (!(await this.authority.canModerate(actorId, at))) {
+      throw new ResearchLabCommandError(
+        'ACCESS_DENIED',
+        'Research Lab moderation permission required.',
+      );
+    }
+    const facts = await this.requireAuthenticated(actorId);
+    const page = await tx.researchPage.findFirst({
+      where: {
+        id: pageId,
+        state: { in: ['ACTIVE', 'ARCHIVED'] },
+        publishedRevision: { is: { state: 'PUBLISHED' } },
+        ...researchAudience(facts.groups, true),
+      },
+      select: {
+        visibility: true,
+        audienceGroups: {
+          select: { groupKey: true },
+          orderBy: { groupKey: 'asc' },
+        },
+      },
+    });
+    if (!page) this.notFound('Published page');
+    return {
+      visibility: page.visibility,
+      groupKeys: page.audienceGroups.map((group) => group.groupKey),
+    };
+  }
+
   async setAudience(
     actorId: string,
     pageId: string,
@@ -138,30 +180,7 @@ export class ResearchLabService {
   ) {
     return this.prisma.$transaction(async (tx) => {
       await this.lockPage(tx, pageId);
-      const at = new Date();
-      if (!(await this.authority.canModerate(actorId, at))) {
-        throw new ResearchLabCommandError(
-          'ACCESS_DENIED',
-          'Research Lab moderation permission required.',
-        );
-      }
-      const facts = await this.requireAuthenticated(actorId);
-      const page = await tx.researchPage.findFirst({
-        where: {
-          id: pageId,
-          state: { in: ['ACTIVE', 'ARCHIVED'] },
-          publishedRevision: { is: { state: 'PUBLISHED' } },
-          ...researchAudience(facts.groups, true),
-        },
-        select: {
-          visibility: true,
-          audienceGroups: {
-            select: { groupKey: true },
-            orderBy: { groupKey: 'asc' },
-          },
-        },
-      });
-      if (!page) this.notFound('Published page');
+      const page = await this.readAudience(tx, actorId, pageId);
       const keys = [...new Set(groupKeys)].sort();
       if (
         (visibility === 'GROUPS') !== keys.length > 0 ||
@@ -172,7 +191,7 @@ export class ResearchLabService {
           'Supply group keys only for a group audience, with at least one key.',
         );
       }
-      const previous = page.audienceGroups.map((group) => group.groupKey);
+      const previous = page.groupKeys;
       if (
         page.visibility !== visibility ||
         previous.join(',') !== keys.join(',')
@@ -812,6 +831,46 @@ export class ResearchLabService {
     const { document, ...metadata } = revision;
     const view = await this.delivery.project(JSON.stringify(document), actorId);
     return { ...metadata, documentJson: view.documentJson };
+  }
+
+  async reviewHistory(
+    actorId: string,
+    pageId: string,
+    revisionId: string,
+    offset = 0,
+    limit = 50,
+  ) {
+    const facts = await this.requireAuthenticated(actorId);
+    return this.prisma.researchReviewDecision.findMany({
+      where: {
+        pageId,
+        revisionId,
+        page: {
+          state: { in: ['DRAFT', 'ACTIVE', 'ARCHIVED'] },
+          ...researchAudience(facts.groups, true),
+        },
+        revision: facts.guardian ? undefined : { authorId: actorId },
+        action: {
+          in: [
+            'SUBMITTED',
+            'CHANGES_REQUESTED',
+            'REJECTED',
+            'PUBLISHED',
+            'WITHDRAWN',
+          ],
+        },
+      },
+      select: {
+        id: true,
+        actorId: true,
+        action: true,
+        reason: true,
+        createdAt: true,
+      },
+      orderBy: [{ createdAt: 'asc' }, { action: 'asc' }, { id: 'asc' }],
+      skip: offset,
+      take: limit,
+    });
   }
 
   async reviewQueue(actorId: string, offset = 0, limit = 50) {
