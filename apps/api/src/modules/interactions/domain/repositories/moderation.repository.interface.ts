@@ -60,6 +60,7 @@ export interface ModerationRepository {
     interactionTargetId: string,
     commentId: string | null,
   ): Promise<ModerationAnnotation[]>;
+  findActiveAnnotationTargetId(annotationId: string): Promise<string | null>;
   revokeAnnotation(
     annotationId: string,
     actorId: string,

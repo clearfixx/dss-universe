@@ -69,6 +69,9 @@ describe('ModerationService', () => {
       reviewReport: jest.fn().mockResolvedValue(report),
       createAnnotation: jest.fn().mockResolvedValue(annotation),
       listAnnotations: jest.fn().mockResolvedValue([annotation]),
+      findActiveAnnotationTargetId: jest
+        .fn()
+        .mockResolvedValue(annotation.interactionTargetId),
       revokeAnnotation: jest.fn().mockResolvedValue(annotation),
     };
     comments = {
@@ -147,6 +150,33 @@ describe('ModerationService', () => {
         'Repeated promotion.',
       ),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('requires current target visibility to add or revoke an annotation', async () => {
+    targets.authorize.mockResolvedValue({ allowed: false } as never);
+    await expect(
+      service.annotate(
+        'moderator-1',
+        'target-1',
+        'comment-1',
+        'WARNING',
+        'Community rules',
+        null,
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(
+      service.revokeAnnotation('annotation-1', 'moderator-1', 'Correction'),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(targets.authorize.mock.calls).toEqual(
+      Array(2).fill([
+        'target-1',
+        { kind: 'AUTHENTICATED', subjectId: 'moderator-1' },
+        'READ',
+      ]),
+    );
+    expect(comments.findById.mock.calls).toHaveLength(0);
+    expect(repository.createAnnotation.mock.calls).toHaveLength(0);
+    expect(repository.revokeAnnotation.mock.calls).toHaveLength(0);
   });
 
   it('rejects annotation expiration in the past', async () => {
