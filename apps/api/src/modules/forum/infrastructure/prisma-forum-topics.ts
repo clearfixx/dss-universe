@@ -60,6 +60,7 @@ import {
   type ForumPostView,
   type ForumTopicKind,
   type ForumStaffNoteView,
+  type ForumTopicFacets,
   type ForumTopicFilter,
   type ForumViewerCollection,
   type ForumTopicScope,
@@ -383,6 +384,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     topPeriod: ForumTopPeriod = 'WEEK',
     tagSlug: string | null = null,
     filter: ForumTopicFilter = 'ALL',
+    kind: ForumTopicKind | null = null,
   ): Promise<ForumPage<ForumTopicSummary>> {
     const viewer = await this.viewers.read(viewerId, new Date());
     const forum = await this.visibleForum(forumId, viewer);
@@ -413,6 +415,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
             ? 'ARCHIVED'
             : 'TRASHED',
       ...filterWhere,
+      ...(kind ? { kind } : {}),
     };
     const since = sort === 'TOP' ? topPeriodStart(topPeriod, new Date()) : null;
     if (since) where.createdAt = { gte: since };
@@ -431,6 +434,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
             take,
             filter,
             viewer.subjectId,
+            kind,
           )
         : this.prisma.forumTopic.findMany({
             where,
@@ -648,6 +652,74 @@ export class ForumTopicsService implements ForumInteractionDecisions {
   }
 
   /**
+   * Counts for one section's filter panel: by type and status among live
+   * (open and closed) topics, archived topics, the viewer's own topics and
+   * the number of distinct members with a visible post in a live topic.
+   */
+  async facets(
+    viewerId: string | null,
+    forumId: string,
+  ): Promise<ForumTopicFacets> {
+    const viewer = await this.viewers.read(viewerId, new Date());
+    await this.visibleForum(forumId, viewer);
+    const live: Prisma.ForumTopicWhereInput = {
+      forumId,
+      mergedIntoTopicId: null,
+      state: { in: ['OPEN', 'CLOSED'] },
+    };
+    const count = (where: Prisma.ForumTopicWhereInput) =>
+      this.prisma.forumTopic.count({ where: { ...live, ...where } });
+    const [
+      total,
+      questions,
+      accepted,
+      unsolved,
+      noReplies,
+      closed,
+      archived,
+      mine,
+      participants,
+    ] = await Promise.all([
+      count({}),
+      count({ kind: 'QUESTION' }),
+      count({ acceptedAnswerPostId: { not: null } }),
+      count({ kind: 'QUESTION', acceptedAnswerPostId: null }),
+      count({ postCount: 1 }),
+      count({ state: 'CLOSED' }),
+      this.prisma.forumTopic.count({
+        where: { forumId, mergedIntoTopicId: null, state: 'ARCHIVED' },
+      }),
+      viewer.subjectId ? count({ authorId: viewer.subjectId }) : null,
+      this.prisma.$queryRaw<Array<{ count: bigint }>>`
+        SELECT COUNT(DISTINCT p."authorId") AS "count"
+        FROM "forum_posts" p
+        JOIN "forum_topics" t ON t."id" = p."topicId"
+        WHERE t."forumId" = ${forumId}
+          AND t."mergedIntoTopicId" IS NULL
+          AND t."state"::text IN ('OPEN', 'CLOSED')
+          AND p."state"::text = 'VISIBLE'`,
+    ]);
+    return {
+      total,
+      questions,
+      discussions: total - questions,
+      accepted,
+      unsolved,
+      noReplies,
+      closed,
+      archived,
+      mine,
+      participants: Number(participants[0]?.count ?? 0),
+    };
+  }
+
+  /** Throws NOT_FOUND unless the viewer may see the section. */
+  async assertVisibleForum(viewerId: string, forumId: string): Promise<void> {
+    const viewer = await this.authenticated(viewerId);
+    await this.visibleForum(forumId, viewer);
+  }
+
+  /**
    * The signed-in viewer's own or followed topics across every forum they can
    * see right now; trashed and merged topics are excluded.
    */
@@ -666,12 +738,22 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       state: { in: ['OPEN', 'CLOSED', 'ARCHIVED'] },
       ...(collection === 'AUTHORED'
         ? { authorId: viewerId }
-        : { subscriptions: { some: { userId: viewerId } } }),
+        : collection === 'SUBSCRIBED'
+          ? { subscriptions: { some: { userId: viewerId } } }
+          : {
+              state: { in: ['OPEN', 'CLOSED'] },
+              forum: { followers: { some: { userId: viewerId } } },
+            }),
     };
     const [rows, total] = await Promise.all([
       this.prisma.forumTopic.findMany({
         where,
-        orderBy: [{ lastPostAt: 'desc' }, { id: 'desc' }],
+        orderBy: [
+          collection === 'FOLLOWED_SECTIONS'
+            ? { createdAt: 'desc' }
+            : { lastPostAt: 'desc' },
+          { id: 'desc' },
+        ],
         skip,
         take,
       }),
@@ -1206,7 +1288,11 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     take: number,
     filter: ForumTopicFilter = 'ALL',
     viewerId: string | null = null,
+    kind: ForumTopicKind | null = null,
   ): Promise<ForumTopic[]> {
+    const kindSql = kind
+      ? Prisma.sql`AND "kind"::text = ${kind}`
+      : Prisma.empty;
     const filterSql =
       filter === 'MINE'
         ? Prisma.sql`AND "authorId" = ${viewerId}`
@@ -1240,6 +1326,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
           WHERE tt."topicId" = "forum_topics"."id" AND g."slug" = ${tagSlug}
         ))
         ${filterSql}
+        ${kindSql}
       ORDER BY "pinned" DESC, ${order} DESC, "createdAt" DESC, "id" DESC
       LIMIT ${take} OFFSET ${skip}`;
     const rows = await this.prisma.forumTopic.findMany({

@@ -6,7 +6,8 @@
  * 📄 File: apps/api/src/modules/forum/presentation/forum-integrations.resolver.ts
  *
  * 🎯 Purpose:
- * Thin GraphQL transport for topic subscriptions and News discussion links.
+ * Thin GraphQL transport for topic subscriptions, section follows and News
+ * discussion links.
  *
  * ⚠️ Important:
  * Subscribing is not a content write, so read-only users keep it.
@@ -69,6 +70,39 @@ export class ForumIntegrationsResolver {
   ) {
     return this.execute(
       this.integrations.isSubscribed(ctx.req.user?.id ?? null, topicId),
+    );
+  }
+
+  @Mutation(() => Boolean, {
+    description: 'Follow a section to learn about its new topics.',
+  })
+  @UseGuards(JwtAuthGuard)
+  @PermittedWhileReadOnly()
+  followForum(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('forumId', { type: () => ID }) forumId: string,
+  ) {
+    return this.execute(this.integrations.followForum(actor.id, forumId));
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(JwtAuthGuard)
+  @PermittedWhileReadOnly()
+  unfollowForum(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('forumId', { type: () => ID }) forumId: string,
+  ) {
+    return this.execute(this.integrations.unfollowForum(actor.id, forumId));
+  }
+
+  @Query(() => Boolean)
+  @UseGuards(OptionalViewerJwtGuard)
+  forumFollowed(
+    @Context() ctx: RequestContext,
+    @Args('forumId', { type: () => ID }) forumId: string,
+  ) {
+    return this.execute(
+      this.integrations.isFollowingForum(ctx.req.user?.id ?? null, forumId),
     );
   }
 

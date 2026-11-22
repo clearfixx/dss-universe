@@ -12,7 +12,7 @@
  * ===============================================================
  */
 
-export type LeaderboardPeriod = 'MONTH' | 'YEAR' | 'ALL_TIME';
+export type LeaderboardPeriod = 'WEEK' | 'MONTH' | 'YEAR' | 'ALL_TIME';
 
 export type LeaderboardWindow = {
   period: LeaderboardPeriod;
