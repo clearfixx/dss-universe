@@ -54,8 +54,26 @@ export const FORUM_TOPIC_FILTERS = [
 export type ForumTopicFilter = (typeof FORUM_TOPIC_FILTERS)[number];
 
 /** Cross-forum personal lists of the signed-in viewer. */
-export const FORUM_VIEWER_COLLECTIONS = ['AUTHORED', 'SUBSCRIBED'] as const;
+export const FORUM_VIEWER_COLLECTIONS = [
+  'AUTHORED',
+  'SUBSCRIBED',
+  'FOLLOWED_SECTIONS',
+] as const;
 export type ForumViewerCollection = (typeof FORUM_VIEWER_COLLECTIONS)[number];
+
+/** Topic counts of one section for the filter panel and its header. */
+export type ForumTopicFacets = {
+  total: number;
+  questions: number;
+  discussions: number;
+  accepted: number;
+  unsolved: number;
+  noReplies: number;
+  closed: number;
+  archived: number;
+  mine: number | null;
+  participants: number;
+};
 
 export const FORUM_TOPIC_SORTS = [
   'LAST_ACTIVITY',

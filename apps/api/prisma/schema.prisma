@@ -438,6 +438,7 @@ model User {
   forumTopicViews         ForumTopicView[]
   forumTopicReadStates    ForumTopicReadState[]
   forumSubscriptions      ForumTopicSubscription[]
+  forumFollows            ForumFollow[]
   forumNewsLinks          ForumNewsDiscussion[]
   communityMissions       CommunityMission[]
   communityEvents         CommunityEvent[]
@@ -2744,6 +2745,7 @@ model Forum {
   category  ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   parent    Forum?        @relation("ForumSubforums", fields: [parentId], references: [id], onDelete: Restrict)
   subforums Forum[]       @relation("ForumSubforums")
+  followers ForumFollow[]
 
   @@unique([categoryId, slug])
   @@index([categoryId, parentId, position, id])
@@ -2989,6 +2991,20 @@ model ForumTopicSubscription {
   @@id([userId, topicId])
   @@index([topicId, createdAt])
   @@map("forum_topic_subscriptions")
+}
+
+/// A member follows a section to learn about its new topics (CH-6).
+model ForumFollow {
+  userId    String
+  forumId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  forum Forum @relation(fields: [forumId], references: [id], onDelete: Cascade)
+
+  @@id([userId, forumId])
+  @@index([forumId, createdAt])
+  @@map("forum_follows")
 }
 
 model ForumNewsDiscussion {
