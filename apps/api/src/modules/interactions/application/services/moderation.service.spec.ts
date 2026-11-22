@@ -174,9 +174,9 @@ describe('ModerationService', () => {
         'READ',
       ]),
     );
-    expect(comments.findById).not.toHaveBeenCalled();
-    expect(repository.createAnnotation).not.toHaveBeenCalled();
-    expect(repository.revokeAnnotation).not.toHaveBeenCalled();
+    expect(comments.findById.mock.calls).toHaveLength(0);
+    expect(repository.createAnnotation.mock.calls).toHaveLength(0);
+    expect(repository.revokeAnnotation.mock.calls).toHaveLength(0);
   });
 
   it('rejects annotation expiration in the past', async () => {
