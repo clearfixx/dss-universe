@@ -2751,6 +2751,18 @@ model Forum {
   showCounts         Boolean  @default(true)
   /// Maximum pinned topics; null = no limit.
   pinnedLimit        Int?
+  /// Largest attachment in MB; null = the platform media limit.
+  attachmentMaxMb    Int?
+  /// Allowed file extensions (lower case, no dot); empty = any.
+  attachmentFormats  String[] @default([])
+  /// Close open topics without new posts for this many days; null = off.
+  autoCloseDays      Int?
+  /// Lowest forum role that sees hidden blocks unlocked by their conditions.
+  gateViewRole       ForumAccessRole @default(GUEST)
+  /// Lowest forum role that may insert hidden blocks.
+  gateCreateRole     ForumAccessRole @default(MEMBER)
+  /// Block kinds allowed inside hidden blocks: TEXT, CODE, MEDIA, FILES.
+  gateBlockTypes     String[] @default(["TEXT", "CODE", "MEDIA", "FILES"])
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
@@ -2866,6 +2878,7 @@ model ForumTopic {
   @@index([forumId, pinned, lastPostAt, id])
   @@index([forumId, pinned, createdAt, id])
   @@index([authorId, createdAt])
+  @@index([forumId, state, lastPostAt], map: "forum_topics_autoclose_idx")
   @@map("forum_topics")
 }
 

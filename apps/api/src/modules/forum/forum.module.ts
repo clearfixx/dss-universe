@@ -48,6 +48,10 @@ import { ForumViewerFactsAdapter } from './infrastructure/forum-viewer-facts.ada
 import { ForumStructureService } from './infrastructure/prisma-forum-structure';
 import { ForumStructureResolver } from './presentation/forum-structure.resolver';
 
+import {
+  ForumAutoCloseRunner,
+  ForumAutoCloseService,
+} from './infrastructure/forum-auto-close.service';
 @Module({
   imports: [
     AuthorizationModule,
@@ -80,6 +84,8 @@ import { ForumStructureResolver } from './presentation/forum-structure.resolver'
     ForumOperationsResolver,
     ForumIntegrationsService,
     ForumIntegrationsResolver,
+    ForumAutoCloseService,
+    ForumAutoCloseRunner,
     { provide: FORUM_SEARCH_SOURCE, useClass: PrismaForumSearch },
     { provide: FORUM_INTERACTION_DECISIONS, useExisting: ForumTopicsService },
   ],

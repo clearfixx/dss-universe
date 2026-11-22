@@ -571,8 +571,14 @@ type Forum {
   allowReplies: Boolean!
   allowTopics: Boolean!
   allowsGatedContent: Boolean!
+  attachmentFormats: [String!]!
+  attachmentMaxMb: Int
+  autoCloseDays: Int
   categoryId: ID!
   description: String
+  gateBlockTypes: [ForumGateBlockType!]!
+  gateCreateRole: ForumAccessRole!
+  gateViewRole: ForumAccessRole!
   id: ID!
   listed: Boolean!
   parentId: ID
@@ -685,6 +691,14 @@ enum ForumDiscoverSort {
   NEW
 }
 
+"""Content kinds allowed inside hidden blocks."""
+enum ForumGateBlockType {
+  CODE
+  FILES
+  MEDIA
+  TEXT
+}
+
 type ForumHubStats {
   forumCount: Int!
 
@@ -703,8 +717,20 @@ input ForumInput {
   allowReplies: Boolean! = true
   allowTopics: Boolean! = true
   allowsGatedContent: Boolean! = false
+
+  """Allowed extensions (pdf, zip…); empty = any."""
+  attachmentFormats: [String!]! = []
+
+  """Largest attachment in MB; empty = platform limit."""
+  attachmentMaxMb: Int
+
+  """Close open topics inactive for N days; empty = off."""
+  autoCloseDays: Int
   categoryId: ID!
   description: String
+  gateBlockTypes: [ForumGateBlockType!]! = [TEXT, CODE, MEDIA, FILES]
+  gateCreateRole: ForumAccessRole! = MEMBER
+  gateViewRole: ForumAccessRole! = GUEST
 
   """false = unlisted: hidden from lists, opens by direct link."""
   listed: Boolean! = true
@@ -912,8 +938,14 @@ type ForumSubforum {
   allowReplies: Boolean!
   allowTopics: Boolean!
   allowsGatedContent: Boolean!
+  attachmentFormats: [String!]!
+  attachmentMaxMb: Int
+  autoCloseDays: Int
   categoryId: ID!
   description: String
+  gateBlockTypes: [ForumGateBlockType!]!
+  gateCreateRole: ForumAccessRole!
+  gateViewRole: ForumAccessRole!
   id: ID!
   listed: Boolean!
   parentId: ID
@@ -1562,6 +1594,9 @@ type Mutation {
   deleteCommunityEvent(id: ID!): Boolean!
   deleteCommunityMission(id: ID!): Boolean!
   deleteForumPost(postId: ID!, reason: String!): ForumPostModerationResult!
+
+  """Author deletes their own reply where the section grants "delete own"."""
+  deleteOwnForumPost(postId: ID!): ForumPostModerationResult!
   disableViewerTwoFactor(input: DisableTwoFactorInput!): LogoutResultModel!
   discardCommentDraft(draftId: ID!): Boolean!
   discardResearchDraft(draftId: ID!, expectedVersion: Int!, pageId: ID!): ResearchDiscardReceipt!

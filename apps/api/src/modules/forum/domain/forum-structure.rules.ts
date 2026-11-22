@@ -15,6 +15,7 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+import { normalizeSectionLimits } from './forum-section-limits.rules';
 import { ForumCommandError } from './errors/forum-command.error';
 import {
   FORUM_VISIBILITIES,
@@ -108,6 +109,7 @@ export function normalizeForumInput(input: ForumInput): ForumInput {
   }
   return {
     ...input,
+    ...normalizeSectionLimits(input),
     slug: slug(input.slug),
     title: title(input.title),
     description: description(input.description),

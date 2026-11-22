@@ -71,7 +71,13 @@ import {
 } from '../domain/types/forum-topic.type';
 import { ForumStructureService } from './prisma-forum-structure';
 import { ForumAccessPolicy } from './forum-access.policy';
-import type { ForumAccessGrant } from '../domain/forum-access.rules';
+import {
+  atLeastRole,
+  viewerRole,
+  type ForumAccessGrant,
+  type ForumAccessRole,
+} from '../domain/forum-access.rules';
+import { gateBlockKinds } from '../domain/forum-section-limits.rules';
 import { FORUM_POST_MEDIA, type ForumPostMedia } from './forum-post-media.port';
 
 const PRODUCER = 'dss.api.forum';
@@ -88,6 +94,11 @@ type SectionScope = {
   allowPolls: boolean;
   allowAttachments: boolean;
   pinnedLimit: number | null;
+  attachmentMaxMb: number | null;
+  attachmentFormats: string[];
+  gateViewRole: ForumAccessRole;
+  gateCreateRole: ForumAccessRole;
+  gateBlockTypes: string[];
   grant: ForumAccessGrant;
 };
 
@@ -150,8 +161,10 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       forum.allowsGatedContent,
     );
     await this.requireDocumentAccess(actorId, content.document);
+    this.requireGateRules(viewer, forum, content.document);
     const mediaIds = await this.attachableMedia(actorId, content.document, []);
     this.requireAttachmentsAllowed(forum, mediaIds);
+    await this.requireAttachmentLimits(actorId, forum, mediaIds, []);
     const exempt = await this.cooldownExempt(viewer, forum.categoryId);
     const topicId = randomUUID();
     const postId = randomUUID();
@@ -230,8 +243,10 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       allowsGatedContent,
     );
     await this.requireDocumentAccess(actorId, content.document);
+    this.requireGateRules(viewer, forum, content.document);
     const mediaIds = await this.attachableMedia(actorId, content.document, []);
     this.requireAttachmentsAllowed(forum, mediaIds);
+    await this.requireAttachmentLimits(actorId, forum, mediaIds, []);
     const exempt = await this.cooldownExempt(viewer, categoryId);
     const postId = randomUUID();
     const now = new Date();
@@ -331,12 +346,21 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     // Editing must never silently drop hidden blocks the editor cannot read.
     await this.requireDocumentAccess(actorId, post.document);
     await this.requireDocumentAccess(actorId, content.document);
+    this.requireGateRules(viewer, forum, content.document);
     // Files the post already references stay; only new ones need the actor's access.
+    const referenced = this.media
+      ? await this.media.activeMediaIds(post.id)
+      : [];
     const mediaIds = await this.attachableMedia(
       actorId,
       content.document,
-      this.media ? await this.media.activeMediaIds(post.id) : [],
+      referenced,
     );
+    this.requireAttachmentsAllowed(
+      forum,
+      mediaIds.filter((id) => !referenced.includes(id)),
+    );
+    await this.requireAttachmentLimits(actorId, forum, mediaIds, referenced);
     const now = new Date();
     await this.prisma.$transaction(async (tx) => {
       const nextRevision = input.expectedRevision + 1;
@@ -903,7 +927,11 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       rows.map(async (row) =>
         this.redact(
           this.postView(row, staff, notes.get(row.id) ?? []),
-          viewer.subjectId,
+          // Below the section's hidden-content floor, hidden blocks stay
+          // locked as for a guest (staff always see them).
+          staff || atLeastRole(viewerRole(viewer), forum.gateViewRole)
+            ? viewer.subjectId
+            : null,
         ),
       ),
     );
@@ -1087,6 +1115,72 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     return Object.assign(forum, { grant });
   }
 
+  /** Hidden blocks: who may add them in this section and with which kinds. */
+  private requireGateRules(
+    viewer: ForumViewerFacts,
+    forum: { gateCreateRole: ForumAccessRole; gateBlockTypes: string[] },
+    document: unknown,
+  ): void {
+    if (!this.contains(document, (type) => type === GATE_NODE)) return;
+    const staff = viewer.seesAllCategories || viewer.moderatesAllCategories;
+    if (!staff && !atLeastRole(viewerRole(viewer), forum.gateCreateRole)) {
+      throw new ForumCommandError(
+        'ACCESS_DENIED',
+        'Your role cannot add hidden blocks in this section.',
+      );
+    }
+    const allowed = new Set(forum.gateBlockTypes);
+    for (const kind of gateBlockKinds(document, GATE_NODE)) {
+      if (!allowed.has(kind)) {
+        throw new ForumCommandError(
+          'INVALID_INPUT',
+          'Hidden blocks in this section cannot contain this kind of content.',
+        );
+      }
+    }
+  }
+
+  /** Newly attached files must fit the section's size and format limits. */
+  private async requireAttachmentLimits(
+    actorId: string,
+    forum: { attachmentMaxMb: number | null; attachmentFormats: string[] },
+    mediaIds: readonly string[],
+    alreadyReferenced: readonly string[],
+  ): Promise<void> {
+    if (!this.media?.files) return;
+    if (
+      forum.attachmentMaxMb === null &&
+      forum.attachmentFormats.length === 0
+    ) {
+      return;
+    }
+    const known = new Set(alreadyReferenced);
+    const added = mediaIds.filter((id) => !known.has(id));
+    if (added.length === 0) return;
+    const files = await this.media.files(actorId, added);
+    const maxBytes =
+      forum.attachmentMaxMb === null
+        ? null
+        : forum.attachmentMaxMb * 1024 * 1024;
+    for (const file of files) {
+      if (maxBytes !== null && file.size > maxBytes) {
+        throw new ForumCommandError(
+          'INVALID_INPUT',
+          `Files in this section may be at most ${forum.attachmentMaxMb} MB.`,
+        );
+      }
+      if (
+        forum.attachmentFormats.length > 0 &&
+        !forum.attachmentFormats.includes(file.extension)
+      ) {
+        throw new ForumCommandError(
+          'INVALID_INPUT',
+          'This file format is not allowed in this section.',
+        );
+      }
+    }
+  }
+
   private requireAttachmentsAllowed(
     forum: { allowAttachments: boolean },
     mediaIds: readonly string[],
@@ -1123,6 +1217,11 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       allowPolls: forum.allowPolls,
       allowAttachments: forum.allowAttachments,
       pinnedLimit: forum.pinnedLimit,
+      attachmentMaxMb: forum.attachmentMaxMb,
+      attachmentFormats: forum.attachmentFormats,
+      gateViewRole: forum.gateViewRole,
+      gateCreateRole: forum.gateCreateRole,
+      gateBlockTypes: forum.gateBlockTypes,
       grant: forum.grant,
     };
     if (
@@ -1273,10 +1372,12 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     if (!node || typeof node !== 'object') return false;
     const record = node as { type?: unknown; content?: unknown };
     if (typeof record.type === 'string' && match(record.type)) return true;
-    return (
-      Array.isArray(record.content) &&
-      record.content.some((child) => this.contains(child, match))
-    );
+    // An EditorDocument wraps its root node in `content` (an object); nodes
+    // keep their children in a `content` array.
+    if (Array.isArray(record.content)) {
+      return record.content.some((child) => this.contains(child, match));
+    }
+    return this.contains(record.content, match);
   }
 
   /** Authors and editors must be able to read every hidden block they save. */

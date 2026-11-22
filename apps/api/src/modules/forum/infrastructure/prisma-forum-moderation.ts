@@ -70,6 +70,50 @@ export class ForumModerationService {
     return this.movePost(actorId, postId, 'HIDDEN', reason);
   }
 
+  /**
+   * The author removes their own reply when the section matrix grants
+   * "delete own". Soft delete: moderators can restore it. The first post
+   * goes only with its topic (trash).
+   */
+  async deleteOwnPost(
+    actorId: string,
+    postId: string,
+  ): Promise<{ postId: string; state: string }> {
+    const { post, forum } = await this.postScope(actorId, postId);
+    if (post.authorId !== actorId || !forum.grant.deleteOwn) this.denied();
+    if (post.number === 1) {
+      throw new ForumCommandError(
+        'ACCESS_DENIED',
+        'The first post is removed by trashing the topic.',
+      );
+    }
+    if (post.state !== 'VISIBLE') {
+      throw new ForumCommandError('CONFLICT', 'The post state changed.');
+    }
+    await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.forumPost.updateMany({
+        where: { id: postId, state: 'VISIBLE', authorId: actorId },
+        data: {
+          state: 'DELETED',
+          moderatedAt: new Date(),
+          moderatedById: actorId,
+          moderationReason: 'Deleted by the author.',
+        },
+      });
+      if (updated.count !== 1) {
+        throw new ForumCommandError('CONFLICT', 'The post state changed.');
+      }
+      await this.record(tx, actorId, 'ForumPost', postId, 'post.deleted', {
+        topicId: post.topicId,
+        number: post.number,
+        from: 'VISIBLE',
+        reason: 'Deleted by the author.',
+        byAuthor: true,
+      });
+    });
+    return { postId, state: 'DELETED' };
+  }
+
   deletePost(actorId: string, postId: string, reason: string) {
     return this.movePost(actorId, postId, 'DELETED', reason);
   }
@@ -371,7 +415,13 @@ export class ForumModerationService {
     const viewer = await this.viewer(actorId);
     const post = await this.prisma.forumPost.findUnique({
       where: { id: postId },
-      select: { id: true, topicId: true, number: true, state: true },
+      select: {
+        id: true,
+        topicId: true,
+        number: true,
+        state: true,
+        authorId: true,
+      },
     });
     if (!post) this.notFound('Post');
     const { topic, categoryId, forum } = await this.topics.visibleTopic(
@@ -383,7 +433,7 @@ export class ForumModerationService {
       moderator: await this.topics.isModerator(viewer, categoryId, forum),
       curator: topic.curatorId === actorId,
     };
-    return { viewer, actor, post, topic };
+    return { viewer, actor, post, topic, forum };
   }
 
   private async viewer(actorId: string): Promise<ForumViewerFacts> {

@@ -65,6 +65,12 @@ describe('Forum GraphQL inputs survive the global validation pipe', () => {
         searchable: true,
         showCounts: false,
         pinnedLimit: 5,
+        attachmentMaxMb: 25,
+        attachmentFormats: ['pdf', 'zip'],
+        autoCloseDays: 30,
+        gateViewRole: 'MEMBER',
+        gateCreateRole: 'CONTRIBUTOR',
+        gateBlockTypes: ['TEXT', 'CODE'],
       },
     ],
     [
@@ -93,6 +99,12 @@ describe('Forum GraphQL inputs survive the global validation pipe', () => {
               searchable: true,
               showCounts: true,
               pinnedLimit: null,
+              attachmentMaxMb: 25,
+              attachmentFormats: ['pdf', 'zip'],
+              autoCloseDays: 30,
+              gateViewRole: 'MEMBER',
+              gateCreateRole: 'CONTRIBUTOR',
+              gateBlockTypes: ['TEXT', 'CODE'],
             },
             access: [
               {
