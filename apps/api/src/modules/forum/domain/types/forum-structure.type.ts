@@ -17,6 +17,8 @@ export type ForumVisibility = (typeof FORUM_VISIBILITIES)[number];
 /** Current viewer facts needed by Forum; never cached across requests. */
 export type ForumViewerFacts = {
   subjectId: string | null;
+  /** Highest forum role (section matrices); guests and members by default. */
+  accessRole?: import('../forum-access.rules').ForumAccessRole;
   /** Audience keys such as `role:moderator` and `group:premium`. */
   audienceKeys: readonly string[];
   /** Holders of forum.structure.manage see every category. */
@@ -41,6 +43,14 @@ export type ForumNode = {
   position: number;
   active: boolean;
   allowsGatedContent: boolean;
+  allowTopics: boolean;
+  allowReplies: boolean;
+  allowPolls: boolean;
+  allowAttachments: boolean;
+  listed: boolean;
+  searchable: boolean;
+  showCounts: boolean;
+  pinnedLimit: number | null;
   subforums: ForumNode[];
 };
 
@@ -75,11 +85,22 @@ export type ForumInput = {
   position: number;
   allowsGatedContent: boolean;
   active: boolean;
+  /** Section switches; omitted = keep the stored value (defaults on create). */
+  allowTopics?: boolean;
+  allowReplies?: boolean;
+  allowPolls?: boolean;
+  allowAttachments?: boolean;
+  listed?: boolean;
+  searchable?: boolean;
+  showCounts?: boolean;
+  pinnedLimit?: number | null;
 };
 
 export type ForumModeratorAssignmentRecord = {
   id: string;
   categoryId: string;
+  /** null = whole category. */
+  forumId: string | null;
   moderatorId: string;
   assignedById: string;
   assignedAt: Date;

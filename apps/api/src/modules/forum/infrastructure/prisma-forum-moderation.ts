@@ -155,9 +155,29 @@ export class ForumModerationService {
     pinned: boolean,
   ): Promise<ForumTopicSummary> {
     const viewer = await this.viewer(actorId);
-    const { categoryId } = await this.topics.visibleTopic(topicId, viewer);
-    if (!(await this.topics.isModerator(viewer, categoryId))) this.denied();
+    const { categoryId, forum } = await this.topics.visibleTopic(
+      topicId,
+      viewer,
+    );
+    if (!(await this.topics.isModerator(viewer, categoryId, forum)))
+      this.denied();
     await this.prisma.$transaction(async (tx) => {
+      if (pinned && forum.pinnedLimit !== null) {
+        const current = await tx.forumTopic.count({
+          where: {
+            forumId: forum.id,
+            pinned: true,
+            mergedIntoTopicId: null,
+            state: { not: 'TRASHED' },
+          },
+        });
+        if (current >= forum.pinnedLimit) {
+          throw new ForumCommandError(
+            'CONFLICT',
+            `This section allows at most ${forum.pinnedLimit} pinned topics.`,
+          );
+        }
+      }
       const updated = await tx.forumTopic.updateMany({
         where: { id: topicId, pinned: !pinned, state: { not: 'TRASHED' } },
         data: { pinned },
@@ -301,11 +321,12 @@ export class ForumModerationService {
     action: TopicAction,
   ): Promise<ForumTopicSummary> {
     const viewer = await this.viewer(actorId);
-    const { topic, categoryId } = await this.topics.visibleTopic(
+    const { topic, categoryId, forum } = await this.topics.visibleTopic(
       topicId,
       viewer,
     );
-    if (!(await this.topics.isModerator(viewer, categoryId))) this.denied();
+    if (!(await this.topics.isModerator(viewer, categoryId, forum)))
+      this.denied();
     if (!TOPIC_MODERATION_TRANSITIONS[action].includes(topic.state)) {
       throw new ForumCommandError(
         'CONFLICT',
@@ -353,13 +374,13 @@ export class ForumModerationService {
       select: { id: true, topicId: true, number: true, state: true },
     });
     if (!post) this.notFound('Post');
-    const { topic, categoryId } = await this.topics.visibleTopic(
+    const { topic, categoryId, forum } = await this.topics.visibleTopic(
       post.topicId,
       viewer,
     );
     const actor: ForumModerationActor = {
       id: actorId,
-      moderator: await this.topics.isModerator(viewer, categoryId),
+      moderator: await this.topics.isModerator(viewer, categoryId, forum),
       curator: topic.curatorId === actorId,
     };
     return { viewer, actor, post, topic };

@@ -27,6 +27,15 @@ import {
   type ForumViewerFactsReader,
 } from '../contracts/forum-viewer-facts.contract';
 import { ForumCommandError } from '../domain/errors/forum-command.error';
+import { ForumAccessPolicy, matrixOf } from './forum-access.policy';
+import {
+  effectiveAccess,
+  FORUM_ACCESS_ACTIONS,
+  FORUM_ACCESS_ROLES,
+  normalizeAccessMatrix,
+  type ForumAccessGrant,
+  type ForumAccessMatrix,
+} from '../domain/forum-access.rules';
 import {
   canSeeCategory,
   normalizeCategoryInput,
@@ -175,6 +184,7 @@ export class ForumStructureService {
     actorId: string,
     categoryId: string,
     moderatorId: string,
+    forumId: string | null = null,
   ): Promise<ForumModeratorAssignmentRecord> {
     const actor = await this.viewers.read(actorId, new Date());
     if (!actor.canAssignModerators) this.denied();
@@ -185,13 +195,20 @@ export class ForumStructureService {
         select: { id: true },
       });
       if (!category) this.notFound('Forum category');
+      if (forumId) {
+        const forum = await tx.forum.findUnique({
+          where: { id: forumId },
+          select: { categoryId: true },
+        });
+        if (!forum || forum.categoryId !== categoryId) this.notFound('Forum');
+      }
       const moderator = await tx.user.findUnique({
         where: { id: moderatorId },
         select: { id: true },
       });
       if (!moderator) this.notFound('User');
       await tx.forumModeratorAssignment.create({
-        data: { id, categoryId, moderatorId, assignedById: actorId },
+        data: { id, categoryId, forumId, moderatorId, assignedById: actorId },
       });
       await this.record(
         tx,
@@ -199,7 +216,7 @@ export class ForumStructureService {
         'ForumCategory',
         categoryId,
         'moderator.assigned',
-        { assignmentId: id, moderatorId },
+        { assignmentId: id, moderatorId, forumId },
       );
     });
     return this.assignment(id);
@@ -242,16 +259,32 @@ export class ForumStructureService {
       },
       orderBy: [{ position: 'asc' }, { id: 'asc' }],
     });
-    return categories
-      .filter((category) =>
-        canSeeCategory(
-          {
-            visibility: category.visibility,
-            audienceKeys: category.audience.map(({ subjectKey }) => subjectKey),
-          },
-          viewer,
-        ),
-      )
+    const visibleCategories = categories.filter((category) =>
+      canSeeCategory(
+        {
+          visibility: category.visibility,
+          audienceKeys: category.audience.map(({ subjectKey }) => subjectKey),
+        },
+        viewer,
+      ),
+    );
+    // Section matrices hide what a role may not see; unlisted sections stay
+    // out of lists for everyone but staff (they still open by link).
+    const grants = await new ForumAccessPolicy(this.prisma).grants(
+      viewer,
+      visibleCategories.flatMap(({ forums }) => forums),
+    );
+    return visibleCategories
+      .map((category) => ({
+        ...category,
+        forums: category.forums.filter((forum) => {
+          const grant = grants.get(forum.id);
+          return (
+            grant?.view === true &&
+            (forum.listed || viewer.seesAllCategories || grant.moderate)
+          );
+        }),
+      }))
       .map((category) => ({
         id: category.id,
         slug: category.slug,
@@ -288,7 +321,29 @@ export class ForumStructureService {
     if (viewer.subjectId === null) return false;
     if (viewer.moderatesAllCategories) return true;
     const assignment = await this.prisma.forumModeratorAssignment.findFirst({
-      where: { categoryId, moderatorId: subjectId, revokedAt: null },
+      where: {
+        categoryId,
+        forumId: null,
+        moderatorId: subjectId,
+        revokedAt: null,
+      },
+      select: { id: true },
+    });
+    return assignment !== null;
+  }
+
+  /** Forum-level assignment on the forum or its parent forum. */
+  async canModerateForum(
+    subjectId: string,
+    forumIds: readonly string[],
+  ): Promise<boolean> {
+    if (forumIds.length === 0) return false;
+    const assignment = await this.prisma.forumModeratorAssignment.findFirst({
+      where: {
+        forumId: { in: [...forumIds] },
+        moderatorId: subjectId,
+        revokedAt: null,
+      },
       select: { id: true },
     });
     return assignment !== null;
@@ -318,6 +373,236 @@ export class ForumStructureService {
       this.notFound('Forum category');
     }
     return viewer;
+  }
+
+  /**
+   * Command Deck "Зберегти зміни": updates any number of categories and
+   * forums (fields, order, switches and role matrices) in ONE transaction,
+   * each change audited. `access: null` drops a section's own matrix so it
+   * inherits again; an omitted `access` leaves it untouched.
+   */
+  async saveSettings(
+    actorId: string,
+    input: {
+      categories: ReadonlyArray<{
+        id: string;
+        input: ForumCategoryInput;
+        access?: ReadonlyArray<{ role: string } & ForumAccessGrant> | null;
+      }>;
+      forums: ReadonlyArray<{
+        id: string;
+        input: ForumInput;
+        access?: ReadonlyArray<{ role: string } & ForumAccessGrant> | null;
+      }>;
+    },
+  ): Promise<ForumCategoryNode[]> {
+    await this.requireStructureManager(actorId);
+    if (input.categories.length + input.forums.length > 200) {
+      this.invalid('Save at most 200 sections at once.');
+    }
+    const categories = input.categories.map((change) => ({
+      ...change,
+      data: normalizeCategoryInput(change.input),
+      matrix: this.matrixInput(change.access),
+    }));
+    const forums = input.forums.map((change) => ({
+      ...change,
+      data: normalizeForumInput(change.input),
+      matrix: this.matrixInput(change.access),
+    }));
+    await this.write(async (tx) => {
+      for (const change of categories) {
+        const { data } = change;
+        const updated = await tx.forumCategory.updateMany({
+          where: { id: change.id },
+          data: {
+            slug: data.slug,
+            title: data.title,
+            description: data.description,
+            position: data.position,
+            visibility: data.visibility,
+            active: data.active,
+          },
+        });
+        if (updated.count !== 1) this.notFound('Forum category');
+        await tx.forumCategoryAudience.deleteMany({
+          where: { categoryId: change.id },
+        });
+        if (data.audienceKeys.length > 0) {
+          await tx.forumCategoryAudience.createMany({
+            data: data.audienceKeys.map((subjectKey) => ({
+              categoryId: change.id,
+              subjectKey,
+            })),
+          });
+        }
+        await this.writeMatrix(
+          tx,
+          actorId,
+          { categoryId: change.id },
+          change.matrix,
+        );
+        await this.record(
+          tx,
+          actorId,
+          'ForumCategory',
+          change.id,
+          'category.updated',
+          {
+            slug: data.slug,
+            visibility: data.visibility,
+            audienceKeys: data.audienceKeys,
+            active: data.active,
+            access: this.matrixAudit(change.matrix),
+          },
+        );
+      }
+      for (const change of forums) {
+        const { data } = change;
+        const current = await tx.forum.findUnique({
+          where: { id: change.id },
+          select: { id: true },
+        });
+        if (!current) this.notFound('Forum');
+        await this.assertPlacement(tx, change.id, data);
+        await tx.forum.update({ where: { id: change.id }, data });
+        await this.writeMatrix(
+          tx,
+          actorId,
+          { forumId: change.id },
+          change.matrix,
+        );
+        await this.record(tx, actorId, 'Forum', change.id, 'forum.updated', {
+          categoryId: data.categoryId,
+          parentId: data.parentId,
+          slug: data.slug,
+          active: data.active,
+          listed: data.listed ?? null,
+          access: this.matrixAudit(change.matrix),
+        });
+      }
+    });
+    return this.visibleTree(actorId);
+  }
+
+  /** A section's own matrix (null when it inherits) and the one in force. */
+  async sectionAccess(
+    actorId: string,
+    scope: { categoryId?: string | null; forumId?: string | null },
+  ): Promise<{
+    source: 'FORUM' | 'PARENT' | 'CATEGORY' | 'DEFAULT';
+    own: ForumAccessMatrix | null;
+    effective: ForumAccessMatrix;
+  }> {
+    await this.requireStructureManager(actorId);
+    if (!scope.categoryId === !scope.forumId) {
+      this.invalid('Pass exactly one of categoryId or forumId.');
+    }
+    if (scope.categoryId) {
+      const category = await this.prisma.forumCategory.findUnique({
+        where: { id: scope.categoryId },
+        select: { id: true },
+      });
+      if (!category) this.notFound('Forum category');
+      const own = matrixOf(
+        await this.prisma.forumAccessRule.findMany({
+          where: { categoryId: scope.categoryId },
+        }),
+      );
+      return {
+        source: own ? 'CATEGORY' : 'DEFAULT',
+        own,
+        effective: effectiveAccess([own]),
+      };
+    }
+    const forum = await this.prisma.forum.findUnique({
+      where: { id: scope.forumId! },
+      select: { id: true, parentId: true, categoryId: true },
+    });
+    if (!forum) this.notFound('Forum');
+    const rules = await this.prisma.forumAccessRule.findMany({
+      where: {
+        OR: [
+          {
+            forumId: {
+              in: [forum.id, forum.parentId].filter(Boolean) as string[],
+            },
+          },
+          { categoryId: forum.categoryId },
+        ],
+      },
+    });
+    const own = matrixOf(rules.filter((rule) => rule.forumId === forum.id));
+    const parent = forum.parentId
+      ? matrixOf(rules.filter((rule) => rule.forumId === forum.parentId))
+      : null;
+    const category = matrixOf(
+      rules.filter((rule) => rule.categoryId === forum.categoryId),
+    );
+    return {
+      source: own
+        ? 'FORUM'
+        : parent
+          ? 'PARENT'
+          : category
+            ? 'CATEGORY'
+            : 'DEFAULT',
+      own,
+      effective: effectiveAccess([own, parent, category]),
+    };
+  }
+
+  private matrixInput(
+    access:
+      | ReadonlyArray<{ role: string } & ForumAccessGrant>
+      | null
+      | undefined,
+  ): ForumAccessMatrix | null | undefined {
+    if (access === undefined) return undefined;
+    if (access === null) return null;
+    return normalizeAccessMatrix(access);
+  }
+
+  private matrixAudit(
+    matrix: ForumAccessMatrix | null | undefined,
+  ): string | null {
+    if (matrix === undefined) return null;
+    if (matrix === null) return 'inherit';
+    return FORUM_ACCESS_ROLES.map(
+      (role) =>
+        role +
+        ':' +
+        FORUM_ACCESS_ACTIONS.filter((action) => matrix[role][action]).join('+'),
+    ).join(' ');
+  }
+
+  private async writeMatrix(
+    tx: TransactionClient,
+    actorId: string,
+    scope: { categoryId: string } | { forumId: string },
+    matrix: ForumAccessMatrix | null | undefined,
+  ): Promise<void> {
+    if (matrix === undefined) return;
+    await tx.forumAccessRule.deleteMany({ where: scope });
+    if (matrix === null) return;
+    await tx.forumAccessRule.createMany({
+      data: FORUM_ACCESS_ROLES.map((role) => ({
+        ...scope,
+        role,
+        canView: matrix[role].view,
+        canRead: matrix[role].read,
+        canCreateTopics: matrix[role].createTopics,
+        canReply: matrix[role].reply,
+        canEditOwn: matrix[role].editOwn,
+        canDeleteOwn: matrix[role].deleteOwn,
+        canModerate: matrix[role].moderate,
+        updatedById: actorId,
+      })),
+    });
+  }
+
+  private invalid(message: string): never {
+    throw new ForumCommandError('INVALID_INPUT', message);
   }
 
   private async assertPlacement(
@@ -403,6 +688,14 @@ export class ForumStructureService {
       position: row.position,
       active: row.active,
       allowsGatedContent: row.allowsGatedContent,
+      allowTopics: row.allowTopics,
+      allowReplies: row.allowReplies,
+      allowPolls: row.allowPolls,
+      allowAttachments: row.allowAttachments,
+      listed: row.listed,
+      searchable: row.searchable,
+      showCounts: row.showCounts,
+      pinnedLimit: row.pinnedLimit,
     };
   }
 

@@ -566,15 +566,64 @@ type EditorDocumentPreview {
 type Forum {
   active: Boolean!
   activity: ForumActivityStats!
+  allowAttachments: Boolean!
+  allowPolls: Boolean!
+  allowReplies: Boolean!
+  allowTopics: Boolean!
   allowsGatedContent: Boolean!
   categoryId: ID!
   description: String
   id: ID!
+  listed: Boolean!
   parentId: ID
+  pinnedLimit: Int
   position: Int!
+  searchable: Boolean!
+  showCounts: Boolean!
   slug: String!
   subforums: [ForumSubforum!]!
   title: String!
+}
+
+"""
+Forum role of a viewer: GUEST (signed out), MEMBER, CONTRIBUTOR, MODERATOR, ADMIN (admin or owner).
+"""
+enum ForumAccessRole {
+  ADMIN
+  CONTRIBUTOR
+  GUEST
+  MEMBER
+  MODERATOR
+}
+
+type ForumAccessRow {
+  createTopics: Boolean!
+  deleteOwn: Boolean!
+  editOwn: Boolean!
+  moderate: Boolean!
+  read: Boolean!
+  reply: Boolean!
+  role: ForumAccessRole!
+  view: Boolean!
+}
+
+input ForumAccessRowInput {
+  createTopics: Boolean!
+  deleteOwn: Boolean!
+  editOwn: Boolean!
+  moderate: Boolean!
+  read: Boolean!
+  reply: Boolean!
+  role: ForumAccessRole!
+  view: Boolean!
+}
+
+"""Where the matrix in force comes from."""
+enum ForumAccessSource {
+  CATEGORY
+  DEFAULT
+  FORUM
+  PARENT
 }
 
 type ForumActivityStats {
@@ -597,6 +646,14 @@ type ForumCategory {
   visibility: ForumVisibility!
 }
 
+input ForumCategoryChangeInput {
+  """Omit to keep; [] is invalid; send resetAccess to inherit."""
+  access: [ForumAccessRowInput!]
+  id: ID!
+  input: ForumCategoryInput!
+  resetAccess: Boolean! = false
+}
+
 input ForumCategoryInput {
   active: Boolean! = true
   audienceKeys: [String!]! = []
@@ -605,6 +662,13 @@ input ForumCategoryInput {
   slug: String!
   title: String!
   visibility: ForumVisibility!
+}
+
+input ForumChangeInput {
+  access: [ForumAccessRowInput!]
+  id: ID!
+  input: ForumInput!
+  resetAccess: Boolean! = false
 }
 
 """
@@ -634,11 +698,23 @@ type ForumHubStats {
 
 input ForumInput {
   active: Boolean! = true
+  allowAttachments: Boolean! = true
+  allowPolls: Boolean! = true
+  allowReplies: Boolean! = true
+  allowTopics: Boolean! = true
   allowsGatedContent: Boolean! = false
   categoryId: ID!
   description: String
+
+  """false = unlisted: hidden from lists, opens by direct link."""
+  listed: Boolean! = true
   parentId: ID
+
+  """Empty = no limit."""
+  pinnedLimit: Int
   position: Int! = 0
+  searchable: Boolean! = true
+  showCounts: Boolean! = true
   slug: String!
   title: String!
 }
@@ -674,6 +750,9 @@ type ForumMemberStats {
 type ForumModeratorAssignment {
   assignedAt: DateTime!
   categoryId: ID!
+
+  """null = whole category."""
+  forumId: ID
   id: ID!
   moderatorId: ID!
   revokedAt: DateTime
@@ -802,6 +881,14 @@ type ForumSanctionReceipt {
   sanctionId: ID!
 }
 
+type ForumSectionAccess {
+  effective: [ForumAccessRow!]!
+
+  """The section's own matrix; null when it inherits."""
+  own: [ForumAccessRow!]
+  source: ForumAccessSource!
+}
+
 type ForumStaffNote {
   authorId: ID!
   body: String!
@@ -820,12 +907,20 @@ enum ForumStaffRole {
 type ForumSubforum {
   active: Boolean!
   activity: ForumActivityStats!
+  allowAttachments: Boolean!
+  allowPolls: Boolean!
+  allowReplies: Boolean!
+  allowTopics: Boolean!
   allowsGatedContent: Boolean!
   categoryId: ID!
   description: String
   id: ID!
+  listed: Boolean!
   parentId: ID
+  pinnedLimit: Int
   position: Int!
+  searchable: Boolean!
+  showCounts: Boolean!
   slug: String!
   title: String!
 }
@@ -1434,6 +1529,9 @@ type Mutation {
   archiveForumTopic(topicId: ID!): ForumTopic!
   archiveResearchPage(input: ResearchLifecycleInput!): Boolean!
   assignForumCategoryModerator(categoryId: ID!, moderatorId: ID!): ForumModeratorAssignment!
+
+  """Assign a moderator to one forum (and its subforums)."""
+  assignForumModerator(categoryId: ID!, forumId: ID!, moderatorId: ID!): ForumModeratorAssignment!
   attachForumTopicPoll(input: ForumTopicPollInput!, topicId: ID!): ForumTopicPollReceipt!
   awardAchievement(input: ManualAchievementAwardInput!): AchievementAward!
   beginViewerTwoFactorSetup: TwoFactorSetupModel!
@@ -1536,6 +1634,11 @@ type Mutation {
   saveAchievementRule(input: SaveAchievementRuleInput!): AchievementRule!
   saveBookmark(interactionTargetId: ID!): BookmarkMutationPayload!
   saveCommentDraft(input: SaveCommentDraftInput!): CommentDraft!
+
+  """
+  Command Deck "Зберегти зміни": updates categories and forums (fields, order, switches, role matrices) in one transaction.
+  """
+  saveForumSettings(input: SaveForumSettingsInput!): [ForumCategory!]!
   saveNewsDraft(input: SaveNewsDraftInput!): NewsEditorialArticle!
   saveResearchDraft(input: ResearchSaveDraftInput!): ResearchDraftReceipt!
   scheduleNews(input: ScheduleNewsInput!): NewsEditorialTransition!
@@ -2037,6 +2140,9 @@ type Query {
   forumPosts(limit: Int! = 20, page: Int! = 1, sort: ForumReplySort! = OLDEST, topicId: ID!): ForumPostPage!
   forumRankingSettings: ForumRankingSettings!
 
+  """Structure managers: role matrix of a category or forum."""
+  forumSectionAccess(categoryId: ID, forumId: ID): ForumSectionAccess!
+
   """
   Related topics the viewer can read: shared tags, then the same section.
   """
@@ -2509,6 +2615,11 @@ input SaveCommentDraftInput {
   documentJson: String!
   interactionTargetId: ID!
   parentId: ID
+}
+
+input SaveForumSettingsInput {
+  categories: [ForumCategoryChangeInput!]! = []
+  forums: [ForumChangeInput!]! = []
 }
 
 input SaveNewsDraftInput {

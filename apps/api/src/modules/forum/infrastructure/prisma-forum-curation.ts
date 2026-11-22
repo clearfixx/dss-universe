@@ -195,7 +195,11 @@ export class ForumCurationService {
   ): Promise<ForumTagView[]> {
     const viewer = await this.viewers.read(viewerId, new Date());
     const forum = await this.topics.visibleForumFor(forumId, viewer);
-    const moderator = await this.topics.isModerator(viewer, forum.categoryId);
+    const moderator = await this.topics.isModerator(
+      viewer,
+      forum.categoryId,
+      forum,
+    );
     return this.prisma.forumTag.findMany({
       where: { forumId, ...(moderator ? {} : { active: true }) },
       orderBy: [{ label: 'asc' }, { id: 'asc' }],
@@ -249,9 +253,12 @@ export class ForumCurationService {
       maxChoices: number;
     },
   ): Promise<{ pollId: string }> {
-    const { topic, actor } = await this.scope(actorId, topicId);
+    const { topic, actor, forum } = await this.scope(actorId, topicId);
     if (topic.authorId !== actorId && !actor.moderator) {
       this.denied('Only the topic author or a moderator can add a poll.');
+    }
+    if (!forum.allowPolls) {
+      this.denied('Polls are turned off in this section.');
     }
     if (topic.state !== 'OPEN') {
       throw new ForumCommandError(
@@ -281,22 +288,22 @@ export class ForumCurationService {
 
   private async scope(actorId: string, topicId: string) {
     const viewer = await this.authenticated(actorId);
-    const { topic, categoryId } = await this.topics.visibleTopic(
+    const { topic, categoryId, forum } = await this.topics.visibleTopic(
       topicId,
       viewer,
     );
     const actor: ForumModerationActor = {
       id: actorId,
-      moderator: await this.topics.isModerator(viewer, categoryId),
+      moderator: await this.topics.isModerator(viewer, categoryId, forum),
       curator: topic.curatorId === actorId,
     };
-    return { topic, actor, viewer };
+    return { topic, actor, viewer, forum };
   }
 
   private async requireForumModerator(actorId: string, forumId: string) {
     const viewer = await this.authenticated(actorId);
     const forum = await this.topics.visibleForumFor(forumId, viewer);
-    if (!(await this.topics.isModerator(viewer, forum.categoryId))) {
+    if (!(await this.topics.isModerator(viewer, forum.categoryId, forum))) {
       this.denied('Only moderators of this category manage its tags.');
     }
   }

@@ -28,6 +28,7 @@ import {
   type ForumViewerFactsReader,
 } from '../contracts/forum-viewer-facts.contract';
 import { canSeeCategory } from '../domain/forum-structure.rules';
+import { ForumAccessPolicy } from './forum-access.policy';
 import type { ForumViewerFacts } from '../domain/types/forum-structure.type';
 
 const GATE_MARKER = '%"contentGate"%';
@@ -92,12 +93,25 @@ export class PrismaForumSearch implements ForumSearchSource {
       )
       .map(({ id }) => id);
     if (visible.length === 0) return { items: [], total: 0, categories: [] };
+    // Only sections the viewer may read and that are indexed for search.
+    const forums = await tx.forum.findMany({
+      where: { categoryId: { in: visible } },
+      select: { id: true, parentId: true, categoryId: true, searchable: true },
+    });
+    const grants = await new ForumAccessPolicy(tx).grants(viewer, forums);
+    const searchable = forums
+      .filter((forum) => forum.searchable && grants.get(forum.id)?.read)
+      .map(({ id }) => id);
+    if (searchable.length === 0) {
+      return { items: [], total: 0, categories: [] };
+    }
 
     const term = query.term.trim();
     const pattern = likePattern(term);
     const inactiveAllowed = viewer.seesAllCategories;
     const where = Prisma.sql`
       c."id" IN (${Prisma.join(visible)})
+      AND f."id" IN (${Prisma.join(searchable)})
       AND t."mergedIntoTopicId" IS NULL
       AND t."state"::text IN ('OPEN', 'CLOSED', 'ARCHIVED')
       AND (${inactiveAllowed} OR (f."active" AND c."active" AND COALESCE(pf."active", TRUE)))

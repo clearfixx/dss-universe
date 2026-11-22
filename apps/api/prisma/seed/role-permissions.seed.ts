@@ -43,6 +43,7 @@ import {
 
 const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
   user: [Permission.UsersRead],
+  contributor: [Permission.UsersRead],
 
   moderator: [
     Permission.UsersRead,

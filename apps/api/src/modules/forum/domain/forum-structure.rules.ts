@@ -98,6 +98,14 @@ export function normalizeCategoryInput(
 }
 
 export function normalizeForumInput(input: ForumInput): ForumInput {
+  if (
+    input.pinnedLimit != null &&
+    (!Number.isInteger(input.pinnedLimit) ||
+      input.pinnedLimit < 0 ||
+      input.pinnedLimit > 100)
+  ) {
+    invalid('Pinned topic limit must be 0–100 or empty.');
+  }
   return {
     ...input,
     slug: slug(input.slug),
