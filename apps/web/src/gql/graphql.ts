@@ -119,6 +119,7 @@ export type LeaderboardInput = {
 export type LeaderboardPeriod =
   | 'ALL_TIME'
   | 'MONTH'
+  | 'WEEK'
   | 'YEAR';
 
 export type LoginInput = {
