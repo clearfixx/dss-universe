@@ -18,6 +18,7 @@ import { IsEnum, IsInt, Max, Min } from 'class-validator';
 import type { LeaderboardPeriod } from '../../../domain/types/leaderboards.type';
 
 export enum LeaderboardPeriodInput {
+  WEEK = 'WEEK',
   MONTH = 'MONTH',
   YEAR = 'YEAR',
   ALL_TIME = 'ALL_TIME',

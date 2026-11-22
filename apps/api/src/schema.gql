@@ -221,6 +221,71 @@ input CommentsPageInput {
   page: Int! = 1
 }
 
+type CommunityEvent {
+  description: String
+  durationMinutes: Int!
+  endsAt: DateTime!
+  format: CommunityEventFormat!
+  id: ID!
+
+  """Place (offline)."""
+  location: String
+  startsAt: DateTime!
+  title: String!
+
+  """Link (online)."""
+  url: String
+}
+
+enum CommunityEventFormat {
+  OFFLINE
+  ONLINE
+}
+
+input CommunityEventInput {
+  description: String
+  durationMinutes: Int!
+  format: CommunityEventFormat!
+  location: String
+  startsAt: DateTime!
+  title: String!
+  url: String
+}
+
+type CommunityMission {
+  active: Boolean!
+  description: String
+  endsAt: DateTime!
+  id: ID!
+  metric: CommunityMissionMetric!
+  startsAt: DateTime!
+  target: Int!
+  title: String!
+
+  """Signed-in viewer progress in the mission window; null for guests."""
+  viewerProgress: Int
+}
+
+input CommunityMissionInput {
+  active: Boolean! = true
+  description: String
+  endsAt: DateTime!
+  metric: CommunityMissionMetric!
+  startsAt: DateTime!
+  target: Int!
+  title: String!
+}
+
+"""
+TOPICS: topics opened; REPLIES: replies written; ACCEPTED_ANSWERS: replies accepted as answers; REPUTATION: net reputation received. Public sections only.
+"""
+enum CommunityMissionMetric {
+  ACCEPTED_ANSWERS
+  REPLIES
+  REPUTATION
+  TOPICS
+}
+
 type CommunityPointEntry {
   actorId: ID
   id: ID!
@@ -542,6 +607,31 @@ input ForumCategoryInput {
   visibility: ForumVisibility!
 }
 
+"""
+NO_REPLIES: nobody replied yet; UNSOLVED: questions without an accepted answer.
+"""
+enum ForumDiscoverFilter {
+  ALL
+  NO_REPLIES
+  UNSOLVED
+}
+
+enum ForumDiscoverSort {
+  LAST_ACTIVITY
+  NEW
+}
+
+type ForumHubStats {
+  forumCount: Int!
+
+  """Distinct authors of visible posts."""
+  participantCount: Int!
+
+  """Visible posts only."""
+  postCount: Int!
+  topicCount: Int!
+}
+
 input ForumInput {
   active: Boolean! = true
   allowsGatedContent: Boolean! = false
@@ -565,7 +655,20 @@ type ForumMember {
   avatarUrl: String
   displayName: String
   id: ID!
+
+  """Account creation time."""
+  joinedAt: DateTime!
+  stats: ForumMemberStats!
   username: String!
+}
+
+"""Public standing shown next to forum posts."""
+type ForumMemberStats {
+  level: Int!
+
+  """Visible posts in live topics across the forum."""
+  postCount: Int!
+  reputation: Int!
 }
 
 type ForumModeratorAssignment {
@@ -574,6 +677,12 @@ type ForumModeratorAssignment {
   id: ID!
   moderatorId: ID!
   revokedAt: DateTime
+}
+
+type ForumPopularTag {
+  label: String!
+  slug: String!
+  topicCount: Int!
 }
 
 type ForumPost {
@@ -679,6 +788,15 @@ input ForumRankingSettingsInput {
   hotReplyWeight: Int!
 }
 
+"""
+Order of replies; the first post always opens page 1. BEST = net rating, ties by number.
+"""
+enum ForumReplySort {
+  BEST
+  NEWEST
+  OLDEST
+}
+
 type ForumSanctionReceipt {
   escalatedSanctionId: ID
   sanctionId: ID!
@@ -757,6 +875,7 @@ type ForumTopic {
   tags: [ForumTopicTag!]!
   title: String!
   viewCount: Int!
+  viewerAbilities: ForumTopicViewerAbilities!
 
   """Furthest post number read by the viewer; null for guests."""
   viewerLastReadNumber: Int
@@ -765,6 +884,31 @@ type ForumTopic {
 type ForumTopicCreated {
   firstPostId: ID!
   topic: ForumTopic!
+}
+
+"""
+Counts among live (open and closed) topics unless noted; mine is null for guests.
+"""
+type ForumTopicFacets {
+  """Topics with an accepted answer."""
+  accepted: Int!
+
+  """Archived topics (not live)."""
+  archived: Int!
+  closed: Int!
+  discussions: Int!
+  mine: Int
+
+  """Topics nobody replied to yet."""
+  noReplies: Int!
+
+  """Distinct members with a visible post in a live topic."""
+  participants: Int!
+  questions: Int!
+  total: Int!
+
+  """Questions without an accepted answer."""
+  unsolved: Int!
 }
 
 """
@@ -828,8 +972,29 @@ type ForumTopicTag {
   slug: String!
 }
 
+"""
+What the current viewer may do in this topic; the API still checks every command.
+"""
+type ForumTopicViewerAbilities {
+  acceptAnswer: Boolean!
+  close: Boolean!
+
+  """Topic and post moderation in this category."""
+  moderate: Boolean!
+
+  """Permanent removal of posts (administrators)."""
+  purge: Boolean!
+  reopen: Boolean!
+
+  """
+  Signed in and the topic is open; read-only mode is reported by viewerSanctionStatus.
+  """
+  reply: Boolean!
+}
+
 enum ForumViewerCollection {
   AUTHORED
+  FOLLOWED_SECTIONS
   SUBSCRIBED
 }
 
@@ -961,6 +1126,7 @@ type LeaderboardPage {
 enum LeaderboardPeriod {
   ALL_TIME
   MONTH
+  WEEK
   YEAR
 }
 
@@ -1281,6 +1447,8 @@ type Mutation {
   closeForumTopic(topicId: ID!): ForumTopic!
   confirmViewerTwoFactorSetup(input: ConfirmTwoFactorInput!): TwoFactorConfirmationModel!
   createComment(input: CreateCommentInput!): Comment!
+  createCommunityEvent(input: CommunityEventInput!): CommunityEvent!
+  createCommunityMission(input: CommunityMissionInput!): CommunityMission!
   createContentGate(input: CreateContentGateInput!): ContentGateModel!
   createCustomTitle(input: CreateCustomTitleInput!): CustomTitle!
   createForum(input: ForumInput!): Forum!
@@ -1293,12 +1461,17 @@ type Mutation {
   createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
   createResearchDraft(input: ResearchDraftInput!): ResearchDraftReceipt!
   deactivateAccount(input: DeactivateAccountInput!): LogoutResultModel!
+  deleteCommunityEvent(id: ID!): Boolean!
+  deleteCommunityMission(id: ID!): Boolean!
   deleteForumPost(postId: ID!, reason: String!): ForumPostModerationResult!
   disableViewerTwoFactor(input: DisableTwoFactorInput!): LogoutResultModel!
   discardCommentDraft(draftId: ID!): Boolean!
   discardResearchDraft(draftId: ID!, expectedVersion: Int!, pageId: ID!): ResearchDiscardReceipt!
   editComment(input: EditCommentInput!): Comment!
   editForumPost(input: EditForumPostInput!): ForumPost!
+
+  """Follow a section to learn about its new topics."""
+  followForum(forumId: ID!): Boolean!
   followUser(userId: ID!): UserSocialGraphSummary!
   giveReputation(input: GiveReputationInput!): ReputationEntry!
   grantCustomTitle(input: GrantCustomTitleInput!): UserTitleGrant!
@@ -1374,6 +1547,7 @@ type Mutation {
   setNewsPin(input: SetNewsPinInput!): ManagedNewsPin!
   setReaction(input: SetReactionInput!): SetReactionPayload!
   setResearchEditProtection(level: ResearchEditProtection!, pageId: ID!): ResearchEditPolicy!
+  setResearchInteractionSetting(enabled: Boolean!, pageId: ID!, setting: ResearchInteractionSetting!): ResearchInteractionSettings!
   setResearchPageAudience(groupKeys: [String!]! = [], pageId: ID!, visibility: ResearchPageAudience!): ResearchAudiencePolicy!
   setResearchTrustedEditors(groupKeys: [String!]!, pageId: ID!): [String!]!
   setViewerAvatar(mediaId: ID!): Viewer!
@@ -1387,9 +1561,12 @@ type Mutation {
   trashForumTopic(topicId: ID!): ForumTopic!
   unarchiveForumTopic(topicId: ID!): ForumTopic!
   unblockUser(userId: ID!): UserBlockResult!
+  unfollowForum(forumId: ID!): Boolean!
   unfollowUser(userId: ID!): UserSocialGraphSummary!
   unlinkNewsDiscussion(articleId: ID!): Boolean!
   unsubscribeForumTopic(topicId: ID!): Boolean!
+  updateCommunityEvent(id: ID!, input: CommunityEventInput!): CommunityEvent!
+  updateCommunityMission(id: ID!, input: CommunityMissionInput!): CommunityMission!
   updateCommunityPointRule(input: UpdateCommunityPointRuleInput!): CommunityPointRule!
   updateCustomTitle(input: UpdateCustomTitleInput!): CustomTitle!
   updateCustomTitleSettings(input: UpdateCustomTitleSettingsInput!): CustomTitleSettings!
@@ -1833,6 +2010,14 @@ type Query {
   commentDraft(interactionTargetId: ID!, parentId: ID): CommentDraft
   commentRevisions(commentId: ID!): [CommentRevision!]!
   commentsForTarget(interactionTargetId: ID!, pagination: CommentsPageInput, parentId: ID): CommentPage!
+
+  """Events that have not finished yet, soonest first (max 20)."""
+  communityEvents(limit: Int! = 5): [CommunityEvent!]!
+  communityEventsAdmin: [CommunityEvent!]!
+
+  """Running missions (active, started, not ended)."""
+  communityMissions: [CommunityMission!]!
+  communityMissionsAdmin: [CommunityMission!]!
   communityPointRules: [CommunityPointRule!]!
   communityPointsHistory(pagination: CommunityPointsPageInput, userId: ID!): CommunityPointHistory!
   contentReports(pagination: ModerationPageInput, status: ContentReportStatus): ContentReportPage!
@@ -1847,14 +2032,42 @@ type Query {
   following(pagination: UsersPageInput, userId: ID!): UsersPageModel!
   forumCategories: [ForumCategory!]!
   forumCategoryModerators(categoryId: ID!): [ForumModeratorAssignment!]!
+
+  """
+  Open and closed topics across every forum the viewer can see (guests included).
+  """
+  forumDiscoverTopics(filter: ForumDiscoverFilter! = ALL, limit: Int! = 10, page: Int! = 1, sort: ForumDiscoverSort! = NEW): ForumTopicPage!
+  forumFollowed(forumId: ID!): Boolean!
+  forumHubStats: ForumHubStats!
+  forumPopularTags(limit: Int! = 12): [ForumPopularTag!]!
   forumPostRevisions(postId: ID!): [ForumPostRevision!]!
   forumPostVotes(limit: Int! = 50, page: Int! = 1, postId: ID!): ForumPostVotePage!
-  forumPosts(limit: Int! = 20, page: Int! = 1, topicId: ID!): ForumPostPage!
+  forumPosts(limit: Int! = 20, page: Int! = 1, sort: ForumReplySort! = OLDEST, topicId: ID!): ForumPostPage!
   forumRankingSettings: ForumRankingSettings!
+
+  """
+  Related topics the viewer can read: shared tags, then the same section.
+  """
+  forumSimilarTopics(limit: Int! = 3, topicId: ID!): [ForumTopic!]!
   forumTags(forumId: ID!): [ForumTag!]!
   forumTopic(topicId: ID!): ForumTopic!
+
+  """Topic counts of one section for its filters and header."""
+  forumTopicFacets(forumId: ID!): ForumTopicFacets!
   forumTopicSubscribed(topicId: ID!): Boolean!
-  forumTopics(filter: ForumTopicFilter! = ALL, forumId: ID!, limit: Int! = 20, page: Int! = 1, scope: ForumTopicScope! = ACTIVE, sort: ForumTopicSort! = LAST_ACTIVITY, tagSlug: String, topPeriod: ForumTopPeriod! = WEEK): ForumTopicPage!
+  forumTopics(
+    filter: ForumTopicFilter! = ALL
+    forumId: ID!
+
+    """Only questions or only discussions; all when omitted."""
+    kind: ForumTopicKind
+    limit: Int! = 20
+    page: Int! = 1
+    scope: ForumTopicScope! = ACTIVE
+    sort: ForumTopicSort! = LAST_ACTIVITY
+    tagSlug: String
+    topPeriod: ForumTopPeriod! = WEEK
+  ): ForumTopicPage!
   fullNews(language: String!, slug: String!): FullNews
   interactionTarget(id: ID!): InteractionTarget!
   interactionTargetAccess(capability: InteractionCapability!, targetId: ID!): InteractionAccessDecision!
@@ -1890,6 +2103,7 @@ type Query {
   reputationHistory(pagination: ReputationPageInput, userId: ID!): ReputationHistory!
   reputationPolicy: ReputationPolicy!
   researchEditPolicy(pageId: ID!): ResearchEditPolicy!
+  researchInteractionSettings(pageId: ID!): ResearchInteractionSettings!
   researchOwnDraft(pageId: ID!): ResearchOwnDraft
   researchOwnDrafts(limit: Int! = 50, offset: Int! = 0): [ResearchOwnDraftItem!]!
   researchPage(id: ID!): ResearchPublishedPage
@@ -1917,7 +2131,7 @@ type Query {
   viewerCommentDrafts(limit: Int! = 20): [CommentDraft!]!
 
   """
-  Signed-in viewer: own (AUTHORED) or followed (SUBSCRIBED) topics across visible forums.
+  Signed-in viewer: own (AUTHORED) or followed (SUBSCRIBED) topics, or live topics of followed sections (FOLLOWED_SECTIONS, newest first), across visible forums.
   """
   viewerForumTopics(collection: ForumViewerCollection!, limit: Int! = 20, page: Int! = 1): ForumTopicPage!
   viewerNotificationPreferences: NotificationPreferences!
@@ -2100,6 +2314,16 @@ type ResearchHistoryEntry {
   number: Int!
   publicationDecision: String
   state: String!
+}
+
+enum ResearchInteractionSetting {
+  COMMENTS
+  RATING
+}
+
+type ResearchInteractionSettings {
+  allowComments: Boolean!
+  allowRating: Boolean!
 }
 
 input ResearchLifecycleInput {

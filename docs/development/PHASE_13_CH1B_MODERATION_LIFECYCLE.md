@@ -11,7 +11,7 @@ CH-1b completes the CH-1 lifecycle from the brainstorm:
 - topic moving: archive, unarchive, trash and restore;
 - pinning;
 - staff notes on posts with the author's staff role;
-- administrator purge of post content and its revisions;
+- owner-only purge of post content and its revisions;
 - staff-aware delivery of tombstones and moderation facts.
 
 Deferred to CH-4: curator assignment, moving topics between forums, merge,
@@ -20,16 +20,16 @@ already honoured, so curator rules work as soon as CH-4 assigns curators.
 
 ## Owner rules implemented
 
-| Rule                                                                      | Implementation                                       |
-| ------------------------------------------------------------------------- | ---------------------------------------------------- |
-| Authors never delete their own topics or posts                            | only moderators/curators may hide or delete          |
-| Curators act on replies of their own topic only                           | `canModeratePost` with `curator` scope               |
-| Deleted posts show "post deleted" to users; staff see content, actor, why | `postView` returns content/moderation to staff only  |
-| Restoration has no time limit                                             | `restorePost` from `HIDDEN`/`DELETED`                |
-| Archive: closed but visible                                               | `ARCHIVED` state, `scope: ARCHIVED` listing          |
-| Trash: hidden from users, visible and restorable by moderators            | `TRASHED` + `stateBeforeTrash`, moderator-only reads |
-| Full purge impossible for users and moderators; administrators may purge  | `forum.content.purge`, reason required, audited      |
-| Public mark of staff intervention                                         | staff notes with `CURATOR`/`MODERATOR`/… role        |
+| Rule                                                                      | Implementation                                                           |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Authors never delete their own topics or posts                            | only moderators/curators may hide or delete                              |
+| Curators act on replies of their own topic only                           | `canModeratePost` with `curator` scope                                   |
+| Deleted posts show "post deleted" to users; staff see content, actor, why | `postView` returns content/moderation to staff only                      |
+| Restoration has no time limit                                             | `restorePost` from `HIDDEN`/`DELETED`                                    |
+| Archive: closed but visible                                               | `ARCHIVED` state, `scope: ARCHIVED` listing                              |
+| Trash: hidden from users, visible and restorable by moderators            | `TRASHED` + `stateBeforeTrash`, moderator-only reads                     |
+| Only the verified platform owner may purge                                | Unavailable until immutable owner verification; reason required, audited |
+| Public mark of staff intervention                                         | staff notes with `CURATOR`/`MODERATOR`/… role                            |
 
 The first post is never hidden or deleted on its own; staff trash the topic
 instead, so a topic never loses its body while staying listed.
@@ -64,7 +64,7 @@ declares `dss.forum_purge`. Audit keeps who purged, when and why.
 
 ## Permissions
 
-`forum.content.purge` is new and seeded for admin and owner. All other actions
+The legacy permission grants no purge authority. Production denies purge until IAM can verify the unique immutable owner. All other actions
 use CH-0 scope: category moderator assignment, `forum.moderate.all` or the
 topic curator.
 

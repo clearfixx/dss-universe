@@ -48,6 +48,7 @@ import {
 import {
   ArrayMaxSize,
   IsArray,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -58,6 +59,7 @@ import { OptionalViewerJwtGuard } from '@api/core/auth/guards/optional-viewer-jw
 import { ForumCommandError } from '../domain/errors/forum-command.error';
 import {
   FORUM_POST_STATES,
+  FORUM_REPLY_SORTS,
   FORUM_TOPIC_KINDS,
   FORUM_TOPIC_SCOPES,
   FORUM_TOPIC_SORTS,
@@ -66,6 +68,7 @@ import {
   FORUM_VIEWER_COLLECTIONS,
   type ForumPage,
   type ForumPostState,
+  type ForumReplySort,
   type ForumTopicFilter,
   type ForumTopicKind,
   type ForumViewerCollection,
@@ -94,6 +97,12 @@ registerEnumType(TopicKindEnum, { name: 'ForumTopicKind' });
 registerEnumType(TopicStateEnum, { name: 'ForumTopicState' });
 registerEnumType(PostStateEnum, { name: 'ForumPostState' });
 registerEnumType(TopicSortEnum, { name: 'ForumTopicSort' });
+const ReplySortEnum = enumOf(FORUM_REPLY_SORTS);
+registerEnumType(ReplySortEnum, {
+  name: 'ForumReplySort',
+  description:
+    'Order of replies; the first post always opens page 1. BEST = net rating, ties by number.',
+});
 const TopicFilterEnum = enumOf(FORUM_TOPIC_FILTERS);
 registerEnumType(TopicFilterEnum, {
   name: 'ForumTopicFilter',
@@ -102,18 +111,50 @@ registerEnumType(TopicFilterEnum, {
 });
 const ViewerCollectionEnum = enumOf(FORUM_VIEWER_COLLECTIONS);
 registerEnumType(ViewerCollectionEnum, { name: 'ForumViewerCollection' });
+const DiscoverFilterEnum = {
+  ALL: 'ALL',
+  NO_REPLIES: 'NO_REPLIES',
+  UNSOLVED: 'UNSOLVED',
+} as const;
+registerEnumType(DiscoverFilterEnum, {
+  name: 'ForumDiscoverFilter',
+  description:
+    'NO_REPLIES: nobody replied yet; UNSOLVED: questions without an accepted answer.',
+});
+const DiscoverSortEnum = {
+  NEW: 'NEW',
+  LAST_ACTIVITY: 'LAST_ACTIVITY',
+} as const;
+registerEnumType(DiscoverSortEnum, { name: 'ForumDiscoverSort' });
+
+@ObjectType('ForumHubStats')
+class ForumHubStatsModel {
+  @Field(() => Int) forumCount!: number;
+  @Field(() => Int) topicCount!: number;
+  @Field(() => Int, { description: 'Visible posts only.' }) postCount!: number;
+  @Field(() => Int, { description: 'Distinct authors of visible posts.' })
+  participantCount!: number;
+}
+
+@ObjectType('ForumPopularTag')
+class ForumPopularTagModel {
+  @Field() slug!: string;
+  @Field() label!: string;
+  @Field(() => Int) topicCount!: number;
+}
 
 @InputType()
-class CreateForumTopicInput {
+export class CreateForumTopicInput {
   @Field(() => ID) @IsString() forumId!: string;
   @Field(() => TopicKindEnum, { defaultValue: 'DISCUSSION' })
+  @IsIn(FORUM_TOPIC_KINDS)
   kind!: ForumTopicKind;
   @Field() @IsString() title!: string;
   @Field() @IsString() documentJson!: string;
 }
 
 @InputType()
-class CreateForumReplyInput {
+export class CreateForumReplyInput {
   @Field(() => ID) @IsString() topicId!: string;
   @Field() @IsString() documentJson!: string;
   @Field(() => Int, { nullable: true })
@@ -129,7 +170,7 @@ class CreateForumReplyInput {
 }
 
 @InputType()
-class EditForumPostInput {
+export class EditForumPostInput {
   @Field(() => ID) @IsString() postId!: string;
   @Field(() => Int) @IsInt() @Min(1) expectedRevision!: number;
   @Field() @IsString() documentJson!: string;
@@ -173,6 +214,31 @@ export class ForumTopicModel {
   @Field(() => ID, { nullable: true }) acceptedAnswerPostId!: string | null;
   @Field(() => ID, { nullable: true }) mergedIntoTopicId!: string | null;
   @Field(() => [ForumTopicTagModel]) tags!: ForumTopicTagModel[];
+}
+
+@ObjectType('ForumTopicFacets', {
+  description:
+    'Counts among live (open and closed) topics unless noted; mine is null for guests.',
+})
+export class ForumTopicFacetsModel {
+  @Field(() => Int) total!: number;
+  @Field(() => Int) questions!: number;
+  @Field(() => Int) discussions!: number;
+  @Field(() => Int, { description: 'Topics with an accepted answer.' })
+  accepted!: number;
+  @Field(() => Int, { description: 'Questions without an accepted answer.' })
+  unsolved!: number;
+  @Field(() => Int, { description: 'Topics nobody replied to yet.' })
+  noReplies!: number;
+  @Field(() => Int) closed!: number;
+  @Field(() => Int, { description: 'Archived topics (not live).' })
+  archived!: number;
+  @Field(() => Int, { nullable: true })
+  mine!: number | null;
+  @Field(() => Int, {
+    description: 'Distinct members with a visible post in a live topic.',
+  })
+  participants!: number;
 }
 
 @ObjectType('ForumTopicPage')
@@ -296,6 +362,12 @@ export class ForumTopicsResolver {
     tagSlug: string | null,
     @Args('filter', { type: () => TopicFilterEnum, defaultValue: 'ALL' })
     filter: ForumTopicFilter,
+    @Args('kind', {
+      type: () => TopicKindEnum,
+      nullable: true,
+      description: 'Only questions or only discussions; all when omitted.',
+    })
+    kind: ForumTopicKind | null,
   ): Promise<ForumPage<ForumTopicModel>> {
     return this.execute(
       this.topics.topics(
@@ -308,13 +380,25 @@ export class ForumTopicsResolver {
         topPeriod,
         tagSlug ?? null,
         filter,
+        kind ?? null,
       ),
     );
   }
 
+  @Query(() => ForumTopicFacetsModel, {
+    description: 'Topic counts of one section for its filters and header.',
+  })
+  @UseGuards(OptionalViewerJwtGuard)
+  forumTopicFacets(
+    @Context() ctx: RequestContext,
+    @Args('forumId', { type: () => ID }) forumId: string,
+  ): Promise<ForumTopicFacetsModel> {
+    return this.execute(this.topics.facets(this.viewer(ctx), forumId));
+  }
+
   @Query(() => ForumTopicPageModel, {
     description:
-      'Signed-in viewer: own (AUTHORED) or followed (SUBSCRIBED) topics across visible forums.',
+      'Signed-in viewer: own (AUTHORED) or followed (SUBSCRIBED) topics, or live topics of followed sections (FOLLOWED_SECTIONS, newest first), across visible forums.',
   })
   @UseGuards(JwtAuthGuard)
   viewerForumTopics(
@@ -326,6 +410,55 @@ export class ForumTopicsResolver {
   ): Promise<ForumPage<ForumTopicModel>> {
     return this.execute(
       this.topics.viewerTopics(user.id, collection, page, limit),
+    );
+  }
+
+  @Query(() => ForumTopicPageModel, {
+    description:
+      'Open and closed topics across every forum the viewer can see (guests included).',
+  })
+  @UseGuards(OptionalViewerJwtGuard)
+  forumDiscoverTopics(
+    @Context() ctx: RequestContext,
+    @Args('filter', { type: () => DiscoverFilterEnum, defaultValue: 'ALL' })
+    filter: keyof typeof DiscoverFilterEnum,
+    @Args('sort', { type: () => DiscoverSortEnum, defaultValue: 'NEW' })
+    sort: keyof typeof DiscoverSortEnum,
+    @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
+    @Args('limit', { type: () => Int, defaultValue: 10 }) limit: number,
+  ): Promise<ForumPage<ForumTopicModel>> {
+    return this.execute(
+      this.topics.discoverTopics(this.viewer(ctx), filter, sort, page, limit),
+    );
+  }
+
+  @Query(() => ForumHubStatsModel)
+  @UseGuards(OptionalViewerJwtGuard)
+  forumHubStats(@Context() ctx: RequestContext): Promise<ForumHubStatsModel> {
+    return this.execute(this.topics.hubStats(this.viewer(ctx)));
+  }
+
+  @Query(() => [ForumPopularTagModel])
+  @UseGuards(OptionalViewerJwtGuard)
+  forumPopularTags(
+    @Context() ctx: RequestContext,
+    @Args('limit', { type: () => Int, defaultValue: 12 }) limit: number,
+  ): Promise<ForumPopularTagModel[]> {
+    return this.execute(this.topics.popularTags(this.viewer(ctx), limit));
+  }
+
+  @Query(() => [ForumTopicModel], {
+    description:
+      'Related topics the viewer can read: shared tags, then the same section.',
+  })
+  @UseGuards(OptionalViewerJwtGuard)
+  forumSimilarTopics(
+    @Context() ctx: RequestContext,
+    @Args('topicId', { type: () => ID }) topicId: string,
+    @Args('limit', { type: () => Int, defaultValue: 3 }) limit: number,
+  ) {
+    return this.execute(
+      this.topics.similarTopics(this.viewer(ctx), topicId, limit),
     );
   }
 
@@ -345,9 +478,11 @@ export class ForumTopicsResolver {
     @Args('topicId', { type: () => ID }) topicId: string,
     @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
+    @Args('sort', { type: () => ReplySortEnum, defaultValue: 'OLDEST' })
+    sort: ForumReplySort,
   ) {
     return this.execute(
-      this.topics.posts(this.viewer(ctx), topicId, page, limit),
+      this.topics.posts(this.viewer(ctx), topicId, page, limit, sort),
     );
   }
 

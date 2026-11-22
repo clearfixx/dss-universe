@@ -27,7 +27,7 @@ The governing product rules are:
    journal. Public staff notes inside posts are visible marks.
 7. Authors never delete their own topics or posts. Deletion is a moderator
    tombstone; restoration has no time limit.
-8. Physical purge exists only for administrators with a dedicated permission
+8. Physical purge is reserved for the unique platform owner
    and a mandatory reason (secrets, malware, legal/privacy requests).
 9. Category visibility is restricted by user groups. Users without access do
    not see a restricted category at all.
@@ -172,7 +172,7 @@ Permission prefix: `forum.`. Names below are proposals for architecture review.
 | Curator        | One topic      | Edit first post, hide/delete replies (tombstone), add curator notes, issue verbal warnings, mark accepted answer |
 | Moderator      | Own categories | All topic/post operations, curator assignment, verbal warning, read-only, accepted-answer change, vote reversal  |
 | Supermoderator | Whole site     | Moderator capabilities everywhere                                                                                |
-| Administrator  | Whole site     | All above, category visibility settings, purge (`forum.content.purge`), configuration                            |
+| Administrator  | Whole site     | All above, category visibility settings, configuration                                                           |
 
 Rules:
 

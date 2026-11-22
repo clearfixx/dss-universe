@@ -54,8 +54,26 @@ export const FORUM_TOPIC_FILTERS = [
 export type ForumTopicFilter = (typeof FORUM_TOPIC_FILTERS)[number];
 
 /** Cross-forum personal lists of the signed-in viewer. */
-export const FORUM_VIEWER_COLLECTIONS = ['AUTHORED', 'SUBSCRIBED'] as const;
+export const FORUM_VIEWER_COLLECTIONS = [
+  'AUTHORED',
+  'SUBSCRIBED',
+  'FOLLOWED_SECTIONS',
+] as const;
 export type ForumViewerCollection = (typeof FORUM_VIEWER_COLLECTIONS)[number];
+
+/** Topic counts of one section for the filter panel and its header. */
+export type ForumTopicFacets = {
+  total: number;
+  questions: number;
+  discussions: number;
+  accepted: number;
+  unsolved: number;
+  noReplies: number;
+  closed: number;
+  archived: number;
+  mine: number | null;
+  participants: number;
+};
 
 export const FORUM_TOPIC_SORTS = [
   'LAST_ACTIVITY',
@@ -64,6 +82,13 @@ export const FORUM_TOPIC_SORTS = [
   'TOP',
 ] as const;
 export type ForumTopicSort = (typeof FORUM_TOPIC_SORTS)[number];
+
+/**
+ * Order of replies inside a topic. The first post always opens page 1;
+ * BEST = net rating (up − down), ties by post number.
+ */
+export const FORUM_REPLY_SORTS = ['OLDEST', 'NEWEST', 'BEST'] as const;
+export type ForumReplySort = (typeof FORUM_REPLY_SORTS)[number];
 
 /** Owner decisions: reply edit window and global posting cooldown. */
 export const FORUM_REPLY_EDIT_WINDOW_MS = 10 * 60 * 1000;

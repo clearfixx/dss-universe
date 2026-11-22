@@ -125,6 +125,16 @@ export const PERMISSIONS = {
     label: 'Manage custom title settings',
     description: 'Allows updating custom title selection policy.',
   },
+  MissionsManage: {
+    key: 'missions.manage',
+    label: 'Manage community missions',
+    description: 'Allows creating, updating and removing community missions.',
+  },
+  EventsManage: {
+    key: 'events.manage',
+    label: 'Manage community events',
+    description: 'Allows creating, updating and removing community events.',
+  },
   AchievementsManage: {
     key: 'achievements.manage',
     label: 'Manage achievements',

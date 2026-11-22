@@ -46,6 +46,7 @@ describe('LeaderboardsService', () => {
   });
 
   it.each([
+    ['WEEK', '2026-07-27T00:00:00.000Z'],
     ['MONTH', '2026-07-01T00:00:00.000Z'],
     ['YEAR', '2026-01-01T00:00:00.000Z'],
   ] as const)('builds the %s UTC window', async (period, startsAt) => {

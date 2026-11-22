@@ -453,7 +453,10 @@ model User {
   forumTopicViews         ForumTopicView[]
   forumTopicReadStates    ForumTopicReadState[]
   forumSubscriptions      ForumTopicSubscription[]
+  forumFollows            ForumFollow[]
   forumNewsLinks          ForumNewsDiscussion[]
+  communityMissions       CommunityMission[]
+  communityEvents         CommunityEvent[]
   contentGates            ContentGate[]
   newsArticles            NewsArticle[]                @relation("NewsAuthor")
   newsRevisions           NewsRevision[]               @relation("NewsRevisionEditor")
@@ -2757,6 +2760,7 @@ model Forum {
   category  ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   parent    Forum?        @relation("ForumSubforums", fields: [parentId], references: [id], onDelete: Restrict)
   subforums Forum[]       @relation("ForumSubforums")
+  followers ForumFollow[]
 
   @@unique([categoryId, slug])
   @@index([categoryId, parentId, position, id])
@@ -3004,6 +3008,20 @@ model ForumTopicSubscription {
   @@map("forum_topic_subscriptions")
 }
 
+/// A member follows a section to learn about its new topics (CH-6).
+model ForumFollow {
+  userId    String
+  forumId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  forum Forum @relation(fields: [forumId], references: [id], onDelete: Cascade)
+
+  @@id([userId, forumId])
+  @@index([forumId, createdAt])
+  @@map("forum_follows")
+}
+
 model ForumNewsDiscussion {
   newsArticleId String   @id
   topicId       String   @unique
@@ -3014,4 +3032,57 @@ model ForumNewsDiscussion {
   linkedBy User       @relation(fields: [linkedById], references: [id], onDelete: Restrict)
 
   @@map("forum_news_discussions")
+}
+
+enum CommunityMissionMetric {
+  TOPICS
+  REPLIES
+  ACCEPTED_ANSWERS
+  REPUTATION
+}
+
+/// Staff-defined community challenge; each member's progress is counted
+/// automatically from forum and reputation data inside [startsAt, endsAt).
+model CommunityMission {
+  id          String                 @id @default(uuid())
+  title       String
+  description String?
+  metric      CommunityMissionMetric
+  target      Int
+  startsAt    DateTime
+  endsAt      DateTime
+  active      Boolean                @default(true)
+  createdById String
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  createdBy User @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([active, startsAt, endsAt])
+  @@map("community_missions")
+}
+
+enum CommunityEventFormat {
+  ONLINE
+  OFFLINE
+}
+
+/// Staff-announced community event (no attendee registration).
+model CommunityEvent {
+  id              String               @id @default(uuid())
+  title           String
+  description     String?
+  startsAt        DateTime
+  durationMinutes Int
+  format          CommunityEventFormat
+  location        String?
+  url             String?
+  createdById     String
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  createdBy User @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([startsAt])
+  @@map("community_events")
 }

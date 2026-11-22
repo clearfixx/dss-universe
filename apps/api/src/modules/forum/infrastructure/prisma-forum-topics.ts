@@ -60,9 +60,11 @@ import {
   type ForumPostView,
   type ForumTopicKind,
   type ForumStaffNoteView,
+  type ForumTopicFacets,
   type ForumTopicFilter,
   type ForumViewerCollection,
   type ForumTopicScope,
+  type ForumReplySort,
   type ForumTopicSort,
   type ForumTopicState,
   type ForumTopicSummary,
@@ -382,6 +384,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     topPeriod: ForumTopPeriod = 'WEEK',
     tagSlug: string | null = null,
     filter: ForumTopicFilter = 'ALL',
+    kind: ForumTopicKind | null = null,
   ): Promise<ForumPage<ForumTopicSummary>> {
     const viewer = await this.viewers.read(viewerId, new Date());
     const forum = await this.visibleForum(forumId, viewer);
@@ -412,6 +415,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
             ? 'ARCHIVED'
             : 'TRASHED',
       ...filterWhere,
+      ...(kind ? { kind } : {}),
     };
     const since = sort === 'TOP' ? topPeriodStart(topPeriod, new Date()) : null;
     if (since) where.createdAt = { gte: since };
@@ -430,6 +434,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
             take,
             filter,
             viewer.subjectId,
+            kind,
           )
         : this.prisma.forumTopic.findMany({
             where,
@@ -461,6 +466,260 @@ export class ForumTopicsService implements ForumInteractionDecisions {
   }
 
   /**
+   * Topics across every forum the viewer can see (guests included), for hub
+   * blocks such as "Needs help" (UNSOLVED) or "No replies yet" (NO_REPLIES).
+   * Open and closed topics only; newest first or by last activity.
+   */
+  async discoverTopics(
+    viewerId: string | null,
+    filter: Exclude<ForumTopicFilter, 'MINE'>,
+    sort: 'NEW' | 'LAST_ACTIVITY',
+    page: number,
+    limit: number,
+  ): Promise<ForumPage<ForumTopicSummary>> {
+    const viewer = await this.viewers.read(viewerId, new Date());
+    const { skip, take, safePage } = this.paging(page, limit);
+    const where: Prisma.ForumTopicWhereInput = {
+      forumId: { in: await this.visibleForumIds(viewer) },
+      mergedIntoTopicId: null,
+      state: { in: ['OPEN', 'CLOSED'] },
+      ...this.filterWhere(filter, viewer.subjectId),
+    };
+    const [rows, total] = await Promise.all([
+      this.prisma.forumTopic.findMany({
+        where,
+        orderBy: [
+          sort === 'NEW' ? { createdAt: 'desc' } : { lastPostAt: 'desc' },
+          { id: 'desc' },
+        ],
+        skip,
+        take,
+      }),
+      this.prisma.forumTopic.count({ where }),
+    ]);
+    const ids = rows.map(({ id }) => id);
+    const reads = await this.readStates(viewer, ids);
+    const tags = await this.topicTags(ids);
+    return {
+      items: rows.map((row) =>
+        this.toSummary(
+          row,
+          viewer.subjectId ? (reads.get(row.id) ?? 0) : null,
+          tags.get(row.id) ?? [],
+        ),
+      ),
+      total,
+      page: safePage,
+      limit: take,
+    };
+  }
+
+  /**
+   * Topics related to one the viewer can read: shared tag slugs (2 points
+   * each) plus the same section (1 point); only live topics in forums the
+   * viewer can see. Ties go to the most recent activity.
+   */
+  async similarTopics(
+    viewerId: string | null,
+    topicId: string,
+    limit: number,
+  ): Promise<ForumTopicSummary[]> {
+    const viewer = await this.viewers.read(viewerId, new Date());
+    const { topic } = await this.visibleTopic(topicId, viewer);
+    const forumIds = await this.visibleForumIds(viewer);
+    if (forumIds.length === 0) return [];
+    const take = Math.min(Math.max(1, Math.trunc(limit) || 1), 10);
+    const ranked = await this.prisma.$queryRaw<{ id: string }[]>(Prisma.sql`
+      WITH source_tags AS (
+        SELECT g."slug" FROM "forum_topic_tags" tt
+        JOIN "forum_tags" g ON g."id" = tt."tagId"
+        WHERE tt."topicId" = ${topic.id}
+      ),
+      scored AS (
+        SELECT t."id", t."lastPostAt",
+          2 * (
+            SELECT COUNT(DISTINCT g."slug")::int FROM "forum_topic_tags" tt
+            JOIN "forum_tags" g ON g."id" = tt."tagId"
+            WHERE tt."topicId" = t."id"
+              AND g."slug" IN (SELECT "slug" FROM source_tags)
+          ) + CASE WHEN t."forumId" = ${topic.forumId} THEN 1 ELSE 0 END AS score
+        FROM "forum_topics" t
+        WHERE t."id" <> ${topic.id}
+          AND t."forumId" IN (${Prisma.join(forumIds)})
+          AND t."mergedIntoTopicId" IS NULL
+          AND t."state"::text IN ('OPEN', 'CLOSED', 'ARCHIVED')
+      )
+      SELECT "id" FROM scored WHERE score > 0
+      ORDER BY score DESC, "lastPostAt" DESC, "id" DESC
+      LIMIT ${take}
+    `);
+    if (ranked.length === 0) return [];
+    const ids = ranked.map(({ id }) => id);
+    const [rows, reads, tags] = await Promise.all([
+      this.prisma.forumTopic.findMany({ where: { id: { in: ids } } }),
+      this.readStates(viewer, ids),
+      this.topicTags(ids),
+    ]);
+    const byId = new Map(rows.map((row) => [row.id, row]));
+    return ids.flatMap((id) => {
+      const row = byId.get(id);
+      return row
+        ? [
+            this.toSummary(
+              row,
+              viewer.subjectId ? (reads.get(id) ?? 0) : null,
+              tags.get(id) ?? [],
+            ),
+          ]
+        : [];
+    });
+  }
+
+  /** Totals over the forums the viewer can see; trashed/merged never count. */
+  async hubStats(viewerId: string | null): Promise<{
+    forumCount: number;
+    topicCount: number;
+    postCount: number;
+    participantCount: number;
+  }> {
+    const viewer = await this.viewers.read(viewerId, new Date());
+    const forumIds = await this.visibleForumIds(viewer);
+    if (forumIds.length === 0) {
+      return {
+        forumCount: 0,
+        topicCount: 0,
+        postCount: 0,
+        participantCount: 0,
+      };
+    }
+    const [row] = await this.prisma.$queryRaw<
+      Array<{ topics: bigint; posts: bigint; participants: bigint }>
+    >`
+      SELECT
+        (SELECT COUNT(*) FROM "forum_topics" t
+          WHERE t."forumId" IN (${Prisma.join(forumIds)})
+            AND t."mergedIntoTopicId" IS NULL
+            AND t."state"::text IN ('OPEN', 'CLOSED', 'ARCHIVED'))::bigint AS "topics",
+        (SELECT COUNT(*) FROM "forum_posts" p JOIN "forum_topics" t ON t."id" = p."topicId"
+          WHERE t."forumId" IN (${Prisma.join(forumIds)})
+            AND t."mergedIntoTopicId" IS NULL
+            AND t."state"::text IN ('OPEN', 'CLOSED', 'ARCHIVED')
+            AND p."state" = 'VISIBLE')::bigint AS "posts",
+        (SELECT COUNT(DISTINCT p."authorId") FROM "forum_posts" p JOIN "forum_topics" t ON t."id" = p."topicId"
+          WHERE t."forumId" IN (${Prisma.join(forumIds)})
+            AND t."mergedIntoTopicId" IS NULL
+            AND t."state"::text IN ('OPEN', 'CLOSED', 'ARCHIVED')
+            AND p."state" = 'VISIBLE')::bigint AS "participants"`;
+    return {
+      forumCount: forumIds.length,
+      topicCount: Number(row?.topics ?? 0),
+      postCount: Number(row?.posts ?? 0),
+      participantCount: Number(row?.participants ?? 0),
+    };
+  }
+
+  /**
+   * Most used active tags over visible forums, merged by slug (each forum
+   * curates its own tags, so one slug may exist in several forums).
+   */
+  async popularTags(
+    viewerId: string | null,
+    limit: number,
+  ): Promise<Array<{ slug: string; label: string; topicCount: number }>> {
+    const viewer = await this.viewers.read(viewerId, new Date());
+    const forumIds = await this.visibleForumIds(viewer);
+    if (forumIds.length === 0) return [];
+    const take = Math.min(50, Math.max(1, Math.trunc(limit) || 10));
+    const rows = await this.prisma.$queryRaw<
+      Array<{ slug: string; label: string; topics: bigint }>
+    >`
+      SELECT g."slug", MIN(g."label") AS "label", COUNT(DISTINCT tt."topicId")::bigint AS "topics"
+      FROM "forum_tags" g
+      JOIN "forum_topic_tags" tt ON tt."tagId" = g."id"
+      JOIN "forum_topics" t ON t."id" = tt."topicId"
+      WHERE g."forumId" IN (${Prisma.join(forumIds)})
+        AND g."active"
+        AND t."mergedIntoTopicId" IS NULL
+        AND t."state"::text IN ('OPEN', 'CLOSED', 'ARCHIVED')
+      GROUP BY g."slug"
+      ORDER BY "topics" DESC, g."slug" ASC
+      LIMIT ${take}`;
+    return rows.map((row) => ({
+      slug: row.slug,
+      label: row.label,
+      topicCount: Number(row.topics),
+    }));
+  }
+
+  /**
+   * Counts for one section's filter panel: by type and status among live
+   * (open and closed) topics, archived topics, the viewer's own topics and
+   * the number of distinct members with a visible post in a live topic.
+   */
+  async facets(
+    viewerId: string | null,
+    forumId: string,
+  ): Promise<ForumTopicFacets> {
+    const viewer = await this.viewers.read(viewerId, new Date());
+    await this.visibleForum(forumId, viewer);
+    const live: Prisma.ForumTopicWhereInput = {
+      forumId,
+      mergedIntoTopicId: null,
+      state: { in: ['OPEN', 'CLOSED'] },
+    };
+    const count = (where: Prisma.ForumTopicWhereInput) =>
+      this.prisma.forumTopic.count({ where: { ...live, ...where } });
+    const [
+      total,
+      questions,
+      accepted,
+      unsolved,
+      noReplies,
+      closed,
+      archived,
+      mine,
+      participants,
+    ] = await Promise.all([
+      count({}),
+      count({ kind: 'QUESTION' }),
+      count({ acceptedAnswerPostId: { not: null } }),
+      count({ kind: 'QUESTION', acceptedAnswerPostId: null }),
+      count({ postCount: 1 }),
+      count({ state: 'CLOSED' }),
+      this.prisma.forumTopic.count({
+        where: { forumId, mergedIntoTopicId: null, state: 'ARCHIVED' },
+      }),
+      viewer.subjectId ? count({ authorId: viewer.subjectId }) : null,
+      this.prisma.$queryRaw<Array<{ count: bigint }>>`
+        SELECT COUNT(DISTINCT p."authorId") AS "count"
+        FROM "forum_posts" p
+        JOIN "forum_topics" t ON t."id" = p."topicId"
+        WHERE t."forumId" = ${forumId}
+          AND t."mergedIntoTopicId" IS NULL
+          AND t."state"::text IN ('OPEN', 'CLOSED')
+          AND p."state"::text = 'VISIBLE'`,
+    ]);
+    return {
+      total,
+      questions,
+      discussions: total - questions,
+      accepted,
+      unsolved,
+      noReplies,
+      closed,
+      archived,
+      mine,
+      participants: Number(participants[0]?.count ?? 0),
+    };
+  }
+
+  /** Throws NOT_FOUND unless the viewer may see the section. */
+  async assertVisibleForum(viewerId: string, forumId: string): Promise<void> {
+    const viewer = await this.authenticated(viewerId);
+    await this.visibleForum(forumId, viewer);
+  }
+
+  /**
    * The signed-in viewer's own or followed topics across every forum they can
    * see right now; trashed and merged topics are excluded.
    */
@@ -479,12 +738,22 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       state: { in: ['OPEN', 'CLOSED', 'ARCHIVED'] },
       ...(collection === 'AUTHORED'
         ? { authorId: viewerId }
-        : { subscriptions: { some: { userId: viewerId } } }),
+        : collection === 'SUBSCRIBED'
+          ? { subscriptions: { some: { userId: viewerId } } }
+          : {
+              state: { in: ['OPEN', 'CLOSED'] },
+              forum: { followers: { some: { userId: viewerId } } },
+            }),
     };
     const [rows, total] = await Promise.all([
       this.prisma.forumTopic.findMany({
         where,
-        orderBy: [{ lastPostAt: 'desc' }, { id: 'desc' }],
+        orderBy: [
+          collection === 'FOLLOWED_SECTIONS'
+            ? { createdAt: 'desc' }
+            : { lastPostAt: 'desc' },
+          { id: 'desc' },
+        ],
         skip,
         take,
       }),
@@ -570,6 +839,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     topicId: string,
     page: number,
     limit: number,
+    sort: ForumReplySort = 'OLDEST',
   ): Promise<ForumPage<ForumPostView>> {
     const viewer = await this.viewers.read(viewerId, new Date());
     const { topic, categoryId } = await this.visibleTopic(topicId, viewer);
@@ -579,12 +849,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
         (await this.isModerator(viewer, categoryId)));
     const { skip, take, safePage } = this.paging(page, limit);
     const [rows, total] = await Promise.all([
-      this.prisma.forumPost.findMany({
-        where: { topicId },
-        orderBy: { number: 'asc' },
-        skip,
-        take,
-      }),
+      this.postPage(topicId, sort, safePage, skip, take),
       this.prisma.forumPost.count({ where: { topicId } }),
     ]);
     const notes = await this.staffNotes(rows.map(({ id }) => id));
@@ -602,6 +867,60 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       page: safePage,
       limit: take,
     };
+  }
+
+  /**
+   * One page of posts. Non-chronological sorts keep the first post at the
+   * top of page 1 and order only the replies, so a page still holds
+   * `take` posts and the total stays the topic post count.
+   */
+  private async postPage(
+    topicId: string,
+    sort: ForumReplySort,
+    page: number,
+    skip: number,
+    take: number,
+  ): Promise<ForumPost[]> {
+    if (sort === 'OLDEST') {
+      return this.prisma.forumPost.findMany({
+        where: { topicId },
+        orderBy: { number: 'asc' },
+        skip,
+        take,
+      });
+    }
+    const first =
+      page === 1
+        ? await this.prisma.forumPost.findMany({
+            where: { topicId, number: 1 },
+          })
+        : [];
+    const replySkip = page === 1 ? 0 : skip - 1;
+    const replyTake = page === 1 ? take - 1 : take;
+    if (replyTake <= 0) return first;
+    if (sort === 'NEWEST') {
+      const replies = await this.prisma.forumPost.findMany({
+        where: { topicId, number: { gt: 1 } },
+        orderBy: { number: 'desc' },
+        skip: replySkip,
+        take: replyTake,
+      });
+      return [...first, ...replies];
+    }
+    const ids = await this.prisma.$queryRaw<{ id: string }[]>(Prisma.sql`
+      SELECT "id" FROM "forum_posts"
+      WHERE "topicId" = ${topicId} AND "number" > 1
+      ORDER BY ("ratingUp" - "ratingDown") DESC, "number" ASC
+      OFFSET ${replySkip} LIMIT ${replyTake}
+    `);
+    const replies = await this.prisma.forumPost.findMany({
+      where: { id: { in: ids.map(({ id }) => id) } },
+    });
+    const byId = new Map(replies.map((row) => [row.id, row]));
+    return [
+      ...first,
+      ...ids.flatMap(({ id }) => (byId.has(id) ? [byId.get(id)!] : [])),
+    ];
   }
 
   async revisions(
@@ -969,7 +1288,11 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     take: number,
     filter: ForumTopicFilter = 'ALL',
     viewerId: string | null = null,
+    kind: ForumTopicKind | null = null,
   ): Promise<ForumTopic[]> {
+    const kindSql = kind
+      ? Prisma.sql`AND "kind"::text = ${kind}`
+      : Prisma.empty;
     const filterSql =
       filter === 'MINE'
         ? Prisma.sql`AND "authorId" = ${viewerId}`
@@ -1003,6 +1326,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
           WHERE tt."topicId" = "forum_topics"."id" AND g."slug" = ${tagSlug}
         ))
         ${filterSql}
+        ${kindSql}
       ORDER BY "pinned" DESC, ${order} DESC, "createdAt" DESC, "id" DESC
       LIMIT ${take} OFFSET ${skip}`;
     const rows = await this.prisma.forumTopic.findMany({

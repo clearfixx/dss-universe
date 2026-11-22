@@ -18,7 +18,7 @@ import {
   COMMUNITY_POINTS_BALANCE_READER,
 } from '@api/modules/community-points';
 import { AchievementsModule } from '@api/modules/achievements';
-import { LevelsModule } from '@api/modules/levels';
+import { LEVEL_CURRENT_READER, LevelsModule } from '@api/modules/levels';
 import { RecipientExistenceAdapter } from './infrastructure/recipient-existence.adapter';
 import { LevelPointsBalanceAdapter } from './infrastructure/level-points-balance.adapter';
 describe('gamification integration boundaries', () => {
@@ -29,9 +29,9 @@ describe('gamification integration boundaries', () => {
     expect(
       Reflect.getMetadata(MODULE_METADATA.EXPORTS, AchievementsModule),
     ).toEqual([]);
-    expect(Reflect.getMetadata(MODULE_METADATA.EXPORTS, LevelsModule)).toEqual(
-      [],
-    );
+    expect(Reflect.getMetadata(MODULE_METADATA.EXPORTS, LevelsModule)).toEqual([
+      LEVEL_CURRENT_READER,
+    ]);
   });
   it('forwards scalar reads and errors without caching, expansion or fallback', async () => {
     const exists = jest
