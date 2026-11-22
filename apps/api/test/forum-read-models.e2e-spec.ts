@@ -557,4 +557,93 @@ describe('Forum UI read models (e2e)', () => {
     ]);
     expect(await topics.similarTopics(viewer, source.id, 1)).toHaveLength(1);
   });
+
+  it('counts section facets and filters topics by kind', async () => {
+    const f = await forum();
+    const author = await user();
+    const other = await user();
+    const make = async (
+      who: string,
+      kind: 'QUESTION' | 'DISCUSSION',
+      title: string,
+    ) =>
+      (
+        await openTopic(who, {
+          forumId: f.forumId,
+          kind,
+          title,
+          documentJson: 'x',
+        })
+      ).topic;
+    const solved = await make(author, 'QUESTION', 'Solved question');
+    const open = await make(author, 'QUESTION', 'Open question');
+    const talk = await make(other, 'DISCUSSION', 'Talk');
+    const closed = await make(other, 'DISCUSSION', 'Closed talk');
+    const archived = await make(other, 'DISCUSSION', 'Old talk');
+    const answer = await reply(other, solved.id);
+    await reply(author, talk.id);
+    await fixture.prisma.forumTopic.update({
+      where: { id: solved.id },
+      data: {
+        acceptedAnswerPostId: answer.id,
+        acceptedAt: new Date(),
+        acceptedById: author,
+      },
+    });
+    await fixture.prisma.forumTopic.update({
+      where: { id: closed.id },
+      data: { state: 'CLOSED' },
+    });
+    await fixture.prisma.forumTopic.update({
+      where: { id: archived.id },
+      data: { state: 'ARCHIVED' },
+    });
+
+    expect(await topics.facets(author, f.forumId)).toEqual({
+      total: 4,
+      questions: 2,
+      discussions: 2,
+      accepted: 1,
+      unsolved: 1,
+      noReplies: 2,
+      closed: 1,
+      archived: 1,
+      mine: 2,
+      participants: 2,
+    });
+    expect((await topics.facets(null, f.forumId)).mine).toBeNull();
+
+    const kinds = async (kind: 'QUESTION' | 'DISCUSSION') =>
+      (
+        await topics.topics(
+          null,
+          f.forumId,
+          'LAST_ACTIVITY',
+          1,
+          20,
+          'ACTIVE',
+          'WEEK',
+          null,
+          'ALL',
+          kind,
+        )
+      ).items
+        .map(({ id }) => id)
+        .sort();
+    expect(await kinds('QUESTION')).toEqual([solved.id, open.id].sort());
+    expect(await kinds('DISCUSSION')).toEqual([talk.id, closed.id].sort());
+    const hot = await topics.topics(
+      null,
+      f.forumId,
+      'HOT',
+      1,
+      20,
+      'ACTIVE',
+      'WEEK',
+      null,
+      'ALL',
+      'QUESTION',
+    );
+    expect(hot.items.map(({ kind }) => kind)).toEqual(['QUESTION', 'QUESTION']);
+  });
 });

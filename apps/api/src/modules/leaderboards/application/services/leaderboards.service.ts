@@ -64,6 +64,21 @@ export class LeaderboardsService {
       throw new BadRequestException('Leaderboard date is invalid.');
     }
     switch (period) {
+      case 'WEEK': {
+        // ISO week: Monday 00:00 UTC.
+        const day = (now.getUTCDay() + 6) % 7;
+        return {
+          period,
+          startsAt: new Date(
+            Date.UTC(
+              now.getUTCFullYear(),
+              now.getUTCMonth(),
+              now.getUTCDate() - day,
+            ),
+          ),
+          endsAt: now,
+        };
+      }
       case 'MONTH':
         return {
           period,

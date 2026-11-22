@@ -216,6 +216,31 @@ export class ForumTopicModel {
   @Field(() => [ForumTopicTagModel]) tags!: ForumTopicTagModel[];
 }
 
+@ObjectType('ForumTopicFacets', {
+  description:
+    'Counts among live (open and closed) topics unless noted; mine is null for guests.',
+})
+export class ForumTopicFacetsModel {
+  @Field(() => Int) total!: number;
+  @Field(() => Int) questions!: number;
+  @Field(() => Int) discussions!: number;
+  @Field(() => Int, { description: 'Topics with an accepted answer.' })
+  accepted!: number;
+  @Field(() => Int, { description: 'Questions without an accepted answer.' })
+  unsolved!: number;
+  @Field(() => Int, { description: 'Topics nobody replied to yet.' })
+  noReplies!: number;
+  @Field(() => Int) closed!: number;
+  @Field(() => Int, { description: 'Archived topics (not live).' })
+  archived!: number;
+  @Field(() => Int, { nullable: true })
+  mine!: number | null;
+  @Field(() => Int, {
+    description: 'Distinct members with a visible post in a live topic.',
+  })
+  participants!: number;
+}
+
 @ObjectType('ForumTopicPage')
 class ForumTopicPageModel {
   @Field(() => [ForumTopicModel]) items!: ForumTopicModel[];
@@ -337,6 +362,12 @@ export class ForumTopicsResolver {
     tagSlug: string | null,
     @Args('filter', { type: () => TopicFilterEnum, defaultValue: 'ALL' })
     filter: ForumTopicFilter,
+    @Args('kind', {
+      type: () => TopicKindEnum,
+      nullable: true,
+      description: 'Only questions or only discussions; all when omitted.',
+    })
+    kind: ForumTopicKind | null,
   ): Promise<ForumPage<ForumTopicModel>> {
     return this.execute(
       this.topics.topics(
@@ -349,13 +380,25 @@ export class ForumTopicsResolver {
         topPeriod,
         tagSlug ?? null,
         filter,
+        kind ?? null,
       ),
     );
   }
 
+  @Query(() => ForumTopicFacetsModel, {
+    description: 'Topic counts of one section for its filters and header.',
+  })
+  @UseGuards(OptionalViewerJwtGuard)
+  forumTopicFacets(
+    @Context() ctx: RequestContext,
+    @Args('forumId', { type: () => ID }) forumId: string,
+  ): Promise<ForumTopicFacetsModel> {
+    return this.execute(this.topics.facets(this.viewer(ctx), forumId));
+  }
+
   @Query(() => ForumTopicPageModel, {
     description:
-      'Signed-in viewer: own (AUTHORED) or followed (SUBSCRIBED) topics across visible forums.',
+      'Signed-in viewer: own (AUTHORED) or followed (SUBSCRIBED) topics, or live topics of followed sections (FOLLOWED_SECTIONS, newest first), across visible forums.',
   })
   @UseGuards(JwtAuthGuard)
   viewerForumTopics(

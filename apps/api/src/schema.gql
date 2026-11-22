@@ -822,6 +822,31 @@ type ForumTopicCreated {
 }
 
 """
+Counts among live (open and closed) topics unless noted; mine is null for guests.
+"""
+type ForumTopicFacets {
+  """Topics with an accepted answer."""
+  accepted: Int!
+
+  """Archived topics (not live)."""
+  archived: Int!
+  closed: Int!
+  discussions: Int!
+  mine: Int
+
+  """Topics nobody replied to yet."""
+  noReplies: Int!
+
+  """Distinct members with a visible post in a live topic."""
+  participants: Int!
+  questions: Int!
+  total: Int!
+
+  """Questions without an accepted answer."""
+  unsolved: Int!
+}
+
+"""
 MINE: authored by the viewer; NO_REPLIES: no replies yet; UNSOLVED: questions without an accepted answer.
 """
 enum ForumTopicFilter {
@@ -904,6 +929,7 @@ type ForumTopicViewerAbilities {
 
 enum ForumViewerCollection {
   AUTHORED
+  FOLLOWED_SECTIONS
   SUBSCRIBED
 }
 
@@ -1035,6 +1061,7 @@ type LeaderboardPage {
 enum LeaderboardPeriod {
   ALL_TIME
   MONTH
+  WEEK
   YEAR
 }
 
@@ -1373,6 +1400,9 @@ type Mutation {
   discardResearchDraft(draftId: ID!, expectedVersion: Int!, pageId: ID!): ResearchDiscardReceipt!
   editComment(input: EditCommentInput!): Comment!
   editForumPost(input: EditForumPostInput!): ForumPost!
+
+  """Follow a section to learn about its new topics."""
+  followForum(forumId: ID!): Boolean!
   followUser(userId: ID!): UserSocialGraphSummary!
   giveReputation(input: GiveReputationInput!): ReputationEntry!
   grantCustomTitle(input: GrantCustomTitleInput!): UserTitleGrant!
@@ -1462,6 +1492,7 @@ type Mutation {
   trashForumTopic(topicId: ID!): ForumTopic!
   unarchiveForumTopic(topicId: ID!): ForumTopic!
   unblockUser(userId: ID!): UserBlockResult!
+  unfollowForum(forumId: ID!): Boolean!
   unfollowUser(userId: ID!): UserSocialGraphSummary!
   unlinkNewsDiscussion(articleId: ID!): Boolean!
   unsubscribeForumTopic(topicId: ID!): Boolean!
@@ -1927,6 +1958,7 @@ type Query {
   Open and closed topics across every forum the viewer can see (guests included).
   """
   forumDiscoverTopics(filter: ForumDiscoverFilter! = ALL, limit: Int! = 10, page: Int! = 1, sort: ForumDiscoverSort! = NEW): ForumTopicPage!
+  forumFollowed(forumId: ID!): Boolean!
   forumHubStats: ForumHubStats!
   forumPopularTags(limit: Int! = 12): [ForumPopularTag!]!
   forumPostRevisions(postId: ID!): [ForumPostRevision!]!
@@ -1940,8 +1972,23 @@ type Query {
   forumSimilarTopics(limit: Int! = 3, topicId: ID!): [ForumTopic!]!
   forumTags(forumId: ID!): [ForumTag!]!
   forumTopic(topicId: ID!): ForumTopic!
+
+  """Topic counts of one section for its filters and header."""
+  forumTopicFacets(forumId: ID!): ForumTopicFacets!
   forumTopicSubscribed(topicId: ID!): Boolean!
-  forumTopics(filter: ForumTopicFilter! = ALL, forumId: ID!, limit: Int! = 20, page: Int! = 1, scope: ForumTopicScope! = ACTIVE, sort: ForumTopicSort! = LAST_ACTIVITY, tagSlug: String, topPeriod: ForumTopPeriod! = WEEK): ForumTopicPage!
+  forumTopics(
+    filter: ForumTopicFilter! = ALL
+    forumId: ID!
+
+    """Only questions or only discussions; all when omitted."""
+    kind: ForumTopicKind
+    limit: Int! = 20
+    page: Int! = 1
+    scope: ForumTopicScope! = ACTIVE
+    sort: ForumTopicSort! = LAST_ACTIVITY
+    tagSlug: String
+    topPeriod: ForumTopPeriod! = WEEK
+  ): ForumTopicPage!
   fullNews(language: String!, slug: String!): FullNews
   interactionTarget(id: ID!): InteractionTarget!
   interactionTargetAccess(capability: InteractionCapability!, targetId: ID!): InteractionAccessDecision!
@@ -2005,7 +2052,7 @@ type Query {
   viewerCommentDrafts(limit: Int! = 20): [CommentDraft!]!
 
   """
-  Signed-in viewer: own (AUTHORED) or followed (SUBSCRIBED) topics across visible forums.
+  Signed-in viewer: own (AUTHORED) or followed (SUBSCRIBED) topics, or live topics of followed sections (FOLLOWED_SECTIONS, newest first), across visible forums.
   """
   viewerForumTopics(collection: ForumViewerCollection!, limit: Int! = 20, page: Int! = 1): ForumTopicPage!
   viewerNotificationPreferences: NotificationPreferences!

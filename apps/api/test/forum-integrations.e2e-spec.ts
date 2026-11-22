@@ -110,7 +110,9 @@ describe('Forum integrations (e2e)', () => {
     return id;
   }
 
-  async function forum(visibility: 'PUBLIC' | 'MEMBERS' = 'PUBLIC') {
+  async function forum(
+    visibility: 'PUBLIC' | 'MEMBERS' | 'RESTRICTED' = 'PUBLIC',
+  ) {
     const admin = await user({
       seesAllCategories: true,
       canAssignModerators: true,
@@ -252,5 +254,35 @@ describe('Forum integrations (e2e)', () => {
         author,
       ),
     ).resolves.toBe(1);
+  });
+
+  it('follows visible sections and lists their new live topics', async () => {
+    const { forumId } = await forum();
+    const hidden = await forum('RESTRICTED');
+    const reader = await user();
+    await integrations.followForum(reader, forumId);
+    await integrations.followForum(reader, forumId);
+    await expect(integrations.isFollowingForum(reader, forumId)).resolves.toBe(
+      true,
+    );
+    await expect(integrations.isFollowingForum(null, forumId)).resolves.toBe(
+      false,
+    );
+    await expect(
+      integrations.followForum(reader, hidden.forumId),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+
+    const first = await topic(forumId, await user());
+    const second = await topic(forumId, await user());
+    const feed = await topics.viewerTopics(reader, 'FOLLOWED_SECTIONS', 1, 20);
+    expect(feed.items.map(({ id }) => id)).toEqual([second.id, first.id]);
+
+    await integrations.unfollowForum(reader, forumId);
+    await expect(integrations.isFollowingForum(reader, forumId)).resolves.toBe(
+      false,
+    );
+    expect(
+      (await topics.viewerTopics(reader, 'FOLLOWED_SECTIONS', 1, 20)).total,
+    ).toBe(0);
   });
 });
