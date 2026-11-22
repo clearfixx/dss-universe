@@ -229,10 +229,13 @@ async function authenticate(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query, variables: { input } }),
       cache: "no-store",
+      signal: AbortSignal.timeout(15_000),
     });
     const body = (await response.json()) as GraphqlResponse;
     const payload = body.data?.[field];
-    if (!response.ok || !payload) {
+    // GraphQL may return HTTP 200 with errors and partial data. Never persist
+    // credentials from a partial or malformed authentication result.
+    if (!response.ok || body.errors?.length || !isCompleteAuthPayload(payload)) {
       return {
         error: {
           status: "error",
@@ -250,6 +253,18 @@ async function authenticate(
       },
     };
   }
+}
+
+function isCompleteAuthPayload(payload: AuthPayload | undefined): payload is AuthPayload {
+  return Boolean(
+    payload &&
+      typeof payload.user?.id === "string" &&
+      payload.user.id.trim() &&
+      typeof payload.tokens?.accessToken === "string" &&
+      payload.tokens.accessToken.trim() &&
+      typeof payload.tokens?.refreshToken === "string" &&
+      payload.tokens.refreshToken.trim(),
+  );
 }
 
 async function persistSession(

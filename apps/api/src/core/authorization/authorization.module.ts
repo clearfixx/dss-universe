@@ -39,6 +39,7 @@
 
 import { Module } from '@nestjs/common';
 
+import { AdminCommandDeckResolver } from './admin-command-deck.resolver';
 import { AuthorizationTestController } from './authorization-test.controller';
 import { PermissionsGuard } from './guards/permissions.guard';
 import { PermissionsRepository } from './repositories/permissions.repository';
@@ -51,6 +52,7 @@ import { AccessCapabilityDecisionsService } from './services/access-capability-d
   controllers: [AuthorizationTestController],
   providers: [
     PermissionsGuard,
+    AdminCommandDeckResolver,
     PermissionsService,
     PermissionsRepository,
     AccessCapabilityDecisionsService,

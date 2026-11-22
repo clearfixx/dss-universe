@@ -52,6 +52,8 @@ import {
   REFRESH_COOKIE,
 } from "@/features/auth/session-contract";
 
+import { profileRoutePath } from "./profile-route";
+
 async function context() {
   const token = (await cookies()).get("dss_access_token")?.value;
   if (!token) throw new Error("Authentication required.");
@@ -70,12 +72,13 @@ export async function setProfileFollowState(
   username: string,
   following: boolean,
 ): Promise<void> {
+  const profilePath = profileRoutePath(username);
   await getClient().mutate({
     mutation: following ? UnfollowProfileDocument : FollowProfileDocument,
     variables: { userId },
     context: await context(),
   });
-  revalidatePath(`/profile/${username}`);
+  revalidatePath(profilePath);
 }
 
 export async function createWallPost(
@@ -83,6 +86,7 @@ export async function createWallPost(
   username: string,
   formData: FormData,
 ): Promise<void> {
+  const profilePath = profileRoutePath(username);
   const body = String(formData.get("body") ?? "").trim();
   const imageMediaId = String(formData.get("imageMediaId") ?? "").trim();
   if (!body && !imageMediaId) {
@@ -99,7 +103,7 @@ export async function createWallPost(
     },
     context: await context(),
   });
-  revalidatePath(`/profile/${username}`);
+  revalidatePath(profilePath);
 }
 
 export async function giveProfileReputation(
@@ -107,6 +111,7 @@ export async function giveProfileReputation(
   username: string,
   formData: FormData,
 ): Promise<void> {
+  const profilePath = profileRoutePath(username);
   const reason = String(formData.get("reason") ?? "").trim();
   const value = Number.parseInt(String(formData.get("value") ?? ""), 10);
   if ((value !== 1 && value !== -1) || reason.length < 3) {
@@ -117,13 +122,14 @@ export async function giveProfileReputation(
     variables: { input: { recipientId, value, reason } },
     context: await context(),
   });
-  revalidatePath(`/profile/${username}`);
+  revalidatePath(profilePath);
 }
 
 export async function selectViewerCustomTitle(
   username: string,
   formData: FormData,
 ): Promise<void> {
+  const profilePath = profileRoutePath(username);
   const grantId = String(formData.get("grantId") ?? "").trim();
   if (!grantId) throw new Error("Оберіть звання.");
   await getClient().mutate({
@@ -131,7 +137,7 @@ export async function selectViewerCustomTitle(
     variables: { grantId },
     context: await context(),
   });
-  revalidatePath(`/profile/${username}`);
+  revalidatePath(profilePath);
 }
 
 export async function updateProfileSettings(formData: FormData): Promise<void> {

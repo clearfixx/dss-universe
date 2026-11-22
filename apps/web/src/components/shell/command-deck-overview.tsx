@@ -12,15 +12,7 @@
  * ===============================================================
  */
 
-import {
-  BookOpen,
-  CircleCheck,
-  Flame,
-  MessageSquare,
-  Sparkles,
-  Trophy,
-  Users,
-} from "lucide-react";
+import { BookOpen, MessageSquare, Sparkles } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,96 +21,33 @@ import { ActivityVisitMarker } from "@/features/activity/activity-visit-marker";
 
 import { GraphqlPlatformStatus } from "./graphql-platform-status";
 
-const metrics = [
-  { label: "Level", value: "42", hint: "Commander", icon: Trophy },
-  { label: "Missions", value: "89", hint: "+7 this week", icon: CircleCheck },
-  {
-    label: "Community points",
-    value: "8,765",
-    hint: "+156 this week",
-    icon: Users,
-  },
-  {
-    label: "Mission streak",
-    value: "23 days",
-    hint: "Keep it up",
-    icon: Flame,
-  },
-];
-
-const fallbackActivity = [
-  {
-    icon: BookOpen,
-    title: "New research published",
-    text: "Quantum Computing Advances 2026",
-    time: "2h ago",
-  },
-  {
-    icon: MessageSquare,
-    title: "New Community Hub discussion",
-    text: "How should we design AI agents?",
-    time: "4h ago",
-  },
-  {
-    icon: CircleCheck,
-    title: "Academy course updated",
-    text: "Advanced TypeScript Patterns",
-    time: "8h ago",
-  },
-];
-
 type ActivityFeed = ViewerActivityFeedQuery["viewerActivityFeed"];
 
 export function CommandDeckOverview({ feed }: { feed?: ActivityFeed | null }) {
-  const activity = feed
-    ? feed.items.map((item) => ({
-        icon: item.module === "PROFILE" ? MessageSquare : BookOpen,
-        title: activityTitle(item.action),
-        text: `${item.module} · ${item.subjectType}`,
-        time: relativeTime(item.occurredAt),
-        unread: item.isUnread,
-        id: item.id,
-      }))
-    : fallbackActivity.map((item) => ({
-        ...item,
-        unread: false,
-        id: item.text,
-      }));
+  const activity = (feed?.items ?? []).map((item) => ({
+    icon: item.module === "PROFILE" ? MessageSquare : BookOpen,
+    title: activityTitle(item.action),
+    text: `${item.module} · ${item.subjectType}`,
+    time: relativeTime(item.occurredAt),
+    unread: item.isUnread,
+    id: item.id,
+  }));
 
   return (
     <div className="mx-auto max-w-[1500px] space-y-6">
       {feed ? <ActivityVisitMarker /> : null}
       <div>
         <Badge className="mb-3 bg-violet-500/15 text-violet-200">
-          Command Deck
+          Command Deck · Адміністрування
         </Badge>
-        <h1 className="text-3xl font-bold">Welcome back, Commander.</h1>
+        <h1 className="text-3xl font-bold">Панель адміністратора</h1>
         <p className="mt-2 text-slate-400">
-          Here is what changed across the universe while you were away.
+          Огляд доступних подій платформи.
         </p>
         <p className="mt-2 text-xs">
           <GraphqlPlatformStatus />
         </p>
       </div>
-
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {metrics.map(({ label, value, hint, icon: Icon }) => (
-          <Card key={label} className="border-white/10 bg-white/[0.035]">
-            <CardContent className="flex items-center gap-4 p-5">
-              <span className="grid size-11 place-items-center rounded-xl bg-violet-500/15 text-violet-300">
-                <Icon className="size-5" />
-              </span>
-              <div>
-                <p className="text-xs uppercase tracking-wider text-slate-500">
-                  {label}
-                </p>
-                <p className="text-2xl font-semibold">{value}</p>
-                <p className="text-xs text-emerald-400">{hint}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
         <Card className="border-white/10 bg-white/[0.035]">
@@ -133,9 +62,11 @@ export function CommandDeckOverview({ feed }: { feed?: ActivityFeed | null }) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {feed && activity.length === 0 ? (
+            {activity.length === 0 ? (
               <p className="rounded-xl border border-dashed border-white/10 p-6 text-sm text-slate-400">
-                No new universe activity matches this view yet.
+                {feed
+                  ? "No new universe activity matches this view yet."
+                  : "Universe activity is currently unavailable. Please check back later."}
               </p>
             ) : null}
             {activity.map(({ icon: Icon, title, text, time, unread, id }) => (
@@ -164,11 +95,8 @@ export function CommandDeckOverview({ feed }: { feed?: ActivityFeed | null }) {
             <p className="leading-7 text-slate-300">
               {feed
                 ? `${feed.total} relevant signals are available. ${feed.unreadCount} arrived since your previous visit.`
-                : "The deterministic briefing remains available even while optional AI summaries are offline."}
+                : "A briefing cannot be prepared while the activity feed is unavailable."}
             </p>
-            <div className="mt-5 rounded-xl border border-violet-400/20 bg-violet-500/10 p-4 text-sm text-violet-100">
-              Ask AI Core to summarize your universe activity.
-            </div>
           </CardContent>
         </Card>
       </section>

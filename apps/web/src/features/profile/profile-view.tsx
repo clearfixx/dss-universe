@@ -230,7 +230,7 @@ export function ProfileView({
                 </Button>
               ) : isGuest ? (
                 <Button asChild>
-                  <Link href={`/login?returnTo=/profile/${profile.username}`}>
+                  <Link href={`/login?returnTo=${encodeURIComponent(`/profile/${encodeURIComponent(profile.username)}`)}`}>
                     <UserPlus /> Увійти, щоб підписатися
                   </Link>
                 </Button>
