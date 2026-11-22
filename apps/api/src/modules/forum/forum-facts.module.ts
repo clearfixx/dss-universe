@@ -25,11 +25,17 @@ import { ForumViewerFactsAdapter } from './infrastructure/forum-viewer-facts.ada
 import { PrismaForumSubjectVisibility } from './infrastructure/prisma-forum-subject-visibility';
 import { FORUM_TOPIC_COUNTS } from './contracts/forum-topic-counts.contract';
 import { PrismaForumTopicCounts } from './infrastructure/prisma-forum-topic-counts';
+import { FORUM_CONTRIBUTION_TOTALS } from './contracts/forum-contribution-totals.contract';
+import { PrismaForumContributionTotals } from './infrastructure/prisma-forum-contribution-totals';
 
 @Module({
   imports: [PrismaModule, AuthorizationModule],
   providers: [
     { provide: FORUM_TOPIC_COUNTS, useClass: PrismaForumTopicCounts },
+    {
+      provide: FORUM_CONTRIBUTION_TOTALS,
+      useClass: PrismaForumContributionTotals,
+    },
     ForumViewerFactsAdapter,
     { provide: FORUM_VIEWER_FACTS, useExisting: ForumViewerFactsAdapter },
     {
@@ -37,6 +43,10 @@ import { PrismaForumTopicCounts } from './infrastructure/prisma-forum-topic-coun
       useClass: PrismaForumSubjectVisibility,
     },
   ],
-  exports: [FORUM_TOPIC_COUNTS, FORUM_SUBJECT_VISIBILITY],
+  exports: [
+    FORUM_TOPIC_COUNTS,
+    FORUM_SUBJECT_VISIBILITY,
+    FORUM_CONTRIBUTION_TOTALS,
+  ],
 })
 export class ForumFactsModule {}

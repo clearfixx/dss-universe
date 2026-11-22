@@ -68,6 +68,8 @@ import { FORUM_MEMBER_CARDS, FORUM_MEMBER_STATS } from '@api/modules/forum';
 import { LevelsModule } from '@api/modules/levels';
 import { ForumMemberStatsAdapter } from './infrastructure/forum-member-stats.adapter';
 import { ForumMemberCardsAdapter } from './infrastructure/forum-member-cards.adapter';
+import { MISSION_METRIC_READER } from '@api/modules/missions';
+import { MissionMetricAdapter } from './infrastructure/mission-metric.adapter';
 import { ForumPostMediaAdapter } from '../media-references/infrastructure/forum-post-media.adapter';
 import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapter';
 
@@ -86,6 +88,7 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
     ForumFactsModule,
   ],
   providers: [
+    { provide: MISSION_METRIC_READER, useClass: MissionMetricAdapter },
     { provide: NEWS_ATTACHMENT_READER, useClass: NewsAttachmentAdapter },
     {
       provide: ACTIVITY_SUBJECT_VISIBILITY,
@@ -113,6 +116,7 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
     { provide: PROFILE_ACTIVITY_READER, useClass: ProfileActivityAdapter },
   ],
   exports: [
+    MISSION_METRIC_READER,
     FORUM_MEMBER_CARDS,
     FORUM_MEMBER_STATS,
     FORUM_POST_MEDIA,
