@@ -235,7 +235,7 @@ class ForumCategoryModel {
 }
 
 @ObjectType('ForumModeratorAssignment')
-class ForumModeratorAssignmentModel {
+export class ForumModeratorAssignmentModel {
   @Field(() => ID) id!: string;
   @Field(() => ID) categoryId!: string;
   @Field(() => ID, { nullable: true, description: 'null = whole category.' })
