@@ -1,3 +1,6 @@
+import { ResearchLabAuthorityAdapter } from '../src/modules/research-lab/infrastructure/research-lab-authority.adapter';
+import { Permission } from '../src/core/authorization';
+import { ModerationSanctionsService } from '../src/modules/moderation/infrastructure/prisma-moderation-sanctions';
 import {
   EDITOR_VIEWER_DOCUMENT_PROJECTOR,
   type EditorViewerDocumentProjector,
@@ -291,6 +294,27 @@ describe('Research Lab public delivery (GraphQL)', () => {
         },
       },
     });
+    const vote = async (targetId: string, kind: 'UPVOTE' | 'DOWNVOTE') =>
+      payload(
+        await request(app.getHttpServer())
+          .post('/api/graphql')
+          .set('Authorization', 'Bearer ' + member.tokens.accessToken)
+          .send({
+            query:
+              'mutation($input:SetReactionInput!){setReaction(input:$input){changed summary{score total}}}',
+            variables: { input: { interactionTargetId: targetId, kind } },
+          })
+          .expect(200),
+      );
+    await app
+      .get(ResearchLabService)
+      .setInteractionSetting(member.user.id, id, 'allowRating', false);
+    expect((await vote(target.id, 'UPVOTE')).errors[0].extensions.code).toBe(
+      'FORBIDDEN',
+    );
+    expect(await vote(childTarget.id, 'UPVOTE')).toEqual({
+      data: { setReaction: { changed: true, summary: { score: 1, total: 1 } } },
+    });
     await fixture.prisma.interactionTarget.update({
       where: { id: target.id },
       data: { status: 'LOCKED' },
@@ -300,6 +324,23 @@ describe('Research Lab public delivery (GraphQL)', () => {
     });
     expect((await access(childTarget.id, 'REACT')).data).toMatchObject({
       interactionTargetAccess: { allowed: false },
+    });
+    expect(
+      (await vote(childTarget.id, 'DOWNVOTE')).errors[0].extensions.code,
+    ).toBe('FORBIDDEN');
+    const summary = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .set('Authorization', 'Bearer ' + member.tokens.accessToken)
+      .send({
+        query:
+          'query($id:ID!){reactionSummary(interactionTargetId:$id){score total viewerReaction}}',
+        variables: { id: childTarget.id },
+      })
+      .expect(200);
+    expect(payload(summary)).toEqual({
+      data: {
+        reactionSummary: { score: 1, total: 1, viewerReaction: 'UPVOTE' },
+      },
     });
     await fixture.prisma.interactionTarget.update({
       where: { id: target.id },
@@ -388,6 +429,219 @@ describe('Research Lab public delivery (GraphQL)', () => {
       await fixture.prisma.researchRevision.count({ where: { pageId: id } }),
     ).toBe(1);
   });
+  it('enforces page access for Wiki search and comment history when membership changes', async () => {
+    const db = fixture.prisma;
+    const suffix = randomUUID();
+    const register = (label: string) =>
+      app.get(AuthenticationPresentationService).register({
+        email: label + suffix + '@dss.test',
+        username: label + suffix,
+        displayName: label,
+        password: 'research-fixture-123',
+      });
+    const author = await register('author');
+    const reader = await register('reader');
+    const actorId = author.user.id;
+    const key = 'wiki-' + suffix;
+    const group = await db.accessGroup.create({
+      data: {
+        key,
+        displayName: key,
+        createdById: actorId,
+        capabilities: { create: { key: 'KNOWLEDGE_FORGE_GUARDIAN' } },
+        memberships: { create: { subjectId: actorId, grantedById: actorId } },
+      },
+    });
+    const category = await db.researchCategory.create({
+      data: { slug: key, name: key },
+    });
+    const service = app.get(ResearchLabService);
+    const summary = 'Private summary ' + suffix;
+    const draft = await service.createDraft({
+      actorId,
+      title: key,
+      summary,
+      proposedSlug: key,
+      documentJson: JSON.stringify(createEmptyEditorDocument('WIKI')),
+    });
+    const published = await service.selfPublishDraft({
+      ...draft,
+      actorId,
+      expectedVersion: draft.version,
+      editSummary: 'First',
+      correlationId: randomUUID(),
+    });
+    await db.researchPage.update({
+      where: { id: draft.pageId },
+      data: {
+        visibility: 'GROUPS',
+        primaryCategoryId: category.id,
+        audienceGroups: { create: { groupKey: key } },
+      },
+    });
+    const now = Date.now();
+    const membership = await db.accessGroupMembership.create({
+      data: {
+        groupId: group.id,
+        subjectId: reader.user.id,
+        grantedById: actorId,
+        validFrom: new Date(now - 86400000),
+        validUntil: new Date(now + 86400000),
+      },
+    });
+    const search = async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/graphql')
+        .set('Authorization', 'Bearer ' + reader.tokens.accessToken)
+        .send({
+          query:
+            'query($term:String!){search(source:RESEARCH_LAB,term:$term){items{id revisionId excerpt} total categories{slug total}}}',
+          variables: { term: key },
+        })
+        .expect(200);
+      const result = payload(response);
+      expect(result.errors).toBeUndefined();
+      return result.data.search;
+    };
+    const visible = {
+      items: [
+        {
+          id: draft.pageId,
+          revisionId: published.revisionId,
+          excerpt: summary,
+        },
+      ],
+      total: 1,
+      categories: [{ slug: key, total: 1 }],
+    };
+    const empty = { items: [], total: 0, categories: [] };
+    expect(await search()).toEqual(visible);
+    const target = await db.researchPage.findUniqueOrThrow({
+      where: { id: draft.pageId },
+      select: { interactionTargetId: true },
+    });
+    const graphql = async <T>(
+      query: string,
+      variables: Record<string, unknown>,
+    ) =>
+      payload<T>(
+        await request(app.getHttpServer())
+          .post('/api/graphql')
+          .set('Authorization', 'Bearer ' + reader.tokens.accessToken)
+          .send({ query, variables })
+          .expect(200),
+      );
+    const saveBookmark = () =>
+      graphql<{
+        saveBookmark: { bookmark: { id: string; interactionTargetId: string } };
+      }>(
+        'mutation($id:ID!){saveBookmark(interactionTargetId:$id){bookmark{id interactionTargetId}}}',
+        { id: target.interactionTargetId },
+      );
+    const saved = await saveBookmark();
+    expect(saved.errors).toBeUndefined();
+    expect(saved.data.saveBookmark.bookmark.interactionTargetId).toBe(
+      target.interactionTargetId,
+    );
+    const add = (parentId?: string) =>
+      graphql<{ createComment: { id: string } }>(
+        'mutation($input:CreateCommentInput!){createComment(input:$input){id}}',
+        { input: { ...target, parentId, body: 'Wiki discussion' } },
+      );
+    const parent = await add();
+    expect(parent.errors).toBeUndefined();
+    const commentId = parent.data.createComment.id;
+    const history = () =>
+      graphql<{ commentRevisions: { body: string }[] }>(
+        'query($commentId:ID!){commentRevisions(commentId:$commentId){body}}',
+        { commentId },
+      );
+    await db.researchPage.update({
+      where: { id: draft.pageId },
+      data: { allowComments: false },
+    });
+    expect((await add(commentId)).errors[0].extensions.code).toBe('FORBIDDEN');
+    expect((await history()).data.commentRevisions).toEqual([
+      { body: 'Wiki discussion' },
+    ]);
+    await db.researchPage.update({
+      where: { id: draft.pageId },
+      data: { allowComments: true },
+    });
+    expect((await add(commentId)).errors).toBeUndefined();
+    const where = { id: membership.id };
+    const authority = app.get<ResearchLabAuthorityAdapter>(
+      ResearchLabAuthorityAdapter,
+    );
+    const atExpiry = jest
+      .spyOn(authority, 'viewerFacts')
+      .mockImplementationOnce((subjectId) =>
+        authority.viewerFacts(subjectId, new Date(now + 86400000)),
+      );
+    try {
+      expect(await search()).toEqual(empty);
+    } finally {
+      atExpiry.mockRestore();
+    }
+    expect(await search()).toEqual(visible);
+    await db.accessGroupMembership.update({
+      where,
+      data: {
+        revokedAt: new Date(),
+        revokedById: actorId,
+        revokeReason: 'Access withdrawn',
+      },
+    });
+    expect(await search()).toEqual(empty);
+    expect((await history()).errors[0].extensions.code).toBe('FORBIDDEN');
+    const list = (page: number) =>
+      graphql(
+        'query($id:ID!,$page:Int!){researchPage(id:$id){title} viewerBookmarks(pagination:{page:$page,limit:1}){items{id interactionTargetId} total totalPages}}',
+        { id: draft.pageId, page },
+      );
+    expect(await list(1)).toEqual({
+      data: {
+        researchPage: null,
+        viewerBookmarks: {
+          items: [saved.data.saveBookmark.bookmark],
+          total: 1,
+          totalPages: 1,
+        },
+      },
+    });
+    expect(await list(2)).toEqual({
+      data: {
+        researchPage: null,
+        viewerBookmarks: { items: [], total: 1, totalPages: 1 },
+      },
+    });
+    expect((await saveBookmark()).errors[0].extensions.code).toBe('FORBIDDEN');
+    expect(
+      await graphql(
+        'mutation($id:ID!){removeBookmark(interactionTargetId:$id){saved changed}}',
+        { id: target.interactionTargetId },
+      ),
+    ).toEqual({ data: { removeBookmark: { saved: false, changed: true } } });
+    expect(await list(1)).toEqual({
+      data: {
+        researchPage: null,
+        viewerBookmarks: { items: [], total: 0, totalPages: 0 },
+      },
+    });
+    const removal = await graphql(
+      'mutation($commentId:ID!){removeComment(commentId:$commentId){id}}',
+      { commentId },
+    );
+    expect(removal.errors[0].extensions.code).toBe('FORBIDDEN');
+    expect(
+      await db.comment.findUniqueOrThrow({ where: { id: commentId } }),
+    ).toMatchObject({
+      deletedAt: null,
+      deletedById: null,
+      body: 'Wiki discussion',
+    });
+  });
+
   it('keeps exact facets and stable ties across a search batch and on an empty deep page', async () => {
     const db = fixture.prisma;
     const author = randomUUID();
@@ -639,6 +893,81 @@ describe('Research Lab public delivery (GraphQL)', () => {
       categories: [{ slug: category.slug, total: 65 }],
     });
   });
+  it('preserves draft reads and blocks Wiki edits until read-only is lifted', async () => {
+    const suffix = randomUUID();
+    const author = await app.get(AuthenticationPresentationService).register({
+      email: suffix + '@dss.test',
+      username: suffix,
+      displayName: 'Wiki author',
+      password: 'research-fixture-123',
+    });
+    const moderator = await fixture.prisma.user.create({
+      data: {
+        email: 'mod-' + suffix + '@dss.test',
+        username: 'mod-' + suffix,
+        passwordHash: 'fixture',
+      },
+    });
+    const input = {
+      title: 'Original title',
+      summary: 'Draft',
+      proposedSlug: 'readonly-' + suffix,
+      documentJson: JSON.stringify(createEmptyEditorDocument('WIKI')),
+    };
+    const { pageId, version } = await app
+      .get(ResearchLabService)
+      .createDraft({ actorId: author.user.id, ...input });
+    const graphql = (query: string, variables: Record<string, unknown>) =>
+      request(app.getHttpServer())
+        .post('/api/graphql')
+        .set('Authorization', 'Bearer ' + author.tokens.accessToken)
+        .send({ query, variables })
+        .expect(200);
+    const save = () =>
+      graphql(
+        'mutation($input:ResearchSaveDraftInput!){saveResearchDraft(input:$input){pageId version}}',
+        {
+          input: {
+            ...input,
+            pageId,
+            expectedVersion: version,
+            title: 'Revised title',
+          },
+        },
+      );
+    const sanctions = app.get(ModerationSanctionsService);
+    const { sanctionId } = await sanctions.issueReadOnly(
+      { id: moderator.id, permissions: [Permission.ModerationReadOnlyIssue] },
+      {
+        subjectId: author.user.id,
+        reason: 'Wiki fixture',
+        context: null,
+        expiresAt: new Date(Date.now() + 86400000),
+      },
+    );
+    const denied = payload(await save());
+    expect(denied.errors[0].extensions.code).toBe('FORBIDDEN');
+    expect(denied.errors[0].message).toContain('read-only');
+    const read = payload(
+      await graphql(
+        'query($pageId:ID!){researchOwnDraft(pageId:$pageId){title version}}',
+        { pageId },
+      ),
+    );
+    expect(read.errors).toBeUndefined();
+    expect(read.data.researchOwnDraft).toEqual({ title: input.title, version });
+    await sanctions.revoke(
+      { id: moderator.id, permissions: [Permission.ModerationSanctionsRevoke] },
+      { sanctionId, reason: 'Lifted' },
+    );
+    const saved = payload(await save());
+    expect(saved.errors).toBeUndefined();
+    expect(saved.data.saveResearchDraft).toEqual({
+      pageId,
+      version: version + 1,
+    });
+  });
+
   it('resumes a private draft at the saved version and removes it from discovery after audience loss', async () => {
     const auth = app.get(AuthenticationPresentationService);
     const register = () => {

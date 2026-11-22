@@ -6,7 +6,8 @@
  * 📄 File: apps/api/src/modules/forum/infrastructure/prisma-forum-integrations.ts
  *
  * 🎯 Purpose:
- * Implements CH-5a: topic subscriptions and News discussion links.
+ * Implements CH-5a: topic subscriptions and News discussion links, and
+ * CH-6 section follows.
  *
  * ⚠️ Important:
  * Subscriptions only record intent; notification delivery is Phase 15 and
@@ -75,6 +76,37 @@ export class ForumIntegrationsService {
     const row = await this.prisma.forumTopicSubscription.findUnique({
       where: { userId_topicId: { userId: viewerId, topicId } },
       select: { topicId: true },
+    });
+    return row !== null;
+  }
+
+  /** Follows a section the viewer can see; new topics then reach them. */
+  async followForum(actorId: string, forumId: string): Promise<boolean> {
+    await this.topics.assertVisibleForum(actorId, forumId);
+    await this.prisma.forumFollow.upsert({
+      where: { userId_forumId: { userId: actorId, forumId } },
+      create: { userId: actorId, forumId },
+      update: {},
+    });
+    return true;
+  }
+
+  async unfollowForum(actorId: string, forumId: string): Promise<boolean> {
+    await this.viewer(actorId);
+    await this.prisma.forumFollow.deleteMany({
+      where: { userId: actorId, forumId },
+    });
+    return false;
+  }
+
+  async isFollowingForum(
+    viewerId: string | null,
+    forumId: string,
+  ): Promise<boolean> {
+    if (!viewerId) return false;
+    const row = await this.prisma.forumFollow.findUnique({
+      where: { userId_forumId: { userId: viewerId, forumId } },
+      select: { forumId: true },
     });
     return row !== null;
   }

@@ -259,6 +259,42 @@ describe('Research Lab commands (e2e)', () => {
     await expect(
       service.audiencePolicy(outsider, pageId),
     ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    await expect(
+      service.setInteractionSetting(guardian, pageId, 'allowRating', false),
+    ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+    await expect(
+      service.setInteractionSetting(outsider, pageId, 'allowComments', false),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    await Promise.all([
+      service.setInteractionSetting(moderator, pageId, 'allowComments', false),
+      service.setInteractionSetting(moderator, pageId, 'allowRating', false),
+    ]);
+    expect(await service.interactionSettings(moderator, pageId)).toEqual({
+      allowComments: false,
+      allowRating: false,
+    });
+    await service.setInteractionSetting(
+      moderator,
+      pageId,
+      'allowComments',
+      false,
+    );
+    expect(
+      await fixture.prisma.auditRecord.count({
+        where: {
+          targetId: pageId,
+          action: 'research_lab.interaction_setting_updated',
+        },
+      }),
+    ).toBe(2);
+    expect(
+      await service.setInteractionSetting(
+        moderator,
+        pageId,
+        'allowRating',
+        true,
+      ),
+    ).toEqual({ allowComments: false, allowRating: true });
     const audit = await fixture.prisma.auditRecord.findMany({
       where: { targetId: pageId, action: 'research_lab.audience_updated' },
     });
@@ -421,6 +457,115 @@ describe('Research Lab commands (e2e)', () => {
       }),
     ).toBe(2);
   });
+
+  it.each(['publish first', 'rollback first', 'concurrent'] as const)(
+    'commits only one competing publication or rollback (%s)',
+    async (order) => {
+      const actorId = await user(true);
+      const slug = 'race-' + randomUUID();
+      const { pageId } = await service.createDraft({
+        actorId,
+        ...content(slug, 'Original'),
+      });
+      const command = {
+        actorId,
+        pageId,
+        editSummary: 'Reviewed',
+        correlationId: randomUUID(),
+      };
+      const original = await service.selfPublishDraft({
+        ...command,
+        expectedVersion: 1,
+      });
+      const edit = async (title: string) => {
+        const draft = await service.startDraft(actorId, pageId);
+        return service.saveDraft({
+          actorId,
+          pageId,
+          expectedVersion: draft.version,
+          ...content(slug, title),
+        });
+      };
+      const second = await edit('Current');
+      const current = await service.selfPublishDraft({
+        ...command,
+        correlationId: randomUUID(),
+        expectedVersion: second.version,
+      });
+      const third = await edit('Proposed');
+      const proposed = await service.submitDraft({
+        ...command,
+        correlationId: randomUUID(),
+        expectedVersion: third.version,
+      });
+      const publish = () =>
+        service.publishRevision({
+          ...command,
+          correlationId: randomUUID(),
+          revisionId: proposed.revisionId,
+        });
+      const rollback = () =>
+        service.rollback({
+          ...command,
+          correlationId: randomUUID(),
+          revisionId: original.revisionId,
+          expectedPublicationGeneration: 2,
+        });
+      const outbox = () =>
+        fixture.prisma.outboxEvent.count({ where: { aggregateId: pageId } });
+      const audit = () =>
+        fixture.prisma.auditRecord.count({ where: { targetId: pageId } });
+      const decisions = () =>
+        fixture.prisma.researchReviewDecision.count({ where: { pageId } });
+      const before = await Promise.all([outbox(), audit(), decisions()]);
+      let winner: Awaited<ReturnType<typeof publish>>;
+      if (order === 'concurrent') {
+        const results = await Promise.allSettled([publish(), rollback()]);
+        const won = results.filter((r) => r.status === 'fulfilled');
+        expect(won).toHaveLength(1);
+        expect(results.find((r) => r.status === 'rejected')).toMatchObject({
+          reason: { code: 'REVISION_CONFLICT' },
+        });
+        winner = won[0].value;
+      } else {
+        const [first, last] =
+          order === 'publish first' ? [publish, rollback] : [rollback, publish];
+        winner = await first();
+        await expect(last()).rejects.toMatchObject({
+          code: 'REVISION_CONFLICT',
+        });
+      }
+      const rows = await fixture.prisma.researchRevision.findMany({
+        where: { pageId },
+        orderBy: { number: 'asc' },
+      });
+      const rolledBack = winner.revisionId !== proposed.revisionId;
+      expect(rows.map((row) => [row.title, row.state])).toEqual([
+        ['Original', 'SUPERSEDED'],
+        ['Current', 'SUPERSEDED'],
+        ['Proposed', rolledBack ? 'IN_REVIEW' : 'PUBLISHED'],
+        ...(rolledBack ? [['Original', 'PUBLISHED']] : []),
+      ]);
+      if (rolledBack)
+        expect(rows[3]).toMatchObject({
+          rollbackFromRevisionId: original.revisionId,
+          basePublishedRevisionId: current.revisionId,
+          document: rows[0].document,
+          contentHash: rows[0].contentHash,
+        });
+      expect(
+        await fixture.prisma.researchPage.findUniqueOrThrow({
+          where: { id: pageId },
+        }),
+      ).toMatchObject({
+        publishedRevisionId: winner.revisionId,
+        publicationGeneration: 3,
+      });
+      expect(await Promise.all([outbox(), audit(), decisions()])).toEqual(
+        before.map((n) => n + 1),
+      );
+    },
+  );
 
   it('allows explicit Guardian self-publish with complete decision history', async () => {
     const guardian = await user(true);
@@ -679,11 +824,47 @@ describe('Research Lab commands (e2e)', () => {
     ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
     const moderator = await user();
     moderators.add(moderator);
-    await service.tombstone({
+    memberships.set(actorId, ['group:editors']);
+    await service.setAudience(moderator, pageId, 'GROUPS', ['editors']);
+    const removal = {
       ...command,
       actorId: moderator,
       expectedPublicationGeneration: 1,
       reason: 'Removed by reviewer',
+    };
+    const before = await fixture.prisma.researchPage.findUniqueOrThrow({
+      where: { id: pageId },
+    });
+    await expect(service.tombstone(removal)).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+    });
+    expect(
+      await fixture.prisma.researchPage.findUniqueOrThrow({
+        where: { id: pageId },
+      }),
+    ).toEqual(before);
+    expect(
+      await fixture.prisma.interactionTarget.findUniqueOrThrow({
+        where: { id: before.interactionTargetId },
+      }),
+    ).toMatchObject({ status: 'ACTIVE' });
+    expect(
+      await fixture.prisma.auditRecord.count({
+        where: { targetId: pageId, action: 'research_lab.page_tombstoned' },
+      }),
+    ).toBe(0);
+    expect(
+      await fixture.prisma.outboxEvent.count({
+        where: {
+          aggregateId: pageId,
+          eventName: 'research-lab.page.tombstoned.v1',
+        },
+      }),
+    ).toBe(0);
+    memberships.set(moderator, ['group:editors']);
+    await service.tombstone(removal);
+    await expect(service.tombstone(removal)).rejects.toMatchObject({
+      code: 'NOT_FOUND',
     });
     const removed = await fixture.prisma.researchPage.findUniqueOrThrow({
       where: { id: pageId },

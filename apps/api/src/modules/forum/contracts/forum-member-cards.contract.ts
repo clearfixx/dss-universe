@@ -7,7 +7,8 @@
  *
  * 🎯 Purpose:
  * Forum's consumer-owned port for the public identity shown next to topics,
- * posts and votes (name, username, avatar), bound in root composition.
+ * posts and votes (name, username, avatar, join date), bound in root
+ * composition.
  *
  * ⚠️ Important:
  * Batch only: callers pass every ID of one response at once. Never returns
@@ -21,6 +22,8 @@ export type ForumMemberCard = Readonly<{
   username: string;
   displayName: string | null;
   avatarUrl: string | null;
+  /** Account creation time, shown as "На сайті з …". */
+  createdAt: Date;
 }>;
 
 export interface ForumMemberCardReader {

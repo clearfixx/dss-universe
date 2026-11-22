@@ -10,7 +10,8 @@
  * fields News delivery shows for authors and voters.
  *
  * ⚠️ Important:
- * Selects only id, username, displayName and avatarUrl; one query per batch.
+ * Selects only id, username, displayName, avatarUrl and createdAt; one
+ * query per batch.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -30,7 +31,13 @@ export class ForumMemberCardsAdapter implements ForumMemberCardReader {
     if (ids.length === 0) return [];
     return this.prisma.user.findMany({
       where: { id: { in: [...new Set(ids)] } },
-      select: { id: true, username: true, displayName: true, avatarUrl: true },
+      select: {
+        id: true,
+        username: true,
+        displayName: true,
+        avatarUrl: true,
+        createdAt: true,
+      },
     });
   }
 }

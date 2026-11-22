@@ -105,6 +105,7 @@ function rankingHref(
 }
 
 const rankingLabels: Record<LeaderboardPeriod, string> = {
+  WEEK: "За тиждень",
   MONTH: "За місяць",
   YEAR: "За рік",
   ALL_TIME: "За весь час",

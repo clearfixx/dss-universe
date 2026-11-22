@@ -30,6 +30,20 @@ enum ResearchPageAudience {
 }
 registerEnumType(ResearchPageAudience, { name: 'ResearchPageAudience' });
 
+enum ResearchInteractionSetting {
+  COMMENTS = 'allowComments',
+  RATING = 'allowRating',
+}
+registerEnumType(ResearchInteractionSetting, {
+  name: 'ResearchInteractionSetting',
+});
+
+@ObjectType()
+class ResearchInteractionSettings {
+  @Field() allowComments!: boolean;
+  @Field() allowRating!: boolean;
+}
+
 @ObjectType()
 class ResearchAudiencePolicy {
   @Field(() => ResearchPageAudience) visibility!: ResearchPageAudience;
@@ -257,6 +271,27 @@ export class ResearchLabCommandResolver {
   ) {
     return this.execute(this.workflow.editPolicy(actor.id, pageId));
   }
+  @Query(() => ResearchInteractionSettings)
+  researchInteractionSettings(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('pageId', { type: () => ID }) pageId: string,
+  ) {
+    return this.execute(this.workflow.interactionSettings(actor.id, pageId));
+  }
+
+  @Mutation(() => ResearchInteractionSettings)
+  setResearchInteractionSetting(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('pageId', { type: () => ID }) pageId: string,
+    @Args('setting', { type: () => ResearchInteractionSetting })
+    setting: ResearchInteractionSetting,
+    @Args('enabled', { type: () => Boolean }) enabled: boolean,
+  ) {
+    return this.execute(
+      this.workflow.setInteractionSetting(actor.id, pageId, setting, enabled),
+    );
+  }
+
   @Query(() => ResearchAudiencePolicy)
   researchPageAudience(
     @AuthUser() actor: AuthenticatedUser,
