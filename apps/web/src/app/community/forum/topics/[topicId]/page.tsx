@@ -115,7 +115,8 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
   };
 
   return (
-    <DssApplicationShell pageTitle={{ pathname: path, title: topic.title }}
+    <DssApplicationShell
+      pageTitle={{ pathname: path, title: topic.title }}
       breadcrumbs={[
         { href: "/community", label: "Спільнота" },
         { label: "Форум" },
@@ -135,7 +136,6 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
       />
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_19rem] 2xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0 space-y-4">
-
           <header className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4">
             <div className="min-w-0 flex-1 space-y-2.5">
               <h1 className="flex flex-wrap items-center gap-2 text-xl font-bold leading-tight sm:text-2xl">
@@ -421,7 +421,10 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
                         {item.kind === "QUESTION" ? (
                           <HelpCircle className="size-4" aria-hidden="true" />
                         ) : (
-                          <MessagesSquare className="size-4" aria-hidden="true" />
+                          <MessagesSquare
+                            className="size-4"
+                            aria-hidden="true"
+                          />
                         )}
                       </span>
                       <span className="min-w-0 space-y-1">
@@ -430,7 +433,10 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
                         </span>
                         <span className="flex gap-3 text-xs text-slate-400">
                           <span className="inline-flex items-center gap-1">
-                            <MessageSquare className="size-3.5" aria-hidden="true" />
+                            <MessageSquare
+                              className="size-3.5"
+                              aria-hidden="true"
+                            />
                             {Math.max(0, item.postCount - 1)}
                           </span>
                           <span className="inline-flex items-center gap-1">
@@ -461,6 +467,7 @@ function pluralReplies(count: number) {
   const mod10 = count % 10;
   const mod100 = count % 100;
   if (mod10 === 1 && mod100 !== 11) return "відповідь";
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "відповіді";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14))
+    return "відповіді";
   return "відповідей";
 }

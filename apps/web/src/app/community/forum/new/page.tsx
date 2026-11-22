@@ -73,7 +73,8 @@ export default async function NewForumTopicRoute({ searchParams }: Props) {
   const readOnlyUntil = sanctions?.readOnlyUntil;
 
   return (
-    <DssApplicationShell pageTitle={{ pathname: path, title: "Нова тема" }}
+    <DssApplicationShell
+      pageTitle={{ pathname: path, title: "Нова тема" }}
       breadcrumbs={[
         { href: "/community", label: "Спільнота" },
         { label: "Форум" },

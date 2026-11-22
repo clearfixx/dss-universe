@@ -123,21 +123,21 @@ export async function loadViewerForumTopics(
 /** Topic header and one page of posts; null when missing or not visible. */
 export const loadForumThread = cache(
   async (topicId: string, page = 1, sort: ForumReplySort = "OLDEST") =>
-  orNull(async () => {
-    const result = await getClient().query({
-      query: ForumTopicThreadDocument,
-      variables: { topicId, page, limit: FORUM_PAGE_SIZE, sort },
-      context: await authContext(),
-      fetchPolicy: "no-cache",
-    });
-    return result.data
-      ? {
-          topic: result.data.forumTopic,
-          posts: result.data.forumPosts,
-          similar: result.data.forumSimilarTopics,
-        }
-      : null;
-  }),
+    orNull(async () => {
+      const result = await getClient().query({
+        query: ForumTopicThreadDocument,
+        variables: { topicId, page, limit: FORUM_PAGE_SIZE, sort },
+        context: await authContext(),
+        fetchPolicy: "no-cache",
+      });
+      return result.data
+        ? {
+            topic: result.data.forumTopic,
+            posts: result.data.forumPosts,
+            similar: result.data.forumSimilarTopics,
+          }
+        : null;
+    }),
 );
 
 /** Subscription and sanction state of the signed-in viewer for a topic. */
@@ -216,7 +216,7 @@ export async function loadViewerSanctionStatus() {
 export async function loadForumHub() {
   const result = await getClient().query({
     query: ForumHubDocument,
-    variables: { helpLimit: 5, tagLimit: 12 },
+    variables: { helpLimit: 4, latestLimit: 4, tagLimit: 9 },
     context: await authContext(),
     fetchPolicy: "no-cache",
   });

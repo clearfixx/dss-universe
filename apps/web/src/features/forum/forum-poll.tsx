@@ -75,7 +75,9 @@ export function ForumPoll({
           {poll.question}
         </h2>
         <span className="rounded-md bg-violet-500/20 px-2 py-0.5 text-xs text-violet-200">
-          {poll.visibility === "ANONYMOUS" ? "Анонімне опитування" : "Відкрите опитування"}
+          {poll.visibility === "ANONYMOUS"
+            ? "Анонімне опитування"
+            : "Відкрите опитування"}
         </span>
       </div>
 

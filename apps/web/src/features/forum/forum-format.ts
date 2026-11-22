@@ -84,3 +84,56 @@ export function canEditForumPost(input: {
       FORUM_REPLY_EDIT_WINDOW_MS
   );
 }
+
+const RELATIVE = new Intl.RelativeTimeFormat("uk-UA", { numeric: "auto" });
+
+/** "5 хв тому" style age of a timestamp, for topic lists. */
+export function forumAgo(value: unknown, now = Date.now()): string {
+  const minutes = Math.round((now - new Date(String(value)).getTime()) / 60000);
+  if (minutes < 60) return RELATIVE.format(-Math.max(minutes, 0), "minute");
+  if (minutes < 1440) return RELATIVE.format(-Math.round(minutes / 60), "hour");
+  return RELATIVE.format(-Math.round(minutes / 1440), "day");
+}
+
+/** Ukrainian plural: forumPlural(3, ["тема", "теми", "тем"]) → "теми". */
+export function forumPlural(
+  count: number,
+  [one, few, many]: readonly [string, string, string],
+): string {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+  return many;
+}
+
+const COMPACT = new Intl.NumberFormat("en-US", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
+
+/** Counter style from the mockups: 980, 12.4K, 1.2M. */
+export function forumCount(value: number): string {
+  return COMPACT.format(value);
+}
+
+const CLOCK = new Intl.DateTimeFormat("uk-UA", {
+  hour: "2-digit",
+  minute: "2-digit",
+});
+const DAY = new Intl.DateTimeFormat("uk-UA", {
+  day: "numeric",
+  month: "short",
+});
+
+/** "сьогодні, 11:47" / "вчора, 18:06" / "10 жовт., 09:14" for list rows. */
+export function forumWhen(value: unknown, now = new Date()): string {
+  const date = new Date(String(value));
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+  const days = Math.ceil((start.getTime() - date.getTime()) / 86_400_000);
+  const clock = CLOCK.format(date);
+  if (days <= 0) return `сьогодні, ${clock}`;
+  if (days === 1) return `вчора, ${clock}`;
+  return `${DAY.format(date)}, ${clock}`;
+}

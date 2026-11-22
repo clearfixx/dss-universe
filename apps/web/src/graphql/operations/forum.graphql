@@ -361,7 +361,7 @@ query ViewerForumSanctionStatus {
   }
 }
 
-query ForumHub($helpLimit: Int!, $tagLimit: Int!) {
+query ForumHub($helpLimit: Int!, $latestLimit: Int!, $tagLimit: Int!) {
   forumHubStats {
     forumCount
     topicCount
@@ -375,6 +375,16 @@ query ForumHub($helpLimit: Int!, $tagLimit: Int!) {
     limit: $helpLimit
   ) {
     total
+    items {
+      ...ForumTopicSummary
+    }
+  }
+  latest: forumDiscoverTopics(
+    filter: ALL
+    sort: LAST_ACTIVITY
+    page: 1
+    limit: $latestLimit
+  ) {
     items {
       ...ForumTopicSummary
     }

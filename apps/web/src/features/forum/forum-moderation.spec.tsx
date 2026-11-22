@@ -30,11 +30,7 @@ describe("moderation helpers", () => {
 const none = { moderate: false, purge: false, acceptAnswer: false };
 const post = (state: string, number = 3) => ({ id: "p", number, state });
 
-function bar(
-  state: string,
-  abilities: typeof none,
-  canEdit = false,
-) {
+function bar(state: string, abilities: typeof none, canEdit = false) {
   return render(
     <ForumPostEditScope canEdit={canEdit}>
       <ForumPostActionBar
