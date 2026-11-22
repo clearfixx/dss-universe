@@ -161,6 +161,16 @@ export class PrismaModerationRepository implements ModerationRepository {
     });
   }
 
+  async findActiveAnnotationTargetId(
+    annotationId: string,
+  ): Promise<string | null> {
+    const annotation = await this.prisma.moderationAnnotation.findFirst({
+      where: { id: annotationId, revokedAt: null },
+      select: { interactionTargetId: true },
+    });
+    return annotation?.interactionTargetId ?? null;
+  }
+
   async revokeAnnotation(
     annotationId: string,
     actorId: string,
