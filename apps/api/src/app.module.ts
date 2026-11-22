@@ -109,6 +109,8 @@ import { ReputationModule } from './modules/reputation';
 import { ResearchLabModule } from './modules/research-lab';
 import { ModerationModule } from './modules/moderation';
 import { ForumModule } from './modules/forum';
+import { MissionsModule } from './modules/missions';
+import { CommunityEventsModule } from './modules/events';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
@@ -160,6 +162,8 @@ import { UsersModule } from './modules/users/users.module';
     ResearchLabModule,
     ModerationModule,
     ForumModule,
+    MissionsModule,
+    CommunityEventsModule,
   ],
   providers: [
     {
