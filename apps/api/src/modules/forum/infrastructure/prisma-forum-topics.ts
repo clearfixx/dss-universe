@@ -70,6 +70,14 @@ import {
   type ForumTopicSummary,
 } from '../domain/types/forum-topic.type';
 import { ForumStructureService } from './prisma-forum-structure';
+import { ForumAccessPolicy } from './forum-access.policy';
+import {
+  atLeastRole,
+  viewerRole,
+  type ForumAccessGrant,
+  type ForumAccessRole,
+} from '../domain/forum-access.rules';
+import { gateBlockKinds } from '../domain/forum-section-limits.rules';
 import { FORUM_POST_MEDIA, type ForumPostMedia } from './forum-post-media.port';
 
 const PRODUCER = 'dss.api.forum';
@@ -78,11 +86,28 @@ const MAX_PAGE = 50;
 const MEDIA_NODES = new Set(['mediaReference', 'attachment']);
 const GATE_NODE = 'contentGate';
 
+type SectionScope = {
+  id: string;
+  parentId: string | null;
+  allowTopics: boolean;
+  allowReplies: boolean;
+  allowPolls: boolean;
+  allowAttachments: boolean;
+  pinnedLimit: number | null;
+  attachmentMaxMb: number | null;
+  attachmentFormats: string[];
+  gateViewRole: ForumAccessRole;
+  gateCreateRole: ForumAccessRole;
+  gateBlockTypes: string[];
+  grant: ForumAccessGrant;
+};
+
 type VisibleTopic = {
   topic: ForumTopic;
   categoryId: string;
   allowsGatedContent: boolean;
   viewer: ForumViewerFacts;
+  forum: SectionScope;
 };
 
 @Injectable()
@@ -106,6 +131,12 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     private readonly media?: ForumPostMedia,
   ) {}
 
+  private policy?: ForumAccessPolicy;
+  /** Section role matrices (created lazily; no extra DI dependency). */
+  private get access(): ForumAccessPolicy {
+    return (this.policy ??= new ForumAccessPolicy(this.prisma));
+  }
+
   async createTopic(
     actorId: string,
     input: {
@@ -117,6 +148,12 @@ export class ForumTopicsService implements ForumInteractionDecisions {
   ): Promise<{ topic: ForumTopicSummary; firstPostId: string }> {
     const viewer = await this.authenticated(actorId);
     const forum = await this.visibleForum(input.forumId, viewer);
+    if (!forum.allowTopics || !forum.grant.createTopics) {
+      throw new ForumCommandError(
+        'ACCESS_DENIED',
+        'New topics are not accepted in this section.',
+      );
+    }
     const title = normalizeTopicTitle(input.title);
     const content = this.content(
       input.documentJson,
@@ -124,7 +161,10 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       forum.allowsGatedContent,
     );
     await this.requireDocumentAccess(actorId, content.document);
+    this.requireGateRules(viewer, forum, content.document);
     const mediaIds = await this.attachableMedia(actorId, content.document, []);
+    this.requireAttachmentsAllowed(forum, mediaIds);
+    await this.requireAttachmentLimits(actorId, forum, mediaIds, []);
     const exempt = await this.cooldownExempt(viewer, forum.categoryId);
     const topicId = randomUUID();
     const postId = randomUUID();
@@ -187,17 +227,26 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     },
   ): Promise<ForumPostView> {
     const viewer = await this.authenticated(actorId);
-    const { categoryId, allowsGatedContent } = await this.visibleTopic(
+    const { categoryId, allowsGatedContent, forum } = await this.visibleTopic(
       input.topicId,
       viewer,
     );
+    if (!forum.allowReplies || !forum.grant.reply) {
+      throw new ForumCommandError(
+        'ACCESS_DENIED',
+        'Replies are not accepted in this section.',
+      );
+    }
     const content = this.content(
       input.documentJson,
       'reply',
       allowsGatedContent,
     );
     await this.requireDocumentAccess(actorId, content.document);
+    this.requireGateRules(viewer, forum, content.document);
     const mediaIds = await this.attachableMedia(actorId, content.document, []);
+    this.requireAttachmentsAllowed(forum, mediaIds);
+    await this.requireAttachmentLimits(actorId, forum, mediaIds, []);
     const exempt = await this.cooldownExempt(viewer, categoryId);
     const postId = randomUUID();
     const now = new Date();
@@ -266,16 +315,15 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       where: { id: input.postId },
     });
     if (!post) this.notFound('Post');
-    const { topic, categoryId, allowsGatedContent } = await this.visibleTopic(
-      post.topicId,
-      viewer,
-    );
+    const { topic, categoryId, allowsGatedContent, forum } =
+      await this.visibleTopic(post.topicId, viewer);
     const actor = {
       id: actorId,
-      moderator: await this.structure.canModerateCategory(actorId, categoryId),
+      moderator: await this.isModerator(viewer, categoryId, forum),
     };
     if (
       post.state !== 'VISIBLE' ||
+      (!actor.moderator && !forum.grant.editOwn) ||
       !canEditPost(topic, post, actor, new Date())
     ) {
       throw new ForumCommandError(
@@ -298,12 +346,21 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     // Editing must never silently drop hidden blocks the editor cannot read.
     await this.requireDocumentAccess(actorId, post.document);
     await this.requireDocumentAccess(actorId, content.document);
+    this.requireGateRules(viewer, forum, content.document);
     // Files the post already references stay; only new ones need the actor's access.
+    const referenced = this.media
+      ? await this.media.activeMediaIds(post.id)
+      : [];
     const mediaIds = await this.attachableMedia(
       actorId,
       content.document,
-      this.media ? await this.media.activeMediaIds(post.id) : [],
+      referenced,
     );
+    this.requireAttachmentsAllowed(
+      forum,
+      mediaIds.filter((id) => !referenced.includes(id)),
+    );
+    await this.requireAttachmentLimits(actorId, forum, mediaIds, referenced);
     const now = new Date();
     await this.prisma.$transaction(async (tx) => {
       const nextRevision = input.expectedRevision + 1;
@@ -388,6 +445,12 @@ export class ForumTopicsService implements ForumInteractionDecisions {
   ): Promise<ForumPage<ForumTopicSummary>> {
     const viewer = await this.viewers.read(viewerId, new Date());
     const forum = await this.visibleForum(forumId, viewer);
+    if (!forum.grant.read) {
+      throw new ForumCommandError(
+        'ACCESS_DENIED',
+        'You cannot read topics in this section.',
+      );
+    }
     if (filter === 'MINE' && !viewer.subjectId) {
       throw new ForumCommandError(
         'ACCESS_DENIED',
@@ -397,7 +460,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     const filterWhere = this.filterWhere(filter, viewer.subjectId);
     if (
       scope === 'TRASHED' &&
-      !(await this.isModerator(viewer, forum.categoryId))
+      !(await this.isModerator(viewer, forum.categoryId, forum))
     ) {
       throw new ForumCommandError(
         'ACCESS_DENIED',
@@ -788,6 +851,8 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     const forums = await this.prisma.forum.findMany({
       select: {
         id: true,
+        parentId: true,
+        categoryId: true,
         active: true,
         parent: { select: { active: true } },
         category: {
@@ -799,9 +864,11 @@ export class ForumTopicsService implements ForumInteractionDecisions {
         },
       },
     });
+    const grants = await this.access.grants(viewer, forums);
     return forums
       .filter(
         (forum) =>
+          grants.get(forum.id)?.read === true &&
           (viewer.seesAllCategories ||
             (forum.active &&
               forum.category.active &&
@@ -842,11 +909,14 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     sort: ForumReplySort = 'OLDEST',
   ): Promise<ForumPage<ForumPostView>> {
     const viewer = await this.viewers.read(viewerId, new Date());
-    const { topic, categoryId } = await this.visibleTopic(topicId, viewer);
+    const { topic, categoryId, forum } = await this.visibleTopic(
+      topicId,
+      viewer,
+    );
     const staff =
       viewer.subjectId !== null &&
       (topic.curatorId === viewer.subjectId ||
-        (await this.isModerator(viewer, categoryId)));
+        (await this.isModerator(viewer, categoryId, forum)));
     const { skip, take, safePage } = this.paging(page, limit);
     const [rows, total] = await Promise.all([
       this.postPage(topicId, sort, safePage, skip, take),
@@ -857,7 +927,11 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       rows.map(async (row) =>
         this.redact(
           this.postView(row, staff, notes.get(row.id) ?? []),
-          viewer.subjectId,
+          // Below the section's hidden-content floor, hidden blocks stay
+          // locked as for a guest (staff always see them).
+          staff || atLeastRole(viewerRole(viewer), forum.gateViewRole)
+            ? viewer.subjectId
+            : null,
         ),
       ),
     );
@@ -1036,7 +1110,87 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       });
       if (!parent?.active) this.notFound('Forum');
     }
-    return forum;
+    const grant = await this.access.grant(viewer, forum);
+    if (!grant.view) this.notFound('Forum');
+    return Object.assign(forum, { grant });
+  }
+
+  /** Hidden blocks: who may add them in this section and with which kinds. */
+  private requireGateRules(
+    viewer: ForumViewerFacts,
+    forum: { gateCreateRole: ForumAccessRole; gateBlockTypes: string[] },
+    document: unknown,
+  ): void {
+    if (!this.contains(document, (type) => type === GATE_NODE)) return;
+    const staff = viewer.seesAllCategories || viewer.moderatesAllCategories;
+    if (!staff && !atLeastRole(viewerRole(viewer), forum.gateCreateRole)) {
+      throw new ForumCommandError(
+        'ACCESS_DENIED',
+        'Your role cannot add hidden blocks in this section.',
+      );
+    }
+    const allowed = new Set(forum.gateBlockTypes);
+    for (const kind of gateBlockKinds(document, GATE_NODE)) {
+      if (!allowed.has(kind)) {
+        throw new ForumCommandError(
+          'INVALID_INPUT',
+          'Hidden blocks in this section cannot contain this kind of content.',
+        );
+      }
+    }
+  }
+
+  /** Newly attached files must fit the section's size and format limits. */
+  private async requireAttachmentLimits(
+    actorId: string,
+    forum: { attachmentMaxMb: number | null; attachmentFormats: string[] },
+    mediaIds: readonly string[],
+    alreadyReferenced: readonly string[],
+  ): Promise<void> {
+    if (!this.media?.files) return;
+    if (
+      forum.attachmentMaxMb === null &&
+      forum.attachmentFormats.length === 0
+    ) {
+      return;
+    }
+    const known = new Set(alreadyReferenced);
+    const added = mediaIds.filter((id) => !known.has(id));
+    if (added.length === 0) return;
+    const files = await this.media.files(actorId, added);
+    const maxBytes =
+      forum.attachmentMaxMb === null
+        ? null
+        : forum.attachmentMaxMb * 1024 * 1024;
+    for (const file of files) {
+      if (maxBytes !== null && file.size > maxBytes) {
+        throw new ForumCommandError(
+          'INVALID_INPUT',
+          `Files in this section may be at most ${forum.attachmentMaxMb} MB.`,
+        );
+      }
+      if (
+        forum.attachmentFormats.length > 0 &&
+        !forum.attachmentFormats.includes(file.extension)
+      ) {
+        throw new ForumCommandError(
+          'INVALID_INPUT',
+          'This file format is not allowed in this section.',
+        );
+      }
+    }
+  }
+
+  private requireAttachmentsAllowed(
+    forum: { allowAttachments: boolean },
+    mediaIds: readonly string[],
+  ): void {
+    if (mediaIds.length > 0 && !forum.allowAttachments) {
+      throw new ForumCommandError(
+        'INVALID_INPUT',
+        'Attachments are turned off in this section.',
+      );
+    }
   }
 
   /** Resolves a topic the viewer may see; trashed topics only for moderators. */
@@ -1054,9 +1208,25 @@ export class ForumTopicsService implements ForumInteractionDecisions {
         throw error;
       },
     );
+    if (!forum.grant.read) this.notFound('Topic');
+    const scope: SectionScope = {
+      id: forum.id,
+      parentId: forum.parentId,
+      allowTopics: forum.allowTopics,
+      allowReplies: forum.allowReplies,
+      allowPolls: forum.allowPolls,
+      allowAttachments: forum.allowAttachments,
+      pinnedLimit: forum.pinnedLimit,
+      attachmentMaxMb: forum.attachmentMaxMb,
+      attachmentFormats: forum.attachmentFormats,
+      gateViewRole: forum.gateViewRole,
+      gateCreateRole: forum.gateCreateRole,
+      gateBlockTypes: forum.gateBlockTypes,
+      grant: forum.grant,
+    };
     if (
       topic.state === 'TRASHED' &&
-      !(await this.isModerator(viewer, forum.categoryId))
+      !(await this.isModerator(viewer, forum.categoryId, scope))
     ) {
       this.notFound('Topic');
     }
@@ -1065,6 +1235,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       categoryId: forum.categoryId,
       allowsGatedContent: forum.allowsGatedContent,
       viewer,
+      forum: scope,
     };
   }
 
@@ -1072,10 +1243,21 @@ export class ForumTopicsService implements ForumInteractionDecisions {
   async isModerator(
     viewer: ForumViewerFacts,
     categoryId: string,
+    forum?: { id: string; parentId: string | null; grant?: ForumAccessGrant },
   ): Promise<boolean> {
     if (viewer.subjectId === null) return false;
     if (viewer.seesAllCategories || viewer.moderatesAllCategories) return true;
-    return this.structure.canModerateCategory(viewer.subjectId, categoryId);
+    if (forum?.grant?.moderate) return true;
+    if (
+      await this.structure.canModerateCategory(viewer.subjectId, categoryId)
+    ) {
+      return true;
+    }
+    if (!forum) return false;
+    return this.structure.canModerateForum(
+      viewer.subjectId,
+      [forum.id, forum.parentId].filter((id): id is string => id !== null),
+    );
   }
 
   private async authenticated(actorId: string): Promise<ForumViewerFacts> {
@@ -1190,10 +1372,12 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     if (!node || typeof node !== 'object') return false;
     const record = node as { type?: unknown; content?: unknown };
     if (typeof record.type === 'string' && match(record.type)) return true;
-    return (
-      Array.isArray(record.content) &&
-      record.content.some((child) => this.contains(child, match))
-    );
+    // An EditorDocument wraps its root node in `content` (an object); nodes
+    // keep their children in a `content` array.
+    if (Array.isArray(record.content)) {
+      return record.content.some((child) => this.contains(child, match));
+    }
+    return this.contains(record.content, match);
   }
 
   /** Authors and editors must be able to read every hidden block they save. */

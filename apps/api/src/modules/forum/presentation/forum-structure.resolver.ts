@@ -38,18 +38,31 @@ import {
 } from '@nestjs/graphql';
 import {
   ArrayMaxSize,
+  ArrayMinSize,
   IsArray,
   IsBoolean,
   IsIn,
   IsInt,
   IsOptional,
   IsString,
+  Max,
   Min,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
 import { OptionalViewerJwtGuard } from '@api/core/auth/guards/optional-viewer-jwt.guard';
 import { ForumStructureService } from '../infrastructure/prisma-forum-structure';
 import { ForumCommandError } from '../domain/errors/forum-command.error';
+import {
+  FORUM_ACCESS_ROLES,
+  type ForumAccessMatrix,
+  type ForumAccessRole,
+} from '../domain/forum-access.rules';
+import {
+  GATE_BLOCK_TYPES,
+  type GateBlockType,
+} from '../domain/forum-section-limits.rules';
 import {
   FORUM_VISIBILITIES,
   type ForumCategoryNode,
@@ -61,6 +74,21 @@ const ForumVisibilityEnum = Object.fromEntries(
   FORUM_VISIBILITIES.map((value) => [value, value]),
 ) as Record<ForumVisibility, ForumVisibility>;
 registerEnumType(ForumVisibilityEnum, { name: 'ForumVisibility' });
+const ForumAccessRoleEnum = Object.fromEntries(
+  FORUM_ACCESS_ROLES.map((value) => [value, value]),
+) as Record<ForumAccessRole, ForumAccessRole>;
+registerEnumType(ForumAccessRoleEnum, {
+  name: 'ForumAccessRole',
+  description:
+    'Forum role of a viewer: GUEST (signed out), MEMBER, CONTRIBUTOR, MODERATOR, ADMIN (admin or owner).',
+});
+const GateBlockTypeEnum = Object.fromEntries(
+  GATE_BLOCK_TYPES.map((value) => [value, value]),
+) as Record<GateBlockType, GateBlockType>;
+registerEnumType(GateBlockTypeEnum, {
+  name: 'ForumGateBlockType',
+  description: 'Content kinds allowed inside hidden blocks.',
+});
 
 @InputType()
 export class ForumCategoryInput {
@@ -98,6 +126,63 @@ export class ForumInput {
   @Field(() => Int, { defaultValue: 0 }) @IsInt() @Min(0) position!: number;
   @Field({ defaultValue: false }) @IsBoolean() allowsGatedContent!: boolean;
   @Field({ defaultValue: true }) @IsBoolean() active!: boolean;
+  @Field({ defaultValue: true }) @IsBoolean() allowTopics!: boolean;
+  @Field({ defaultValue: true }) @IsBoolean() allowReplies!: boolean;
+  @Field({ defaultValue: true }) @IsBoolean() allowPolls!: boolean;
+  @Field({ defaultValue: true }) @IsBoolean() allowAttachments!: boolean;
+  @Field({
+    defaultValue: true,
+    description: 'false = unlisted: hidden from lists, opens by direct link.',
+  })
+  @IsBoolean()
+  listed!: boolean;
+  @Field({ defaultValue: true }) @IsBoolean() searchable!: boolean;
+  @Field({ defaultValue: true }) @IsBoolean() showCounts!: boolean;
+  @Field(() => Int, { nullable: true, description: 'Empty = no limit.' })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  pinnedLimit?: number | null;
+  @Field(() => Int, {
+    nullable: true,
+    description: 'Largest attachment in MB; empty = platform limit.',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(1024)
+  attachmentMaxMb?: number | null;
+  @Field(() => [String], {
+    defaultValue: [],
+    description: 'Allowed extensions (pdf, zip…); empty = any.',
+  })
+  @IsArray()
+  @ArrayMaxSize(30)
+  @IsString({ each: true })
+  attachmentFormats!: string[];
+  @Field(() => Int, {
+    nullable: true,
+    description: 'Close open topics inactive for N days; empty = off.',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(3650)
+  autoCloseDays?: number | null;
+  @Field(() => ForumAccessRoleEnum, { defaultValue: 'GUEST' })
+  @IsIn(FORUM_ACCESS_ROLES)
+  gateViewRole!: ForumAccessRole;
+  @Field(() => ForumAccessRoleEnum, { defaultValue: 'MEMBER' })
+  @IsIn(FORUM_ACCESS_ROLES)
+  gateCreateRole!: ForumAccessRole;
+  @Field(() => [GateBlockTypeEnum], {
+    defaultValue: ['TEXT', 'CODE', 'MEDIA', 'FILES'],
+  })
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsIn(GATE_BLOCK_TYPES, { each: true })
+  gateBlockTypes!: GateBlockType[];
 }
 
 @ObjectType('ForumSubforum')
@@ -111,6 +196,20 @@ export class ForumSubforumModel {
   @Field(() => Int) position!: number;
   @Field() active!: boolean;
   @Field() allowsGatedContent!: boolean;
+  @Field() allowTopics!: boolean;
+  @Field() allowReplies!: boolean;
+  @Field() allowPolls!: boolean;
+  @Field() allowAttachments!: boolean;
+  @Field() listed!: boolean;
+  @Field() searchable!: boolean;
+  @Field() showCounts!: boolean;
+  @Field(() => Int, { nullable: true }) pinnedLimit!: number | null;
+  @Field(() => Int, { nullable: true }) attachmentMaxMb!: number | null;
+  @Field(() => [String]) attachmentFormats!: string[];
+  @Field(() => Int, { nullable: true }) autoCloseDays!: number | null;
+  @Field(() => ForumAccessRoleEnum) gateViewRole!: ForumAccessRole;
+  @Field(() => ForumAccessRoleEnum) gateCreateRole!: ForumAccessRole;
+  @Field(() => [GateBlockTypeEnum]) gateBlockTypes!: GateBlockType[];
 }
 
 @ObjectType('Forum')
@@ -139,9 +238,112 @@ class ForumCategoryModel {
 class ForumModeratorAssignmentModel {
   @Field(() => ID) id!: string;
   @Field(() => ID) categoryId!: string;
+  @Field(() => ID, { nullable: true, description: 'null = whole category.' })
+  forumId!: string | null;
   @Field(() => ID) moderatorId!: string;
   @Field() assignedAt!: Date;
   @Field(() => Date, { nullable: true }) revokedAt!: Date | null;
+}
+
+const AccessSourceEnum = {
+  FORUM: 'FORUM',
+  PARENT: 'PARENT',
+  CATEGORY: 'CATEGORY',
+  DEFAULT: 'DEFAULT',
+} as const;
+registerEnumType(AccessSourceEnum, {
+  name: 'ForumAccessSource',
+  description: 'Where the matrix in force comes from.',
+});
+
+@InputType()
+export class ForumAccessRowInput {
+  @Field(() => ForumAccessRoleEnum)
+  @IsIn(FORUM_ACCESS_ROLES)
+  role!: ForumAccessRole;
+  @Field() @IsBoolean() view!: boolean;
+  @Field() @IsBoolean() read!: boolean;
+  @Field() @IsBoolean() createTopics!: boolean;
+  @Field() @IsBoolean() reply!: boolean;
+  @Field() @IsBoolean() editOwn!: boolean;
+  @Field() @IsBoolean() deleteOwn!: boolean;
+  @Field() @IsBoolean() moderate!: boolean;
+}
+
+@ObjectType('ForumAccessRow')
+export class ForumAccessRowModel {
+  @Field(() => ForumAccessRoleEnum) role!: ForumAccessRole;
+  @Field() view!: boolean;
+  @Field() read!: boolean;
+  @Field() createTopics!: boolean;
+  @Field() reply!: boolean;
+  @Field() editOwn!: boolean;
+  @Field() deleteOwn!: boolean;
+  @Field() moderate!: boolean;
+}
+
+@ObjectType('ForumSectionAccess')
+export class ForumSectionAccessModel {
+  @Field(() => AccessSourceEnum) source!: keyof typeof AccessSourceEnum;
+  @Field(() => [ForumAccessRowModel], {
+    nullable: true,
+    description: "The section's own matrix; null when it inherits.",
+  })
+  own!: ForumAccessRowModel[] | null;
+  @Field(() => [ForumAccessRowModel]) effective!: ForumAccessRowModel[];
+}
+
+@InputType()
+export class ForumCategoryChangeInput {
+  @Field(() => ID) @IsString() id!: string;
+  @Field(() => ForumCategoryInput)
+  @ValidateNested()
+  @Type(() => ForumCategoryInput)
+  input!: ForumCategoryInput;
+  @Field(() => [ForumAccessRowInput], {
+    nullable: true,
+    description: 'Omit to keep; [] is invalid; send resetAccess to inherit.',
+  })
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => ForumAccessRowInput)
+  access?: ForumAccessRowInput[] | null;
+  @Field({ defaultValue: false }) @IsBoolean() resetAccess!: boolean;
+}
+
+@InputType()
+export class ForumChangeInput {
+  @Field(() => ID) @IsString() id!: string;
+  @Field(() => ForumInput)
+  @ValidateNested()
+  @Type(() => ForumInput)
+  input!: ForumInput;
+  @Field(() => [ForumAccessRowInput], { nullable: true })
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => ForumAccessRowInput)
+  access?: ForumAccessRowInput[] | null;
+  @Field({ defaultValue: false }) @IsBoolean() resetAccess!: boolean;
+}
+
+@InputType()
+export class SaveForumSettingsInput {
+  @Field(() => [ForumCategoryChangeInput], { defaultValue: [] })
+  @IsArray()
+  @ArrayMaxSize(200)
+  @ValidateNested({ each: true })
+  @Type(() => ForumCategoryChangeInput)
+  categories!: ForumCategoryChangeInput[];
+  @Field(() => [ForumChangeInput], { defaultValue: [] })
+  @IsArray()
+  @ArrayMaxSize(200)
+  @ValidateNested({ each: true })
+  @Type(() => ForumChangeInput)
+  forums!: ForumChangeInput[];
+}
+
+function accessRows(matrix: ForumAccessMatrix): ForumAccessRowModel[] {
+  return FORUM_ACCESS_ROLES.map((role) => ({ role, ...matrix[role] }));
 }
 
 type RequestContext = { req: { user?: AuthenticatedUser } };
@@ -241,6 +443,81 @@ export class ForumStructureResolver {
     );
   }
 
+  @Mutation(() => ForumModeratorAssignmentModel, {
+    description: 'Assign a moderator to one forum (and its subforums).',
+  })
+  @UseGuards(JwtAuthGuard)
+  assignForumModerator(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('categoryId', { type: () => ID }) categoryId: string,
+    @Args('forumId', { type: () => ID }) forumId: string,
+    @Args('moderatorId', { type: () => ID }) moderatorId: string,
+  ) {
+    return this.execute(
+      this.structure.assignModerator(
+        actor.id,
+        categoryId,
+        moderatorId,
+        forumId,
+      ),
+    );
+  }
+
+  @Query(() => ForumSectionAccessModel, {
+    description: 'Structure managers: role matrix of a category or forum.',
+  })
+  @UseGuards(JwtAuthGuard)
+  async forumSectionAccess(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('categoryId', { type: () => ID, nullable: true })
+    categoryId: string | null,
+    @Args('forumId', { type: () => ID, nullable: true }) forumId: string | null,
+  ): Promise<ForumSectionAccessModel> {
+    const access = await this.execute(
+      this.structure.sectionAccess(actor.id, { categoryId, forumId }),
+    );
+    return {
+      source: access.source,
+      own: access.own ? accessRows(access.own) : null,
+      effective: accessRows(access.effective),
+    };
+  }
+
+  @Mutation(() => [ForumCategoryModel], {
+    description:
+      'Command Deck "Зберегти зміни": updates categories and forums (fields, order, switches, role matrices) in one transaction.',
+  })
+  @UseGuards(JwtAuthGuard)
+  async saveForumSettings(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('input') input: SaveForumSettingsInput,
+  ) {
+    const access = (change: {
+      access?: ForumAccessRowInput[] | null;
+      resetAccess: boolean;
+    }) =>
+      change.resetAccess
+        ? null
+        : change.access
+          ? change.access.map((row) => ({ ...row }))
+          : undefined;
+    const tree = await this.execute(
+      this.structure.saveSettings(actor.id, {
+        categories: input.categories.map((change) => ({
+          id: change.id,
+          input: this.categoryInput(change.input),
+          access: access(change),
+        })),
+        forums: input.forums.map((change) => ({
+          id: change.id,
+          input: this.forumInput(change.input),
+          access: access(change),
+        })),
+      }),
+    );
+    return tree.map((node) => this.category(node));
+  }
+
   @Mutation(() => ForumModeratorAssignmentModel)
   @UseGuards(JwtAuthGuard)
   revokeForumCategoryModerator(
@@ -272,6 +549,20 @@ export class ForumStructureResolver {
       position: input.position,
       allowsGatedContent: input.allowsGatedContent,
       active: input.active,
+      allowTopics: input.allowTopics,
+      allowReplies: input.allowReplies,
+      allowPolls: input.allowPolls,
+      allowAttachments: input.allowAttachments,
+      listed: input.listed,
+      searchable: input.searchable,
+      showCounts: input.showCounts,
+      pinnedLimit: input.pinnedLimit ?? null,
+      attachmentMaxMb: input.attachmentMaxMb ?? null,
+      attachmentFormats: input.attachmentFormats,
+      autoCloseDays: input.autoCloseDays ?? null,
+      gateViewRole: input.gateViewRole,
+      gateCreateRole: input.gateCreateRole,
+      gateBlockTypes: input.gateBlockTypes,
     };
   }
 
@@ -293,6 +584,20 @@ export class ForumStructureResolver {
         position: child.position,
         active: child.active,
         allowsGatedContent: child.allowsGatedContent,
+        allowTopics: child.allowTopics,
+        allowReplies: child.allowReplies,
+        allowPolls: child.allowPolls,
+        allowAttachments: child.allowAttachments,
+        listed: child.listed,
+        searchable: child.searchable,
+        showCounts: child.showCounts,
+        pinnedLimit: child.pinnedLimit,
+        attachmentMaxMb: child.attachmentMaxMb,
+        attachmentFormats: child.attachmentFormats,
+        autoCloseDays: child.autoCloseDays,
+        gateViewRole: child.gateViewRole,
+        gateCreateRole: child.gateCreateRole,
+        gateBlockTypes: child.gateBlockTypes,
       })),
     };
   }

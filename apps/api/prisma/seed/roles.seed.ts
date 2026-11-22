@@ -44,6 +44,13 @@ const ROLES = [
     isSystem: true,
   },
   {
+    name: 'contributor',
+    label: 'Contributor',
+    description:
+      'Trusted community author; forum rights come from section access matrices.',
+    isSystem: true,
+  },
+  {
     name: 'moderator',
     label: 'Moderator',
     description: 'Community moderation role.',

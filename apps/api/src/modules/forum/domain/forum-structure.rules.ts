@@ -15,6 +15,7 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+import { normalizeSectionLimits } from './forum-section-limits.rules';
 import { ForumCommandError } from './errors/forum-command.error';
 import {
   FORUM_VISIBILITIES,
@@ -98,8 +99,17 @@ export function normalizeCategoryInput(
 }
 
 export function normalizeForumInput(input: ForumInput): ForumInput {
+  if (
+    input.pinnedLimit != null &&
+    (!Number.isInteger(input.pinnedLimit) ||
+      input.pinnedLimit < 0 ||
+      input.pinnedLimit > 100)
+  ) {
+    invalid('Pinned topic limit must be 0–100 or empty.');
+  }
   return {
     ...input,
+    ...normalizeSectionLimits(input),
     slug: slug(input.slug),
     title: title(input.title),
     description: description(input.description),

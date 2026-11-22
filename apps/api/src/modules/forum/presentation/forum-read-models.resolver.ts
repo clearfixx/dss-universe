@@ -98,11 +98,21 @@ class ForumTopicViewerAbilitiesModel {
   reply!: boolean;
 }
 
-type ModerationFacts = { facts: ForumViewerFacts; assigned: Set<string> };
+type ModerationFacts = {
+  facts: ForumViewerFacts;
+  assigned: Set<string>;
+  assignedForums: Set<string>;
+};
+type SectionFacts = {
+  parentId: string | null;
+  allowReplies: boolean;
+  grant: import('../domain/forum-access.rules').ForumAccessGrant;
+};
 
 type Loaders = {
   moderation: () => Promise<ModerationFacts | null>;
   forumCategory: DataLoader<string, string | null>;
+  section: DataLoader<string, SectionFacts | null>;
   cards: DataLoader<string, ForumMemberCard | null>;
   votes: DataLoader<string, number | null>;
   stats: DataLoader<string, ForumActivityStats>;
@@ -129,11 +139,21 @@ export class ForumReadLoaders {
             if (!viewerId || !this.viewers) return null;
             const facts = await this.viewers.read(viewerId, new Date());
             if (facts.subjectId === null) return null;
-            return {
-              facts,
-              assigned: await this.reads.assignedCategories(viewerId),
-            };
+            const [assigned, assignedForums] = await Promise.all([
+              this.reads.assignedCategories(viewerId),
+              this.reads.assignedForums(viewerId),
+            ]);
+            return { facts, assigned, assignedForums };
           })()),
+        section: new DataLoader(async (forumIds) => {
+          const moderation = await loaders!.moderation();
+          if (!moderation) return forumIds.map(() => null);
+          const map = await this.reads.forumSections(
+            moderation.facts,
+            forumIds,
+          );
+          return forumIds.map((id) => map.get(id) ?? null);
+        }),
         forumCategory: new DataLoader(async (forumIds) => {
           const map = await this.reads.forumCategories(forumIds);
           return forumIds.map((id) => map.get(id) ?? null);
@@ -224,12 +244,18 @@ export class ForumTopicReadResolver extends ForumReadResolverBase {
         reply: false,
       };
     }
-    const { facts, assigned } = scope;
-    const categoryId = await loaders.forumCategory.load(topic.forumId);
+    const { facts, assigned, assignedForums } = scope;
+    const [categoryId, section] = await Promise.all([
+      loaders.forumCategory.load(topic.forumId),
+      loaders.section.load(topic.forumId),
+    ]);
     const moderator =
       facts.moderatesAllCategories ||
       facts.seesAllCategories ||
-      (categoryId !== null && assigned.has(categoryId));
+      (categoryId !== null && assigned.has(categoryId)) ||
+      assignedForums.has(topic.forumId) ||
+      (section?.parentId != null && assignedForums.has(section.parentId)) ||
+      section?.grant.moderate === true;
     const actor = { id: facts.subjectId!, moderator };
     const curator = topic.curatorId === actor.id;
     const facts4rules = {
@@ -246,7 +272,10 @@ export class ForumTopicReadResolver extends ForumReadResolverBase {
         (topic.acceptedAnswerPostId === null || moderator),
       close: canCloseTopic(facts4rules, actor),
       reopen: canReopenTopic(facts4rules, actor),
-      reply: topic.state === 'OPEN',
+      reply:
+        topic.state === 'OPEN' &&
+        (section?.allowReplies ?? true) &&
+        (section?.grant.reply ?? true),
     };
   }
 
