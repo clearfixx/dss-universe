@@ -18,4 +18,6 @@ export interface ReputationTotalReader {
   totalsFor(
     recipientIds: readonly string[],
   ): Promise<ReadonlyMap<string, number>>;
+  /** Net reputation received in [since, until) (community missions). */
+  earnedBetween(recipientId: string, since: Date, until: Date): Promise<number>;
 }
