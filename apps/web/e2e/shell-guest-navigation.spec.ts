@@ -98,12 +98,18 @@ test("desktop Shell keeps its module launcher and contextual sidebar usable", as
 
     const header = page.locator("header").first();
     const launcher = header.getByRole("button", { name: "Модулі" });
-    const sidebar = page.getByRole("navigation", { name: "Розділи: Новини" });
+    // Mockup layout: a fixed left sidebar holds the logo and the module list;
+    // the active module expands only when it has more than one section.
+    const aside = page.locator("aside").first();
+    const sidebar = aside.getByRole("navigation", { name: "Модулі DSS Universe" });
 
     await expect(launcher).toBeVisible();
     await expect(launcher).toHaveAttribute("aria-expanded", "false");
-    await expect(sidebar.getByRole("link", { name: "Огляд" })).toBeVisible();
-    await expect(header.getByRole("link", { name: "DSS Universe — головна" })).toBeVisible();
+    await expect(sidebar.getByRole("link", { name: "Новини" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    await expect(aside.getByRole("link", { name: "DSS Universe — головна" })).toBeVisible();
 
     const { scrollWidth, clientWidth } = await header.evaluate((element) => ({
       scrollWidth: element.scrollWidth,
