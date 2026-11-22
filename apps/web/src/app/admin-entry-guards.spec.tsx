@@ -26,6 +26,10 @@ vi.mock("@/components/shell/session-application-shell", () => ({
   DssApplicationShell: ({ children }: { children: ReactNode }) =>
     createElement("main", null, children),
 }));
+vi.mock("@/components/command-deck/command-deck-frame", () => ({
+  CommandDeckFrame: ({ children }: { children: ReactNode }) =>
+    createElement("main", null, children),
+}));
 vi.mock("@/components/shell/command-deck-overview", () => ({
   CommandDeckOverview: () => createElement("div", null, "ADMIN_DECK"),
 }));

@@ -14,8 +14,8 @@ vi.mock("@/features/activity/activity-data", () => ({
 vi.mock("@/components/shell/command-deck-overview", () => ({
   CommandDeckOverview: () => null,
 }));
-vi.mock("@/components/shell/session-application-shell", () => ({
-  DssApplicationShell: () => null,
+vi.mock("@/components/command-deck/command-deck-frame", () => ({
+  CommandDeckFrame: () => null,
 }));
 
 import { loadAdminCommandDeckAccess } from "@/features/auth/admin-access";

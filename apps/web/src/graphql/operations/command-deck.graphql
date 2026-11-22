@@ -1,0 +1,189 @@
+fragment AdminForumSettings on Forum {
+  id
+  categoryId
+  parentId
+  slug
+  title
+  description
+  position
+  active
+  allowsGatedContent
+  allowTopics
+  allowReplies
+  allowPolls
+  allowAttachments
+  listed
+  searchable
+  showCounts
+  pinnedLimit
+  attachmentMaxMb
+  attachmentFormats
+  autoCloseDays
+  gateViewRole
+  gateCreateRole
+  gateBlockTypes
+}
+
+fragment AdminSubforumSettings on ForumSubforum {
+  id
+  categoryId
+  parentId
+  slug
+  title
+  description
+  position
+  active
+  allowsGatedContent
+  allowTopics
+  allowReplies
+  allowPolls
+  allowAttachments
+  listed
+  searchable
+  showCounts
+  pinnedLimit
+  attachmentMaxMb
+  attachmentFormats
+  autoCloseDays
+  gateViewRole
+  gateCreateRole
+  gateBlockTypes
+}
+
+fragment AdminAccessRow on ForumAccessRow {
+  role
+  view
+  read
+  createTopics
+  reply
+  editOwn
+  deleteOwn
+  moderate
+}
+
+query CommandDeckCommunityHub {
+  forumCategories {
+    id
+    slug
+    title
+    description
+    position
+    active
+    visibility
+    audienceKeys
+    forums {
+      ...AdminForumSettings
+      subforums {
+        ...AdminSubforumSettings
+      }
+    }
+  }
+  forumHubStats {
+    forumCount
+    topicCount
+    postCount
+    participantCount
+  }
+  moderationSanctionPolicy {
+    escalationWarningCount
+    escalationReadOnlyDays
+    warningLifetimeDays
+    readOnlyMaxDays
+  }
+  communityPointRules {
+    key
+    eventName
+    points
+    dailyLimit
+    enabled
+  }
+}
+
+query CommandDeckSectionAccess($categoryId: ID, $forumId: ID) {
+  forumSectionAccess(categoryId: $categoryId, forumId: $forumId) {
+    source
+    own {
+      ...AdminAccessRow
+    }
+    effective {
+      ...AdminAccessRow
+    }
+  }
+}
+
+query CommandDeckModerators($categoryId: ID!) {
+  forumCategoryModerators(categoryId: $categoryId) {
+    id
+    categoryId
+    forumId
+    moderatorId
+    assignedAt
+    moderator {
+      ...ForumMemberCard
+    }
+  }
+}
+
+query CommandDeckMemberLookup($search: String!) {
+  members(input: { search: $search, limit: 6 }) {
+    items {
+      id
+      username
+      displayName
+      avatarUrl
+      roles
+    }
+  }
+}
+
+mutation SaveForumSettings($input: SaveForumSettingsInput!) {
+  saveForumSettings(input: $input) {
+    id
+  }
+}
+
+mutation CreateForumCategory($input: ForumCategoryInput!) {
+  createForumCategory(input: $input) {
+    id
+  }
+}
+
+mutation CreateForum($input: ForumInput!) {
+  createForum(input: $input) {
+    id
+  }
+}
+
+mutation UpdateModerationSanctionPolicy(
+  $input: ModerationSanctionPolicyInput!
+) {
+  updateModerationSanctionPolicy(input: $input) {
+    escalationWarningCount
+  }
+}
+
+mutation UpdateCommunityPointRule($input: UpdateCommunityPointRuleInput!) {
+  updateCommunityPointRule(input: $input) {
+    key
+  }
+}
+
+mutation AssignForumModerator(
+  $categoryId: ID!
+  $forumId: ID!
+  $moderatorId: ID!
+) {
+  assignForumModerator(
+    categoryId: $categoryId
+    forumId: $forumId
+    moderatorId: $moderatorId
+  ) {
+    id
+  }
+}
+
+mutation RevokeForumModerator($assignmentId: ID!) {
+  revokeForumCategoryModerator(assignmentId: $assignmentId) {
+    id
+  }
+}
