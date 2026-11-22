@@ -6,7 +6,8 @@
  * 📄 File: apps/web/src/app/community/forum/new/page.tsx
  *
  * 🎯 Purpose:
- * New topic page: the composer, section rules and tips (owner mockups).
+ * New topic page after the owner mockups "Створення теми" and "Стани та
+ * помилки": the composer, section rules, title tips and section tags.
  *
  * ⚠️ Important:
  * Guests are sent to sign in; read-only members see why they cannot post.
@@ -14,14 +15,17 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import { CheckCircle2, Lock, PenLine } from "lucide-react";
+import { Check, CheckCircle2, Lock, Plus, XCircle } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import type { ReactNode } from "react";
 
 import { DssApplicationShell } from "@/components/shell/session-application-shell";
 import { loadSessionViewer } from "@/features/auth/session-data";
 import {
   loadForumCategories,
+  loadForumTags,
   loadViewerSanctionStatus,
 } from "@/features/forum/forum-data";
 import { ForumTopicComposer } from "@/features/forum/forum-topic-composer";
@@ -36,6 +40,22 @@ const dateFormatter = new Intl.DateTimeFormat("uk-UA", {
   dateStyle: "medium",
   timeStyle: "short",
 });
+
+const RULES = [
+  "Дотримуйтеся тематики розділу.",
+  "Шукайте відповідь перед створенням теми.",
+  "Використовуйте зрозумілий заголовок.",
+  "Поважайте інших учасників.",
+];
+
+function Card({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="rounded-xl border border-white/[0.07] bg-card p-4">
+      <h2 className="mb-3 font-semibold">{title}</h2>
+      {children}
+    </section>
+  );
+}
 
 export default async function NewForumTopicRoute({ searchParams }: Props) {
   const { forum } = await searchParams;
@@ -58,6 +78,7 @@ export default async function NewForumTopicRoute({ searchParams }: Props) {
           id: item.id,
           title: item.title,
           category: category.title,
+          categoryId: category.id,
           allowsGatedContent: item.allowsGatedContent,
         },
         ...item.subforums
@@ -66,10 +87,15 @@ export default async function NewForumTopicRoute({ searchParams }: Props) {
             id: sub.id,
             title: `${item.title} › ${sub.title}`,
             category: category.title,
+            categoryId: category.id,
             allowsGatedContent: sub.allowsGatedContent,
           })),
       ]),
   );
+  const chosen = sections.find((item) => item.id === forum) ?? null;
+  const tags = chosen
+    ? (await loadForumTags(chosen.id)).filter((tag) => tag.active)
+    : [];
   const readOnlyUntil = sanctions?.readOnlyUntil;
 
   return (
@@ -77,22 +103,31 @@ export default async function NewForumTopicRoute({ searchParams }: Props) {
       pageTitle={{ pathname: path, title: "Нова тема" }}
       breadcrumbs={[
         { href: "/community", label: "Спільнота" },
-        { label: "Форум" },
-        { label: "Створення теми" },
+        { href: "/community", label: "Форум" },
+        ...(chosen
+          ? [
+              {
+                href: `/community?category=${chosen.categoryId}`,
+                label: chosen.category,
+              },
+              { href: `/community/forum/${chosen.id}`, label: chosen.title },
+            ]
+          : []),
+        { label: "Створити тему" },
       ]}
     >
-      <div className="mx-auto grid max-w-7xl gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
-        <div className="min-w-0 space-y-5">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_19rem] 2xl:grid-cols-[minmax(0,1fr)_21rem]">
+        <div className="min-w-0 space-y-4">
           <header className="flex items-center gap-4">
-            <span className="flex size-14 items-center justify-center rounded-2xl bg-violet-500/20 text-violet-200">
-              <PenLine className="size-7" aria-hidden="true" />
+            <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-violet-600/30 text-white">
+              <Plus className="size-8" aria-hidden="true" />
             </span>
             <div>
-              <h1 className="text-2xl font-bold sm:text-3xl">
-                Створення нової теми
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                Створити нову тему
               </h1>
-              <p className="mt-1 text-sm text-slate-400">
-                Поставте запитання або почніть обговорення.
+              <p className="mt-0.5 text-sm text-slate-400">
+                Поділіться досвідом, поставте запитання або почніть обговорення.
               </p>
             </div>
           </header>
@@ -100,17 +135,22 @@ export default async function NewForumTopicRoute({ searchParams }: Props) {
           {readOnlyUntil ? (
             <div
               role="status"
-              className="flex gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100"
+              className="flex items-center gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100"
             >
-              <Lock className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
-              <p>
-                <strong>Режим «лише читання»</strong> до{" "}
+              <Lock className="size-6 shrink-0" aria-hidden="true" />
+              <p className="flex-1">
+                <strong className="block text-base">
+                  Режим «Лише читання»
+                </strong>
+                Створювати теми й відповідати можна буде після{" "}
                 {dateFormatter.format(new Date(String(readOnlyUntil)))}.
-                Створювати теми й відповідати поки не можна.
               </p>
+              <span className="hidden rounded-md bg-amber-500/20 px-2 py-1 text-xs font-semibold sm:block">
+                Лише читання
+              </span>
             </div>
           ) : sections.length === 0 ? (
-            <p className="rounded-xl border border-white/10 p-4 text-sm text-slate-400">
+            <p className="rounded-xl border border-white/[0.07] bg-card p-4 text-sm text-slate-400">
               Немає розділів, у яких ви можете створити тему.
             </p>
           ) : (
@@ -121,33 +161,72 @@ export default async function NewForumTopicRoute({ searchParams }: Props) {
           )}
         </div>
 
-        <aside className="space-y-4">
-          <section className="rounded-2xl border border-white/10 bg-[#0f1328] p-5">
-            <h2 className="mb-3 font-semibold">Перед публікацією</h2>
+        <aside className="min-w-0 space-y-4">
+          <Card title="Правила розділу">
             <ul className="space-y-2 text-sm text-slate-300">
-              {[
-                "Оберіть відповідний розділ.",
-                "Вкажіть зрозумілий і короткий заголовок.",
-                "Для питання додайте версії, код і що вже пробували.",
-                "Використовуйте теги розділу для кращого пошуку.",
-              ].map((tip) => (
-                <li key={tip} className="flex gap-2">
-                  <CheckCircle2
-                    className="mt-0.5 size-4 shrink-0 text-emerald-400"
+              {RULES.map((rule) => (
+                <li key={rule} className="flex gap-2">
+                  <Check
+                    className="mt-0.5 size-4 shrink-0 text-violet-400"
                     aria-hidden="true"
                   />
-                  {tip}
+                  {rule}
                 </li>
               ))}
             </ul>
-          </section>
-          <section className="rounded-2xl border border-white/10 bg-[#0f1328] p-5 text-sm text-slate-300">
-            <h2 className="mb-2 font-semibold text-white">Обмеження</h2>
-            <p>Між дописами — пауза 60 секунд (захист від спаму).</p>
-            <p className="mt-2">
-              Перший допис можна редагувати, доки темі не призначать куратора.
-            </p>
-          </section>
+          </Card>
+          <Card title="Підказки">
+            <ul className="space-y-3 text-sm">
+              <li className="flex gap-2.5">
+                <CheckCircle2
+                  className="mt-0.5 size-4 shrink-0 text-emerald-400"
+                  aria-hidden="true"
+                />
+                <span>
+                  <span className="block font-medium">Гарний заголовок</span>
+                  <span className="text-xs text-slate-400">
+                    «Оптимізація білда Next.js 16: практичні поради»
+                  </span>
+                </span>
+              </li>
+              <li className="flex gap-2.5">
+                <XCircle
+                  className="mt-0.5 size-4 shrink-0 text-rose-400"
+                  aria-hidden="true"
+                />
+                <span>
+                  <span className="block font-medium">Слабкий заголовок</span>
+                  <span className="text-xs text-slate-400">
+                    «Проблема з Next.js!!!»
+                  </span>
+                </span>
+              </li>
+              <li className="text-xs text-slate-400">
+                Для питання додайте версії, код і що вже пробували. Між дописами
+                діє пауза 60 секунд.
+              </li>
+            </ul>
+          </Card>
+          {chosen && tags.length ? (
+            <Card title="Теги у розділі">
+              <ul className="flex flex-wrap gap-1.5">
+                {tags.map((tag) => (
+                  <li
+                    key={tag.id}
+                    className="rounded-md bg-white/[0.05] px-2 py-1 text-xs text-slate-200"
+                  >
+                    {tag.label}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href={`/community/forum/${chosen.id}`}
+                className="mt-3 inline-block text-xs text-violet-300 hover:text-violet-200"
+              >
+                До розділу «{chosen.title}» →
+              </Link>
+            </Card>
+          ) : null}
         </aside>
       </div>
     </DssApplicationShell>

@@ -40,7 +40,7 @@ describe("ForumTopicComposer", () => {
     render(<ForumTopicComposer sections={sections} initialForumId={null} />);
     const publish = screen.getByRole("button", { name: /Опублікувати тему/ });
     expect(publish).toBeDisabled();
-    fireEvent.change(screen.getByLabelText("Розділ *"), {
+    fireEvent.change(screen.getByLabelText("Розділ (форум)"), {
       target: { value: "plain" },
     });
     fireEvent.change(screen.getByLabelText(/Заголовок теми/), {
@@ -57,7 +57,7 @@ describe("ForumTopicComposer", () => {
       "MEDIA_UPLOAD",
     );
     rerender(<ForumTopicComposer sections={sections} initialForumId="gated" />);
-    fireEvent.change(screen.getByLabelText("Розділ *"), {
+    fireEvent.change(screen.getByLabelText("Розділ (форум)"), {
       target: { value: "gated" },
     });
     expect(screen.getByTestId("editor").dataset.permissions).toBe(
