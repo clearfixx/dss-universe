@@ -780,6 +780,7 @@ type ForumModeratorAssignment {
   """null = whole category."""
   forumId: ID
   id: ID!
+  moderator: ForumMember
   moderatorId: ID!
   revokedAt: DateTime
 }

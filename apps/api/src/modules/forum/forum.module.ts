@@ -35,6 +35,7 @@ import { ForumModerationResolver } from './presentation/forum-moderation.resolve
 import { ForumRatingsService } from './infrastructure/prisma-forum-ratings';
 import { ForumRatingsResolver } from './presentation/forum-ratings.resolver';
 import {
+  ForumModeratorCardResolver,
   ForumPostReadResolver,
   ForumPostVoteReadResolver,
   ForumStatsResolver,
@@ -73,6 +74,7 @@ import {
     ForumRatingsResolver,
     PrismaForumReadModels,
     ForumTopicReadResolver,
+    ForumModeratorCardResolver,
     ForumPostReadResolver,
     ForumPostVoteReadResolver,
     ForumStatsResolver,
