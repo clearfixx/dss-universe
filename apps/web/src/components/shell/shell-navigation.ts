@@ -1,7 +1,9 @@
 import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard,
+  MessagesSquare,
   Newspaper,
+  PenSquare,
   PenLine,
   Settings,
   Users,
@@ -39,7 +41,7 @@ export type ModuleNavigation = ModuleNavigationItem & {
 /**
  * Only verified implemented routes are navigable.
  * This registry is a presentation contract, never an authorization boundary.
- * Future Academy, Community and AI routes must be added when their actual pages ship.
+ * Future Academy and AI routes must be added when their actual pages ship.
  */
 export const MODULE_NAVIGATION: readonly ModuleNavigation[] = [
   {
@@ -49,6 +51,15 @@ export const MODULE_NAVIGATION: readonly ModuleNavigation[] = [
     requiresSession: true,
     requiresAdminDeck: true,
     children: [],
+  },
+  {
+    href: "/community",
+    label: "Спільнота",
+    icon: MessagesSquare,
+    featured: true,
+    children: [
+      { href: "/community/forum/new", label: "Нова тема", icon: PenSquare },
+    ],
   },
   {
     href: "/news",
