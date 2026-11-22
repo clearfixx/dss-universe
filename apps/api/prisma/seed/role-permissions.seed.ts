@@ -63,6 +63,8 @@ const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     Permission.NewsReview,
     Permission.NewsLinksManage,
     Permission.NewsPinsManage,
+    Permission.MissionsManage,
+    Permission.EventsManage,
   ],
 
   admin: [
@@ -93,6 +95,8 @@ const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     Permission.LevelsSettingsManage,
     Permission.CustomTitlesManage,
     Permission.CustomTitlesSettingsManage,
+    Permission.MissionsManage,
+    Permission.EventsManage,
     Permission.AchievementsManage,
     Permission.ContentReportsReview,
     Permission.ModerationAnnotationsManage,

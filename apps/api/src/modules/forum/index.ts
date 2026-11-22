@@ -16,6 +16,11 @@ export {
   type ForumNewsFactsReader,
 } from './contracts/forum-news-facts.contract';
 export {
+  FORUM_CONTRIBUTION_TOTALS,
+  type ForumContributionTotals,
+  type ForumContributionTotalsReader,
+} from './contracts/forum-contribution-totals.contract';
+export {
   FORUM_TOPIC_COUNTS,
   type ForumTopicCounts,
 } from './contracts/forum-topic-counts.contract';

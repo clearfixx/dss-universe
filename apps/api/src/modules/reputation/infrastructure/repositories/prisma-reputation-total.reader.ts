@@ -47,4 +47,16 @@ export class PrismaReputationTotalReader implements ReputationTotalReader {
     });
     return new Map(rows.map((row) => [row.recipientId, row._sum.value ?? 0]));
   }
+
+  async earnedBetween(
+    recipientId: string,
+    since: Date,
+    until: Date,
+  ): Promise<number> {
+    const result = await this.prisma.reputationEntry.aggregate({
+      where: { recipientId, createdAt: { gte: since, lt: until } },
+      _sum: { value: true },
+    });
+    return result._sum.value ?? 0;
+  }
 }

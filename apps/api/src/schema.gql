@@ -221,6 +221,71 @@ input CommentsPageInput {
   page: Int! = 1
 }
 
+type CommunityEvent {
+  description: String
+  durationMinutes: Int!
+  endsAt: DateTime!
+  format: CommunityEventFormat!
+  id: ID!
+
+  """Place (offline)."""
+  location: String
+  startsAt: DateTime!
+  title: String!
+
+  """Link (online)."""
+  url: String
+}
+
+enum CommunityEventFormat {
+  OFFLINE
+  ONLINE
+}
+
+input CommunityEventInput {
+  description: String
+  durationMinutes: Int!
+  format: CommunityEventFormat!
+  location: String
+  startsAt: DateTime!
+  title: String!
+  url: String
+}
+
+type CommunityMission {
+  active: Boolean!
+  description: String
+  endsAt: DateTime!
+  id: ID!
+  metric: CommunityMissionMetric!
+  startsAt: DateTime!
+  target: Int!
+  title: String!
+
+  """Signed-in viewer progress in the mission window; null for guests."""
+  viewerProgress: Int
+}
+
+input CommunityMissionInput {
+  active: Boolean! = true
+  description: String
+  endsAt: DateTime!
+  metric: CommunityMissionMetric!
+  startsAt: DateTime!
+  target: Int!
+  title: String!
+}
+
+"""
+TOPICS: topics opened; REPLIES: replies written; ACCEPTED_ANSWERS: replies accepted as answers; REPUTATION: net reputation received. Public sections only.
+"""
+enum CommunityMissionMetric {
+  ACCEPTED_ANSWERS
+  REPLIES
+  REPUTATION
+  TOPICS
+}
+
 type CommunityPointEntry {
   actorId: ID
   id: ID!
@@ -1382,6 +1447,8 @@ type Mutation {
   closeForumTopic(topicId: ID!): ForumTopic!
   confirmViewerTwoFactorSetup(input: ConfirmTwoFactorInput!): TwoFactorConfirmationModel!
   createComment(input: CreateCommentInput!): Comment!
+  createCommunityEvent(input: CommunityEventInput!): CommunityEvent!
+  createCommunityMission(input: CommunityMissionInput!): CommunityMission!
   createContentGate(input: CreateContentGateInput!): ContentGateModel!
   createCustomTitle(input: CreateCustomTitleInput!): CustomTitle!
   createForum(input: ForumInput!): Forum!
@@ -1394,6 +1461,8 @@ type Mutation {
   createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
   createResearchDraft(input: ResearchDraftInput!): ResearchDraftReceipt!
   deactivateAccount(input: DeactivateAccountInput!): LogoutResultModel!
+  deleteCommunityEvent(id: ID!): Boolean!
+  deleteCommunityMission(id: ID!): Boolean!
   deleteForumPost(postId: ID!, reason: String!): ForumPostModerationResult!
   disableViewerTwoFactor(input: DisableTwoFactorInput!): LogoutResultModel!
   discardCommentDraft(draftId: ID!): Boolean!
@@ -1496,6 +1565,8 @@ type Mutation {
   unfollowUser(userId: ID!): UserSocialGraphSummary!
   unlinkNewsDiscussion(articleId: ID!): Boolean!
   unsubscribeForumTopic(topicId: ID!): Boolean!
+  updateCommunityEvent(id: ID!, input: CommunityEventInput!): CommunityEvent!
+  updateCommunityMission(id: ID!, input: CommunityMissionInput!): CommunityMission!
   updateCommunityPointRule(input: UpdateCommunityPointRuleInput!): CommunityPointRule!
   updateCustomTitle(input: UpdateCustomTitleInput!): CustomTitle!
   updateCustomTitleSettings(input: UpdateCustomTitleSettingsInput!): CustomTitleSettings!
@@ -1939,6 +2010,14 @@ type Query {
   commentDraft(interactionTargetId: ID!, parentId: ID): CommentDraft
   commentRevisions(commentId: ID!): [CommentRevision!]!
   commentsForTarget(interactionTargetId: ID!, pagination: CommentsPageInput, parentId: ID): CommentPage!
+
+  """Events that have not finished yet, soonest first (max 20)."""
+  communityEvents(limit: Int! = 5): [CommunityEvent!]!
+  communityEventsAdmin: [CommunityEvent!]!
+
+  """Running missions (active, started, not ended)."""
+  communityMissions: [CommunityMission!]!
+  communityMissionsAdmin: [CommunityMission!]!
   communityPointRules: [CommunityPointRule!]!
   communityPointsHistory(pagination: CommunityPointsPageInput, userId: ID!): CommunityPointHistory!
   contentReports(pagination: ModerationPageInput, status: ContentReportStatus): ContentReportPage!
