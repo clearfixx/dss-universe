@@ -167,6 +167,7 @@ query ForumTopics(
   $scope: ForumTopicScope!
   $topPeriod: ForumTopPeriod!
   $tagSlug: String
+  $kind: ForumTopicKind
   $page: Int!
   $limit: Int!
 ) {
@@ -177,6 +178,7 @@ query ForumTopics(
     scope: $scope
     topPeriod: $topPeriod
     tagSlug: $tagSlug
+    kind: $kind
     page: $page
     limit: $limit
   ) {
@@ -362,6 +364,24 @@ query ViewerForumSanctionStatus {
 }
 
 query ForumHub($helpLimit: Int!, $latestLimit: Int!, $tagLimit: Int!) {
+  communityMissions {
+    id
+    title
+    description
+    metric
+    target
+    endsAt
+    viewerProgress
+  }
+  communityEvents(limit: 3) {
+    id
+    title
+    startsAt
+    endsAt
+    format
+    location
+    url
+  }
   forumHubStats {
     forumCount
     topicCount
@@ -404,5 +424,42 @@ query ForumHub($helpLimit: Int!, $latestLimit: Int!, $tagLimit: Int!) {
     slug
     label
     topicCount
+  }
+}
+
+query ForumSectionState($forumId: ID!) {
+  forumTopicFacets(forumId: $forumId) {
+    total
+    questions
+    discussions
+    accepted
+    unsolved
+    noReplies
+    closed
+    archived
+    mine
+    participants
+  }
+  forumFollowed(forumId: $forumId)
+}
+
+mutation FollowForum($forumId: ID!) {
+  followForum(forumId: $forumId)
+}
+
+mutation UnfollowForum($forumId: ID!) {
+  unfollowForum(forumId: $forumId)
+}
+
+query ForumWeeklyTop($limit: Int!) {
+  leaderboard(input: { period: WEEK, limit: $limit }) {
+    items {
+      rank
+      userId
+      username
+      displayName
+      avatarUrl
+      communityPoints
+    }
   }
 }

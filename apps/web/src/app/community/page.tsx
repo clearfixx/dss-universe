@@ -29,6 +29,9 @@ import {
   Plus,
   UserPlus,
   Users,
+  Trophy,
+  Target,
+  CalendarDays,
   Zap,
 } from "lucide-react";
 import type { Metadata } from "next";
@@ -41,6 +44,7 @@ import { ForumAvatar } from "@/features/forum/forum-avatar";
 import {
   loadForumCategories,
   loadForumHub,
+  loadForumWeeklyTop,
   loadViewerForumTopics,
 } from "@/features/forum/forum-data";
 import {
@@ -93,6 +97,22 @@ type Activity = {
 const TOPICS = ["тема", "теми", "тем"] as const;
 const POSTS = ["допис", "дописи", "дописів"] as const;
 const FORUMS = ["форум", "форуми", "форумів"] as const;
+const MISSION_METRIC: Record<string, string> = {
+  TOPICS: "Нові теми",
+  REPLIES: "Відповіді",
+  ACCEPTED_ANSWERS: "Прийняті відповіді",
+  REPUTATION: "Репутація",
+};
+const DAY_MONTH = new Intl.DateTimeFormat("uk-UA", {
+  day: "numeric",
+  month: "long",
+});
+const MONTH = new Intl.DateTimeFormat("uk-UA", { month: "short" });
+const EVENT_TIME = new Intl.DateTimeFormat("uk-UA", {
+  weekday: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+});
 const REPLIES = ["відповідь", "відповіді", "відповідей"] as const;
 
 function Panel({
@@ -308,11 +328,32 @@ function merge(activities: readonly Activity[]): Activity {
 export default async function CommunityHubRoute({ searchParams }: Props) {
   const { category: categoryId } = await searchParams;
   const viewer = await loadSessionViewer();
-  const [hub, categories, followed] = await Promise.all([
+  const [hub, categories, subscribed, sections, weeklyTop] = await Promise.all([
     loadForumHub(),
     loadForumCategories(),
     viewer ? loadViewerForumTopics("SUBSCRIBED", 1) : null,
+    viewer ? loadViewerForumTopics("FOLLOWED_SECTIONS", 1) : null,
+    viewer ? loadForumWeeklyTop(5) : null,
   ]);
+  const topScorers = (weeklyTop ?? []).filter(
+    (entry) => entry.communityPoints > 0,
+  );
+  const followed =
+    subscribed || sections
+      ? [
+          ...new Map(
+            [...(subscribed?.items ?? []), ...(sections?.items ?? [])].map(
+              (topic) => [topic.id, topic],
+            ),
+          ).values(),
+        ]
+          .sort(
+            (a, b) =>
+              new Date(String(b.lastPostAt)).getTime() -
+              new Date(String(a.lastPostAt)).getTime(),
+          )
+          .slice(0, 4)
+      : null;
   const stats = hub.forumHubStats;
   const current = categories.find((item) => item.id === categoryId) ?? null;
   const createHref = viewer
@@ -516,45 +557,147 @@ export default async function CommunityHubRoute({ searchParams }: Props) {
                 </ul>
               )}
             </section>
-          </div>
-
-          <aside className="min-w-0 space-y-4">
-            {followed ? (
+            <div className="grid gap-4 lg:grid-cols-2">
+              {followed ? (
+                <Panel
+                  title="Нове у підписках"
+                  icon={
+                    <BellRing
+                      className="size-5 text-violet-300"
+                      aria-hidden="true"
+                    />
+                  }
+                >
+                  <TopicLines
+                    topics={followed}
+                    stacked
+                    empty="Стежте за темами — нові відповіді з’являться тут."
+                    who={(topic) => topic.lastPostAuthor ?? topic.author}
+                    when={(topic) => topic.lastPostAt}
+                  />
+                </Panel>
+              ) : null}
               <Panel
-                title="Нове у підписках"
+                title="Ще без відповідей"
                 icon={
-                  <BellRing
+                  <MessageSquareDashed
                     className="size-5 text-violet-300"
                     aria-hidden="true"
                   />
                 }
               >
                 <TopicLines
-                  topics={followed.items.slice(0, 4)}
+                  topics={hub.quiet.items}
+                  empty="Усі теми вже отримали відповіді."
+                  who={(topic) => topic.author}
+                  when={(topic) => topic.createdAt}
                   stacked
-                  empty="Стежте за темами — нові відповіді з’являться тут."
-                  who={(topic) => topic.lastPostAuthor ?? topic.author}
-                  when={(topic) => topic.lastPostAt}
                 />
               </Panel>
+            </div>
+          </div>
+
+          <aside className="min-w-0 space-y-4">
+            {hub.communityMissions.length ? (
+              <Panel
+                title="Місії спільноти"
+                icon={
+                  <Target
+                    className="size-5 text-violet-300"
+                    aria-hidden="true"
+                  />
+                }
+              >
+                <ul className="space-y-2 px-2 pb-1">
+                  {hub.communityMissions.map((mission) => {
+                    const progress = mission.viewerProgress;
+                    const percent =
+                      progress == null
+                        ? 0
+                        : Math.min(100, (progress / mission.target) * 100);
+                    return (
+                      <li
+                        key={mission.id}
+                        className="rounded-lg bg-white/[0.03] p-3"
+                      >
+                        <p className="text-sm font-semibold">{mission.title}</p>
+                        {mission.description ? (
+                          <p className="mt-0.5 text-xs text-slate-400">
+                            {mission.description}
+                          </p>
+                        ) : null}
+                        <div className="mt-2 flex items-center gap-3">
+                          <span
+                            className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10"
+                            role="progressbar"
+                            aria-valuemin={0}
+                            aria-valuemax={mission.target}
+                            aria-valuenow={progress ?? 0}
+                            aria-label={mission.title}
+                          >
+                            <span
+                              className="block h-full rounded-full bg-violet-500"
+                              style={{ width: `${percent}%` }}
+                            />
+                          </span>
+                          <span className="text-xs text-slate-300">
+                            {progress == null
+                              ? `ціль ${mission.target}`
+                              : `${Math.min(progress, mission.target)} / ${mission.target}`}
+                          </span>
+                        </div>
+                        <p className="mt-1.5 text-[11px] text-slate-500">
+                          {MISSION_METRIC[mission.metric]} · до{" "}
+                          {DAY_MONTH.format(new Date(String(mission.endsAt)))}
+                          {progress == null
+                            ? " · увійдіть, щоб бачити прогрес"
+                            : ""}
+                        </p>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </Panel>
             ) : null}
-            <Panel
-              title="Ще без відповідей"
-              icon={
-                <MessageSquareDashed
-                  className="size-5 text-violet-300"
-                  aria-hidden="true"
-                />
-              }
-            >
-              <TopicLines
-                topics={hub.quiet.items}
-                empty="Усі теми вже отримали відповіді."
-                who={(topic) => topic.author}
-                when={(topic) => topic.createdAt}
-                stacked
-              />
-            </Panel>
+            {weeklyTop ? (
+              <Panel
+                title="Топ учасників тижня"
+                icon={
+                  <Trophy
+                    className="size-5 text-amber-300"
+                    aria-hidden="true"
+                  />
+                }
+              >
+                {topScorers.length === 0 ? (
+                  <p className="px-2 py-3 text-sm text-slate-400">
+                    Цього тижня ще ніхто не набрав балів.
+                  </p>
+                ) : null}
+                <ol className="px-2 pb-1">
+                  {topScorers.map((entry) => (
+                    <li
+                      key={entry.userId}
+                      className="flex items-center gap-2.5 py-1.5 text-sm"
+                    >
+                      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-xs text-slate-300">
+                        {entry.rank}
+                      </span>
+                      <ForumAvatar
+                        member={entry}
+                        className="size-7 text-[10px]"
+                      />
+                      <span className="min-w-0 flex-1 truncate">
+                        {entry.displayName || entry.username}
+                      </span>
+                      <span className="text-xs text-slate-300">
+                        {forumCount(entry.communityPoints)}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              </Panel>
+            ) : null}
             <Panel
               title="Популярні теги"
               icon={
@@ -586,6 +729,64 @@ export default async function CommunityHubRoute({ searchParams }: Props) {
                 </p>
               )}
             </Panel>
+            {hub.communityEvents.length ? (
+              <Panel
+                title="Найближчі події"
+                icon={
+                  <CalendarDays
+                    className="size-5 text-violet-300"
+                    aria-hidden="true"
+                  />
+                }
+              >
+                <ul className="space-y-2 px-2 pb-1">
+                  {hub.communityEvents.map((event) => {
+                    const start = new Date(String(event.startsAt));
+                    const body = (
+                      <>
+                        <span className="flex w-11 shrink-0 flex-col items-center rounded-lg bg-white/[0.06] py-1">
+                          <span className="text-base leading-tight font-bold">
+                            {start.getDate()}
+                          </span>
+                          <span className="text-[10px] text-slate-400">
+                            {MONTH.format(start)}
+                          </span>
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-semibold">
+                            {event.title}
+                          </span>
+                          <span className="block truncate text-xs text-slate-400">
+                            {EVENT_TIME.format(start)} ·{" "}
+                            {event.format === "ONLINE"
+                              ? "Онлайн"
+                              : (event.location ?? "Офлайн")}
+                          </span>
+                        </span>
+                      </>
+                    );
+                    return (
+                      <li key={event.id}>
+                        {event.url ? (
+                          <a
+                            href={event.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3 rounded-lg p-1.5 hover:bg-white/[0.04]"
+                          >
+                            {body}
+                          </a>
+                        ) : (
+                          <div className="flex items-center gap-3 p-1.5">
+                            {body}
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </Panel>
+            ) : null}
           </aside>
         </div>
       </div>

@@ -34,6 +34,7 @@ import {
   MessageSquareText,
   Pin,
   Plus,
+  Users,
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -46,6 +47,7 @@ import { ForumAvatar } from "@/features/forum/forum-avatar";
 import {
   FORUM_PAGE_SIZE,
   loadForumCategories,
+  loadForumSectionState,
   loadForumTags,
   loadForumTopics,
 } from "@/features/forum/forum-data";
@@ -57,8 +59,10 @@ import {
   forumUnreadCount,
 } from "@/features/forum/forum-format";
 import { ForumSectionIcon } from "@/features/forum/forum-section-icon";
+import { ForumFollowButton } from "@/features/forum/forum-topic-controls";
 import type {
   ForumTopicFilter,
+  ForumTopicKind,
   ForumTopicScope,
   ForumTopicSort,
   ForumTopicsQuery,
@@ -72,6 +76,7 @@ type Props = {
     tag?: string;
     scope?: string;
     page?: string;
+    type?: string;
   }>;
 };
 
@@ -95,6 +100,7 @@ const FILTERS: ReadonlyArray<{
 ];
 const TOPICS = ["тема", "теми", "тем"] as const;
 const POSTS = ["допис", "дописи", "дописів"] as const;
+const MEMBERS = ["учасник", "учасники", "учасників"] as const;
 const REPLIES = ["відповідь", "відповіді", "відповідей"] as const;
 
 const pick = <T extends string>(
@@ -122,6 +128,39 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ? `${found.forum.title} | Форум DSS Universe`
       : "Розділ не знайдено | DSS Universe",
   };
+}
+
+function FilterLink({
+  href,
+  active,
+  label,
+  count,
+}: {
+  href: string;
+  active: boolean;
+  label: string;
+  count?: number | null;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className="flex items-center gap-2.5 rounded-md px-1.5 py-1.5 text-sm text-slate-200 hover:bg-white/[0.04]"
+    >
+      <span
+        aria-hidden="true"
+        className={`flex size-4 shrink-0 items-center justify-center rounded border ${
+          active ? "border-violet-500 bg-violet-600" : "border-white/25"
+        }`}
+      >
+        {active ? <span className="size-1.5 rounded-full bg-white" /> : null}
+      </span>
+      <span className="flex-1">{label}</span>
+      {count != null ? (
+        <span className="text-xs text-slate-500">{forumCount(count)}</span>
+      ) : null}
+    </Link>
+  );
 }
 
 function StatusIcon({ topic }: { topic: Topic }) {
@@ -250,16 +289,23 @@ export default async function ForumSectionRoute({
     "ACTIVE",
   );
   const page = Math.max(1, Number(query.page) || 1);
-  const [list, tags] = await Promise.all([
+  const kind = pick<ForumTopicKind | "ALL">(
+    query.type,
+    ["QUESTION", "DISCUSSION"],
+    "ALL",
+  );
+  const [list, tags, state] = await Promise.all([
     loadForumTopics({
       forumId,
       sort,
       filter,
       scope,
       tagSlug: query.tag ?? null,
+      kind: kind === "ALL" ? null : kind,
       page,
     }),
     loadForumTags(forumId),
+    loadForumSectionState(forumId),
   ]);
   if (!list) notFound();
 
@@ -271,6 +317,7 @@ export default async function ForumSectionRoute({
       filter,
       scope,
       tag: query.tag ?? null,
+      type: kind,
       page,
       ...change,
     };
@@ -278,6 +325,7 @@ export default async function ForumSectionRoute({
     if (merged.filter !== "ALL") next.set("filter", String(merged.filter));
     if (merged.scope !== "ACTIVE") next.set("scope", String(merged.scope));
     if (merged.tag) next.set("tag", String(merged.tag));
+    if (merged.type !== "ALL") next.set("type", String(merged.type));
     if (Number(merged.page) > 1) next.set("page", String(merged.page));
     const qs = next.toString();
     return qs ? `${path}?${qs}` : path;
@@ -291,7 +339,18 @@ export default async function ForumSectionRoute({
   const pinned = list.items.filter((topic) => topic.pinned);
   const regular = list.items.filter((topic) => !topic.pinned);
   const activeTags = tags.filter((tag) => tag.active);
-  const filtered = filter !== "ALL" || scope !== "ACTIVE" || Boolean(query.tag);
+  const filtered =
+    filter !== "ALL" ||
+    scope !== "ACTIVE" ||
+    kind !== "ALL" ||
+    Boolean(query.tag);
+  const facets = state?.forumTopicFacets ?? null;
+  const statusCount: Record<ForumTopicFilter, number | null | undefined> = {
+    ALL: facets?.total,
+    UNSOLVED: facets?.unsolved,
+    NO_REPLIES: facets?.noReplies,
+    MINE: facets?.mine,
+  };
 
   const pill = (active: boolean) =>
     `inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition ${
@@ -353,6 +412,9 @@ export default async function ForumSectionRoute({
                 [
                   [MessageSquareText, activity.topicCount, TOPICS],
                   [FileText, activity.postCount, POSTS],
+                  ...(facets
+                    ? ([[Users, facets.participants, MEMBERS]] as const)
+                    : []),
                 ] as const
               ).map(([Icon, value, forms]) => (
                 <div key={forms[0]} className="flex items-center gap-2">
@@ -416,6 +478,14 @@ export default async function ForumSectionRoute({
                 Підрозділи ({subforums.length})
               </a>
             ) : null}
+            <span className="ml-auto flex items-center pb-1.5 pl-3">
+              <ForumFollowButton
+                forumId={forumId}
+                followed={state?.forumFollowed ?? false}
+                signedIn={Boolean(viewer)}
+                path={path}
+              />
+            </span>
           </nav>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -592,6 +662,7 @@ export default async function ForumSectionRoute({
                     filter: "ALL",
                     scope: "ACTIVE",
                     tag: null,
+                    type: "ALL",
                     page: 1,
                   })}
                   className="ml-auto text-xs text-violet-300 hover:text-violet-200"
@@ -600,60 +671,48 @@ export default async function ForumSectionRoute({
                 </Link>
               ) : null}
             </div>
+            <h3 className="mt-3 text-xs font-medium text-slate-400">
+              Тип теми
+            </h3>
+            <ul className="mt-1.5 space-y-0.5">
+              {(
+                [
+                  ["ALL", "Усі типи", facets?.total],
+                  ["QUESTION", "Питання", facets?.questions],
+                  ["DISCUSSION", "Обговорення", facets?.discussions],
+                ] as const
+              ).map(([id, label, count]) => (
+                <li key={id}>
+                  <FilterLink
+                    href={href({ type: id, page: 1 })}
+                    active={kind === id}
+                    label={label}
+                    count={count}
+                  />
+                </li>
+              ))}
+            </ul>
             <h3 className="mt-3 text-xs font-medium text-slate-400">Статус</h3>
             <ul className="mt-1.5 space-y-0.5">
               {FILTERS.filter((item) => !item.signedIn || viewer).map(
-                (item) => {
-                  const active = item.id === filter && scope === "ACTIVE";
-                  return (
-                    <li key={item.id}>
-                      <Link
-                        href={href({
-                          filter: item.id,
-                          scope: "ACTIVE",
-                          page: 1,
-                        })}
-                        aria-current={active ? "page" : undefined}
-                        className="flex items-center gap-2.5 rounded-md px-1.5 py-1.5 text-sm text-slate-200 hover:bg-white/[0.04]"
-                      >
-                        <span
-                          aria-hidden="true"
-                          className={`flex size-4 items-center justify-center rounded border ${
-                            active
-                              ? "border-violet-500 bg-violet-600"
-                              : "border-white/25"
-                          }`}
-                        >
-                          {active ? (
-                            <span className="size-1.5 rounded-full bg-white" />
-                          ) : null}
-                        </span>
-                        {item.label}
-                      </Link>
-                    </li>
-                  );
-                },
+                (item) => (
+                  <li key={item.id}>
+                    <FilterLink
+                      href={href({ filter: item.id, scope: "ACTIVE", page: 1 })}
+                      active={item.id === filter && scope === "ACTIVE"}
+                      label={item.label}
+                      count={statusCount[item.id]}
+                    />
+                  </li>
+                ),
               )}
               <li>
-                <Link
+                <FilterLink
                   href={href({ filter: "ALL", scope: "ARCHIVED", page: 1 })}
-                  aria-current={scope === "ARCHIVED" ? "page" : undefined}
-                  className="flex items-center gap-2.5 rounded-md px-1.5 py-1.5 text-sm text-slate-200 hover:bg-white/[0.04]"
-                >
-                  <span
-                    aria-hidden="true"
-                    className={`flex size-4 items-center justify-center rounded border ${
-                      scope === "ARCHIVED"
-                        ? "border-violet-500 bg-violet-600"
-                        : "border-white/25"
-                    }`}
-                  >
-                    {scope === "ARCHIVED" ? (
-                      <span className="size-1.5 rounded-full bg-white" />
-                    ) : null}
-                  </span>
-                  Архівні
-                </Link>
+                  active={scope === "ARCHIVED"}
+                  label="Архівні"
+                  count={facets?.archived}
+                />
               </li>
             </ul>
           </section>

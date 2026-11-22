@@ -53,6 +53,8 @@ import {
   SetForumTopicTagsDocument,
   SplitForumTopicDocument,
   SubscribeForumTopicDocument,
+  FollowForumDocument,
+  UnfollowForumDocument,
   TrashForumTopicDocument,
   UnarchiveForumTopicDocument,
   UnsubscribeForumTopicDocument,
@@ -200,6 +202,21 @@ export async function setForumTopicFollowed(
         UnsubscribeForumTopicDocument,
         { topicId },
         (d) => d.unsubscribeForumTopic,
+        revalidate,
+      );
+}
+
+export async function setForumSectionFollowed(
+  forumId: string,
+  followed: boolean,
+  revalidate?: string,
+) {
+  return followed
+    ? run(FollowForumDocument, { forumId }, (d) => d.followForum, revalidate)
+    : run(
+        UnfollowForumDocument,
+        { forumId },
+        (d) => d.unfollowForum,
         revalidate,
       );
 }

@@ -25,6 +25,8 @@ import { cache } from "react";
 import {
   ForumCategoriesDocument,
   ForumHubDocument,
+  ForumSectionStateDocument,
+  ForumWeeklyTopDocument,
   ForumPostRevisionsDocument,
   ForumPostVotesDocument,
   ForumTagsDocument,
@@ -35,6 +37,7 @@ import {
   ViewerForumSanctionStatusDocument,
   ViewerForumTopicsDocument,
   type ForumTopicFilter,
+  type ForumTopicKind,
   type ForumReplySort,
   type ForumTopicScope,
   type ForumTopicSort,
@@ -81,6 +84,7 @@ export type ForumTopicListQuery = Readonly<{
   scope?: ForumTopicScope;
   topPeriod?: ForumTopPeriod;
   tagSlug?: string | null;
+  kind?: ForumTopicKind | null;
   page?: number;
 }>;
 
@@ -95,6 +99,7 @@ export async function loadForumTopics(input: ForumTopicListQuery) {
         scope: input.scope ?? "ACTIVE",
         topPeriod: input.topPeriod ?? "WEEK",
         tagSlug: input.tagSlug ?? null,
+        kind: input.kind ?? null,
         page: input.page ?? 1,
         limit: FORUM_PAGE_SIZE,
       },
@@ -222,4 +227,31 @@ export async function loadForumHub() {
   });
   if (!result.data) throw new Error("FORUM_HUB_UNAVAILABLE");
   return result.data;
+}
+
+/** Section counters (filters, header) and whether the viewer follows it. */
+export async function loadForumSectionState(forumId: string) {
+  return orNull(async () => {
+    const result = await getClient().query({
+      query: ForumSectionStateDocument,
+      variables: { forumId },
+      context: await authContext(),
+      fetchPolicy: "no-cache",
+    });
+    return result.data ?? null;
+  });
+}
+
+/** Signed-in only (the leaderboard is private to members). */
+export async function loadForumWeeklyTop(limit = 5) {
+  if (!(await hasSession())) return null;
+  return orNull(async () => {
+    const result = await getClient().query({
+      query: ForumWeeklyTopDocument,
+      variables: { limit },
+      context: await authContext(),
+      fetchPolicy: "no-cache",
+    });
+    return result.data?.leaderboard.items ?? null;
+  });
 }

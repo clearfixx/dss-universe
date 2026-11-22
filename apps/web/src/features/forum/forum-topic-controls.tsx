@@ -22,19 +22,23 @@ import { Button } from "@/components/ui/button";
 import {
   markForumTopicRead,
   recordForumTopicView,
+  setForumSectionFollowed,
   setForumTopicFollowed,
 } from "./forum-actions";
 
 export const FORUM_REPLY_EVENT = "dss:forum-reply";
 export type ForumReplyTarget = { number: number; quote: boolean };
 
+/** Follow a topic (new replies) or, with `forumId`, a section (new topics). */
 export function ForumFollowButton({
   topicId,
+  forumId,
   followed,
   signedIn,
   path,
 }: {
-  topicId: string;
+  topicId?: string;
+  forumId?: string;
   followed: boolean;
   signedIn: boolean;
   path: string;
@@ -50,7 +54,9 @@ export function ForumFollowButton({
       disabled={pending}
       onClick={() =>
         start(async () => {
-          const result = await setForumTopicFollowed(topicId, !on, path);
+          const result = forumId
+            ? await setForumSectionFollowed(forumId, !on, path)
+            : await setForumTopicFollowed(topicId ?? "", !on, path);
           if (result.ok) setOn(!on);
         })
       }
