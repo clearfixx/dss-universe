@@ -180,7 +180,7 @@ export function ForumPostCard({
           ) : (
             <span
               aria-hidden="true"
-              className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-700 text-sm font-bold"
+              className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/25 text-violet-100 text-sm font-bold"
             >
               <Initials name={name} />
             </span>

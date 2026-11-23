@@ -189,7 +189,7 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
                   ) : (
                     <span
                       aria-hidden="true"
-                      className="flex size-6 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-700 text-[10px] font-bold"
+                      className="flex size-6 items-center justify-center rounded-full bg-primary/25 text-violet-100 text-[10px] font-bold"
                     >
                       {forumMemberName(topic.author).slice(0, 1).toUpperCase()}
                     </span>

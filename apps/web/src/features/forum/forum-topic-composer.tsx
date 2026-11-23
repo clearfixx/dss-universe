@@ -142,7 +142,7 @@ export function ForumTopicComposer({
   }
 
   const field =
-    "w-full rounded-lg border border-white/[0.09] bg-[#0b0b1c] px-3 py-2.5 text-sm text-white outline-none placeholder:text-slate-500 focus:border-violet-400";
+    "w-full rounded-lg border border-white/[0.09] bg-background px-3 py-2.5 text-sm text-white outline-none placeholder:text-slate-500 focus:border-violet-400";
   const required = (
     <span className="text-rose-400" aria-hidden="true">
       {" "}
@@ -182,7 +182,7 @@ export function ForumTopicComposer({
           <legend className="mb-1.5 font-semibold text-white">
             Тип теми{required}
           </legend>
-          <div className="grid grid-cols-2 rounded-lg border border-white/[0.09] bg-[#0b0b1c] p-0.5">
+          <div className="grid grid-cols-2 rounded-lg border border-white/[0.09] bg-background p-0.5">
             {(
               [
                 ["QUESTION", "Питання", HelpCircle],
@@ -258,7 +258,7 @@ export function ForumTopicComposer({
       {available.length ? (
         <fieldset className="space-y-1.5 text-sm">
           <legend className="mb-1.5 font-semibold text-white">Теги</legend>
-          <div className="flex flex-wrap gap-1.5 rounded-lg border border-white/[0.09] bg-[#0b0b1c] p-1.5">
+          <div className="flex flex-wrap gap-1.5 rounded-lg border border-white/[0.09] bg-background p-1.5">
             {available.map((tag) => {
               const on = tagIds.includes(tag.id);
               return (
