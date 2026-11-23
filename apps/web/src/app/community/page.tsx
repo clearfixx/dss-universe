@@ -382,7 +382,7 @@ export default async function CommunityHubRoute({ searchParams }: Props) {
       ]}
     >
       <div className="space-y-5">
-        <section className="rounded-2xl bg-[radial-gradient(55%_130%_at_80%_0%,rgba(124,58,237,.26)_0%,rgba(49,46,129,.14)_45%,transparent_80%)] py-1">
+        <section className="py-1">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
             <div className="min-w-0 flex-1 space-y-4">
               <div className="flex items-center gap-4">
@@ -400,7 +400,7 @@ export default async function CommunityHubRoute({ searchParams }: Props) {
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
-                <dl className="grid grid-cols-2 rounded-xl border border-white/[0.08] bg-[#0d0d20]/70 sm:grid-cols-4">
+                <dl className="grid grid-cols-2 rounded-xl border border-white/[0.08] bg-card sm:grid-cols-4">
                   {counters.map(([label, value, Icon]) => (
                     <div
                       key={label}
@@ -427,7 +427,7 @@ export default async function CommunityHubRoute({ searchParams }: Props) {
             <div className="flex shrink-0 flex-wrap gap-2 lg:w-52 lg:flex-col">
               <Link
                 href={createHref}
-                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 text-sm font-semibold text-white shadow-[0_0_24px_rgba(124,58,237,.35)] hover:bg-violet-500"
+                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 text-sm font-semibold text-white hover:bg-violet-500"
               >
                 <Plus className="size-4" aria-hidden="true" />
                 Створити тему

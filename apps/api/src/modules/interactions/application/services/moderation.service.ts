@@ -105,7 +105,7 @@ export class ModerationService {
     reason: string,
     expiresAt: Date | null,
   ) {
-    await this.targets.getById(targetId);
+    await this.assertReadable(targetId, actorId);
     await this.assertCommentSubject(targetId, commentId);
     if (expiresAt && expiresAt <= new Date()) {
       throw new BadRequestException(
@@ -137,6 +137,13 @@ export class ModerationService {
     actorId: string,
     reason: string,
   ) {
+    const targetId =
+      await this.moderation.findActiveAnnotationTargetId(annotationId);
+    if (!targetId)
+      throw new NotFoundException(
+        'Active moderation annotation was not found.',
+      );
+    await this.assertReadable(targetId, actorId);
     const annotation = await this.moderation.revokeAnnotation(
       annotationId,
       actorId,

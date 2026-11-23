@@ -433,7 +433,7 @@ export default async function ForumSectionRoute({
             {viewer ? (
               <Link
                 href={`/community/forum/new?forum=${forumId}`}
-                className="inline-flex h-10 items-center gap-2 rounded-lg bg-violet-600 px-4 text-sm font-semibold text-white shadow-[0_0_24px_rgba(124,58,237,.3)] hover:bg-violet-500"
+                className="inline-flex h-10 items-center gap-2 rounded-lg bg-violet-600 px-4 text-sm font-semibold text-white hover:bg-violet-500"
               >
                 <Plus className="size-4" aria-hidden="true" />
                 Створити тему
