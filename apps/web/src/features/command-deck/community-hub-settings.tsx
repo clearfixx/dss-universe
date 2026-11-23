@@ -10,7 +10,8 @@
  * 🎯 Purpose:
  * Command Deck › Community Hub › Налаштування (owner mockup "Налаштування
  * Community Hub"): counters, the section tree with an edit panel, the role
- * matrix of the selected section, sanctions and points. Every change waits
+ * matrix of the selected section and sanctions. XP rules live on Gamification
+ * › Правила XP (P1 C06), not here. Every change waits
  * for "Зберегти зміни" (owner decision), with an unsaved-changes warning.
  *
  * ⚠️ Important:
@@ -38,7 +39,6 @@ import {
   Plus,
   Scale,
   ShieldCheck,
-  Trophy,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -54,7 +54,6 @@ import {
   createForum,
   createForumCategory,
   saveForumSettings,
-  updatePointRule,
   updateSanctionPolicy,
 } from "./command-deck-actions";
 import {
@@ -87,7 +86,7 @@ const HUB_TABS: ReadonlyArray<{ id: HubTab; label: string; soon?: boolean }> = [
   { id: "structure", label: "Структура форуму" },
   { id: "moderation", label: "Модерація", soon: true },
   { id: "sanctions", label: "Санкції" },
-  { id: "points", label: "Рейтинг і XP" },
+  { id: "points", label: "Рейтинг і XP", soon: true },
   { id: "tags", label: "Теги", soon: true },
   { id: "notifications", label: "Сповіщення", soon: true },
   { id: "integrations", label: "Інтеграції", soon: true },
@@ -99,12 +98,6 @@ const VISIBILITY_LABEL = {
   MEMBERS: "Учасники",
   RESTRICTED: "За ролями",
 } as const;
-
-const POINT_LABELS: Record<string, string> = {
-  "forum.reply.created": "XP за відповідь",
-  "forum.topic.created": "XP за створення теми",
-  "forum.answer.accepted": "Бонус за прийняту відповідь",
-};
 
 type CategoryDraft = {
   id: string;
@@ -175,7 +168,6 @@ export function CommunityHubSettings({
   );
   const [accessDirty, setAccessDirty] = useState(false);
   const [policy, setPolicy] = useState(data.moderationSanctionPolicy);
-  const [rules, setRules] = useState(data.communityPointRules);
   const [expanded, setExpanded] = useState<Set<string>>(
     () => new Set(data.forumCategories.map(({ id }) => id)),
   );
@@ -194,16 +186,11 @@ export function CommunityHubSettings({
   );
   const policyDirty =
     JSON.stringify(policy) !== JSON.stringify(data.moderationSanctionPolicy);
-  const dirtyRules = rules.filter(
-    (rule, index) =>
-      JSON.stringify(rule) !== JSON.stringify(data.communityPointRules[index]),
-  );
   const dirty =
     dirtyCategories.length > 0 ||
     dirtyForums.length > 0 ||
     accessDirty ||
-    policyDirty ||
-    dirtyRules.length > 0;
+    policyDirty;
 
   useEffect(() => {
     if (!dirty) return;
@@ -287,15 +274,6 @@ export function CommunityHubSettings({
         });
         if (!result.ok) return setMessage(result.error.message);
       }
-      for (const rule of dirtyRules) {
-        const result = await updatePointRule({
-          key: rule.key,
-          points: rule.points,
-          dailyLimit: rule.dailyLimit,
-          enabled: rule.enabled,
-        });
-        if (!result.ok) return setMessage(result.error.message);
-      }
       setAccessDirty(false);
       setMessage("Зміни збережено.");
       router.refresh();
@@ -364,7 +342,7 @@ export function CommunityHubSettings({
           type="button"
           onClick={save}
           disabled={!dirty || pending}
-          className="inline-flex h-10 items-center gap-2 rounded-lg bg-violet-600 px-4 text-sm font-semibold text-white shadow-[0_0_24px_rgba(124,58,237,.35)] hover:bg-violet-500 disabled:opacity-50"
+          className="inline-flex h-10 items-center gap-2 rounded-lg bg-violet-600 px-4 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-50"
         >
           <Check className="size-4" aria-hidden="true" />
           {pending ? "Зберігаємо…" : "Зберегти зміни"}
@@ -394,7 +372,7 @@ export function CommunityHubSettings({
             {tiles.map(([label, value, hint, Icon]) => (
               <div
                 key={label}
-                className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-[#0f0f24] p-4"
+                className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-card p-4"
               >
                 <span className="flex size-11 items-center justify-center rounded-xl bg-violet-500/15 text-violet-200">
                   <Icon className="size-5" aria-hidden="true" />
@@ -659,7 +637,7 @@ export function CommunityHubSettings({
             )}
           </div>
 
-          <div className="grid gap-5 xl:grid-cols-3">
+          <div className="grid gap-5 lg:grid-cols-2">
             <Card
               title="Права доступу"
               icon={
@@ -758,39 +736,6 @@ export function CommunityHubSettings({
                 </li>
               </ul>
             </Card>
-            <Card
-              title="Рейтинг і XP"
-              icon={
-                <Trophy className="size-5 text-violet-300" aria-hidden="true" />
-              }
-              action={
-                <button
-                  type="button"
-                  onClick={() => setTab("points")}
-                  className="text-sm text-violet-300 hover:text-violet-200"
-                >
-                  Налаштувати
-                </button>
-              }
-            >
-              <ul className="space-y-2 text-sm">
-                {rules
-                  .filter(({ key }) => key in POINT_LABELS)
-                  .map((rule) => (
-                    <li
-                      key={rule.key}
-                      className="flex items-center justify-between gap-3"
-                    >
-                      <span className={rule.enabled ? "" : "text-slate-500"}>
-                        {POINT_LABELS[rule.key]}
-                      </span>
-                      <span className="rounded-md bg-white/[0.06] px-2 py-0.5 text-xs">
-                        {rule.enabled ? `+${rule.points} XP` : "вимкнено"}
-                      </span>
-                    </li>
-                  ))}
-              </ul>
-            </Card>
           </div>
         </>
       ) : tab === "sanctions" ? (
@@ -829,100 +774,7 @@ export function CommunityHubSettings({
             />
           </div>
         </Card>
-      ) : (
-        <Card
-          title="Рейтинг і XP"
-          icon={
-            <Trophy className="size-5 text-violet-300" aria-hidden="true" />
-          }
-        >
-          <div className="-mx-4 -my-4 overflow-x-auto">
-            <table className="w-full min-w-[36rem] text-sm">
-              <thead>
-                <tr className="text-xs text-slate-400">
-                  <th className="px-4 py-2.5 text-left font-medium">Правило</th>
-                  <th className="py-2.5 text-left font-medium">Бали</th>
-                  <th className="py-2.5 text-left font-medium">Денний ліміт</th>
-                  <th className="py-2.5 text-left font-medium">Увімкнено</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rules.map((rule, index) => (
-                  <tr key={rule.key} className="border-t border-white/[0.05]">
-                    <td className="px-4 py-2">
-                      <span className="block">
-                        {POINT_LABELS[rule.key] ?? rule.key}
-                      </span>
-                      <span className="text-xs text-slate-500">
-                        {rule.eventName}
-                      </span>
-                    </td>
-                    <td className="py-2 pr-3">
-                      <input
-                        type="number"
-                        min={0}
-                        aria-label={`Бали: ${rule.key}`}
-                        className={cn(field, "w-24")}
-                        value={rule.points}
-                        onChange={(event) =>
-                          setRules(
-                            rules.map((item, i) =>
-                              i === index
-                                ? {
-                                    ...item,
-                                    points: Number(event.target.value),
-                                  }
-                                : item,
-                            ),
-                          )
-                        }
-                      />
-                    </td>
-                    <td className="py-2 pr-3">
-                      <input
-                        type="number"
-                        min={0}
-                        aria-label={`Денний ліміт: ${rule.key}`}
-                        placeholder="без ліміту"
-                        className={cn(field, "w-28")}
-                        value={rule.dailyLimit ?? ""}
-                        onChange={(event) =>
-                          setRules(
-                            rules.map((item, i) =>
-                              i === index
-                                ? {
-                                    ...item,
-                                    dailyLimit:
-                                      event.target.value === ""
-                                        ? null
-                                        : Number(event.target.value),
-                                  }
-                                : item,
-                            ),
-                          )
-                        }
-                      />
-                    </td>
-                    <td className="py-2">
-                      <Toggle
-                        label=""
-                        checked={rule.enabled}
-                        onChange={(enabled) =>
-                          setRules(
-                            rules.map((item, i) =>
-                              i === index ? { ...item, enabled } : item,
-                            ),
-                          )
-                        }
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      )}
+      ) : null}
 
       {adding ? (
         <AddSectionDialog
@@ -1341,7 +1193,7 @@ function AddSectionDialog({
       aria-labelledby="add-section-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
     >
-      <div className="w-full max-w-md space-y-4 rounded-xl border border-white/10 bg-[#0f0f24] p-5">
+      <div className="w-full max-w-md space-y-4 rounded-xl border border-white/10 bg-card p-5">
         <div className="flex items-center">
           <h2 id="add-section-title" className="text-lg font-semibold">
             Додати розділ

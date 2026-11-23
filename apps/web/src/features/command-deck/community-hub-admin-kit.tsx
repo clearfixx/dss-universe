@@ -160,7 +160,7 @@ export function Card({
   return (
     <section
       className={cn(
-        "min-w-0 rounded-xl border border-white/[0.07] bg-[#0f0f24]",
+        "min-w-0 rounded-xl border border-white/[0.07] bg-card",
         className,
       )}
     >
@@ -317,4 +317,4 @@ export const ROLE_FLOORS: ReadonlyArray<{
 ];
 
 export const field =
-  "h-10 w-full rounded-lg border border-white/[0.09] bg-[#0b0b1c] px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-violet-400";
+  "h-10 w-full rounded-lg border border-white/[0.09] bg-background px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-violet-400";

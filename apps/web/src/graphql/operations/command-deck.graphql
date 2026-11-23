@@ -90,13 +90,6 @@ query CommandDeckCommunityHub {
     warningLifetimeDays
     readOnlyMaxDays
   }
-  communityPointRules {
-    key
-    eventName
-    points
-    dailyLimit
-    enabled
-  }
 }
 
 query CommandDeckSectionAccess($categoryId: ID, $forumId: ID) {
@@ -159,12 +152,6 @@ mutation UpdateModerationSanctionPolicy(
 ) {
   updateModerationSanctionPolicy(input: $input) {
     escalationWarningCount
-  }
-}
-
-mutation UpdateCommunityPointRule($input: UpdateCommunityPointRuleInput!) {
-  updateCommunityPointRule(input: $input) {
-    key
   }
 }
 

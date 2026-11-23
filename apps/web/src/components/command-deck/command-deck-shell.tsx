@@ -53,26 +53,14 @@ function DeckLogo() {
       aria-label="Command Deck — огляд"
       className="flex items-center gap-2.5 text-slate-100"
     >
-      <svg width="38" height="38" viewBox="0 0 40 40" aria-hidden="true">
-        <circle
-          cx="20"
-          cy="20"
-          r="10.5"
-          fill="none"
-          stroke="#ece9ff"
-          strokeWidth="4"
-        />
-        <ellipse
-          cx="20"
-          cy="20"
-          rx="18.5"
-          ry="6.5"
-          fill="none"
-          stroke="#a78bfa"
-          strokeWidth="2.5"
-          transform="rotate(-22 20 20)"
-        />
-      </svg>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/brand/dss-logo-mark.svg"
+        alt=""
+        width={44}
+        height={38}
+        className="h-[38px] w-11"
+      />
       <span className="flex flex-col leading-tight">
         <span className="text-base font-extrabold tracking-[0.12em]">
           DSS UNIVERSE
@@ -168,8 +156,8 @@ export function CommandDeckShell({
       .toUpperCase() || "?";
 
   return (
-    <div className="min-h-screen bg-[#08081a] text-slate-100">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-white/[0.06] bg-[#0b0b1e] lg:flex">
+    <div className="min-h-screen bg-background text-slate-100">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-white/[0.06] bg-[var(--shell-surface)] lg:flex">
         <div className="px-5 pt-5 pb-4">
           <DeckLogo />
         </div>
@@ -179,7 +167,7 @@ export function CommandDeckShell({
       </aside>
 
       <div className="lg:pl-60">
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-white/[0.06] bg-[#0b0b1e]/95 px-4 backdrop-blur sm:px-6">
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-white/[0.06] bg-[var(--shell-surface)]/95 px-4 backdrop-blur sm:px-6">
           <button
             type="button"
             aria-label="Відкрити меню Command Deck"
@@ -235,7 +223,7 @@ export function CommandDeckShell({
               ) : (
                 <span
                   aria-hidden="true"
-                  className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-700 text-xs font-bold"
+                  className="flex size-9 items-center justify-center rounded-full bg-primary/25 text-violet-100 text-xs font-bold"
                 >
                   {initials}
                 </span>
@@ -309,7 +297,7 @@ export function CommandDeckShell({
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent
           side="left"
-          className="w-72 border-white/10 bg-[#0b0b1e] p-0 text-slate-100"
+          className="w-72 border-white/10 bg-[var(--shell-surface)] p-0 text-slate-100"
         >
           <SheetTitle className="sr-only">Меню Command Deck</SheetTitle>
           <div className="px-5 pt-5 pb-4">

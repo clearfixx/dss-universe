@@ -458,7 +458,7 @@ export function SectionSettings({
           type="button"
           onClick={save}
           disabled={!dirty || pending}
-          className="inline-flex h-10 items-center gap-2 rounded-lg bg-violet-600 px-4 text-sm font-semibold text-white shadow-[0_0_24px_rgba(124,58,237,.35)] hover:bg-violet-500 disabled:opacity-50"
+          className="inline-flex h-10 items-center gap-2 rounded-lg bg-violet-600 px-4 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-50"
         >
           <Check className="size-4" aria-hidden="true" />
           {pending ? "Зберігаємо…" : "Зберегти зміни"}
@@ -532,7 +532,7 @@ export function SectionSettings({
               {tiles.map(([label, value, Icon]) => (
                 <div
                   key={label}
-                  className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-[#0f0f24] p-4"
+                  className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-card p-4"
                 >
                   <span className="flex size-11 items-center justify-center rounded-xl bg-violet-500/15 text-violet-200">
                     <Icon className="size-5" aria-hidden="true" />
@@ -582,7 +582,7 @@ export function SectionSettings({
                     <span className="text-xs text-slate-400">
                       Видимий для ролей
                     </span>
-                    <div className="mt-1 flex flex-wrap gap-1.5 rounded-lg border border-white/[0.09] bg-[#0b0b1c] p-1.5">
+                    <div className="mt-1 flex flex-wrap gap-1.5 rounded-lg border border-white/[0.09] bg-background p-1.5">
                       {ROLES.map(({ id, label }) => {
                         const on = rows.find((row) => row.role === id)!.view;
                         return (
@@ -847,7 +847,7 @@ function ModeratorsCard({
               "Учасник";
             return (
               <li key={item.id} className="flex items-center gap-3 py-1.5">
-                <span className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-700 text-xs font-bold">
+                <span className="flex size-9 items-center justify-center rounded-full bg-primary/25 text-violet-100 text-xs font-bold">
                   {name.slice(0, 2).toUpperCase()}
                 </span>
                 <span className="min-w-0 flex-1 truncate text-sm font-medium">

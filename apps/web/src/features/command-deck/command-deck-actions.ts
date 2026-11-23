@@ -34,13 +34,11 @@ import {
   CreateForumDocument,
   RevokeForumModeratorDocument,
   SaveForumSettingsDocument,
-  UpdateCommunityPointRuleDocument,
   UpdateModerationSanctionPolicyDocument,
   type ForumCategoryInput,
   type ForumInput,
   type ModerationSanctionPolicyInput,
   type SaveForumSettingsInput,
-  type UpdateCommunityPointRuleInput,
 } from "@/gql/graphql";
 import { getClient } from "@/lib/apollo/rsc-client";
 
@@ -98,14 +96,6 @@ export async function updateSanctionPolicy(
     UpdateModerationSanctionPolicyDocument,
     { input },
     (d) => d.updateModerationSanctionPolicy.escalationWarningCount,
-  );
-}
-
-export async function updatePointRule(input: UpdateCommunityPointRuleInput) {
-  return run(
-    UpdateCommunityPointRuleDocument,
-    { input },
-    (d) => d.updateCommunityPointRule.key,
   );
 }
 
