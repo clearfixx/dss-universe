@@ -39,6 +39,7 @@ import {
   Plus,
   Scale,
   ShieldCheck,
+  Trophy,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -337,6 +338,13 @@ export function CommunityHubSettings({
         >
           <ExternalLink className="size-4" aria-hidden="true" />
           Відкрити форум
+        </Link>
+        <Link
+          href="/command-deck/gamification/xp-rules"
+          className="inline-flex h-10 items-center gap-2 rounded-lg border border-white/15 px-4 text-sm font-medium hover:border-violet-400"
+        >
+          <Trophy className="size-4" aria-hidden="true" />
+          Правила XP
         </Link>
         <button
           type="button"
