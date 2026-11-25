@@ -68,6 +68,17 @@ export class ForumModerationResolver {
     return this.execute(this.moderation.deletePost(actor.id, postId, reason));
   }
 
+  @Mutation(() => ForumPostModerationResultModel, {
+    description:
+      'Author deletes their own reply where the section grants "delete own".',
+  })
+  deleteOwnForumPost(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('postId', { type: () => ID }) postId: string,
+  ) {
+    return this.execute(this.moderation.deleteOwnPost(actor.id, postId));
+  }
+
   @Mutation(() => ForumPostModerationResultModel)
   restoreForumPost(
     @AuthUser() actor: AuthenticatedUser,

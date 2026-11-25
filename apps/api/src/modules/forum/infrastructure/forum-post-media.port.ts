@@ -41,6 +41,13 @@ export interface ForumPostMedia {
     actorId: string,
     mediaIds: readonly string[],
   ): Promise<readonly ForumPostMediaRejection[]>;
+  /** Extension and size of files the actor may attach (section limits). */
+  files?(
+    actorId: string,
+    mediaIds: readonly string[],
+  ): Promise<
+    ReadonlyArray<{ mediaId: string; extension: string; size: number }>
+  >;
   /** Makes the post's active references exactly `mediaIds`. */
   sync(
     transaction: TransactionClient,

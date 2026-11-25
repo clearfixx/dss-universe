@@ -46,7 +46,11 @@ import {
 import type { ForumViewerFacts } from '../domain/types/forum-structure.type';
 import { canCloseTopic, canReopenTopic } from '../domain/forum-topic.rules';
 import { ForumPostVoteModel } from './forum-ratings.resolver';
-import { ForumModel, ForumSubforumModel } from './forum-structure.resolver';
+import {
+  ForumModel,
+  ForumModeratorAssignmentModel,
+  ForumSubforumModel,
+} from './forum-structure.resolver';
 import { ForumPostModel, ForumTopicModel } from './forum-topics.resolver';
 
 type RequestContext = { req: { user?: AuthenticatedUser } };
@@ -214,6 +218,25 @@ abstract class ForumReadResolverBase {
           }
         : null,
     };
+  }
+}
+
+/** Member card of an assigned moderator (Command Deck moderator lists). */
+@Resolver(() => ForumModeratorAssignmentModel)
+export class ForumModeratorCardResolver extends ForumReadResolverBase {
+  constructor(
+    @Inject(FORUM_MEMBER_CARDS) members: ForumMemberCardReader,
+    reads: PrismaForumReadModels,
+  ) {
+    super(members, reads);
+  }
+
+  @ResolveField(() => ForumMemberModel, { nullable: true })
+  moderator(
+    @Parent() assignment: ForumModeratorAssignmentModel,
+    @Context() ctx: RequestContext,
+  ) {
+    return this.card(ctx, assignment.moderatorId);
   }
 }
 

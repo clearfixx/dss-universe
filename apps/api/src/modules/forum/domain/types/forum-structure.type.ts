@@ -51,6 +51,12 @@ export type ForumNode = {
   searchable: boolean;
   showCounts: boolean;
   pinnedLimit: number | null;
+  attachmentMaxMb: number | null;
+  attachmentFormats: string[];
+  autoCloseDays: number | null;
+  gateViewRole: import('../forum-access.rules').ForumAccessRole;
+  gateCreateRole: import('../forum-access.rules').ForumAccessRole;
+  gateBlockTypes: import('../forum-section-limits.rules').GateBlockType[];
   subforums: ForumNode[];
 };
 
@@ -94,6 +100,12 @@ export type ForumInput = {
   searchable?: boolean;
   showCounts?: boolean;
   pinnedLimit?: number | null;
+  attachmentMaxMb?: number | null;
+  attachmentFormats?: string[];
+  autoCloseDays?: number | null;
+  gateViewRole?: import('../forum-access.rules').ForumAccessRole;
+  gateCreateRole?: import('../forum-access.rules').ForumAccessRole;
+  gateBlockTypes?: import('../forum-section-limits.rules').GateBlockType[];
 };
 
 export type ForumModeratorAssignmentRecord = {

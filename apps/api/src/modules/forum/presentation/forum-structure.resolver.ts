@@ -38,6 +38,7 @@ import {
 } from '@nestjs/graphql';
 import {
   ArrayMaxSize,
+  ArrayMinSize,
   IsArray,
   IsBoolean,
   IsIn,
@@ -59,6 +60,10 @@ import {
   type ForumAccessRole,
 } from '../domain/forum-access.rules';
 import {
+  GATE_BLOCK_TYPES,
+  type GateBlockType,
+} from '../domain/forum-section-limits.rules';
+import {
   FORUM_VISIBILITIES,
   type ForumCategoryNode,
   type ForumNode,
@@ -69,6 +74,21 @@ const ForumVisibilityEnum = Object.fromEntries(
   FORUM_VISIBILITIES.map((value) => [value, value]),
 ) as Record<ForumVisibility, ForumVisibility>;
 registerEnumType(ForumVisibilityEnum, { name: 'ForumVisibility' });
+const ForumAccessRoleEnum = Object.fromEntries(
+  FORUM_ACCESS_ROLES.map((value) => [value, value]),
+) as Record<ForumAccessRole, ForumAccessRole>;
+registerEnumType(ForumAccessRoleEnum, {
+  name: 'ForumAccessRole',
+  description:
+    'Forum role of a viewer: GUEST (signed out), MEMBER, CONTRIBUTOR, MODERATOR, ADMIN (admin or owner).',
+});
+const GateBlockTypeEnum = Object.fromEntries(
+  GATE_BLOCK_TYPES.map((value) => [value, value]),
+) as Record<GateBlockType, GateBlockType>;
+registerEnumType(GateBlockTypeEnum, {
+  name: 'ForumGateBlockType',
+  description: 'Content kinds allowed inside hidden blocks.',
+});
 
 @InputType()
 export class ForumCategoryInput {
@@ -124,6 +144,45 @@ export class ForumInput {
   @Min(0)
   @Max(100)
   pinnedLimit?: number | null;
+  @Field(() => Int, {
+    nullable: true,
+    description: 'Largest attachment in MB; empty = platform limit.',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(1024)
+  attachmentMaxMb?: number | null;
+  @Field(() => [String], {
+    defaultValue: [],
+    description: 'Allowed extensions (pdf, zip…); empty = any.',
+  })
+  @IsArray()
+  @ArrayMaxSize(30)
+  @IsString({ each: true })
+  attachmentFormats!: string[];
+  @Field(() => Int, {
+    nullable: true,
+    description: 'Close open topics inactive for N days; empty = off.',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(3650)
+  autoCloseDays?: number | null;
+  @Field(() => ForumAccessRoleEnum, { defaultValue: 'GUEST' })
+  @IsIn(FORUM_ACCESS_ROLES)
+  gateViewRole!: ForumAccessRole;
+  @Field(() => ForumAccessRoleEnum, { defaultValue: 'MEMBER' })
+  @IsIn(FORUM_ACCESS_ROLES)
+  gateCreateRole!: ForumAccessRole;
+  @Field(() => [GateBlockTypeEnum], {
+    defaultValue: ['TEXT', 'CODE', 'MEDIA', 'FILES'],
+  })
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsIn(GATE_BLOCK_TYPES, { each: true })
+  gateBlockTypes!: GateBlockType[];
 }
 
 @ObjectType('ForumSubforum')
@@ -145,6 +204,12 @@ export class ForumSubforumModel {
   @Field() searchable!: boolean;
   @Field() showCounts!: boolean;
   @Field(() => Int, { nullable: true }) pinnedLimit!: number | null;
+  @Field(() => Int, { nullable: true }) attachmentMaxMb!: number | null;
+  @Field(() => [String]) attachmentFormats!: string[];
+  @Field(() => Int, { nullable: true }) autoCloseDays!: number | null;
+  @Field(() => ForumAccessRoleEnum) gateViewRole!: ForumAccessRole;
+  @Field(() => ForumAccessRoleEnum) gateCreateRole!: ForumAccessRole;
+  @Field(() => [GateBlockTypeEnum]) gateBlockTypes!: GateBlockType[];
 }
 
 @ObjectType('Forum')
@@ -170,7 +235,7 @@ class ForumCategoryModel {
 }
 
 @ObjectType('ForumModeratorAssignment')
-class ForumModeratorAssignmentModel {
+export class ForumModeratorAssignmentModel {
   @Field(() => ID) id!: string;
   @Field(() => ID) categoryId!: string;
   @Field(() => ID, { nullable: true, description: 'null = whole category.' })
@@ -180,14 +245,6 @@ class ForumModeratorAssignmentModel {
   @Field(() => Date, { nullable: true }) revokedAt!: Date | null;
 }
 
-const ForumAccessRoleEnum = Object.fromEntries(
-  FORUM_ACCESS_ROLES.map((value) => [value, value]),
-) as Record<ForumAccessRole, ForumAccessRole>;
-registerEnumType(ForumAccessRoleEnum, {
-  name: 'ForumAccessRole',
-  description:
-    'Forum role of a viewer: GUEST (signed out), MEMBER, CONTRIBUTOR, MODERATOR, ADMIN (admin or owner).',
-});
 const AccessSourceEnum = {
   FORUM: 'FORUM',
   PARENT: 'PARENT',
@@ -500,6 +557,12 @@ export class ForumStructureResolver {
       searchable: input.searchable,
       showCounts: input.showCounts,
       pinnedLimit: input.pinnedLimit ?? null,
+      attachmentMaxMb: input.attachmentMaxMb ?? null,
+      attachmentFormats: input.attachmentFormats,
+      autoCloseDays: input.autoCloseDays ?? null,
+      gateViewRole: input.gateViewRole,
+      gateCreateRole: input.gateCreateRole,
+      gateBlockTypes: input.gateBlockTypes,
     };
   }
 
@@ -529,6 +592,12 @@ export class ForumStructureResolver {
         searchable: child.searchable,
         showCounts: child.showCounts,
         pinnedLimit: child.pinnedLimit,
+        attachmentMaxMb: child.attachmentMaxMb,
+        attachmentFormats: child.attachmentFormats,
+        autoCloseDays: child.autoCloseDays,
+        gateViewRole: child.gateViewRole,
+        gateCreateRole: child.gateCreateRole,
+        gateBlockTypes: child.gateBlockTypes,
       })),
     };
   }

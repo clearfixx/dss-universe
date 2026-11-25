@@ -28,6 +28,7 @@ import {
 } from '../contracts/forum-viewer-facts.contract';
 import { ForumCommandError } from '../domain/errors/forum-command.error';
 import { ForumAccessPolicy, matrixOf } from './forum-access.policy';
+import type { GateBlockType } from '../domain/forum-section-limits.rules';
 import {
   effectiveAccess,
   FORUM_ACCESS_ACTIONS,
@@ -696,6 +697,12 @@ export class ForumStructureService {
       searchable: row.searchable,
       showCounts: row.showCounts,
       pinnedLimit: row.pinnedLimit,
+      attachmentMaxMb: row.attachmentMaxMb,
+      attachmentFormats: row.attachmentFormats,
+      autoCloseDays: row.autoCloseDays,
+      gateViewRole: row.gateViewRole,
+      gateCreateRole: row.gateCreateRole,
+      gateBlockTypes: row.gateBlockTypes as GateBlockType[],
     };
   }
 

@@ -169,3 +169,24 @@ export function viewerGrant(
     viewer.accessRole ?? (viewer.subjectId === null ? 'GUEST' : 'MEMBER');
   return matrix[viewer.subjectId === null ? 'GUEST' : role];
 }
+
+const ROLE_RANK: Record<ForumAccessRole, number> = {
+  GUEST: 0,
+  MEMBER: 1,
+  CONTRIBUTOR: 2,
+  MODERATOR: 3,
+  ADMIN: 4,
+};
+
+/** "Учасник+" style floors: is `role` at least `floor`? */
+export function atLeastRole(
+  role: ForumAccessRole,
+  floor: ForumAccessRole,
+): boolean {
+  return ROLE_RANK[role] >= ROLE_RANK[floor];
+}
+
+export function viewerRole(viewer: ForumAccessViewer): ForumAccessRole {
+  if (viewer.subjectId === null) return 'GUEST';
+  return viewer.accessRole ?? 'MEMBER';
+}
