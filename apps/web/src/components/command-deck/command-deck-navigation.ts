@@ -52,6 +52,8 @@ export type CommandDeckEntry = Readonly<{
   label: string;
   icon: LucideIcon;
   href?: string;
+  /** Extra path prefixes that highlight this entry (owner mockup). */
+  matches?: readonly string[];
 }>;
 
 export type CommandDeckGroup = Readonly<{
@@ -76,6 +78,8 @@ export const COMMAND_DECK_GROUPS: readonly CommandDeckGroup[] = [
         label: "Community Hub",
         icon: MessagesSquare,
         href: "/command-deck/community-hub",
+        // «Правила XP» mockup: Gamification lives under the Community Hub entry.
+        matches: ["/command-deck/gamification"],
       },
       { label: "Research Lab", icon: FlaskConical },
       { label: "Academy", icon: GraduationCap },
@@ -121,6 +125,18 @@ export const COMMAND_DECK_GROUPS: readonly CommandDeckGroup[] = [
 
 /** The deepest entry whose href prefixes the path. */
 export function activeCommandDeckHref(pathname: string): string | null {
+  for (const { entries } of COMMAND_DECK_GROUPS) {
+    for (const { href, matches } of entries) {
+      if (
+        href &&
+        matches?.some(
+          (prefix) => pathname === prefix || pathname.startsWith(prefix + "/"),
+        )
+      ) {
+        return href;
+      }
+    }
+  }
   const hrefs = COMMAND_DECK_GROUPS.flatMap(({ entries }) =>
     entries.map(({ href }) => href).filter((href): href is string => !!href),
   ).sort((a, b) => b.length - a.length);

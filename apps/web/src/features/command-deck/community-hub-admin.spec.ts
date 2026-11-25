@@ -48,5 +48,8 @@ describe("Command Deck community hub settings", () => {
       activeCommandDeckHref("/command-deck/community-hub/sections/abc"),
     ).toBe("/command-deck/community-hub");
     expect(activeCommandDeckHref("/command-deckish")).toBe(null);
+    expect(activeCommandDeckHref("/command-deck/gamification/xp-rules")).toBe(
+      "/command-deck/community-hub",
+    );
   });
 });
