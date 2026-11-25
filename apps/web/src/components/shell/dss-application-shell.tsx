@@ -22,8 +22,6 @@
  */
 import {
   ChevronDown,
-  ChevronRight,
-  Home,
   LayoutDashboard,
   LogIn,
   LogOut,
@@ -70,7 +68,6 @@ import {
   COMING_SOON_MODULES,
   DEFAULT_SHELL_VARIANT,
   visibleModules,
-  breadcrumbsForPath,
   currentModule,
   currentSidebarHref,
   moduleSidebarItems,
@@ -80,8 +77,9 @@ import {
   type TrustedPageTitle,
 } from "./shell-navigation";
 
-/** A route-owned breadcrumb trail; the last item is the current page. */
-export type TrustedBreadcrumb = Readonly<{ href?: string; label: string }>;
+import { Breadcrumbs, type TrustedBreadcrumb } from "./shell-breadcrumbs";
+
+export { Breadcrumbs, type TrustedBreadcrumb } from "./shell-breadcrumbs";
 
 function Logo({ compact = false }: { compact?: boolean }) {
   return (
@@ -251,51 +249,6 @@ export function GlobalNavigation({
         <ChevronDown aria-hidden="true" className="size-3" />
       </Button>
     </div>
-  );
-}
-
-export function Breadcrumbs({
-  pathname,
-  pageTitle,
-  trail,
-}: {
-  pathname: string;
-  pageTitle?: TrustedPageTitle;
-  trail?: readonly TrustedBreadcrumb[];
-}) {
-  const routeTrail = Boolean(trail?.length);
-  const parts = routeTrail ? trail! : breadcrumbsForPath(pathname, pageTitle);
-  if (!parts.length) return null;
-  return (
-    <nav aria-label="Навігаційний шлях" className="mb-5 text-sm text-slate-400">
-      <ol className="flex flex-wrap items-center gap-2">
-        <li>
-          <Link
-            href="/"
-            aria-label="DSS Universe"
-            className="flex items-center text-violet-300 hover:text-violet-200"
-          >
-            <Home className="size-4" aria-hidden="true" />
-          </Link>
-        </li>
-        {parts.map((part, index) => (
-          <li key={`${part.href}-${index}`} className="flex items-center gap-2">
-            <ChevronRight className="size-3.5 text-slate-500" aria-hidden="true" />
-            {index === parts.length - 1 && (routeTrail || pathname === part.href) ? (
-              <span aria-current="page" className="font-medium text-slate-100">
-                {part.label}
-              </span>
-            ) : part.href ? (
-              <Link href={part.href} className="text-violet-300 hover:text-violet-200">
-                {part.label}
-              </Link>
-            ) : (
-              <span>{part.label}</span>
-            )}
-          </li>
-        ))}
-      </ol>
-    </nav>
   );
 }
 
