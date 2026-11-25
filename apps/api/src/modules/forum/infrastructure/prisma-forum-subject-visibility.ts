@@ -22,6 +22,7 @@ import {
   type ForumViewerFactsReader,
 } from '../contracts/forum-viewer-facts.contract';
 import { canSeeCategory } from '../domain/forum-structure.rules';
+import { ForumAccessPolicy } from './forum-access.policy';
 
 const MAX_SUBJECTS = 200;
 
@@ -65,6 +66,9 @@ export class PrismaForumSubjectVisibility implements ForumSubjectVisibility {
         mergedIntoTopicId: true,
         forum: {
           select: {
+            id: true,
+            parentId: true,
+            categoryId: true,
             active: true,
             parent: { select: { active: true } },
             category: {
@@ -78,10 +82,15 @@ export class PrismaForumSubjectVisibility implements ForumSubjectVisibility {
         },
       },
     });
+    const grants = await new ForumAccessPolicy(this.prisma).grants(
+      viewer,
+      topics.map(({ forum }) => forum),
+    );
     const visibleTopics = new Set(
       topics
         .filter(
           (topic) =>
+            grants.get(topic.forum.id)?.read === true &&
             topic.state !== 'TRASHED' &&
             topic.mergedIntoTopicId === null &&
             (viewer.seesAllCategories ||

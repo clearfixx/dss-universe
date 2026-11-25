@@ -146,8 +146,11 @@ export class ForumRatingsService {
       select: { topicId: true, number: true },
     });
     if (!post) this.notFound('Post');
-    const { categoryId } = await this.topics.visibleTopic(post.topicId, viewer);
-    if (!(await this.topics.isModerator(viewer, categoryId))) {
+    const { categoryId, forum } = await this.topics.visibleTopic(
+      post.topicId,
+      viewer,
+    );
+    if (!(await this.topics.isModerator(viewer, categoryId, forum))) {
       throw new ForumCommandError(
         'ACCESS_DENIED',
         'Only moderators can reverse votes.',

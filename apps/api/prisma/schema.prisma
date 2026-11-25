@@ -2726,6 +2726,7 @@ model ForumCategory {
   audience   ForumCategoryAudience[]
   forums     Forum[]
   moderators ForumModeratorAssignment[]
+  accessRules ForumAccessRule[]
 
   @@index([active, position, id])
   @@map("forum_categories")
@@ -2752,10 +2753,25 @@ model Forum {
   position           Int      @default(0)
   active             Boolean  @default(true)
   allowsGatedContent Boolean  @default(false)
+  /// Section switches (Command Deck): new topics, replies, polls, attachments.
+  allowTopics        Boolean  @default(true)
+  allowReplies       Boolean  @default(true)
+  allowPolls         Boolean  @default(true)
+  allowAttachments   Boolean  @default(true)
+  /// false = unlisted: hidden from lists and navigation, opens by direct link.
+  listed             Boolean  @default(true)
+  /// false = topics of this section are left out of forum search.
+  searchable         Boolean  @default(true)
+  /// false = topic and reply counters are not shown for this section.
+  showCounts         Boolean  @default(true)
+  /// Maximum pinned topics; null = no limit.
+  pinnedLimit        Int?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  topics    ForumTopic[]
+  topics               ForumTopic[]
+  accessRules          ForumAccessRule[]
+  moderatorAssignments ForumModeratorAssignment[]
   tags      ForumTag[]
   category  ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   parent    Forum?        @relation("ForumSubforums", fields: [parentId], references: [id], onDelete: Restrict)
@@ -2770,6 +2786,8 @@ model Forum {
 model ForumModeratorAssignment {
   id           String    @id @default(uuid())
   categoryId   String
+  /// null = the whole category; otherwise one forum (and its subforums).
+  forumId      String?
   moderatorId  String
   assignedById String
   assignedAt   DateTime  @default(now())
@@ -2777,13 +2795,48 @@ model ForumModeratorAssignment {
   revokedById  String?
 
   category   ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  forum      Forum?        @relation(fields: [forumId], references: [id], onDelete: Restrict)
   moderator  User          @relation("ForumModerator", fields: [moderatorId], references: [id], onDelete: Restrict)
   assignedBy User          @relation("ForumModeratorAssigner", fields: [assignedById], references: [id], onDelete: Restrict)
   revokedBy  User?         @relation("ForumModeratorRevoker", fields: [revokedById], references: [id], onDelete: Restrict)
 
   @@index([moderatorId, revokedAt])
   @@index([categoryId, revokedAt])
+  @@index([forumId, revokedAt])
   @@map("forum_moderator_assignments")
+}
+
+enum ForumAccessRole {
+  GUEST
+  MEMBER
+  CONTRIBUTOR
+  MODERATOR
+  ADMIN
+}
+
+/// One row of a section's role matrix; a section has all five roles or none
+/// (then it inherits). Exactly one of categoryId / forumId is set.
+model ForumAccessRule {
+  id              String          @id @default(uuid())
+  categoryId      String?
+  forumId         String?
+  role            ForumAccessRole
+  canView         Boolean
+  canRead         Boolean
+  canCreateTopics Boolean
+  canReply        Boolean
+  canEditOwn      Boolean
+  canDeleteOwn    Boolean
+  canModerate     Boolean
+  updatedById     String
+  updatedAt       DateTime        @updatedAt
+
+  category ForumCategory? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  forum    Forum?         @relation(fields: [forumId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, role])
+  @@unique([forumId, role])
+  @@map("forum_access_rules")
 }
 
 model ForumTopic {

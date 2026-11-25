@@ -5,7 +5,11 @@
  * created and every topic became a discussion through GraphQL.
  */
 import { ArgumentMetadata, ValidationPipe } from '@nestjs/common';
-import { ForumCategoryInput, ForumInput } from './forum-structure.resolver';
+import {
+  ForumCategoryInput,
+  ForumInput,
+  SaveForumSettingsInput,
+} from './forum-structure.resolver';
 import {
   CreateForumReplyInput,
   CreateForumTopicInput,
@@ -53,6 +57,57 @@ describe('Forum GraphQL inputs survive the global validation pipe', () => {
         position: 2,
         allowsGatedContent: true,
         active: false,
+        allowTopics: false,
+        allowReplies: true,
+        allowPolls: false,
+        allowAttachments: true,
+        listed: false,
+        searchable: true,
+        showCounts: false,
+        pinnedLimit: 5,
+      },
+    ],
+    [
+      'SaveForumSettingsInput',
+      SaveForumSettingsInput,
+      {
+        categories: [],
+        forums: [
+          {
+            id: 'f',
+            resetAccess: false,
+            input: {
+              categoryId: 'c',
+              parentId: null,
+              slug: 'web',
+              title: 'Web',
+              description: null,
+              position: 1,
+              allowsGatedContent: false,
+              active: true,
+              allowTopics: true,
+              allowReplies: true,
+              allowPolls: true,
+              allowAttachments: true,
+              listed: true,
+              searchable: true,
+              showCounts: true,
+              pinnedLimit: null,
+            },
+            access: [
+              {
+                role: 'MEMBER',
+                view: true,
+                read: true,
+                createTopics: true,
+                reply: true,
+                editOwn: true,
+                deleteOwn: false,
+                moderate: false,
+              },
+            ],
+          },
+        ],
       },
     ],
     [

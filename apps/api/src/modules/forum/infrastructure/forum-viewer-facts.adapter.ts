@@ -24,9 +24,11 @@ import {
 } from '@api/core/authorization';
 import type { ForumViewerFactsReader } from '../contracts/forum-viewer-facts.contract';
 import type { ForumViewerFacts } from '../domain/types/forum-structure.type';
+import { forumAccessRole } from '../domain/forum-access.rules';
 
 const GUEST: ForumViewerFacts = {
   subjectId: null,
+  accessRole: 'GUEST',
   audienceKeys: [],
   seesAllCategories: false,
   moderatesAllCategories: false,
@@ -51,6 +53,7 @@ export class ForumViewerFactsAdapter implements ForumViewerFactsReader {
     const permissions = new Set(profile.permissions);
     return {
       subjectId,
+      accessRole: forumAccessRole(subjectId, profile.roles),
       audienceKeys: audience.groups,
       seesAllCategories: permissions.has(Permission.ForumStructureManage),
       moderatesAllCategories: permissions.has(Permission.ForumModerateAll),

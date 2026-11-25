@@ -19,6 +19,9 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@api/core/database';
+import type { ForumAccessGrant } from '../domain/forum-access.rules';
+import type { ForumViewerFacts } from '../domain/types/forum-structure.type';
+import { ForumAccessPolicy } from './forum-access.policy';
 
 export type ForumActivityStats = Readonly<{
   topicCount: number;
@@ -172,12 +175,61 @@ export class PrismaForumReadModels {
   }
 
   /** Category IDs the viewer moderates by an active assignment. */
+  /** Whole-category assignments only (forum-level ones are separate). */
   async assignedCategories(viewerId: string): Promise<Set<string>> {
     const rows = await this.prisma.forumModeratorAssignment.findMany({
-      where: { moderatorId: viewerId, revokedAt: null },
+      where: { moderatorId: viewerId, revokedAt: null, forumId: null },
       select: { categoryId: true },
     });
     return new Set(rows.map(({ categoryId }) => categoryId));
+  }
+
+  async assignedForums(viewerId: string): Promise<Set<string>> {
+    const rows = await this.prisma.forumModeratorAssignment.findMany({
+      where: { moderatorId: viewerId, revokedAt: null, forumId: { not: null } },
+      select: { forumId: true },
+    });
+    return new Set(rows.map(({ forumId }) => forumId!));
+  }
+
+  /** Section switches and the viewer's matrix rights, batched. */
+  async forumSections(
+    viewer: ForumViewerFacts,
+    forumIds: readonly string[],
+  ): Promise<
+    Map<
+      string,
+      {
+        parentId: string | null;
+        allowReplies: boolean;
+        grant: ForumAccessGrant;
+      }
+    >
+  > {
+    if (forumIds.length === 0) return new Map();
+    const rows = await this.prisma.forum.findMany({
+      where: { id: { in: [...forumIds] } },
+      select: {
+        id: true,
+        parentId: true,
+        categoryId: true,
+        allowReplies: true,
+      },
+    });
+    const grants = await new ForumAccessPolicy(this.prisma).grants(
+      viewer,
+      rows,
+    );
+    return new Map(
+      rows.map((row) => [
+        row.id,
+        {
+          parentId: row.parentId,
+          allowReplies: row.allowReplies,
+          grant: grants.get(row.id)!,
+        },
+      ]),
+    );
   }
 
   async forumCategories(
