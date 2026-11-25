@@ -28,6 +28,7 @@ export type ModuleNavigationItem = {
   href: string;
   label: string;
   icon: LucideIcon;
+  requiresSession?: boolean;
 };
 
 export type ModuleNavigation = ModuleNavigationItem & {
@@ -58,7 +59,7 @@ export const MODULE_NAVIGATION: readonly ModuleNavigation[] = [
     icon: MessagesSquare,
     featured: true,
     children: [
-      { href: "/community/forum/new", label: "Нова тема", icon: PenSquare },
+      { href: "/community/forum/new", label: "Нова тема", icon: PenSquare, requiresSession: true },
     ],
   },
   {

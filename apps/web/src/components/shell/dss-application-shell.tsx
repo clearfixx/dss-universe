@@ -26,15 +26,12 @@ import {
   LogIn,
   LogOut,
   Menu,
-  Search,
   Settings,
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
-  useEffect,
-  useRef,
   useState,
   type PropsWithChildren,
   type ReactNode,
@@ -59,239 +56,25 @@ import {
 } from "@/components/ui/sheet";
 import { logoutAction } from "@/features/auth/auth-actions";
 import type { SessionViewer } from "@/features/auth/session-contract";
-import { cn } from "@/lib/utils";
 
 import { viewerDisplayName } from "./personal-hub-presentation";
 import { isDrawerOpenForPath } from "./shell-drawer-state";
 
 import {
-  COMING_SOON_MODULES,
   DEFAULT_SHELL_VARIANT,
-  visibleModules,
-  currentModule,
-  currentSidebarHref,
-  moduleSidebarItems,
-  navigationCurrent,
-  routeMatches,
   type ShellVariant,
   type TrustedPageTitle,
 } from "./shell-navigation";
 
 import { Breadcrumbs, type TrustedBreadcrumb } from "./shell-breadcrumbs";
 
+import { Logo } from "./shell-logo";
+import { GlobalNavigation } from "./shell-navbar";
+import { ModuleNavigation, SidebarNavigation } from "./shell-sidebar";
+import { ShellSearch } from "./shell-search";
+
 export { Breadcrumbs, type TrustedBreadcrumb } from "./shell-breadcrumbs";
-
-function Logo({ compact = false }: { compact?: boolean }) {
-  return (
-    <Link
-      href="/"
-      aria-label="DSS Universe — головна"
-      className="flex shrink-0 items-center gap-2.5 text-slate-100"
-    >
-      <svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true" className="shrink-0">
-        <circle cx="20" cy="20" r="10.5" fill="none" stroke="#ece9ff" strokeWidth="4" />
-        <ellipse
-          cx="20"
-          cy="20"
-          rx="18.5"
-          ry="6.5"
-          fill="none"
-          stroke="#a78bfa"
-          strokeWidth="2.5"
-          transform="rotate(-22 20 20)"
-        />
-      </svg>
-      {compact ? null : (
-        <span aria-hidden="true" className="flex flex-col leading-none">
-          <span className="text-lg font-extrabold tracking-[0.06em]">DSS</span>
-          <span className="text-[10px] font-semibold tracking-[0.28em] text-slate-300">
-            UNIVERSE
-          </span>
-        </span>
-      )}
-    </Link>
-  );
-}
-
-/** Left sidebar: every module, the active one expanded with its sections. */
-function SidebarNavigation({
-  pathname,
-  hasSession,
-  canAccessAdminDeck,
-  onNavigate,
-}: {
-  pathname: string;
-  hasSession: boolean;
-  canAccessAdminDeck: boolean;
-  onNavigate?: () => void;
-}) {
-  const active = currentModule(pathname);
-  const sections = moduleSidebarItems(pathname);
-  const currentHref = currentSidebarHref(pathname);
-  return (
-    <nav aria-label="Модулі DSS Universe" className="space-y-1">
-      {visibleModules(hasSession, canAccessAdminDeck).map((module) => {
-        const Icon = module.icon;
-        const expanded = active?.href === module.href && sections.length > 1;
-        return (
-          <div key={module.href}>
-            <Link
-              href={module.href}
-              aria-current={navigationCurrent(pathname, module.href)}
-              onClick={onNavigate}
-              className={cn(
-                "flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm text-slate-300 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400",
-                active?.href === module.href &&
-                  "bg-violet-600/20 text-white shadow-[inset_0_0_0_1px_rgba(139,92,246,.45)]",
-              )}
-            >
-              <Icon className="size-[18px] shrink-0" aria-hidden="true" />
-              <span className="flex-1">{module.label}</span>
-              {expanded ? (
-                <ChevronDown className="size-4 text-slate-400" aria-hidden="true" />
-              ) : null}
-            </Link>
-            {expanded ? (
-              <ul aria-label={`Розділи: ${module.label}`} className="mt-1 space-y-0.5 pl-4">
-                {sections.map(({ href, label, icon: SectionIcon }) => (
-                  <li key={href}>
-                    <Link
-                      href={href}
-                      onClick={onNavigate}
-                      aria-current={
-                        currentHref === href ? navigationCurrent(pathname, href) : undefined
-                      }
-                      className={cn(
-                        "flex min-h-9 items-center gap-3 rounded-lg px-3 text-sm text-slate-400 transition-colors hover:bg-white/5 hover:text-white",
-                        currentHref === href && "bg-violet-500/15 text-violet-100",
-                      )}
-                    >
-                      <SectionIcon className="size-4 shrink-0" aria-hidden="true" />
-                      {label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </div>
-        );
-      })}
-    </nav>
-  );
-}
-
-export function GlobalNavigation({
-  pathname,
-  variant,
-  hasSession,
-  canAccessAdminDeck,
-  onOpenLauncher,
-  launcherOpen = false,
-}: {
-  pathname: string;
-  variant: ShellVariant;
-  hasSession: boolean;
-  canAccessAdminDeck: boolean;
-  onOpenLauncher: () => void;
-  launcherOpen?: boolean;
-}) {
-  const modules = visibleModules(hasSession, canAccessAdminDeck);
-  const featured = modules.filter((item) => item.featured);
-  const inline = variant === "HORIZONTAL_NAVIGATION" ? modules : featured;
-
-  return (
-    <div className="hidden min-w-0 items-stretch gap-1 self-stretch lg:flex">
-      {variant !== "MODULE_LAUNCHER" && (
-        <nav aria-label="Глобальна навігація" className="flex min-w-0 items-stretch gap-0.5 overflow-hidden">
-          {inline.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              aria-label={label}
-              title={label}
-              aria-current={navigationCurrent(pathname, href)}
-              className={cn(
-                "inline-flex shrink-0 items-center border-b-2 border-transparent px-2.5 text-sm text-slate-300 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-violet-400",
-                routeMatches(pathname, href) &&
-                  "border-violet-500 bg-violet-500/10 text-violet-100",
-              )}
-            >
-              {label}
-            </Link>
-          ))}
-          {COMING_SOON_MODULES.map((label) => (
-            <a
-              key={label}
-              href="#"
-              title="Скоро"
-              aria-disabled="true"
-              onClick={(event) => event.preventDefault()}
-              className="inline-flex shrink-0 cursor-default items-center border-b-2 border-transparent px-3 text-sm text-slate-500"
-            >
-              {label}
-            </a>
-          ))}
-        </nav>
-      )}
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onClick={onOpenLauncher}
-        aria-haspopup="dialog"
-        aria-expanded={launcherOpen}
-        className="self-center text-slate-300"
-      >
-        <Menu aria-hidden="true" />
-        <span className={variant === "MODULE_LAUNCHER" ? undefined : "sr-only 2xl:not-sr-only"}>
-          {variant === "MODULE_LAUNCHER" ? "Модулі" : "Усі модулі"}
-        </span>
-        <ChevronDown aria-hidden="true" className="size-3" />
-      </Button>
-    </div>
-  );
-}
-
-function ShellSearch() {
-  const router = useRouter();
-  const [term, setTerm] = useState("");
-  const input = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        input.current?.focus();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-  return (
-    <form
-      role="search"
-      className="hidden min-w-0 md:block"
-      onSubmit={(event) => {
-        event.preventDefault();
-        const value = term.trim();
-        if (value) router.push(`/community/search?q=${encodeURIComponent(value)}`);
-      }}
-    >
-      <label className="flex h-10 w-56 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 text-sm text-slate-400 focus-within:border-violet-400 2xl:w-72">
-        <Search className="size-4 shrink-0" aria-hidden="true" />
-        <span className="sr-only">Пошук у спільноті</span>
-        <input
-          ref={input}
-          type="search"
-          value={term}
-          onChange={(event) => setTerm(event.target.value)}
-          placeholder="Пошук у спільноті…"
-          className="min-w-0 flex-1 bg-transparent text-slate-100 outline-none placeholder:text-slate-500"
-        />
-        <kbd className="rounded border border-white/10 px-1.5 text-[11px] text-slate-500">Ctrl K</kbd>
-      </label>
-    </form>
-  );
-}
+export { GlobalNavigation } from "./shell-navbar";
 
 export function DssApplicationShell({
   children,
@@ -490,7 +273,8 @@ export function DssApplicationShell({
               Оберіть доступний розділ платформи.
             </SheetDescription>
           </SheetHeader>
-          <div className="max-h-[calc(100dvh-5rem)] overflow-y-auto px-3 py-4">
+          <div className="max-h-[calc(100dvh-5rem)] space-y-4 overflow-y-auto px-3 py-4">
+            <ModuleNavigation pathname={pathname} hasSession={hasSession} canAccessAdminDeck={canAccessAdminDeck} onNavigate={() => setOpen(false)} />
             <SidebarNavigation
               pathname={pathname}
               hasSession={hasSession}
