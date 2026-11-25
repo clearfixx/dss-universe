@@ -3,7 +3,7 @@
  * 🚀 DSS Universe
  * ---------------------------------------------------------------
  * 📦 Module: Web Forum
- * 📄 File: apps/web/src/app/community/page.tsx
+ * 📄 File: apps/web/src/app/community/(hub)/page.tsx
  *
  * 🎯 Purpose:
  * Community Hub home after the owner mockup "Центр спільноти": hero with

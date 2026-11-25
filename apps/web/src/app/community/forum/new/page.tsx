@@ -15,7 +15,7 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import { Check, CheckCircle2, Lock, Plus, XCircle } from "lucide-react";
+import { Check, CheckCircle2, Plus, XCircle } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -28,6 +28,7 @@ import {
   loadForumTags,
   loadViewerSanctionStatus,
 } from "@/features/forum/forum-data";
+import { ForumReadOnlyNotice } from "@/features/forum/forum-states";
 import { ForumTopicComposer } from "@/features/forum/forum-topic-composer";
 
 export const metadata: Metadata = {
@@ -35,11 +36,6 @@ export const metadata: Metadata = {
 };
 
 type Props = { searchParams: Promise<{ forum?: string }> };
-
-const dateFormatter = new Intl.DateTimeFormat("uk-UA", {
-  dateStyle: "medium",
-  timeStyle: "short",
-});
 
 const RULES = [
   "Дотримуйтеся тематики розділу.",
@@ -133,22 +129,9 @@ export default async function NewForumTopicRoute({ searchParams }: Props) {
           </header>
 
           {readOnlyUntil ? (
-            <div
-              role="status"
-              className="flex items-center gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100"
-            >
-              <Lock className="size-6 shrink-0" aria-hidden="true" />
-              <p className="flex-1">
-                <strong className="block text-base">
-                  Режим «Лише читання»
-                </strong>
-                Створювати теми й відповідати можна буде після{" "}
-                {dateFormatter.format(new Date(String(readOnlyUntil)))}.
-              </p>
-              <span className="hidden rounded-md bg-amber-500/20 px-2 py-1 text-xs font-semibold sm:block">
-                Лише читання
-              </span>
-            </div>
+            <ForumReadOnlyNotice until={String(readOnlyUntil)}>
+              Створювати теми й відповідати поки не можна.
+            </ForumReadOnlyNotice>
           ) : sections.length === 0 ? (
             <p className="rounded-xl border border-white/[0.07] bg-card p-4 text-sm text-slate-400">
               Немає розділів, у яких ви можете створити тему.

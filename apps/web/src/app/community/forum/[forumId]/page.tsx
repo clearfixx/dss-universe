@@ -44,6 +44,7 @@ import type { ReactNode } from "react";
 import { DssApplicationShell } from "@/components/shell/session-application-shell";
 import { loadSessionViewer } from "@/features/auth/session-data";
 import { ForumAvatar } from "@/features/forum/forum-avatar";
+import { ForumStatePanel } from "@/features/forum/forum-states";
 import {
   FORUM_PAGE_SIZE,
   loadForumCategories,
@@ -576,13 +577,29 @@ export default async function ForumSectionRoute({
             aria-label="Теми"
             className="overflow-hidden rounded-xl border border-white/[0.07] bg-card"
           >
-            {regular.length === 0 ? (
+            {regular.length === 0 && !pinned.length && !filtered ? (
+              <ForumStatePanel
+                icon={<MessageSquareText />}
+                title="У цьому розділі ще немає тем"
+                actions={
+                  viewer ? (
+                    <Link
+                      href={`/community/forum/new?forum=${forumId}`}
+                      className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white hover:bg-violet-500"
+                    >
+                      <Plus className="size-4" aria-hidden="true" />
+                      Створити тему
+                    </Link>
+                  ) : null
+                }
+              >
+                Стань першим, хто створить обговорення та запустить дискусію.
+              </ForumStatePanel>
+            ) : regular.length === 0 ? (
               <p className="p-8 text-center text-sm text-slate-400">
                 {pinned.length
                   ? "Інших тем на цій сторінці немає."
-                  : filtered
-                    ? "Тем за цими умовами не знайдено."
-                    : "У цьому розділі ще немає тем."}
+                  : "Тем за цими умовами не знайдено."}
               </p>
             ) : (
               <ul>
