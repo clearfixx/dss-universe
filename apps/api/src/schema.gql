@@ -1002,6 +1002,13 @@ type ForumTopic {
   state: ForumTopicState!
   tags: [ForumTopicTag!]!
   title: String!
+
+  """When the topic was moved to the trash; null outside it."""
+  trashedAt: DateTime
+
+  """Who moved the topic to the trash; null outside it."""
+  trashedBy: ForumMember
+  trashedById: ID
   viewCount: Int!
   viewerAbilities: ForumTopicViewerAbilities!
 
@@ -2210,6 +2217,11 @@ type Query {
     tagSlug: String
     topPeriod: ForumTopPeriod! = WEEK
   ): ForumTopicPage!
+
+  """
+  Forum trash: trashed topics of the sections the viewer moderates, most recently trashed first. Moderators only.
+  """
+  forumTrash(forumId: ID, limit: Int! = 20, page: Int! = 1, search: String): ForumTopicPage!
   fullNews(language: String!, slug: String!): FullNews
   interactionTarget(id: ID!): InteractionTarget!
   interactionTargetAccess(capability: InteractionCapability!, targetId: ID!): InteractionAccessDecision!

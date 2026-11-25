@@ -380,17 +380,27 @@ export class ForumModerationService {
     const next: {
       state: ForumTopicState;
       stateBeforeTrash: ForumTopicState | null;
+      trashedAt: Date | null;
+      trashedById: string | null;
     } =
-      action === 'ARCHIVE'
-        ? { state: 'ARCHIVED', stateBeforeTrash: null }
-        : action === 'UNARCHIVE'
-          ? { state: 'CLOSED', stateBeforeTrash: null }
-          : action === 'TRASH'
-            ? { state: 'TRASHED', stateBeforeTrash: topic.state }
-            : {
-                state: topic.stateBeforeTrash ?? 'CLOSED',
-                stateBeforeTrash: null,
-              };
+      action === 'TRASH'
+        ? {
+            state: 'TRASHED',
+            stateBeforeTrash: topic.state,
+            trashedAt: new Date(),
+            trashedById: actorId,
+          }
+        : {
+            state:
+              action === 'ARCHIVE'
+                ? 'ARCHIVED'
+                : action === 'UNARCHIVE'
+                  ? 'CLOSED'
+                  : (topic.stateBeforeTrash ?? 'CLOSED'),
+            stateBeforeTrash: null,
+            trashedAt: null,
+            trashedById: null,
+          };
     await this.prisma.$transaction(async (tx) => {
       const updated = await tx.forumTopic.updateMany({
         where: { id: topicId, state: topic.state },

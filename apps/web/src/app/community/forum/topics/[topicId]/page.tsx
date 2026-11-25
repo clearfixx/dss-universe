@@ -254,7 +254,13 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
               className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100"
             >
               Тема в кошику: учасники її не бачать. Модератори можуть її
-              відновити.
+              відновити.{" "}
+              <Link
+                href="/community/moderation/trash"
+                className="font-medium text-white underline"
+              >
+                Відкрити кошик
+              </Link>
             </div>
           ) : null}
 
