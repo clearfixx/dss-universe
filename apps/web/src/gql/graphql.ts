@@ -133,6 +133,94 @@ export type EditorAiCommand =
   | 'Rewrite'
   | 'Shorten';
 
+/** Forum role of a viewer: GUEST (signed out), MEMBER, CONTRIBUTOR, MODERATOR, ADMIN (admin or owner). */
+export type ForumAccessRole =
+  | 'ADMIN'
+  | 'CONTRIBUTOR'
+  | 'GUEST'
+  | 'MEMBER'
+  | 'MODERATOR';
+
+export type ForumAccessRowInput = {
+  createTopics: boolean;
+  deleteOwn: boolean;
+  editOwn: boolean;
+  moderate: boolean;
+  read: boolean;
+  reply: boolean;
+  role: ForumAccessRole;
+  view: boolean;
+};
+
+/** Where the matrix in force comes from. */
+export type ForumAccessSource =
+  | 'CATEGORY'
+  | 'DEFAULT'
+  | 'FORUM'
+  | 'PARENT';
+
+export type ForumCategoryChangeInput = {
+  /** Omit to keep; [] is invalid; send resetAccess to inherit. */
+  access?: Array<ForumAccessRowInput> | null | undefined;
+  id: string | number;
+  input: ForumCategoryInput;
+  resetAccess?: boolean;
+};
+
+export type ForumCategoryInput = {
+  active?: boolean;
+  audienceKeys?: Array<string>;
+  description?: string | null | undefined;
+  position?: number;
+  slug: string;
+  title: string;
+  visibility: ForumVisibility;
+};
+
+export type ForumChangeInput = {
+  access?: Array<ForumAccessRowInput> | null | undefined;
+  id: string | number;
+  input: ForumInput;
+  resetAccess?: boolean;
+};
+
+/** Content kinds allowed inside hidden blocks. */
+export type ForumGateBlockType =
+  | 'CODE'
+  | 'FILES'
+  | 'MEDIA'
+  | 'TEXT';
+
+export type ForumInput = {
+  active?: boolean;
+  allowAttachments?: boolean;
+  allowPolls?: boolean;
+  allowReplies?: boolean;
+  allowTopics?: boolean;
+  allowsGatedContent?: boolean;
+  /** Allowed extensions (pdf, zip…); empty = any. */
+  attachmentFormats?: Array<string>;
+  /** Largest attachment in MB; empty = platform limit. */
+  attachmentMaxMb?: number | null | undefined;
+  /** Close open topics inactive for N days; empty = off. */
+  autoCloseDays?: number | null | undefined;
+  categoryId: string | number;
+  description?: string | null | undefined;
+  gateBlockTypes?: Array<ForumGateBlockType>;
+  gateCreateRole?: ForumAccessRole;
+  gateViewRole?: ForumAccessRole;
+  /** false = unlisted: hidden from lists, opens by direct link. */
+  listed?: boolean;
+  parentId?: string | number | null | undefined;
+  /** Empty = no limit. */
+  pinnedLimit?: number | null | undefined;
+  position?: number;
+  searchable?: boolean;
+  showCounts?: boolean;
+  slug: string;
+  title: string;
+};
+
 export type ForumPostState =
   | 'DELETED'
   | 'HIDDEN'
@@ -288,6 +376,13 @@ export type MembersDirectorySort =
   | 'USERNAME_ASC'
   | 'USERNAME_DESC';
 
+export type ModerationSanctionPolicyInput = {
+  escalationReadOnlyDays: number;
+  escalationWarningCount: number;
+  readOnlyMaxDays: number;
+  warningLifetimeDays: number;
+};
+
 export type NewsArticleStatus =
   | 'APPROVED'
   | 'ARCHIVED'
@@ -432,6 +527,11 @@ export type SaveCommentDraftInput = {
   parentId?: string | number | null | undefined;
 };
 
+export type SaveForumSettingsInput = {
+  categories?: Array<ForumCategoryChangeInput>;
+  forums?: Array<ForumChangeInput>;
+};
+
 export type SaveNewsDraftInput = {
   articleId: string | number;
   baseVersion: number;
@@ -537,6 +637,83 @@ export type RegisterMutationVariables = Exact<{
 
 
 export type RegisterMutation = { register: { user: { id: string, username: string, displayName: string | null, email: string }, tokens: { accessToken: string, refreshToken: string } } };
+
+export type AdminForumSettingsFragment = { id: string, categoryId: string, parentId: string | null, slug: string, title: string, description: string | null, position: number, active: boolean, allowsGatedContent: boolean, allowTopics: boolean, allowReplies: boolean, allowPolls: boolean, allowAttachments: boolean, listed: boolean, searchable: boolean, showCounts: boolean, pinnedLimit: number | null, attachmentMaxMb: number | null, attachmentFormats: Array<string>, autoCloseDays: number | null, gateViewRole: ForumAccessRole, gateCreateRole: ForumAccessRole, gateBlockTypes: Array<ForumGateBlockType> };
+
+export type AdminSubforumSettingsFragment = { id: string, categoryId: string, parentId: string | null, slug: string, title: string, description: string | null, position: number, active: boolean, allowsGatedContent: boolean, allowTopics: boolean, allowReplies: boolean, allowPolls: boolean, allowAttachments: boolean, listed: boolean, searchable: boolean, showCounts: boolean, pinnedLimit: number | null, attachmentMaxMb: number | null, attachmentFormats: Array<string>, autoCloseDays: number | null, gateViewRole: ForumAccessRole, gateCreateRole: ForumAccessRole, gateBlockTypes: Array<ForumGateBlockType> };
+
+export type AdminAccessRowFragment = { role: ForumAccessRole, view: boolean, read: boolean, createTopics: boolean, reply: boolean, editOwn: boolean, deleteOwn: boolean, moderate: boolean };
+
+export type CommandDeckCommunityHubQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type CommandDeckCommunityHubQuery = { forumCategories: Array<{ id: string, slug: string, title: string, description: string | null, position: number, active: boolean, visibility: ForumVisibility, audienceKeys: Array<string> | null, forums: Array<{ id: string, categoryId: string, parentId: string | null, slug: string, title: string, description: string | null, position: number, active: boolean, allowsGatedContent: boolean, allowTopics: boolean, allowReplies: boolean, allowPolls: boolean, allowAttachments: boolean, listed: boolean, searchable: boolean, showCounts: boolean, pinnedLimit: number | null, attachmentMaxMb: number | null, attachmentFormats: Array<string>, autoCloseDays: number | null, gateViewRole: ForumAccessRole, gateCreateRole: ForumAccessRole, gateBlockTypes: Array<ForumGateBlockType>, subforums: Array<{ id: string, categoryId: string, parentId: string | null, slug: string, title: string, description: string | null, position: number, active: boolean, allowsGatedContent: boolean, allowTopics: boolean, allowReplies: boolean, allowPolls: boolean, allowAttachments: boolean, listed: boolean, searchable: boolean, showCounts: boolean, pinnedLimit: number | null, attachmentMaxMb: number | null, attachmentFormats: Array<string>, autoCloseDays: number | null, gateViewRole: ForumAccessRole, gateCreateRole: ForumAccessRole, gateBlockTypes: Array<ForumGateBlockType> }> }> }>, forumHubStats: { forumCount: number, topicCount: number, postCount: number, participantCount: number }, moderationSanctionPolicy: { escalationWarningCount: number, escalationReadOnlyDays: number, warningLifetimeDays: number, readOnlyMaxDays: number } };
+
+export type CommandDeckSectionAccessQueryVariables = Exact<{
+  categoryId?: string | number | null | undefined;
+  forumId?: string | number | null | undefined;
+}>;
+
+
+export type CommandDeckSectionAccessQuery = { forumSectionAccess: { source: ForumAccessSource, own: Array<{ role: ForumAccessRole, view: boolean, read: boolean, createTopics: boolean, reply: boolean, editOwn: boolean, deleteOwn: boolean, moderate: boolean }> | null, effective: Array<{ role: ForumAccessRole, view: boolean, read: boolean, createTopics: boolean, reply: boolean, editOwn: boolean, deleteOwn: boolean, moderate: boolean }> } };
+
+export type CommandDeckModeratorsQueryVariables = Exact<{
+  categoryId: string | number;
+}>;
+
+
+export type CommandDeckModeratorsQuery = { forumCategoryModerators: Array<{ id: string, categoryId: string, forumId: string | null, moderatorId: string, assignedAt: unknown, moderator: { id: string, username: string, displayName: string | null, avatarUrl: string | null } | null }> };
+
+export type CommandDeckMemberLookupQueryVariables = Exact<{
+  search: string;
+}>;
+
+
+export type CommandDeckMemberLookupQuery = { members: { items: Array<{ id: string, username: string, displayName: string | null, avatarUrl: string | null, roles: Array<string> }> } };
+
+export type SaveForumSettingsMutationVariables = Exact<{
+  input: SaveForumSettingsInput;
+}>;
+
+
+export type SaveForumSettingsMutation = { saveForumSettings: Array<{ id: string }> };
+
+export type CreateForumCategoryMutationVariables = Exact<{
+  input: ForumCategoryInput;
+}>;
+
+
+export type CreateForumCategoryMutation = { createForumCategory: { id: string } };
+
+export type CreateForumMutationVariables = Exact<{
+  input: ForumInput;
+}>;
+
+
+export type CreateForumMutation = { createForum: { id: string } };
+
+export type UpdateModerationSanctionPolicyMutationVariables = Exact<{
+  input: ModerationSanctionPolicyInput;
+}>;
+
+
+export type UpdateModerationSanctionPolicyMutation = { updateModerationSanctionPolicy: { escalationWarningCount: number } };
+
+export type AssignForumModeratorMutationVariables = Exact<{
+  categoryId: string | number;
+  forumId: string | number;
+  moderatorId: string | number;
+}>;
+
+
+export type AssignForumModeratorMutation = { assignForumModerator: { id: string } };
+
+export type RevokeForumModeratorMutationVariables = Exact<{
+  assignmentId: string | number;
+}>;
+
+
+export type RevokeForumModeratorMutation = { revokeForumCategoryModerator: { id: string } };
 
 export type CommentDraftQueryVariables = Exact<{
   interactionTargetId: string | number;
@@ -1381,6 +1558,9 @@ export type ViewerQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type ViewerQuery = { viewer: { id: string, username: string, displayName: string | null, email: string, avatarUrl: string | null, status: string, createdAt: string } };
 
+export const AdminForumSettingsFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"AdminForumSettings"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Forum"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"categoryId"}},{"kind":"Field","name":{"kind":"Name","value":"parentId"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"position"}},{"kind":"Field","name":{"kind":"Name","value":"active"}},{"kind":"Field","name":{"kind":"Name","value":"allowsGatedContent"}},{"kind":"Field","name":{"kind":"Name","value":"allowTopics"}},{"kind":"Field","name":{"kind":"Name","value":"allowReplies"}},{"kind":"Field","name":{"kind":"Name","value":"allowPolls"}},{"kind":"Field","name":{"kind":"Name","value":"allowAttachments"}},{"kind":"Field","name":{"kind":"Name","value":"listed"}},{"kind":"Field","name":{"kind":"Name","value":"searchable"}},{"kind":"Field","name":{"kind":"Name","value":"showCounts"}},{"kind":"Field","name":{"kind":"Name","value":"pinnedLimit"}},{"kind":"Field","name":{"kind":"Name","value":"attachmentMaxMb"}},{"kind":"Field","name":{"kind":"Name","value":"attachmentFormats"}},{"kind":"Field","name":{"kind":"Name","value":"autoCloseDays"}},{"kind":"Field","name":{"kind":"Name","value":"gateViewRole"}},{"kind":"Field","name":{"kind":"Name","value":"gateCreateRole"}},{"kind":"Field","name":{"kind":"Name","value":"gateBlockTypes"}}]}}]} as unknown as DocumentNode<AdminForumSettingsFragment, unknown>;
+export const AdminSubforumSettingsFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"AdminSubforumSettings"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"ForumSubforum"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"categoryId"}},{"kind":"Field","name":{"kind":"Name","value":"parentId"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"position"}},{"kind":"Field","name":{"kind":"Name","value":"active"}},{"kind":"Field","name":{"kind":"Name","value":"allowsGatedContent"}},{"kind":"Field","name":{"kind":"Name","value":"allowTopics"}},{"kind":"Field","name":{"kind":"Name","value":"allowReplies"}},{"kind":"Field","name":{"kind":"Name","value":"allowPolls"}},{"kind":"Field","name":{"kind":"Name","value":"allowAttachments"}},{"kind":"Field","name":{"kind":"Name","value":"listed"}},{"kind":"Field","name":{"kind":"Name","value":"searchable"}},{"kind":"Field","name":{"kind":"Name","value":"showCounts"}},{"kind":"Field","name":{"kind":"Name","value":"pinnedLimit"}},{"kind":"Field","name":{"kind":"Name","value":"attachmentMaxMb"}},{"kind":"Field","name":{"kind":"Name","value":"attachmentFormats"}},{"kind":"Field","name":{"kind":"Name","value":"autoCloseDays"}},{"kind":"Field","name":{"kind":"Name","value":"gateViewRole"}},{"kind":"Field","name":{"kind":"Name","value":"gateCreateRole"}},{"kind":"Field","name":{"kind":"Name","value":"gateBlockTypes"}}]}}]} as unknown as DocumentNode<AdminSubforumSettingsFragment, unknown>;
+export const AdminAccessRowFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"AdminAccessRow"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"ForumAccessRow"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"view"}},{"kind":"Field","name":{"kind":"Name","value":"read"}},{"kind":"Field","name":{"kind":"Name","value":"createTopics"}},{"kind":"Field","name":{"kind":"Name","value":"reply"}},{"kind":"Field","name":{"kind":"Name","value":"editOwn"}},{"kind":"Field","name":{"kind":"Name","value":"deleteOwn"}},{"kind":"Field","name":{"kind":"Name","value":"moderate"}}]}}]} as unknown as DocumentNode<AdminAccessRowFragment, unknown>;
 export const ForumMemberCardFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"ForumMemberCard"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"ForumMember"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"avatarUrl"}}]}}]} as unknown as DocumentNode<ForumMemberCardFragment, unknown>;
 export const ForumActivityStatsFieldsFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"ForumActivityStatsFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"ForumActivityStats"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"topicCount"}},{"kind":"Field","name":{"kind":"Name","value":"postCount"}},{"kind":"Field","name":{"kind":"Name","value":"lastActivity"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"topicId"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"lastPostAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastPostNumber"}},{"kind":"Field","name":{"kind":"Name","value":"author"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"ForumMemberCard"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"ForumMemberCard"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"ForumMember"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"avatarUrl"}}]}}]} as unknown as DocumentNode<ForumActivityStatsFieldsFragment, unknown>;
 export const ForumTopicSummaryFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"ForumTopicSummary"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"ForumTopic"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"forumId"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"state"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"pinned"}},{"kind":"Field","name":{"kind":"Name","value":"postCount"}},{"kind":"Field","name":{"kind":"Name","value":"viewCount"}},{"kind":"Field","name":{"kind":"Name","value":"ratingUp"}},{"kind":"Field","name":{"kind":"Name","value":"ratingDown"}},{"kind":"Field","name":{"kind":"Name","value":"lastPostNumber"}},{"kind":"Field","name":{"kind":"Name","value":"lastPostAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"acceptedAnswerPostId"}},{"kind":"Field","name":{"kind":"Name","value":"mergedIntoTopicId"}},{"kind":"Field","name":{"kind":"Name","value":"curatorId"}},{"kind":"Field","name":{"kind":"Name","value":"viewerLastReadNumber"}},{"kind":"Field","name":{"kind":"Name","value":"viewerAbilities"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"moderate"}},{"kind":"Field","name":{"kind":"Name","value":"purge"}},{"kind":"Field","name":{"kind":"Name","value":"acceptAnswer"}},{"kind":"Field","name":{"kind":"Name","value":"close"}},{"kind":"Field","name":{"kind":"Name","value":"reopen"}},{"kind":"Field","name":{"kind":"Name","value":"reply"}}]}},{"kind":"Field","name":{"kind":"Name","value":"tags"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"label"}}]}},{"kind":"Field","name":{"kind":"Name","value":"author"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"ForumMemberCard"}}]}},{"kind":"Field","name":{"kind":"Name","value":"lastPostAuthor"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"ForumMemberCard"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"ForumMemberCard"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"ForumMember"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"avatarUrl"}}]}}]} as unknown as DocumentNode<ForumTopicSummaryFragment, unknown>;
@@ -1394,6 +1574,16 @@ export const MarkActivityFeedVisitedDocument = {"kind":"Document","definitions":
 export const ApiInfoDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ApiInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"apiInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"transport"}}]}}]}}]} as unknown as DocumentNode<ApiInfoQuery, ApiInfoQueryVariables>;
 export const LoginDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"Login"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"LoginInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"login"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"email"}}]}},{"kind":"Field","name":{"kind":"Name","value":"tokens"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"accessToken"}},{"kind":"Field","name":{"kind":"Name","value":"refreshToken"}}]}}]}}]}}]} as unknown as DocumentNode<LoginMutation, LoginMutationVariables>;
 export const RegisterDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"Register"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"RegisterInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"register"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"email"}}]}},{"kind":"Field","name":{"kind":"Name","value":"tokens"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"accessToken"}},{"kind":"Field","name":{"kind":"Name","value":"refreshToken"}}]}}]}}]}}]} as unknown as DocumentNode<RegisterMutation, RegisterMutationVariables>;
+export const CommandDeckCommunityHubDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"CommandDeckCommunityHub"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"forumCategories"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"position"}},{"kind":"Field","name":{"kind":"Name","value":"active"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"audienceKeys"}},{"kind":"Field","name":{"kind":"Name","value":"forums"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"AdminForumSettings"}},{"kind":"Field","name":{"kind":"Name","value":"subforums"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"AdminSubforumSettings"}}]}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"forumHubStats"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"forumCount"}},{"kind":"Field","name":{"kind":"Name","value":"topicCount"}},{"kind":"Field","name":{"kind":"Name","value":"postCount"}},{"kind":"Field","name":{"kind":"Name","value":"participantCount"}}]}},{"kind":"Field","name":{"kind":"Name","value":"moderationSanctionPolicy"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"escalationWarningCount"}},{"kind":"Field","name":{"kind":"Name","value":"escalationReadOnlyDays"}},{"kind":"Field","name":{"kind":"Name","value":"warningLifetimeDays"}},{"kind":"Field","name":{"kind":"Name","value":"readOnlyMaxDays"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"AdminForumSettings"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Forum"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"categoryId"}},{"kind":"Field","name":{"kind":"Name","value":"parentId"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"position"}},{"kind":"Field","name":{"kind":"Name","value":"active"}},{"kind":"Field","name":{"kind":"Name","value":"allowsGatedContent"}},{"kind":"Field","name":{"kind":"Name","value":"allowTopics"}},{"kind":"Field","name":{"kind":"Name","value":"allowReplies"}},{"kind":"Field","name":{"kind":"Name","value":"allowPolls"}},{"kind":"Field","name":{"kind":"Name","value":"allowAttachments"}},{"kind":"Field","name":{"kind":"Name","value":"listed"}},{"kind":"Field","name":{"kind":"Name","value":"searchable"}},{"kind":"Field","name":{"kind":"Name","value":"showCounts"}},{"kind":"Field","name":{"kind":"Name","value":"pinnedLimit"}},{"kind":"Field","name":{"kind":"Name","value":"attachmentMaxMb"}},{"kind":"Field","name":{"kind":"Name","value":"attachmentFormats"}},{"kind":"Field","name":{"kind":"Name","value":"autoCloseDays"}},{"kind":"Field","name":{"kind":"Name","value":"gateViewRole"}},{"kind":"Field","name":{"kind":"Name","value":"gateCreateRole"}},{"kind":"Field","name":{"kind":"Name","value":"gateBlockTypes"}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"AdminSubforumSettings"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"ForumSubforum"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"categoryId"}},{"kind":"Field","name":{"kind":"Name","value":"parentId"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"position"}},{"kind":"Field","name":{"kind":"Name","value":"active"}},{"kind":"Field","name":{"kind":"Name","value":"allowsGatedContent"}},{"kind":"Field","name":{"kind":"Name","value":"allowTopics"}},{"kind":"Field","name":{"kind":"Name","value":"allowReplies"}},{"kind":"Field","name":{"kind":"Name","value":"allowPolls"}},{"kind":"Field","name":{"kind":"Name","value":"allowAttachments"}},{"kind":"Field","name":{"kind":"Name","value":"listed"}},{"kind":"Field","name":{"kind":"Name","value":"searchable"}},{"kind":"Field","name":{"kind":"Name","value":"showCounts"}},{"kind":"Field","name":{"kind":"Name","value":"pinnedLimit"}},{"kind":"Field","name":{"kind":"Name","value":"attachmentMaxMb"}},{"kind":"Field","name":{"kind":"Name","value":"attachmentFormats"}},{"kind":"Field","name":{"kind":"Name","value":"autoCloseDays"}},{"kind":"Field","name":{"kind":"Name","value":"gateViewRole"}},{"kind":"Field","name":{"kind":"Name","value":"gateCreateRole"}},{"kind":"Field","name":{"kind":"Name","value":"gateBlockTypes"}}]}}]} as unknown as DocumentNode<CommandDeckCommunityHubQuery, CommandDeckCommunityHubQueryVariables>;
+export const CommandDeckSectionAccessDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"CommandDeckSectionAccess"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"categoryId"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"forumId"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"forumSectionAccess"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"categoryId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"categoryId"}}},{"kind":"Argument","name":{"kind":"Name","value":"forumId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"forumId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"source"}},{"kind":"Field","name":{"kind":"Name","value":"own"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"AdminAccessRow"}}]}},{"kind":"Field","name":{"kind":"Name","value":"effective"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"AdminAccessRow"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"AdminAccessRow"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"ForumAccessRow"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"view"}},{"kind":"Field","name":{"kind":"Name","value":"read"}},{"kind":"Field","name":{"kind":"Name","value":"createTopics"}},{"kind":"Field","name":{"kind":"Name","value":"reply"}},{"kind":"Field","name":{"kind":"Name","value":"editOwn"}},{"kind":"Field","name":{"kind":"Name","value":"deleteOwn"}},{"kind":"Field","name":{"kind":"Name","value":"moderate"}}]}}]} as unknown as DocumentNode<CommandDeckSectionAccessQuery, CommandDeckSectionAccessQueryVariables>;
+export const CommandDeckModeratorsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"CommandDeckModerators"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"categoryId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"forumCategoryModerators"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"categoryId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"categoryId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"categoryId"}},{"kind":"Field","name":{"kind":"Name","value":"forumId"}},{"kind":"Field","name":{"kind":"Name","value":"moderatorId"}},{"kind":"Field","name":{"kind":"Name","value":"assignedAt"}},{"kind":"Field","name":{"kind":"Name","value":"moderator"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"ForumMemberCard"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"ForumMemberCard"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"ForumMember"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"avatarUrl"}}]}}]} as unknown as DocumentNode<CommandDeckModeratorsQuery, CommandDeckModeratorsQueryVariables>;
+export const CommandDeckMemberLookupDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"CommandDeckMemberLookup"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"search"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"members"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"search"},"value":{"kind":"Variable","name":{"kind":"Name","value":"search"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"6"}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"avatarUrl"}},{"kind":"Field","name":{"kind":"Name","value":"roles"}}]}}]}}]}}]} as unknown as DocumentNode<CommandDeckMemberLookupQuery, CommandDeckMemberLookupQueryVariables>;
+export const SaveForumSettingsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SaveForumSettings"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"SaveForumSettingsInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"saveForumSettings"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<SaveForumSettingsMutation, SaveForumSettingsMutationVariables>;
+export const CreateForumCategoryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateForumCategory"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ForumCategoryInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createForumCategory"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<CreateForumCategoryMutation, CreateForumCategoryMutationVariables>;
+export const CreateForumDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateForum"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ForumInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createForum"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<CreateForumMutation, CreateForumMutationVariables>;
+export const UpdateModerationSanctionPolicyDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateModerationSanctionPolicy"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ModerationSanctionPolicyInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateModerationSanctionPolicy"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"escalationWarningCount"}}]}}]}}]} as unknown as DocumentNode<UpdateModerationSanctionPolicyMutation, UpdateModerationSanctionPolicyMutationVariables>;
+export const AssignForumModeratorDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AssignForumModerator"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"categoryId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"forumId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"moderatorId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"assignForumModerator"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"categoryId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"categoryId"}}},{"kind":"Argument","name":{"kind":"Name","value":"forumId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"forumId"}}},{"kind":"Argument","name":{"kind":"Name","value":"moderatorId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"moderatorId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<AssignForumModeratorMutation, AssignForumModeratorMutationVariables>;
+export const RevokeForumModeratorDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RevokeForumModerator"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"assignmentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"revokeForumCategoryModerator"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"assignmentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"assignmentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<RevokeForumModeratorMutation, RevokeForumModeratorMutationVariables>;
 export const CommentDraftDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"CommentDraft"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"interactionTargetId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"parentId"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"commentDraft"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"interactionTargetId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"interactionTargetId"}}},{"kind":"Argument","name":{"kind":"Name","value":"parentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"parentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"parentId"}},{"kind":"Field","name":{"kind":"Name","value":"documentJson"}},{"kind":"Field","name":{"kind":"Name","value":"plainText"}},{"kind":"Field","name":{"kind":"Name","value":"version"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<CommentDraftQuery, CommentDraftQueryVariables>;
 export const ViewerCommentDraftsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ViewerCommentDrafts"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"limit"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},"defaultValue":{"kind":"IntValue","value":"20"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewerCommentDrafts"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"limit"},"value":{"kind":"Variable","name":{"kind":"Name","value":"limit"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"parentId"}},{"kind":"Field","name":{"kind":"Name","value":"documentJson"}},{"kind":"Field","name":{"kind":"Name","value":"plainText"}},{"kind":"Field","name":{"kind":"Name","value":"version"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<ViewerCommentDraftsQuery, ViewerCommentDraftsQueryVariables>;
 export const SaveCommentDraftDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SaveCommentDraft"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"SaveCommentDraftInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"saveCommentDraft"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"interactionTargetId"}},{"kind":"Field","name":{"kind":"Name","value":"parentId"}},{"kind":"Field","name":{"kind":"Name","value":"documentJson"}},{"kind":"Field","name":{"kind":"Name","value":"plainText"}},{"kind":"Field","name":{"kind":"Name","value":"version"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<SaveCommentDraftMutation, SaveCommentDraftMutationVariables>;
