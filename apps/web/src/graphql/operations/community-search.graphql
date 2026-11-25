@@ -1,0 +1,39 @@
+# Community Hub search page (P1 A11): forum topics and news for one term.
+# Both lists come back so the tabs can show their counts.
+query CommunitySearch(
+  $term: String!
+  $topicPage: Int!
+  $newsPage: Int!
+  $pageSize: Int!
+) {
+  topics: search(
+    term: $term
+    page: $topicPage
+    pageSize: $pageSize
+    source: FORUM
+  ) {
+    total
+    items {
+      id
+      title
+      excerpt
+      publishedAt
+    }
+  }
+  news: search(
+    term: $term
+    page: $newsPage
+    pageSize: $pageSize
+    source: NEWS
+  ) {
+    total
+    items {
+      id
+      title
+      excerpt
+      publishedAt
+      slug
+      language
+    }
+  }
+}

@@ -23,6 +23,7 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 
 import {
+  CommunitySearchDocument,
   ForumCategoriesDocument,
   ForumHubDocument,
   ForumSectionStateDocument,
@@ -254,4 +255,29 @@ export async function loadForumWeeklyTop(limit = 5) {
     });
     return result.data?.leaderboard.items ?? null;
   });
+}
+
+export const COMMUNITY_SEARCH_PAGE_SIZE = 10;
+/** Longest term the shared search API accepts. */
+export const COMMUNITY_SEARCH_MAX_TERM = 100;
+
+/** Forum topics and news for one term (P1 A11); the API applies visibility. */
+export async function loadCommunitySearch(
+  term: string,
+  topicPage = 1,
+  newsPage = 1,
+) {
+  const result = await getClient().query({
+    query: CommunitySearchDocument,
+    variables: {
+      term,
+      topicPage,
+      newsPage,
+      pageSize: COMMUNITY_SEARCH_PAGE_SIZE,
+    },
+    context: await authContext(),
+    fetchPolicy: "no-cache",
+  });
+  if (!result.data) throw new Error("COMMUNITY_SEARCH_UNAVAILABLE");
+  return result.data;
 }

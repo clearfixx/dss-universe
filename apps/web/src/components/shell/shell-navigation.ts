@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  BellRing,
   LayoutDashboard,
   MessagesSquare,
   Newspaper,
@@ -59,6 +60,7 @@ export const MODULE_NAVIGATION: readonly ModuleNavigation[] = [
     featured: true,
     children: [
       { href: "/community/forum/new", label: "Нова тема", icon: PenSquare },
+      { href: "/community/following", label: "Мої підписки", icon: BellRing },
     ],
   },
   {
