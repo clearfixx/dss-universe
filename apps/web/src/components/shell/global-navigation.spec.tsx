@@ -140,4 +140,12 @@ describe("breadcrumb rendering", () => {
     expect(html).toContain('aria-label="DSS Universe"');
   });
 
+  it("rejects a route-owned trail from a different pathname", () => {
+    const html = renderToStaticMarkup(createElement(Breadcrumbs, {
+      pathname: "/community/forum/topics/t2",
+      trail: [{ href: "/community/forum/topics/t1", label: "Stale topic" }],
+    }));
+    expect(html).not.toContain("Stale topic");
+    expect(html).toContain("Поточна сторінка");
+  });
 });

@@ -20,16 +20,7 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import {
-  ChevronDown,
-  LayoutDashboard,
-  LogIn,
-  LogOut,
-  Menu,
-  Settings,
-  UserRound,
-} from "lucide-react";
-import Link from "next/link";
+import { Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
   useState,
@@ -37,27 +28,9 @@ import {
   type ReactNode,
 } from "react";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { logoutAction } from "@/features/auth/auth-actions";
 import type { SessionViewer } from "@/features/auth/session-contract";
 
-import { viewerDisplayName } from "./personal-hub-presentation";
 import { isDrawerOpenForPath } from "./shell-drawer-state";
 
 import {
@@ -70,8 +43,10 @@ import { Breadcrumbs, type TrustedBreadcrumb } from "./shell-breadcrumbs";
 
 import { Logo } from "./shell-logo";
 import { GlobalNavigation } from "./shell-navbar";
-import { ModuleNavigation, SidebarNavigation } from "./shell-sidebar";
+import { SidebarNavigation } from "./shell-sidebar";
 import { ShellSearch } from "./shell-search";
+import { ShellMobileNavigation } from "./shell-mobile-navigation";
+import { ShellUserMenu } from "./shell-user-menu";
 
 export { Breadcrumbs, type TrustedBreadcrumb } from "./shell-breadcrumbs";
 export { GlobalNavigation } from "./shell-navbar";
@@ -158,90 +133,7 @@ export function DssApplicationShell({
           />
           <div className="ml-auto flex items-center gap-2">
             <ShellSearch />
-            {viewer ? (
-              <>
-                <Button
-                  asChild
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Налаштування"
-                  className="hidden lg:inline-flex"
-                >
-                  <Link href="/settings/profile">
-                    <Settings aria-hidden="true" />
-                  </Link>
-                </Button>
-                <form action={logoutAction}>
-                  <Button variant="ghost" size="icon" type="submit" aria-label="Вийти">
-                    <LogOut aria-hidden="true" />
-                  </Button>
-                </form>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      type="button"
-                      className="h-auto gap-2.5 px-2"
-                      aria-label={`Меню користувача: ${viewerDisplayName(viewer)}`}
-                    >
-                      <Avatar>
-                        <AvatarFallback className="bg-gradient-to-br from-violet-500 to-indigo-700 text-white">
-                          {viewerInitials(viewer)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="hidden flex-col items-start leading-tight sm:flex">
-                        <span className="max-w-36 truncate text-sm font-semibold text-slate-100">
-                          {viewerDisplayName(viewer)}
-                        </span>
-                        <span className="max-w-36 truncate text-xs text-slate-400">
-                          @{viewer.username}
-                        </span>
-                      </span>
-                      <ChevronDown className="size-4 text-slate-400" aria-hidden="true" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="w-60 border border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)]"
-                  >
-                    <DropdownMenuLabel>
-                      <span className="block truncate text-sm">{viewerDisplayName(viewer)}</span>
-                      <span className="block truncate text-xs font-normal text-slate-400">
-                        @{viewer.username}
-                      </span>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href={`/profile/${encodeURIComponent(viewer.username)}`}>
-                        <UserRound aria-hidden="true" />
-                        Мій профіль
-                      </Link>
-                    </DropdownMenuItem>
-                    {canAccessAdminDeck ? (
-                      <DropdownMenuItem asChild>
-                        <Link href="/command-deck">
-                          <LayoutDashboard aria-hidden="true" />
-                          Адмінпанель
-                        </Link>
-                      </DropdownMenuItem>
-                    ) : null}
-                    <DropdownMenuItem asChild>
-                      <Link href="/settings/profile">
-                        <Settings aria-hidden="true" />
-                        Налаштування
-                      </Link>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
-            ) : (
-              <Button asChild size="sm">
-                <Link href={`/login?returnTo=${encodeURIComponent(pathname)}`}>
-                  <LogIn aria-hidden="true" />
-                  Увійти
-                </Link>
-              </Button>
-            )}
+            <ShellUserMenu viewer={viewer} pathname={pathname} canAccessAdminDeck={canAccessAdminDeck} />
           </div>
         </header>
 
@@ -260,39 +152,7 @@ export function DssApplicationShell({
         </main>
       </div>
 
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent
-          side="left"
-          className="border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)] p-0"
-        >
-          <SheetHeader className="border-b border-[color:var(--shell-divider)] px-5 py-4">
-            <SheetTitle className="text-left text-sm text-slate-100">
-              Навігація DSS Universe
-            </SheetTitle>
-            <SheetDescription className="text-left text-xs">
-              Оберіть доступний розділ платформи.
-            </SheetDescription>
-          </SheetHeader>
-          <div className="max-h-[calc(100dvh-5rem)] space-y-4 overflow-y-auto px-3 py-4">
-            <ModuleNavigation pathname={pathname} hasSession={hasSession} canAccessAdminDeck={canAccessAdminDeck} onNavigate={() => setOpen(false)} />
-            <SidebarNavigation
-              pathname={pathname}
-              hasSession={hasSession}
-              canAccessAdminDeck={canAccessAdminDeck}
-              onNavigate={() => setOpen(false)}
-            />
-          </div>
-        </SheetContent>
-      </Sheet>
+      <ShellMobileNavigation open={open} setOpen={setOpen} pathname={pathname} hasSession={hasSession} canAccessAdminDeck={canAccessAdminDeck} />
     </div>
   );
-}
-
-function viewerInitials(viewer: SessionViewer | null) {
-  const value = viewer?.displayName?.trim() || viewer?.username || "DSS";
-  return value
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
 }
