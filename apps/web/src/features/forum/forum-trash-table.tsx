@@ -13,7 +13,9 @@
  *
  * ⚠️ Important:
  * The API re-checks moderation for every restore. Permanent deletion (B10)
- * is not offered: purge stays reserved until the owner policy is decided.
+ * is not offered: purge is reserved to the platform owner (owner decision
+ * 2026-11-26) and stays off until the verified owner identity and the
+ * backup/retention policy exist.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -194,7 +196,7 @@ export function ForumTrashTable({
         </button>
         <span
           aria-disabled="true"
-          title="Скоро: остаточне видалення чекає рішення щодо політики"
+          title="Лише для власника платформи — з’явиться разом із підтвердженим власником і політикою резервних копій"
           className="inline-flex h-10 cursor-default items-center gap-2 rounded-lg border border-white/[0.07] px-4 text-sm text-slate-500"
         >
           <Trash2 className="size-4" aria-hidden="true" />
