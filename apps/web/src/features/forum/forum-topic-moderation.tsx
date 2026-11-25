@@ -108,7 +108,7 @@ export function ForumTopicModeration({
   return (
     <section
       aria-labelledby="forum-moderation-title"
-      className="rounded-2xl border border-violet-500/30 bg-[#140f2e] p-5"
+      className="rounded-2xl border border-violet-500/30 bg-card p-5"
     >
       <h2 id="forum-moderation-title" className="mb-3 font-semibold">
         {abilities.moderate ? "Дії модератора" : "Керування темою"}

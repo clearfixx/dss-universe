@@ -90,19 +90,8 @@ function Logo({ compact = false }: { compact?: boolean }) {
       aria-label="DSS Universe — головна"
       className="flex shrink-0 items-center gap-2.5 text-slate-100"
     >
-      <svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true" className="shrink-0">
-        <circle cx="20" cy="20" r="10.5" fill="none" stroke="#ece9ff" strokeWidth="4" />
-        <ellipse
-          cx="20"
-          cy="20"
-          rx="18.5"
-          ry="6.5"
-          fill="none"
-          stroke="#a78bfa"
-          strokeWidth="2.5"
-          transform="rotate(-22 20 20)"
-        />
-      </svg>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/brand/dss-logo-mark.svg" alt="" width={40} height={35} className="h-[35px] w-10 shrink-0" />
       {compact ? null : (
         <span aria-hidden="true" className="flex flex-col leading-none">
           <span className="text-lg font-extrabold tracking-[0.06em]">DSS</span>
@@ -449,7 +438,7 @@ export function DssApplicationShell({
                       aria-label={`Меню користувача: ${viewerDisplayName(viewer)}`}
                     >
                       <Avatar>
-                        <AvatarFallback className="bg-gradient-to-br from-violet-500 to-indigo-700 text-white">
+                        <AvatarFallback className="bg-primary/25 text-violet-100">
                           {viewerInitials(viewer)}
                         </AvatarFallback>
                       </Avatar>
