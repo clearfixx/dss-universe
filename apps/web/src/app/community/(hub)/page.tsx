@@ -119,16 +119,26 @@ function Panel({
   title,
   icon,
   children,
+  more,
 }: {
   title: string;
   icon: ReactNode;
   children: ReactNode;
+  more?: { href: string; label: string };
 }) {
   return (
     <section className="min-w-0 rounded-xl border border-white/[0.07] bg-card">
       <header className="flex items-center gap-2 px-4 pt-3.5 pb-2">
         {icon}
-        <h2 className="font-semibold">{title}</h2>
+        <h2 className="flex-1 font-semibold">{title}</h2>
+        {more ? (
+          <Link
+            href={more.href}
+            className="text-xs text-violet-300 hover:text-violet-200"
+          >
+            {more.label} →
+          </Link>
+        ) : null}
       </header>
       <div className="px-2 pb-2">{children}</div>
     </section>
@@ -561,6 +571,7 @@ export default async function CommunityHubRoute({ searchParams }: Props) {
               {followed ? (
                 <Panel
                   title="Нове у підписках"
+                  more={{ href: "/community/following", label: "Усі" }}
                   icon={
                     <BellRing
                       className="size-5 text-violet-300"
