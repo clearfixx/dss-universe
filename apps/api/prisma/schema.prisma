@@ -2860,6 +2860,9 @@ model ForumTopic {
   title                String
   state                ForumTopicState  @default(OPEN)
   stateBeforeTrash     ForumTopicState?
+  /// When and by whom the topic was moved to the trash; null outside it.
+  trashedAt            DateTime?
+  trashedById          String?
   pinned               Boolean          @default(false)
   curatorId            String?
   mergedIntoTopicId    String?
@@ -2894,6 +2897,7 @@ model ForumTopic {
   @@index([forumId, pinned, createdAt, id])
   @@index([authorId, createdAt])
   @@index([forumId, state, lastPostAt], map: "forum_topics_autoclose_idx")
+  @@index([state, trashedAt])
   @@map("forum_topics")
 }
 

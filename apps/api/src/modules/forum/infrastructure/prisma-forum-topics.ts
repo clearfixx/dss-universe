@@ -529,6 +529,97 @@ export class ForumTopicsService implements ForumInteractionDecisions {
   }
 
   /**
+   * Forum trash (P1 B07): trashed topics of every section the viewer
+   * moderates, most recently trashed first. Non-moderators are denied; a
+   * section outside the viewer's moderation scope is reported as missing.
+   */
+  async trash(
+    viewerId: string,
+    page: number,
+    limit: number,
+    forumId: string | null = null,
+    search: string | null = null,
+  ): Promise<ForumPage<ForumTopicSummary>> {
+    const viewer = await this.viewers.read(viewerId, new Date());
+    const moderated = await this.moderatedForumIds(viewer);
+    if (moderated.length === 0) {
+      throw new ForumCommandError(
+        'ACCESS_DENIED',
+        'Only moderators can open the trash.',
+      );
+    }
+    if (forumId !== null && !moderated.includes(forumId)) {
+      this.notFound('Forum');
+    }
+    const term = search?.trim().slice(0, 100) ?? '';
+    const { skip, take, safePage } = this.paging(page, limit);
+    const where: Prisma.ForumTopicWhereInput = {
+      forumId: { in: forumId !== null ? [forumId] : moderated },
+      state: 'TRASHED',
+      mergedIntoTopicId: null,
+      ...(term ? { title: { contains: term, mode: 'insensitive' } } : {}),
+    };
+    const [rows, total] = await Promise.all([
+      this.prisma.forumTopic.findMany({
+        where,
+        orderBy: [
+          { trashedAt: { sort: 'desc', nulls: 'last' } },
+          { id: 'desc' },
+        ],
+        skip,
+        take,
+      }),
+      this.prisma.forumTopic.count({ where }),
+    ]);
+    const tags = await this.topicTags(rows.map(({ id }) => id));
+    return {
+      items: rows.map((row) =>
+        this.toSummary(row, null, tags.get(row.id) ?? []),
+      ),
+      total,
+      page: safePage,
+      limit: take,
+    };
+  }
+
+  /** Visible sections the viewer moderates (every one for supermoderators). */
+  private async moderatedForumIds(viewer: ForumViewerFacts): Promise<string[]> {
+    if (viewer.subjectId === null) return [];
+    const visible = await this.visibleForumIds(viewer);
+    if (viewer.seesAllCategories || viewer.moderatesAllCategories) {
+      return visible;
+    }
+    const [forums, assignments] = await Promise.all([
+      this.prisma.forum.findMany({
+        where: { id: { in: visible } },
+        select: { id: true, parentId: true, categoryId: true },
+      }),
+      this.prisma.forumModeratorAssignment.findMany({
+        where: { moderatorId: viewer.subjectId, revokedAt: null },
+        select: { categoryId: true, forumId: true },
+      }),
+    ]);
+    const grants = await this.access.grants(viewer, forums);
+    const categories = new Set(
+      assignments
+        .filter(({ forumId }) => forumId === null)
+        .map(({ categoryId }) => categoryId),
+    );
+    const sections = new Set(
+      assignments.flatMap(({ forumId }) => (forumId ? [forumId] : [])),
+    );
+    return forums
+      .filter(
+        (forum) =>
+          grants.get(forum.id)?.moderate === true ||
+          categories.has(forum.categoryId) ||
+          sections.has(forum.id) ||
+          (forum.parentId !== null && sections.has(forum.parentId)),
+      )
+      .map(({ id }) => id);
+  }
+
+  /**
    * Topics across every forum the viewer can see (guests included), for hub
    * blocks such as "Needs help" (UNSOLVED) or "No replies yet" (NO_REPLIES).
    * Open and closed topics only; newest first or by last activity.
@@ -1581,6 +1672,8 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       viewerLastReadNumber: lastRead ?? null,
       acceptedAnswerPostId: row.acceptedAnswerPostId,
       mergedIntoTopicId: row.mergedIntoTopicId,
+      trashedAt: row.state === 'TRASHED' ? row.trashedAt : null,
+      trashedById: row.state === 'TRASHED' ? row.trashedById : null,
       tags,
       createdAt: row.createdAt,
     };

@@ -117,6 +117,9 @@ export type ForumTopicSummary = {
   acceptedAnswerPostId: string | null;
   /** Set when this topic was merged; clients redirect to the target. */
   mergedIntoTopicId: string | null;
+  /** Trash metadata; null unless the topic is in the trash. */
+  trashedAt: Date | null;
+  trashedById: string | null;
   tags: Array<{ id: string; slug: string; label: string }>;
 };
 
