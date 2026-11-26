@@ -20,6 +20,7 @@
 import {
   Inject,
   Injectable,
+  Logger,
   type OnApplicationShutdown,
   type OnModuleInit,
 } from '@nestjs/common';
@@ -41,6 +42,7 @@ export class MediaRetentionService
 {
   private timer?: NodeJS.Timeout;
   private running = false;
+  private readonly logger = new Logger(MediaRetentionService.name);
 
   constructor(
     @Inject(MEDIA_REPOSITORY)
@@ -52,7 +54,7 @@ export class MediaRetentionService
   onModuleInit(): void {
     const interval = this.config.get<number>('MEDIA_CLEANUP_INTERVAL_MS', 0);
     if (interval > 0) {
-      this.timer = setInterval(() => void this.runOnce(), interval);
+      this.timer = setInterval(() => void this.tick(), interval);
       this.timer.unref();
     }
   }
@@ -60,6 +62,21 @@ export class MediaRetentionService
   onApplicationShutdown(): void {
     if (this.timer) {
       clearInterval(this.timer);
+    }
+  }
+
+  /**
+   * Timer entry point. A failed run (e.g. the database is briefly
+   * unavailable) is logged and retried on the next tick; it must never
+   * become an unhandled rejection that stops the whole API process.
+   */
+  async tick(): Promise<void> {
+    try {
+      await this.runOnce();
+    } catch (error) {
+      this.logger.error(
+        `Media cleanup run failed: ${this.failureReason(error)}`,
+      );
     }
   }
 
