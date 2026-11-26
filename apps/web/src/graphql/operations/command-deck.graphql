@@ -174,3 +174,31 @@ mutation RevokeForumModerator($assignmentId: ID!) {
     id
   }
 }
+
+# Command Deck › Community Hub › Теги (P1 C03): allowed tags of one section.
+query AdminForumTags($forumId: ID!) {
+  forumTags(forumId: $forumId) {
+    id
+    slug
+    label
+    active
+  }
+}
+
+mutation CreateAdminForumTag($forumId: ID!, $input: ForumTagInput!) {
+  createForumTag(forumId: $forumId, input: $input) {
+    id
+    slug
+    label
+    active
+  }
+}
+
+mutation UpdateAdminForumTag($tagId: ID!, $input: ForumTagInput!) {
+  updateForumTag(tagId: $tagId, input: $input) {
+    id
+    slug
+    label
+    active
+  }
+}
