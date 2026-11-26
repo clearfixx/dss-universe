@@ -4,7 +4,7 @@ import { ChevronDown, Menu } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { visibleModules, navigationCurrent, routeMatches, type ShellVariant } from "./shell-navigation";
+import { COMING_SOON_MODULES, visibleModules, navigationCurrent, routeMatches, type ShellVariant } from "./shell-navigation";
 
 export function GlobalNavigation({
   pathname,
@@ -37,13 +37,18 @@ export function GlobalNavigation({
               title={label}
               aria-current={navigationCurrent(pathname, href)}
               className={cn(
-                "inline-flex shrink-0 items-center border-b-2 border-transparent px-2.5 text-sm text-slate-300 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-violet-400",
+                "inline-flex shrink-0 items-center border-b-2 border-transparent px-2.5 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring",
                 routeMatches(pathname, href) &&
-                  "border-violet-500 bg-violet-500/10 text-violet-100",
+                  "border-primary bg-primary/10 text-foreground",
               )}
             >
               {label}
             </Link>
+          ))}
+          {variant === "HORIZONTAL_NAVIGATION" && COMING_SOON_MODULES.map((label) => (
+            <span key={label} className="inline-flex shrink-0 items-center gap-1 px-2.5 text-sm text-muted-foreground">
+              {label} <span className="text-xs">(скоро)</span>
+            </span>
           ))}
         </nav>
       )}
@@ -54,7 +59,7 @@ export function GlobalNavigation({
         onClick={onOpenLauncher}
         aria-haspopup="dialog"
         aria-expanded={launcherOpen}
-        className="shrink-0 self-center text-slate-300"
+        className="shrink-0 self-center text-muted-foreground"
       >
         <Menu aria-hidden="true" />
         <span className={variant === "MODULE_LAUNCHER" ? undefined : "sr-only 2xl:not-sr-only"}>
