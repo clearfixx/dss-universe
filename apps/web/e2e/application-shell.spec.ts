@@ -54,6 +54,9 @@ test("anonymous visitors cannot open administrator Command Deck", async ({ page 
 });
 
 test("missing news articles return HTTP 404 without duplicate shells", async ({ page }) => {
+  // The default Web smoke job starts Next.js only, not the GraphQL API.
+  // Run this contract against a live API explicitly; an outage is not a 404.
+  test.skip(process.env.DSS_WEB_E2E_LIVE_API !== "1", "Requires a running GraphQL API");
   const response = await page.goto("/news/uk/dss-e2e-missing-article-7e02a57f");
   expect(response?.status()).toBe(404);
   await expect(page.getByRole("heading", { name: "Сигнал не знайдено" })).toBeVisible();
