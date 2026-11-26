@@ -32,6 +32,8 @@ import {
 } from './presentation/forum-topics.resolver';
 import { ForumModerationService } from './infrastructure/prisma-forum-moderation';
 import { ForumModerationResolver } from './presentation/forum-moderation.resolver';
+import { ForumPostNetworkService } from './infrastructure/prisma-forum-post-network';
+import { ForumPostNetworkResolver } from './presentation/forum-post-network.resolver';
 import { ForumRatingsService } from './infrastructure/prisma-forum-ratings';
 import { ForumRatingsResolver } from './presentation/forum-ratings.resolver';
 import {
@@ -70,6 +72,8 @@ import {
     ForumPostMediaResolver,
     ForumModerationService,
     ForumModerationResolver,
+    ForumPostNetworkService,
+    ForumPostNetworkResolver,
     ForumRatingsService,
     ForumRatingsResolver,
     PrismaForumReadModels,

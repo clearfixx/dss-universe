@@ -15,9 +15,9 @@
  * ⚠️ Important:
  * Owner decision 2026-11-21: the rarer per-post staff actions (accept,
  * staff note, delete, warning, read-only, purge) live in the "⋯" menu.
- * Bookmarks and IP+UA are approved but wait for their API, so they render
- * disabled with a "Скоро" tooltip. The API stays authoritative for every
- * action shown here.
+ * Bookmarks wait for their API and render disabled with a "Скоро" tooltip.
+ * IP+UA opens only for holders of forum.network.view (P1 B11); each open is
+ * an audited read. The API stays authoritative for every action shown here.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -60,6 +60,7 @@ import {
   warnForumPostAuthor,
 } from "./forum-actions";
 import { useForumPostEdit } from "./forum-post-edit-scope";
+import { ForumPostNetworkDialog } from "./forum-post-network-dialog";
 import { targetForumReply } from "./forum-topic-controls";
 
 type DialogKey =
@@ -70,7 +71,8 @@ type DialogKey =
   | "note"
   | "warn"
   | "restrict"
-  | "purge";
+  | "purge"
+  | "network";
 
 const plain =
   "inline-flex min-h-8 items-center gap-1.5 rounded-md px-2 text-[13px] text-slate-300 transition hover:bg-white/[0.06] hover:text-white disabled:pointer-events-none disabled:opacity-40";
@@ -103,6 +105,8 @@ export function ForumPostActionBar({
     moderate: boolean;
     purge: boolean;
     acceptAnswer: boolean;
+    network?: boolean;
+    networkDelete?: boolean;
   }>;
   isAccepted: boolean;
   path: string;
@@ -311,14 +315,28 @@ export function ForumPostActionBar({
             <button
               type="button"
               className={staff}
-              disabled
-              title="IP та User-Agent — скоро"
+              disabled={!abilities.network}
+              title={
+                abilities.network
+                  ? "IP та User-Agent автора (перегляд записується в журнал)"
+                  : "IP та User-Agent доступні модераторам і адміністраторам"
+              }
+              onClick={() => setDialog("network")}
             >
               <Fingerprint className="size-3.5" aria-hidden="true" />
               IP+UA
             </button>
           </div>
         </div>
+      ) : null}
+
+      {abilities.network ? (
+        <ForumPostNetworkDialog
+          {...dialogProps("network")}
+          postId={post.id}
+          postNumber={post.number}
+          canErase={abilities.networkDelete === true}
+        />
       ) : null}
 
       <ForumActionDialog

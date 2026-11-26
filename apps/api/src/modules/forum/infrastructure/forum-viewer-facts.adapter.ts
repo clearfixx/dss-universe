@@ -60,6 +60,8 @@ export class ForumViewerFactsAdapter implements ForumViewerFactsReader {
       canAssignModerators: permissions.has(Permission.ForumModeratorsAssign),
       // Enable only with a verified, immutable owner subject. Roles are delegable.
       canPurgeContent: false,
+      canViewNetwork: permissions.has(Permission.ForumNetworkView),
+      canDeleteNetwork: permissions.has(Permission.ForumNetworkDelete),
     };
   }
 }

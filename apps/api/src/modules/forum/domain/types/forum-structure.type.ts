@@ -26,6 +26,10 @@ export type ForumViewerFacts = {
   moderatesAllCategories: boolean;
   canAssignModerators: boolean;
   canPurgeContent: boolean;
+  /** forum.network.view: may read post IP+UA (P1 B11, audited). */
+  canViewNetwork?: boolean;
+  /** forum.network.delete: may erase post IP+UA. */
+  canDeleteNetwork?: boolean;
 };
 
 export type ForumCategoryVisibilityRule = {
