@@ -2,6 +2,7 @@
 
 import { ChevronDown, LayoutDashboard, LogIn, LogOut, Plus, Settings, UserRound } from "lucide-react";
 import Link from "next/link";
+import { useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -36,9 +37,11 @@ export function ShellQuickAdd({ canAccessAdminDeck }: { canAccessAdminDeck: bool
 }
 
 export function ShellUserMenu({ viewer, pathname, canAccessAdminDeck }: { viewer: SessionViewer | null; pathname: string; canAccessAdminDeck: boolean }) {
+  const logoutForm = useRef<HTMLFormElement>(null);
   return (<>
 {viewer ? (
               <>
+                <form ref={logoutForm} action={logoutAction} hidden />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -96,14 +99,10 @@ export function ShellUserMenu({ viewer, pathname, canAccessAdminDeck }: { viewer
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <form action={logoutAction}>
-                      <DropdownMenuItem asChild>
-                        <button type="submit" className="w-full">
-                          <LogOut aria-hidden="true" />
-                          Вийти
-                        </button>
-                      </DropdownMenuItem>
-                    </form>
+                    <DropdownMenuItem onSelect={() => logoutForm.current?.requestSubmit()}>
+                      <LogOut aria-hidden="true" />
+                      Вийти
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </>
