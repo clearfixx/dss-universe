@@ -281,15 +281,15 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
             </h2>
             <nav
               aria-label="Сортування відповідей"
-              className="flex items-center gap-1 text-sm"
+              className="flex max-w-full items-center gap-1 overflow-x-auto text-sm"
             >
-              <span className="mr-1 text-slate-400">Сортувати:</span>
+              <span className="mr-1 shrink-0 text-slate-400">Сортувати:</span>
               {REPLY_SORTS.map((item) => (
                 <Link
                   key={item.id}
                   href={pageHref(1, item.id)}
                   aria-current={item.id === sort ? "true" : undefined}
-                  className={`rounded-md px-2.5 py-1 ${
+                  className={`shrink-0 whitespace-nowrap rounded-md px-2.5 py-1 ${
                     item.id === sort
                       ? "bg-white/[0.08] text-white"
                       : "text-slate-400 hover:bg-white/[0.05] hover:text-white"

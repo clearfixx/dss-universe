@@ -410,7 +410,7 @@ export default async function CommunityHubRoute({ searchParams }: Props) {
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
-                <dl className="grid grid-cols-2 rounded-xl border border-white/[0.08] bg-card sm:grid-cols-4">
+                <dl className="grid w-full grid-cols-2 rounded-xl border border-white/[0.08] bg-card sm:w-auto sm:grid-cols-4">
                   {counters.map(([label, value, Icon]) => (
                     <div
                       key={label}
