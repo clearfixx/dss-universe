@@ -37,3 +37,19 @@ export DEMO_ADMIN_EMAIL=... DEMO_ADMIN_PASSWORD=... DEMO_MEMBER_EMAIL=... DEMO_M
 node tools/agent-helpers/demo-content/forum-demo.mjs --api http://localhost:3101/api/graphql          # dry run
 node tools/agent-helpers/demo-content/forum-demo.mjs --api http://localhost:3101/api/graphql --write  # apply
 ```
+
+### PowerShell
+
+```powershell
+$env:DEMO_ADMIN_EMAIL = '...'; $env:DEMO_ADMIN_PASSWORD = '...'
+$env:DEMO_MEMBER_EMAIL = '...'; $env:DEMO_MEMBER_PASSWORD = '...'
+node tools/agent-helpers/demo-content/forum-demo.mjs --api http://localhost:3101/api/graphql
+node tools/agent-helpers/demo-content/forum-demo.mjs --api http://localhost:3101/api/graphql --write
+```
+
+## Remote hosts
+
+`--write` works only on local hosts (`localhost`, `127.0.0.1`, `::1`, `*.localhost`).
+Another host needs explicit confirmation: `--allow-remote-host <hostname>`, which
+must exactly match the hostname from `--api`. Hosts containing `prod` are always
+refused.

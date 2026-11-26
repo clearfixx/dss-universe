@@ -32,6 +32,23 @@ if (!API || !/^https?:\/\//.test(API)) {
   fail("Set the GraphQL endpoint explicitly: --api <url> or DEMO_API_URL.");
 }
 
+// --write is allowed only against a local host. Any other host needs an
+// explicit, matching confirmation: --allow-remote-host <hostname>.
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]", "::1"]);
+if (WRITE) {
+  const host = new URL(API).hostname;
+  const allowArg = args.indexOf("--allow-remote-host");
+  const allowed = allowArg >= 0 ? args[allowArg + 1] : null;
+  const isLocal = LOCAL_HOSTS.has(host) || host.endsWith(".localhost");
+  if (!isLocal && allowed !== host) {
+    fail(
+      `Refusing to write to non-local host "${host}". ` +
+        `If this is a disposable test stack, pass --allow-remote-host ${host}.`,
+    );
+  }
+  if (/prod/i.test(host)) fail(`Refusing to write to a production-looking host "${host}".`);
+}
+
 const PREFIX = "[demo]";
 const CATEGORY = {
   slug: "demo",
@@ -481,12 +498,25 @@ if (accounts.admin.id === accounts.member.id) fail("Admin and member must be dif
 
 try {
   const forums = await ensureStructure(accounts.admin);
-  if (forums.general && WRITE)
-    await gql(
+  if (forums.general) {
+    const { forumFollowed } = await gql(
       accounts.member.token,
-      `mutation($forumId: ID!) { followForum(forumId: $forumId) }`,
+      `query($forumId: ID!) { forumFollowed(forumId: $forumId) }`,
       { forumId: forums.general.id },
-    ).then(() => console.log(`  ~ follow section demo-general (member)`));
+    );
+    if (forumFollowed) skip("follow section demo-general (member)");
+    else
+      await write("follow section demo-general (member)", () =>
+        gql(
+          accounts.member.token,
+          `mutation($forumId: ID!) { followForum(forumId: $forumId) }`,
+          { forumId: forums.general.id },
+        ),
+      );
+  } else {
+    stats.planned++;
+    console.log("  · plan   follow section demo-general (member)");
+  }
   for (const topic of TOPICS) await ensureTopic(accounts, forums, topic);
 } catch (error) {
   fail(error instanceof Error ? error.message : String(error));
