@@ -71,6 +71,8 @@ import {
 } from "./community-hub-admin-kit";
 import { cn } from "@/lib/utils";
 
+import { ForumTagsManager } from "./forum-tags-manager";
+
 type HubTab =
   | "general"
   | "structure"
@@ -88,7 +90,7 @@ const HUB_TABS: ReadonlyArray<{ id: HubTab; label: string; soon?: boolean }> = [
   { id: "moderation", label: "Модерація", soon: true },
   { id: "sanctions", label: "Санкції" },
   { id: "points", label: "Рейтинг і XP", soon: true },
-  { id: "tags", label: "Теги", soon: true },
+  { id: "tags", label: "Теги" },
   { id: "notifications", label: "Сповіщення", soon: true },
   { id: "integrations", label: "Інтеграції", soon: true },
   { id: "extra", label: "Додатково", soon: true },
@@ -782,6 +784,8 @@ export function CommunityHubSettings({
             />
           </div>
         </Card>
+      ) : tab === "tags" ? (
+        <ForumTagsManager forums={forums} />
       ) : null}
 
       {adding ? (
