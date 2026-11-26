@@ -89,7 +89,7 @@ export default async function ForumTrashRoute({ searchParams }: Props) {
       pageTitle={{ pathname: PATH, title: "Кошик" }}
       breadcrumbs={[
         { href: "/community", label: "Спільнота" },
-        { label: "Модерація" },
+        { href: "/community/moderation", label: "Модерація" },
         { label: "Кошик" },
       ]}
     >

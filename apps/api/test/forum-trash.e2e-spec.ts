@@ -216,4 +216,44 @@ describe('Forum trash (e2e)', () => {
       code: 'ACCESS_DENIED',
     });
   });
+
+  it('summarises the moderator area within the viewer scope', async () => {
+    const owner = await admin();
+    const mine = await section(owner);
+    const other = await section(owner);
+    const a = await trashed(owner, mine.forumId, 'Overview mine');
+    const b = await trashed(owner, other.forumId, 'Overview other');
+
+    const sectionModerator = await user();
+    await structure.assignModerator(
+      owner,
+      mine.categoryId,
+      sectionModerator,
+      mine.forumId,
+    );
+    const overview = await topics.moderationOverview(sectionModerator);
+    expect(overview.allSections).toBe(false);
+    expect(overview.sections.map(({ id }) => id)).toEqual([mine.forumId]);
+    expect(overview.trashCount).toBe(1);
+    const mineAction = overview.recentActions.find((r) => r.topicId === a);
+    expect(mineAction).toMatchObject({
+      action: 'topic.trashed',
+      actorId: owner,
+      topicTitle: 'Overview mine',
+      postNumber: null,
+    });
+    expect(overview.recentActions.some((r) => r.topicId === b)).toBe(false);
+
+    const supermoderator = await user({ moderatesAllCategories: true });
+    const all = await topics.moderationOverview(supermoderator);
+    expect(all.allSections).toBe(true);
+    expect(all.recentActions.map((r) => r.topicId)).toEqual(
+      expect.arrayContaining([a, b]),
+    );
+
+    const member = await user();
+    await expect(topics.moderationOverview(member)).rejects.toMatchObject({
+      code: 'ACCESS_DENIED',
+    });
+  });
 });

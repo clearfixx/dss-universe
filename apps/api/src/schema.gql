@@ -787,6 +787,31 @@ type ForumMemberStats {
   reputation: Int!
 }
 
+type ForumModeratedSection {
+  id: ID!
+  title: String!
+}
+
+type ForumModerationAction {
+  """e.g. post.hidden, topic.trashed."""
+  action: String!
+  actor: ForumMember
+  actorId: ID
+  id: ID!
+  occurredAt: DateTime!
+  postNumber: Int
+  topicId: ID!
+  topicTitle: String!
+}
+
+type ForumModerationOverview {
+  """Supermoderators and admins moderate every section."""
+  allSections: Boolean!
+  recentActions: [ForumModerationAction!]!
+  sections: [ForumModeratedSection!]!
+  trashCount: Int!
+}
+
 type ForumModeratorAssignment {
   assignedAt: DateTime!
   categoryId: ID!
@@ -2237,6 +2262,11 @@ type Query {
   forumDiscoverTopics(filter: ForumDiscoverFilter! = ALL, limit: Int! = 10, page: Int! = 1, sort: ForumDiscoverSort! = NEW): ForumTopicPage!
   forumFollowed(forumId: ID!): Boolean!
   forumHubStats: ForumHubStats!
+
+  """
+  Moderator area overview: moderated sections, trash size and the latest moderator actions there. Moderators only.
+  """
+  forumModerationOverview: ForumModerationOverview!
   forumPopularTags(limit: Int! = 12): [ForumPopularTag!]!
 
   """Topic, number and page of a post the viewer may see."""
