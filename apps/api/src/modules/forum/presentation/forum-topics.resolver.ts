@@ -346,6 +346,18 @@ class ForumTopicCreatedModel {
 }
 
 type RequestContext = { req: { user?: AuthenticatedUser } };
+/** The HTTP request as Express sees it (ip honours TRUST_PROXY). */
+type ClientContext = {
+  req?: { ip?: string; get?: (name: string) => string | undefined };
+};
+
+/** Author network metadata for P1 B11; stored staff-only. */
+function clientInfo(ctx: ClientContext) {
+  return {
+    ipAddress: ctx.req?.ip ?? null,
+    userAgent: ctx.req?.get?.('user-agent') ?? null,
+  };
+}
 
 @Resolver()
 export class ForumTopicsResolver {
@@ -525,8 +537,11 @@ export class ForumTopicsResolver {
   createForumTopic(
     @AuthUser() actor: AuthenticatedUser,
     @Args('input') input: CreateForumTopicInput,
+    @Context() ctx: ClientContext,
   ) {
-    return this.execute(this.topics.createTopic(actor.id, { ...input }));
+    return this.execute(
+      this.topics.createTopic(actor.id, { ...input }, clientInfo(ctx)),
+    );
   }
 
   @Mutation(() => ForumPostModel)
@@ -534,14 +549,19 @@ export class ForumTopicsResolver {
   createForumReply(
     @AuthUser() actor: AuthenticatedUser,
     @Args('input') input: CreateForumReplyInput,
+    @Context() ctx: ClientContext,
   ) {
     return this.execute(
-      this.topics.reply(actor.id, {
-        topicId: input.topicId,
-        documentJson: input.documentJson,
-        replyToNumber: input.replyToNumber ?? null,
-        quotedNumbers: input.quotedNumbers,
-      }),
+      this.topics.reply(
+        actor.id,
+        {
+          topicId: input.topicId,
+          documentJson: input.documentJson,
+          replyToNumber: input.replyToNumber ?? null,
+          quotedNumbers: input.quotedNumbers,
+        },
+        clientInfo(ctx),
+      ),
     );
   }
 

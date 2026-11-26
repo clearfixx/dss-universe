@@ -5,6 +5,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 vi.mock("./forum-actions", () => ({}));
+vi.mock("./forum-network-actions", () => ({}));
 
 import { postNumbersFrom, topicIdFrom } from "./forum-action-dialog";
 import { ForumPostActionBar } from "./forum-post-action-bar";
@@ -27,7 +28,12 @@ describe("moderation helpers", () => {
   });
 });
 
-const none = { moderate: false, purge: false, acceptAnswer: false };
+const none: {
+  moderate: boolean;
+  purge: boolean;
+  acceptAnswer: boolean;
+  network?: boolean;
+} = { moderate: false, purge: false, acceptAnswer: false };
 const post = (state: string, number = 3) => ({ id: "p", number, state });
 
 function bar(state: string, abilities: typeof none, canEdit = false) {
@@ -71,6 +77,11 @@ describe("ForumPostActionBar", () => {
     expect(screen.getByText("Вид.")).toBeInTheDocument();
     expect(screen.getByText("Ред.").closest("button")).toBeEnabled();
     expect(screen.getByText("IP+UA").closest("button")).toBeDisabled();
+  });
+
+  it("enables IP+UA only with the network permission (P1 B11)", () => {
+    bar("VISIBLE", { ...none, moderate: true, network: true });
+    expect(screen.getByText("IP+UA").closest("button")).toBeEnabled();
   });
 
   it("offers restore on hidden posts and disables reply", () => {

@@ -168,3 +168,22 @@ query ForumTrash($page: Int!, $limit: Int!, $forumId: ID, $search: String) {
     }
   }
 }
+
+# Post network metadata (P1 B11): staff-only, every read is audited.
+query ForumPostNetwork($postId: ID!) {
+  forumPostNetwork(postId: $postId) {
+    postId
+    ipAddress
+    userAgent
+    capturedAt
+    device {
+      kind
+      browser
+      os
+    }
+  }
+}
+
+mutation DeleteForumPostNetwork($postId: ID!, $reason: String!) {
+  deleteForumPostNetwork(postId: $postId, reason: $reason)
+}
