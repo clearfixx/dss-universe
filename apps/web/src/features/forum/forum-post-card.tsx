@@ -31,6 +31,7 @@ import type { ForumPostFieldsFragment } from "@/gql/graphql";
 import { ForumDocument } from "./forum-document";
 import { canEditForumPost, forumMemberName } from "./forum-format";
 import { ForumPostEditor } from "./forum-post-editor";
+import { ForumAuthorReputation } from "./forum-author-reputation";
 import { ForumPostRating } from "./forum-post-rating";
 import { ForumPostActionBar } from "./forum-post-action-bar";
 import { ForumPostEditScope } from "./forum-post-edit-scope";
@@ -122,6 +123,17 @@ export function ForumPostCard({
       path={path}
     />
   );
+  const reputation = post.author ? (
+    <ForumAuthorReputation
+      postId={post.id}
+      authorId={post.author.id}
+      authorName={name}
+      reputation={post.author.stats.reputation}
+      viewerId={viewerId}
+      path={path}
+    />
+  ) : null;
+
   const canEdit =
     visible &&
     Boolean(post.documentJson) &&
@@ -196,6 +208,11 @@ export function ForumPostCard({
                 Рів. {post.author.stats.level}
               </span>
             ) : null}
+            {post.author ? (
+              <span className="inline-flex items-center gap-1 text-[11px] text-slate-400 sm:hidden">
+                Реп.: {reputation}
+              </span>
+            ) : null}
             {badges.map((badge) => (
               <span
                 key={badge}
@@ -213,15 +230,7 @@ export function ForumPostCard({
               {numberFormatter.format(post.author.stats.postCount)}
             </dd>
             <dt>Репутація:</dt>
-            <dd
-              className={`tabular-nums ${
-                post.author.stats.reputation < 0
-                  ? "text-rose-300"
-                  : "text-slate-200"
-              }`}
-            >
-              {numberFormatter.format(post.author.stats.reputation)}
-            </dd>
+            <dd>{reputation}</dd>
             <dt className="col-span-2 pt-0.5">
               На сайті з{" "}
               <span className="text-slate-200">
