@@ -342,13 +342,13 @@ export default async function CommunityHubRoute({ searchParams }: Props) {
   const viewer = await loadSessionViewer();
   const [hub, categories, subscribed, sections, weeklyTop, moderation] =
     await Promise.all([
-    loadForumHub(),
-    loadForumCategories(),
-    viewer ? loadViewerForumTopics("SUBSCRIBED", 1) : null,
-    viewer ? loadViewerForumTopics("FOLLOWED_SECTIONS", 1) : null,
-    viewer ? loadForumWeeklyTop(5) : null,
-    viewer ? loadForumModerationOverview() : null,
-  ]);
+      loadForumHub(),
+      loadForumCategories(),
+      viewer ? loadViewerForumTopics("SUBSCRIBED", 1) : null,
+      viewer ? loadViewerForumTopics("FOLLOWED_SECTIONS", 1) : null,
+      viewer ? loadForumWeeklyTop(5) : null,
+      viewer ? loadForumModerationOverview() : null,
+    ]);
   const topScorers = (weeklyTop ?? []).filter(
     (entry) => entry.communityPoints > 0,
   );

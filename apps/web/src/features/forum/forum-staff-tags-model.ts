@@ -84,7 +84,7 @@ const MAX_TOKENS = 3000;
 export function wordDiff(before: string, after: string): DiffPart[] {
   const a = before.split(/(\s+)/).filter(Boolean);
   const b = after.split(/(\s+)/).filter(Boolean);
-  if (a.length * b.length > MAX_TOKENS * MAX_TOKENS / 4) {
+  if (a.length * b.length > (MAX_TOKENS * MAX_TOKENS) / 4) {
     return merge([
       ...(before ? [{ text: before, kind: "removed" as const }] : []),
       ...(after ? [{ text: after, kind: "added" as const }] : []),

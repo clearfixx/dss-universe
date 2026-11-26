@@ -37,6 +37,7 @@ export function ForumPostEditor({
   topicTitle,
   path,
   staffRoles = [],
+  allowsGatedContent = false,
   children,
 }: {
   post: Readonly<{
@@ -49,6 +50,8 @@ export function ForumPostEditor({
   path: string;
   /** Staff tags the viewer may add under the post (owner 2026-11-27). */
   staffRoles?: readonly ForumStaffTagRole[];
+  /** The section lets posts hide content (Command Deck switch). */
+  allowsGatedContent?: boolean;
   /** The read-only rendering shown while not editing. */
   children: ReactNode;
 }) {
@@ -87,7 +90,9 @@ export function ForumPostEditor({
       if (tagRole && note) {
         const added = await addForumStaffNote(post.id, note, path, tagRole);
         if (!added.ok) {
-          setError(`Допис збережено, але тег не додано: ${added.error.message}`);
+          setError(
+            `Допис збережено, але тег не додано: ${added.error.message}`,
+          );
           return;
         }
       }
@@ -114,6 +119,7 @@ export function ForumPostEditor({
       ) : null}
       <DssEditor
         profile={post.number === 1 ? "FORUM_TOPIC" : "FORUM_REPLY"}
+        permissions={allowsGatedContent ? ["CONTENT_GATE_CONFIGURE"] : []}
         initialDocument={document}
         onDocumentChange={setDocument}
         ariaLabel={`Редагування допису #${post.number}`}

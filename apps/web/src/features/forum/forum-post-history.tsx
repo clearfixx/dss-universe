@@ -165,25 +165,27 @@ export function ForumPostHistory({
                           <tr>
                             <td colSpan={4} className="pb-3">
                               <p className="whitespace-pre-wrap break-words rounded-lg bg-slate-950/60 p-3 text-sm leading-relaxed text-slate-200">
-                                {wordDiff(previous?.plainText ?? text, text).map(
-                                  (part, key) =>
-                                    part.kind === "same" ? (
-                                      <span key={key}>{part.text}</span>
-                                    ) : part.kind === "added" ? (
-                                      <ins
-                                        key={key}
-                                        className="rounded bg-emerald-500/20 text-emerald-200 no-underline"
-                                      >
-                                        {part.text}
-                                      </ins>
-                                    ) : (
-                                      <del
-                                        key={key}
-                                        className="rounded bg-rose-500/20 text-rose-200"
-                                      >
-                                        {part.text}
-                                      </del>
-                                    ),
+                                {wordDiff(
+                                  previous?.plainText ?? text,
+                                  text,
+                                ).map((part, key) =>
+                                  part.kind === "same" ? (
+                                    <span key={key}>{part.text}</span>
+                                  ) : part.kind === "added" ? (
+                                    <ins
+                                      key={key}
+                                      className="rounded bg-emerald-500/20 text-emerald-200 no-underline"
+                                    >
+                                      {part.text}
+                                    </ins>
+                                  ) : (
+                                    <del
+                                      key={key}
+                                      className="rounded bg-rose-500/20 text-rose-200"
+                                    >
+                                      {part.text}
+                                    </del>
+                                  ),
                                 )}
                               </p>
                             </td>

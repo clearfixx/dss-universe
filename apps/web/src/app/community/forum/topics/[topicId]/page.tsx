@@ -312,6 +312,7 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
                 abilities={abilities}
                 topicState={topic.state}
                 topicTitle={topic.title}
+                allowsGatedContent={forum?.allowsGatedContent ?? false}
                 accepted={post.id === topic.acceptedAnswerPostId}
                 viewerId={viewer?.id ?? null}
                 canReply={canWrite}
@@ -349,6 +350,7 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
               topicId={topic.id}
               path={pageHref(page)}
               lastPage={sort === "OLDEST" ? pageHref(pages) : pageHref(1)}
+              allowsGatedContent={forum?.allowsGatedContent ?? false}
             />
           ) : readOnlyUntil && topic.state === "OPEN" ? (
             <div

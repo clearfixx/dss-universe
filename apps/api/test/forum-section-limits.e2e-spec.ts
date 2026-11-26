@@ -299,6 +299,20 @@ describe('Forum section limits (e2e)', () => {
     await topics.posts(member, topic.id, 1, 20);
     await topics.posts(contributor, topic.id, 1, 20);
     expect(projectedFor).toEqual([null, contributor]);
+
+    // Replies may hide content as well (owner 2026-11-27).
+    const replyDoc = JSON.parse(doc(gate({ type: 'paragraph' }))) as {
+      profile: string;
+    };
+    replyDoc.profile = 'FORUM_REPLY';
+    await expect(
+      topics.reply(contributor, {
+        topicId: topic.id,
+        documentJson: JSON.stringify(replyDoc),
+        replyToNumber: null,
+        quotedNumbers: [],
+      }),
+    ).resolves.toMatchObject({ number: 2 });
   });
 
   it('auto-closes inactive open topics and audits it as the system', async () => {

@@ -23,7 +23,9 @@ describe("staffTagRoles", () => {
 
 describe("wordDiff", () => {
   it("marks removed and added words", () => {
-    expect(wordDiff("Як налаштувати черги", "Як правильно налаштувати черги")).toEqual([
+    expect(
+      wordDiff("Як налаштувати черги", "Як правильно налаштувати черги"),
+    ).toEqual([
       { text: "Як ", kind: "same" },
       { text: "правильно ", kind: "added" },
       { text: "налаштувати черги", kind: "same" },

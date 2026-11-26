@@ -17,12 +17,7 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import {
-  CheckCircle2,
-  EyeOff,
-  Paperclip,
-  Trash2,
-} from "lucide-react";
+import { CheckCircle2, EyeOff, Paperclip, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 import type { ForumPostFieldsFragment } from "@/gql/graphql";
@@ -77,9 +72,11 @@ export function ForumPostCard({
   abilities,
   topicState,
   topicTitle,
+  allowsGatedContent = false,
 }: {
   topicState: string;
   topicTitle: string;
+  allowsGatedContent?: boolean;
   topicId: string;
   abilities: Readonly<{
     moderate: boolean;
@@ -291,6 +288,7 @@ export function ForumPostCard({
                   topicTitle={topicTitle}
                   path={path}
                   staffRoles={staffTagRoles(abilities.staffRole)}
+                  allowsGatedContent={allowsGatedContent}
                 >
                   <ForumDocument documentJson={post.documentJson} />
                 </ForumPostEditor>
