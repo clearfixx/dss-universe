@@ -51,7 +51,11 @@ import {
   ForumModeratorAssignmentModel,
   ForumSubforumModel,
 } from './forum-structure.resolver';
-import { ForumPostModel, ForumTopicModel } from './forum-topics.resolver';
+import {
+  ForumModerationActionModel,
+  ForumPostModel,
+  ForumTopicModel,
+} from './forum-topics.resolver';
 
 type RequestContext = { req: { user?: AuthenticatedUser } };
 
@@ -370,6 +374,25 @@ export class ForumPostVoteReadResolver extends ForumReadResolverBase {
   @ResolveField(() => ForumMemberModel, { nullable: true })
   voter(@Parent() vote: ForumPostVoteModel, @Context() ctx: RequestContext) {
     return this.card(ctx, vote.voterId);
+  }
+}
+
+/** Who performed a moderator action (moderator area overview). */
+@Resolver(() => ForumModerationActionModel)
+export class ForumModerationActionReadResolver extends ForumReadResolverBase {
+  constructor(
+    @Inject(FORUM_MEMBER_CARDS) members: ForumMemberCardReader,
+    reads: PrismaForumReadModels,
+  ) {
+    super(members, reads);
+  }
+
+  @ResolveField(() => ForumMemberModel, { nullable: true })
+  actor(
+    @Parent() action: ForumModerationActionModel,
+    @Context() ctx: RequestContext,
+  ) {
+    return action.actorId ? this.card(ctx, action.actorId) : null;
   }
 }
 

@@ -8,16 +8,18 @@
  * 📄 File: apps/web/src/features/forum/forum-post-rating.tsx
  *
  * 🎯 Purpose:
- * The vertical rating column of a post: up, net score, down.
+ * Post usefulness rating (owner 2026-11-26): two buttons «Добре (N)» and
+ * «Погано (N)». It rates the post only and never changes the author's
+ * reputation.
  *
  * ⚠️ Important:
- * Owner decisions: votes rate content only and are final; hovering the score
- * shows "80+ / 10−"; clicking it lists who voted.
+ * Votes are final (D1); accounts younger than 7 days cannot vote (API).
+ * «Хто голосував» opens the voters dialog.
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import { Minus, Plus } from "lucide-react";
+import { ThumbsDown, ThumbsUp, Users } from "lucide-react";
 import { useState, useTransition } from "react";
 
 import {
@@ -29,7 +31,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { getForumPostVoters, voteForumPost } from "./forum-actions";
-import { forumMemberName, forumRatingBreakdown } from "./forum-format";
+import { forumMemberName } from "./forum-format";
 
 type Voter = Awaited<ReturnType<typeof getForumPostVoters>>;
 
@@ -41,7 +43,6 @@ export function ForumPostRating({
   canVote,
   disabledReason,
   path,
-  horizontal = false,
 }: {
   postId: string;
   ratingUp: number;
@@ -50,8 +51,6 @@ export function ForumPostRating({
   canVote: boolean;
   disabledReason?: string;
   path: string;
-  /** Mobile: a compact row instead of the vertical column. */
-  horizontal?: boolean;
 }) {
   const [rating, setRating] = useState({ ratingUp, ratingDown });
   const [vote, setVote] = useState(viewerVote);
@@ -84,51 +83,51 @@ export function ForumPostRating({
     }
   }
 
-  const score = rating.ratingUp - rating.ratingDown;
-  const arrow =
-    "flex size-7 items-center justify-center rounded-md text-slate-400 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent";
+  const button = (active: boolean, tone: "good" | "bad") =>
+    `inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-sm transition disabled:cursor-not-allowed ${
+      active
+        ? tone === "good"
+          ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-200"
+          : "border-rose-400/40 bg-rose-500/15 text-rose-200"
+        : "border-white/10 bg-white/[0.03] text-slate-300 hover:border-violet-400/40 hover:text-white disabled:hover:border-white/10 disabled:hover:text-slate-300"
+    }`;
 
   return (
-    <div
-      className={`flex items-center gap-0.5 rounded-lg bg-white/[0.04] ring-1 ring-white/[0.08] ${
-        horizontal ? "inline-flex px-1" : "w-11 flex-col py-1"
-      }`}
-    >
+    <div className="flex flex-wrap items-center gap-2">
       <button
         type="button"
-        className={`${arrow} ${vote === 1 ? "!text-violet-300 !opacity-100" : ""}`}
+        className={button(vote === 1, "good")}
         onClick={() => cast(1)}
         disabled={locked}
-        aria-label="Голосувати за"
         aria-pressed={vote === 1}
         title={reason}
       >
-        <Plus className="size-4" aria-hidden="true" />
+        <ThumbsUp className="size-4" aria-hidden="true" />
+        Добре <span className="tabular-nums">({rating.ratingUp})</span>
       </button>
       <button
         type="button"
-        onClick={() => showVoters(true)}
-        title={forumRatingBreakdown(rating)}
-        aria-label={`Рейтинг ${score}: ${forumRatingBreakdown(rating)}. Показати, хто голосував`}
-        className={`min-h-7 rounded-md px-1 text-base font-bold tabular-nums hover:bg-white/10 ${
-          score < 0 ? "text-rose-300" : "text-white"
-        }`}
-      >
-        {score}
-      </button>
-      <button
-        type="button"
-        className={`${arrow} ${vote === -1 ? "!text-rose-300 !opacity-100" : ""}`}
+        className={button(vote === -1, "bad")}
         onClick={() => cast(-1)}
         disabled={locked}
-        aria-label="Голосувати проти"
         aria-pressed={vote === -1}
         title={reason}
       >
-        <Minus className="size-4" aria-hidden="true" />
+        <ThumbsDown className="size-4" aria-hidden="true" />
+        Погано <span className="tabular-nums">({rating.ratingDown})</span>
       </button>
+      {rating.ratingUp + rating.ratingDown > 0 ? (
+        <button
+          type="button"
+          onClick={() => showVoters(true)}
+          className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-xs text-slate-400 hover:bg-white/[0.05] hover:text-white"
+        >
+          <Users className="size-3.5" aria-hidden="true" />
+          Хто голосував
+        </button>
+      ) : null}
       {error ? (
-        <p role="alert" className="sr-only">
+        <p role="alert" className="w-full text-xs text-rose-300">
           {error}
         </p>
       ) : null}
@@ -137,8 +136,8 @@ export function ForumPostRating({
           <DialogHeader>
             <DialogTitle>Голоси за допис</DialogTitle>
             <DialogDescription>
-              {rating.ratingUp} за · {rating.ratingDown} проти. Голос остаточний
-              і змінює лише рейтинг допису.
+              «Добре»: {rating.ratingUp} · «Погано»: {rating.ratingDown}. Голос
+              остаточний і не впливає на репутацію автора.
             </DialogDescription>
           </DialogHeader>
           {!voters ? (
@@ -161,10 +160,10 @@ export function ForumPostRating({
                   </span>
                   <span
                     className={
-                      item.value > 0 ? "text-violet-300" : "text-rose-300"
+                      item.value > 0 ? "text-emerald-300" : "text-rose-300"
                     }
                   >
-                    {item.value > 0 ? "+" : "−"}
+                    {item.value > 0 ? "Добре" : "Погано"}
                   </span>
                 </li>
               ))}

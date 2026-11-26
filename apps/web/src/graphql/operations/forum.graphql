@@ -465,3 +465,33 @@ query ForumWeeklyTop($limit: Int!) {
     }
   }
 }
+
+query ForumPostLocation($postId: ID!, $limit: Int!) {
+  forumPostLocation(postId: $postId, limit: $limit) {
+    topicId
+    number
+    page
+  }
+}
+
+query ForumModerationOverview {
+  forumModerationOverview {
+    allSections
+    trashCount
+    sections {
+      id
+      title
+    }
+    recentActions {
+      id
+      action
+      topicId
+      topicTitle
+      postNumber
+      occurredAt
+      actor {
+        ...ForumMemberCard
+      }
+    }
+  }
+}

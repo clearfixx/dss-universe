@@ -332,6 +332,42 @@ class ForumPostPageModel {
   @Field(() => Int) limit!: number;
 }
 
+@ObjectType('ForumPostLocation')
+class ForumPostLocationModel {
+  @Field(() => ID) topicId!: string;
+  @Field(() => Int) number!: number;
+  @Field(() => Int, { description: 'Page in OLDEST order for the limit.' })
+  page!: number;
+}
+
+@ObjectType('ForumModeratedSection')
+class ForumModeratedSectionModel {
+  @Field(() => ID) id!: string;
+  @Field() title!: string;
+}
+
+@ObjectType('ForumModerationAction')
+export class ForumModerationActionModel {
+  @Field(() => ID) id!: string;
+  @Field({ description: 'e.g. post.hidden, topic.trashed.' }) action!: string;
+  @Field(() => ID, { nullable: true }) actorId!: string | null;
+  @Field(() => ID) topicId!: string;
+  @Field() topicTitle!: string;
+  @Field(() => Int, { nullable: true }) postNumber!: number | null;
+  @Field() occurredAt!: Date;
+}
+
+@ObjectType('ForumModerationOverview')
+class ForumModerationOverviewModel {
+  @Field({ description: 'Supermoderators and admins moderate every section.' })
+  allSections!: boolean;
+  @Field(() => [ForumModeratedSectionModel])
+  sections!: ForumModeratedSectionModel[];
+  @Field(() => Int) trashCount!: number;
+  @Field(() => [ForumModerationActionModel])
+  recentActions!: ForumModerationActionModel[];
+}
+
 @ObjectType('ForumPostRevision')
 class ForumPostRevisionModel {
   @Field(() => Int) revision!: number;
@@ -401,6 +437,15 @@ export class ForumTopicsResolver {
         kind ?? null,
       ),
     );
+  }
+
+  @Query(() => ForumModerationOverviewModel, {
+    description:
+      'Moderator area overview: moderated sections, trash size and the latest moderator actions there. Moderators only.',
+  })
+  @UseGuards(JwtAuthGuard)
+  forumModerationOverview(@AuthUser() user: AuthenticatedUser) {
+    return this.execute(this.topics.moderationOverview(user.id));
   }
 
   @Query(() => ForumTopicPageModel, {
@@ -506,6 +551,20 @@ export class ForumTopicsResolver {
     @Args('topicId', { type: () => ID }) topicId: string,
   ) {
     return this.execute(this.topics.topic(this.viewer(ctx), topicId));
+  }
+
+  @Query(() => ForumPostLocationModel, {
+    description: 'Topic, number and page of a post the viewer may see.',
+  })
+  @UseGuards(OptionalViewerJwtGuard)
+  forumPostLocation(
+    @Context() ctx: RequestContext,
+    @Args('postId', { type: () => ID }) postId: string,
+    @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
+  ) {
+    return this.execute(
+      this.topics.postLocation(this.viewer(ctx), postId, limit),
+    );
   }
 
   @Query(() => ForumPostPageModel)

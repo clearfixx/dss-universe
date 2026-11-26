@@ -28,8 +28,10 @@ import {
   NewsDiscussionDocument,
   ForumTrashDocument,
   ForumHubDocument,
+  ForumModerationOverviewDocument,
   ForumSectionStateDocument,
   ForumWeeklyTopDocument,
+  ForumPostLocationDocument,
   ForumPostRevisionsDocument,
   ForumPostVotesDocument,
   ForumTagsDocument,
@@ -329,4 +331,37 @@ export async function loadNewsDiscussion(articleId: string) {
     });
     return result.data?.newsDiscussionTopic ?? null;
   });
+}
+
+/** Where a post lives (activity links know only the post); null if hidden. */
+export async function loadForumPostLocation(postId: string) {
+  return orNull(async () => {
+    const result = await getClient().query({
+      query: ForumPostLocationDocument,
+      variables: { postId, limit: FORUM_PAGE_SIZE },
+      context: await authContext(),
+      fetchPolicy: "no-cache",
+    });
+    return result.data?.forumPostLocation ?? null;
+  });
+}
+
+/** Moderator area overview; "DENIED" for guests and non-moderators. */
+export async function loadForumModerationOverview() {
+  if (!(await hasSession())) return "DENIED" as const;
+  try {
+    const result = await getClient().query({
+      query: ForumModerationOverviewDocument,
+      context: await authContext(),
+      fetchPolicy: "no-cache",
+    });
+    if (!result.data) throw new Error("FORUM_MODERATION_UNAVAILABLE");
+    return result.data.forumModerationOverview;
+  } catch (error) {
+    const code = toForumError(error).code;
+    if (code === "ACCESS_DENIED" || code === "NOT_SIGNED_IN") {
+      return "DENIED" as const;
+    }
+    throw error;
+  }
 }

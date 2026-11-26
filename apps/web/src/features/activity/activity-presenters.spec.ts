@@ -21,7 +21,7 @@ describe("activity presenters (P1 A13)", () => {
     expect(presentActivity(item("forum.post.created.v1", "ForumPost"))).toEqual(
       {
         title: "Відповів на форумі",
-        href: null,
+        href: `/community/forum/posts/${TOPIC}`,
       },
     );
     expect(
@@ -41,7 +41,13 @@ describe("activity presenters (P1 A13)", () => {
     expect(fallbackActivityTitle("news.published")).toBe("News Published");
   });
 
-  it("never links without a real topic id", () => {
+  it("never links without a real id", () => {
+    expect(
+      presentActivity(item("forum.post.created.v1", "ForumPost", "../x")).href,
+    ).toBeNull();
+    expect(
+      presentActivity(item("forum.topic.created.v1", "ForumThing")).href,
+    ).toBeNull();
     expect(
       presentActivity(item("forum.topic.created.v1", "ForumTopic", "")).href,
     ).toBeNull();

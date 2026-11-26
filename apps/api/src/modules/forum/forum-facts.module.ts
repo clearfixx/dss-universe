@@ -27,6 +27,8 @@ import { FORUM_TOPIC_COUNTS } from './contracts/forum-topic-counts.contract';
 import { PrismaForumTopicCounts } from './infrastructure/prisma-forum-topic-counts';
 import { FORUM_CONTRIBUTION_TOTALS } from './contracts/forum-contribution-totals.contract';
 import { PrismaForumContributionTotals } from './infrastructure/prisma-forum-contribution-totals';
+import { FORUM_POST_FACTS } from './contracts/forum-post-facts.contract';
+import { PrismaForumPostFacts } from './infrastructure/prisma-forum-post-facts';
 
 @Module({
   imports: [PrismaModule, AuthorizationModule],
@@ -42,9 +44,11 @@ import { PrismaForumContributionTotals } from './infrastructure/prisma-forum-con
       provide: FORUM_SUBJECT_VISIBILITY,
       useClass: PrismaForumSubjectVisibility,
     },
+    { provide: FORUM_POST_FACTS, useClass: PrismaForumPostFacts },
   ],
   exports: [
     FORUM_TOPIC_COUNTS,
+    FORUM_POST_FACTS,
     FORUM_SUBJECT_VISIBILITY,
     FORUM_CONTRIBUTION_TOTALS,
   ],

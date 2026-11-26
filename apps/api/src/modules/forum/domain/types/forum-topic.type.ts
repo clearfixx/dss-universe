@@ -167,3 +167,23 @@ export type ForumPostActor = {
   /** Moderator scope in the topic's category (assignment or supermoderator). */
   moderator: boolean;
 };
+
+/** One moderator action on a topic or post (moderator area overview). */
+export type ForumModerationActionView = {
+  id: string;
+  /** e.g. "post.hidden", "topic.trashed". */
+  action: string;
+  actorId: string | null;
+  topicId: string;
+  topicTitle: string;
+  postNumber: number | null;
+  occurredAt: Date;
+};
+
+export type ForumModerationOverview = {
+  /** Supermoderators and admins moderate every section. */
+  allSections: boolean;
+  sections: Array<{ id: string; title: string }>;
+  trashCount: number;
+  recentActions: ForumModerationActionView[];
+};

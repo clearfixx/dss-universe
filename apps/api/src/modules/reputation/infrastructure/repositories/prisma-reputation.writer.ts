@@ -49,6 +49,8 @@ const entrySelect = {
   recipientId: true,
   value: true,
   reason: true,
+  sourceType: true,
+  sourceId: true,
   createdAt: true,
 } as const;
 
@@ -65,17 +67,28 @@ export class PrismaReputationWriter {
     input: CreateReputationEntry,
     project: ReputationEntryProjection,
   ): Promise<ReputationEntry | null> {
+    const source = input.source ?? null;
     await this.lock(
       transaction,
-      `reputation:${input.actorId}:${input.recipientId}`,
+      source
+        ? `reputation-source:${input.actorId}:${source.type}:${source.id}`
+        : `reputation:${input.actorId}:${input.recipientId}`,
     );
+    // With a source: one change per member per source (owner 2026-11-26).
+    // Without: one change per member pair per rolling 24 hours.
     const recent = await transaction.reputationEntry.findFirst({
-      where: {
-        actorId: input.actorId,
-        recipientId: input.recipientId,
-        reversesEntryId: null,
-        createdAt: { gt: input.cooldownStartedAfter },
-      },
+      where: source
+        ? {
+            actorId: input.actorId,
+            sourceType: source.type,
+            sourceId: source.id,
+          }
+        : {
+            actorId: input.actorId,
+            recipientId: input.recipientId,
+            reversesEntryId: null,
+            createdAt: { gt: input.cooldownStartedAfter },
+          },
       select: { id: true },
     });
     if (recent) return null;
@@ -85,6 +98,8 @@ export class PrismaReputationWriter {
         recipientId: input.recipientId,
         value: input.value,
         reason: input.reason,
+        sourceType: source?.type ?? null,
+        sourceId: source?.id ?? null,
       },
       select: entrySelect,
     });

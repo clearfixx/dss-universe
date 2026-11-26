@@ -6,6 +6,11 @@ export {
   type ForumSearchSource,
 } from './contracts/forum-search-source.contract';
 export {
+  FORUM_POST_FACTS,
+  type ForumPostFact,
+  type ForumPostFactsReader,
+} from './contracts/forum-post-facts.contract';
+export {
   FORUM_SUBJECT_VISIBILITY,
   type ForumSubjectRef,
   type ForumSubjectVisibility,

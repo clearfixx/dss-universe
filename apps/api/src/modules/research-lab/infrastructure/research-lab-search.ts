@@ -1,3 +1,4 @@
+import { researchExcerpt } from './research-excerpt';
 import { Inject, Injectable } from '@nestjs/common';
 import { projectEditorSearchText, type EditorDocument } from '@dss/editor';
 import { PrismaService } from '@api/core/database';
@@ -102,7 +103,7 @@ export class ResearchLabSearch implements ResearchSearchSource {
                 language: page.language,
                 slug: page.slug,
                 title: revision.title,
-                excerpt: (revision.summary || body).slice(0, 240),
+                excerpt: researchExcerpt(revision.summary || body),
                 publishedAt: page.lastPublishedAt,
               });
             total++;

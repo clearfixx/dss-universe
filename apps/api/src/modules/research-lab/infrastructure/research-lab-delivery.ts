@@ -1,3 +1,4 @@
+import { researchExcerpt } from './research-excerpt';
 import { projectEditorPublicSearch, type EditorDocument } from '@dss/editor';
 import { Inject, Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
@@ -170,7 +171,7 @@ export class ResearchLabDelivery {
               language: page.language,
               slug: page.slug,
               title: revision.title,
-              description: revision.summary || body.slice(0, 240),
+              description: revision.summary || researchExcerpt(body),
               updatedAt: page.lastPublishedAt,
             });
             if (entries.length === limit) break;

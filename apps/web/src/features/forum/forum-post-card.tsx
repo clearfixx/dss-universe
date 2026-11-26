@@ -31,6 +31,7 @@ import type { ForumPostFieldsFragment } from "@/gql/graphql";
 import { ForumDocument } from "./forum-document";
 import { canEditForumPost, forumMemberName } from "./forum-format";
 import { ForumPostEditor } from "./forum-post-editor";
+import { ForumAuthorReputation } from "./forum-author-reputation";
 import { ForumPostRating } from "./forum-post-rating";
 import { ForumPostActionBar } from "./forum-post-action-bar";
 import { ForumPostEditScope } from "./forum-post-edit-scope";
@@ -122,24 +123,16 @@ export function ForumPostCard({
       path={path}
     />
   );
-  const ratingRow = (
-    <ForumPostRating
+  const reputation = post.author ? (
+    <ForumAuthorReputation
       postId={post.id}
-      ratingUp={post.ratingUp}
-      ratingDown={post.ratingDown}
-      viewerVote={post.viewerVote ?? null}
-      canVote={viewerId !== null && !own}
-      disabledReason={
-        viewerId === null
-          ? "Увійдіть, щоб голосувати"
-          : own
-            ? "Свої дописи оцінювати не можна"
-            : undefined
-      }
+      authorId={post.author.id}
+      authorName={name}
+      reputation={post.author.stats.reputation}
+      viewerId={viewerId}
       path={path}
-      horizontal
     />
-  );
+  ) : null;
 
   const canEdit =
     visible &&
@@ -160,7 +153,7 @@ export function ForumPostCard({
     <article
       id={`post-${post.number}`}
       aria-label={`Допис #${post.number}, ${name}`}
-      className={`grid scroll-mt-24 overflow-hidden rounded-xl sm:grid-cols-[10rem_minmax(0,1fr)_3.5rem] ${
+      className={`grid scroll-mt-24 overflow-hidden rounded-xl sm:grid-cols-[10rem_minmax(0,1fr)] ${
         accepted
           ? "bg-emerald-950/30 ring-1 ring-emerald-500/50"
           : visible
@@ -215,6 +208,11 @@ export function ForumPostCard({
                 Рів. {post.author.stats.level}
               </span>
             ) : null}
+            {post.author ? (
+              <span className="inline-flex items-center gap-1 text-[11px] text-slate-400 sm:hidden">
+                Реп.: {reputation}
+              </span>
+            ) : null}
             {badges.map((badge) => (
               <span
                 key={badge}
@@ -232,15 +230,7 @@ export function ForumPostCard({
               {numberFormatter.format(post.author.stats.postCount)}
             </dd>
             <dt>Репутація:</dt>
-            <dd
-              className={`tabular-nums ${
-                post.author.stats.reputation < 0
-                  ? "text-rose-300"
-                  : "text-slate-200"
-              }`}
-            >
-              {numberFormatter.format(post.author.stats.reputation)}
-            </dd>
+            <dd>{reputation}</dd>
             <dt className="col-span-2 pt-0.5">
               На сайті з{" "}
               <span className="text-slate-200">
@@ -387,6 +377,8 @@ export function ForumPostCard({
             </ul>
           ) : null}
 
+          {visible ? <div className="pt-1">{rating}</div> : null}
+
           <ForumPostActionBar
             topicId={topicId}
             post={post}
@@ -397,11 +389,6 @@ export function ForumPostCard({
           />
         </div>
       </ForumPostEditScope>
-
-      <div className="hidden justify-center pt-3 sm:flex">
-        {visible ? rating : null}
-      </div>
-      {visible ? <div className="px-3 pb-3 sm:hidden">{ratingRow}</div> : null}
     </article>
   );
 }

@@ -101,7 +101,7 @@ export default async function StaffSanctionsRoute({ searchParams }: Props) {
       pageTitle={{ pathname: PATH, title: "Журнал санкцій" }}
       breadcrumbs={[
         { href: "/community", label: "Спільнота" },
-        { label: "Модерація" },
+        { href: "/community/moderation", label: "Модерація" },
         { label: "Журнал санкцій" },
       ]}
     >

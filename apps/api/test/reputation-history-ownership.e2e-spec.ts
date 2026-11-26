@@ -303,6 +303,8 @@ describe('Reputation history ownership (e2e)', () => {
           reason,
           createdAt,
           reversal: reversed,
+          // Synthetic ledger rows carry no source (forum post etc.).
+          source: null,
         }),
       ),
       total,

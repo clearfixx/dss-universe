@@ -787,6 +787,31 @@ type ForumMemberStats {
   reputation: Int!
 }
 
+type ForumModeratedSection {
+  id: ID!
+  title: String!
+}
+
+type ForumModerationAction {
+  """e.g. post.hidden, topic.trashed."""
+  action: String!
+  actor: ForumMember
+  actorId: ID
+  id: ID!
+  occurredAt: DateTime!
+  postNumber: Int
+  topicId: ID!
+  topicTitle: String!
+}
+
+type ForumModerationOverview {
+  """Supermoderators and admins moderate every section."""
+  allSections: Boolean!
+  recentActions: [ForumModerationAction!]!
+  sections: [ForumModeratedSection!]!
+  trashCount: Int!
+}
+
 type ForumModeratorAssignment {
   assignedAt: DateTime!
   categoryId: ID!
@@ -840,6 +865,14 @@ type ForumPostAttachment {
   mediaId: ID!
   mimeType: String!
   size: Int!
+}
+
+type ForumPostLocation {
+  number: Int!
+
+  """Page in OLDEST order for the limit."""
+  page: Int!
+  topicId: ID!
 }
 
 type ForumPostModeration {
@@ -1202,6 +1235,9 @@ type FullNews {
 input GiveReputationInput {
   reason: String!
   recipientId: ID!
+
+  """Where the change is made, e.g. a forum post."""
+  source: ReputationSourceInput
   value: Int!
 }
 
@@ -2229,7 +2265,15 @@ type Query {
   forumDiscoverTopics(filter: ForumDiscoverFilter! = ALL, limit: Int! = 10, page: Int! = 1, sort: ForumDiscoverSort! = NEW): ForumTopicPage!
   forumFollowed(forumId: ID!): Boolean!
   forumHubStats: ForumHubStats!
+
+  """
+  Moderator area overview: moderated sections, trash size and the latest moderator actions there. Moderators only.
+  """
+  forumModerationOverview: ForumModerationOverview!
   forumPopularTags(limit: Int! = 12): [ForumPopularTag!]!
+
+  """Topic, number and page of a post the viewer may see."""
+  forumPostLocation(limit: Int! = 20, postId: ID!): ForumPostLocation!
 
   """
   IP address and User-Agent of a post author (forum.network.view; audited). Null when nothing was stored.
@@ -2430,6 +2474,7 @@ type ReputationEntry {
   reason: String!
   recipientId: ID!
   reversal: ReputationReversal
+  source: ReputationSource
   value: Int!
 }
 
@@ -2458,6 +2503,23 @@ type ReputationReversal {
   createdAt: DateTime!
   id: ID!
   reason: String!
+}
+
+type ReputationSource {
+  """true when the source (e.g. post) was deleted."""
+  deleted: Boolean!
+  id: ID!
+  type: ReputationSourceType!
+}
+
+input ReputationSourceInput {
+  id: ID!
+  type: ReputationSourceType!
+}
+
+"""Where a reputation change was made."""
+enum ReputationSourceType {
+  FORUM_POST
 }
 
 input RequestPasswordRecoveryInput {

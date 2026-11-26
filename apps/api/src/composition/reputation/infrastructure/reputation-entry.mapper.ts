@@ -18,7 +18,12 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import type { ReputationActor, ReputationEntry } from '@api/modules/reputation';
+import {
+  REPUTATION_SOURCE_TYPES,
+  type ReputationActor,
+  type ReputationEntry,
+  type ReputationSourceType,
+} from '@api/modules/reputation';
 import type {
   ReputationEntryFact,
   ReputationReversalFact,
@@ -58,5 +63,16 @@ export function composeReputationEntry(
           actor: actor(reversalProfiles, reversed.actorId),
         }
       : null,
+    // `deleted` is filled by the history read; a fresh entry's source exists.
+    source:
+      entry.sourceType &&
+      entry.sourceId &&
+      (REPUTATION_SOURCE_TYPES as readonly string[]).includes(entry.sourceType)
+        ? {
+            type: entry.sourceType as ReputationSourceType,
+            id: entry.sourceId,
+            deleted: false,
+          }
+        : null,
   };
 }

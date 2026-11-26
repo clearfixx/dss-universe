@@ -57,6 +57,8 @@ import type { ForumViewerFacts } from '../domain/types/forum-structure.type';
 import {
   FORUM_POSTING_COOLDOWN_SECONDS,
   type ForumPage,
+  type ForumModerationActionView,
+  type ForumModerationOverview,
   type ForumPostView,
   type ForumTopicKind,
   type ForumStaffNoteView,
@@ -87,6 +89,23 @@ import { FORUM_POST_MEDIA, type ForumPostMedia } from './forum-post-media.port';
 const PRODUCER = 'dss.api.forum';
 const TOPIC_KIND = 'forum.topic';
 const MAX_PAGE = 50;
+const MODERATION_RECENT_LIMIT = 10;
+const MODERATION_SCAN_WINDOW = 200;
+const MODERATION_AUDIT_ACTIONS = [
+  'forum.post_deleted',
+  'forum.post_hidden',
+  'forum.post_restored',
+  'forum.post_purged',
+  'forum.topic_trashed',
+  'forum.topic_restored',
+  'forum.topic_archived',
+  'forum.topic_unarchived',
+  'forum.topic_pinned',
+  'forum.topic_unpinned',
+  'forum.topic_moved',
+  'forum.topic_split',
+  'forum.topic_reopened',
+] as const;
 const MEDIA_NODES = new Set(['mediaReference', 'attachment']);
 const GATE_NODE = 'contentGate';
 
@@ -590,6 +609,93 @@ export class ForumTopicsService implements ForumInteractionDecisions {
     };
   }
 
+  /**
+   * Moderator area overview (/community/moderation): sections in the
+   * viewer's moderation scope, trash size and the latest moderator actions
+   * on topics and posts of those sections. Non-moderators are denied.
+   */
+  async moderationOverview(viewerId: string): Promise<ForumModerationOverview> {
+    const viewer = await this.viewers.read(viewerId, new Date());
+    const moderated = await this.moderatedForumIds(viewer);
+    if (moderated.length === 0) {
+      throw new ForumCommandError(
+        'ACCESS_DENIED',
+        'Only moderators can open the moderator area.',
+      );
+    }
+    const scope = new Set(moderated);
+    const [sections, trashCount, records] = await Promise.all([
+      this.prisma.forum.findMany({
+        where: { id: { in: moderated } },
+        select: { id: true, title: true },
+        orderBy: [{ position: 'asc' }, { title: 'asc' }],
+      }),
+      this.prisma.forumTopic.count({
+        where: {
+          forumId: { in: moderated },
+          state: 'TRASHED',
+          mergedIntoTopicId: null,
+        },
+      }),
+      // Recent window; filtered to the viewer's scope below.
+      this.prisma.auditRecord.findMany({
+        where: { action: { in: [...MODERATION_AUDIT_ACTIONS] } },
+        orderBy: [{ occurredAt: 'desc' }, { id: 'desc' }],
+        take: MODERATION_SCAN_WINDOW,
+        select: {
+          id: true,
+          action: true,
+          actorId: true,
+          targetType: true,
+          targetId: true,
+          occurredAt: true,
+        },
+      }),
+    ]);
+    const postIds = records
+      .filter((r) => r.targetType === 'ForumPost' && r.targetId)
+      .map((r) => r.targetId!);
+    const posts = await this.prisma.forumPost.findMany({
+      where: { id: { in: postIds } },
+      select: { id: true, topicId: true, number: true },
+    });
+    const postById = new Map(posts.map((p) => [p.id, p]));
+    const topicIds = new Set<string>(posts.map((p) => p.topicId));
+    for (const r of records) {
+      if (r.targetType === 'ForumTopic' && r.targetId) topicIds.add(r.targetId);
+    }
+    const topics = await this.prisma.forumTopic.findMany({
+      where: { id: { in: [...topicIds] } },
+      select: { id: true, title: true, forumId: true },
+    });
+    const topicById = new Map(topics.map((t) => [t.id, t]));
+    const recentActions: ForumModerationActionView[] = [];
+    for (const r of records) {
+      if (recentActions.length >= MODERATION_RECENT_LIMIT) break;
+      const post =
+        r.targetType === 'ForumPost' ? postById.get(r.targetId!) : null;
+      const topic = topicById.get(
+        post ? post.topicId : r.targetType === 'ForumTopic' ? r.targetId! : '',
+      );
+      if (!topic || !scope.has(topic.forumId)) continue;
+      recentActions.push({
+        id: r.id,
+        action: r.action.replace(/^forum\./, '').replace('_', '.'),
+        actorId: r.actorId,
+        topicId: topic.id,
+        topicTitle: topic.title,
+        postNumber: post?.number ?? null,
+        occurredAt: r.occurredAt,
+      });
+    }
+    return {
+      allSections: viewer.seesAllCategories || viewer.moderatesAllCategories,
+      sections,
+      trashCount,
+      recentActions,
+    };
+  }
+
   /** Visible sections the viewer moderates (every one for supermoderators). */
   private async moderatedForumIds(viewer: ForumViewerFacts): Promise<string[]> {
     if (viewer.subjectId === null) return [];
@@ -1039,6 +1145,34 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       total,
       page: safePage,
       limit: take,
+    };
+  }
+
+  /**
+   * Where a post lives, for links that only know the post ID (activity
+   * feed). Same visibility as the topic; unknown or hidden → not found.
+   * The page is for the default OLDEST order with the given page size.
+   */
+  async postLocation(
+    viewerId: string | null,
+    postId: string,
+    limit: number,
+  ): Promise<{ topicId: string; number: number; page: number }> {
+    const post = await this.prisma.forumPost.findUnique({
+      where: { id: postId },
+      select: { topicId: true, number: true },
+    });
+    if (!post) this.notFound('Post');
+    const viewer = await this.viewers.read(viewerId, new Date());
+    await this.visibleTopic(post.topicId, viewer);
+    const { take } = this.paging(1, limit);
+    const position = await this.prisma.forumPost.count({
+      where: { topicId: post.topicId, number: { lte: post.number } },
+    });
+    return {
+      topicId: post.topicId,
+      number: post.number,
+      page: Math.max(1, Math.ceil(position / take)),
     };
   }
 
