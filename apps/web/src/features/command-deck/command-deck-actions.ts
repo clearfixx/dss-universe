@@ -28,6 +28,7 @@ import {
   type ForumResult,
 } from "@/features/forum/forum-errors";
 import {
+  AssignForumCategoryModeratorDocument,
   AssignForumModeratorDocument,
   CommandDeckMemberLookupDocument,
   CreateForumCategoryDocument,
@@ -108,6 +109,18 @@ export async function assignForumModerator(
     AssignForumModeratorDocument,
     { categoryId, forumId, moderatorId },
     (d) => d.assignForumModerator.id,
+  );
+}
+
+/** Whole-category moderator (P1 C02); the API checks forum.moderators.assign. */
+export async function assignForumCategoryModerator(
+  categoryId: string,
+  moderatorId: string,
+) {
+  return run(
+    AssignForumCategoryModeratorDocument,
+    { categoryId, moderatorId },
+    (d) => d.assignForumCategoryModerator.id,
   );
 }
 

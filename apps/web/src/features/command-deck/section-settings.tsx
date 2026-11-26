@@ -31,7 +31,6 @@ import {
   Plus,
   Settings2,
   ShieldCheck,
-  Users,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -41,12 +40,7 @@ import { useEffect, useState, useTransition } from "react";
 import type { ForumAccessRole, ForumGateBlockType } from "@/gql/graphql";
 import { cn } from "@/lib/utils";
 
-import {
-  assignForumModerator,
-  lookupMembers,
-  revokeForumModerator,
-  saveForumSettings,
-} from "./command-deck-actions";
+import { saveForumSettings } from "./command-deck-actions";
 import type { AdminModerator, AdminSectionAccess } from "./command-deck-data";
 import {
   LabeledInput,
@@ -66,6 +60,7 @@ import {
   type AccessRow,
   type ForumDraft,
 } from "./community-hub-admin-kit";
+import { ModeratorsCard } from "./moderators-card";
 
 type SectionTab =
   | "basics"
@@ -724,168 +719,5 @@ export function SectionSettings({
         </div>
       )}
     </div>
-  );
-}
-
-function ModeratorsCard({
-  categoryId,
-  forumId,
-  parentId,
-  moderators,
-  onChanged,
-}: {
-  categoryId: string;
-  forumId: string;
-  parentId: string | null;
-  moderators: readonly AdminModerator[];
-  onChanged: () => void;
-}) {
-  const [adding, setAdding] = useState(false);
-  const [term, setTerm] = useState("");
-  const [found, setFound] = useState<
-    ReadonlyArray<{ id: string; username: string; displayName: string | null }>
-  >([]);
-  const [error, setError] = useState<string | null>(null);
-  const [pending, start] = useTransition();
-  const relevant = moderators.filter(
-    (item) =>
-      item.forumId === null ||
-      item.forumId === forumId ||
-      item.forumId === parentId,
-  );
-
-  return (
-    <Card
-      title="Модератори розділу"
-      icon={<Users className="size-5 text-violet-300" aria-hidden="true" />}
-      action={
-        <button
-          type="button"
-          onClick={() => setAdding(!adding)}
-          className="inline-flex h-8 items-center gap-1 rounded-lg bg-violet-600/30 px-2.5 text-xs font-semibold text-violet-100 hover:bg-violet-600/50"
-        >
-          <Plus className="size-3.5" aria-hidden="true" />
-          Призначити
-        </button>
-      }
-    >
-      {adding ? (
-        <div className="mb-3 space-y-2">
-          <form
-            className="flex gap-2"
-            onSubmit={(event) => {
-              event.preventDefault();
-              start(async () => {
-                const result = await lookupMembers(term);
-                setFound(result.ok ? result.data : []);
-                setError(result.ok ? null : result.error.message);
-              });
-            }}
-          >
-            <input
-              aria-label="Пошук учасника"
-              placeholder="Ім'я або @username"
-              value={term}
-              onChange={(event) => setTerm(event.target.value)}
-              className={field}
-            />
-            <button
-              type="submit"
-              className="h-10 rounded-lg border border-white/15 px-3 text-sm"
-            >
-              Знайти
-            </button>
-          </form>
-          <ul className="space-y-1">
-            {found.map((member) => (
-              <li key={member.id}>
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() =>
-                    start(async () => {
-                      const result = await assignForumModerator(
-                        categoryId,
-                        forumId,
-                        member.id,
-                      );
-                      if (!result.ok) return setError(result.error.message);
-                      setAdding(false);
-                      setFound([]);
-                      setTerm("");
-                      onChanged();
-                    })
-                  }
-                  className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm hover:bg-white/[0.05]"
-                >
-                  <span>
-                    {member.displayName || member.username}{" "}
-                    <span className="text-xs text-slate-500">
-                      @{member.username}
-                    </span>
-                  </span>
-                  <span className="text-xs text-violet-300">Призначити</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-          {error ? (
-            <p role="alert" className="text-sm text-rose-300">
-              {error}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
-      {relevant.length === 0 ? (
-        <p className="text-sm text-slate-400">Модераторів ще не призначено.</p>
-      ) : (
-        <ul className="space-y-1">
-          {relevant.map((item) => {
-            const name =
-              item.moderator?.displayName ||
-              item.moderator?.username ||
-              "Учасник";
-            return (
-              <li key={item.id} className="flex items-center gap-3 py-1.5">
-                <span className="flex size-9 items-center justify-center rounded-full bg-primary/25 text-violet-100 text-xs font-bold">
-                  {name.slice(0, 2).toUpperCase()}
-                </span>
-                <span className="min-w-0 flex-1 truncate text-sm font-medium">
-                  {name}
-                </span>
-                <span className="rounded-md bg-violet-600/25 px-2 py-0.5 text-xs text-violet-100">
-                  {item.forumId === null
-                    ? "Модератор категорії"
-                    : item.forumId === forumId
-                      ? "Модератор"
-                      : "Модератор форуму-батька"}
-                </span>
-                {item.forumId === forumId ? (
-                  <button
-                    type="button"
-                    aria-label={`Зняти ${name}`}
-                    disabled={pending}
-                    onClick={() =>
-                      start(async () => {
-                        const result = await revokeForumModerator(item.id);
-                        if (!result.ok) return setError(result.error.message);
-                        onChanged();
-                      })
-                    }
-                    className="rounded-md p-1 text-slate-400 hover:bg-white/[0.06] hover:text-rose-300"
-                  >
-                    <X className="size-4" aria-hidden="true" />
-                  </button>
-                ) : null}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      <p className="mt-3 text-xs text-slate-500">
-        Супермодератори (глобальне право) модерують усі розділи й тут не
-        показуються.
-      </p>
-    </Card>
   );
 }

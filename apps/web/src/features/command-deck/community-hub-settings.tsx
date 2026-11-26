@@ -48,8 +48,10 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 
 import type {
   AdminCategory,
+  AdminModerator,
   AdminSectionAccess,
   CommunityHubAdmin,
+  Supermoderator,
 } from "./command-deck-data";
 import {
   createForum,
@@ -72,6 +74,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import { ForumTagsManager } from "./forum-tags-manager";
+import { ModeratorsCard, SupermoderatorsCard } from "./moderators-card";
 
 type HubTab =
   | "general"
@@ -128,10 +131,15 @@ export function CommunityHubSettings({
   data,
   selected,
   access,
+  moderators = [],
+  supermoderators = [],
 }: {
   data: CommunityHubAdmin;
   selected: Selection;
   access: AdminSectionAccess | null;
+  /** Assignments of the selected category (P1 C02). */
+  moderators?: readonly AdminModerator[];
+  supermoderators?: readonly Supermoderator[];
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<HubTab>("structure");
@@ -747,6 +755,20 @@ export function CommunityHubSettings({
               </ul>
             </Card>
           </div>
+
+          {selected?.kind === "category" ? (
+            <div className="grid gap-5 lg:grid-cols-2">
+              <ModeratorsCard
+                title="Модератори категорії"
+                categoryId={selected.id}
+                forumId={null}
+                parentId={null}
+                moderators={moderators}
+                onChanged={() => router.refresh()}
+              />
+              <SupermoderatorsCard members={supermoderators} />
+            </div>
+          ) : null}
         </>
       ) : tab === "sanctions" ? (
         <Card

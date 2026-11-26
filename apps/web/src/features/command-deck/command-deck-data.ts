@@ -24,6 +24,7 @@ import { cookies } from "next/headers";
 import {
   CommandDeckCommunityHubDocument,
   CommandDeckModeratorsDocument,
+  CommandDeckSupermoderatorsDocument,
   CommandDeckSectionAccessDocument,
 } from "@/gql/graphql";
 import { getClient } from "@/lib/apollo/rsc-client";
@@ -78,4 +79,25 @@ export type AdminSectionAccess = NonNullable<
 >;
 export type AdminModerator = Awaited<
   ReturnType<typeof loadCategoryModerators>
+>[number];
+
+/**
+ * Supermoderators (P1 C02): members of the roles that hold
+ * forum.moderate.all (admin, owner), de-duplicated. Read-only.
+ */
+export async function loadSupermoderators() {
+  const result = await getClient().query({
+    query: CommandDeckSupermoderatorsDocument,
+    context: await authContext(),
+    fetchPolicy: "no-cache",
+  });
+  const all = [
+    ...(result.data?.admins.items ?? []),
+    ...(result.data?.owners.items ?? []),
+  ];
+  return [...new Map(all.map((member) => [member.id, member])).values()];
+}
+
+export type Supermoderator = Awaited<
+  ReturnType<typeof loadSupermoderators>
 >[number];

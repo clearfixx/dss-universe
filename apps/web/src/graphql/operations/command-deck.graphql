@@ -202,3 +202,35 @@ mutation UpdateAdminForumTag($tagId: ID!, $input: ForumTagInput!) {
     active
   }
 }
+
+# P1 C02: whole-category moderators and the read-only supermoderator list
+# (members of the roles that hold forum.moderate.all).
+mutation AssignForumCategoryModerator($categoryId: ID!, $moderatorId: ID!) {
+  assignForumCategoryModerator(
+    categoryId: $categoryId
+    moderatorId: $moderatorId
+  ) {
+    id
+  }
+}
+
+query CommandDeckSupermoderators {
+  admins: members(input: { role: "admin", limit: 50 }) {
+    items {
+      id
+      username
+      displayName
+      avatarUrl
+      roles
+    }
+  }
+  owners: members(input: { role: "owner", limit: 50 }) {
+    items {
+      id
+      username
+      displayName
+      avatarUrl
+      roles
+    }
+  }
+}
