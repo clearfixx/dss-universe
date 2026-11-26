@@ -10,6 +10,9 @@ import {
   loadNewsComments,
   loadNewsNavigation,
 } from "@/features/news/news-data";
+import { loadAdminCommandDeckAccess } from "@/features/auth/admin-access";
+import { loadSessionViewer } from "@/features/auth/session-data";
+import { ForumNewsDiscussion } from "@/features/forum/forum-news-discussion";
 import { NewsComments } from "@/features/news/news-comments";
 import { NewsDocument } from "@/features/news/news-document";
 import { NewsEngagement } from "@/features/news/news-engagement";
@@ -57,10 +60,17 @@ export default async function FullNewsRoute({ params }: Props) {
   const { language, slug } = await params;
   const article = await loadFullNews(language, slug);
   if (!article) notFound();
-  const [navigation, comments] = await Promise.all([
+  const [navigation, comments, viewer] = await Promise.all([
     loadNewsNavigation(article.id),
     article.allowComments ? loadNewsComments(article.id, 1) : null,
+    loadSessionViewer(),
   ]);
+  // P1 A12: the author or administrators may link the forum discussion; the
+  // API re-checks (author or category moderator).
+  const canLinkDiscussion =
+    viewer !== null &&
+    (viewer.username === article.author.username ||
+      (await loadAdminCommandDeckAccess()));
   const articlePath = `/news/${article.language}/${article.slug}`;
   const structuredData = {
     "@context": "https://schema.org",
@@ -83,7 +93,9 @@ export default async function FullNewsRoute({ params }: Props) {
   };
 
   return (
-    <DssApplicationShell pageTitle={{ pathname: articlePath, title: article.title }}>
+    <DssApplicationShell
+      pageTitle={{ pathname: articlePath, title: article.title }}
+    >
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -180,6 +192,11 @@ export default async function FullNewsRoute({ params }: Props) {
             ) : null}
           </aside>
         </div>
+        <ForumNewsDiscussion
+          articleId={article.id}
+          articlePath={`/news/${article.language}/${article.slug}`}
+          canLink={canLinkDiscussion}
+        />
         <NewsAttachments items={article.attachments} />
         <NewsAudience
           interactionTargetId={article.interactionTargetId}

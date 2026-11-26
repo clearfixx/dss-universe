@@ -1,0 +1,33 @@
+# News ↔ forum (P1 A12): the discussion topic linked to a news article and
+# the author/moderator controls to link or unlink it.
+query NewsDiscussion($articleId: ID!) {
+  newsDiscussionTopic(articleId: $articleId) {
+    id
+    forumId
+    title
+    postCount
+    viewCount
+    lastPostAt
+    state
+  }
+}
+
+query ForumTopicPicker($term: String!) {
+  search(term: $term, page: 1, pageSize: 8, source: FORUM) {
+    items {
+      id
+      title
+      publishedAt
+    }
+  }
+}
+
+mutation LinkNewsDiscussion($articleId: ID!, $topicId: ID!) {
+  linkNewsDiscussion(articleId: $articleId, topicId: $topicId) {
+    id
+  }
+}
+
+mutation UnlinkNewsDiscussion($articleId: ID!) {
+  unlinkNewsDiscussion(articleId: $articleId)
+}
