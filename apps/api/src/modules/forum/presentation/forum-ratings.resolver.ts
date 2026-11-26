@@ -181,7 +181,13 @@ export class ForumRatingsResolver {
         case 'CONFLICT':
           throw new ConflictException(error.message);
         case 'RATE_LIMITED':
-          throw new HttpException(error.message, HttpStatus.TOO_MANY_REQUESTS);
+          throw new HttpException(
+            {
+              message: error.message,
+              statusCode: HttpStatus.TOO_MANY_REQUESTS,
+            },
+            HttpStatus.TOO_MANY_REQUESTS,
+          );
       }
     }
   }
