@@ -23,26 +23,26 @@ export function Breadcrumbs({
   const parts = routeTrail ? trail! : breadcrumbsForPath(pathname, pageTitle);
   if (!parts.length) return null;
   return (
-    <nav aria-label="Навігаційний шлях" className="mb-5 text-sm text-slate-400">
+    <nav aria-label="Навігаційний шлях" className="mb-5 text-sm text-muted-foreground">
       <ol className="flex flex-wrap items-center gap-2">
         <li>
           <Link
             href="/"
             aria-label="DSS Universe"
-            className="flex items-center text-violet-300 hover:text-violet-200"
+            className="flex items-center text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
           >
             <Home className="size-4" aria-hidden="true" />
           </Link>
         </li>
         {parts.map((part, index) => (
           <li key={`${part.href}-${index}`} className="flex items-center gap-2">
-            <ChevronRight className="size-3.5 text-slate-500" aria-hidden="true" />
+            <ChevronRight className="size-3.5 text-muted-foreground" aria-hidden="true" />
             {index === parts.length - 1 && (routeTrail || pathname === part.href) ? (
-              <span aria-current="page" className="font-medium text-slate-100">
+              <span aria-current="page" className="font-medium text-foreground">
                 {part.label}
               </span>
             ) : part.href ? (
-              <Link href={part.href} className="text-violet-300 hover:text-violet-200">
+              <Link href={part.href} className="text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring">
                 {part.label}
               </Link>
             ) : (
