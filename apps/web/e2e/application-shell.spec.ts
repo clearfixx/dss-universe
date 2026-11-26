@@ -56,5 +56,7 @@ test("anonymous visitors cannot open administrator Command Deck", async ({ page 
 test("missing news articles return HTTP 404 without duplicate shells", async ({ page }) => {
   const response = await page.goto("/news/uk/dss-e2e-missing-article-7e02a57f");
   expect(response?.status()).toBe(404);
-  await expect(page.locator("[data-shell-variant]")).toHaveCount(1);
+  await expect(page.getByRole("heading", { name: "Сигнал не знайдено" })).toBeVisible();
+  // The existing article not-found page is standalone, not an application shell.
+  await expect(page.locator("[data-shell-variant]")).toHaveCount(0);
 });
