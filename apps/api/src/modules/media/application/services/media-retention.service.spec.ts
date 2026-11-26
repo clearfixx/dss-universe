@@ -12,6 +12,7 @@
  * ===============================================================
  */
 
+import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import type { StorageService } from '@api/core/storage';
@@ -76,5 +77,24 @@ describe('MediaRetentionService', () => {
       'media-1',
       'storage unavailable',
     );
+  });
+
+  it('logs a failed timer run instead of rejecting (keeps the API alive)', async () => {
+    claimCleanupCandidates.mockRejectedValueOnce(
+      new Error('Unable to start a transaction in the given time.'),
+    );
+    const logged = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
+
+    await expect(service.tick()).resolves.toBeUndefined();
+    expect(logged).toHaveBeenCalledWith(
+      expect.stringContaining('Unable to start a transaction'),
+    );
+
+    // The next run is not blocked by the failed one.
+    claimCleanupCandidates.mockResolvedValueOnce([]);
+    await expect(service.runOnce()).resolves.toBe(0);
+    logged.mockRestore();
   });
 });
