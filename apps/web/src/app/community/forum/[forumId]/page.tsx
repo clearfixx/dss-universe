@@ -376,13 +376,16 @@ export default async function ForumSectionRoute({
           </nav>
 
           <div className="flex flex-wrap items-center gap-2">
-            <nav aria-label="Сортування" className="flex flex-wrap gap-2">
+            <nav
+              aria-label="Сортування"
+              className="-mx-1 flex w-full gap-2 overflow-x-auto px-1 pb-1 sm:mx-0 sm:w-auto sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0"
+            >
               {SORTS.map((item) => (
                 <Link
                   key={item.id}
                   href={href({ sort: item.id, page: 1 })}
                   aria-current={item.id === sort ? "page" : undefined}
-                  className={pill(item.id === sort)}
+                  className={`${pill(item.id === sort)} shrink-0 whitespace-nowrap`}
                 >
                   {item.label}
                   {item.id === "HOT" ? (
