@@ -28,6 +28,7 @@ import {
   NewsDiscussionDocument,
   ForumTrashDocument,
   ForumHubDocument,
+  ForumModerationOverviewDocument,
   ForumSectionStateDocument,
   ForumWeeklyTopDocument,
   ForumPostLocationDocument,
@@ -343,4 +344,24 @@ export async function loadForumPostLocation(postId: string) {
     });
     return result.data?.forumPostLocation ?? null;
   });
+}
+
+/** Moderator area overview; "DENIED" for guests and non-moderators. */
+export async function loadForumModerationOverview() {
+  if (!(await hasSession())) return "DENIED" as const;
+  try {
+    const result = await getClient().query({
+      query: ForumModerationOverviewDocument,
+      context: await authContext(),
+      fetchPolicy: "no-cache",
+    });
+    if (!result.data) throw new Error("FORUM_MODERATION_UNAVAILABLE");
+    return result.data.forumModerationOverview;
+  } catch (error) {
+    const code = toForumError(error).code;
+    if (code === "ACCESS_DENIED" || code === "NOT_SIGNED_IN") {
+      return "DENIED" as const;
+    }
+    throw error;
+  }
 }

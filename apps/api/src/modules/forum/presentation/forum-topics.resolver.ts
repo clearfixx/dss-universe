@@ -340,6 +340,34 @@ class ForumPostLocationModel {
   page!: number;
 }
 
+@ObjectType('ForumModeratedSection')
+class ForumModeratedSectionModel {
+  @Field(() => ID) id!: string;
+  @Field() title!: string;
+}
+
+@ObjectType('ForumModerationAction')
+export class ForumModerationActionModel {
+  @Field(() => ID) id!: string;
+  @Field({ description: 'e.g. post.hidden, topic.trashed.' }) action!: string;
+  @Field(() => ID, { nullable: true }) actorId!: string | null;
+  @Field(() => ID) topicId!: string;
+  @Field() topicTitle!: string;
+  @Field(() => Int, { nullable: true }) postNumber!: number | null;
+  @Field() occurredAt!: Date;
+}
+
+@ObjectType('ForumModerationOverview')
+class ForumModerationOverviewModel {
+  @Field({ description: 'Supermoderators and admins moderate every section.' })
+  allSections!: boolean;
+  @Field(() => [ForumModeratedSectionModel])
+  sections!: ForumModeratedSectionModel[];
+  @Field(() => Int) trashCount!: number;
+  @Field(() => [ForumModerationActionModel])
+  recentActions!: ForumModerationActionModel[];
+}
+
 @ObjectType('ForumPostRevision')
 class ForumPostRevisionModel {
   @Field(() => Int) revision!: number;
@@ -409,6 +437,15 @@ export class ForumTopicsResolver {
         kind ?? null,
       ),
     );
+  }
+
+  @Query(() => ForumModerationOverviewModel, {
+    description:
+      'Moderator area overview: moderated sections, trash size and the latest moderator actions there. Moderators only.',
+  })
+  @UseGuards(JwtAuthGuard)
+  forumModerationOverview(@AuthUser() user: AuthenticatedUser) {
+    return this.execute(this.topics.moderationOverview(user.id));
   }
 
   @Query(() => ForumTopicPageModel, {
