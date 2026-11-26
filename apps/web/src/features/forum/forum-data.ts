@@ -25,6 +25,7 @@ import { cache } from "react";
 import {
   CommunitySearchDocument,
   ForumCategoriesDocument,
+  NewsDiscussionDocument,
   ForumTrashDocument,
   ForumHubDocument,
   ForumSectionStateDocument,
@@ -316,3 +317,16 @@ export type ForumTrashPage = Exclude<
   Awaited<ReturnType<typeof loadForumTrash>>,
   "DENIED" | "OUT_OF_SCOPE"
 >;
+
+/** The forum topic linked to a news article as its discussion (P1 A12). */
+export async function loadNewsDiscussion(articleId: string) {
+  return orNull(async () => {
+    const result = await getClient().query({
+      query: NewsDiscussionDocument,
+      variables: { articleId },
+      context: await authContext(),
+      fetchPolicy: "no-cache",
+    });
+    return result.data?.newsDiscussionTopic ?? null;
+  });
+}

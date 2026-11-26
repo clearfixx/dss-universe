@@ -23,6 +23,7 @@ import { loadAdminCommandDeckAccess } from "@/features/auth/admin-access";
 import {
   loadCategoryModerators,
   loadCommunityHubAdmin,
+  loadRankingAdmin,
   loadSectionAccess,
   loadSupermoderators,
 } from "@/features/command-deck/command-deck-data";
@@ -37,7 +38,10 @@ type Props = { searchParams: Promise<{ forum?: string; category?: string }> };
 export default async function CommunityHubAdminPage({ searchParams }: Props) {
   if (!(await loadAdminCommandDeckAccess())) notFound();
   const query = await searchParams;
-  const data = await loadCommunityHubAdmin();
+  const [data, ranking] = await Promise.all([
+    loadCommunityHubAdmin(),
+    loadRankingAdmin(),
+  ]);
   const forumIds = new Set(
     data.forumCategories.flatMap((category) =>
       category.forums.flatMap((forum) => [
@@ -84,6 +88,7 @@ export default async function CommunityHubAdminPage({ searchParams }: Props) {
         access={access}
         moderators={moderators.filter(({ forumId }) => forumId === null)}
         supermoderators={supermoderators}
+        ranking={ranking}
       />
     </CommandDeckFrame>
   );

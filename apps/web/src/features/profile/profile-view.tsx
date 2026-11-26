@@ -64,6 +64,7 @@ import type {
   PublicProfileQuery,
   UserActivityQuery,
 } from "@/gql/graphql";
+import { presentActivity } from "@/features/activity/activity-presenters";
 import { cn } from "@/lib/utils";
 import { useProfileUiStore, type ProfileTab } from "@/stores/profile-ui.store";
 
@@ -117,6 +118,18 @@ function activityLabel(action: string): string {
     "users.profile-wall.post-retracted.v1": "Видалив запис зі стіни",
   };
   return labels[action] ?? action.replaceAll(".", " ");
+}
+
+/** Wall labels stay profile-owned; other modules present their own events. */
+function presentEntry(entry: {
+  module: string;
+  action: string;
+  subjectType: string;
+  subjectId: string;
+}) {
+  return entry.module === "users"
+    ? { title: activityLabel(entry.action), href: null }
+    : presentActivity(entry);
 }
 
 export function ProfileView({
@@ -230,7 +243,9 @@ export function ProfileView({
                 </Button>
               ) : isGuest ? (
                 <Button asChild>
-                  <Link href={`/login?returnTo=${encodeURIComponent(`/profile/${encodeURIComponent(profile.username)}`)}`}>
+                  <Link
+                    href={`/login?returnTo=${encodeURIComponent(`/profile/${encodeURIComponent(profile.username)}`)}`}
+                  >
                     <UserPlus /> Увійти, щоб підписатися
                   </Link>
                 </Button>
@@ -586,7 +601,16 @@ function ActivityFeed({
               </span>
               <div className="min-w-0">
                 <p className="text-sm text-slate-300">
-                  {activityLabel(entry.action)}
+                  {(() => {
+                    const shown = presentEntry(entry);
+                    return shown.href ? (
+                      <Link href={shown.href} className="hover:text-violet-200">
+                        {shown.title}
+                      </Link>
+                    ) : (
+                      shown.title
+                    );
+                  })()}
                 </p>
                 <p className="mt-1 text-xs text-slate-500">
                   {entry.module} · {shortDate(entry.occurredAt)}
