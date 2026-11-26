@@ -17,6 +17,7 @@
  * ===============================================================
  */
 import { Lock } from "lucide-react";
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
@@ -97,9 +98,12 @@ export function ForumStatePanel({
 export function ForumReadOnlyNotice({
   until,
   children,
+  showDetailsLink = true,
 }: {
   until: string | Date;
   children?: ReactNode;
+  /** Link to «Мої санкції»; off on that page itself. */
+  showDetailsLink?: boolean;
 }) {
   const end = new Date(String(until));
   const left = forumDaysLeft(end);
@@ -118,6 +122,17 @@ export function ForumReadOnlyNotice({
         </strong>
         {children ?? "Ти тимчасово можеш лише переглядати контент."}{" "}
         {`Обмеження діє до ${untilFormatter.format(end)} (залишилось ${left} ${daysWord(left)}).`}
+        {showDetailsLink ? (
+          <>
+            {" "}
+            <Link
+              href="/community/my-sanctions"
+              className="font-medium text-white underline"
+            >
+              Мої санкції
+            </Link>
+          </>
+        ) : null}
       </p>
     </div>
   );

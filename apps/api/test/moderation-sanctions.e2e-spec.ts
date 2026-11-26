@@ -423,4 +423,69 @@ describe('Moderation sanctions core (e2e)', () => {
       }),
     ).rejects.toThrow();
   });
+
+  it('lists the staff journal across members with filters (B09)', async () => {
+    const moderator = await user(moderatorPermissions);
+    const first = await user();
+    const second = await user();
+    const kept = await service.issueWarning(actor(moderator), warning(first));
+    const revoked = await service.issueWarning(
+      actor(moderator),
+      warning(second, 'Spam links'),
+    );
+    await service.revoke(actor(moderator), {
+      sanctionId: revoked.sanctionId,
+      reason: 'Issued by mistake',
+    });
+    const readOnly = await service.issueReadOnly(actor(moderator), {
+      ...warning(second, 'Repeated spam'),
+      expiresAt: new Date(Date.now() + 3 * 86_400_000),
+    });
+
+    const all = await service.listForStaff(
+      actor(moderator),
+      { subjectId: null, kind: null, activeOnly: false },
+      1,
+      50,
+    );
+    const ids = all.items.map(({ id }) => id);
+    expect(ids).toEqual(
+      expect.arrayContaining([
+        kept.sanctionId,
+        revoked.sanctionId,
+        readOnly.sanctionId,
+      ]),
+    );
+    expect(ids.indexOf(readOnly.sanctionId)).toBeLessThan(
+      ids.indexOf(kept.sanctionId),
+    );
+
+    const ofSecond = await service.listForStaff(
+      actor(moderator),
+      { subjectId: second, kind: null, activeOnly: true },
+      1,
+      50,
+    );
+    expect(ofSecond.items.map(({ id }) => id)).toEqual([readOnly.sanctionId]);
+
+    const readOnlyOnly = await service.listForStaff(
+      actor(moderator),
+      { subjectId: null, kind: 'READ_ONLY', activeOnly: false },
+      1,
+      50,
+    );
+    expect(readOnlyOnly.items.every(({ kind }) => kind === 'READ_ONLY')).toBe(
+      true,
+    );
+
+    const member = await user();
+    await expect(
+      service.listForStaff(
+        actor(member, []),
+        { subjectId: null, kind: null, activeOnly: false },
+        1,
+        20,
+      ),
+    ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+  });
 });
