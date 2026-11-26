@@ -12,7 +12,14 @@
  * ===============================================================
  */
 
+import type { ReputationSourceRef } from '../../contracts/reputation-source.port';
+
 export type ReputationValue = -1 | 1;
+
+export type ReputationSource = ReputationSourceRef & {
+  /** The source (e.g. forum post) was deleted or is no longer available. */
+  deleted: boolean;
+};
 
 export type ReputationActor = {
   id: string;
@@ -36,6 +43,8 @@ export type ReputationEntry = {
   reason: string;
   createdAt: Date;
   reversal: ReputationReversal | null;
+  /** Where the change was made; null for changes without a source. */
+  source?: ReputationSource | null;
 };
 
 export type ReputationHistory = {
@@ -59,6 +68,8 @@ export type CreateReputationEntry = {
   value: ReputationValue;
   reason: string;
   cooldownStartedAfter: Date;
+  /** With a source the rule is one change per source, not the cooldown. */
+  source?: ReputationSourceRef | null;
 };
 
 /**

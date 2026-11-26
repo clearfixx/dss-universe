@@ -27,6 +27,7 @@
 import { Global, Module } from '@nestjs/common';
 import { AuthModule } from '@api/modules/auth';
 import { UsersModule } from '@api/modules/users';
+import { ForumFactsModule } from '@api/modules/forum';
 import { PrismaModule } from '@api/core/database';
 import { AuditModule } from '@api/core/audit';
 import { EventsModule } from '@api/core/events';
@@ -46,10 +47,12 @@ import {
   REPUTATION_PROFILE_EXISTENCE,
   REPUTATION_ENTRY_READER,
   REPUTATION_WRITE_TRANSACTION,
+  REPUTATION_SOURCE_READER,
 } from '@api/modules/reputation';
 import { ReputationAccountAdapter } from './infrastructure/reputation-account.adapter';
 import { ReputationBlockAdapter } from './infrastructure/reputation-block.adapter';
 import { ReputationProfileAdapter } from './infrastructure/reputation-profile.adapter';
+import { ReputationForumSourceAdapter } from './infrastructure/reputation-forum-source.adapter';
 import { PrismaReputationReadUnit } from './infrastructure/prisma-reputation.read-unit';
 import { PrismaReputationWriteTransaction } from './infrastructure/prisma-reputation-write.transaction';
 import { ReputationQualificationReadModule } from './reputation-qualification-read.module';
@@ -61,6 +64,7 @@ import { ReputationQualificationReadModule } from './reputation-qualification-re
     EventsModule,
     AuthModule,
     UsersModule,
+    ForumFactsModule,
     ReputationModule,
     ReputationQualificationReadModule,
   ],
@@ -81,6 +85,10 @@ import { ReputationQualificationReadModule } from './reputation-qualification-re
       provide: REPUTATION_PROFILE_EXISTENCE,
       useClass: ReputationProfileAdapter,
     },
+    {
+      provide: REPUTATION_SOURCE_READER,
+      useClass: ReputationForumSourceAdapter,
+    },
   ],
   exports: [
     REPUTATION_WRITE_TRANSACTION,
@@ -88,6 +96,7 @@ import { ReputationQualificationReadModule } from './reputation-qualification-re
     REPUTATION_ACCOUNT_READER,
     REPUTATION_BLOCK_READER,
     REPUTATION_PROFILE_EXISTENCE,
+    REPUTATION_SOURCE_READER,
   ],
 })
 export class ReputationIntegrationModule {}

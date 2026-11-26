@@ -41,6 +41,15 @@ export {
   type ReputationAccountEvidence,
 } from './contracts/account-evidence.port';
 export {
+  REPUTATION_SOURCE_READER,
+  REPUTATION_SOURCE_TYPES,
+  reputationSourceKey,
+  type ReputationSourceReader,
+  type ReputationSourceRef,
+  type ReputationSourceStatus,
+  type ReputationSourceType,
+} from './contracts/reputation-source.port';
+export {
   REPUTATION_BLOCK_READER,
   type ReputationBlockReader,
 } from './contracts/block-decision.port';

@@ -2218,6 +2218,9 @@ model ReputationEntry {
   value           Int
   reason          String
   reversesEntryId String?  @unique
+  /// Where the change was made, e.g. FORUM_POST + post id (owner 2026-11-26).
+  sourceType      String?
+  sourceId        String?
   createdAt       DateTime @default(now())
 
   actor     User @relation("ReputationActor", fields: [actorId], references: [id], onDelete: Restrict)
@@ -2235,6 +2238,8 @@ model ReputationEntry {
   @@index([actorId, recipientId, createdAt])
   @@index([createdAt, recipientId])
   @@index([reversesEntryId])
+  /// One change per member per source (e.g. per forum post).
+  @@unique([actorId, sourceType, sourceId])
   @@map("reputation_entries")
 }
 

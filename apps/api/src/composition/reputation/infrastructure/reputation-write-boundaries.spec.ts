@@ -43,6 +43,8 @@ const fact: ReputationEntryFact = {
   recipientId: 'recipient',
   value: 1,
   reason: 'Reason',
+  sourceType: null,
+  sourceId: null,
   createdAt: new Date(0),
 };
 const profile = {

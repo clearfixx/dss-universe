@@ -68,6 +68,7 @@ export class ReputationResolver {
       input.recipientId,
       input.value,
       input.reason,
+      input.source ? { type: input.source.type, id: input.source.id } : null,
     );
   }
 
