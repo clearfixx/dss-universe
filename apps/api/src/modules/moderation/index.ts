@@ -10,3 +10,8 @@ export {
   type ScopedSanctionCommand,
 } from './contracts/sanction-issuer.contract';
 export type { ModerationSanctionKind } from './domain/types/moderation-sanction.type';
+export {
+  MODERATION_MEMBER_CARDS,
+  type ModerationMemberCard,
+  type ModerationMemberCardReader,
+} from './contracts/moderation-member-cards.contract';

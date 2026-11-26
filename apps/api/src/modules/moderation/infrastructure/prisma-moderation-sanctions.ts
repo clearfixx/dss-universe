@@ -260,6 +260,49 @@ export class ModerationSanctionsService
     return this.journal(subjectId, page, limit);
   }
 
+  /**
+   * Staff sanctions journal across members (P1 B09), newest first.
+   * Optional filters: one member, one kind, active sanctions only.
+   */
+  async listForStaff(
+    actor: ModerationActor,
+    filter: {
+      subjectId: string | null;
+      kind: ModerationSanctionKind | null;
+      activeOnly: boolean;
+    },
+    page: number,
+    limit: number,
+    at = new Date(),
+  ): Promise<ModerationJournalPage> {
+    this.require(actor, Permission.ModerationSanctionsView);
+    const safePage = Math.max(1, Math.trunc(page) || 1);
+    const safeLimit = Math.min(
+      MAX_PAGE_SIZE,
+      Math.max(1, Math.trunc(limit) || 20),
+    );
+    const where = {
+      ...(filter.subjectId ? { subjectId: filter.subjectId } : {}),
+      ...(filter.kind ? { kind: filter.kind } : {}),
+      ...(filter.activeOnly ? this.activeWhere(at) : {}),
+    };
+    const [rows, total] = await Promise.all([
+      this.prisma.moderationSanction.findMany({
+        where,
+        orderBy: [{ issuedAt: 'desc' }, { id: 'desc' }],
+        skip: (safePage - 1) * safeLimit,
+        take: safeLimit,
+      }),
+      this.prisma.moderationSanction.count({ where }),
+    ]);
+    return {
+      items: rows.map((row) => this.toRecord(row)),
+      total,
+      page: safePage,
+      limit: safeLimit,
+    };
+  }
+
   async policy(): Promise<ModerationSanctionPolicy> {
     return this.readPolicy(this.prisma);
   }
