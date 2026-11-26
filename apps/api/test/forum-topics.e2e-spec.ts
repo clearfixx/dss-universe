@@ -384,6 +384,55 @@ describe('Forum topics and posts (e2e)', () => {
     ).resolves.toBe(false);
   });
 
+  it('locates a post (topic, number, page) only for viewers who see the topic', async () => {
+    const { forumId } = await forum();
+    const author = await user();
+    const { topic } = await topics.createTopic(author, {
+      forumId,
+      kind: 'DISCUSSION',
+      title: 'Location',
+      documentJson: 'first',
+    });
+    const repliers = await Promise.all(Array.from({ length: 4 }, () => user()));
+    const posts = await Promise.all(
+      repliers.map((id) =>
+        topics.reply(id, {
+          topicId: topic.id,
+          documentJson: 'reply',
+          replyToNumber: null,
+          quotedNumbers: [],
+        }),
+      ),
+    );
+    const last = posts.find(({ number }) => number === 5)!;
+    await expect(topics.postLocation(null, last.id, 2)).resolves.toEqual({
+      topicId: topic.id,
+      number: 5,
+      page: 3,
+    });
+    await expect(topics.postLocation(null, last.id, 20)).resolves.toMatchObject(
+      { page: 1 },
+    );
+    await expect(
+      topics.postLocation(null, randomUUID(), 20),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+
+    const restricted = await forum('RESTRICTED', ['group:premium']);
+    const premium = await user({ audienceKeys: ['group:premium'] });
+    const hidden = await topics.createTopic(premium, {
+      forumId: restricted.forumId,
+      kind: 'DISCUSSION',
+      title: 'Premium location',
+      documentJson: 'first',
+    });
+    await expect(
+      topics.postLocation(null, hidden.firstPostId, 20),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    await expect(
+      topics.postLocation(premium, hidden.firstPostId, 20),
+    ).resolves.toMatchObject({ topicId: hidden.topic.id, number: 1 });
+  });
+
   it('rejects media and hidden-content nodes until CH-3, and empty posts', async () => {
     const { forumId } = await forum();
     const author = await user();

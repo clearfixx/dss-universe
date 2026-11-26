@@ -842,6 +842,14 @@ type ForumPostAttachment {
   size: Int!
 }
 
+type ForumPostLocation {
+  number: Int!
+
+  """Page in OLDEST order for the limit."""
+  page: Int!
+  topicId: ID!
+}
+
 type ForumPostModeration {
   at: DateTime!
   byId: ID!
@@ -2230,6 +2238,9 @@ type Query {
   forumFollowed(forumId: ID!): Boolean!
   forumHubStats: ForumHubStats!
   forumPopularTags(limit: Int! = 12): [ForumPopularTag!]!
+
+  """Topic, number and page of a post the viewer may see."""
+  forumPostLocation(limit: Int! = 20, postId: ID!): ForumPostLocation!
 
   """
   IP address and User-Agent of a post author (forum.network.view; audited). Null when nothing was stored.

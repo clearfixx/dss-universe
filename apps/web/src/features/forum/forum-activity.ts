@@ -11,7 +11,8 @@
  *
  * ⚠️ Important:
  * The feed only delivers subjects the viewer may see (Activity asks Forum).
- * Posts have no own route yet, so ForumPost cards carry no link.
+ * ForumPost cards link to the post permalink, which resolves the topic and
+ * page through the API (and 404s for hidden posts).
  *
  * 🚀 Build. Share. Grow.
  * ===============================================================
@@ -34,13 +35,17 @@ export function forumActivityPresenter(
   const action = item.action.replace(/\.v\d+$/, "");
   const title = TITLES[action];
   if (!title) return null;
-  return {
-    title,
-    href:
-      // Only real topic IDs from the payload; never a guessed route.
-      item.subjectType === "ForumTopic" &&
-      /^[0-9a-f-]{36}$/i.test(item.subjectId)
-        ? `/community/forum/topics/${item.subjectId}`
-        : null,
-  };
+  return { title, href: hrefFor(item) };
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Only real IDs from the payload; never a guessed route. */
+function hrefFor(item: ActivityItemRef): string | null {
+  if (!UUID.test(item.subjectId)) return null;
+  if (item.subjectType === "ForumTopic")
+    return `/community/forum/topics/${item.subjectId}`;
+  if (item.subjectType === "ForumPost")
+    return `/community/forum/posts/${item.subjectId}`;
+  return null;
 }

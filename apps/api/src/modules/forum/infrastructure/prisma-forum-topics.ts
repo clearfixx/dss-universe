@@ -1043,6 +1043,34 @@ export class ForumTopicsService implements ForumInteractionDecisions {
   }
 
   /**
+   * Where a post lives, for links that only know the post ID (activity
+   * feed). Same visibility as the topic; unknown or hidden → not found.
+   * The page is for the default OLDEST order with the given page size.
+   */
+  async postLocation(
+    viewerId: string | null,
+    postId: string,
+    limit: number,
+  ): Promise<{ topicId: string; number: number; page: number }> {
+    const post = await this.prisma.forumPost.findUnique({
+      where: { id: postId },
+      select: { topicId: true, number: true },
+    });
+    if (!post) this.notFound('Post');
+    const viewer = await this.viewers.read(viewerId, new Date());
+    await this.visibleTopic(post.topicId, viewer);
+    const { take } = this.paging(1, limit);
+    const position = await this.prisma.forumPost.count({
+      where: { topicId: post.topicId, number: { lte: post.number } },
+    });
+    return {
+      topicId: post.topicId,
+      number: post.number,
+      page: Math.max(1, Math.ceil(position / take)),
+    };
+  }
+
+  /**
    * One page of posts. Non-chronological sorts keep the first post at the
    * top of page 1 and order only the replies, so a page still holds
    * `take` posts and the total stays the topic post count.
