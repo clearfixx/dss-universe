@@ -37,7 +37,9 @@ export function forumActivityPresenter(
   return {
     title,
     href:
-      item.subjectType === "ForumTopic"
+      // Only real topic IDs from the payload; never a guessed route.
+      item.subjectType === "ForumTopic" &&
+      /^[0-9a-f-]{36}$/i.test(item.subjectId)
         ? `/community/forum/topics/${item.subjectId}`
         : null,
   };
