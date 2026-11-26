@@ -30,6 +30,7 @@ export type ModuleNavigationItem = {
   label: string;
   icon: LucideIcon;
   requiresSession?: boolean;
+  quickAdd?: boolean;
 };
 
 export type ModuleNavigation = ModuleNavigationItem & {
@@ -60,7 +61,7 @@ export const MODULE_NAVIGATION: readonly ModuleNavigation[] = [
     icon: MessagesSquare,
     featured: true,
     children: [
-      { href: "/community/forum/new", label: "Нова тема", icon: PenSquare, requiresSession: true },
+      { href: "/community/forum/new", label: "Нова тема", icon: PenSquare, requiresSession: true, quickAdd: true },
       { href: "/community/following", label: "Мої підписки", icon: BellRing, requiresSession: true },
     ],
   },
@@ -76,7 +77,7 @@ export const MODULE_NAVIGATION: readonly ModuleNavigation[] = [
     label: "Newsroom",
     icon: PenLine,
     requiresSession: true,
-    children: [{ href: "/newsroom/new", label: "Нова стаття", icon: PenLine }],
+    children: [{ href: "/newsroom/new", label: "Нова стаття", icon: PenLine, requiresSession: true, quickAdd: true }],
   },
   {
     href: "/members",
@@ -232,3 +233,11 @@ export const COMING_SOON_MODULES: readonly string[] = [
   "Завантаження",
   "База знань",
 ];
+
+/** Global creation shortcuts are opt-in and never exposed to guests. */
+export function quickAddItems(hasSession: boolean, canAccessAdminDeck = false): readonly ModuleNavigationItem[] {
+  if (!hasSession) return [];
+  return visibleModules(hasSession, canAccessAdminDeck)
+    .flatMap((module) => module.children)
+    .filter((item) => item.quickAdd);
+}

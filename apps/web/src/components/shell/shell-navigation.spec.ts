@@ -12,6 +12,7 @@ import {
   isShellVariant,
   moduleSidebarItems,
   navigationCurrent,
+  quickAddItems,
   routeMatches,
   trustedPageTitle,
   visibleModules,
@@ -199,5 +200,17 @@ describe("contextual navigation session eligibility", () => {
   it("does not select an inaccessible child or admin module", () => {
     expect(currentSidebarHref("/community/following", false, false)).toBe("/community");
     expect(currentSidebarHref("/command-deck", true, false)).toBeNull();
+  });
+});
+
+describe("Quick Add contract", () => {
+  it("exposes no creation actions to guests, even with an admin flag", () => {
+    expect(quickAddItems(false)).toEqual([]);
+    expect(quickAddItems(false, true)).toEqual([]);
+  });
+  it("exposes only registered creation actions to signed-in viewers", () => {
+    const expected = ["/community/forum/new", "/newsroom/new"];
+    expect(quickAddItems(true).map((item) => item.href)).toEqual(expected);
+    expect(quickAddItems(true, true).map((item) => item.href)).toEqual(expected);
   });
 });

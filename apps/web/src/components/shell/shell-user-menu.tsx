@@ -8,13 +8,11 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { logoutAction } from "@/features/auth/auth-actions";
 import type { SessionViewer } from "@/features/auth/session-contract";
-import { visibleModules } from "./shell-navigation";
+import { quickAddItems } from "./shell-navigation";
 import { viewerDisplayName } from "./personal-hub-presentation";
 
 export function ShellQuickAdd({ canAccessAdminDeck }: { canAccessAdminDeck: boolean }) {
-  const actions = visibleModules(true, canAccessAdminDeck)
-    .flatMap((module) => module.children)
-    .filter((item) => item.href === "/community/forum/new" || item.href === "/newsroom/new");
+  const actions = quickAddItems(true, canAccessAdminDeck);
 
   if (!actions.length) return null;
   return (
