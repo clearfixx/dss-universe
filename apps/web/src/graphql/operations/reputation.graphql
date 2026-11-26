@@ -1,0 +1,40 @@
+mutation GiveForumPostReputation($input: GiveReputationInput!) {
+  giveReputation(input: $input) {
+    id
+    value
+  }
+}
+
+query ReputationJournal($userId: ID!, $page: Int!, $limit: Int!) {
+  reputationHistory(
+    userId: $userId
+    pagination: { page: $page, limit: $limit }
+  ) {
+    score
+    total
+    page
+    totalPages
+    items {
+      id
+      value
+      reason
+      createdAt
+      actor {
+        id
+        username
+        displayName
+        avatarUrl
+      }
+      reversal {
+        id
+        reason
+        createdAt
+      }
+      source {
+        type
+        id
+        deleted
+      }
+    }
+  }
+}

@@ -30,6 +30,8 @@ const entrySelect = {
   recipientId: true,
   value: true,
   reason: true,
+  sourceType: true,
+  sourceId: true,
   createdAt: true,
 } as const;
 

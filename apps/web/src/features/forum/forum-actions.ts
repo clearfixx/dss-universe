@@ -25,6 +25,8 @@ import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
 import {
   AcceptForumAnswerDocument,
+  GiveForumPostReputationDocument,
+  ReputationJournalDocument,
   AddForumStaffNoteDocument,
   ArchiveForumTopicDocument,
   AttachForumTopicPollDocument,
@@ -537,5 +539,44 @@ export async function getForumSectionTags(forumId: string) {
     return (await loadForumTags(forumId))
       .filter((tag) => tag.active)
       .map(({ id, slug, label }) => ({ id, slug, label }));
+  });
+}
+
+// ── Member reputation (owner 2026-11-26) ───────────────────────
+
+/** Changes the post author's reputation from that post, with a reason. */
+export async function giveForumPostReputation(
+  postId: string,
+  recipientId: string,
+  value: 1 | -1,
+  reason: string,
+  revalidate?: string,
+) {
+  return run(
+    GiveForumPostReputationDocument,
+    {
+      input: {
+        recipientId,
+        value,
+        reason: reason.trim(),
+        source: { type: "FORUM_POST", id: postId },
+      },
+    },
+    (d) => d.giveReputation,
+    revalidate,
+  );
+}
+
+/** Public reputation journal of a member (signed-in readers). */
+export async function getReputationJournal(userId: string, page = 1) {
+  return forumResult(async () => {
+    const result = await getClient().query({
+      query: ReputationJournalDocument,
+      variables: { userId, page, limit: 20 },
+      context: await signedIn(),
+      fetchPolicy: "no-cache",
+    });
+    if (!result.data) throw new Error("Reputation journal is unavailable.");
+    return result.data.reputationHistory;
   });
 }

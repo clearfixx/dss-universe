@@ -10,7 +10,8 @@
  *
  * 🧠 Responsibilities:
  * • validates actor, recipient, reason and account age;
- * • enforces one actor-to-recipient decision per rolling 24 hours;
+ * • enforces one actor-to-recipient decision per rolling 24 hours, or one
+ *   decision per source (e.g. forum post) when a source is given;
  * • appends compensating reversals without mutating history;
  * • exposes public, explainable reputation history.
  *
@@ -42,6 +43,13 @@ import {
 } from '../../contracts/profile-existence.port';
 
 import {
+  REPUTATION_SOURCE_READER,
+  reputationSourceKey,
+  type ReputationSourceReader,
+  type ReputationSourceRef,
+} from '../../contracts/reputation-source.port';
+
+import {
   REPUTATION_REPOSITORY,
   type ReputationRepository,
 } from '../../domain/repositories/reputation.repository.interface';
@@ -67,6 +75,8 @@ export class ReputationService {
     private readonly blocks: ReputationBlockReader,
     @Inject(REPUTATION_PROFILE_EXISTENCE)
     private readonly profiles: ReputationProfileExistence,
+    @Inject(REPUTATION_SOURCE_READER)
+    private readonly sources: ReputationSourceReader,
   ) {}
 
   getPolicy(): Promise<ReputationPolicy> {
@@ -94,7 +104,19 @@ export class ReputationService {
     recipientId: string,
     value: ReputationValue,
     reason: string,
+    source: ReputationSourceRef | null = null,
   ): Promise<ReputationEntry> {
+    if (source) {
+      const author = await this.sources.recipientOf(actorId, source);
+      if (!author) {
+        throw new NotFoundException('Reputation source not found.');
+      }
+      if (author !== recipientId) {
+        throw new BadRequestException(
+          'The recipient must be the author of the source.',
+        );
+      }
+    }
     if (actorId === recipientId) {
       throw new BadRequestException('You cannot change your own reputation.');
     }
@@ -133,10 +155,13 @@ export class ReputationService {
       value,
       reason: cleanReason,
       cooldownStartedAfter: new Date(Date.now() - REPUTATION_COOLDOWN_MS),
+      source,
     });
     if (!entry) {
       throw new ConflictException(
-        'You may rate this user only once per rolling 24 hours.',
+        source
+          ? 'You have already changed reputation for this post.'
+          : 'You may rate this user only once per rolling 24 hours.',
       );
     }
     return entry;
@@ -175,7 +200,28 @@ export class ReputationService {
     if (!(await this.profiles.exists(recipientId))) {
       throw new NotFoundException('Reputation recipient not found.');
     }
-    return this.reputation.history(recipientId, page, limit);
+    const history = await this.reputation.history(recipientId, page, limit);
+    const refs = history.items.flatMap((item) =>
+      item.source ? [item.source] : [],
+    );
+    if (refs.length === 0) return history;
+    const statuses = await this.sources.statuses(refs);
+    return {
+      ...history,
+      items: history.items.map((item) =>
+        item.source
+          ? {
+              ...item,
+              source: {
+                ...item.source,
+                deleted:
+                  statuses.get(reputationSourceKey(item.source)) !==
+                  'AVAILABLE',
+              },
+            }
+          : item,
+      ),
+    };
   }
 
   private reason(value: string): string {

@@ -43,6 +43,8 @@ const fact: ReputationEntryFact = {
   recipientId: 'recipient',
   value: 1,
   reason: 'Reason',
+  sourceType: null,
+  sourceId: null,
   createdAt: new Date(0),
 };
 const profile = {
@@ -59,6 +61,7 @@ const response: ReputationEntry = {
   reason: fact.reason,
   createdAt: fact.createdAt,
   reversal: null,
+  source: null,
 };
 const input: CreateReputationEntry = {
   actorId: 'actor',
@@ -132,6 +135,8 @@ describe('Owned Reputation writer', () => {
         recipientId: 'recipient',
         value: 1,
         reason: 'Reason',
+        sourceType: null,
+        sourceId: null,
       },
       select: {
         id: true,
@@ -139,6 +144,8 @@ describe('Owned Reputation writer', () => {
         recipientId: true,
         value: true,
         reason: true,
+        sourceType: true,
+        sourceId: true,
         createdAt: true,
       },
     });
@@ -162,6 +169,38 @@ describe('Owned Reputation writer', () => {
         metadata: { recipientId: 'recipient', value: 1 },
       }),
     );
+  });
+  it('with a source: locks the source, allows one change per source and stores it', async () => {
+    const h = harness();
+    const source = { type: 'FORUM_POST' as const, id: 'post-1' };
+    await h.writer.createDirect(h.transaction, { ...input, source }, h.project);
+    expect(h.lock).toHaveBeenCalledWith(
+      expect.any(Array),
+      'reputation-source:actor:FORUM_POST:post-1',
+    );
+    expect(h.delegate.findFirst).toHaveBeenCalledWith({
+      where: { actorId: 'actor', sourceType: 'FORUM_POST', sourceId: 'post-1' },
+      select: { id: true },
+    });
+    expect(h.delegate.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          sourceType: 'FORUM_POST',
+          sourceId: 'post-1',
+        }) as unknown,
+      }),
+    );
+
+    const again = harness();
+    again.delegate.findFirst.mockResolvedValue({ id: 'earlier' });
+    expect(
+      await again.writer.createDirect(
+        again.transaction,
+        { ...input, source },
+        again.project,
+      ),
+    ).toBeNull();
+    expect(again.delegate.create).not.toHaveBeenCalled();
   });
   it('returns null for a recent original without INSERT, display lookup or evidence', async () => {
     const h = harness();

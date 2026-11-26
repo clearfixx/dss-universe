@@ -15,6 +15,7 @@ import type { ReputationRepository } from '../../domain/repositories/reputation.
 import type { ReputationAccountReader } from '../../contracts/account-evidence.port';
 import type { ReputationBlockReader } from '../../contracts/block-decision.port';
 import type { ReputationProfileExistence } from '../../contracts/profile-existence.port';
+import type { ReputationSourceReader } from '../../contracts/reputation-source.port';
 import type { ReputationEntry } from '../../domain/types/reputation.type';
 import { ReputationService } from './reputation.service';
 const actor = { active: true, createdAt: new Date('2025-01-01T00:00:00.000Z') };
@@ -51,7 +52,17 @@ describe('ReputationService', () => {
   const profiles = {
     exists: jest.fn(),
   } satisfies jest.Mocked<ReputationProfileExistence>;
-  const service = new ReputationService(repository, accounts, blocks, profiles);
+  const sources = {
+    recipientOf: jest.fn(),
+    statuses: jest.fn(),
+  } satisfies jest.Mocked<ReputationSourceReader>;
+  const service = new ReputationService(
+    repository,
+    accounts,
+    blocks,
+    profiles,
+    sources,
+  );
   beforeEach(() => {
     jest.resetAllMocks();
     repository.policy.mockResolvedValue({

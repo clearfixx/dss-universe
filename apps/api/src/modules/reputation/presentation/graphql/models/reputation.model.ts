@@ -18,7 +18,28 @@ import {
   ID,
   Int,
   ObjectType,
+  registerEnumType,
 } from '@nestjs/graphql';
+
+export enum ReputationSourceTypeEnum {
+  FORUM_POST = 'FORUM_POST',
+}
+registerEnumType(ReputationSourceTypeEnum, {
+  name: 'ReputationSourceType',
+  description: 'Where a reputation change was made.',
+});
+
+@ObjectType('ReputationSource')
+export class ReputationSourceModel {
+  @Field(() => ReputationSourceTypeEnum)
+  type!: ReputationSourceTypeEnum;
+
+  @Field(() => ID)
+  id!: string;
+
+  @Field({ description: 'true when the source (e.g. post) was deleted.' })
+  deleted!: boolean;
+}
 
 @ObjectType('ReputationActor')
 export class ReputationActorModel {
@@ -72,6 +93,9 @@ export class ReputationEntryModel {
 
   @Field(() => ReputationReversalModel, { nullable: true })
   reversal!: ReputationReversalModel | null;
+
+  @Field(() => ReputationSourceModel, { nullable: true })
+  source!: ReputationSourceModel | null;
 }
 
 @ObjectType('ReputationHistory')
