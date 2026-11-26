@@ -8,6 +8,25 @@ type EditorNode = {
   content?: EditorNode[];
 };
 
+/**
+ * Full News returns the canonical editor envelope
+ * `{ schemaVersion, profile, content: { type: "doc", … } }`; legacy documents
+ * are the bare root node. Both render from the root node.
+ */
+export function rootNode(parsed: unknown): EditorNode {
+  if (
+    parsed &&
+    typeof parsed === "object" &&
+    "content" in parsed &&
+    parsed.content &&
+    typeof parsed.content === "object" &&
+    !Array.isArray(parsed.content)
+  ) {
+    return parsed.content as EditorNode;
+  }
+  return parsed as EditorNode;
+}
+
 function textNode(node: EditorNode, key: string): ReactNode {
   let content: ReactNode = node.text ?? "";
   for (const [index, mark] of (node.marks ?? []).entries()) {
@@ -80,7 +99,7 @@ function renderNode(node: EditorNode, key: string): ReactNode {
 export function NewsDocument({ documentJson }: { documentJson: string }) {
   let document: EditorNode;
   try {
-    document = JSON.parse(documentJson) as EditorNode;
+    document = rootNode(JSON.parse(documentJson));
   } catch {
     return <p>Не вдалося відобразити текст цієї новини.</p>;
   }
