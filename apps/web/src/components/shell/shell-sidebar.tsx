@@ -16,11 +16,11 @@ export function SidebarNavigation({ pathname, hasSession, canAccessAdminDeck, on
   const currentHref = currentSidebarHref(pathname, hasSession, canAccessAdminDeck);
   return (
     <nav aria-label={`Розділи: ${active.label}`} className="space-y-1">
-      <p className="px-3 py-2 text-xs font-medium text-slate-400">{active.label}</p>
+      <p className="px-3 py-2 text-xs font-medium text-muted-foreground">{active.label}</p>
       {sections.map(({ href, label, icon: Icon }) => (
         <Link key={href} href={href} onClick={onNavigate}
           aria-current={currentHref === href ? navigationCurrent(pathname, href) : undefined}
-          className={cn("flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-slate-300 hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-violet-400", currentHref === href && "bg-violet-500/15 text-violet-100")}>
+          className={cn("flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline-2 focus-visible:outline-ring", currentHref === href && "bg-primary/10 text-foreground")}>
           <Icon className="size-4 shrink-0" aria-hidden="true" />
           {label}
         </Link>
@@ -34,7 +34,7 @@ export function ModuleNavigation({ pathname, hasSession, canAccessAdminDeck, onN
     <nav aria-label="Модулі DSS Universe" className="space-y-1">
       {visibleModules(hasSession, canAccessAdminDeck).map(({ href, label, icon: Icon }) => (
         <Link key={href} href={href} onClick={onNavigate} aria-current={navigationCurrent(pathname, href)}
-          className="flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-slate-300 hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-violet-400">
+          className="flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline-2 focus-visible:outline-ring">
           <Icon className="size-4 shrink-0" aria-hidden="true" />
           {label}
         </Link>
