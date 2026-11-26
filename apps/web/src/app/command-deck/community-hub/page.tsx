@@ -21,8 +21,10 @@ import { notFound } from "next/navigation";
 import { CommandDeckFrame } from "@/components/command-deck/command-deck-frame";
 import { loadAdminCommandDeckAccess } from "@/features/auth/admin-access";
 import {
+  loadCategoryModerators,
   loadCommunityHubAdmin,
   loadSectionAccess,
+  loadSupermoderators,
 } from "@/features/command-deck/command-deck-data";
 import { CommunityHubSettings } from "@/features/command-deck/community-hub-settings";
 
@@ -58,6 +60,14 @@ export default async function CommunityHubAdminPage({ searchParams }: Props) {
           : { categoryId: selected.id },
       )
     : null;
+  // P1 C02: whole-category moderators and the global supermoderator list.
+  const [moderators, supermoderators] =
+    selected?.kind === "category"
+      ? await Promise.all([
+          loadCategoryModerators(selected.id),
+          loadSupermoderators(),
+        ])
+      : [[], []];
 
   return (
     <CommandDeckFrame
@@ -72,6 +82,8 @@ export default async function CommunityHubAdminPage({ searchParams }: Props) {
         data={data}
         selected={selected}
         access={access}
+        moderators={moderators.filter(({ forumId }) => forumId === null)}
+        supermoderators={supermoderators}
       />
     </CommandDeckFrame>
   );
