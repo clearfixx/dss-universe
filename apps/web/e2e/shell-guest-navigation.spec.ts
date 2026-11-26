@@ -135,10 +135,13 @@ test("mobile search remains usable at 320px and supports keyboard dismissal", as
   await trigger.click();
   const dialog = page.getByRole("dialog", { name: "Пошук у спільноті" });
   await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("searchbox")).toBeFocused();
   await dialog.getByRole("searchbox").fill("Next.js");
   await page.keyboard.press("Escape");
   await expect(dialog).not.toBeVisible();
-  await trigger.click();
+  await expect(trigger).toBeFocused();
+  await page.keyboard.press("Control+k");
+  await expect(dialog.getByRole("searchbox")).toBeFocused();
   await dialog.getByRole("searchbox").fill("Next.js");
   await dialog.getByRole("button", { name: "Знайти" }).click();
   await expect(page).toHaveURL(/community\/search\?q=Next.js/);
