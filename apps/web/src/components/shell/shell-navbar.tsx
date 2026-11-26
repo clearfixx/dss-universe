@@ -4,7 +4,7 @@ import { ChevronDown, Menu } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { COMING_SOON_MODULES, visibleModules, navigationCurrent, routeMatches, type ShellVariant } from "./shell-navigation";
+import { visibleModules, navigationCurrent, routeMatches, type ShellVariant } from "./shell-navigation";
 
 export function GlobalNavigation({
   pathname,
@@ -28,7 +28,7 @@ export function GlobalNavigation({
   return (
     <div className="hidden min-w-0 items-stretch gap-1 self-stretch lg:flex">
       {variant !== "MODULE_LAUNCHER" && (
-        <nav aria-label="Глобальна навігація" className="flex min-w-0 items-stretch gap-0.5 overflow-x-auto">
+        <nav aria-label="Глобальна навігація" className="flex min-w-0 max-w-full items-stretch gap-0.5 overflow-x-auto overscroll-x-contain [scrollbar-width:thin]">
           {inline.map(({ href, label }) => (
             <Link
               key={href}
@@ -44,16 +44,6 @@ export function GlobalNavigation({
             >
               {label}
             </Link>
-          ))}
-          {COMING_SOON_MODULES.map((label) => (
-            <span
-              key={label}
-              title="Скоро"
-              aria-disabled="true"
-              className="inline-flex shrink-0 cursor-default items-center border-b-2 border-transparent px-3 text-sm text-slate-500"
-            >
-              {label}
-            </span>
           ))}
         </nav>
       )}
