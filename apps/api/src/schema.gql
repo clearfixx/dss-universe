@@ -1540,6 +1540,14 @@ enum ModerationAnnotationKind {
   WARNING
 }
 
+"""Public identity in the staff sanctions journal."""
+type ModerationMember {
+  avatarUrl: String
+  displayName: String
+  id: ID!
+  username: String!
+}
+
 input ModerationPageInput {
   limit: Int! = 20
   page: Int! = 1
@@ -2279,6 +2287,11 @@ type Query {
   moderationSanctionJournal(limit: Int! = 20, page: Int! = 1, subjectId: ID!): StaffSanctionJournal!
   moderationSanctionPolicy: ModerationSanctionPolicy!
   moderationSanctionStatus(subjectId: ID!): ModerationSanctionStatus!
+
+  """
+  Staff sanctions journal across members, newest first. Optional filters: member, kind, active only.
+  """
+  moderationSanctions(activeOnly: Boolean! = false, kind: ModerationSanctionKind, limit: Int! = 20, page: Int! = 1, subjectId: ID): StaffSanctionJournal!
   news(input: NewsBrowseInput): NumberedNewsPage!
   newsComments(articleId: ID!, page: Int! = 1, pageSize: Int): NewsCommentsPage!
   newsDiscussionTopic(articleId: ID!): ForumTopic
@@ -2837,6 +2850,9 @@ type StaffSanction {
   expiresAt: DateTime!
   id: ID!
   issuedAt: DateTime!
+
+  """Issuing staff member; null for automatic escalations."""
+  issuer: ModerationMember
   issuerId: ID
   kind: ModerationSanctionKind!
   origin: ModerationSanctionOrigin!
@@ -2844,6 +2860,9 @@ type StaffSanction {
   revokeReason: String
   revokedAt: DateTime
   revokedById: ID
+
+  """Sanctioned member; filled by journal queries."""
+  subject: ModerationMember
   subjectId: ID!
 }
 

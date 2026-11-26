@@ -1,0 +1,83 @@
+# Sanctions journal (P1 B09): staff view across members and the member's
+# own view. The API enforces moderation.sanctions.view for staff queries.
+fragment StaffSanctionFields on StaffSanction {
+  id
+  kind
+  origin
+  reason
+  issuedAt
+  expiresAt
+  active
+  revokedAt
+  revokeReason
+  consumedAt
+  subjectId
+  issuerId
+  subject {
+    id
+    username
+    displayName
+    avatarUrl
+  }
+  issuer {
+    id
+    username
+    displayName
+    avatarUrl
+  }
+}
+
+query StaffSanctions(
+  $page: Int!
+  $limit: Int!
+  $subjectId: ID
+  $kind: ModerationSanctionKind
+  $activeOnly: Boolean!
+) {
+  moderationSanctions(
+    page: $page
+    limit: $limit
+    subjectId: $subjectId
+    kind: $kind
+    activeOnly: $activeOnly
+  ) {
+    total
+    page
+    limit
+    items {
+      ...StaffSanctionFields
+    }
+  }
+}
+
+query ViewerSanctions($page: Int!, $limit: Int!) {
+  viewerSanctionStatus {
+    activeWarnings
+    readOnlyUntil
+  }
+  viewerSanctionJournal(page: $page, limit: $limit) {
+    total
+    page
+    limit
+    items {
+      id
+      kind
+      origin
+      reason
+      issuedAt
+      expiresAt
+      active
+      revokedAt
+      revokeReason
+      consumedAt
+    }
+  }
+}
+
+mutation RevokeStaffSanction($input: RevokeModerationSanctionInput!) {
+  revokeModerationSanction(input: $input) {
+    id
+    active
+    revokedAt
+  }
+}
