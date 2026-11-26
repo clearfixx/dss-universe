@@ -9,7 +9,7 @@
  *
  * 🎯 Purpose:
  * Application shell in the owner's mockup layout: a fixed left sidebar
- * (logo, modules, the active module's sections), a top bar with module tabs,
+ * (logo and the active module's sections), a top bar with module tabs,
  * search and the user menu, and violet breadcrumbs with a home icon.
  *
  * ⚠️ Important:
@@ -17,7 +17,7 @@
  * guards remain authoritative. Route owners may pass a deeper, trusted
  * breadcrumb trail (e.g. forum category › section › topic).
  *
- * 🚀 Build. Share. Grow.
+ * 🚀 Build. Inspire. Grow.
  * ===============================================================
  */
 import { Menu } from "lucide-react";
@@ -46,7 +46,7 @@ import { GlobalNavigation } from "./shell-navbar";
 import { SidebarNavigation } from "./shell-sidebar";
 import { ShellSearch } from "./shell-search";
 import { ShellMobileNavigation } from "./shell-mobile-navigation";
-import { ShellUserMenu } from "./shell-user-menu";
+import { ShellQuickAdd, ShellUserMenu } from "./shell-user-menu";
 
 export { Breadcrumbs, type TrustedBreadcrumb } from "./shell-breadcrumbs";
 export { GlobalNavigation } from "./shell-navbar";
@@ -100,14 +100,14 @@ export function DssApplicationShell({
             canAccessAdminDeck={canAccessAdminDeck}
           />
         </div>
-        <div className="m-3 rounded-xl bg-white/[0.04] px-4 py-3 text-xs leading-5 text-slate-400">
-          <p className="font-semibold text-slate-200">DSS Universe</p>
+        <div className="m-3 rounded-xl bg-muted/40 px-4 py-3 text-xs leading-5 text-muted-foreground">
+          <p className="font-semibold text-foreground">DSS Universe</p>
           <p>Build. Inspire. Grow.</p>
         </div>
       </aside>
 
       <div className="lg:pl-60">
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)] px-4 sm:px-6">
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-1.5 sm:gap-3 border-b border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)] px-2 sm:px-6">
           <Button
             variant="ghost"
             size="icon"
@@ -131,8 +131,9 @@ export function DssApplicationShell({
             launcherOpen={open}
             onOpenLauncher={() => setOpen(true)}
           />
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-2">
             <ShellSearch />
+            {hasSession ? <ShellQuickAdd canAccessAdminDeck={canAccessAdminDeck} /> : null}
             <ShellUserMenu viewer={viewer} pathname={pathname} canAccessAdminDeck={canAccessAdminDeck} />
           </div>
         </header>
