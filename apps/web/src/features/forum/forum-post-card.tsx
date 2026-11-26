@@ -21,7 +21,6 @@ import {
   CheckCircle2,
   EyeOff,
   Paperclip,
-  ShieldCheck,
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
@@ -31,6 +30,9 @@ import type { ForumPostFieldsFragment } from "@/gql/graphql";
 import { ForumDocument } from "./forum-document";
 import { canEditForumPost, forumMemberName } from "./forum-format";
 import { ForumPostEditor } from "./forum-post-editor";
+import { ForumPostHistory } from "./forum-post-history";
+import { ForumStaffNote } from "./forum-staff-note";
+import { staffTagRoles } from "./forum-staff-tags-model";
 import { ForumAuthorReputation } from "./forum-author-reputation";
 import { ForumPostRating } from "./forum-post-rating";
 import { ForumPostActionBar } from "./forum-post-action-bar";
@@ -51,13 +53,6 @@ const TOMBSTONE: Record<string, string> = {
   HIDDEN: "Допис приховано модератором.",
   DELETED: "Допис видалено модератором.",
   PURGED: "Допис остаточно видалено адміністратором.",
-};
-
-const ROLE: Record<string, string> = {
-  CURATOR: "Куратор",
-  MODERATOR: "Модератор",
-  SUPERMODERATOR: "Супермодератор",
-  ADMINISTRATOR: "Адміністратор",
 };
 
 function Initials({ name }: { name: string }) {
@@ -90,6 +85,7 @@ export function ForumPostCard({
     moderate: boolean;
     purge: boolean;
     acceptAnswer: boolean;
+    staffRole?: string | null;
   }>;
   post: ForumPostFieldsFragment;
   topicAuthorId: string;
@@ -294,6 +290,7 @@ export function ForumPostCard({
                   post={{ ...post, documentJson: post.documentJson }}
                   topicTitle={topicTitle}
                   path={path}
+                  staffRoles={staffTagRoles(abilities.staffRole)}
                 >
                   <ForumDocument documentJson={post.documentJson} />
                 </ForumPostEditor>
@@ -338,26 +335,6 @@ export function ForumPostCard({
             </div>
           )}
 
-          {post.staffNotes.map((note) => (
-            <aside
-              key={note.id}
-              className="flex gap-3 rounded-lg bg-violet-500/10 p-3 ring-1 ring-violet-500/25"
-            >
-              <ShieldCheck
-                className="mt-0.5 size-5 shrink-0 text-violet-300"
-                aria-hidden="true"
-              />
-              <div className="space-y-1 text-sm">
-                <p className="font-semibold text-violet-100">
-                  Мітка: {ROLE[note.role] ?? "Модератор"}
-                </p>
-                <p className="whitespace-pre-line text-slate-200">
-                  {note.body}
-                </p>
-              </div>
-            </aside>
-          ))}
-
           {post.attachments.length ? (
             <ul className="flex flex-wrap gap-2">
               {post.attachments.map((file) => (
@@ -375,6 +352,19 @@ export function ForumPostCard({
                 </li>
               ))}
             </ul>
+          ) : null}
+
+          {post.staffNotes.map((note) => (
+            <ForumStaffNote key={note.id} note={note} />
+          ))}
+
+          {post.editedAt ? (
+            <ForumPostHistory
+              postId={post.id}
+              postNumber={post.number}
+              editor={post.lastEditor ?? null}
+              editedAt={post.editedAt}
+            />
           ) : null}
 
           {visible ? <div className="pt-1">{rating}</div> : null}

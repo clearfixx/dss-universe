@@ -841,6 +841,12 @@ type ForumPost {
   editedAt: DateTime
   id: ID!
 
+  """Who made the latest edit; null when never edited."""
+  lastEditor: ForumMember
+
+  """Who made the latest edit; null when never edited."""
+  lastEditorId: ID
+
   """Returned to staff of the topic only."""
   moderation: ForumPostModeration
   number: Int!
@@ -912,7 +918,13 @@ type ForumPostRating {
 
 type ForumPostRevision {
   createdAt: DateTime!
+  editor: ForumMember
   editorId: ID!
+
+  """
+  Unformatted text of this revision; only the post author and topic staff.
+  """
+  plainText: String
   revision: Int!
 }
 
@@ -1189,6 +1201,9 @@ type ForumTopicViewerAbilities {
   Signed in and the topic is open; read-only mode is reported by viewerSanctionStatus.
   """
   reply: Boolean!
+
+  """Role the viewer signs staff notes with in this topic."""
+  staffRole: ForumStaffRole
 }
 
 enum ForumViewerCollection {
@@ -1639,7 +1654,7 @@ type ModerationSanctionStatus {
 type Mutation {
   abortMediaUpload(id: String!): MediaUploadSession!
   acceptForumAnswer(postId: ID!, topicId: ID!): ForumTopic!
-  addForumStaffNote(body: String!, postId: ID!): ForumStaffNote!
+  addForumStaffNote(body: String!, postId: ID!, role: ForumStaffRole): ForumStaffNote!
   approveNews(input: NewsDecisionInput!): NewsEditorialTransition!
   archiveForumTopic(topicId: ID!): ForumTopic!
   archiveResearchPage(input: ResearchLifecycleInput!): Boolean!

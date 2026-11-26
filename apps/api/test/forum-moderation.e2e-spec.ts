@@ -209,6 +209,57 @@ describe('Forum moderation (e2e)', () => {
     expect(notes.map(({ body }) => body)).toEqual(['Please stay on topic.']);
   });
 
+  it('signs staff notes with the own role; administrators may pick any role', async () => {
+    const s = await scene();
+    await expect(
+      moderation.addStaffNote(
+        s.moderator,
+        s.reply.id,
+        'Not mine.',
+        'ADMINISTRATOR',
+      ),
+    ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+    const own = await moderation.addStaffNote(
+      s.moderator,
+      s.reply.id,
+      'Moderator tag.',
+      'MODERATOR',
+    );
+    expect(own.role).toBe('MODERATOR');
+    const picked = await moderation.addStaffNote(
+      s.admin,
+      s.reply.id,
+      'Curator tag by admin.',
+      'CURATOR',
+    );
+    expect(picked.role).toBe('CURATOR');
+  });
+
+  it('reports the last editor and hides old texts from strangers', async () => {
+    const s = await scene();
+    await topics.editPost(s.replier, {
+      postId: s.reply.id,
+      expectedRevision: 1,
+      documentJson: 'edited reply',
+    });
+    const post = (await topics.posts(null, s.topic.id, 1, 20)).items[1];
+    expect(post.lastEditorId).toBe(s.replier);
+    const own = await topics.revisions(s.replier, s.reply.id);
+    expect(own.map(({ plainText }) => plainText)).toEqual([
+      'Text secret reply',
+      'Text edited reply',
+    ]);
+    const staff = await topics.revisions(s.moderator, s.reply.id);
+    expect(staff[0].plainText).toBe('Text secret reply');
+    const stranger = await topics.revisions(s.author, s.reply.id);
+    expect(
+      stranger.map(({ revision, plainText }) => [revision, plainText]),
+    ).toEqual([
+      [1, null],
+      [2, null],
+    ]);
+  });
+
   it('archives, trashes and restores topics; trash is visible to moderators only', async () => {
     const s = await scene();
     await expect(

@@ -138,6 +138,7 @@ export type ForumPostView = {
   ratingDown: number;
   createdAt: Date;
   editedAt: Date | null;
+  lastEditorId: string | null;
   /** Moderation facts, returned only to staff of the topic. */
   moderation: {
     at: Date;

@@ -28,6 +28,7 @@ import {
   GiveForumPostReputationDocument,
   ReputationJournalDocument,
   AddForumStaffNoteDocument,
+  ForumPostRevisionsDocument,
   ArchiveForumTopicDocument,
   AttachForumTopicPollDocument,
   CastForumPollBallotDocument,
@@ -65,6 +66,7 @@ import {
   type CreateForumReplyInput,
   type CreateForumTopicInput,
   type EditForumPostInput,
+  type ForumStaffRole,
   type ForumTopicPollInput,
 } from "@/gql/graphql";
 import { getClient } from "@/lib/apollo/rsc-client";
@@ -466,10 +468,11 @@ export async function addForumStaffNote(
   postId: string,
   body: string,
   revalidate?: string,
+  role?: ForumStaffRole | null,
 ) {
   return run(
     AddForumStaffNoteDocument,
-    { postId, body },
+    { postId, body, role: role ?? null },
     (d) => d.addForumStaffNote,
     revalidate,
   );
@@ -578,5 +581,19 @@ export async function getReputationJournal(userId: string, page = 1) {
     });
     if (!result.data) throw new Error("Reputation journal is unavailable.");
     return result.data.reputationHistory;
+  });
+}
+
+/** Edit history of a post: who and when; texts for the author and staff. */
+export async function getForumPostRevisions(postId: string) {
+  return forumResult(async () => {
+    const result = await getClient().query({
+      query: ForumPostRevisionsDocument,
+      variables: { postId },
+      context: await optionalSession(),
+      fetchPolicy: "no-cache",
+    });
+    if (!result.data) throw new Error("Post history is unavailable.");
+    return result.data.forumPostRevisions;
   });
 }

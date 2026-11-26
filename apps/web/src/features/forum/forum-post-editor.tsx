@@ -26,13 +26,17 @@ import { useState, useTransition, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { DssEditor } from "@/features/editor/dss-editor";
 
-import { editForumPost } from "./forum-actions";
+import { addForumStaffNote, editForumPost } from "./forum-actions";
 import { useForumPostEdit } from "./forum-post-edit-scope";
+import { STAFF_TAGS, type ForumStaffTagRole } from "./forum-staff-tags-model";
+
+const STAFF_NOTE_MAX = 2000;
 
 export function ForumPostEditor({
   post,
   topicTitle,
   path,
+  staffRoles = [],
   children,
 }: {
   post: Readonly<{
@@ -43,6 +47,8 @@ export function ForumPostEditor({
   }>;
   topicTitle: string;
   path: string;
+  /** Staff tags the viewer may add under the post (owner 2026-11-27). */
+  staffRoles?: readonly ForumStaffTagRole[];
   /** The read-only rendering shown while not editing. */
   children: ReactNode;
 }) {
@@ -52,6 +58,8 @@ export function ForumPostEditor({
     () => JSON.parse(post.documentJson) as EditorDocument,
   );
   const [title, setTitle] = useState(topicTitle);
+  const [tagRole, setTagRole] = useState<ForumStaffTagRole | null>(null);
+  const [tagText, setTagText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
@@ -75,6 +83,16 @@ export function ForumPostEditor({
         );
         return;
       }
+      const note = tagText.trim();
+      if (tagRole && note) {
+        const added = await addForumStaffNote(post.id, note, path, tagRole);
+        if (!added.ok) {
+          setError(`Допис збережено, але тег не додано: ${added.error.message}`);
+          return;
+        }
+      }
+      setTagRole(null);
+      setTagText("");
       setEditing(false);
       router.refresh();
     });
@@ -100,6 +118,56 @@ export function ForumPostEditor({
         onDocumentChange={setDocument}
         ariaLabel={`Редагування допису #${post.number}`}
       />
+      {staffRoles.length ? (
+        <div className="space-y-2">
+          <div
+            role="group"
+            aria-label="Теги персоналу"
+            className="flex flex-wrap items-center gap-1.5"
+          >
+            <span className="text-xs text-slate-400">Теги:</span>
+            {staffRoles.map((role) => {
+              const tag = STAFF_TAGS[role];
+              const active = tagRole === role;
+              return (
+                <button
+                  key={role}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setTagRole(active ? null : role)}
+                  className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs ring-1 ${tag.ring} ${
+                    active
+                      ? "bg-white/10 text-white"
+                      : "text-slate-300 hover:bg-white/[0.06]"
+                  }`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`flex size-4 items-center justify-center rounded-sm font-serif text-[11px] font-bold text-white ${tag.square}`}
+                  >
+                    {tag.letter}
+                  </span>
+                  {tag.tag}
+                </button>
+              );
+            })}
+          </div>
+          {tagRole ? (
+            <label className="block space-y-1 text-sm">
+              <span className="text-slate-300">
+                {STAFF_TAGS[tagRole].tag}: текст у рамці під дописом
+              </span>
+              <textarea
+                value={tagText}
+                maxLength={STAFF_NOTE_MAX}
+                onChange={(event) => setTagText(event.target.value)}
+                rows={3}
+                className="w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-white outline-none focus:border-violet-400"
+              />
+            </label>
+          ) : null}
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-center gap-2">
         {error ? (
           <p role="alert" className="text-sm text-rose-300">
