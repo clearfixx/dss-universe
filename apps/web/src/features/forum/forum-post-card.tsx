@@ -122,25 +122,6 @@ export function ForumPostCard({
       path={path}
     />
   );
-  const ratingRow = (
-    <ForumPostRating
-      postId={post.id}
-      ratingUp={post.ratingUp}
-      ratingDown={post.ratingDown}
-      viewerVote={post.viewerVote ?? null}
-      canVote={viewerId !== null && !own}
-      disabledReason={
-        viewerId === null
-          ? "Увійдіть, щоб голосувати"
-          : own
-            ? "Свої дописи оцінювати не можна"
-            : undefined
-      }
-      path={path}
-      horizontal
-    />
-  );
-
   const canEdit =
     visible &&
     Boolean(post.documentJson) &&
@@ -160,7 +141,7 @@ export function ForumPostCard({
     <article
       id={`post-${post.number}`}
       aria-label={`Допис #${post.number}, ${name}`}
-      className={`grid scroll-mt-24 overflow-hidden rounded-xl sm:grid-cols-[10rem_minmax(0,1fr)_3.5rem] ${
+      className={`grid scroll-mt-24 overflow-hidden rounded-xl sm:grid-cols-[10rem_minmax(0,1fr)] ${
         accepted
           ? "bg-emerald-950/30 ring-1 ring-emerald-500/50"
           : visible
@@ -387,6 +368,8 @@ export function ForumPostCard({
             </ul>
           ) : null}
 
+          {visible ? <div className="pt-1">{rating}</div> : null}
+
           <ForumPostActionBar
             topicId={topicId}
             post={post}
@@ -397,11 +380,6 @@ export function ForumPostCard({
           />
         </div>
       </ForumPostEditScope>
-
-      <div className="hidden justify-center pt-3 sm:flex">
-        {visible ? rating : null}
-      </div>
-      {visible ? <div className="px-3 pb-3 sm:hidden">{ratingRow}</div> : null}
     </article>
   );
 }
