@@ -2,7 +2,7 @@
 
 import { ChevronDown, LayoutDashboard, LogIn, LogOut, Settings, UserRound } from "lucide-react";
 import Link from "next/link";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { logoutAction } from "@/features/auth/auth-actions";
@@ -13,36 +13,21 @@ export function ShellUserMenu({ viewer, pathname, canAccessAdminDeck }: { viewer
   return (<>
 {viewer ? (
               <>
-                <Button
-                  asChild
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Налаштування"
-                  className="hidden lg:inline-flex"
-                >
-                  <Link href="/settings/profile">
-                    <Settings aria-hidden="true" />
-                  </Link>
-                </Button>
-                <form action={logoutAction}>
-                  <Button variant="ghost" size="icon" type="submit" aria-label="Вийти">
-                    <LogOut aria-hidden="true" />
-                  </Button>
-                </form>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
                       type="button"
-                      className="h-auto gap-2.5 px-2"
+                      className="h-auto shrink-0 gap-1 px-1 sm:gap-2.5 sm:px-2"
                       aria-label={`Меню користувача: ${viewerDisplayName(viewer)}`}
                     >
                       <Avatar>
-                        <AvatarFallback className="bg-violet-700 text-white">
+                        {viewer.avatarUrl ? <AvatarImage src={viewer.avatarUrl} alt="" /> : null}
+                        <AvatarFallback className="bg-primary text-primary-foreground">
                           {viewerInitials(viewer)}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="hidden flex-col items-start leading-tight sm:flex">
+                      <span className="hidden flex-col items-start leading-tight xl:flex">
                         <span className="max-w-36 truncate text-sm font-semibold text-slate-100">
                           {viewerDisplayName(viewer)}
                         </span>
@@ -50,7 +35,7 @@ export function ShellUserMenu({ viewer, pathname, canAccessAdminDeck }: { viewer
                           @{viewer.username}
                         </span>
                       </span>
-                      <ChevronDown className="size-4 text-slate-400" aria-hidden="true" />
+                      <ChevronDown className="hidden size-4 text-muted-foreground sm:block" aria-hidden="true" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
@@ -84,6 +69,15 @@ export function ShellUserMenu({ viewer, pathname, canAccessAdminDeck }: { viewer
                         Налаштування
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <form action={logoutAction}>
+                      <DropdownMenuItem asChild>
+                        <button type="submit" className="w-full">
+                          <LogOut aria-hidden="true" />
+                          Вийти
+                        </button>
+                      </DropdownMenuItem>
+                    </form>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </>
