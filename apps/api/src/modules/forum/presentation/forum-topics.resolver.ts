@@ -332,6 +332,14 @@ class ForumPostPageModel {
   @Field(() => Int) limit!: number;
 }
 
+@ObjectType('ForumPostLocation')
+class ForumPostLocationModel {
+  @Field(() => ID) topicId!: string;
+  @Field(() => Int) number!: number;
+  @Field(() => Int, { description: 'Page in OLDEST order for the limit.' })
+  page!: number;
+}
+
 @ObjectType('ForumPostRevision')
 class ForumPostRevisionModel {
   @Field(() => Int) revision!: number;
@@ -506,6 +514,20 @@ export class ForumTopicsResolver {
     @Args('topicId', { type: () => ID }) topicId: string,
   ) {
     return this.execute(this.topics.topic(this.viewer(ctx), topicId));
+  }
+
+  @Query(() => ForumPostLocationModel, {
+    description: 'Topic, number and page of a post the viewer may see.',
+  })
+  @UseGuards(OptionalViewerJwtGuard)
+  forumPostLocation(
+    @Context() ctx: RequestContext,
+    @Args('postId', { type: () => ID }) postId: string,
+    @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
+  ) {
+    return this.execute(
+      this.topics.postLocation(this.viewer(ctx), postId, limit),
+    );
   }
 
   @Query(() => ForumPostPageModel)

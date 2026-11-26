@@ -465,3 +465,11 @@ query ForumWeeklyTop($limit: Int!) {
     }
   }
 }
+
+query ForumPostLocation($postId: ID!, $limit: Int!) {
+  forumPostLocation(postId: $postId, limit: $limit) {
+    topicId
+    number
+    page
+  }
+}

@@ -30,6 +30,7 @@ import {
   ForumHubDocument,
   ForumSectionStateDocument,
   ForumWeeklyTopDocument,
+  ForumPostLocationDocument,
   ForumPostRevisionsDocument,
   ForumPostVotesDocument,
   ForumTagsDocument,
@@ -328,5 +329,18 @@ export async function loadNewsDiscussion(articleId: string) {
       fetchPolicy: "no-cache",
     });
     return result.data?.newsDiscussionTopic ?? null;
+  });
+}
+
+/** Where a post lives (activity links know only the post); null if hidden. */
+export async function loadForumPostLocation(postId: string) {
+  return orNull(async () => {
+    const result = await getClient().query({
+      query: ForumPostLocationDocument,
+      variables: { postId, limit: FORUM_PAGE_SIZE },
+      context: await authContext(),
+      fetchPolicy: "no-cache",
+    });
+    return result.data?.forumPostLocation ?? null;
   });
 }
