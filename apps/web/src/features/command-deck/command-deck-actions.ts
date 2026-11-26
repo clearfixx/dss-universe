@@ -35,6 +35,7 @@ import {
   CreateForumDocument,
   RevokeForumModeratorDocument,
   SaveForumSettingsDocument,
+  UpdateForumRankingDocument,
   UpdateModerationSanctionPolicyDocument,
   type ForumCategoryInput,
   type ForumInput,
@@ -144,4 +145,18 @@ export async function lookupMembers(search: string) {
     });
     return result.data?.members.items ?? [];
   });
+}
+
+/** «Гарячі» settings (P1 C04); the API requires forum.structure.manage. */
+export async function saveForumRanking(input: {
+  hotGravitySeconds: number;
+  hotReplyWeight: number;
+}) {
+  // Pick fields: drafts built from query data carry __typename.
+  const { hotGravitySeconds, hotReplyWeight } = input;
+  return run(
+    UpdateForumRankingDocument,
+    { input: { hotGravitySeconds, hotReplyWeight } },
+    (d) => d.updateForumRankingSettings.hotReplyWeight,
+  );
 }

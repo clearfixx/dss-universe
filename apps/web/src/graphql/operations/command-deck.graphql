@@ -234,3 +234,30 @@ query CommandDeckSupermoderators {
     }
   }
 }
+
+# Command Deck › Community Hub › Рейтинг і XP (P1 C04): «Гарячі» settings and
+# recent topics for the live preview.
+query CommandDeckRanking {
+  forumRankingSettings {
+    hotGravitySeconds
+    hotReplyWeight
+  }
+  forumDiscoverTopics(filter: ALL, sort: LAST_ACTIVITY, limit: 50) {
+    items {
+      id
+      title
+      ratingUp
+      ratingDown
+      postCount
+      viewCount
+      createdAt
+    }
+  }
+}
+
+mutation UpdateForumRanking($input: ForumRankingSettingsInput!) {
+  updateForumRankingSettings(input: $input) {
+    hotGravitySeconds
+    hotReplyWeight
+  }
+}
