@@ -18,7 +18,7 @@ export function GlobalNavigation({
   variant: ShellVariant;
   hasSession: boolean;
   canAccessAdminDeck: boolean;
-  onOpenLauncher: () => void;
+  onOpenLauncher: (trigger: HTMLButtonElement) => void;
   launcherOpen?: boolean;
 }) {
   const modules = visibleModules(hasSession, canAccessAdminDeck);
@@ -56,7 +56,7 @@ export function GlobalNavigation({
         type="button"
         variant="ghost"
         size="sm"
-        onClick={onOpenLauncher}
+        onClick={(event) => onOpenLauncher(event.currentTarget)}
         aria-haspopup="dialog"
         aria-expanded={launcherOpen}
         className="shrink-0 self-center text-muted-foreground"

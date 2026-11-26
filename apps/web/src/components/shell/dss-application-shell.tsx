@@ -24,6 +24,7 @@ import { Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
   useState,
+  useRef,
   type PropsWithChildren,
   type ReactNode,
 } from "react";
@@ -78,6 +79,14 @@ export function DssApplicationShell({
   }
   const open = isDrawerOpenForPath(drawerState, pathname);
   const setOpen = (nextOpen: boolean) => setDrawerState({ pathname, open: nextOpen });
+  const drawerTrigger = useRef<HTMLButtonElement | null>(null);
+  const openDrawer = (trigger: HTMLButtonElement) => {
+    drawerTrigger.current = trigger;
+    setOpen(true);
+  };
+  const restoreDrawerFocus = () => {
+    if (drawerTrigger.current?.getClientRects().length) drawerTrigger.current.focus();
+  };
   const hasSession = Boolean(viewer);
 
   return (
@@ -112,7 +121,7 @@ export function DssApplicationShell({
             variant="ghost"
             size="icon"
             type="button"
-            onClick={() => setOpen(true)}
+            onClick={(event) => openDrawer(event.currentTarget)}
             aria-label="Відкрити навігацію"
             aria-haspopup="dialog"
             aria-expanded={open}
@@ -129,7 +138,7 @@ export function DssApplicationShell({
             hasSession={hasSession}
             canAccessAdminDeck={canAccessAdminDeck}
             launcherOpen={open}
-            onOpenLauncher={() => setOpen(true)}
+            onOpenLauncher={openDrawer}
           />
           <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-2">
             <ShellSearch />
@@ -153,7 +162,7 @@ export function DssApplicationShell({
         </main>
       </div>
 
-      <ShellMobileNavigation open={open} setOpen={setOpen} pathname={pathname} hasSession={hasSession} canAccessAdminDeck={canAccessAdminDeck} />
+      <ShellMobileNavigation onRestoreFocus={restoreDrawerFocus} open={open} setOpen={setOpen} pathname={pathname} hasSession={hasSession} canAccessAdminDeck={canAccessAdminDeck} />
     </div>
   );
 }
