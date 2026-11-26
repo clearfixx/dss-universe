@@ -13,10 +13,12 @@
  */
 
 import { BookOpen, MessageSquare, Sparkles } from "lucide-react";
+import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ViewerActivityFeedQuery } from "@/gql/graphql";
+import { presentActivity } from "@/features/activity/activity-presenters";
 import { ActivityVisitMarker } from "@/features/activity/activity-visit-marker";
 
 import { GraphqlPlatformStatus } from "./graphql-platform-status";
@@ -26,7 +28,7 @@ type ActivityFeed = ViewerActivityFeedQuery["viewerActivityFeed"];
 export function CommandDeckOverview({ feed }: { feed?: ActivityFeed | null }) {
   const activity = (feed?.items ?? []).map((item) => ({
     icon: item.module === "PROFILE" ? MessageSquare : BookOpen,
-    title: activityTitle(item.action),
+    ...presentActivity(item),
     text: `${item.module} · ${item.subjectType}`,
     time: relativeTime(item.occurredAt),
     unread: item.isUnread,
@@ -67,14 +69,18 @@ export function CommandDeckOverview({ feed }: { feed?: ActivityFeed | null }) {
                   : "Universe activity is currently unavailable. Please check back later."}
               </p>
             ) : null}
-            {activity.map(({ icon: Icon, title, text, time, unread, id }) => (
+            {activity.map(({ icon: Icon, title, href, text, time, unread, id }) => (
               <div
                 key={id}
                 className={`flex items-center gap-4 rounded-xl border p-4 ${unread ? "border-blue-400/30 bg-blue-500/[0.07]" : "border-white/10 bg-white/[0.025]"}`}
               >
                 <Icon className="size-5 text-violet-300" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium">{title}</p>
+                  {href ? (
+                    <Link href={href} className="text-sm font-medium hover:underline focus-visible:outline-2 focus-visible:outline-ring">{title}</Link>
+                  ) : (
+                    <p className="text-sm font-medium">{title}</p>
+                  )}
                   <p className="truncate text-sm text-slate-400">{text}</p>
                 </div>
                 <span className="text-xs text-slate-500">{time}</span>
@@ -100,14 +106,6 @@ export function CommandDeckOverview({ feed }: { feed?: ActivityFeed | null }) {
       </section>
     </div>
   );
-}
-
-function activityTitle(action: string) {
-  return action
-    .split(/[._-]/)
-    .filter(Boolean)
-    .map((word) => word[0]?.toUpperCase() + word.slice(1))
-    .join(" ");
 }
 
 function relativeTime(value: string) {
