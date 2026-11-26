@@ -51,6 +51,7 @@ import type {
   AdminModerator,
   AdminSectionAccess,
   CommunityHubAdmin,
+  RankingAdmin,
   Supermoderator,
 } from "./command-deck-data";
 import {
@@ -75,6 +76,7 @@ import { cn } from "@/lib/utils";
 
 import { ForumTagsManager } from "./forum-tags-manager";
 import { ModeratorsCard, SupermoderatorsCard } from "./moderators-card";
+import { RankingSettingsPanel } from "./ranking-settings";
 
 type HubTab =
   | "general"
@@ -92,7 +94,7 @@ const HUB_TABS: ReadonlyArray<{ id: HubTab; label: string; soon?: boolean }> = [
   { id: "structure", label: "Структура форуму" },
   { id: "moderation", label: "Модерація", soon: true },
   { id: "sanctions", label: "Санкції" },
-  { id: "points", label: "Рейтинг і XP", soon: true },
+  { id: "points", label: "Рейтинг і XP" },
   { id: "tags", label: "Теги" },
   { id: "notifications", label: "Сповіщення", soon: true },
   { id: "integrations", label: "Інтеграції", soon: true },
@@ -133,6 +135,7 @@ export function CommunityHubSettings({
   access,
   moderators = [],
   supermoderators = [],
+  ranking = null,
 }: {
   data: CommunityHubAdmin;
   selected: Selection;
@@ -140,6 +143,8 @@ export function CommunityHubSettings({
   /** Assignments of the selected category (P1 C02). */
   moderators?: readonly AdminModerator[];
   supermoderators?: readonly Supermoderator[];
+  /** «Гарячі» settings and preview topics (P1 C04). */
+  ranking?: RankingAdmin | null;
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<HubTab>("structure");
@@ -806,6 +811,10 @@ export function CommunityHubSettings({
             />
           </div>
         </Card>
+      ) : tab === "points" ? (
+        ranking ? (
+          <RankingSettingsPanel data={ranking} />
+        ) : null
       ) : tab === "tags" ? (
         <ForumTagsManager forums={forums} />
       ) : null}
