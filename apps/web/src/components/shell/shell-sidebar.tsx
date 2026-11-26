@@ -12,8 +12,8 @@ type NavigationProps = {
 export function SidebarNavigation({ pathname, hasSession, canAccessAdminDeck, onNavigate }: NavigationProps) {
   const active = currentModule(pathname);
   if (!active || !visibleModules(hasSession, canAccessAdminDeck).some((item) => item.href === active.href)) return null;
-  const sections = moduleSidebarItems(pathname).filter((item) => hasSession || !item.requiresSession);
-  const currentHref = currentSidebarHref(pathname);
+  const sections = moduleSidebarItems(pathname, hasSession, canAccessAdminDeck);
+  const currentHref = currentSidebarHref(pathname, hasSession, canAccessAdminDeck);
   return (
     <nav aria-label={`Розділи: ${active.label}`} className="space-y-1">
       <p className="px-3 py-2 text-xs font-medium text-slate-400">{active.label}</p>

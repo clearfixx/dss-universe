@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  BellRing,
   LayoutDashboard,
   MessagesSquare,
   Newspaper,
@@ -60,6 +61,7 @@ export const MODULE_NAVIGATION: readonly ModuleNavigation[] = [
     featured: true,
     children: [
       { href: "/community/forum/new", label: "Нова тема", icon: PenSquare, requiresSession: true },
+      { href: "/community/following", label: "Мої підписки", icon: BellRing, requiresSession: true },
     ],
   },
   {
@@ -119,13 +121,13 @@ export function currentModule(pathname: string): ModuleNavigation | null {
     .sort((a, b) => b.href.length - a.href.length)[0] ?? null;
 }
 
-export function moduleSidebarItems(pathname: string): readonly ModuleNavigationItem[] {
+export function moduleSidebarItems(pathname: string, hasSession = true, canAccessAdminDeck = true): readonly ModuleNavigationItem[] {
   const activeModule = currentModule(pathname);
-  if (!activeModule) return [];
+  if (!activeModule || !visibleModules(hasSession, canAccessAdminDeck).some((item) => item.href === activeModule.href)) return [];
 
   const overview = activeModule.href;
   // Contextual navigation is stable across sibling routes, not filtered to the current page.
-  const children = activeModule.children;
+  const children = activeModule.children.filter((item) => hasSession || !item.requiresSession);
   return [
     { href: overview, label: "Огляд", icon: activeModule.icon },
     ...children,
@@ -133,8 +135,8 @@ export function moduleSidebarItems(pathname: string): readonly ModuleNavigationI
 }
 
 /** Only the deepest matching Sidebar destination receives aria-current. */
-export function currentSidebarHref(pathname: string): string | null {
-  const candidates = moduleSidebarItems(pathname).filter((item) =>
+export function currentSidebarHref(pathname: string, hasSession = true, canAccessAdminDeck = true): string | null {
+  const candidates = moduleSidebarItems(pathname, hasSession, canAccessAdminDeck).filter((item) =>
     routeMatches(pathname, item.href),
   );
   return candidates.sort((a, b) => b.href.length - a.href.length)[0]?.href ?? null;

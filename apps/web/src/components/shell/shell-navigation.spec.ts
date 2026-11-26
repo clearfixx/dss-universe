@@ -187,3 +187,17 @@ describe("application shell navigation contracts", () => {
   });
 
 });
+
+
+describe("contextual navigation session eligibility", () => {
+  it("hides protected community actions from guests", () => {
+    expect(moduleSidebarItems("/community", false, false).map((item) => item.href)).toEqual(["/community"]);
+  });
+  it("preserves both community actions for authenticated viewers", () => {
+    expect(moduleSidebarItems("/community", true, false).map((item) => item.href)).toEqual(["/community", "/community/forum/new", "/community/following"]);
+  });
+  it("does not select an inaccessible child or admin module", () => {
+    expect(currentSidebarHref("/community/following", false, false)).toBe("/community");
+    expect(currentSidebarHref("/command-deck", true, false)).toBeNull();
+  });
+});
