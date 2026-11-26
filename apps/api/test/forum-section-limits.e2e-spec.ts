@@ -305,6 +305,9 @@ describe('Forum section limits (e2e)', () => {
       profile: string;
     };
     replyDoc.profile = 'FORUM_REPLY';
+    await fixture.prisma.forumPostingCooldown.deleteMany({
+      where: { userId: contributor },
+    });
     await expect(
       topics.reply(contributor, {
         topicId: topic.id,
