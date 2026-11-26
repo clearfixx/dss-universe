@@ -43,6 +43,18 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
+  // Behind a reverse proxy request.ip is the proxy unless Express is told
+  // which hops to trust (Express "trust proxy" syntax: true, a hop count or
+  // a list of addresses). Off by default: the socket address is used.
+  const trustProxy = parseTrustProxy(process.env.TRUST_PROXY);
+  if (trustProxy !== undefined) {
+    (
+      app.getHttpAdapter().getInstance() as {
+        set: (key: string, value: unknown) => void;
+      }
+    ).set('trust proxy', trustProxy);
+  }
+
   const allowedOrigins = (process.env.WEB_ORIGINS ?? 'http://localhost:3000')
     .split(',')
     .map((origin) => origin.trim())
@@ -85,3 +97,14 @@ bootstrap().catch((error) => {
  * Validation makes sure guests do not bring cosmic junk inside.
  * -----------------------------------------------------------------------------
  */
+
+function parseTrustProxy(
+  value: string | undefined,
+): boolean | number | string | undefined {
+  const trimmed = value?.trim();
+  if (!trimmed) return undefined;
+  if (trimmed === 'true') return true;
+  if (trimmed === 'false') return false;
+  if (/^\d+$/.test(trimmed)) return Number(trimmed);
+  return trimmed;
+}

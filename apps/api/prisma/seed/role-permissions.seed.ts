@@ -61,6 +61,7 @@ const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     Permission.ModerationWarningsIssue,
     Permission.ModerationReadOnlyIssue,
     Permission.ModerationSanctionsRevoke,
+    Permission.ForumNetworkView,
     Permission.NewsReview,
     Permission.NewsLinksManage,
     Permission.NewsPinsManage,
@@ -110,6 +111,8 @@ const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     Permission.ForumStructureManage,
     Permission.ForumModeratorsAssign,
     Permission.ForumModerateAll,
+    Permission.ForumNetworkView,
+    Permission.ForumNetworkDelete,
 
     Permission.NewsReview,
     Permission.NewsPublish,

@@ -78,6 +78,10 @@ import {
   type ForumAccessRole,
 } from '../domain/forum-access.rules';
 import { gateBlockKinds } from '../domain/forum-section-limits.rules';
+import {
+  normalizeClientInfo,
+  type ForumClientInfo,
+} from '../domain/forum-network.rules';
 import { FORUM_POST_MEDIA, type ForumPostMedia } from './forum-post-media.port';
 
 const PRODUCER = 'dss.api.forum';
@@ -145,6 +149,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       title: string;
       documentJson: string;
     },
+    client?: ForumClientInfo,
   ): Promise<{ topic: ForumTopicSummary; firstPostId: string }> {
     const viewer = await this.authenticated(actorId);
     const forum = await this.visibleForum(input.forumId, viewer);
@@ -204,6 +209,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
         quotedNumbers: [],
         createdAt: now,
       });
+      await this.captureNetwork(tx, postId, client);
       await this.syncMedia(tx, postId, actorId, mediaIds);
       await this.record(tx, actorId, 'ForumTopic', topicId, 'topic.created', {
         forumId: forum.id,
@@ -225,6 +231,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       replyToNumber: number | null;
       quotedNumbers: number[];
     },
+    client?: ForumClientInfo,
   ): Promise<ForumPostView> {
     const viewer = await this.authenticated(actorId);
     const { categoryId, allowsGatedContent, forum } = await this.visibleTopic(
@@ -277,6 +284,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
         ...references,
         createdAt: now,
       });
+      await this.captureNetwork(tx, postId, client);
       await tx.forumTopic.update({
         where: { id: input.topicId },
         data: {
@@ -1735,6 +1743,17 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       grouped.set(note.postId, list);
     }
     return grouped;
+  }
+
+  /** Stores the author network metadata of a new post (P1 B11). */
+  private async captureNetwork(
+    tx: TransactionClient,
+    postId: string,
+    client: ForumClientInfo | undefined,
+  ): Promise<void> {
+    const data = normalizeClientInfo(client);
+    if (data.ipAddress === null && data.userAgent === null) return;
+    await tx.forumPostNetwork.create({ data: { postId, ...data } });
   }
 
   private paging(page: number, limit: number) {

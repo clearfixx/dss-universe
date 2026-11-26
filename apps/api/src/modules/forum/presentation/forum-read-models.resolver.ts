@@ -92,6 +92,12 @@ class ForumTopicViewerAbilitiesModel {
   moderate!: boolean;
   @Field({ description: 'Permanent removal of posts (administrators).' })
   purge!: boolean;
+  @Field({
+    description: 'Post IP+UA (forum.network.view; every read audited).',
+  })
+  network!: boolean;
+  @Field({ description: 'Erase post IP+UA (forum.network.delete).' })
+  networkDelete!: boolean;
   @Field() acceptAnswer!: boolean;
   @Field() close!: boolean;
   @Field() reopen!: boolean;
@@ -261,6 +267,8 @@ export class ForumTopicReadResolver extends ForumReadResolverBase {
       return {
         moderate: false,
         purge: false,
+        network: false,
+        networkDelete: false,
         acceptAnswer: false,
         close: false,
         reopen: false,
@@ -289,6 +297,8 @@ export class ForumTopicReadResolver extends ForumReadResolverBase {
     return {
       moderate: moderator,
       purge: facts.canPurgeContent,
+      network: facts.canViewNetwork === true,
+      networkDelete: facts.canDeleteNetwork === true,
       acceptAnswer:
         topic.kind === 'QUESTION' &&
         (moderator || curator || topic.authorId === actor.id) &&

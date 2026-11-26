@@ -2936,10 +2936,25 @@ model ForumPost {
   staffNotes  ForumPostStaffNote[]
   votes       ForumPostVote[]
   acceptedFor ForumTopic?          @relation("ForumAcceptedAnswer")
+  network     ForumPostNetwork?
 
   @@unique([topicId, number])
   @@index([authorId, createdAt])
   @@map("forum_posts")
+}
+
+/// Network metadata of a post (P1 B11): the IP address and User-Agent the
+/// post was written from. Staff-only (forum.network.view), every read is
+/// audited; kept until an administrator deletes it (owner decision D6).
+model ForumPostNetwork {
+  postId     String   @id
+  ipAddress  String?
+  userAgent  String?
+  capturedAt DateTime @default(now())
+
+  post ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("forum_post_network")
 }
 
 model ForumPostRevision {

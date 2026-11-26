@@ -51,6 +51,8 @@ fragment ForumTopicSummary on ForumTopic {
   viewerAbilities {
     moderate
     purge
+    network
+    networkDelete
     acceptAnswer
     close
     reopen
