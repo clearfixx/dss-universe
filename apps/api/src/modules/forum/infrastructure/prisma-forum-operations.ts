@@ -328,11 +328,11 @@ export class ForumOperationsService {
       select: { id: true, topicId: true, number: true, authorId: true },
     });
     if (!post) this.notFound('Post');
-    const { topic, categoryId } = await this.topics.visibleTopic(
+    const { topic, categoryId, forum } = await this.topics.visibleTopic(
       post.topicId,
       viewer,
     );
-    const moderator = await this.topics.isModerator(viewer, categoryId);
+    const moderator = await this.topics.isModerator(viewer, categoryId, forum);
     return { post, topic, moderator };
   }
 

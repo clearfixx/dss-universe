@@ -63,6 +63,15 @@ export class ForumPostMediaAdapter implements ForumPostMedia {
     return (await this.policy.evaluate(actorId, mediaIds)).rejected;
   }
 
+  async files(
+    actorId: string,
+    mediaIds: readonly string[],
+  ): Promise<
+    ReadonlyArray<{ mediaId: string; extension: string; size: number }>
+  > {
+    return (await this.policy.evaluate(actorId, mediaIds)).files ?? [];
+  }
+
   sync(
     transaction: TransactionClient,
     postId: string,

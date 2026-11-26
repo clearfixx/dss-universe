@@ -41,9 +41,7 @@ export function CommandDeckOverview({ feed }: { feed?: ActivityFeed | null }) {
           Command Deck · Адміністрування
         </Badge>
         <h1 className="text-3xl font-bold">Панель адміністратора</h1>
-        <p className="mt-2 text-slate-400">
-          Огляд доступних подій платформи.
-        </p>
+        <p className="mt-2 text-slate-400">Огляд доступних подій платформи.</p>
         <p className="mt-2 text-xs">
           <GraphqlPlatformStatus />
         </p>
@@ -85,7 +83,7 @@ export function CommandDeckOverview({ feed }: { feed?: ActivityFeed | null }) {
           </CardContent>
         </Card>
 
-        <Card className="border-violet-400/20 bg-gradient-to-b from-violet-950/50 to-white/[0.03]">
+        <Card className="border-violet-400/20 bg-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="text-violet-300" /> AI Core briefing

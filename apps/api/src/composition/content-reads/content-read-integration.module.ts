@@ -72,6 +72,8 @@ import { MISSION_METRIC_READER } from '@api/modules/missions';
 import { MissionMetricAdapter } from './infrastructure/mission-metric.adapter';
 import { ForumPostMediaAdapter } from '../media-references/infrastructure/forum-post-media.adapter';
 import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapter';
+import { MODERATION_MEMBER_CARDS } from '@api/modules/moderation';
+import { ModerationMemberCardsAdapter } from './infrastructure/moderation-member-cards.adapter';
 
 @Global()
 @Module({
@@ -110,6 +112,10 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
     { provide: FORUM_NEWS_FACTS, useClass: ForumNewsFactsAdapter },
     { provide: GATE_FORUM_POST_COUNT, useClass: GateForumPostCountAdapter },
     { provide: FORUM_MEMBER_CARDS, useClass: ForumMemberCardsAdapter },
+    {
+      provide: MODERATION_MEMBER_CARDS,
+      useClass: ModerationMemberCardsAdapter,
+    },
     { provide: FORUM_MEMBER_STATS, useClass: ForumMemberStatsAdapter },
     { provide: FORUM_POST_MEDIA, useClass: ForumPostMediaAdapter },
     { provide: NEWS_MEDIA_EVIDENCE, useClass: NewsMediaEvidenceAdapter },
@@ -118,6 +124,7 @@ import { ProfileActivityAdapter } from './infrastructure/profile-activity.adapte
   exports: [
     MISSION_METRIC_READER,
     FORUM_MEMBER_CARDS,
+    MODERATION_MEMBER_CARDS,
     FORUM_MEMBER_STATS,
     FORUM_POST_MEDIA,
     NEWS_ATTACHMENT_READER,

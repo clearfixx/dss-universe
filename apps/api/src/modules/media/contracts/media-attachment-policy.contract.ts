@@ -22,9 +22,19 @@ export type MediaAttachmentRejection = Readonly<{
   reason: 'NOT_FOUND' | 'NOT_READY' | 'NOT_PERMITTED';
 }>;
 
+export type MediaAttachableFile = Readonly<{
+  mediaId: string;
+  filename: string;
+  extension: string;
+  mimeType: string;
+  size: number;
+}>;
+
 export type MediaAttachmentDecision = Readonly<{
   attachable: readonly string[];
   rejected: readonly MediaAttachmentRejection[];
+  /** Name, type and size of every attachable file (for section limits). */
+  files?: readonly MediaAttachableFile[];
 }>;
 
 export interface MediaAttachmentPolicy {

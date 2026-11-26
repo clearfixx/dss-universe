@@ -34,7 +34,16 @@ export class PrismaMediaAttachmentPolicy implements MediaAttachmentPolicy {
     if (unique.length === 0) return { attachable: [], rejected: [] };
     const rows = await this.prisma.media.findMany({
       where: { id: { in: unique } },
-      select: { id: true, ownerId: true, visibility: true, status: true },
+      select: {
+        id: true,
+        ownerId: true,
+        visibility: true,
+        status: true,
+        originalFilename: true,
+        extension: true,
+        mimeType: true,
+        size: true,
+      },
     });
     const byId = new Map(rows.map((row) => [row.id, row]));
     const attachable: string[] = [];
@@ -48,6 +57,16 @@ export class PrismaMediaAttachmentPolicy implements MediaAttachmentPolicy {
         rejected.push({ mediaId, reason: 'NOT_PERMITTED' });
       else attachable.push(mediaId);
     }
-    return { attachable, rejected };
+    const files = attachable.map((mediaId) => {
+      const row = byId.get(mediaId)!;
+      return {
+        mediaId,
+        filename: row.originalFilename,
+        extension: row.extension.toLowerCase().replace(/^\./, ''),
+        mimeType: row.mimeType,
+        size: row.size,
+      };
+    });
+    return { attachable, rejected, files };
   }
 }

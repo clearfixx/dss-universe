@@ -68,6 +68,17 @@ export class ForumModerationResolver {
     return this.execute(this.moderation.deletePost(actor.id, postId, reason));
   }
 
+  @Mutation(() => ForumPostModerationResultModel, {
+    description:
+      'Author deletes their own reply where the section grants "delete own".',
+  })
+  deleteOwnForumPost(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('postId', { type: () => ID }) postId: string,
+  ) {
+    return this.execute(this.moderation.deleteOwnPost(actor.id, postId));
+  }
+
   @Mutation(() => ForumPostModerationResultModel)
   restoreForumPost(
     @AuthUser() actor: AuthenticatedUser,
@@ -158,7 +169,13 @@ export class ForumModerationResolver {
         case 'CONFLICT':
           throw new ConflictException(error.message);
         case 'RATE_LIMITED':
-          throw new HttpException(error.message, HttpStatus.TOO_MANY_REQUESTS);
+          throw new HttpException(
+            {
+              message: error.message,
+              statusCode: HttpStatus.TOO_MANY_REQUESTS,
+            },
+            HttpStatus.TOO_MANY_REQUESTS,
+          );
       }
     }
   }

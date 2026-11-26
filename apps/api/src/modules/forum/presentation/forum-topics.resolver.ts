@@ -213,6 +213,12 @@ export class ForumTopicModel {
   viewerLastReadNumber!: number | null;
   @Field(() => ID, { nullable: true }) acceptedAnswerPostId!: string | null;
   @Field(() => ID, { nullable: true }) mergedIntoTopicId!: string | null;
+  @Field(() => Date, {
+    nullable: true,
+    description: 'When the topic was moved to the trash; null outside it.',
+  })
+  trashedAt!: Date | null;
+  @Field(() => ID, { nullable: true }) trashedById!: string | null;
   @Field(() => [ForumTopicTagModel]) tags!: ForumTopicTagModel[];
 }
 
@@ -340,6 +346,18 @@ class ForumTopicCreatedModel {
 }
 
 type RequestContext = { req: { user?: AuthenticatedUser } };
+/** The HTTP request as Express sees it (ip honours TRUST_PROXY). */
+type ClientContext = {
+  req?: { ip?: string; get?: (name: string) => string | undefined };
+};
+
+/** Author network metadata for P1 B11; stored staff-only. */
+function clientInfo(ctx: ClientContext) {
+  return {
+    ipAddress: ctx.req?.ip ?? null,
+    userAgent: ctx.req?.get?.('user-agent') ?? null,
+  };
+}
 
 @Resolver()
 export class ForumTopicsResolver {
@@ -382,6 +400,25 @@ export class ForumTopicsResolver {
         filter,
         kind ?? null,
       ),
+    );
+  }
+
+  @Query(() => ForumTopicPageModel, {
+    description:
+      'Forum trash: trashed topics of the sections the viewer moderates, most recently trashed first. Moderators only.',
+  })
+  @UseGuards(JwtAuthGuard)
+  forumTrash(
+    @AuthUser() user: AuthenticatedUser,
+    @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
+    @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
+    @Args('forumId', { type: () => ID, nullable: true })
+    forumId: string | null,
+    @Args('search', { type: () => String, nullable: true })
+    search: string | null,
+  ): Promise<ForumPage<ForumTopicModel>> {
+    return this.execute(
+      this.topics.trash(user.id, page, limit, forumId ?? null, search ?? null),
     );
   }
 
@@ -500,8 +537,11 @@ export class ForumTopicsResolver {
   createForumTopic(
     @AuthUser() actor: AuthenticatedUser,
     @Args('input') input: CreateForumTopicInput,
+    @Context() ctx: ClientContext,
   ) {
-    return this.execute(this.topics.createTopic(actor.id, { ...input }));
+    return this.execute(
+      this.topics.createTopic(actor.id, { ...input }, clientInfo(ctx)),
+    );
   }
 
   @Mutation(() => ForumPostModel)
@@ -509,14 +549,19 @@ export class ForumTopicsResolver {
   createForumReply(
     @AuthUser() actor: AuthenticatedUser,
     @Args('input') input: CreateForumReplyInput,
+    @Context() ctx: ClientContext,
   ) {
     return this.execute(
-      this.topics.reply(actor.id, {
-        topicId: input.topicId,
-        documentJson: input.documentJson,
-        replyToNumber: input.replyToNumber ?? null,
-        quotedNumbers: input.quotedNumbers,
-      }),
+      this.topics.reply(
+        actor.id,
+        {
+          topicId: input.topicId,
+          documentJson: input.documentJson,
+          replyToNumber: input.replyToNumber ?? null,
+          quotedNumbers: input.quotedNumbers,
+        },
+        clientInfo(ctx),
+      ),
     );
   }
 
@@ -566,7 +611,13 @@ export class ForumTopicsResolver {
         case 'CONFLICT':
           throw new ConflictException(error.message);
         case 'RATE_LIMITED':
-          throw new HttpException(error.message, HttpStatus.TOO_MANY_REQUESTS);
+          throw new HttpException(
+            {
+              message: error.message,
+              statusCode: HttpStatus.TOO_MANY_REQUESTS,
+            },
+            HttpStatus.TOO_MANY_REQUESTS,
+          );
       }
     }
   }

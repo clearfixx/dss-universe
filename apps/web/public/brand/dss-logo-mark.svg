@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 140" role="img" aria-label="DSS Universe">
+  <defs>
+    <linearGradient id="dss-planet" x1="0.15" y1="0.95" x2="0.85" y2="0.05">
+      <stop offset="0" stop-color="#A855F7"/>
+      <stop offset="0.45" stop-color="#7C6CF6"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+    <linearGradient id="dss-core" x1="0.3" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#22D3EE"/>
+      <stop offset="1" stop-color="#38BDF8"/>
+    </linearGradient>
+    <linearGradient id="dss-orbit" x1="0" y1="0.5" x2="1" y2="0.5">
+      <stop offset="0" stop-color="#9333EA"/>
+      <stop offset="0.5" stop-color="#A855F7"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <!-- Hides the back half of the orbit wherever the planet is. -->
+    <mask id="dss-behind" maskUnits="userSpaceOnUse" x="0" y="0" width="160" height="140">
+      <rect width="160" height="140" fill="#fff"/>
+      <ellipse cx="80" cy="70" rx="50" ry="55" transform="rotate(16 80 70)" fill="#000"/>
+    </mask>
+    <!-- Transparent gap where the orbit passes in front of the planet. -->
+    <mask id="dss-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="160" height="140">
+      <rect width="160" height="140" fill="#fff"/>
+      <path d="M144 74 A64 15 0 0 1 16 74" transform="rotate(-17 80 74)"
+            fill="none" stroke="#000" stroke-width="16" stroke-linecap="round"/>
+    </mask>
+  </defs>
+
+  <!-- Orbit behind the planet (only its tips stay visible). -->
+  <path d="M16 74 A64 15 0 0 1 144 74" transform="rotate(-17 80 74)" mask="url(#dss-behind)"
+        fill="none" stroke="url(#dss-orbit)" stroke-width="8" stroke-linecap="round"/>
+
+  <g mask="url(#dss-gap)">
+    <g transform="rotate(16 80 70)">
+      <!-- Planet ring: tall ellipse, hole shifted right (crescent volume). -->
+      <path fill="url(#dss-planet)" fill-rule="evenodd"
+            d="M80 22 a44 48 0 1 0 0.01 0 Z M86 30 a28 37 0 1 0 0.01 0 Z"/>
+      <!-- Inner core band, separated from the ring by a gap. -->
+      <path d="M90 36 A22 31 0 0 1 104 74" fill="none" stroke="url(#dss-core)"
+            stroke-width="9" stroke-linecap="round"/>
+      <!-- Cap above the ring. -->
+      <path d="M53 25 A49 54 0 0 1 69 17" fill="none" stroke="#A855F7"
+            stroke-width="6" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- Orbit in front of the planet. -->
+  <path d="M144 74 A64 15 0 0 1 16 74" transform="rotate(-17 80 74)"
+        fill="none" stroke="url(#dss-orbit)" stroke-width="8.5" stroke-linecap="round"/>
+</svg>

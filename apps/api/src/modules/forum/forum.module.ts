@@ -32,9 +32,12 @@ import {
 } from './presentation/forum-topics.resolver';
 import { ForumModerationService } from './infrastructure/prisma-forum-moderation';
 import { ForumModerationResolver } from './presentation/forum-moderation.resolver';
+import { ForumPostNetworkService } from './infrastructure/prisma-forum-post-network';
+import { ForumPostNetworkResolver } from './presentation/forum-post-network.resolver';
 import { ForumRatingsService } from './infrastructure/prisma-forum-ratings';
 import { ForumRatingsResolver } from './presentation/forum-ratings.resolver';
 import {
+  ForumModeratorCardResolver,
   ForumPostReadResolver,
   ForumPostVoteReadResolver,
   ForumStatsResolver,
@@ -48,6 +51,10 @@ import { ForumViewerFactsAdapter } from './infrastructure/forum-viewer-facts.ada
 import { ForumStructureService } from './infrastructure/prisma-forum-structure';
 import { ForumStructureResolver } from './presentation/forum-structure.resolver';
 
+import {
+  ForumAutoCloseRunner,
+  ForumAutoCloseService,
+} from './infrastructure/forum-auto-close.service';
 @Module({
   imports: [
     AuthorizationModule,
@@ -65,10 +72,13 @@ import { ForumStructureResolver } from './presentation/forum-structure.resolver'
     ForumPostMediaResolver,
     ForumModerationService,
     ForumModerationResolver,
+    ForumPostNetworkService,
+    ForumPostNetworkResolver,
     ForumRatingsService,
     ForumRatingsResolver,
     PrismaForumReadModels,
     ForumTopicReadResolver,
+    ForumModeratorCardResolver,
     ForumPostReadResolver,
     ForumPostVoteReadResolver,
     ForumStatsResolver,
@@ -80,6 +90,8 @@ import { ForumStructureResolver } from './presentation/forum-structure.resolver'
     ForumOperationsResolver,
     ForumIntegrationsService,
     ForumIntegrationsResolver,
+    ForumAutoCloseService,
+    ForumAutoCloseRunner,
     { provide: FORUM_SEARCH_SOURCE, useClass: PrismaForumSearch },
     { provide: FORUM_INTERACTION_DECISIONS, useExisting: ForumTopicsService },
   ],

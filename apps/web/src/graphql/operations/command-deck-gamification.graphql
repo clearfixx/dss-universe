@@ -1,0 +1,28 @@
+query CommandDeckXpRules {
+  communityPointRules {
+    key
+    eventName
+    payloadValue
+    points
+    dailyLimit
+    enabled
+    updatedAt
+  }
+  levelDefinitions {
+    level
+    threshold
+    updatedAt
+  }
+}
+
+mutation UpdateCommunityPointRule($input: UpdateCommunityPointRuleInput!) {
+  updateCommunityPointRule(input: $input) {
+    key
+  }
+}
+
+mutation UpdateLevelDefinition($input: UpdateLevelDefinitionInput!) {
+  updateLevelDefinition(input: $input) {
+    level
+  }
+}

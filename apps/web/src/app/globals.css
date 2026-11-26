@@ -29,6 +29,9 @@
   --color-accent-foreground: var(--accent-foreground);
 
   --color-destructive: var(--destructive);
+  --color-brand-cyan: var(--brand-cyan);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -43,23 +46,23 @@
 :root {
   --radius: 0.875rem;
 
-  --background: #0a0a18;
-  --foreground: #f8fafc;
+  --background: #0b0f1a;
+  --foreground: #f9fafb;
 
-  --card: #11122a;
-  --card-foreground: #f8fafc;
+  --card: #121726;
+  --card-foreground: #f9fafb;
 
-  --popover: #14152e;
-  --popover-foreground: #f8fafc;
+  --popover: #121726;
+  --popover-foreground: #f9fafb;
 
-  --primary: #7c3aed;
+  --primary: #8b5cf6;
   --primary-foreground: #ffffff;
 
   --secondary: #1c1d3a;
   --secondary-foreground: #ffffff;
 
   --muted: #1a1b34;
-  --muted-foreground: #9aa0b8;
+  --muted-foreground: #94a3b8;
 
   --accent: #a78bfa;
   --accent-foreground: #020617;
@@ -70,8 +73,13 @@
   --input: rgba(139, 132, 196, 0.24);
   --ring: #8b5cf6;
 
+  /* Design system v1.0: cyan secondary accent and semantic colours. */
+  --brand-cyan: #06b6d4;
+  --success: #22c55e;
+  --warning: #f59e0b;
+
   /* Shell surfaces stay slightly lighter than the page; dividers are deliberately quiet. */
-  --shell-surface: #0d0d20;
+  --shell-surface: #0e1320;
   --shell-divider: rgba(139, 132, 196, 0.14);
 }
 

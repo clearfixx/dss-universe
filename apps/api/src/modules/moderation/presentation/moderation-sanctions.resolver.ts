@@ -18,7 +18,9 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  Inject,
   NotFoundException,
+  Optional,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -51,6 +53,11 @@ import {
 } from '@api/core/authorization';
 import { ModerationSanctionsService } from '../infrastructure/prisma-moderation-sanctions';
 import { ModerationSanctionError } from '../domain/errors/moderation-sanction.error';
+import {
+  MODERATION_MEMBER_CARDS,
+  type ModerationMemberCard,
+  type ModerationMemberCardReader,
+} from '../contracts/moderation-member-cards.contract';
 import {
   MODERATION_SANCTION_KINDS,
   MODERATION_SANCTION_ORIGINS,
@@ -132,12 +139,30 @@ class ViewerSanction {
   @Field(() => Date, { nullable: true }) consumedAt!: Date | null;
 }
 
+@ObjectType({ description: 'Public identity in the staff sanctions journal.' })
+class ModerationMember {
+  @Field(() => ID) id!: string;
+  @Field() username!: string;
+  @Field(() => String, { nullable: true }) displayName!: string | null;
+  @Field(() => String, { nullable: true }) avatarUrl!: string | null;
+}
+
 @ObjectType()
 class StaffSanction extends ViewerSanction {
   @Field(() => ID) subjectId!: string;
   @Field(() => ID, { nullable: true }) issuerId!: string | null;
   @Field(() => ID, { nullable: true }) revokedById!: string | null;
   @Field(() => ID, { nullable: true }) consumedBySanctionId!: string | null;
+  @Field(() => ModerationMember, {
+    nullable: true,
+    description: 'Sanctioned member; filled by journal queries.',
+  })
+  subject?: ModerationMember | null;
+  @Field(() => ModerationMember, {
+    nullable: true,
+    description: 'Issuing staff member; null for automatic escalations.',
+  })
+  issuer?: ModerationMember | null;
 }
 
 @ObjectType()
@@ -179,7 +204,39 @@ class ModerationSanctionPolicy {
 @Resolver()
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class ModerationSanctionsResolver {
-  constructor(private readonly sanctions: ModerationSanctionsService) {}
+  constructor(
+    private readonly sanctions: ModerationSanctionsService,
+    // Optional: without composition wiring the journal omits member names.
+    @Optional()
+    @Inject(MODERATION_MEMBER_CARDS)
+    private readonly members?: ModerationMemberCardReader,
+  ) {}
+
+  @Query(() => StaffSanctionJournal, {
+    description:
+      'Staff sanctions journal across members, newest first. Optional filters: member, kind, active only.',
+  })
+  @RequirePermissions(Permission.ModerationSanctionsView)
+  async moderationSanctions(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
+    @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
+    @Args('subjectId', { type: () => ID, nullable: true })
+    subjectId: string | null,
+    @Args('kind', { type: () => KindEnum, nullable: true })
+    kind: ModerationSanctionKind | null,
+    @Args('activeOnly', { defaultValue: false }) activeOnly: boolean,
+  ): Promise<StaffSanctionJournal> {
+    const journal = await this.execute(
+      this.sanctions.listForStaff(
+        actor,
+        { subjectId: subjectId ?? null, kind: kind ?? null, activeOnly },
+        page,
+        limit,
+      ),
+    );
+    return this.withMembers(this.page(journal, (item) => this.staffItem(item)));
+  }
 
   @Query(() => ModerationSanctionStatus)
   viewerSanctionStatus(@AuthUser() viewer: AuthenticatedUser) {
@@ -209,7 +266,7 @@ export class ModerationSanctionsResolver {
     const journal = await this.execute(
       this.sanctions.journalForStaff(actor, subjectId, page, limit),
     );
-    return this.page(journal, (item) => this.staffItem(item));
+    return this.withMembers(this.page(journal, (item) => this.staffItem(item)));
   }
 
   @Query(() => ModerationSanctionStatus)
@@ -307,6 +364,29 @@ export class ModerationSanctionsResolver {
       issuerId: item.issuerId,
       revokedById: item.revokedById,
       consumedBySanctionId: item.consumedBySanctionId,
+    };
+  }
+
+  /** Attaches subject and issuer cards with one batched lookup. */
+  private async withMembers(
+    journal: StaffSanctionJournal,
+  ): Promise<StaffSanctionJournal> {
+    if (!this.members) return journal;
+    const ids = journal.items.flatMap((item) =>
+      item.issuerId ? [item.subjectId, item.issuerId] : [item.subjectId],
+    );
+    const cards = new Map<string, ModerationMemberCard>(
+      (await this.members.cards(ids)).map((card) => [card.id, card]),
+    );
+    const card = (id: string | null) =>
+      id && cards.has(id) ? { ...cards.get(id)! } : null;
+    return {
+      ...journal,
+      items: journal.items.map((item) => ({
+        ...item,
+        subject: card(item.subjectId),
+        issuer: card(item.issuerId),
+      })),
     };
   }
 

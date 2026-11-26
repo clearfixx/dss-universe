@@ -44,6 +44,7 @@ import type { ForumReplySort } from "@/gql/graphql";
 import { ForumPoll } from "@/features/forum/forum-poll";
 import { ForumPostCard } from "@/features/forum/forum-post-card";
 import { ForumReplyComposer } from "@/features/forum/forum-reply-composer";
+import { ForumReadOnlyNotice } from "@/features/forum/forum-states";
 import { ForumTopicModeration } from "@/features/forum/forum-topic-moderation";
 import {
   ForumFollowButton,
@@ -189,7 +190,7 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
                   ) : (
                     <span
                       aria-hidden="true"
-                      className="flex size-6 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-700 text-[10px] font-bold"
+                      className="flex size-6 items-center justify-center rounded-full bg-primary/25 text-violet-100 text-[10px] font-bold"
                     >
                       {forumMemberName(topic.author).slice(0, 1).toUpperCase()}
                     </span>
@@ -253,19 +254,20 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
               className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100"
             >
               Тема в кошику: учасники її не бачать. Модератори можуть її
-              відновити.
+              відновити.{" "}
+              <Link
+                href="/community/moderation/trash"
+                className="font-medium text-white underline"
+              >
+                Відкрити кошик
+              </Link>
             </div>
           ) : null}
 
           {readOnlyUntil ? (
-            <div
-              role="status"
-              className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100"
-            >
-              Ваш акаунт у режимі лише читання до{" "}
-              {dateFormatter.format(new Date(String(readOnlyUntil)))}. Читати й
-              стежити за темами можна, писати — ні.
-            </div>
+            <ForumReadOnlyNotice until={String(readOnlyUntil)}>
+              Читати й стежити за темами можна, писати — ні.
+            </ForumReadOnlyNotice>
           ) : null}
 
           {poll ? (
@@ -348,6 +350,16 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
               path={pageHref(page)}
               lastPage={sort === "OLDEST" ? pageHref(pages) : pageHref(1)}
             />
+          ) : readOnlyUntil && topic.state === "OPEN" ? (
+            <div
+              aria-disabled="true"
+              className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-card px-4 py-3 text-sm text-slate-500"
+            >
+              <span className="flex-1">
+                Написати відповідь… (недоступно в режимі «Лише читання»)
+              </span>
+              <Lock className="size-4 shrink-0" aria-hidden="true" />
+            </div>
           ) : (
             <p className="rounded-xl bg-card px-4 py-3 text-sm text-slate-400">
               {viewer === null ? (

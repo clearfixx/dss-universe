@@ -48,7 +48,7 @@ export function ForumAvatar({
   return (
     <span
       aria-hidden="true"
-      className={`flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-700 font-bold text-white ${className}`}
+      className={`flex shrink-0 items-center justify-center rounded-full bg-primary/25 text-violet-100 font-bold text-white ${className}`}
     >
       {forumInitials(forumMemberName(member))}
     </span>

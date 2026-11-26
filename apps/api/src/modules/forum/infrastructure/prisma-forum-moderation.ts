@@ -70,6 +70,50 @@ export class ForumModerationService {
     return this.movePost(actorId, postId, 'HIDDEN', reason);
   }
 
+  /**
+   * The author removes their own reply when the section matrix grants
+   * "delete own". Soft delete: moderators can restore it. The first post
+   * goes only with its topic (trash).
+   */
+  async deleteOwnPost(
+    actorId: string,
+    postId: string,
+  ): Promise<{ postId: string; state: string }> {
+    const { post, forum } = await this.postScope(actorId, postId);
+    if (post.authorId !== actorId || !forum.grant.deleteOwn) this.denied();
+    if (post.number === 1) {
+      throw new ForumCommandError(
+        'ACCESS_DENIED',
+        'The first post is removed by trashing the topic.',
+      );
+    }
+    if (post.state !== 'VISIBLE') {
+      throw new ForumCommandError('CONFLICT', 'The post state changed.');
+    }
+    await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.forumPost.updateMany({
+        where: { id: postId, state: 'VISIBLE', authorId: actorId },
+        data: {
+          state: 'DELETED',
+          moderatedAt: new Date(),
+          moderatedById: actorId,
+          moderationReason: 'Deleted by the author.',
+        },
+      });
+      if (updated.count !== 1) {
+        throw new ForumCommandError('CONFLICT', 'The post state changed.');
+      }
+      await this.record(tx, actorId, 'ForumPost', postId, 'post.deleted', {
+        topicId: post.topicId,
+        number: post.number,
+        from: 'VISIBLE',
+        reason: 'Deleted by the author.',
+        byAuthor: true,
+      });
+    });
+    return { postId, state: 'DELETED' };
+  }
+
   deletePost(actorId: string, postId: string, reason: string) {
     return this.movePost(actorId, postId, 'DELETED', reason);
   }
@@ -155,9 +199,29 @@ export class ForumModerationService {
     pinned: boolean,
   ): Promise<ForumTopicSummary> {
     const viewer = await this.viewer(actorId);
-    const { categoryId } = await this.topics.visibleTopic(topicId, viewer);
-    if (!(await this.topics.isModerator(viewer, categoryId))) this.denied();
+    const { categoryId, forum } = await this.topics.visibleTopic(
+      topicId,
+      viewer,
+    );
+    if (!(await this.topics.isModerator(viewer, categoryId, forum)))
+      this.denied();
     await this.prisma.$transaction(async (tx) => {
+      if (pinned && forum.pinnedLimit !== null) {
+        const current = await tx.forumTopic.count({
+          where: {
+            forumId: forum.id,
+            pinned: true,
+            mergedIntoTopicId: null,
+            state: { not: 'TRASHED' },
+          },
+        });
+        if (current >= forum.pinnedLimit) {
+          throw new ForumCommandError(
+            'CONFLICT',
+            `This section allows at most ${forum.pinnedLimit} pinned topics.`,
+          );
+        }
+      }
       const updated = await tx.forumTopic.updateMany({
         where: { id: topicId, pinned: !pinned, state: { not: 'TRASHED' } },
         data: { pinned },
@@ -301,11 +365,12 @@ export class ForumModerationService {
     action: TopicAction,
   ): Promise<ForumTopicSummary> {
     const viewer = await this.viewer(actorId);
-    const { topic, categoryId } = await this.topics.visibleTopic(
+    const { topic, categoryId, forum } = await this.topics.visibleTopic(
       topicId,
       viewer,
     );
-    if (!(await this.topics.isModerator(viewer, categoryId))) this.denied();
+    if (!(await this.topics.isModerator(viewer, categoryId, forum)))
+      this.denied();
     if (!TOPIC_MODERATION_TRANSITIONS[action].includes(topic.state)) {
       throw new ForumCommandError(
         'CONFLICT',
@@ -315,17 +380,27 @@ export class ForumModerationService {
     const next: {
       state: ForumTopicState;
       stateBeforeTrash: ForumTopicState | null;
+      trashedAt: Date | null;
+      trashedById: string | null;
     } =
-      action === 'ARCHIVE'
-        ? { state: 'ARCHIVED', stateBeforeTrash: null }
-        : action === 'UNARCHIVE'
-          ? { state: 'CLOSED', stateBeforeTrash: null }
-          : action === 'TRASH'
-            ? { state: 'TRASHED', stateBeforeTrash: topic.state }
-            : {
-                state: topic.stateBeforeTrash ?? 'CLOSED',
-                stateBeforeTrash: null,
-              };
+      action === 'TRASH'
+        ? {
+            state: 'TRASHED',
+            stateBeforeTrash: topic.state,
+            trashedAt: new Date(),
+            trashedById: actorId,
+          }
+        : {
+            state:
+              action === 'ARCHIVE'
+                ? 'ARCHIVED'
+                : action === 'UNARCHIVE'
+                  ? 'CLOSED'
+                  : (topic.stateBeforeTrash ?? 'CLOSED'),
+            stateBeforeTrash: null,
+            trashedAt: null,
+            trashedById: null,
+          };
     await this.prisma.$transaction(async (tx) => {
       const updated = await tx.forumTopic.updateMany({
         where: { id: topicId, state: topic.state },
@@ -350,19 +425,25 @@ export class ForumModerationService {
     const viewer = await this.viewer(actorId);
     const post = await this.prisma.forumPost.findUnique({
       where: { id: postId },
-      select: { id: true, topicId: true, number: true, state: true },
+      select: {
+        id: true,
+        topicId: true,
+        number: true,
+        state: true,
+        authorId: true,
+      },
     });
     if (!post) this.notFound('Post');
-    const { topic, categoryId } = await this.topics.visibleTopic(
+    const { topic, categoryId, forum } = await this.topics.visibleTopic(
       post.topicId,
       viewer,
     );
     const actor: ForumModerationActor = {
       id: actorId,
-      moderator: await this.topics.isModerator(viewer, categoryId),
+      moderator: await this.topics.isModerator(viewer, categoryId, forum),
       curator: topic.curatorId === actorId,
     };
-    return { viewer, actor, post, topic };
+    return { viewer, actor, post, topic, forum };
   }
 
   private async viewer(actorId: string): Promise<ForumViewerFacts> {

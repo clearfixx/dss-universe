@@ -23,7 +23,9 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 
 import {
+  CommunitySearchDocument,
   ForumCategoriesDocument,
+  ForumTrashDocument,
   ForumHubDocument,
   ForumSectionStateDocument,
   ForumWeeklyTopDocument,
@@ -255,3 +257,62 @@ export async function loadForumWeeklyTop(limit = 5) {
     return result.data?.leaderboard.items ?? null;
   });
 }
+
+export const COMMUNITY_SEARCH_PAGE_SIZE = 10;
+/** Longest term the shared search API accepts. */
+export const COMMUNITY_SEARCH_MAX_TERM = 100;
+
+/** Forum topics and news for one term (P1 A11); the API applies visibility. */
+export async function loadCommunitySearch(
+  term: string,
+  topicPage = 1,
+  newsPage = 1,
+) {
+  const result = await getClient().query({
+    query: CommunitySearchDocument,
+    variables: {
+      term,
+      topicPage,
+      newsPage,
+      pageSize: COMMUNITY_SEARCH_PAGE_SIZE,
+    },
+    context: await authContext(),
+    fetchPolicy: "no-cache",
+  });
+  if (!result.data) throw new Error("COMMUNITY_SEARCH_UNAVAILABLE");
+  return result.data;
+}
+
+/**
+ * Forum trash (P1 B07). "DENIED" for viewers who moderate nothing (the
+ * page answers 404); "OUT_OF_SCOPE" for a section outside their scope.
+ */
+export async function loadForumTrash(input: {
+  page: number;
+  forumId: string | null;
+  search: string | null;
+}) {
+  if (!(await hasSession())) return "DENIED" as const;
+  try {
+    const result = await getClient().query({
+      query: ForumTrashDocument,
+      variables: { ...input, limit: FORUM_PAGE_SIZE },
+      context: await authContext(),
+      fetchPolicy: "no-cache",
+    });
+    if (!result.data) throw new Error("FORUM_TRASH_UNAVAILABLE");
+    return result.data.forumTrash;
+  } catch (error) {
+    const code = toForumError(error).code;
+    if (code === "ACCESS_DENIED" || code === "NOT_SIGNED_IN") {
+      return "DENIED" as const;
+    }
+    if (code === "NOT_FOUND") return "OUT_OF_SCOPE" as const;
+    throw error;
+  }
+}
+
+export type ForumTrashPage = Exclude<
+  Awaited<ReturnType<typeof loadForumTrash>>,
+  "DENIED" | "OUT_OF_SCOPE"
+>;

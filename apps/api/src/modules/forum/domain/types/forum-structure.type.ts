@@ -17,6 +17,8 @@ export type ForumVisibility = (typeof FORUM_VISIBILITIES)[number];
 /** Current viewer facts needed by Forum; never cached across requests. */
 export type ForumViewerFacts = {
   subjectId: string | null;
+  /** Highest forum role (section matrices); guests and members by default. */
+  accessRole?: import('../forum-access.rules').ForumAccessRole;
   /** Audience keys such as `role:moderator` and `group:premium`. */
   audienceKeys: readonly string[];
   /** Holders of forum.structure.manage see every category. */
@@ -24,6 +26,10 @@ export type ForumViewerFacts = {
   moderatesAllCategories: boolean;
   canAssignModerators: boolean;
   canPurgeContent: boolean;
+  /** forum.network.view: may read post IP+UA (P1 B11, audited). */
+  canViewNetwork?: boolean;
+  /** forum.network.delete: may erase post IP+UA. */
+  canDeleteNetwork?: boolean;
 };
 
 export type ForumCategoryVisibilityRule = {
@@ -41,6 +47,20 @@ export type ForumNode = {
   position: number;
   active: boolean;
   allowsGatedContent: boolean;
+  allowTopics: boolean;
+  allowReplies: boolean;
+  allowPolls: boolean;
+  allowAttachments: boolean;
+  listed: boolean;
+  searchable: boolean;
+  showCounts: boolean;
+  pinnedLimit: number | null;
+  attachmentMaxMb: number | null;
+  attachmentFormats: string[];
+  autoCloseDays: number | null;
+  gateViewRole: import('../forum-access.rules').ForumAccessRole;
+  gateCreateRole: import('../forum-access.rules').ForumAccessRole;
+  gateBlockTypes: import('../forum-section-limits.rules').GateBlockType[];
   subforums: ForumNode[];
 };
 
@@ -75,11 +95,28 @@ export type ForumInput = {
   position: number;
   allowsGatedContent: boolean;
   active: boolean;
+  /** Section switches; omitted = keep the stored value (defaults on create). */
+  allowTopics?: boolean;
+  allowReplies?: boolean;
+  allowPolls?: boolean;
+  allowAttachments?: boolean;
+  listed?: boolean;
+  searchable?: boolean;
+  showCounts?: boolean;
+  pinnedLimit?: number | null;
+  attachmentMaxMb?: number | null;
+  attachmentFormats?: string[];
+  autoCloseDays?: number | null;
+  gateViewRole?: import('../forum-access.rules').ForumAccessRole;
+  gateCreateRole?: import('../forum-access.rules').ForumAccessRole;
+  gateBlockTypes?: import('../forum-section-limits.rules').GateBlockType[];
 };
 
 export type ForumModeratorAssignmentRecord = {
   id: string;
   categoryId: string;
+  /** null = whole category. */
+  forumId: string | null;
   moderatorId: string;
   assignedById: string;
   assignedAt: Date;

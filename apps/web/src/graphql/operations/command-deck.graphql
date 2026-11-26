@@ -1,0 +1,236 @@
+fragment AdminForumSettings on Forum {
+  id
+  categoryId
+  parentId
+  slug
+  title
+  description
+  position
+  active
+  allowsGatedContent
+  allowTopics
+  allowReplies
+  allowPolls
+  allowAttachments
+  listed
+  searchable
+  showCounts
+  pinnedLimit
+  attachmentMaxMb
+  attachmentFormats
+  autoCloseDays
+  gateViewRole
+  gateCreateRole
+  gateBlockTypes
+}
+
+fragment AdminSubforumSettings on ForumSubforum {
+  id
+  categoryId
+  parentId
+  slug
+  title
+  description
+  position
+  active
+  allowsGatedContent
+  allowTopics
+  allowReplies
+  allowPolls
+  allowAttachments
+  listed
+  searchable
+  showCounts
+  pinnedLimit
+  attachmentMaxMb
+  attachmentFormats
+  autoCloseDays
+  gateViewRole
+  gateCreateRole
+  gateBlockTypes
+}
+
+fragment AdminAccessRow on ForumAccessRow {
+  role
+  view
+  read
+  createTopics
+  reply
+  editOwn
+  deleteOwn
+  moderate
+}
+
+query CommandDeckCommunityHub {
+  forumCategories {
+    id
+    slug
+    title
+    description
+    position
+    active
+    visibility
+    audienceKeys
+    forums {
+      ...AdminForumSettings
+      subforums {
+        ...AdminSubforumSettings
+      }
+    }
+  }
+  forumHubStats {
+    forumCount
+    topicCount
+    postCount
+    participantCount
+  }
+  moderationSanctionPolicy {
+    escalationWarningCount
+    escalationReadOnlyDays
+    warningLifetimeDays
+    readOnlyMaxDays
+  }
+}
+
+query CommandDeckSectionAccess($categoryId: ID, $forumId: ID) {
+  forumSectionAccess(categoryId: $categoryId, forumId: $forumId) {
+    source
+    own {
+      ...AdminAccessRow
+    }
+    effective {
+      ...AdminAccessRow
+    }
+  }
+}
+
+query CommandDeckModerators($categoryId: ID!) {
+  forumCategoryModerators(categoryId: $categoryId) {
+    id
+    categoryId
+    forumId
+    moderatorId
+    assignedAt
+    moderator {
+      ...ForumMemberCard
+    }
+  }
+}
+
+query CommandDeckMemberLookup($search: String!) {
+  members(input: { search: $search, limit: 6 }) {
+    items {
+      id
+      username
+      displayName
+      avatarUrl
+      roles
+    }
+  }
+}
+
+mutation SaveForumSettings($input: SaveForumSettingsInput!) {
+  saveForumSettings(input: $input) {
+    id
+  }
+}
+
+mutation CreateForumCategory($input: ForumCategoryInput!) {
+  createForumCategory(input: $input) {
+    id
+  }
+}
+
+mutation CreateForum($input: ForumInput!) {
+  createForum(input: $input) {
+    id
+  }
+}
+
+mutation UpdateModerationSanctionPolicy(
+  $input: ModerationSanctionPolicyInput!
+) {
+  updateModerationSanctionPolicy(input: $input) {
+    escalationWarningCount
+  }
+}
+
+mutation AssignForumModerator(
+  $categoryId: ID!
+  $forumId: ID!
+  $moderatorId: ID!
+) {
+  assignForumModerator(
+    categoryId: $categoryId
+    forumId: $forumId
+    moderatorId: $moderatorId
+  ) {
+    id
+  }
+}
+
+mutation RevokeForumModerator($assignmentId: ID!) {
+  revokeForumCategoryModerator(assignmentId: $assignmentId) {
+    id
+  }
+}
+
+# Command Deck › Community Hub › Теги (P1 C03): allowed tags of one section.
+query AdminForumTags($forumId: ID!) {
+  forumTags(forumId: $forumId) {
+    id
+    slug
+    label
+    active
+  }
+}
+
+mutation CreateAdminForumTag($forumId: ID!, $input: ForumTagInput!) {
+  createForumTag(forumId: $forumId, input: $input) {
+    id
+    slug
+    label
+    active
+  }
+}
+
+mutation UpdateAdminForumTag($tagId: ID!, $input: ForumTagInput!) {
+  updateForumTag(tagId: $tagId, input: $input) {
+    id
+    slug
+    label
+    active
+  }
+}
+
+# P1 C02: whole-category moderators and the read-only supermoderator list
+# (members of the roles that hold forum.moderate.all).
+mutation AssignForumCategoryModerator($categoryId: ID!, $moderatorId: ID!) {
+  assignForumCategoryModerator(
+    categoryId: $categoryId
+    moderatorId: $moderatorId
+  ) {
+    id
+  }
+}
+
+query CommandDeckSupermoderators {
+  admins: members(input: { role: "admin", limit: 50 }) {
+    items {
+      id
+      username
+      displayName
+      avatarUrl
+      roles
+    }
+  }
+  owners: members(input: { role: "owner", limit: 50 }) {
+    items {
+      id
+      username
+      displayName
+      avatarUrl
+      roles
+    }
+  }
+}

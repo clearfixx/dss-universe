@@ -205,6 +205,18 @@ export const PERMISSIONS = {
     description:
       'Supermoderator scope: moderation authority in every forum category.',
   },
+  ForumNetworkView: {
+    key: 'forum.network.view',
+    label: 'View forum post network data',
+    description:
+      'Allows staff to see the IP address and User-Agent a forum post was written from; every access is audited.',
+  },
+  ForumNetworkDelete: {
+    key: 'forum.network.delete',
+    label: 'Delete forum post network data',
+    description:
+      'Allows manually erasing the stored IP address and User-Agent of a forum post.',
+  },
   ContentGatesConfigure: {
     key: 'content-gates.configure',
     label: 'Configure Content Gates',
