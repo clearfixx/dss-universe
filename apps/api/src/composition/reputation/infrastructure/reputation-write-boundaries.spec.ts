@@ -61,6 +61,7 @@ const response: ReputationEntry = {
   reason: fact.reason,
   createdAt: fact.createdAt,
   reversal: null,
+  source: null,
 };
 const input: CreateReputationEntry = {
   actorId: 'actor',
@@ -134,6 +135,8 @@ describe('Owned Reputation writer', () => {
         recipientId: 'recipient',
         value: 1,
         reason: 'Reason',
+        sourceType: null,
+        sourceId: null,
       },
       select: {
         id: true,
@@ -141,6 +144,8 @@ describe('Owned Reputation writer', () => {
         recipientId: true,
         value: true,
         reason: true,
+        sourceType: true,
+        sourceId: true,
         createdAt: true,
       },
     });
