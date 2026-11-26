@@ -640,6 +640,46 @@ describe('Research Lab public delivery (GraphQL)', () => {
       deletedById: null,
       body: 'Wiki discussion',
     });
+    await service.archive({
+      actorId,
+      pageId: draft.pageId,
+      expectedPublicationGeneration: 1,
+      correlationId: randomUUID(),
+    });
+    const report = async (token: string, subjectCommentId: string | null) =>
+      payload(
+        await request(app.getHttpServer())
+          .post('/api/graphql')
+          .set('Authorization', 'Bearer ' + token)
+          .send({
+            query:
+              'mutation($input:ReportContentInput!){reportContent(input:$input){interactionTargetId commentId reporterId status}}',
+            variables: {
+              input: {
+                ...target,
+                commentId: subjectCommentId,
+                category: 'OTHER',
+                reason: 'Review archived content',
+              },
+            },
+          })
+          .expect(200),
+      );
+    for (const subject of [null, commentId]) {
+      expect(await report(author.tokens.accessToken, subject)).toEqual({
+        data: {
+          reportContent: {
+            ...target,
+            commentId: subject,
+            reporterId: actorId,
+            status: 'OPEN',
+          },
+        },
+      });
+      const denied = await report(reader.tokens.accessToken, subject);
+      expect(denied.errors[0].extensions.code).toBe('FORBIDDEN');
+    }
+    expect(await db.contentReport.count({ where: target })).toBe(2);
   });
 
   it('keeps exact facets and stable ties across a search batch and on an empty deep page', async () => {
