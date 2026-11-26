@@ -12,11 +12,14 @@ export function ShellSearch() {
   const [term, setTerm] = useState("");
   const [open, setOpen] = useState(false);
   const input = useRef<HTMLInputElement>(null);
+  const mobileInput = useRef<HTMLInputElement>(null);
+  const mobileTrigger = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
-        if (input.current?.getClientRects().length) input.current.focus();
+        if (mobileInput.current?.getClientRects().length) mobileInput.current.focus();
+        else if (input.current?.getClientRects().length) input.current.focus();
         else setOpen(true);
       }
     };
@@ -31,7 +34,7 @@ export function ShellSearch() {
   }
   return (
     <>
-      <Button type="button" variant="ghost" size="icon" className="shrink-0 sm:hidden" aria-label="Відкрити пошук" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
+      <Button ref={mobileTrigger} type="button" variant="ghost" size="icon" className="shrink-0 sm:hidden" aria-label="Відкрити пошук" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
         <Search aria-hidden="true" />
       </Button>
       <form role="search" className="hidden min-w-0 sm:block" onSubmit={(event) => { event.preventDefault(); submit(); }}>
@@ -43,13 +46,25 @@ export function ShellSearch() {
         </label>
       </form>
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="top" className="bg-[color:var(--shell-surface)]">
+        <SheetContent
+          side="top"
+          className="bg-[color:var(--shell-surface)]"
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            mobileInput.current?.focus();
+          }}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            if (mobileTrigger.current?.getClientRects().length) mobileTrigger.current.focus();
+            else input.current?.focus();
+          }}
+        >
           <SheetHeader>
             <SheetTitle>Пошук у спільноті</SheetTitle>
             <SheetDescription>Введіть пошуковий запит.</SheetDescription>
           </SheetHeader>
           <form role="search" className="flex gap-2 px-4 pb-4" onSubmit={(event) => { event.preventDefault(); submit(); }}>
-            <input type="search" aria-label="Пошук у спільноті" value={term} onChange={(event) => setTerm(event.target.value)} className="min-w-0 flex-1 rounded-md border border-border bg-background px-3 text-foreground focus-visible:outline-2 focus-visible:outline-ring" />
+            <input ref={mobileInput} type="search" aria-label="Пошук у спільноті" value={term} onChange={(event) => setTerm(event.target.value)} className="min-w-0 flex-1 rounded-md border border-border bg-background px-3 text-foreground focus-visible:outline-2 focus-visible:outline-ring" />
             <Button type="submit">Знайти</Button>
           </form>
         </SheetContent>
