@@ -18,7 +18,7 @@ vi.mock("next/link", () => ({
 import { Breadcrumbs, GlobalNavigation } from "./dss-application-shell";
 
 describe("global navigation accessibility", () => {
-  it("names icon-only links at intermediate desktop widths", () => {
+  it("names horizontal navigation links", () => {
     const html = renderToStaticMarkup(
       createElement(GlobalNavigation, {
         pathname: "/news/en/article",
@@ -173,5 +173,37 @@ describe("breadcrumb rendering", () => {
     }));
     expect(html).not.toContain("Stale topic");
     expect(html).toContain("Поточна сторінка");
+  });
+});
+
+describe("navigation composition contract", () => {
+  for (const variant of ["MODULE_LAUNCHER", "HORIZONTAL_NAVIGATION", "HYBRID"] as const) {
+    it(`preserves launcher access for ${variant}`, () => {
+      const html = renderToStaticMarkup(createElement(GlobalNavigation, {
+        pathname: "/news",
+        variant,
+        hasSession: true,
+        canAccessAdminDeck: false,
+        onOpenLauncher: () => {},
+      }));
+      expect(html).toContain('aria-haspopup="dialog"');
+      expect(html).not.toContain('href="/command-deck"');
+      expect(html.includes('href="/news"')).toBe(variant !== "MODULE_LAUNCHER");
+      expect(html.includes('href="/media"')).toBe(variant === "HORIZONTAL_NAVIGATION");
+    });
+  }
+
+  it("keeps future module labels non-navigable", () => {
+    const html = renderToStaticMarkup(createElement(GlobalNavigation, {
+      pathname: "/news",
+      variant: "HORIZONTAL_NAVIGATION",
+      hasSession: true,
+      canAccessAdminDeck: true,
+      onOpenLauncher: () => {},
+    }));
+    expect(html).toContain("Академія");
+    expect(html).toContain("(скоро)");
+    expect(html).not.toContain('href="/academy"');
+    expect(html).toContain('href="/command-deck"');
   });
 });
