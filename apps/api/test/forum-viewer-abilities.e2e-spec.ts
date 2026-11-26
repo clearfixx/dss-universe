@@ -116,6 +116,8 @@ describe('Forum topic viewer abilities (e2e)', () => {
       seesAllCategories: true,
       canAssignModerators: true,
       canPurgeContent: true,
+      canViewNetwork: true,
+      canDeleteNetwork: true,
     });
     const category = await structure.createCategory(admin, {
       slug: 'c-' + randomUUID().slice(0, 8),
@@ -151,6 +153,8 @@ describe('Forum topic viewer abilities (e2e)', () => {
     await expect(abilities(topic, null)).resolves.toEqual({
       moderate: false,
       purge: false,
+      network: false,
+      networkDelete: false,
       acceptAnswer: false,
       close: false,
       reopen: false,
@@ -159,6 +163,8 @@ describe('Forum topic viewer abilities (e2e)', () => {
     await expect(abilities(topic, member)).resolves.toEqual({
       moderate: false,
       purge: false,
+      network: false,
+      networkDelete: false,
       acceptAnswer: false,
       close: false,
       reopen: false,
@@ -182,6 +188,8 @@ describe('Forum topic viewer abilities (e2e)', () => {
     await expect(abilities(topic, admin)).resolves.toMatchObject({
       moderate: true,
       purge: true,
+      network: true,
+      networkDelete: true,
     });
 
     const closed = { ...topic, state: 'CLOSED', acceptedAnswerPostId: 'x' };

@@ -677,6 +677,20 @@ input ForumChangeInput {
   resetAccess: Boolean! = false
 }
 
+type ForumDeviceInfo {
+  browser: String
+  kind: ForumDeviceKind!
+  os: String
+}
+
+enum ForumDeviceKind {
+  BOT
+  DESKTOP
+  MOBILE
+  TABLET
+  UNKNOWN
+}
+
 """
 NO_REPLIES: nobody replied yet; UNSOLVED: questions without an accepted answer.
 """
@@ -837,6 +851,17 @@ type ForumPostModeration {
 type ForumPostModerationResult {
   postId: ID!
   state: String!
+}
+
+"""
+Staff-only network metadata of a post: where it was written from. Every read is audited.
+"""
+type ForumPostNetwork {
+  capturedAt: DateTime!
+  device: ForumDeviceInfo!
+  ipAddress: String
+  postId: ID!
+  userAgent: String
 }
 
 type ForumPostPage {
@@ -1116,6 +1141,12 @@ type ForumTopicViewerAbilities {
 
   """Topic and post moderation in this category."""
   moderate: Boolean!
+
+  """Post IP+UA (forum.network.view; every read audited)."""
+  network: Boolean!
+
+  """Erase post IP+UA (forum.network.delete)."""
+  networkDelete: Boolean!
 
   """Permanent removal of posts (administrators)."""
   purge: Boolean!
@@ -1610,6 +1641,11 @@ type Mutation {
   deleteCommunityEvent(id: ID!): Boolean!
   deleteCommunityMission(id: ID!): Boolean!
   deleteForumPost(postId: ID!, reason: String!): ForumPostModerationResult!
+
+  """
+  Erases the stored IP address and User-Agent of a post (forum.network.delete; reason required; audited).
+  """
+  deleteForumPostNetwork(postId: ID!, reason: String!): Boolean!
 
   """Author deletes their own reply where the section grants "delete own"."""
   deleteOwnForumPost(postId: ID!): ForumPostModerationResult!
@@ -2194,6 +2230,11 @@ type Query {
   forumFollowed(forumId: ID!): Boolean!
   forumHubStats: ForumHubStats!
   forumPopularTags(limit: Int! = 12): [ForumPopularTag!]!
+
+  """
+  IP address and User-Agent of a post author (forum.network.view; audited). Null when nothing was stored.
+  """
+  forumPostNetwork(postId: ID!): ForumPostNetwork
   forumPostRevisions(postId: ID!): [ForumPostRevision!]!
   forumPostVotes(limit: Int! = 50, page: Int! = 1, postId: ID!): ForumPostVotePage!
   forumPosts(limit: Int! = 20, page: Int! = 1, sort: ForumReplySort! = OLDEST, topicId: ID!): ForumPostPage!
