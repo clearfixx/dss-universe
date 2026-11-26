@@ -1,13 +1,39 @@
 "use client";
 
-import { ChevronDown, LayoutDashboard, LogIn, LogOut, Settings, UserRound } from "lucide-react";
+import { ChevronDown, LayoutDashboard, LogIn, LogOut, Plus, Settings, UserRound } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { logoutAction } from "@/features/auth/auth-actions";
 import type { SessionViewer } from "@/features/auth/session-contract";
+import { visibleModules } from "./shell-navigation";
 import { viewerDisplayName } from "./personal-hub-presentation";
+
+export function ShellQuickAdd({ canAccessAdminDeck }: { canAccessAdminDeck: boolean }) {
+  const actions = visibleModules(true, canAccessAdminDeck)
+    .flatMap((module) => module.children)
+    .filter((item) => item.href === "/community/forum/new" || item.href === "/newsroom/new");
+
+  if (!actions.length) return null;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button type="button" variant="ghost" size="icon" className="shrink-0" aria-label="Швидке створення">
+          <Plus aria-hidden="true" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="bg-[color:var(--shell-surface)]">
+        <DropdownMenuLabel>Створити</DropdownMenuLabel>
+        {actions.map(({ href, label, icon: Icon }) => (
+          <DropdownMenuItem key={href} asChild>
+            <Link href={href}><Icon aria-hidden="true" />{label}</Link>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export function ShellUserMenu({ viewer, pathname, canAccessAdminDeck }: { viewer: SessionViewer | null; pathname: string; canAccessAdminDeck: boolean }) {
   return (<>
@@ -28,10 +54,10 @@ export function ShellUserMenu({ viewer, pathname, canAccessAdminDeck }: { viewer
                         </AvatarFallback>
                       </Avatar>
                       <span className="hidden flex-col items-start leading-tight xl:flex">
-                        <span className="max-w-36 truncate text-sm font-semibold text-slate-100">
+                        <span className="max-w-36 truncate text-sm font-semibold text-foreground">
                           {viewerDisplayName(viewer)}
                         </span>
-                        <span className="max-w-36 truncate text-xs text-slate-400">
+                        <span className="max-w-36 truncate text-xs text-muted-foreground">
                           @{viewer.username}
                         </span>
                       </span>
@@ -44,7 +70,7 @@ export function ShellUserMenu({ viewer, pathname, canAccessAdminDeck }: { viewer
                   >
                     <DropdownMenuLabel>
                       <span className="block truncate text-sm">{viewerDisplayName(viewer)}</span>
-                      <span className="block truncate text-xs font-normal text-slate-400">
+                      <span className="block truncate text-xs font-normal text-muted-foreground">
                         @{viewer.username}
                       </span>
                     </DropdownMenuLabel>
