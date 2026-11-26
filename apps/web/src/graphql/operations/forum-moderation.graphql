@@ -149,3 +149,22 @@ mutation RestrictForumPostAuthor(
     escalatedSanctionId
   }
 }
+
+# Forum trash (P1 B07): trashed topics of the sections the viewer moderates.
+query ForumTrash($page: Int!, $limit: Int!, $forumId: ID, $search: String) {
+  forumTrash(page: $page, limit: $limit, forumId: $forumId, search: $search) {
+    total
+    page
+    limit
+    items {
+      ...ForumTopicSummary
+      trashedAt
+      trashedBy {
+        id
+        username
+        displayName
+        avatarUrl
+      }
+    }
+  }
+}

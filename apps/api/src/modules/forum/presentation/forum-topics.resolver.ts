@@ -213,6 +213,12 @@ export class ForumTopicModel {
   viewerLastReadNumber!: number | null;
   @Field(() => ID, { nullable: true }) acceptedAnswerPostId!: string | null;
   @Field(() => ID, { nullable: true }) mergedIntoTopicId!: string | null;
+  @Field(() => Date, {
+    nullable: true,
+    description: 'When the topic was moved to the trash; null outside it.',
+  })
+  trashedAt!: Date | null;
+  @Field(() => ID, { nullable: true }) trashedById!: string | null;
   @Field(() => [ForumTopicTagModel]) tags!: ForumTopicTagModel[];
 }
 
@@ -382,6 +388,25 @@ export class ForumTopicsResolver {
         filter,
         kind ?? null,
       ),
+    );
+  }
+
+  @Query(() => ForumTopicPageModel, {
+    description:
+      'Forum trash: trashed topics of the sections the viewer moderates, most recently trashed first. Moderators only.',
+  })
+  @UseGuards(JwtAuthGuard)
+  forumTrash(
+    @AuthUser() user: AuthenticatedUser,
+    @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
+    @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
+    @Args('forumId', { type: () => ID, nullable: true })
+    forumId: string | null,
+    @Args('search', { type: () => String, nullable: true })
+    search: string | null,
+  ): Promise<ForumPage<ForumTopicModel>> {
+    return this.execute(
+      this.topics.trash(user.id, page, limit, forumId ?? null, search ?? null),
     );
   }
 

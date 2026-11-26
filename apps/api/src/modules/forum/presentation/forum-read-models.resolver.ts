@@ -314,6 +314,14 @@ export class ForumTopicReadResolver extends ForumReadResolverBase {
   ) {
     return this.card(ctx, topic.lastPostAuthorId);
   }
+
+  @ResolveField(() => ForumMemberModel, {
+    nullable: true,
+    description: 'Who moved the topic to the trash; null outside it.',
+  })
+  trashedBy(@Parent() topic: ForumTopicModel, @Context() ctx: RequestContext) {
+    return topic.trashedById ? this.card(ctx, topic.trashedById) : null;
+  }
 }
 
 @Resolver(() => ForumPostModel)
