@@ -84,6 +84,7 @@ test("mobile navigation exposes expanded state and closes with Escape", async ({
   await page.keyboard.press("Escape");
   await expect(drawer).not.toBeVisible();
   await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  await expect(trigger).toBeFocused();
 
   await trigger.click();
   await expect(trigger).toHaveAttribute("aria-expanded", "true");
@@ -125,6 +126,7 @@ test("desktop Shell keeps its module launcher and contextual sidebar usable", as
     await page.keyboard.press("Escape");
     await expect(drawer).not.toBeVisible();
     await expect(launcher).toHaveAttribute("aria-expanded", "false");
+    await expect(launcher).toBeFocused();
   }
 });
 
