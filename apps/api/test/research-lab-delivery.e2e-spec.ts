@@ -666,18 +666,27 @@ describe('Research Lab public delivery (GraphQL)', () => {
           .expect(200),
       );
     for (const subject of [null, commentId]) {
-      expect(await report(author.tokens.accessToken, subject)).toEqual({
+      const denied = await report(reader.tokens.accessToken, subject);
+      expect(denied.errors[0].extensions.code).toBe('FORBIDDEN');
+    }
+    expect(await db.contentReport.count({ where: target })).toBe(0);
+
+    // The same reader can report as an ordinary member once the page admits members.
+    await db.researchPage.update({
+      where: { id: draft.pageId },
+      data: { visibility: 'MEMBERS' },
+    });
+    for (const subject of [null, commentId]) {
+      expect(await report(reader.tokens.accessToken, subject)).toEqual({
         data: {
           reportContent: {
             ...target,
             commentId: subject,
-            reporterId: actorId,
+            reporterId: reader.user.id,
             status: 'OPEN',
           },
         },
       });
-      const denied = await report(reader.tokens.accessToken, subject);
-      expect(denied.errors[0].extensions.code).toBe('FORBIDDEN');
     }
     expect(await db.contentReport.count({ where: target })).toBe(2);
   });
