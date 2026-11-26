@@ -50,6 +50,21 @@ export class PrismaModerationRepository implements ModerationRepository {
     input: Parameters<ModerationRepository['createReport']>[0],
   ) {
     return this.prisma.$transaction(async (transaction) => {
+      // Serialize report creation with tombstoning, including direct comment targets.
+      const subjects = await transaction.$queryRaw<
+        { id: string; deletedAt: Date | null }[]
+      >`
+        SELECT id, "deletedAt" FROM comments
+        WHERE (id = ${input.commentId} AND "interactionTargetId" = ${input.interactionTargetId})
+           OR "reactionTargetId" = ${input.interactionTargetId}
+        ORDER BY id FOR SHARE
+      `;
+      if (
+        subjects.some((subject) => subject.deletedAt !== null) ||
+        (input.commentId !== null &&
+          !subjects.some((subject) => subject.id === input.commentId))
+      )
+        return null;
       const report = await transaction.contentReport.create({ data: input });
       await this.record(transaction, {
         action: 'content-reports.report.created',
