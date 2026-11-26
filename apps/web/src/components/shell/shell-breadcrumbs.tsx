@@ -15,7 +15,11 @@ export function Breadcrumbs({
   pageTitle?: TrustedPageTitle;
   trail?: readonly TrustedBreadcrumb[];
 }) {
-  const routeTrail = Boolean(trail?.length && trail.at(-1)?.href === pathname);
+  // A non-link final crumb is accepted only with matching route-owned metadata.
+  const last = trail?.at(-1);
+  const routeTrail = Boolean(
+    last && (last.href === pathname || (!last.href && pageTitle?.pathname === pathname && last.label === pageTitle.title)),
+  );
   const parts = routeTrail ? trail! : breadcrumbsForPath(pathname, pageTitle);
   if (!parts.length) return null;
   return (

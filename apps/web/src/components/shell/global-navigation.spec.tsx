@@ -140,6 +140,32 @@ describe("breadcrumb rendering", () => {
     expect(html).toContain('aria-label="DSS Universe"');
   });
 
+  it("accepts a non-link final crumb when verified against the active pathname", () => {
+    const html = renderToStaticMarkup(createElement(Breadcrumbs, {
+      pathname: "/community/moderation/trash",
+      pageTitle: { pathname: "/community/moderation/trash", title: "Кошик" },
+      trail: [
+        { href: "/community", label: "Спільнота" },
+        { label: "Модерація" },
+        { label: "Кошик" },
+      ],
+    }));
+    expect(html).toContain("Модерація");
+    expect(html).toContain("Кошик");
+    expect(html).toContain('aria-current="page"');
+    expect(html).not.toContain('href="/community/moderation/trash"');
+  });
+
+  it("rejects a non-link final crumb with stale route metadata", () => {
+    const html = renderToStaticMarkup(createElement(Breadcrumbs, {
+      pathname: "/community/moderation/sanctions",
+      pageTitle: { pathname: "/community/moderation/trash", title: "Кошик" },
+      trail: [{ label: "Кошик" }],
+    }));
+    expect(html).not.toContain("Кошик");
+    expect(html).toContain("Поточна сторінка");
+  });
+
   it("rejects a route-owned trail from a different pathname", () => {
     const html = renderToStaticMarkup(createElement(Breadcrumbs, {
       pathname: "/community/forum/topics/t2",
