@@ -48,6 +48,41 @@ describe('Research Lab public delivery (GraphQL)', () => {
     await app?.close();
     await fixture?.close();
   });
+  it('lists active categories in stable order without exposing children of inactive parents', async () => {
+    const suffix = randomUUID();
+    const root = await fixture.prisma.researchCategory.create({
+      data: { name: 'Root', slug: 'root-' + suffix, sortOrder: 2 },
+    });
+    const child = await fixture.prisma.researchCategory.create({
+      data: {
+        name: 'Child',
+        slug: 'child-' + suffix,
+        parentId: root.id,
+        sortOrder: 1,
+      },
+    });
+    const inactive = await fixture.prisma.researchCategory.create({
+      data: { name: 'Inactive', slug: 'inactive-' + suffix, isActive: false },
+    });
+    await fixture.prisma.researchCategory.create({
+      data: {
+        name: 'Hidden child',
+        slug: 'hidden-' + suffix,
+        parentId: inactive.id,
+      },
+    });
+    const response = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .send({
+        query: 'query{researchCategories{id parentId name slug sortOrder}}',
+      })
+      .expect(200);
+    expect(payload(response).errors).toBeUndefined();
+    expect(payload(response).data.researchCategories).toEqual([
+      expect.objectContaining({ id: child.id, parentId: root.id }),
+      expect.objectContaining({ id: root.id, parentId: null }),
+    ]);
+  });
   it('removes the entire result and its count after an audience change', async () => {
     const id = randomUUID(),
       author = randomUUID(),

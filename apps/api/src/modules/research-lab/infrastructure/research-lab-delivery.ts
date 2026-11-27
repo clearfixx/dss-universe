@@ -23,6 +23,34 @@ export class ResearchLabDelivery {
     private readonly editor: EditorViewerDocumentProjector,
   ) {}
 
+  async categories() {
+    const categories = await this.prisma.researchCategory.findMany({
+      select: {
+        id: true,
+        parentId: true,
+        name: true,
+        slug: true,
+        description: true,
+        sortOrder: true,
+      },
+      where: { isActive: true },
+      orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
+    });
+    const byId = new Map(categories.map((category) => [category.id, category]));
+    return categories.filter((category) => {
+      const visited = new Set<string>();
+      let current = category;
+      while (current.parentId) {
+        if (visited.has(current.id)) return false;
+        visited.add(current.id);
+        const parent = byId.get(current.parentId);
+        if (!parent) return false;
+        current = parent;
+      }
+      return true;
+    });
+  }
+
   private async scope(viewerId: string | null) {
     const facts = await this.authority.viewerFacts(viewerId, new Date());
     const where: Prisma.ResearchPageWhereInput = {
