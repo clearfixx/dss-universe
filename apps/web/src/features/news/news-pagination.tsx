@@ -4,6 +4,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { NativeSelect } from "@/components/ui/choice-fields";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -123,11 +124,11 @@ export function NewsPagination({
 
           <label className="ml-auto flex items-center gap-2 text-sm">
             Перейти до
-            <select
+            <NativeSelect
               aria-label="Вибрати сторінку"
               value={currentPage}
               onChange={(event) => go(Number(event.target.value))}
-              className="h-8 rounded-lg border border-input bg-background px-2 focus-visible:outline-2 focus-visible:outline-ring"
+              className="bg-background px-2"
             >
               {Array.from({ length: totalPages }, (_, index) => index + 1).map(
                 (page) => (
@@ -136,7 +137,7 @@ export function NewsPagination({
                   </option>
                 ),
               )}
-            </select>
+            </NativeSelect>
           </label>
 
           <form onSubmit={submitManual} className="flex items-center gap-1">

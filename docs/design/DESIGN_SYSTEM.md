@@ -19,14 +19,14 @@ The preview is opt-in via `DesignScope` in `apps/web/src/components/ui/design-sc
 Inter and Inter Tight normal variable WOFF2 assets are bundled under `apps/web/src/app/fonts/` with Latin and Cyrillic subsets and SIL OFL licenses. No network font fetch is required during build. Heading tokens: display 48, H1 36, H2 28, H3 24, H4 20 px; body 18/16/14 and caption 12 px. Use these according to hierarchy, not as a mechanical global replacement.
 
 Shared primitives:
-- Button, Input, Textarea: preserve native events, refs, forms and class overrides.
+- Button, Input, Textarea, Label, NativeSelect, Checkbox, Radio and Switch: preserve native events, refs, forms and class overrides. Choice fields use native HTML controls rather than a second selection engine; use Radix menus for actions, not form values. Switch is a native checkbox exposed as a switch.
 - Dialog, Sheet, DropdownMenu: preserve focus restoration, keyboard navigation and backdrop blur.
 - Card, Badge, Avatar, Separator: use semantic surface and status tokens; avatars retain circular shape.
 - Table: native table markup with horizontal overflow. Sorting, selection, filtering and pagination remain feature responsibilities.
 - Feedback (`feedback.tsx`): Alert, EmptyState, Skeleton and LoadingState. Use explicit live roles for dynamic messages, text labels alongside status colors, and motion-safe skeleton animation.
 - NewsPagination and shell Breadcrumbs are existing navigation implementations; retain route ownership and current-page semantics.
 
-This is a staged implementation, not a completion certificate. Remaining control coverage, overlay visual details, responsive behavior, CI and owner screenshot review must be verified before DF-01 acceptance. Upload Center is excluded.
+This is a staged implementation, not a completion certificate. Control coverage and overlay tokens are implemented; responsive behavior, CI and owner screenshot review must be verified before DF-01 acceptance. Upload Center is excluded.
 
 ## Navigation
 

@@ -19,6 +19,7 @@
 
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+  --color-overlay-outline: var(--dss-overlay-outline, color-mix(in oklab, var(--foreground) 10%, transparent));
   --color-dialog-footer: var(--dss-dialog-footer, color-mix(in oklab, var(--muted) 50%, transparent));
   --color-menu-active: var(--dss-menu-active, var(--accent));
   --color-menu-active-foreground: var(--dss-menu-active-foreground, var(--accent-foreground));
@@ -50,6 +51,7 @@
   --radius-md: var(--dss-radius-md, calc(var(--radius) - 2px));
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-menu: var(--dss-radius-menu, var(--radius));
   --radius-card: var(--dss-radius-card, calc(var(--radius) + 4px));
   --radius-badge: var(--dss-radius-badge, 2rem);
   --radius-2xl: calc(var(--radius) + 8px);
@@ -95,8 +97,14 @@
   --shell-divider: rgba(139, 132, 196, 0.14);
 }
 
-* {
+/* Retain the legacy cascade outside the preview; scoped utilities own border states. */
+*:not([data-dss-design="v1"], [data-dss-design="v1"] *) {
   border-color: var(--border);
+}
+@layer base {
+  :where([data-dss-design="v1"], [data-dss-design="v1"] *) {
+    border-color: var(--border);
+  }
 }
 
 html {
@@ -137,6 +145,8 @@ body {
   --dss-radius-sm: var(--dss-radius-xs);
   --dss-radius-md: var(--radius);
   --dss-radius-card: 8px;
+  --dss-radius-menu: 8px;
+  --dss-overlay-outline: var(--border);
   --dss-radius-badge: 4px;
   --dss-card-outline: var(--border);
   --dss-card-footer: var(--card);
@@ -175,7 +185,12 @@ body {
   --shell-surface: #111827;
   --shell-divider: #263040;
 
-  font-family: var(--dss-font-body);
+}
+
+@layer base {
+  :where([data-dss-design="v1"]) {
+    font-family: var(--dss-font-body);
+  }
 }
 
 /* A scope wrapper paints the page; portal surfaces retain their own utilities. */
