@@ -21,6 +21,12 @@ import {
   safeReturnTo,
   sessionCookieOptions,
 } from "./session-contract";
+import {
+  BAN_COOKIE,
+  BAN_PATH,
+  BAN_TICKET_MAX_AGE,
+  banTicketFrom,
+} from "@/features/ban/ban-contract";
 
 type AuthPayload = {
   user: { id: string };
@@ -29,7 +35,7 @@ type AuthPayload = {
 
 type GraphqlResponse = {
   data?: { login?: AuthPayload; register?: AuthPayload };
-  errors?: Array<{ message?: string }>;
+  errors?: Array<{ message?: string; extensions?: unknown }>;
 };
 
 const LOGIN = `
@@ -67,6 +73,7 @@ export async function loginAction(
     return validationFailure(parsed.error.flatten().fieldErrors, values);
 
   const result = await authenticate("login", LOGIN, parsed.data);
+  if ("banTicket" in result) return openBanScreen(result.banTicket);
   if ("error" in result) return { ...result.error, values };
   await persistSession(result.payload, values.remember);
   redirect(safeReturnTo(String(formData.get("returnTo") ?? "")));
@@ -99,6 +106,7 @@ export async function registerAction(
     password: parsed.data.password,
   };
   const result = await authenticate("register", REGISTER, input);
+  if ("banTicket" in result) return openBanScreen(result.banTicket);
   if ("error" in result) return { ...result.error, values };
   await persistSession(result.payload);
   redirect(safeReturnTo(String(formData.get("returnTo") ?? "")));
@@ -222,7 +230,11 @@ async function authenticate(
   field: "login" | "register",
   query: string,
   input: Record<string, string>,
-): Promise<{ payload: AuthPayload } | { error: AuthFormState }> {
+): Promise<
+  | { payload: AuthPayload }
+  | { error: AuthFormState }
+  | { banTicket: string }
+> {
   try {
     const response = await fetch(siteConfig.graphqlUrl, {
       method: "POST",
@@ -232,6 +244,9 @@ async function authenticate(
       signal: AbortSignal.timeout(15_000),
     });
     const body = (await response.json()) as GraphqlResponse;
+    const banTicket =
+      field === "login" ? banTicketFrom(body.errors?.[0]) : null;
+    if (banTicket) return { banTicket };
     const payload = body.data?.[field];
     // GraphQL may return HTTP 200 with errors and partial data. Never persist
     // credentials from a partial or malformed authentication result.
@@ -272,6 +287,8 @@ async function persistSession(
   remember = false,
 ): Promise<void> {
   const cookieStore = await cookies();
+  // A successful sign-in ends any earlier ban screen on this browser.
+  cookieStore.delete(BAN_COOKIE);
   const shared = sessionCookieOptions(process.env.NODE_ENV === "production");
   cookieStore.set(ACCESS_COOKIE, payload.tokens.accessToken, {
     ...shared,
@@ -289,6 +306,17 @@ async function persistSession(
   } else {
     cookieStore.delete(PERSISTENT_SESSION_COOKIE);
   }
+}
+
+/** A banned sign-in: no session, only the ticket for the ban screen. */
+async function openBanScreen(ticket: string): Promise<never> {
+  const store = await cookies();
+  clearSessionCookies(store);
+  store.set(BAN_COOKIE, ticket, {
+    ...sessionCookieOptions(process.env.NODE_ENV === "production"),
+    maxAge: BAN_TICKET_MAX_AGE,
+  });
+  redirect(BAN_PATH);
 }
 
 function clearSessionCookies(store: Awaited<ReturnType<typeof cookies>>) {

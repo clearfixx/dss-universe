@@ -26,6 +26,11 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import {
+  BAN_COOKIE,
+  BAN_PATH,
+  isOpenDuringBan,
+} from "@/features/ban/ban-contract";
+import {
   ACCESS_COOKIE,
   ACCESS_TOKEN_MAX_AGE,
   isAccessTokenFresh,
@@ -56,6 +61,13 @@ const REFRESH_MUTATION = `
 
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
+  // A banned account has no session: while its ticket is held, every page
+  // leads to the ban screen.
+  if (request.cookies.has(BAN_COOKIE)) {
+    if (!isOpenDuringBan(pathname))
+      return NextResponse.redirect(new URL(BAN_PATH, request.url));
+    if (pathname !== "/login") return NextResponse.next();
+  }
   const protectedRoute = isProtectedPath(pathname);
   const accessToken = request.cookies.get(ACCESS_COOKIE)?.value;
   const hasSessionCookie = Boolean(
@@ -104,7 +116,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)"],
+  matcher: ["/((?!api|banned/files|_next/static|_next/image|favicon.ico|.*\\..*).*)"],
 };
 
 async function refreshSession(refreshToken: string): Promise<RefreshResult> {
