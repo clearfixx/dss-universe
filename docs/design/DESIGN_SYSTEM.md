@@ -8,9 +8,25 @@ Use the owner-provided Design System and Navigation Language reference images, w
 
 ## Foundation
 
-Use semantic CSS tokens rather than page-specific colors. Proposed implementation baseline (subject to visual acceptance): background #0B0F14, shell #111827, cards #1A2332. Keep accessible foreground, focus and semantic status colors. Inter / Inter Tight is the typography direction; do not silently substitute a different font as final. Spacing scale: 4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96 px. Radius scale: 4, 6, 8, 12, 16, 24 px and full. Proposed mapping: controls 4–6, cards 8, large panels/dialogs up to 12; full primarily avatars and indicators.
+Use semantic CSS tokens rather than page-specific colors. Proposed implementation baseline (subject to visual acceptance): background #0B0F14, shell #111827, cards #1A2332. Keep accessible foreground, focus and semantic status colors. Inter / Inter Tight is the typography direction; do not silently substitute a different font as final. Spacing scale: 4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96 px. Radius scale: 2, 4, 8, 12 px and full. Controls 4 px, compact details 2 px, cards and standard dialogs 8 px, large surfaces 12 px; full primarily avatars and indicators. Legacy radius values remain outside the opt-in scope.
 
 Use existing shared React primitives, preserve their public API where possible, and normalize size, icon alignment, hover, focus, disabled, invalid and loading states. Preserve keyboard navigation, labels and focus restoration. Replace native selects where appropriate with accessible shared controls without breaking form submission. Dialog footer should use the same surface as the body.
+
+### Implementation contract (DF-01)
+
+The preview is opt-in via `DesignScope` in `apps/web/src/components/ui/design-scope.tsx`. Do not enable it at the document root until visual acceptance. React context carries the scope to Dialog, Sheet and DropdownMenu portal content without moving portal containers. Keep local class overrides and native accessibility contracts intact.
+
+Inter and Inter Tight normal variable WOFF2 assets are bundled under `apps/web/src/app/fonts/` with Latin and Cyrillic subsets and SIL OFL licenses. No network font fetch is required during build. Heading tokens: display 48, H1 36, H2 28, H3 24, H4 20 px; body 18/16/14 and caption 12 px. Use these according to hierarchy, not as a mechanical global replacement.
+
+Shared primitives:
+- Button, Input, Textarea: preserve native events, refs, forms and class overrides.
+- Dialog, Sheet, DropdownMenu: preserve focus restoration, keyboard navigation and backdrop blur.
+- Card, Badge, Avatar, Separator: use semantic surface and status tokens; avatars retain circular shape.
+- Table: native table markup with horizontal overflow. Sorting, selection, filtering and pagination remain feature responsibilities.
+- Feedback (`feedback.tsx`): Alert, EmptyState, Skeleton and LoadingState. Use explicit live roles for dynamic messages, text labels alongside status colors, and motion-safe skeleton animation.
+- NewsPagination and shell Breadcrumbs are existing navigation implementations; retain route ownership and current-page semantics.
+
+This is a staged implementation, not a completion certificate. Remaining control coverage, overlay visual details, responsive behavior, CI and owner screenshot review must be verified before DF-01 acceptance. Upload Center is excluded.
 
 ## Navigation
 
