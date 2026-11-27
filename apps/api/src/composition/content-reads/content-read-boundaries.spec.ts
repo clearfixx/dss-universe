@@ -11,6 +11,7 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+import { MEDIA_APPEAL_SCREENSHOTS } from '@api/modules/media';
 import { MODULE_METADATA } from '@nestjs/common/constants';
 import {
   MediaModule,
@@ -51,6 +52,7 @@ describe('Content read boundaries', () => {
       MEDIA_PUBLICATION_EVIDENCE,
       MEDIA_ATTACHMENT_POLICY,
       MEDIA_IMAGE_ELIGIBILITY,
+      MEDIA_APPEAL_SCREENSHOTS,
     ]);
     expect(
       Reflect.getMetadata(MODULE_METADATA.EXPORTS, ActivityModule),

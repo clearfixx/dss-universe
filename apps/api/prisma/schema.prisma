@@ -411,6 +411,7 @@ model User {
   accountBans             AccountBan[]                 @relation("AccountBanSubject")
   issuedAccountBans       AccountBan[]                 @relation("AccountBanIssuer")
   liftedAccountBans       AccountBan[]                 @relation("AccountBanLifter")
+  decidedBanAppeals       BanAppeal[]                  @relation("BanAppealDecider")
   wallPosts               UserWallPost[]               @relation("ProfileWallOwner")
   authoredWallPosts       UserWallPost[]               @relation("ProfileWallAuthor")
   notificationPreferences UserNotificationPreferences?
@@ -1485,8 +1486,41 @@ model AccountBan {
   liftedBy User?         @relation("AccountBanLifter", fields: [liftedById], references: [id], onDelete: Restrict)
   rule     CommunityRule @relation(fields: [ruleId], references: [id], onDelete: Restrict)
 
+  appeal      BanAppeal?
+  appealFiles BanAppealFile[]
+
   @@index([subjectId, issuedAt])
   @@map("account_bans")
+}
+
+model BanAppeal {
+  id             String    @id @default(uuid())
+  banId          String    @unique
+  text           String
+  status         String    @default("PENDING")
+  submittedAt    DateTime  @default(now())
+  decidedAt      DateTime?
+  decidedById    String?
+  decisionReason String?
+
+  ban       AccountBan @relation(fields: [banId], references: [id], onDelete: Restrict)
+  decidedBy User?      @relation("BanAppealDecider", fields: [decidedById], references: [id], onDelete: Restrict)
+
+  @@index([status, submittedAt])
+  @@map("ban_appeals")
+}
+
+model BanAppealFile {
+  id        String    @id @default(uuid())
+  banId     String
+  mediaId   String    @unique
+  addedAt   DateTime  @default(now())
+  removedAt DateTime?
+
+  ban AccountBan @relation(fields: [banId], references: [id], onDelete: Restrict)
+
+  @@index([banId, addedAt])
+  @@map("ban_appeal_files")
 }
 
 model CommunityRule {

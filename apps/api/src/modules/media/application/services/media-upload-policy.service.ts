@@ -46,6 +46,12 @@ export class MediaUploadPolicyService {
     avatar: this.imagePolicy('avatar', MediaVisibility.PUBLIC),
     cover: this.imagePolicy('cover', MediaVisibility.PUBLIC),
     'content-image': this.imagePolicy('content-image', MediaVisibility.PRIVATE),
+    // Screenshots of a ban appeal (owner 2026-11-27). Not offered by the
+    // signed-in upload input: only the appeal intake uses it.
+    'appeal-screenshot': {
+      ...this.imagePolicy('appeal-screenshot', MediaVisibility.PRIVATE),
+      maximumBytes: 10 * MEBIBYTE,
+    },
     attachment: {
       key: 'attachment',
       kind: MediaKind.DOCUMENT,
