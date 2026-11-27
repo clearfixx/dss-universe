@@ -22,10 +22,10 @@ export function ShellQuickAdd({ canAccessAdminDeck }: { canAccessAdminDeck: bool
           <Plus aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="bg-[color:var(--shell-surface)]">
+      <DropdownMenuContent align="end" className="w-56 bg-popover">
         <DropdownMenuLabel>Створити</DropdownMenuLabel>
         {actions.map(({ href, label, icon: Icon }) => (
-          <DropdownMenuItem key={href} asChild>
+          <DropdownMenuItem key={href} asChild className="min-h-9 gap-2 px-2">
             <Link href={href}><Icon aria-hidden="true" />{label}</Link>
           </DropdownMenuItem>
         ))}
@@ -45,12 +45,12 @@ export function ShellUserMenu({ viewer, pathname, canAccessAdminDeck }: { viewer
                     <Button
                       variant="ghost"
                       type="button"
-                      className="h-auto shrink-0 gap-1 px-1 sm:gap-2.5 sm:px-2"
+                      className="h-10 shrink-0 gap-1 px-1 sm:gap-2 sm:px-2"
                       aria-label={`Меню користувача: ${viewerDisplayName(viewer)}`}
                     >
                       <Avatar>
                         {viewer.avatarUrl ? <AvatarImage src={viewer.avatarUrl} alt="" /> : null}
-                        <AvatarFallback className="bg-primary text-primary-foreground">
+                        <AvatarFallback className="bg-secondary text-secondary-foreground">
                           {viewerInitials(viewer)}
                         </AvatarFallback>
                       </Avatar>
@@ -67,37 +67,41 @@ export function ShellUserMenu({ viewer, pathname, canAccessAdminDeck }: { viewer
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="end"
-                    className="w-60 border border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)]"
+                    className="w-64 max-w-[calc(100vw-16px)] bg-popover"
                   >
-                    <DropdownMenuLabel>
-                      <span className="block truncate text-sm">{viewerDisplayName(viewer)}</span>
-                      <span className="block truncate text-xs font-normal text-muted-foreground">
-                        @{viewer.username}
+                    <DropdownMenuLabel className="flex items-center gap-3 px-2 py-3">
+                      <Avatar className="size-10 shrink-0">
+                        {viewer.avatarUrl ? <AvatarImage src={viewer.avatarUrl} alt="" /> : null}
+                        <AvatarFallback className="bg-secondary text-secondary-foreground">{viewerInitials(viewer)}</AvatarFallback>
+                      </Avatar>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold text-foreground">{viewerDisplayName(viewer)}</span>
+                        <span className="block truncate text-xs font-normal text-muted-foreground">@{viewer.username}</span>
                       </span>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
+                    <DropdownMenuItem asChild className="min-h-9 gap-2 px-2">
                       <Link href={`/profile/${encodeURIComponent(viewer.username)}`}>
                         <UserRound aria-hidden="true" />
                         Мій профіль
                       </Link>
                     </DropdownMenuItem>
                     {canAccessAdminDeck ? (
-                      <DropdownMenuItem asChild>
+                      <DropdownMenuItem asChild className="min-h-9 gap-2 px-2">
                         <Link href="/command-deck">
                           <LayoutDashboard aria-hidden="true" />
                           Адмінпанель
                         </Link>
                       </DropdownMenuItem>
                     ) : null}
-                    <DropdownMenuItem asChild>
+                    <DropdownMenuItem asChild className="min-h-9 gap-2 px-2">
                       <Link href="/settings/profile">
                         <Settings aria-hidden="true" />
                         Налаштування
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onSelect={() => logoutForm.current?.requestSubmit()}>
+                    <DropdownMenuItem variant="destructive" className="min-h-9 gap-2 px-2" onSelect={() => logoutForm.current?.requestSubmit()}>
                       <LogOut aria-hidden="true" />
                       Вийти
                     </DropdownMenuItem>

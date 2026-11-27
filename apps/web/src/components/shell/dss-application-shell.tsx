@@ -30,6 +30,7 @@ import {
 } from "react";
 
 import { Button } from "@/components/ui/button";
+import { DesignScope } from "@/components/ui/design-scope";
 import type { SessionViewer } from "@/features/auth/session-contract";
 
 import { isDrawerOpenForPath } from "./shell-drawer-state";
@@ -102,8 +103,8 @@ export function DssApplicationShell({
         Перейти до вмісту
       </a>
 
-      {hasSidebar && <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)] lg:flex">
-        <div className="flex h-16 items-center px-5">
+      {hasSidebar && <DesignScope as="aside" className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)] lg:flex">
+        <div className="flex h-14 items-center px-4">
           <Logo />
         </div>
         <div className="flex-1 overflow-y-auto px-3 py-4">
@@ -114,14 +115,14 @@ export function DssApplicationShell({
             canModerate={canModerate}
           />
         </div>
-        <div className="m-3 rounded-xl bg-muted/40 px-4 py-3 text-xs leading-5 text-muted-foreground">
+        <div className="m-3 border-t border-[color:var(--shell-divider)] px-3 py-3 text-xs leading-5 text-muted-foreground">
           <p className="font-semibold text-foreground">DSS Universe</p>
           <p>Build. Inspire. Grow.</p>
         </div>
-      </aside>}
+      </DesignScope>}
 
       <div className={hasSidebar ? "lg:pl-60" : undefined}>
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-1.5 sm:gap-3 border-b border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)] px-2 sm:px-6">
+        <DesignScope as="header" className="sticky top-0 z-20 flex h-14 items-center gap-1 sm:gap-3 border-b border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)] px-2 sm:px-6">
           <Button
             variant="ghost"
             size="icon"
@@ -148,15 +149,17 @@ export function DssApplicationShell({
             {hasSession ? <ShellQuickAdd canAccessAdminDeck={canAccessAdminDeck} /> : null}
             <ShellUserMenu viewer={viewer} pathname={pathname} canAccessAdminDeck={canAccessAdminDeck} />
           </div>
-        </header>
+        </DesignScope>
 
         <main id="main-content" className="mx-auto max-w-[1600px] p-4 sm:p-6 lg:p-8">
-          <Breadcrumbs pathname={pathname} pageTitle={pageTitle} trail={breadcrumbs} />
+          <DesignScope className="bg-transparent">
+            <Breadcrumbs pathname={pathname} pageTitle={pageTitle} trail={breadcrumbs} />
+          </DesignScope>
           {toolbar ? (
             <div
               role="toolbar"
               aria-label="Дії сторінки"
-              className="mb-5 flex flex-wrap items-center gap-2"
+              className="mb-4 flex min-w-0 flex-wrap items-center gap-2 border-b pb-3"
             >
               {toolbar}
             </div>
@@ -165,7 +168,9 @@ export function DssApplicationShell({
         </main>
       </div>
 
-      <ShellMobileNavigation onRestoreFocus={restoreDrawerFocus} open={open} setOpen={setOpen} pathname={pathname} hasSession={hasSession} canAccessAdminDeck={canAccessAdminDeck} canModerate={canModerate} />
+      <DesignScope className="bg-transparent">
+        <ShellMobileNavigation onRestoreFocus={restoreDrawerFocus} open={open} setOpen={setOpen} pathname={pathname} hasSession={hasSession} canAccessAdminDeck={canAccessAdminDeck} canModerate={canModerate} />
+      </DesignScope>
     </div>
   );
 }

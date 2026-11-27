@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 
 export function ShellSearch() {
@@ -38,11 +39,11 @@ export function ShellSearch() {
         <Search aria-hidden="true" />
       </Button>
       <form role="search" className="hidden min-w-0 sm:block" onSubmit={(event) => { event.preventDefault(); submit(); }}>
-        <label className="flex h-10 w-40 items-center gap-2 rounded-xl border border-border bg-muted/30 px-3 text-sm text-muted-foreground focus-within:border-ring lg:w-48 xl:w-56 2xl:w-72">
+        <label className="flex h-9 w-40 items-center gap-2 rounded-md border border-input bg-field px-2 text-sm text-muted-foreground focus-within:border-ring lg:w-48 xl:w-56 2xl:w-72">
           <Search className="size-4 shrink-0" aria-hidden="true" />
           <span className="sr-only">Пошук у спільноті</span>
           <input ref={input} type="search" value={term} onChange={(event) => setTerm(event.target.value)} placeholder="Пошук у спільноті…" className="min-w-0 flex-1 bg-transparent text-foreground outline-none placeholder:text-muted-foreground" />
-          <kbd className="hidden shrink-0 rounded border border-border px-1.5 text-[11px] 2xl:block">Ctrl K</kbd>
+          <kbd className="hidden shrink-0 rounded-sm border border-border px-1.5 text-xs 2xl:block">Ctrl K</kbd>
         </label>
       </form>
       <Sheet open={open} onOpenChange={setOpen}>
@@ -64,7 +65,7 @@ export function ShellSearch() {
             <SheetDescription>Введіть пошуковий запит.</SheetDescription>
           </SheetHeader>
           <form role="search" className="flex gap-2 px-4 pb-4" onSubmit={(event) => { event.preventDefault(); submit(); }}>
-            <input ref={mobileInput} type="search" aria-label="Пошук у спільноті" value={term} onChange={(event) => setTerm(event.target.value)} className="min-w-0 flex-1 rounded-md border border-border bg-background px-3 text-foreground focus-visible:outline-2 focus-visible:outline-ring" />
+            <Input ref={mobileInput} type="search" aria-label="Пошук у спільноті" value={term} onChange={(event) => setTerm(event.target.value)} className="min-w-0 flex-1" />
             <Button type="submit">Знайти</Button>
           </form>
         </SheetContent>

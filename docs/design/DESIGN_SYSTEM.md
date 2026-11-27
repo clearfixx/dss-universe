@@ -32,6 +32,10 @@ This is a staged implementation, not a completion certificate. Control coverage 
 
 Navbar is global; desktop Module Launcher is a compact dropdown, not a second sidebar. Sidebar is contextual and must not waste space when empty. Toolbar owns contextual actions. Breadcrumbs use real routes, current page is not a link; mobile may show nearest accessible parent. Global actions must have real capabilities and permission checks. Mission Control is not Command Deck. Use DSS Intelligence naming. Do not invent roles, links or placeholder actions.
 
+### Shell preview boundaries (DF-03B)
+
+Opt the header, contextual sidebar, breadcrumbs and mobile navigation into v1 individually. The main route content and route-owned toolbar controls remain outside the scope until module acceptance; the toolbar layout alone uses consistent spacing. Portal content inherits the chrome scope. Do not scope the entire application shell or alter the approved Upload Center content. Personal Hub and Quick Add use actual existing actions; no role label or notification shortcut is fabricated.
+
 ## Internal UI Kit
 
 Owner-approved location: Command Deck. Proposed route /command-deck/design/ui-kit, integrated by Claude using existing server authorization (canAccessAdminDeck). No public navigation or persistence. Showcase imports actual shared primitives, not replicas. Sections: foundations, components, navigation, overlays, feedback, patterns. Interactive variants and states, responsive preview where practical. No new dependency or Theme Engine implementation required.

@@ -63,3 +63,19 @@ test("missing news articles return HTTP 404 without duplicate shells", async ({ 
   // The existing article not-found page is standalone, not an application shell.
   await expect(page.locator("[data-shell-variant]")).toHaveCount(0);
 });
+
+
+test("shell chrome opts into v1 without changing page content tokens", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/news");
+  const shell = page.locator("[data-shell-variant]");
+  const header = shell.locator("header").first();
+  await expect(header).toHaveAttribute("data-dss-design", "v1");
+  await expect(header).toHaveCSS("background-color", "rgb(17, 24, 39)");
+  await expect(shell.locator("main")).not.toHaveAttribute("data-dss-design", "v1");
+  expect(await shell.locator("main").evaluate((element) => element.closest('[data-dss-design="v1"]') === null)).toBe(true);
+  await header.getByRole("button", { name: "Модулі" }).click();
+  const menu = page.getByRole("menu", { name: "Модулі DSS Universe" });
+  await expect(menu).toHaveAttribute("data-dss-design", "v1");
+  await expect(menu).toHaveCSS("background-color", "rgb(26, 35, 50)");
+});

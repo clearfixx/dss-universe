@@ -36,7 +36,7 @@ export function GlobalNavigation({
               className={cn(
                 "inline-flex shrink-0 items-center border-b-2 border-transparent px-2.5 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring",
                 routeMatches(pathname, href) &&
-                  "border-primary bg-secondary/50 text-foreground",
+                  "border-accent bg-secondary/50 text-foreground",
               )}
             >
               {label}
@@ -62,7 +62,7 @@ export function GlobalNavigation({
         <DropdownMenuContent align="start" aria-labelledby={undefined} aria-label="Модулі DSS Universe" className="w-56">
           <DropdownMenuLabel>Модулі DSS Universe</DropdownMenuLabel>
           {modules.map(({ href, label, icon: Icon }) => (
-            <DropdownMenuItem key={href} asChild>
+            <DropdownMenuItem key={href} asChild className="min-h-9 gap-2 px-2">
               <Link href={href} aria-current={navigationCurrent(pathname, href)} className={cn(routeMatches(pathname, href) && "bg-secondary text-foreground")}>
                 <Icon aria-hidden="true" />
                 {label}

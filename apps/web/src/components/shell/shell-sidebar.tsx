@@ -21,7 +21,7 @@ export function SidebarNavigation({ pathname, hasSession, canAccessAdminDeck, ca
       {sections.map(({ href, label, icon: Icon }) => (
         <Link key={href} href={href} onClick={onNavigate}
           aria-current={currentHref === href ? navigationCurrent(pathname, href) : undefined}
-          className={cn("flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring", currentHref === href && "bg-secondary text-foreground")}>
+          className={cn("flex min-h-9 items-center gap-2 rounded-md px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring", currentHref === href && "bg-secondary text-foreground")}>
           <Icon className="size-4 shrink-0" aria-hidden="true" />
           {label}
         </Link>
@@ -35,7 +35,7 @@ export function ModuleNavigation({ pathname, hasSession, canAccessAdminDeck, onN
     <nav aria-label="Модулі DSS Universe" className="space-y-1">
       {visibleModules(hasSession, canAccessAdminDeck).map(({ href, label, icon: Icon }) => (
         <Link key={href} href={href} onClick={onNavigate} aria-current={navigationCurrent(pathname, href)}
-          className="flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
+          className={cn("flex min-h-9 items-center gap-2 rounded-md px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring", navigationCurrent(pathname, href) && "bg-secondary text-foreground")}>
           <Icon className="size-4 shrink-0" aria-hidden="true" />
           {label}
         </Link>
