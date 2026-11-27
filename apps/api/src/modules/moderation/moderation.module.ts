@@ -28,6 +28,8 @@ import {
   SANCTION_STATE_READER,
   type SanctionStateReader,
 } from './contracts/sanction-state-reader.contract';
+import { AccountBansService } from './infrastructure/prisma-account-ban-records';
+import { AccountBansResolver } from './presentation/account-bans.resolver';
 import { CommunityRulesService } from './infrastructure/prisma-community-rules';
 import { ModerationSanctionsService } from './infrastructure/prisma-moderation-sanctions';
 import { CommunityRulesResolver } from './presentation/community-rules.resolver';
@@ -40,6 +42,8 @@ import { ModerationSanctionsResolver } from './presentation/moderation-sanctions
     ModerationSanctionsResolver,
     CommunityRulesService,
     CommunityRulesResolver,
+    AccountBansService,
+    AccountBansResolver,
     { provide: SANCTION_STATE_READER, useExisting: ModerationSanctionsService },
     { provide: SANCTION_ISSUER, useExisting: ModerationSanctionsService },
     {

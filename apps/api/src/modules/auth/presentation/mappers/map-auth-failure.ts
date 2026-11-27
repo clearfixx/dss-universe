@@ -27,6 +27,7 @@ import {
   HttpStatus,
   UnauthorizedException,
 } from '@nestjs/common';
+import { AccountBannedException } from '../../domain/exceptions/account-banned.exception';
 import { EmailAlreadyExistsException } from '../../domain/exceptions/email-already-exists.exception';
 import { InvalidCredentialsException } from '../../domain/exceptions/invalid-credentials.exception';
 import { LoginRateLimitedException } from '../../domain/exceptions/login-rate-limited.exception';
@@ -40,6 +41,15 @@ export function mapAuthFailure(failure: unknown): unknown {
     failure instanceof TwoFactorRequiredException
   )
     return new UnauthorizedException(failure.message);
+  if (failure instanceof AccountBannedException)
+    return new HttpException(
+      {
+        message: failure.message,
+        statusCode: HttpStatus.FORBIDDEN,
+        banTicket: failure.banTicket,
+      },
+      HttpStatus.FORBIDDEN,
+    );
   if (failure instanceof LoginRateLimitedException)
     return new HttpException(
       { message: failure.message, statusCode: HttpStatus.TOO_MANY_REQUESTS },

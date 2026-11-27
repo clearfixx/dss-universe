@@ -30,6 +30,7 @@
  * ===============================================================
  */
 
+import { createHmac } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { JwtSignOptions } from '@nestjs/jwt';
@@ -95,6 +96,42 @@ export class TokenService {
       },
     );
     return { sub: claims.sub, sid: claims.sid, ver: claims.ver };
+  }
+
+  /**
+   * A ban ticket is signed with its own derived key, so it can never pass as
+   * an access or refresh token and neither of them passes as a ticket.
+   */
+  async signBanTicket(user: TokenSubject): Promise<string> {
+    return this.jwtService.signAsync(
+      { sub: user.id, ver: user.authVersion, purpose: 'ban' },
+      { secret: this.getBanTicketSecret(), expiresIn: '30m' },
+    );
+  }
+
+  async verifyBanTicket(
+    ticket: string,
+  ): Promise<{ subjectId: string; authVersion: number } | null> {
+    try {
+      const claims = await this.jwtService.verifyAsync<{
+        sub?: unknown;
+        ver?: unknown;
+        purpose?: unknown;
+      }>(ticket, { secret: this.getBanTicketSecret() });
+      return claims.purpose === 'ban' &&
+        typeof claims.sub === 'string' &&
+        typeof claims.ver === 'number'
+        ? { subjectId: claims.sub, authVersion: claims.ver }
+        : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private getBanTicketSecret(): string {
+    return createHmac('sha256', this.getJwtRefreshSecret())
+      .update('dss.ban-ticket.v1')
+      .digest('hex');
   }
 
   async signTokenPair(

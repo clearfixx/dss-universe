@@ -35,6 +35,10 @@ export {
   type AuthSubjectEligibility,
 } from './contracts/subject-eligibility.contract';
 export {
+  AUTH_BAN_TICKETS,
+  type AuthBanTickets,
+} from './contracts/ban-tickets.contract';
+export {
   AUTH_ACCOUNT_EVIDENCE,
   type AuthAccountEvidenceReader,
   type AuthAccountEvidence,

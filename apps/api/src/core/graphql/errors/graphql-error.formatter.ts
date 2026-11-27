@@ -17,6 +17,8 @@ import type { GraphQLFormattedError } from 'graphql';
 type OriginalError = {
   message?: string;
   statusCode?: number;
+  /** The one extra field clients receive: see Auth's banned-login failure. */
+  banTicket?: unknown;
 };
 
 const STATUS_CODES: Record<number, string> = {
@@ -50,6 +52,9 @@ export function formatGraphqlError(
     extensions: {
       code,
       ...(statusCode ? { statusCode } : {}),
+      ...(typeof original?.banTicket === 'string'
+        ? { banTicket: original.banTicket }
+        : {}),
     },
   };
 }

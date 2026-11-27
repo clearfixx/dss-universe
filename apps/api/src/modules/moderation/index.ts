@@ -1,5 +1,13 @@
 export { ModerationModule } from './moderation.module';
 export {
+  BAN_TRANSACTION,
+  type BanTransaction,
+} from './contracts/ban-transaction.port';
+export type {
+  AccountBanRecord,
+  NewAccountBan,
+} from './domain/types/account-ban.type';
+export {
   SANCTION_STATE_READER,
   type SanctionStateReader,
 } from './contracts/sanction-state-reader.contract';

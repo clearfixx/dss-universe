@@ -2,6 +2,40 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type AccountBan {
+  comment: String!
+  contextPath: String
+  id: ID!
+  issuedAt: DateTime!
+  issuerId: ID!
+  liftReason: String
+  liftedAt: DateTime
+  liftedById: ID
+  reference: String!
+  ruleCode: String!
+  ruleText: String!
+  subjectId: ID!
+}
+
+input AccountBanContextInput {
+  id: String!
+  path: String
+  type: String!
+}
+
+"""What a banned person sees about their own ban."""
+type AccountBanNotice {
+  comment: String!
+
+  """Where the violation happened."""
+  contextPath: String
+  issuedAt: DateTime!
+  issuedByName: String
+  reference: String!
+  ruleCode: String!
+  ruleText: String!
+}
+
 type Achievement {
   badge: String!
   color: String!
@@ -1310,6 +1344,13 @@ type InteractionTarget {
   updatedAt: String!
 }
 
+input IssueAccountBanInput {
+  comment: String!
+  context: AccountBanContextInput
+  ruleId: ID!
+  subjectId: ID!
+}
+
 input IssueModerationReadOnlyInput {
   context: ModerationSanctionContextInput
   expiresAt: DateTime!
@@ -1729,8 +1770,10 @@ type Mutation {
   grantCustomTitle(input: GrantCustomTitleInput!): UserTitleGrant!
   hideForumPost(postId: ID!, reason: String!): ForumPostModerationResult!
   initiateMediaUpload(input: InitiateMediaUploadInput!): MediaUploadSession!
+  issueAccountBan(input: IssueAccountBanInput!): AccountBan!
   issueModerationReadOnly(input: IssueModerationReadOnlyInput!): ModerationSanctionReceipt!
   issueModerationWarning(input: IssueModerationWarningInput!): ModerationSanctionReceipt!
+  liftAccountBan(banId: ID!, reason: String!): AccountBan!
   linkNewsDiscussion(articleId: ID!, topicId: ID!): ForumTopic!
   login(input: LoginInput!): AuthPayloadModel!
   logout: LogoutResultModel!
@@ -2258,9 +2301,11 @@ input PublishNewsInput {
 }
 
 type Query {
+  accountBanNotice(ticket: String!): AccountBanNotice!
   achievementRules: [AchievementRule!]!
   achievements: [Achievement!]!
   achievementsAdmin: [Achievement!]!
+  activeAccountBan(subjectId: ID!): AccountBan
   adminCommandDeckAccess: Boolean!
   adminPlatformAppearance: PlatformAppearance!
   apiInfo: ApiInfo!

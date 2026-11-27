@@ -94,4 +94,33 @@ describe('TokenService', () => {
       ],
     ]);
   });
+
+  it('signs ban tickets with a derived key and accepts only ban claims', async () => {
+    await service.signBanTicket(subject);
+    const [claims, options] = signAsync.mock.calls[0] as [
+      unknown,
+      { secret: string; expiresIn: string },
+    ];
+    expect(claims).toEqual({ sub: 'subject-1', ver: 7, purpose: 'ban' });
+    expect(options.expiresIn).toBe('30m');
+    expect(options.secret).not.toBe('synthetic-refresh-secret');
+
+    verifyAsync.mockResolvedValueOnce({
+      sub: 'subject-1',
+      ver: 7,
+      purpose: 'ban',
+    } as unknown as RefreshTokenClaims);
+    await expect(service.verifyBanTicket('t')).resolves.toEqual({
+      subjectId: 'subject-1',
+      authVersion: 7,
+    });
+    verifyAsync.mockResolvedValueOnce({
+      sub: 'subject-1',
+      sid: 'session-1',
+      ver: 7,
+    });
+    await expect(service.verifyBanTicket('t')).resolves.toBeNull();
+    verifyAsync.mockRejectedValueOnce(new Error('expired'));
+    await expect(service.verifyBanTicket('t')).resolves.toBeNull();
+  });
 });

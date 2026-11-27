@@ -55,6 +55,9 @@ import { PrismaSubjectExistenceReader } from './infrastructure/repositories/pris
 import { PrismaAccountEvidenceReader } from './infrastructure/repositories/prisma-account-evidence.reader';
 import { PrismaSubjectEligibilityReader } from './infrastructure/repositories/prisma-subject-eligibility.reader';
 
+import { AUTH_BAN_TICKETS } from './contracts/ban-tickets.contract';
+import { PrismaBanTicketReader } from './infrastructure/repositories/prisma-ban-ticket.reader';
+
 import { AuthService } from './application/services/auth.service';
 import { PasswordHashService } from './application/services/password-hash.service';
 import { TokenService } from './application/services/token.service';
@@ -101,6 +104,7 @@ import { PrismaAccountCredentialsRepository } from './infrastructure/repositorie
       useClass: PrismaSubjectExistenceReader,
     },
     { provide: AUTH_ACCOUNT_EVIDENCE, useClass: PrismaAccountEvidenceReader },
+    { provide: AUTH_BAN_TICKETS, useClass: PrismaBanTicketReader },
     {
       provide: AUTH_SUBJECT_ELIGIBILITY,
       useClass: PrismaSubjectEligibilityReader,
@@ -166,6 +170,7 @@ import { PrismaAccountCredentialsRepository } from './infrastructure/repositorie
     AUTHENTICATION_FLOWS,
     AUTH_SUBJECT_ELIGIBILITY,
     AUTH_ACCOUNT_EVIDENCE,
+    AUTH_BAN_TICKETS,
   ],
 })
 export class AuthModule {}
