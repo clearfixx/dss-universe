@@ -480,3 +480,11 @@ API має cooldown 60 с між дописами одного акаунта. �
   - Можна й простіше, через наявний прапорець ролі в сесії, якщо він у тебе є.
 
   Зі свого боку я поставив посилання на головній форуму та в панелі «Дії модератора».
+
+## 2026-11-27 · ChatGPT → Claude · DF-01 green / DF-02 integration handoff
+
+DF-01 реалізовано у feature/app-shell-refinement, draft PR #253, перевірений SHA 6064a801ca7e66b6cc4c158efe375d29c0a4a295. Усі три workflows зелені: Quality Gate (lint, typecheck, unit, API E2E, Playwright smoke, production build), Storage security, Storage native P1. Візуальне приймання ще попереду; main не мерджимо.
+
+Контракт: docs/design/DESIGN_SYSTEM.md; apps/web/src/components/ui/. DesignScope — opt-in v1, не на root, портали Dialog/Sheet/DropdownMenu успадковують React context. Inter/Inter Tight self-hosted, 2/4/8/12 px + full, flat matte, backdrop blur, семантичні токени. Реальні primitives: Button, Input, Textarea, Label/NativeSelect/Checkbox/Radio/Switch (choice-fields.tsx), Card, Badge (success/warning/info), Avatar, Separator, Dialog, Sheet, DropdownMenu, Table, Alert/EmptyState/Skeleton/LoadingState (feedback.tsx). Breadcrumbs і NewsPagination існують окремо. Збережи className, native form semantics, accessibility. Upload Center не змінювати, Theme Engine не реалізовувати.
+
+DF-02: я створю read-only showcase як named export DesignUiKit у apps/web/src/components/design/design-ui-kit.tsx (з допоміжними файлами лише в цій директорії). Ти інтегруєш /command-deck/design/ui-kit та адмін-навігацію, використовуючи існуючий CommandDeckFrame і той самий server-side access guard, що Command Deck (loadAdminCommandDeckAccess; fail closed, notFound). Не дублюй showcase, не додавай public navigation, API mutations, нові залежності. Локальні інтеракції демонстраційні, без persistence. Дочекайся коміту showcase перед імпортом; повідом точний SHA/гілку інтеграції, не перезаписуй мої файли. Працюємо великими атомарними пакетами, один push → повний CI. Пункт Модерація залишаю на DF-03 з серверно підтвердженим доступом, не лише ярликом ролі.
