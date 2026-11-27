@@ -115,8 +115,21 @@ body {
    Portal content must receive the same scope when rendered outside the preview. */
 [data-dss-design="v1"] {
   --radius: 0.25rem;
-  --dss-radius-sm: 2px;
-  --dss-radius-md: 4px;
+  --dss-radius-xs: 2px;
+  --dss-radius-sm: var(--dss-radius-xs);
+  --dss-radius-md: var(--radius);
+  --dss-radius-card: 8px;
+  --dss-radius-large: 12px;
+  --dss-space-unit: 4px;
+  --dss-text-display: 3rem;
+  --dss-text-h1: 2.25rem;
+  --dss-text-h2: 1.75rem;
+  --dss-text-h3: 1.5rem;
+  --dss-text-h4: 1.25rem;
+  --dss-text-body-lg: 1.125rem;
+  --dss-text-body: 1rem;
+  --dss-text-body-sm: 0.875rem;
+  --dss-text-caption: 0.75rem;
   --background: #0b0f14;
   --foreground: #f1f5f9;
   --card: #1a2332;
@@ -145,16 +158,12 @@ body {
   color: var(--foreground);
 }
 
-/* Preview-only control treatment. Unlayered rules intentionally take precedence
-   over primitive utility defaults within the opt-in design scope. */
+/* Preview-only control treatment. Radius utilities remain authoritative so
+   callers can retain deliberate full-radius and grouped-control exceptions. */
 [data-dss-design="v1"] {
     --dss-font-body: Inter, ui-sans-serif, system-ui, sans-serif;
     --dss-font-heading: "Inter Tight", Inter, ui-sans-serif, system-ui, sans-serif;
     font-family: var(--dss-font-body);
-  }
-
-[data-dss-design="v1"] :is([data-slot="button"], [data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]) {
-    border-radius: var(--radius);
   }
 
 [data-dss-design="v1"] :is([data-slot="button"], [data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]):focus-visible {
