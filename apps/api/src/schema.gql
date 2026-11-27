@@ -165,6 +165,49 @@ type AuthTokensModel {
   refreshToken: String!
 }
 
+type BanAppeal {
+  decidedAt: DateTime
+  decisionReason: String
+  id: ID!
+  status: BanAppealStatus!
+  submittedAt: DateTime!
+  text: String!
+}
+
+type BanAppealFile {
+  filename: String!
+  id: ID!
+  size: Int!
+  status: BanAppealFileStatus!
+}
+
+type BanAppealFileAccess {
+  expiresAt: DateTime!
+  url: String!
+}
+
+enum BanAppealFileStatus {
+  CHECKING
+  READY
+  REJECTED
+}
+
+type BanAppealQueue {
+  items: [ReviewedBanAppeal!]!
+  total: Int!
+}
+
+type BanAppealState {
+  appeal: BanAppeal
+  files: [BanAppealFile!]!
+}
+
+enum BanAppealStatus {
+  ACCEPTED
+  PENDING
+  REJECTED
+}
+
 type Bookmark {
   createdAt: String!
   id: ID!
@@ -1746,6 +1789,7 @@ type Mutation {
   createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
   createResearchDraft(input: ResearchDraftInput!): ResearchDraftReceipt!
   deactivateAccount(input: DeactivateAccountInput!): LogoutResultModel!
+  decideBanAppeal(accept: Boolean!, appealId: ID!, reason: String!): BanAppeal!
   deleteCommunityEvent(id: ID!): Boolean!
   deleteCommunityMission(id: ID!): Boolean!
   deleteForumPost(postId: ID!, reason: String!): ForumPostModerationResult!
@@ -1793,6 +1837,7 @@ type Mutation {
   register(input: RegisterInput!): AuthPayloadModel!
   rejectQuarantinedMedia(mediaId: ID!): MediaQuarantineItem!
   rejectResearchRevision(input: ResearchDecisionInput!): ResearchRevisionReceipt!
+  removeBanAppealFile(fileId: ID!, ticket: String!): Boolean!
   removeBookmark(interactionTargetId: ID!): BookmarkMutationPayload!
   removeComment(commentId: ID!, reason: String): Comment!
   removeForumStaffNote(noteId: ID!): Boolean!
@@ -1854,6 +1899,7 @@ type Mutation {
   setViewerCover(mediaId: ID!): Viewer!
   splitForumTopic(numbers: [Int!]!, sourceTopicId: ID!, title: String!): ForumTopic!
   startResearchDraft(pageId: ID!): ResearchDraftReceipt!
+  submitBanAppeal(text: String!, ticket: String!): BanAppeal!
   submitNewsForReview(articleId: ID!): NewsEditorialTransition!
   submitResearchDraft(input: ResearchSubmitInput!): ResearchRevisionReceipt!
   subscribeForumTopic(topicId: ID!): Boolean!
@@ -2309,6 +2355,9 @@ type Query {
   adminCommandDeckAccess: Boolean!
   adminPlatformAppearance: PlatformAppearance!
   apiInfo: ApiInfo!
+  banAppealFileAccess(appealId: ID!, fileId: ID!): BanAppealFileAccess!
+  banAppealState(ticket: String!): BanAppealState!
+  banAppeals(limit: Int! = 20, page: Int! = 1, status: BanAppealStatus!): BanAppealQueue!
   blockedUsers(pagination: UsersPageInput): UsersPageModel!
   commentDraft(interactionTargetId: ID!, parentId: ID): CommentDraft
   commentRevisions(commentId: ID!): [CommentRevision!]!
@@ -2803,6 +2852,27 @@ input ReviewContentReportInput {
   decision: ReportReviewDecision!
   note: String!
   reportId: ID!
+}
+
+type ReviewedBanAppeal {
+  banComment: String!
+  bannedAt: DateTime!
+  contextPath: String
+  decidedAt: DateTime
+  decidedByName: String
+  decisionReason: String
+  files: [BanAppealFile!]!
+  id: ID!
+  issuedByName: String
+  reference: String!
+  ruleCode: String!
+  ruleText: String!
+  status: BanAppealStatus!
+  subjectId: ID!
+  subjectName: String
+  subjectUsername: String
+  submittedAt: DateTime!
+  text: String!
 }
 
 input RevokeAchievementAwardInput {

@@ -22,6 +22,7 @@ import { Permission } from './../src/core/authorization';
 import { PrismaService } from './../src/core/database';
 import { AuthenticationPresentationService } from './../src/composition/identity/application/authentication-presentation.service';
 import { EDITOR_CODE_HIGHLIGHTER } from './../src/modules/editor/application/contracts/editor-code-highlighter.interface';
+import { BanAppealsService } from './../src/modules/moderation/infrastructure/prisma-ban-appeals';
 import { AccountBansService } from './../src/modules/moderation/infrastructure/prisma-account-ban-records';
 
 type GraphqlResponse<T> = {
@@ -234,4 +235,156 @@ describe('Permanent account bans (e2e)', () => {
       bans.issue(as(owner.user.id), against(otherAdmin.user.id)),
     ).resolves.toMatchObject({ subjectId: otherAdmin.user.id });
   }, 60000);
+
+  it('takes one appeal with screenshots and lets administrators decide it', async () => {
+    const admin = await member('appeal-admin');
+    const rejected = await member('appeal-rejected');
+    const accepted = await member('appeal-accepted');
+    const prisma = app.get(PrismaService);
+    const rule = await prisma.communityRule.create({
+      data: {
+        code: `${Math.floor(Math.random() * 900) + 100}.3`,
+        text: 'No flooding.',
+      },
+    });
+    const bans = app.get(AccountBansService);
+    const appeals = app.get(BanAppealsService);
+    const actor = {
+      id: admin.user.id,
+      permissions: [Permission.ModerationBansManage] as string[],
+    };
+    async function banned(person: { user: { id: string }; email: string }) {
+      await bans.issue(actor, {
+        subjectId: person.user.id,
+        ruleId: rule.id,
+        comment: 'Flooding.',
+        context: null,
+      });
+      return (await login(person.email)).errors![0].extensions!.banTicket!;
+    }
+    const ticket = await banned(rejected);
+
+    // A minimal PNG signature passes intake; the worker re-encodes later.
+    const png = Buffer.concat([
+      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+      Buffer.alloc(64, 1),
+    ]);
+    const upload = (
+      withTicket: string,
+      name = 'proof.png',
+      body = png,
+      contentType = 'image/png',
+    ) =>
+      request(app.getHttpServer())
+        .post('/api/moderation/ban-appeal/files')
+        .set('x-ban-ticket', withTicket)
+        .attach('file', body, { filename: name, contentType });
+
+    await upload('not-a-ticket').expect(403);
+    await upload(admin.tokens.accessToken).expect(403);
+    // Only images: a PDF is refused, and so is text posing as a PNG.
+    await upload(
+      ticket,
+      'doc.pdf',
+      Buffer.from('%PDF-1.7 test'),
+      'application/pdf',
+    ).expect((response) => expect(response.status).toBeGreaterThanOrEqual(400));
+    await upload(ticket, 'fake.png', Buffer.from('MZ not an image')).expect(
+      415,
+    );
+
+    const files: string[] = [];
+    for (let index = 0; index < 5; index += 1) {
+      const response = await upload(ticket, `proof-${index}.png`).expect(201);
+      expect(response.body).toMatchObject({ status: 'CHECKING' });
+      files.push((response.body as { id: string }).id);
+    }
+    await upload(ticket).expect(409);
+
+    const references = () =>
+      prisma.mediaReference.count({
+        where: { purpose: 'appeal-screenshot', removedAt: null },
+      });
+    const before = await references();
+    await expect(appeals.removeFile(ticket, files[4])).resolves.toBe(true);
+    // Retention keeps referenced files only.
+    expect(await references()).toBe(before - 1);
+
+    const sent = await appeals.submit(ticket, 'I did not flood.');
+    expect(sent.status).toBe('PENDING');
+    await expect(appeals.submit(ticket, 'Once more.')).rejects.toMatchObject({
+      code: 'INVALID_STATE',
+    });
+    await upload(ticket).expect(409);
+    await expect(appeals.removeFile(ticket, files[0])).rejects.toMatchObject({
+      code: 'INVALID_STATE',
+    });
+    expect((await appeals.state(ticket)).files).toHaveLength(4);
+
+    await expect(
+      appeals.queue({ id: admin.user.id, permissions: [] }, 'PENDING', 1, 20),
+    ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+    const queued = (await appeals.queue(actor, 'PENDING', 1, 50)).items.find(
+      (item) => item.id === sent.id,
+    )!;
+    expect(queued.ban.subjectId).toBe(rejected.user.id);
+    expect(queued.files).toHaveLength(4);
+
+    // No download until the worker produced a clean re-encoded image.
+    await expect(
+      appeals.fileAccess(actor, sent.id, files[0]),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    const { mediaId } = await prisma.banAppealFile.findUniqueOrThrow({
+      where: { id: files[0] },
+    });
+    const media = await prisma.media.update({
+      where: { id: mediaId },
+      data: { status: 'READY' },
+    });
+    await prisma.mediaVariant.create({
+      data: {
+        mediaId,
+        name: 'review',
+        storageProvider: media.storageProvider,
+        bucket: media.bucket,
+        storageKey: `${media.storageKey}.review`,
+        mimeType: 'image/webp',
+        extension: 'webp',
+        size: 1,
+        checksum: 'x',
+      },
+    });
+    await expect(
+      appeals.fileAccess(actor, sent.id, files[0]),
+    ).resolves.toMatchObject({
+      url: expect.stringContaining('/api/media/signed/') as unknown,
+    });
+
+    await expect(
+      appeals.decide(actor, sent.id, false, ' '),
+    ).rejects.toMatchObject({ code: 'INVALID_INPUT' });
+    await appeals.decide(actor, sent.id, false, 'The logs confirm it.');
+    await expect(
+      appeals.decide(actor, sent.id, true, 'Changed my mind.'),
+    ).rejects.toMatchObject({ code: 'INVALID_STATE' });
+    expect((await appeals.state(ticket)).appeal).toMatchObject({
+      status: 'REJECTED',
+      decisionReason: 'The logs confirm it.',
+    });
+    expect((await login(rejected.email)).errors?.[0].message).toBe(
+      'ACCOUNT_BANNED',
+    );
+
+    const second = await banned(accepted);
+    const appeal = await appeals.submit(second, 'This was a mistake.');
+    await expect(
+      appeals.decide(actor, appeal.id, true, 'Agreed, a mistake.'),
+    ).resolves.toMatchObject({ status: 'ACCEPTED' });
+    expect(
+      (await login(accepted.email)).data?.login.tokens.accessToken,
+    ).toBeTruthy();
+    await expect(appeals.state(second)).rejects.toMatchObject({
+      code: 'ACCESS_DENIED',
+    });
+  }, 90000);
 });

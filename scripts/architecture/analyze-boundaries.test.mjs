@@ -711,6 +711,8 @@ for (const [moduleName, expected] of [
       "MediaPublicAttachmentReader",
       "MediaPublicAttachment",
       "MediaPublicAttachmentQuery",
+      "MEDIA_APPEAL_SCREENSHOTS",
+      "MediaAppealScreenshots",
       "MEDIA_IMAGE_ELIGIBILITY",
       "MediaImageEligibility",
       "MEDIA_PROFILE_ASSET_COMMANDS",
@@ -1155,7 +1157,7 @@ test("owners publish only the intended guarded technical symbols", () => {
       ],
     ],
     ["levels", ["leaderboardLevelLookup", "PrismaLevelSynchronizationWriter"]],
-    ["moderation", ["PrismaAccountBanLedger"]],
+    ["moderation", ["PrismaAccountBanLedger", "PrismaBanAppealLedger"]],
     [
       "leaderboards",
       ["leaderboardRankingColumns", "leaderboardPageWithPopulation"],

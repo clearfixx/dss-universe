@@ -244,6 +244,16 @@ export class MediaBinaryUploadService {
         },
       ];
     }
+    if (policyKey === 'appeal-screenshot') {
+      return [
+        {
+          name: 'review',
+          storageKey: `${prefix}/review.webp`,
+          width: 2560,
+          fit: 'inside',
+        },
+      ];
+    }
     if (policyKey === 'content-image') {
       return [640, 1280].map((width) => ({
         name: `content-${width}`,

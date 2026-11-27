@@ -19,7 +19,8 @@ export type MediaUploadPolicyKey =
   | 'avatar'
   | 'cover'
   | 'content-image'
-  | 'attachment';
+  | 'attachment'
+  | 'appeal-screenshot';
 
 export type MediaUploadPolicy = {
   key: MediaUploadPolicyKey;

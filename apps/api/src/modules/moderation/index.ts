@@ -23,3 +23,12 @@ export {
   type ModerationMemberCard,
   type ModerationMemberCardReader,
 } from './contracts/moderation-member-cards.contract';
+export {
+  BAN_APPEAL_TRANSACTION,
+  type BanAppealTransaction,
+} from './contracts/ban-appeal-transaction.port';
+export {
+  APPEAL_SCREENSHOT_FILES,
+  type AppealScreenshotFiles,
+} from './contracts/appeal-screenshots.port';
+export type { BanAppealRecord } from './domain/ban-appeal.rules';

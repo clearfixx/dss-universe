@@ -15,3 +15,4 @@
  * ===============================================================
  */
 export { PrismaAccountBanLedger } from './infrastructure/prisma-account-ban.ledger';
+export { PrismaBanAppealLedger } from './infrastructure/prisma-ban-appeal.ledger';

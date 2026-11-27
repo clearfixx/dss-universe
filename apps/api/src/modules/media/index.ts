@@ -47,3 +47,7 @@ export {
   type MediaAttachmentDecision,
   type MediaAttachmentRejection,
 } from './contracts/media-attachment-policy.contract';
+export {
+  MEDIA_APPEAL_SCREENSHOTS,
+  type MediaAppealScreenshots,
+} from './contracts/appeal-screenshots.contract';

@@ -30,6 +30,12 @@ import {
 } from './contracts/sanction-state-reader.contract';
 import { AccountBansService } from './infrastructure/prisma-account-ban-records';
 import { AccountBansResolver } from './presentation/account-bans.resolver';
+import { BanAppealsService } from './infrastructure/prisma-ban-appeals';
+import {
+  BanAppealFilesController,
+  BanTicketGuard,
+} from './presentation/ban-appeal-files.controller';
+import { BanAppealsResolver } from './presentation/ban-appeals.resolver';
 import { CommunityRulesService } from './infrastructure/prisma-community-rules';
 import { ModerationSanctionsService } from './infrastructure/prisma-moderation-sanctions';
 import { CommunityRulesResolver } from './presentation/community-rules.resolver';
@@ -37,6 +43,7 @@ import { ModerationSanctionsResolver } from './presentation/moderation-sanctions
 
 @Module({
   imports: [AuthorizationModule],
+  controllers: [BanAppealFilesController],
   providers: [
     ModerationSanctionsService,
     ModerationSanctionsResolver,
@@ -44,6 +51,9 @@ import { ModerationSanctionsResolver } from './presentation/moderation-sanctions
     CommunityRulesResolver,
     AccountBansService,
     AccountBansResolver,
+    BanAppealsService,
+    BanAppealsResolver,
+    BanTicketGuard,
     { provide: SANCTION_STATE_READER, useExisting: ModerationSanctionsService },
     { provide: SANCTION_ISSUER, useExisting: ModerationSanctionsService },
     {

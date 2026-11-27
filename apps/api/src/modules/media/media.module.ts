@@ -33,6 +33,8 @@ import { MEDIA_ATTACHMENT_POLICY } from './contracts/media-attachment-policy.con
 import { PrismaMediaAttachmentPolicy } from './infrastructure/repositories/prisma-media-attachment-policy';
 
 import { StorageModule } from '@api/core/storage';
+import { MEDIA_APPEAL_SCREENSHOTS } from './contracts/appeal-screenshots.contract';
+import { MediaAppealScreenshotsService } from './application/services/media-appeal-screenshots.service';
 import { MEDIA_PROFILE_ASSET_COMMANDS } from './contracts/profile-asset-commands.contract';
 
 import { MediaUploadPolicyService } from './application/services/media-upload-policy.service';
@@ -109,6 +111,11 @@ import { PrismaCoverRepository } from './infrastructure/repositories/prisma-cove
           removeCover: (subjectId: string) => covers.remove(subjectId),
         }),
     },
+    MediaAppealScreenshotsService,
+    {
+      provide: MEDIA_APPEAL_SCREENSHOTS,
+      useExisting: MediaAppealScreenshotsService,
+    },
     AvatarService,
     CoverService,
     MediaAccessService,
@@ -147,6 +154,7 @@ import { PrismaCoverRepository } from './infrastructure/repositories/prisma-cove
     MEDIA_PUBLICATION_EVIDENCE,
     MEDIA_ATTACHMENT_POLICY,
     MEDIA_IMAGE_ELIGIBILITY,
+    MEDIA_APPEAL_SCREENSHOTS,
   ],
 })
 export class MediaModule {}
