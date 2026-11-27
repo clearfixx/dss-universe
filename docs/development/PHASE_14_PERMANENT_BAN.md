@@ -1,8 +1,8 @@
 # Permanent ban and appeals
 
-Status: packages 1 (ban, lift, login ticket, notice) and 2 (appeal with
-screenshots, review) implemented 2026-11-27.
-Packages 3 and 4 are not started.
+Status: packages 1 (ban, lift, login ticket, notice), 2 (appeal with
+screenshots, review) and 3 (ban screen) implemented 2026-11-27.
+Package 4 is not started.
 
 ## Owner decisions
 

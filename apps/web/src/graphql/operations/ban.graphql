@@ -1,0 +1,36 @@
+query BanScreen($ticket: String!) {
+  accountBanNotice(ticket: $ticket) {
+    reference
+    issuedAt
+    issuedByName
+    ruleCode
+    ruleText
+    comment
+    contextPath
+  }
+  banAppealState(ticket: $ticket) {
+    appeal {
+      status
+      submittedAt
+      decidedAt
+      decisionReason
+    }
+    files {
+      id
+      filename
+      size
+      status
+    }
+  }
+}
+
+mutation SubmitBanAppeal($ticket: String!, $text: String!) {
+  submitBanAppeal(ticket: $ticket, text: $text) {
+    id
+    status
+  }
+}
+
+mutation RemoveBanAppealFile($ticket: String!, $fileId: ID!) {
+  removeBanAppealFile(ticket: $ticket, fileId: $fileId)
+}

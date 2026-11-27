@@ -21,6 +21,16 @@ function token(exp: number) {
 describe("session proxy", () => {
   afterEach(() => vi.restoreAllMocks());
 
+  it("keeps a banned browser on the ban screen and login only", async () => {
+    const cookies = { dss_ban_ticket: "ticket" };
+    const away = await proxy(request("/community", cookies));
+    expect(away.headers.get("location")).toBe("http://localhost:3000/banned");
+    const screen = await proxy(request("/banned", cookies));
+    expect(screen.headers.get("location")).toBeNull();
+    const login = await proxy(request("/login", cookies));
+    expect(login.headers.get("location")).toBeNull();
+  });
+
   it("redirects guests from a protected route and preserves its query", async () => {
     const response = await proxy(request("/newsroom/new?draft=alpha"));
 
