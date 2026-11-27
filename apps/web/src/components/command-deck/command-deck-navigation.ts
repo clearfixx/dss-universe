@@ -92,7 +92,12 @@ export const COMMAND_DECK_GROUPS: readonly CommandDeckGroup[] = [
     label: "Community",
     entries: [
       { label: "Users", icon: Users },
-      { label: "Moderation", icon: ShieldAlert },
+      {
+        label: "Moderation",
+        icon: ShieldAlert,
+        href: "/command-deck/moderation/rules",
+        matches: ["/command-deck/moderation"],
+      },
       { label: "Support Center", icon: LifeBuoy },
     ],
   },

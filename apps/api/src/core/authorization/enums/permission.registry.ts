@@ -182,6 +182,11 @@ export const PERMISSIONS = {
     label: 'Manage sanction policy',
     description: 'Allows changing warning lifetime and escalation thresholds.',
   },
+  ModerationRulesManage: {
+    key: 'moderation.rules.manage',
+    label: 'Manage community rules',
+    description: 'Allows editing the numbered community rules catalogue.',
+  },
   ForumStructureManage: {
     key: 'forum.structure.manage',
     label: 'Manage forum structure',

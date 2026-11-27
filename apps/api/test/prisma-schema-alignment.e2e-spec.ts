@@ -42,6 +42,7 @@ describe('Prisma and historical migration alignment (e2e)', () => {
       'achievement_definitions',
       'achievement_rules',
       'comments',
+      'community_rules',
       'community_point_rules',
       'custom_title_settings',
       'custom_titles',

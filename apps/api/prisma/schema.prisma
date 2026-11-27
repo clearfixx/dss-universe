@@ -407,6 +407,7 @@ model User {
   following               UserFollow[]                 @relation("UserFollowing")
   blockedUsers            UserBlock[]                  @relation("UserBlocker")
   blockedByUsers          UserBlock[]                  @relation("UserBlocked")
+  editedCommunityRules    CommunityRule[]              @relation("CommunityRuleEditor")
   wallPosts               UserWallPost[]               @relation("ProfileWallOwner")
   authoredWallPosts       UserWallPost[]               @relation("ProfileWallAuthor")
   notificationPreferences UserNotificationPreferences?
@@ -930,24 +931,24 @@ model ResearchPage {
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt
 
-  interactionTarget InteractionTarget           @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
-  creator           User                        @relation("ResearchPageCreator", fields: [creatorId], references: [id], onDelete: Restrict)
-  publishedRevision ResearchRevision?           @relation("ResearchPublishedRevision", fields: [publishedRevisionId, id], references: [id, pageId], onDelete: Restrict)
-  primaryCategory   ResearchCategory?           @relation("ResearchPrimaryCategory", fields: [primaryCategoryId], references: [id], onDelete: Restrict)
-  tombstonedBy      User?                       @relation("ResearchPageTombstoneActor", fields: [tombstonedById], references: [id], onDelete: Restrict)
-  revisions         ResearchRevision[]          @relation("ResearchPageRevisions")
-  drafts            ResearchDraft[]
-  reviewDecisions   ResearchReviewDecision[]
-  trustedEditGroupKeys String[] @default([])
-  audienceGroups    ResearchPageAudienceGroup[]
-  categories        ResearchPageCategory[]
-  tags              ResearchPageTag[]
-  technologies      ResearchPageTechnology[]
-  manualChapters    ResearchManualChapter[]
-  collectionItems   ResearchCollectionItem[]
-  slugAliases       ResearchSlugAlias[]
-  outgoingLinks     ResearchInternalLink[]      @relation("ResearchOutgoingLinks")
-  incomingLinks     ResearchInternalLink[]      @relation("ResearchIncomingLinks")
+  interactionTarget    InteractionTarget           @relation(fields: [interactionTargetId], references: [id], onDelete: Restrict)
+  creator              User                        @relation("ResearchPageCreator", fields: [creatorId], references: [id], onDelete: Restrict)
+  publishedRevision    ResearchRevision?           @relation("ResearchPublishedRevision", fields: [publishedRevisionId, id], references: [id, pageId], onDelete: Restrict)
+  primaryCategory      ResearchCategory?           @relation("ResearchPrimaryCategory", fields: [primaryCategoryId], references: [id], onDelete: Restrict)
+  tombstonedBy         User?                       @relation("ResearchPageTombstoneActor", fields: [tombstonedById], references: [id], onDelete: Restrict)
+  revisions            ResearchRevision[]          @relation("ResearchPageRevisions")
+  drafts               ResearchDraft[]
+  reviewDecisions      ResearchReviewDecision[]
+  trustedEditGroupKeys String[]                    @default([])
+  audienceGroups       ResearchPageAudienceGroup[]
+  categories           ResearchPageCategory[]
+  tags                 ResearchPageTag[]
+  technologies         ResearchPageTechnology[]
+  manualChapters       ResearchManualChapter[]
+  collectionItems      ResearchCollectionItem[]
+  slugAliases          ResearchSlugAlias[]
+  outgoingLinks        ResearchInternalLink[]      @relation("ResearchOutgoingLinks")
+  incomingLinks        ResearchInternalLink[]      @relation("ResearchIncomingLinks")
 
   @@unique([language, slug])
   @@unique([publishedRevisionId, id])
@@ -1456,6 +1457,20 @@ model ModerationSanction {
   @@index([subjectId, issuedAt, id])
   @@index([consumedBySanctionId])
   @@map("moderation_sanctions")
+}
+
+model CommunityRule {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  text        String
+  active      Boolean  @default(true)
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  updatedBy User? @relation("CommunityRuleEditor", fields: [updatedById], references: [id], onDelete: Restrict)
+
+  @@map("community_rules")
 }
 
 model ModerationSanctionPolicy {
@@ -2234,12 +2249,12 @@ model ReputationEntry {
   qualificationFacts     ReputationQualificationFact[]
   qualificationState     ReputationQualificationState?
 
+  /// One change per member per source (e.g. per forum post).
+  @@unique([actorId, sourceType, sourceId])
   @@index([recipientId, createdAt, id])
   @@index([actorId, recipientId, createdAt])
   @@index([createdAt, recipientId])
   @@index([reversesEntryId])
-  /// One change per member per source (e.g. per forum post).
-  @@unique([actorId, sourceType, sourceId])
   @@map("reputation_entries")
 }
 
@@ -2728,9 +2743,9 @@ model ForumCategory {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
-  audience   ForumCategoryAudience[]
-  forums     Forum[]
-  moderators ForumModeratorAssignment[]
+  audience    ForumCategoryAudience[]
+  forums      Forum[]
+  moderators  ForumModeratorAssignment[]
   accessRules ForumAccessRule[]
 
   @@index([active, position, id])
@@ -2749,32 +2764,32 @@ model ForumCategoryAudience {
 }
 
 model Forum {
-  id                 String   @id @default(uuid())
+  id                 String          @id @default(uuid())
   categoryId         String
   parentId           String?
   slug               String
   title              String
   description        String?
-  position           Int      @default(0)
-  active             Boolean  @default(true)
-  allowsGatedContent Boolean  @default(false)
+  position           Int             @default(0)
+  active             Boolean         @default(true)
+  allowsGatedContent Boolean         @default(false)
   /// Section switches (Command Deck): new topics, replies, polls, attachments.
-  allowTopics        Boolean  @default(true)
-  allowReplies       Boolean  @default(true)
-  allowPolls         Boolean  @default(true)
-  allowAttachments   Boolean  @default(true)
+  allowTopics        Boolean         @default(true)
+  allowReplies       Boolean         @default(true)
+  allowPolls         Boolean         @default(true)
+  allowAttachments   Boolean         @default(true)
   /// false = unlisted: hidden from lists and navigation, opens by direct link.
-  listed             Boolean  @default(true)
+  listed             Boolean         @default(true)
   /// false = topics of this section are left out of forum search.
-  searchable         Boolean  @default(true)
+  searchable         Boolean         @default(true)
   /// false = topic and reply counters are not shown for this section.
-  showCounts         Boolean  @default(true)
+  showCounts         Boolean         @default(true)
   /// Maximum pinned topics; null = no limit.
   pinnedLimit        Int?
   /// Largest attachment in MB; null = the platform media limit.
   attachmentMaxMb    Int?
   /// Allowed file extensions (lower case, no dot); empty = any.
-  attachmentFormats  String[] @default([])
+  attachmentFormats  String[]        @default([])
   /// Close open topics without new posts for this many days; null = off.
   autoCloseDays      Int?
   /// Lowest forum role that sees hidden blocks unlocked by their conditions.
@@ -2782,18 +2797,18 @@ model Forum {
   /// Lowest forum role that may insert hidden blocks.
   gateCreateRole     ForumAccessRole @default(MEMBER)
   /// Block kinds allowed inside hidden blocks: TEXT, CODE, MEDIA, FILES.
-  gateBlockTypes     String[] @default(["TEXT", "CODE", "MEDIA", "FILES"])
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  gateBlockTypes     String[]        @default(["TEXT", "CODE", "MEDIA", "FILES"])
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
 
   topics               ForumTopic[]
   accessRules          ForumAccessRule[]
   moderatorAssignments ForumModeratorAssignment[]
-  tags      ForumTag[]
-  category  ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  parent    Forum?        @relation("ForumSubforums", fields: [parentId], references: [id], onDelete: Restrict)
-  subforums Forum[]       @relation("ForumSubforums")
-  followers ForumFollow[]
+  tags                 ForumTag[]
+  category             ForumCategory              @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  parent               Forum?                     @relation("ForumSubforums", fields: [parentId], references: [id], onDelete: Restrict)
+  subforums            Forum[]                    @relation("ForumSubforums")
+  followers            ForumFollow[]
 
   @@unique([categoryId, slug])
   @@index([categoryId, parentId, position, id])

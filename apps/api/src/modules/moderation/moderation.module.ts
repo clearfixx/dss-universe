@@ -28,7 +28,9 @@ import {
   SANCTION_STATE_READER,
   type SanctionStateReader,
 } from './contracts/sanction-state-reader.contract';
+import { CommunityRulesService } from './infrastructure/prisma-community-rules';
 import { ModerationSanctionsService } from './infrastructure/prisma-moderation-sanctions';
+import { CommunityRulesResolver } from './presentation/community-rules.resolver';
 import { ModerationSanctionsResolver } from './presentation/moderation-sanctions.resolver';
 
 @Module({
@@ -36,6 +38,8 @@ import { ModerationSanctionsResolver } from './presentation/moderation-sanctions
   providers: [
     ModerationSanctionsService,
     ModerationSanctionsResolver,
+    CommunityRulesService,
+    CommunityRulesResolver,
     { provide: SANCTION_STATE_READER, useExisting: ModerationSanctionsService },
     { provide: SANCTION_ISSUER, useExisting: ModerationSanctionsService },
     {
