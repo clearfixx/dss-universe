@@ -24,15 +24,15 @@ export function GraphqlPlatformStatus() {
   });
 
   if (loading) {
-    return <span className="text-slate-500">Connecting to DSS API…</span>;
+    return <span role="status" className="text-muted-foreground">Connecting to DSS API…</span>;
   }
 
   if (!data) {
-    return <span className="text-amber-300">DSS API is unavailable</span>;
+    return <span role="status" className="text-warning">DSS API is unavailable</span>;
   }
 
   return (
-    <span className="text-emerald-300">
+    <span role="status" className="text-success">
       {data.apiInfo.name} · {data.apiInfo.transport} · {data.apiInfo.status}
     </span>
   );
