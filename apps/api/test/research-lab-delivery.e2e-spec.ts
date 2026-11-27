@@ -531,6 +531,20 @@ describe('Research Lab public delivery (GraphQL)', () => {
           .send({ query, variables })
           .expect(200),
       );
+    const revisions = () =>
+      graphql<{
+        researchRevisionHistory: { id: string }[];
+        researchRevisionDiff: { fromDocumentJson: string } | null;
+      }>(
+        'query($page:ID!,$revision:ID!){researchRevisionHistory(pageId:$page){id} researchRevisionDiff(pageId:$page,from:$revision,to:$revision){fromDocumentJson}}',
+        { page: draft.pageId, revision: published.revisionId },
+      );
+    const visibleRevisions = await revisions();
+    expect(visibleRevisions.errors).toBeUndefined();
+    expect(visibleRevisions.data.researchRevisionHistory).toEqual([
+      { id: published.revisionId },
+    ]);
+    expect(visibleRevisions.data.researchRevisionDiff).not.toBeNull();
     const saveBookmark = () =>
       graphql<{
         saveBookmark: { bookmark: { id: string; interactionTargetId: string } };
@@ -593,6 +607,10 @@ describe('Research Lab public delivery (GraphQL)', () => {
       },
     });
     expect(await search()).toEqual(empty);
+    expect((await revisions()).data).toEqual({
+      researchRevisionHistory: [],
+      researchRevisionDiff: null,
+    });
     expect((await history()).errors[0].extensions.code).toBe('FORBIDDEN');
     const list = (page: number) =>
       graphql(
