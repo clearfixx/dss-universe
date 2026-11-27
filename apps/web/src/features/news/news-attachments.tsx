@@ -37,9 +37,9 @@ function FileIcon({
 export function NewsAttachments({ items }: { items: Attachment[] }) {
   if (!items.length) return null;
   return (
-    <section className="space-y-4 rounded-2xl border border-white/10 bg-slate-950/60 p-6 sm:p-8">
+    <section className="space-y-4 rounded-card border border-border bg-card p-6 sm:p-8">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-400">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-cyan">
           Матеріали
         </p>
         <h2 className="mt-1 text-2xl font-semibold">Вкладені файли</h2>
@@ -48,19 +48,19 @@ export function NewsAttachments({ items }: { items: Attachment[] }) {
         {items.map((item) => (
           <article
             key={item.id}
-            className="grid gap-4 rounded-xl border border-white/10 bg-white/[0.025] p-4 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center"
+            className="grid gap-4 rounded-md border border-border bg-muted/40 p-4 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center"
           >
-            <div className="rounded-xl border border-cyan-400/20 bg-cyan-400/10 p-3 text-cyan-300">
+            <div className="rounded-card border border-border bg-muted p-3 text-link">
               <FileIcon mimeType={item.mimeType} extension={item.extension} />
             </div>
             <div className="min-w-0">
-              <h3 className="truncate font-medium text-white">{item.label}</h3>
-              <p className="mt-1 text-sm text-slate-400">
+              <h3 className="truncate font-medium text-foreground">{item.label}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
                 {item.kind} · {formatBytes(item.size)} · {item.filename}
               </p>
-              <dl className="mt-2 grid gap-1 text-xs text-slate-500">
+              <dl className="mt-2 grid gap-1 text-xs text-muted-foreground">
                 <div className="flex min-w-0 gap-2">
-                  <dt className="shrink-0 font-semibold text-slate-400">
+                  <dt className="shrink-0 font-semibold text-muted-foreground">
                     SHA-256
                   </dt>
                   <dd
@@ -72,7 +72,7 @@ export function NewsAttachments({ items }: { items: Attachment[] }) {
                 </div>
                 {item.checksumSha1 ? (
                   <div className="flex min-w-0 gap-2">
-                    <dt className="shrink-0 font-semibold text-slate-400">
+                    <dt className="shrink-0 font-semibold text-muted-foreground">
                       SHA-1
                     </dt>
                     <dd
@@ -85,7 +85,7 @@ export function NewsAttachments({ items }: { items: Attachment[] }) {
                 ) : null}
                 {item.checksumMd5 ? (
                   <div className="flex min-w-0 gap-2">
-                    <dt className="shrink-0 font-semibold text-slate-400">
+                    <dt className="shrink-0 font-semibold text-muted-foreground">
                       MD5
                     </dt>
                     <dd className="truncate font-mono" title={item.checksumMd5}>
@@ -94,7 +94,7 @@ export function NewsAttachments({ items }: { items: Attachment[] }) {
                   </div>
                 ) : null}
                 <div className="flex gap-2">
-                  <dt className="font-semibold text-slate-400">MIME</dt>
+                  <dt className="font-semibold text-muted-foreground">MIME</dt>
                   <dd className="font-mono">{item.mimeType}</dd>
                 </div>
               </dl>
@@ -102,7 +102,7 @@ export function NewsAttachments({ items }: { items: Attachment[] }) {
             <a
               href={downloadUrl(item.downloadUrl)}
               download={item.filename}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-cyan-400/30 px-4 text-sm font-medium text-cyan-200 transition hover:border-cyan-300 hover:bg-cyan-400/10"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border px-4 text-sm font-medium text-link transition hover:border-ring hover:bg-muted"
             >
               <Download className="size-4" /> Завантажити
             </a>

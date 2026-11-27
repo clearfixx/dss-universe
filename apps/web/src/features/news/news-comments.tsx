@@ -83,7 +83,7 @@ function CommentComposer({
         <Button type="submit" disabled={pending || !body.trim()}>
           {pending ? "Надсилаємо…" : parentId ? "Відповісти" : "Коментувати"}
         </Button>
-        {error ? <p className="text-sm text-rose-400">{error}</p> : null}
+        {error ? <p className="text-sm text-destructive">{error}</p> : null}
       </div>
     </form>
   );
@@ -136,13 +136,13 @@ function CommentBranch({
 
   return (
     <article
-      className="space-y-3 border-l border-white/10 pl-4"
+      className="space-y-3 border-l border-border pl-4"
       style={{ marginLeft: `${Math.min(depth, 5) * 0.5}rem` }}
     >
-      <header className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+      <header className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         <Link
           href={`/profile/${comment.author.username}`}
-          className="font-medium text-slate-200 hover:text-cyan-300"
+          className="font-medium text-foreground hover:text-link"
         >
           {comment.author.displayName ?? comment.author.username}
         </Link>
@@ -152,17 +152,17 @@ function CommentBranch({
         {comment.editedAt ? <span>редаговано</span> : null}
       </header>
       {comment.isDeleted ? (
-        <p className="italic text-slate-500">Коментар видалено.</p>
+        <p className="italic text-muted-foreground">Коментар видалено.</p>
       ) : hidden ? (
         <button
-          className="text-left text-sm text-slate-500 hover:text-slate-300"
+          className="text-left text-sm text-muted-foreground hover:text-foreground"
           onClick={() => setShowHidden(true)}
         >
           Цей коментар має низьку оцінку й автоматично прихований. Показати
           його?
         </button>
       ) : (
-        <p className="whitespace-pre-wrap leading-7 text-slate-200">
+        <p className="whitespace-pre-wrap leading-7 text-foreground">
           {comment.body}
         </p>
       )}
@@ -269,10 +269,10 @@ export function NewsComments({
   };
 
   return (
-    <section className="space-y-6 rounded-2xl border border-white/10 bg-slate-950/60 p-6 sm:p-8">
+    <section className="space-y-6 rounded-card border border-border bg-card p-6 sm:p-8">
       <h2 className="flex items-center gap-2 text-2xl font-semibold">
-        <MessageCircle className="size-6 text-cyan-300" /> Коментарі
-        <span className="text-base text-slate-500">{initial.total}</span>
+        <MessageCircle className="size-6 text-link" /> Коментарі
+        <span className="text-base text-muted-foreground">{initial.total}</span>
       </h2>
       <CommentComposer
         interactionTargetId={interactionTargetId}
@@ -288,7 +288,7 @@ export function NewsComments({
           />
         ))}
         {!comments.length ? (
-          <p className="text-slate-500">
+          <p className="text-muted-foreground">
             Будьте першим, хто залишить коментар.
           </p>
         ) : null}

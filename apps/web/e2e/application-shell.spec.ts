@@ -79,3 +79,14 @@ test("shell chrome opts into v1 without changing page content tokens", async ({ 
   await expect(menu).toHaveAttribute("data-dss-design", "v1");
   await expect(menu).toHaveCSS("background-color", "rgb(26, 35, 50)");
 });
+
+
+test("news catalog uses scoped semantic filters without scoping the shell main", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto("/news");
+  const filters = page.locator('form[action="/news"]');
+  await expect(filters.getByRole("textbox", { name: "Пошук у новинах" })).toHaveAttribute("data-slot", "input");
+  await expect(filters.getByRole("combobox", { name: "Формат новини" })).toHaveAttribute("data-slot", "native-select");
+  expect(await filters.evaluate((element) => element.closest('[data-dss-design="v1"]') !== null)).toBe(true);
+  await expect(page.locator("body")).toHaveJSProperty("scrollWidth", 375);
+});

@@ -39,7 +39,7 @@ function textNode(node: EditorNode, key: string): ReactNode {
       content = (
         <code
           key={markKey}
-          className="rounded bg-white/10 px-1 py-0.5 text-cyan-200"
+          className="rounded bg-muted px-1 py-0.5 text-link"
         >
           {content}
         </code>
@@ -50,7 +50,7 @@ function textNode(node: EditorNode, key: string): ReactNode {
           key={markKey}
           href={mark.attrs.href}
           rel="noreferrer"
-          className="text-cyan-300 underline underline-offset-4"
+          className="text-link underline underline-offset-4"
         >
           {content}
         </a>
@@ -104,7 +104,7 @@ export function NewsDocument({ documentJson }: { documentJson: string }) {
     return <p>Не вдалося відобразити текст цієї новини.</p>;
   }
   return (
-    <div className="prose prose-invert max-w-none prose-headings:scroll-mt-24 prose-headings:text-white prose-p:leading-8 prose-p:text-slate-300 prose-a:text-cyan-300 prose-blockquote:border-cyan-400 prose-blockquote:text-slate-300 prose-pre:border prose-pre:border-white/10 prose-pre:bg-slate-950">
+    <div className="prose prose-invert max-w-none prose-headings:scroll-mt-24 prose-headings:text-foreground prose-p:leading-8 prose-p:text-foreground prose-a:text-link prose-blockquote:border-border prose-blockquote:text-foreground prose-pre:border prose-pre:border-border prose-pre:bg-background">
       {children(document, "document")}
     </div>
   );

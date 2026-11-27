@@ -2,6 +2,7 @@ import {
   Bookmark,
   Eye,
   MessageCircle,
+  Newspaper,
   Pin,
   Star,
   ThumbsUp,
@@ -21,61 +22,61 @@ const dateFormatter = new Intl.DateTimeFormat("uk-UA", {
 
 export function NewsCard({ item }: { item: NewsCardItem }) {
   return (
-    <article className="group overflow-hidden rounded-2xl border border-white/10 bg-slate-950/65 transition hover:-translate-y-1 hover:border-cyan-400/35 hover:shadow-2xl hover:shadow-cyan-950/30">
+    <article className="group flex min-w-0 flex-col overflow-hidden rounded-card border border-border bg-card transition-colors hover:border-ring">
       <Link
         href={`/news/${item.language}/${item.slug}`}
-        className="relative block aspect-[16/9] overflow-hidden bg-[radial-gradient(circle_at_60%_35%,rgba(34,211,238,.32),transparent_20%),radial-gradient(circle_at_35%_65%,rgba(124,58,237,.35),transparent_26%),linear-gradient(145deg,#09152c,#050713)]"
+        className="relative grid aspect-[16/9] place-items-center overflow-hidden border-b border-border bg-muted focus-visible:outline-2 focus-visible:outline-ring"
       >
-        <div className="absolute inset-0 opacity-50 [background-image:radial-gradient(circle,rgba(255,255,255,.9)_0_1px,transparent_1px)] [background-size:31px_31px]" />
-        <div className="absolute inset-x-5 bottom-5 flex items-center justify-between">
+        <Newspaper aria-hidden="true" className="size-10 text-muted-foreground" />
+        <div className="absolute inset-x-3 bottom-3 flex items-center justify-between">
           <Badge variant="secondary">{item.postType}</Badge>
           {item.pin ? (
-            <Badge className="gap-1 bg-cyan-300 text-slate-950">
-              <Pin className="size-3 fill-current" /> Закріплено
+            <Badge variant="info">
+              <Pin className="size-3" /> Закріплено
             </Badge>
           ) : item.featured ? (
-            <Badge className="gap-1 bg-amber-400 text-slate-950">
-              <Star className="size-3 fill-current" /> Featured
+            <Badge variant="warning">
+              <Star className="size-3" /> Featured
             </Badge>
           ) : null}
         </div>
         <span className="sr-only">Відкрити новину «{item.title}»</span>
       </Link>
 
-      <div className="space-y-4 p-5">
-        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+      <div className="flex flex-1 flex-col gap-3 p-4">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           {item.primaryCategory ? (
             <Link
               href={`/news?category=${item.primaryCategory.slug}`}
-              className="text-cyan-300 hover:text-cyan-200"
+              className="text-link hover:text-link"
             >
               {item.primaryCategory.name}
             </Link>
           ) : null}
-          <span>·</span>
+          {item.primaryCategory ? <span aria-hidden="true">·</span> : null}
           <time dateTime={String(item.displayPublishedAt)}>
             {dateFormatter.format(new Date(String(item.displayPublishedAt)))}
           </time>
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold tracking-tight text-white">
+          <h2 className="font-heading text-xl font-semibold tracking-tight text-foreground">
             <Link
               href={`/news/${item.language}/${item.slug}`}
-              className="transition group-hover:text-cyan-200"
+              className="transition group-hover:text-link"
             >
               {item.title}
             </Link>
           </h2>
-          <p className="line-clamp-3 leading-6 text-slate-400">
+          <p className="line-clamp-3 leading-6 text-muted-foreground">
             {item.shortText}
           </p>
         </div>
 
-        <div className="flex items-center justify-between border-t border-white/8 pt-4 text-xs text-slate-400">
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4 text-xs text-muted-foreground">
           <Link
             href={`/profile/${item.author.username}`}
-            className="hover:text-white"
+            className="min-w-0 break-words hover:text-foreground"
           >
             {item.author.displayName ?? item.author.username}
           </Link>
@@ -96,7 +97,7 @@ export function NewsCard({ item }: { item: NewsCardItem }) {
               {item.engagement.score}
             </span>
             {item.engagement.bookmarkedByViewer ? (
-              <Bookmark className="size-3.5 fill-cyan-300 text-cyan-300" />
+              <Bookmark className="size-3.5 fill-current text-link" />
             ) : null}
           </div>
         </div>

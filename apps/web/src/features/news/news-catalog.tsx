@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import { EmptyState, EmptyStateDescription } from "@/components/ui/feedback";
 import type { NewsBrowseInput, NewsCatalogQuery } from "@/gql/graphql";
 
 import { loadMoreNews } from "./news-actions";
@@ -42,10 +43,10 @@ export function NewsCatalog({ initial, input, mode }: Props) {
       {initial.pinnedItems.length ? (
         <section className="space-y-4" aria-labelledby="pinned-news-title">
           <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-gradient-to-r from-cyan-400/50 to-transparent" />
+            <div className="h-px flex-1 bg-border" />
             <h2
               id="pinned-news-title"
-              className="text-sm font-semibold uppercase tracking-[0.22em] text-cyan-300"
+              className="font-heading text-base font-semibold text-foreground"
             >
               Закріплені сигнали
             </h2>
@@ -65,9 +66,9 @@ export function NewsCatalog({ initial, input, mode }: Props) {
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-white/15 py-20 text-center text-slate-400">
-          За цими координатами новин поки немає.
-        </div>
+        <EmptyState className="py-12">
+          <EmptyStateDescription>За цими координатами новин поки немає.</EmptyStateDescription>
+        </EmptyState>
       )}
 
       <NewsPagination
@@ -80,7 +81,7 @@ export function NewsCatalog({ initial, input, mode }: Props) {
         noun="новини"
       />
       {pending ? (
-        <p className="text-center text-sm text-cyan-300">
+        <p role="status" className="text-center text-sm text-muted-foreground">
           Отримуємо наступний сигнал…
         </p>
       ) : null}

@@ -36,6 +36,10 @@ Navbar is global; desktop Module Launcher is a compact dropdown, not a second si
 
 Opt the header, contextual sidebar, breadcrumbs and mobile navigation into v1 individually. The main route content and route-owned toolbar controls remain outside the scope until module acceptance; the toolbar layout alone uses consistent spacing. Portal content inherits the chrome scope. Do not scope the entire application shell or alter the approved Upload Center content. Personal Hub and Quick Add use actual existing actions; no role label or notification shortcut is fabricated.
 
+### Public News preview (DF-04A)
+
+News catalog, article, loading and error boundaries opt into v1 locally. Use semantic cards, native filters and shared feedback. Decorative synthetic gradient covers are replaced with a neutral icon fallback in the catalog; the full article no longer displays an empty decorative banner. Existing article content, links, attachment downloads, comments, sharing and pagination contracts are retained. Newsroom, forum-owned components and Upload Center are not migrated by this package.
+
 ## Internal UI Kit
 
 Owner-approved location: Command Deck. Proposed route /command-deck/design/ui-kit, integrated by Claude using existing server authorization (canAccessAdminDeck). No public navigation or persistence. Showcase imports actual shared primitives, not replicas. Sections: foundations, components, navigation, overlays, feedback, patterns. Interactive variants and states, responsive preview where practical. No new dependency or Theme Engine implementation required.
