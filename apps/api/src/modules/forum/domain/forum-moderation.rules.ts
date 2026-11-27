@@ -44,6 +44,16 @@ export function staffRole(
   return null;
 }
 
+/** Staff sign notes with their own role; administrators may use any role. */
+export function staffNoteRole(
+  own: ForumStaffRole | null,
+  requested: ForumStaffRole | null | undefined,
+): ForumStaffRole | null {
+  if (!own) return null;
+  if (!requested || requested === own) return own;
+  return own === 'ADMINISTRATOR' ? requested : null;
+}
+
 export function normalizeModerationReason(value: string): string {
   const reason = value.trim();
   if (reason.length < 3 || reason.length > 1000) {

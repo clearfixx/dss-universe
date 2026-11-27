@@ -27,6 +27,7 @@ import {
   MessageSquare,
   MessageSquareDashed,
   Plus,
+  ShieldCheck,
   UserPlus,
   Users,
   Trophy,
@@ -44,6 +45,7 @@ import { ForumAvatar } from "@/features/forum/forum-avatar";
 import {
   loadForumCategories,
   loadForumHub,
+  loadForumModerationOverview,
   loadForumWeeklyTop,
   loadViewerForumTopics,
 } from "@/features/forum/forum-data";
@@ -338,13 +340,15 @@ function merge(activities: readonly Activity[]): Activity {
 export default async function CommunityHubRoute({ searchParams }: Props) {
   const { category: categoryId } = await searchParams;
   const viewer = await loadSessionViewer();
-  const [hub, categories, subscribed, sections, weeklyTop] = await Promise.all([
-    loadForumHub(),
-    loadForumCategories(),
-    viewer ? loadViewerForumTopics("SUBSCRIBED", 1) : null,
-    viewer ? loadViewerForumTopics("FOLLOWED_SECTIONS", 1) : null,
-    viewer ? loadForumWeeklyTop(5) : null,
-  ]);
+  const [hub, categories, subscribed, sections, weeklyTop, moderation] =
+    await Promise.all([
+      loadForumHub(),
+      loadForumCategories(),
+      viewer ? loadViewerForumTopics("SUBSCRIBED", 1) : null,
+      viewer ? loadViewerForumTopics("FOLLOWED_SECTIONS", 1) : null,
+      viewer ? loadForumWeeklyTop(5) : null,
+      viewer ? loadForumModerationOverview() : null,
+    ]);
   const topScorers = (weeklyTop ?? []).filter(
     (entry) => entry.communityPoints > 0,
   );
@@ -442,6 +446,20 @@ export default async function CommunityHubRoute({ searchParams }: Props) {
                 <Plus className="size-4" aria-hidden="true" />
                 Створити тему
               </Link>
+              {moderation && moderation !== "DENIED" ? (
+                <Link
+                  href="/community/moderation"
+                  className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-violet-400/40 px-4 text-sm font-semibold text-violet-100 hover:border-violet-300"
+                >
+                  <ShieldCheck className="size-4" aria-hidden="true" />
+                  Модерація
+                  {moderation.trashCount ? (
+                    <span className="rounded bg-rose-500/20 px-1.5 text-xs text-rose-200">
+                      кошик {moderation.trashCount}
+                    </span>
+                  ) : null}
+                </Link>
+              ) : null}
               {viewer ? null : (
                 <Link
                   href="/register"

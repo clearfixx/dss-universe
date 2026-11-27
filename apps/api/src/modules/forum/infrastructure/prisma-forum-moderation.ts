@@ -31,6 +31,7 @@ import {
   canModeratePost,
   normalizeModerationReason,
   normalizeStaffNote,
+  staffNoteRole,
   staffRole,
   TOPIC_MODERATION_TRANSITIONS,
   type ForumModerationActor,
@@ -38,6 +39,7 @@ import {
 import type { ForumViewerFacts } from '../domain/types/forum-structure.type';
 import type {
   ForumStaffNoteView,
+  ForumStaffRole,
   ForumTopicState,
   ForumTopicSummary,
 } from '../domain/types/forum-topic.type';
@@ -248,9 +250,10 @@ export class ForumModerationService {
     actorId: string,
     postId: string,
     body: string,
+    requestedRole?: ForumStaffRole | null,
   ): Promise<ForumStaffNoteView> {
     const { viewer, actor, post } = await this.postScope(actorId, postId);
-    const role = staffRole(viewer, actor);
+    const role = staffNoteRole(staffRole(viewer, actor), requestedRole);
     if (!role) this.denied();
     if (post.state === 'PURGED') this.notFound('Post');
     const text = normalizeStaffNote(body);

@@ -95,7 +95,10 @@ const REPLY_TOOLBAR = [
     id: "structure",
     tools: ["bulletList", "orderedList", "blockquote", "codeBlock"],
   },
-  { id: "insert", tools: ["mention", "image", "video", "attachment"] },
+  {
+    id: "insert",
+    tools: ["mention", "image", "video", "attachment", "contentGate"],
+  },
   { id: "history", tools: ["undo", "redo"] },
 ] as const satisfies readonly EditorToolbarGroup[];
 const PUBLICATION_TOOLBAR = [
@@ -145,10 +148,17 @@ function reply(
     profile,
     maxCharacters,
     maxNodes: 3_000,
-    allowedNodes: [...INLINE_NODES, ...BASIC_BLOCKS, ...MEDIA_NODES],
+    // Forum replies may hide content too (owner 2026-11-27); the section
+    // switch and the CONTENT_GATE_CONFIGURE permission still decide.
+    allowedNodes: [
+      ...INLINE_NODES,
+      ...BASIC_BLOCKS,
+      ...MEDIA_NODES,
+      "contentGate",
+    ],
     allowedMarks: MARKS,
     headingLevels: [],
-    capabilities: REPLY_CAPABILITIES,
+    capabilities: [...REPLY_CAPABILITIES, "CONTENT_GATE"],
     toolbar: REPLY_TOOLBAR,
   };
 }

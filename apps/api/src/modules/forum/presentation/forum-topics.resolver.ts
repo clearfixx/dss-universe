@@ -281,6 +281,11 @@ export class ForumPostModel {
   @Field(() => Int) ratingDown!: number;
   @Field() createdAt!: Date;
   @Field(() => Date, { nullable: true }) editedAt!: Date | null;
+  @Field(() => ID, {
+    nullable: true,
+    description: 'Who made the latest edit; null when never edited.',
+  })
+  lastEditorId!: string | null;
   @Field(() => ForumPostModerationModel, {
     nullable: true,
     description: 'Returned to staff of the topic only.',
@@ -369,9 +374,15 @@ class ForumModerationOverviewModel {
 }
 
 @ObjectType('ForumPostRevision')
-class ForumPostRevisionModel {
+export class ForumPostRevisionModel {
   @Field(() => Int) revision!: number;
   @Field(() => ID) editorId!: string;
+  @Field(() => String, {
+    nullable: true,
+    description:
+      'Unformatted text of this revision; only the post author and topic staff.',
+  })
+  plainText!: string | null;
   @Field() createdAt!: Date;
 }
 

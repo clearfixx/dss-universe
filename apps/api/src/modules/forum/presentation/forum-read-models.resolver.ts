@@ -54,8 +54,12 @@ import {
 import {
   ForumModerationActionModel,
   ForumPostModel,
+  ForumPostRevisionModel,
   ForumTopicModel,
 } from './forum-topics.resolver';
+import { StaffRoleEnum } from './forum-shared.models';
+import type { ForumStaffRole } from '../domain/types/forum-topic.type';
+import { staffRole } from '../domain/forum-moderation.rules';
 
 type RequestContext = { req: { user?: AuthenticatedUser } };
 
@@ -110,6 +114,11 @@ class ForumTopicViewerAbilitiesModel {
       'Signed in and the topic is open; read-only mode is reported by viewerSanctionStatus.',
   })
   reply!: boolean;
+  @Field(() => StaffRoleEnum, {
+    nullable: true,
+    description: 'Role the viewer signs staff notes with in this topic.',
+  })
+  staffRole!: ForumStaffRole | null;
 }
 
 type ModerationFacts = {
@@ -277,6 +286,7 @@ export class ForumTopicReadResolver extends ForumReadResolverBase {
         close: false,
         reopen: false,
         reply: false,
+        staffRole: null,
       };
     }
     const { facts, assigned, assignedForums } = scope;
@@ -313,6 +323,7 @@ export class ForumTopicReadResolver extends ForumReadResolverBase {
         topic.state === 'OPEN' &&
         (section?.allowReplies ?? true) &&
         (section?.grant.reply ?? true),
+      staffRole: staffRole(facts, { ...actor, curator }),
     };
   }
 
@@ -359,6 +370,32 @@ export class ForumPostReadResolver extends ForumReadResolverBase {
   })
   viewerVote(@Parent() post: ForumPostModel, @Context() ctx: RequestContext) {
     return this.loaders.for(ctx).votes.load(post.id);
+  }
+
+  @ResolveField(() => ForumMemberModel, {
+    nullable: true,
+    description: 'Who made the latest edit; null when never edited.',
+  })
+  lastEditor(@Parent() post: ForumPostModel, @Context() ctx: RequestContext) {
+    return post.lastEditorId ? this.card(ctx, post.lastEditorId) : null;
+  }
+}
+
+@Resolver(() => ForumPostRevisionModel)
+export class ForumPostRevisionReadResolver extends ForumReadResolverBase {
+  constructor(
+    @Inject(FORUM_MEMBER_CARDS) members: ForumMemberCardReader,
+    reads: PrismaForumReadModels,
+  ) {
+    super(members, reads);
+  }
+
+  @ResolveField(() => ForumMemberModel, { nullable: true })
+  editor(
+    @Parent() revision: ForumPostRevisionModel,
+    @Context() ctx: RequestContext,
+  ) {
+    return this.card(ctx, revision.editorId);
   }
 }
 

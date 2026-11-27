@@ -30,9 +30,10 @@ import {
 } from '@nestjs/graphql';
 import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
 import { ForumCommandError } from '../domain/errors/forum-command.error';
+import type { ForumStaffRole } from '../domain/types/forum-topic.type';
 import { ForumModerationService } from '../infrastructure/prisma-forum-moderation';
 import { ForumTopicModel } from './forum-topics.resolver';
-import { ForumStaffNoteModel } from './forum-shared.models';
+import { ForumStaffNoteModel, StaffRoleEnum } from './forum-shared.models';
 
 @ObjectType('ForumPostModerationResult')
 class ForumPostModerationResultModel {
@@ -142,8 +143,12 @@ export class ForumModerationResolver {
     @AuthUser() actor: AuthenticatedUser,
     @Args('postId', { type: () => ID }) postId: string,
     @Args('body') body: string,
+    @Args('role', { type: () => StaffRoleEnum, nullable: true })
+    role?: ForumStaffRole | null,
   ) {
-    return this.execute(this.moderation.addStaffNote(actor.id, postId, body));
+    return this.execute(
+      this.moderation.addStaffNote(actor.id, postId, body, role),
+    );
   }
 
   @Mutation(() => Boolean)

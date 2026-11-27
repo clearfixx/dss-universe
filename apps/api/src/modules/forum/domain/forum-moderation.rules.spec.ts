@@ -16,6 +16,7 @@ import {
   canModeratePost,
   normalizeModerationReason,
   normalizeStaffNote,
+  staffNoteRole,
   staffRole,
   TOPIC_MODERATION_TRANSITIONS,
 } from './forum-moderation.rules';
@@ -85,5 +86,19 @@ describe('forum moderation rules', () => {
     expect(() => normalizeStaffNote('x'.repeat(2001))).toThrow(
       ForumCommandError,
     );
+  });
+});
+
+describe('staffNoteRole', () => {
+  it('signs with the own role by default', () => {
+    expect(staffNoteRole('CURATOR', null)).toBe('CURATOR');
+    expect(staffNoteRole('MODERATOR', 'MODERATOR')).toBe('MODERATOR');
+  });
+
+  it('lets only administrators pick another role', () => {
+    expect(staffNoteRole('ADMINISTRATOR', 'CURATOR')).toBe('CURATOR');
+    expect(staffNoteRole('MODERATOR', 'ADMINISTRATOR')).toBeNull();
+    expect(staffNoteRole('MODERATOR', 'CURATOR')).toBeNull();
+    expect(staffNoteRole(null, 'CURATOR')).toBeNull();
   });
 });

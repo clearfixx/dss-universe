@@ -1233,19 +1233,45 @@ export class ForumTopicsService implements ForumInteractionDecisions {
   async revisions(
     viewerId: string | null,
     postId: string,
-  ): Promise<Array<{ revision: number; editorId: string; createdAt: Date }>> {
+  ): Promise<
+    Array<{
+      revision: number;
+      editorId: string;
+      plainText: string | null;
+      createdAt: Date;
+    }>
+  > {
     const viewer = await this.viewers.read(viewerId, new Date());
     const post = await this.prisma.forumPost.findUnique({
       where: { id: postId },
-      select: { topicId: true, state: true },
+      select: { topicId: true, state: true, authorId: true },
     });
     if (!post || post.state !== 'VISIBLE') this.notFound('Post');
-    await this.visibleTopic(post.topicId, viewer);
-    return this.prisma.forumPostRevision.findMany({
+    const { topic, categoryId, forum } = await this.visibleTopic(
+      post.topicId,
+      viewer,
+    );
+    // Old texts may hold gated content or text staff removed on purpose:
+    // only the author and the topic staff may read them.
+    const readsText =
+      viewer.subjectId !== null &&
+      (post.authorId === viewer.subjectId ||
+        topic.curatorId === viewer.subjectId ||
+        (await this.isModerator(viewer, categoryId, forum)));
+    const rows = await this.prisma.forumPostRevision.findMany({
       where: { postId },
       orderBy: { revision: 'asc' },
-      select: { revision: true, editorId: true, createdAt: true },
+      select: {
+        revision: true,
+        editorId: true,
+        plainText: true,
+        createdAt: true,
+      },
     });
+    return rows.map((row) => ({
+      ...row,
+      plainText: readsText ? row.plainText : null,
+    }));
   }
 
   /** Owner policy for the `forum.topic` Interaction Target kind. */
@@ -1843,6 +1869,7 @@ export class ForumTopicsService implements ForumInteractionDecisions {
       ratingDown: row.ratingDown,
       createdAt: row.createdAt,
       editedAt: row.editedAt,
+      lastEditorId: row.editedAt ? row.lastEditorId : null,
       moderation:
         staff && row.moderatedAt && row.moderatedById && row.moderationReason
           ? {
