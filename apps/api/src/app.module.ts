@@ -72,6 +72,7 @@ import { ObservabilityModule } from '@api/core/observability';
 import { HealthModule } from '@api/health';
 
 import { AppController } from './app.controller';
+import { ModerationBansIntegrationModule } from './composition/moderation-bans/moderation-bans-integration.module';
 import { IdentityCompositionModule } from './composition/identity/identity-composition.module';
 import { UsersProfileIntegrationModule } from './composition/users-profiles/users-profile-integration.module';
 import { AccessGroupIntegrationModule } from './composition/access-groups/access-group-integration.module';
@@ -127,6 +128,7 @@ import { UsersModule } from './modules/users/users.module';
     ActivityModule,
     UsersModule,
     IdentityCompositionModule,
+    ModerationBansIntegrationModule,
     UsersProfileIntegrationModule,
     AccessGroupIntegrationModule,
     IamTransactionCompositionModule,

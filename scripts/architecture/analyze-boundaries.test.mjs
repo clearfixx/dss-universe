@@ -886,6 +886,8 @@ for (const [moduleName, expected] of [
       "AUTH_ACCOUNT_EVIDENCE",
       "AuthAccountEvidenceReader",
       "AuthAccountEvidence",
+      "AUTH_BAN_TICKETS",
+      "AuthBanTickets",
     ],
   ],
 ]) {
@@ -1097,6 +1099,7 @@ test("owners publish only the intended guarded technical symbols", () => {
         "leaderboardSubjectAge",
         "leaderboardSubjectEligibility",
         "credentialEnrollmentData",
+        "PrismaAccountBanWriter",
       ],
     ],
     [
@@ -1152,6 +1155,7 @@ test("owners publish only the intended guarded technical symbols", () => {
       ],
     ],
     ["levels", ["leaderboardLevelLookup", "PrismaLevelSynchronizationWriter"]],
+    ["moderation", ["PrismaAccountBanLedger"]],
     [
       "leaderboards",
       ["leaderboardRankingColumns", "leaderboardPageWithPopulation"],

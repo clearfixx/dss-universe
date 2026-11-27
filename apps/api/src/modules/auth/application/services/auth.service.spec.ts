@@ -61,6 +61,7 @@ describe('AuthService', () => {
   const tokenService = {
     generateTokens: jest.fn(),
     verifyRefreshToken: jest.fn(),
+    signBanTicket: jest.fn(),
   } as unknown as jest.Mocked<TokenService>;
   const sessions = {
     create: jest.fn(),
@@ -428,5 +429,35 @@ describe('AuthService', () => {
       user.id,
       'next-password-hash',
     ]);
+  });
+
+  it('ends a proven banned login with a ticket and no session', async () => {
+    accountCredentials.findByEmail.mockResolvedValue({
+      ...credentials,
+      status: 'BANNED',
+    });
+    passwordHashService.compare.mockResolvedValue(true);
+    tokenService.signBanTicket.mockResolvedValue('ban-ticket');
+    await expect(
+      service.login({ email: user.email, password: 'password' }),
+    ).rejects.toMatchObject({
+      message: 'ACCOUNT_BANNED',
+      banTicket: 'ban-ticket',
+    });
+    expect(twoFactor.assertLogin.mock.calls).toHaveLength(1);
+    expect(sessions.create.mock.calls).toHaveLength(0);
+    expect(tokenService.generateTokens.mock.calls).toHaveLength(0);
+  });
+
+  it('does not reveal a ban to a wrong password', async () => {
+    accountCredentials.findByEmail.mockResolvedValue({
+      ...credentials,
+      status: 'BANNED',
+    });
+    passwordHashService.compare.mockResolvedValue(false);
+    await expect(
+      service.login({ email: user.email, password: 'wrong' }),
+    ).rejects.toThrow(InvalidCredentialsException);
+    expect(tokenService.signBanTicket.mock.calls).toHaveLength(0);
   });
 });

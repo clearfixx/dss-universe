@@ -47,6 +47,7 @@ import type {
   AuthenticationResult,
 } from '../../contracts/authentication-flows.contract';
 import { EmailAlreadyExistsException } from '../../domain/exceptions/email-already-exists.exception';
+import { AccountBannedException } from '../../domain/exceptions/account-banned.exception';
 import { InvalidCredentialsException } from '../../domain/exceptions/invalid-credentials.exception';
 import { PasswordHashService } from './password-hash.service';
 import { TokenService } from './token.service';
@@ -118,7 +119,10 @@ export class AuthService implements AuthenticationFlows {
       dto.password,
       user?.passwordHash ?? DUMMY_PASSWORD_HASH,
     );
-    if (!user || user.status !== 'ACTIVE' || !isPasswordValid) {
+    // A banned account continues only to prove the same factors; it ends
+    // with a ban ticket instead of a session.
+    const banned = user?.status === 'BANNED';
+    if (!user || (user.status !== 'ACTIVE' && !banned) || !isPasswordValid) {
       await this.loginProtection.recordFailure(
         email,
         client.ipAddress,
@@ -141,6 +145,15 @@ export class AuthService implements AuthenticationFlows {
       throw error;
     }
     await this.loginProtection.recordSuccess(email, user, client);
+    if (banned) {
+      throw new AccountBannedException(
+        await this.tokenService.signBanTicket({
+          id: user.id,
+          email: user.email,
+          authVersion: user.authVersion,
+        }),
+      );
+    }
     return this.issueAuthResponse(user.id, client);
   }
 

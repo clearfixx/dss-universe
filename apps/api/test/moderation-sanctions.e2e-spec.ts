@@ -96,6 +96,7 @@ describe('Moderation sanctions core (e2e)', () => {
       orderBy: { key: 'asc' },
     });
     expect(keys.map(({ key }) => key)).toEqual([
+      'moderation.bans.manage',
       'moderation.policy.manage',
       'moderation.read-only.issue',
       'moderation.rules.manage',

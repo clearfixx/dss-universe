@@ -182,6 +182,11 @@ export const PERMISSIONS = {
     label: 'Manage sanction policy',
     description: 'Allows changing warning lifetime and escalation thresholds.',
   },
+  ModerationBansManage: {
+    key: 'moderation.bans.manage',
+    label: 'Manage permanent bans',
+    description: 'Allows banning accounts permanently and lifting bans.',
+  },
   ModerationRulesManage: {
     key: 'moderation.rules.manage',
     label: 'Manage community rules',

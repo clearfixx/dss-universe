@@ -1,6 +1,7 @@
 # Permanent ban and appeals
 
-Status: design recorded 2026-11-27; implementation not started.
+Status: package 1 (ban, lift, login ticket, notice) implemented 2026-11-27.
+Packages 2 to 4 are not started.
 
 ## Owner decisions
 

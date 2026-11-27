@@ -408,6 +408,9 @@ model User {
   blockedUsers            UserBlock[]                  @relation("UserBlocker")
   blockedByUsers          UserBlock[]                  @relation("UserBlocked")
   editedCommunityRules    CommunityRule[]              @relation("CommunityRuleEditor")
+  accountBans             AccountBan[]                 @relation("AccountBanSubject")
+  issuedAccountBans       AccountBan[]                 @relation("AccountBanIssuer")
+  liftedAccountBans       AccountBan[]                 @relation("AccountBanLifter")
   wallPosts               UserWallPost[]               @relation("ProfileWallOwner")
   authoredWallPosts       UserWallPost[]               @relation("ProfileWallAuthor")
   notificationPreferences UserNotificationPreferences?
@@ -1459,6 +1462,33 @@ model ModerationSanction {
   @@map("moderation_sanctions")
 }
 
+model AccountBan {
+  id             String    @id @default(uuid())
+  reference      String    @unique
+  subjectId      String
+  issuerId       String
+  ruleId         String
+  ruleCode       String
+  ruleText       String
+  comment        String
+  contextType    String?
+  contextId      String?
+  contextPath    String?
+  previousStatus String
+  issuedAt       DateTime  @default(now())
+  liftedAt       DateTime?
+  liftedById     String?
+  liftReason     String?
+
+  subject  User          @relation("AccountBanSubject", fields: [subjectId], references: [id], onDelete: Restrict)
+  issuer   User          @relation("AccountBanIssuer", fields: [issuerId], references: [id], onDelete: Restrict)
+  liftedBy User?         @relation("AccountBanLifter", fields: [liftedById], references: [id], onDelete: Restrict)
+  rule     CommunityRule @relation(fields: [ruleId], references: [id], onDelete: Restrict)
+
+  @@index([subjectId, issuedAt])
+  @@map("account_bans")
+}
+
 model CommunityRule {
   id          String   @id @default(uuid())
   code        String   @unique
@@ -1468,7 +1498,8 @@ model CommunityRule {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
 
-  updatedBy User? @relation("CommunityRuleEditor", fields: [updatedById], references: [id], onDelete: Restrict)
+  updatedBy User?        @relation("CommunityRuleEditor", fields: [updatedById], references: [id], onDelete: Restrict)
+  bans      AccountBan[]
 
   @@map("community_rules")
 }
