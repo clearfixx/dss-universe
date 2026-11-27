@@ -194,7 +194,6 @@ describe("navigation composition contract", () => {
       variant: "HORIZONTAL_NAVIGATION",
       hasSession: true,
       canAccessAdminDeck: true,
-      onOpenLauncher: () => {},
     }));
     expect(html).toContain("Академія");
     expect(html).toContain("(скоро)");

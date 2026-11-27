@@ -59,7 +59,7 @@ export function GlobalNavigation({
             <ChevronDown aria-hidden="true" className="size-3" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" aria-label="Модулі DSS Universe" className="w-56">
+        <DropdownMenuContent align="start" aria-labelledby={undefined} aria-label="Модулі DSS Universe" className="w-56">
           <DropdownMenuLabel>Модулі DSS Universe</DropdownMenuLabel>
           {modules.map(({ href, label, icon: Icon }) => (
             <DropdownMenuItem key={href} asChild>
