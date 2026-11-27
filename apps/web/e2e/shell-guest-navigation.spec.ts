@@ -119,10 +119,9 @@ test("desktop Shell keeps its module launcher and contextual sidebar usable", as
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
 
     await launcher.click();
-    const drawer = page.getByRole("dialog", { name: "Навігація DSS Universe" });
+    const drawer = page.getByRole("menu", { name: "Модулі DSS Universe" });
     await expect(drawer).toBeVisible();
-    // Role queries exclude inert background content while the dialog is open.
-    await expect(header.locator('button[aria-haspopup="dialog"]').filter({ hasText: "Модулі" })).toHaveAttribute("aria-expanded", "true");
+    await expect(header.locator('button[aria-haspopup="menu"]').filter({ hasText: "Модулі" })).toHaveAttribute("aria-expanded", "true");
     await page.keyboard.press("Escape");
     await expect(drawer).not.toBeVisible();
     await expect(launcher).toHaveAttribute("aria-expanded", "false");

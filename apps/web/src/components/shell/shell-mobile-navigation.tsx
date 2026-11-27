@@ -3,7 +3,7 @@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ModuleNavigation, SidebarNavigation } from "./shell-sidebar";
 
-export function ShellMobileNavigation({ open, setOpen, onRestoreFocus, pathname, hasSession, canAccessAdminDeck }: { open: boolean; onRestoreFocus: () => void; setOpen: (open: boolean) => void; pathname: string; hasSession: boolean; canAccessAdminDeck: boolean }) {
+export function ShellMobileNavigation({ open, setOpen, onRestoreFocus, pathname, hasSession, canAccessAdminDeck, canModerate = false }: { open: boolean; onRestoreFocus: () => void; setOpen: (open: boolean) => void; pathname: string; hasSession: boolean; canAccessAdminDeck: boolean; canModerate?: boolean }) {
   return (
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent
@@ -28,6 +28,7 @@ export function ShellMobileNavigation({ open, setOpen, onRestoreFocus, pathname,
               pathname={pathname}
               hasSession={hasSession}
               canAccessAdminDeck={canAccessAdminDeck}
+              canModerate={canModerate}
               onNavigate={() => setOpen(false)}
             />
           </div>

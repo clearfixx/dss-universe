@@ -36,6 +36,7 @@ import { isDrawerOpenForPath } from "./shell-drawer-state";
 
 import {
   DEFAULT_SHELL_VARIANT,
+  moduleSidebarItems,
   type ShellVariant,
   type TrustedPageTitle,
 } from "./shell-navigation";
@@ -58,6 +59,7 @@ export function DssApplicationShell({
   variant = DEFAULT_SHELL_VARIANT,
   toolbar,
   canAccessAdminDeck = false,
+  canModerate = false,
   pageTitle,
   breadcrumbs,
 }: PropsWithChildren<{
@@ -65,6 +67,7 @@ export function DssApplicationShell({
   variant?: ShellVariant;
   toolbar?: ReactNode;
   canAccessAdminDeck?: boolean;
+  canModerate?: boolean;
   pageTitle?: TrustedPageTitle;
   breadcrumbs?: readonly TrustedBreadcrumb[];
 }>) {
@@ -88,6 +91,7 @@ export function DssApplicationShell({
     if (drawerTrigger.current?.getClientRects().length) drawerTrigger.current.focus();
   };
   const hasSession = Boolean(viewer);
+  const hasSidebar = moduleSidebarItems(pathname, hasSession, canAccessAdminDeck, canModerate).length > 0;
 
   return (
     <div data-shell-variant={variant} className="min-h-screen bg-background text-foreground">
@@ -98,7 +102,7 @@ export function DssApplicationShell({
         Перейти до вмісту
       </a>
 
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)] lg:flex">
+      {hasSidebar && <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)] lg:flex">
         <div className="flex h-16 items-center px-5">
           <Logo />
         </div>
@@ -107,15 +111,16 @@ export function DssApplicationShell({
             pathname={pathname}
             hasSession={hasSession}
             canAccessAdminDeck={canAccessAdminDeck}
+            canModerate={canModerate}
           />
         </div>
         <div className="m-3 rounded-xl bg-muted/40 px-4 py-3 text-xs leading-5 text-muted-foreground">
           <p className="font-semibold text-foreground">DSS Universe</p>
           <p>Build. Inspire. Grow.</p>
         </div>
-      </aside>
+      </aside>}
 
-      <div className="lg:pl-60">
+      <div className={hasSidebar ? "lg:pl-60" : undefined}>
         <header className="sticky top-0 z-20 flex h-16 items-center gap-1.5 sm:gap-3 border-b border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)] px-2 sm:px-6">
           <Button
             variant="ghost"
@@ -129,7 +134,7 @@ export function DssApplicationShell({
           >
             <Menu aria-hidden="true" />
           </Button>
-          <div className="lg:hidden">
+          <div className={hasSidebar ? "lg:hidden" : undefined}>
             <Logo compact />
           </div>
           <GlobalNavigation
@@ -137,8 +142,6 @@ export function DssApplicationShell({
             variant={variant}
             hasSession={hasSession}
             canAccessAdminDeck={canAccessAdminDeck}
-            launcherOpen={open}
-            onOpenLauncher={openDrawer}
           />
           <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-2">
             <ShellSearch />
@@ -162,7 +165,7 @@ export function DssApplicationShell({
         </main>
       </div>
 
-      <ShellMobileNavigation onRestoreFocus={restoreDrawerFocus} open={open} setOpen={setOpen} pathname={pathname} hasSession={hasSession} canAccessAdminDeck={canAccessAdminDeck} />
+      <ShellMobileNavigation onRestoreFocus={restoreDrawerFocus} open={open} setOpen={setOpen} pathname={pathname} hasSession={hasSession} canAccessAdminDeck={canAccessAdminDeck} canModerate={canModerate} />
     </div>
   );
 }

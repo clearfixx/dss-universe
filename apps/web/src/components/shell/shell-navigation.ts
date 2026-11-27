@@ -7,6 +7,7 @@ import {
   PenSquare,
   PenLine,
   Settings,
+  ShieldCheck,
   Users,
   Boxes,
 } from "lucide-react";
@@ -31,6 +32,7 @@ export type ModuleNavigationItem = {
   icon: LucideIcon;
   requiresSession?: boolean;
   quickAdd?: boolean;
+  requiresModeration?: boolean;
 };
 
 export type ModuleNavigation = ModuleNavigationItem & {
@@ -63,6 +65,7 @@ export const MODULE_NAVIGATION: readonly ModuleNavigation[] = [
     children: [
       { href: "/community/forum/new", label: "Нова тема", icon: PenSquare, requiresSession: true, quickAdd: true },
       { href: "/community/following", label: "Мої підписки", icon: BellRing, requiresSession: true },
+      { href: "/community/moderation", label: "Модерація", icon: ShieldCheck, requiresSession: true, requiresModeration: true },
     ],
   },
   {
@@ -122,13 +125,13 @@ export function currentModule(pathname: string): ModuleNavigation | null {
     .sort((a, b) => b.href.length - a.href.length)[0] ?? null;
 }
 
-export function moduleSidebarItems(pathname: string, hasSession = true, canAccessAdminDeck = true): readonly ModuleNavigationItem[] {
+export function moduleSidebarItems(pathname: string, hasSession = true, canAccessAdminDeck = true, canModerate = false): readonly ModuleNavigationItem[] {
   const activeModule = currentModule(pathname);
   if (!activeModule || !visibleModules(hasSession, canAccessAdminDeck).some((item) => item.href === activeModule.href)) return [];
 
   const overview = activeModule.href;
   // Contextual navigation is stable across sibling routes, not filtered to the current page.
-  const children = activeModule.children.filter((item) => hasSession || !item.requiresSession);
+  const children = activeModule.children.filter((item) => (hasSession || !item.requiresSession) && (!item.requiresModeration || (hasSession && canModerate)));
   return [
     { href: overview, label: "Огляд", icon: activeModule.icon },
     ...children,
@@ -136,8 +139,8 @@ export function moduleSidebarItems(pathname: string, hasSession = true, canAcces
 }
 
 /** Only the deepest matching Sidebar destination receives aria-current. */
-export function currentSidebarHref(pathname: string, hasSession = true, canAccessAdminDeck = true): string | null {
-  const candidates = moduleSidebarItems(pathname, hasSession, canAccessAdminDeck).filter((item) =>
+export function currentSidebarHref(pathname: string, hasSession = true, canAccessAdminDeck = true, canModerate = false): string | null {
+  const candidates = moduleSidebarItems(pathname, hasSession, canAccessAdminDeck, canModerate).filter((item) =>
     routeMatches(pathname, item.href),
   );
   return candidates.sort((a, b) => b.href.length - a.href.length)[0]?.href ?? null;

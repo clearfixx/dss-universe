@@ -12,17 +12,17 @@ test("public content Shell exposes only implemented navigation and a working lau
   ).toBeVisible();
   await page.getByRole("button", { name: /Модулі/ }).click();
   await expect(
-    page.getByRole("navigation", { name: "Модулі DSS Universe" }),
+    page.getByRole("menu", { name: "Модулі DSS Universe" }),
   ).toBeVisible();
-  const launcher = page.getByRole("navigation", { name: "Модулі DSS Universe" });
+  const launcher = page.getByRole("menu", { name: "Модулі DSS Universe" });
   await expect(
-    launcher.getByRole("link", { name: "Новини" }),
+    launcher.getByRole("menuitem", { name: "Новини" }),
   ).toHaveAttribute("href", "/news");
   await expect(
     launcher.getByRole("link", { name: "Адмінпанель" }),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("navigation", { name: "Модулі DSS Universe" }).getByRole("link", { name: "Academy" }),
+    page.getByRole("menu", { name: "Модулі DSS Universe" }).getByRole("menuitem", { name: "Academy" }),
   ).toHaveCount(0);
 });
 

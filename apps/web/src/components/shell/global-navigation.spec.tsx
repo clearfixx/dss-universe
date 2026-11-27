@@ -25,7 +25,6 @@ describe("global navigation accessibility", () => {
         variant: "HORIZONTAL_NAVIGATION",
         hasSession: false,
         canAccessAdminDeck: false,
-        onOpenLauncher: () => {},
       }),
     );
 
@@ -36,20 +35,18 @@ describe("global navigation accessibility", () => {
     expect(html).not.toContain('href="/command-deck"');
   });
 
-  it("announces an open desktop module launcher", () => {
+  it("announces the desktop module menu", () => {
     const html = renderToStaticMarkup(
       createElement(GlobalNavigation, {
         pathname: "/news",
         variant: "MODULE_LAUNCHER",
         hasSession: false,
         canAccessAdminDeck: false,
-        onOpenLauncher: () => {},
-        launcherOpen: true,
       }),
     );
 
-    expect(html).toContain('aria-haspopup="dialog"');
-    expect(html).toContain('aria-expanded="true"');
+    expect(html).toContain('aria-haspopup="menu"');
+    expect(html).toContain('aria-expanded="false"');
   });
 
   it("names links for the hybrid featured navigation", () => {
@@ -59,11 +56,10 @@ describe("global navigation accessibility", () => {
         variant: "HYBRID",
         hasSession: true,
         canAccessAdminDeck: false,
-        onOpenLauncher: () => {},
       }),
     );
 
-    expect(html).toContain('aria-haspopup="dialog"');
+    expect(html).toContain('aria-haspopup="menu"');
     expect(html).toContain('aria-expanded="false"');
     expect(html).toContain('aria-label="Учасники"');
     expect(html).toContain('aria-current="page"');
@@ -184,9 +180,8 @@ describe("navigation composition contract", () => {
         variant,
         hasSession: true,
         canAccessAdminDeck: false,
-        onOpenLauncher: () => {},
       }));
-      expect(html).toContain('aria-haspopup="dialog"');
+      expect(html).toContain('aria-haspopup="menu"');
       expect(html).not.toContain('href="/command-deck"');
       expect(html.includes('href="/news"')).toBe(variant !== "MODULE_LAUNCHER");
       expect(html.includes('href="/media"')).toBe(variant === "HORIZONTAL_NAVIGATION");

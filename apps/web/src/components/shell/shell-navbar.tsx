@@ -2,6 +2,7 @@
 
 import { ChevronDown, Menu } from "lucide-react";
 import Link from "next/link";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { COMING_SOON_MODULES, visibleModules, navigationCurrent, routeMatches, type ShellVariant } from "./shell-navigation";
@@ -11,15 +12,11 @@ export function GlobalNavigation({
   variant,
   hasSession,
   canAccessAdminDeck,
-  onOpenLauncher,
-  launcherOpen = false,
 }: {
   pathname: string;
   variant: ShellVariant;
   hasSession: boolean;
   canAccessAdminDeck: boolean;
-  onOpenLauncher: (trigger: HTMLButtonElement) => void;
-  launcherOpen?: boolean;
 }) {
   const modules = visibleModules(hasSession, canAccessAdminDeck);
   const featured = modules.filter((item) => item.featured);
@@ -39,7 +36,7 @@ export function GlobalNavigation({
               className={cn(
                 "inline-flex shrink-0 items-center border-b-2 border-transparent px-2.5 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring",
                 routeMatches(pathname, href) &&
-                  "border-primary bg-primary/10 text-foreground",
+                  "border-primary bg-secondary/50 text-foreground",
               )}
             >
               {label}
@@ -52,21 +49,28 @@ export function GlobalNavigation({
           ))}
         </nav>
       )}
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onClick={(event) => onOpenLauncher(event.currentTarget)}
-        aria-haspopup="dialog"
-        aria-expanded={launcherOpen}
-        className="shrink-0 self-center text-muted-foreground"
-      >
-        <Menu aria-hidden="true" />
-        <span className={variant === "MODULE_LAUNCHER" ? undefined : "sr-only 2xl:not-sr-only"}>
-          {variant === "MODULE_LAUNCHER" ? "Модулі" : "Усі модулі"}
-        </span>
-        <ChevronDown aria-hidden="true" className="size-3" />
-      </Button>
+      <DropdownMenu key={pathname}>
+        <DropdownMenuTrigger asChild>
+          <Button type="button" variant="ghost" size="sm" className="shrink-0 self-center text-muted-foreground">
+            <Menu aria-hidden="true" />
+            <span className={variant === "MODULE_LAUNCHER" ? undefined : "sr-only 2xl:not-sr-only"}>
+              {variant === "MODULE_LAUNCHER" ? "Модулі" : "Усі модулі"}
+            </span>
+            <ChevronDown aria-hidden="true" className="size-3" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" aria-label="Модулі DSS Universe" className="w-56">
+          <DropdownMenuLabel>Модулі DSS Universe</DropdownMenuLabel>
+          {modules.map(({ href, label, icon: Icon }) => (
+            <DropdownMenuItem key={href} asChild>
+              <Link href={href} aria-current={navigationCurrent(pathname, href)} className={cn(routeMatches(pathname, href) && "bg-secondary text-foreground")}>
+                <Icon aria-hidden="true" />
+                {label}
+              </Link>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }

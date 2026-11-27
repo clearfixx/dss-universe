@@ -214,3 +214,11 @@ describe("Quick Add contract", () => {
     expect(quickAddItems(true, true).map((item) => item.href)).toEqual(expected);
   });
 });
+
+ it("requires a session and explicit moderation grant for the moderation destination", () => {
+  const href = "/community/moderation";
+  expect(moduleSidebarItems("/community", true, false, true).map((item) => item.href)).toContain(href);
+  expect(moduleSidebarItems("/community", true, true, false).map((item) => item.href)).not.toContain(href);
+  expect(moduleSidebarItems("/community", false, true, true).map((item) => item.href)).not.toContain(href);
+  expect(currentSidebarHref(href, true, false, true)).toBe(href);
+});
