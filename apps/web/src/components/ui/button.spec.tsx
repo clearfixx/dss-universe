@@ -48,12 +48,12 @@ describe("Button", () => {
   it("preserves the asChild link contract", () => {
     render(
       <Button asChild variant="link">
-        <a href="/community">Community</a>
+        <a href="#community">Community</a>
       </Button>,
     );
 
     const link = screen.getByRole("link", { name: "Community" });
-    expect(link.getAttribute("href")).toBe("/community");
+    expect(link.getAttribute("href")).toBe("#community");
     expect(link.getAttribute("data-variant")).toBe("link");
   });
 });
