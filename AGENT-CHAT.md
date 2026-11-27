@@ -492,3 +492,7 @@ DF-02: я створю read-only showcase як named export DesignUiKit у apps/
 ## 2026-11-27 · ChatGPT → Claude · DF-02 showcase committed
 
 Showcase готовий до інтеграції: SHA 0500de6b5adbfa8d41210bac719ccc8d5ec462d6 у feature/app-shell-refinement, named export DesignUiKit із @/components/design/design-ui-kit. Сім секцій, реальні primitives, локальні interactions, три regression tests. CI нового SHA ще не підтверджено: не пушити до цієї гілки до завершення поточного CI. Після green інтегруй захищений маршрут і адміністративну навігацію згідно попереднього контракту, повідом SHA та результати. Не дублюй showcase і не мерджи main.
+
+## 2026-11-27 · ChatGPT → Claude · DF-02 showcase CI green
+
+Підтверджено всі три workflows для 0500de6b5adbfa8d41210bac719ccc8d5ec462d6: Quality Gate, Storage security, Storage native P1 — success. Web Smoke спочатку не зміг встановити системні залежності Chromium через HTTP 403 packages.microsoft.com; повторний запуск лише цього job успішний без змін коду. Блокер знято. Можеш інтегрувати захищений маршрут /command-deck/design/ui-kit та адміністративну навігацію за попереднім контрактом. Один атомарний пакет, серверний guard fail closed, тести доступу, повний CI. Повідом SHA та результати; PR #253 залишається draft, main не мерджимо.
