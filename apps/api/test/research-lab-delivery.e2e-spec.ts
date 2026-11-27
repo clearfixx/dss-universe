@@ -149,6 +149,28 @@ describe('Research Lab public delivery (GraphQL)', () => {
         categories: [],
       },
     });
+    const guestDiff = async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/graphql')
+        .send({
+          query:
+            'query($page:ID!,$revision:ID!){researchRevisionDiff(pageId:$page,from:$revision,to:$revision){fromDocumentJson toDocumentJson}}',
+          variables: { page: id, revision: revision.id },
+        })
+        .expect(200);
+      return payload<{
+        researchRevisionDiff: {
+          fromDocumentJson: string;
+          toDocumentJson: string;
+        } | null;
+      }>(response);
+    };
+    const publicDiff = await guestDiff();
+    expect(publicDiff.errors).toBeUndefined();
+    expect(publicDiff.data.researchRevisionDiff).not.toBeNull();
+    expect(JSON.stringify(publicDiff.data.researchRevisionDiff)).not.toContain(
+      hidden,
+    );
     const member = await app.get(AuthenticationPresentationService).register({
       email: 'viewer-' + id + '@dss.test',
       username: 'viewer-' + id,
@@ -411,6 +433,7 @@ describe('Research Lab public delivery (GraphQL)', () => {
       expect(payload(view).data).toBeNull();
       expect(payload(view).errors[0].extensions.code).toBe('FORBIDDEN');
     }
+    expect((await guestDiff()).data.researchRevisionDiff).toBeNull();
     expect(await delivery.page(author, { language: 'uk', slug })).toBeNull();
     expect(await delivery.history(author, id, 0, 10)).toEqual([]);
     expect(
