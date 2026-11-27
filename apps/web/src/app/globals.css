@@ -168,9 +168,15 @@ body {
   --shell-surface: #111827;
   --shell-divider: #263040;
 
-  background: var(--background);
-  color: var(--foreground);
   font-family: var(--dss-font-body);
+}
+
+/* A scope wrapper paints the page; portal surfaces retain their own utilities. */
+@layer components {
+  [data-dss-design="v1"]:not([data-slot]) {
+    background: var(--background);
+    color: var(--foreground);
+  }
 }
 
 /* Primitive utilities own their defaults and states. No unlayered slot
