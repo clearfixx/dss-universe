@@ -13,7 +13,8 @@ Status: design recorded 2026-11-27; implementation not started.
 - One appeal per ban. Pending: "already submitted, under review". Rejected:
   the rejection reason is shown and no resubmission is possible. Accepted: the
   ban is lifted.
-- Appeal files ship in the first version: up to 5 files, 10 MB each.
+- Appeal files ship in the first version: up to 5 files, 10 MB each. Images
+  only (screenshots): JPG, JPEG, PNG, WebP. No other file types.
 - Administrators and the owner review appeals in a Command Deck section.
 - Rules come from the community rules catalogue (merged in #267).
 
@@ -40,9 +41,10 @@ Sessions keep requiring an `ACTIVE` account; no exception is added.
   verification.
 - Moderation owns bans and appeals and reaches Auth through consumer-owned
   ports bound in `composition/`.
-- Media owns appeal files: a private upload policy for the banned subject that
+- Media owns appeal files: a private image upload policy for the banned subject that
   goes through the existing quarantine and scan pipeline. Reviewers download a
-  file only after a clean scan, through a short-lived signed URL.
+  file only after a clean scan, through a short-lived signed URL. The worker
+  re-encodes every image to WebP; reviewers never receive the uploaded bytes.
 
 ### Data
 
