@@ -1,5 +1,6 @@
 import { DssApplicationShell } from "@/components/shell/session-application-shell";
-import { ErrorState } from "@/components/states/async-states";
+import { DesignScope } from "@/components/ui/design-scope";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/feedback";
 import { NewsEditorWorkspace } from "@/features/newsroom/news-editor-workspace";
 import { loadEditorialArticle } from "@/features/newsroom/newsroom-data";
 
@@ -17,10 +18,12 @@ export default async function EditNewsPage({
       {article ? (
         <NewsEditorWorkspace article={article} />
       ) : (
-        <ErrorState
-          title="Новину не знайдено"
-          description="Матеріал недоступний або у вас немає редакційного доступу."
-        />
+        <DesignScope className="mx-auto max-w-6xl">
+          <Alert variant="warning" role="alert">
+            <AlertTitle>Новину не знайдено</AlertTitle>
+            <AlertDescription>Матеріал недоступний або у вас немає редакційного доступу.</AlertDescription>
+          </Alert>
+        </DesignScope>
       )}
     </DssApplicationShell>
   );

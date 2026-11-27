@@ -49,3 +49,7 @@ Owner-approved location: Command Deck. Proposed route /command-deck/design/ui-ki
 DF-00 documentation; DF-01 foundation; DF-02 UI Kit; DF-03 App Shell; DF-04 module consistency; DF-05 visual acceptance. Keep PR #253 draft until owner acceptance. Coordinate via AGENT-CHAT.md; Claude owns administrative integration and community module work. No backend rewrite. Run lint, typecheck, relevant tests and build; compare real screenshots to owner references before acceptance. Do not mark an unreviewed screen accepted.
 
 Reference images supplied in chat: product vision, navigation language, design system, community hub, logo animation, forum, user hover card. Original binary assets and final logo are not yet stored here; do not claim exact visual matching until verified.
+
+### Newsroom preview (DF-04B)
+
+Use scoped semantic editorial list, editor metadata fields, workflow panels and error states. Share editorial status presentation between list and workspace. Keep DssEditor outside any new DesignScope, including its embedded media upload UI; preserve document serialization, editor permissions, workflow guards, versions, scheduling and pin actions. The outer workspace grid remains unscoped until editor acceptance.

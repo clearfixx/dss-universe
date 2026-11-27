@@ -1,5 +1,6 @@
 import { DssApplicationShell } from "@/components/shell/session-application-shell";
-import { ErrorState } from "@/components/states/async-states";
+import { DesignScope } from "@/components/ui/design-scope";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/feedback";
 import { loadEditorialNews } from "@/features/newsroom/newsroom-data";
 import { NewsroomList } from "@/features/newsroom/newsroom-list";
 
@@ -10,10 +11,12 @@ export default async function NewsroomPage() {
       {page ? (
         <NewsroomList page={page} />
       ) : (
-        <ErrorState
-          title="Newsroom недоступний"
-          description="Увійдіть, щоб створювати новини та працювати з редакційною чергою."
-        />
+        <DesignScope className="mx-auto max-w-6xl">
+          <Alert variant="warning" role="alert">
+            <AlertTitle>Newsroom недоступний</AlertTitle>
+            <AlertDescription>Увійдіть, щоб створювати новини та працювати з редакційною чергою.</AlertDescription>
+          </Alert>
+        </DesignScope>
       )}
     </DssApplicationShell>
   );
