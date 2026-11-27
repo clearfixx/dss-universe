@@ -489,6 +489,45 @@ describe('Research Lab public delivery (GraphQL)', () => {
         validUntil: new Date(now + 86400000),
       },
     });
+    const publicDraft = await service.createDraft({
+      actorId,
+      title: 'Public source',
+      summary: '',
+      proposedSlug: 'public-' + key,
+      documentJson: JSON.stringify(createEmptyEditorDocument('WIKI')),
+    });
+    await service.selfPublishDraft({
+      ...publicDraft,
+      actorId,
+      expectedVersion: publicDraft.version,
+      editSummary: 'First',
+      correlationId: randomUUID(),
+    });
+    await db.researchInternalLink.create({
+      data: {
+        sourcePageId: publicDraft.pageId,
+        targetPageId: draft.pageId,
+        anchorText: 'Linked group page',
+      },
+    });
+    const related = async (token?: string) => {
+      const call = request(app.getHttpServer()).post('/api/graphql');
+      if (token) call.set('Authorization', 'Bearer ' + token);
+      const result = await call
+        .send({
+          query: 'query($id:ID!){researchRelatedPages(pageId:$id){id title}}',
+          variables: { id: publicDraft.pageId },
+        })
+        .expect(200);
+      expect(payload(result).errors).toBeUndefined();
+      return payload<{ researchRelatedPages: { id: string; title: string }[] }>(
+        result,
+      ).data.researchRelatedPages;
+    };
+    expect(await related()).toEqual([]);
+    expect(await related(reader.tokens.accessToken)).toEqual([
+      { id: draft.pageId, title: key },
+    ]);
     const search = async () => {
       const response = await request(app.getHttpServer())
         .post('/api/graphql')
@@ -593,6 +632,8 @@ describe('Research Lab public delivery (GraphQL)', () => {
       },
     });
     expect(await search()).toEqual(empty);
+    expect(await related(reader.tokens.accessToken)).toEqual([]);
+    expect(await related()).toEqual([]);
     expect((await history()).errors[0].extensions.code).toBe('FORBIDDEN');
     const list = (page: number) =>
       graphql(
