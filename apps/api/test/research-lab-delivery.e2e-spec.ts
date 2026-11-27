@@ -503,6 +503,10 @@ describe('Research Lab public delivery (GraphQL)', () => {
       editSummary: 'First',
       correlationId: randomUUID(),
     });
+    await db.researchPage.update({
+      where: { id: publicDraft.pageId },
+      data: { allowIndexing: false },
+    });
     await db.researchInternalLink.create({
       data: {
         sourcePageId: publicDraft.pageId,
