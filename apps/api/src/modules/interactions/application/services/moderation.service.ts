@@ -68,13 +68,15 @@ export class ModerationService {
     );
     if (existing)
       throw new ConflictException('This content is already reported.');
-    return this.moderation.createReport({
+    const report = await this.moderation.createReport({
       interactionTargetId: targetId,
       commentId,
       reporterId: actorId,
       category,
       reason: this.cleanReason(reason),
     });
+    if (!report) throw new NotFoundException('Report subject is unavailable.');
+    return report;
   }
 
   listReports(status: ContentReportStatus | null, page = 1, limit = 20) {

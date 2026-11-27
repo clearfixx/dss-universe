@@ -31,7 +31,7 @@ export interface ModerationRepository {
     reporterId: string;
     category: ContentReportCategory;
     reason: string;
-  }): Promise<ContentReport>;
+  }): Promise<ContentReport | null>;
   findOpenReport(
     interactionTargetId: string,
     commentId: string | null,

@@ -646,7 +646,11 @@ describe('Research Lab public delivery (GraphQL)', () => {
       expectedPublicationGeneration: 1,
       correlationId: randomUUID(),
     });
-    const report = async (token: string, subjectCommentId: string | null) =>
+    const report = async (
+      token: string,
+      subjectCommentId: string | null,
+      targetId = target.interactionTargetId,
+    ) =>
       payload(
         await request(app.getHttpServer())
           .post('/api/graphql')
@@ -656,7 +660,7 @@ describe('Research Lab public delivery (GraphQL)', () => {
               'mutation($input:ReportContentInput!){reportContent(input:$input){interactionTargetId commentId reporterId status}}',
             variables: {
               input: {
-                ...target,
+                interactionTargetId: targetId,
                 commentId: subjectCommentId,
                 category: 'OTHER',
                 reason: 'Review archived content',
@@ -688,7 +692,37 @@ describe('Research Lab public delivery (GraphQL)', () => {
         },
       });
     }
-    expect(await db.contentReport.count({ where: target })).toBe(2);
+    const beforeRemoval = await db.contentReport.findMany({
+      where: target,
+      orderBy: { id: 'asc' },
+    });
+    expect(beforeRemoval).toHaveLength(2);
+    const removed = await graphql(
+      'mutation($id:ID!){removeComment(commentId:$id){id}}',
+      { id: commentId },
+    );
+    expect(removed.errors).toBeUndefined();
+    const { reactionTargetId } = await db.comment.findUniqueOrThrow({
+      where: { id: commentId },
+      select: { reactionTargetId: true },
+    });
+    for (const result of [
+      await report(author.tokens.accessToken, commentId),
+      await report(author.tokens.accessToken, null, reactionTargetId),
+    ]) {
+      expect(result.errors[0].extensions.code).toBe('NOT_FOUND');
+      expect(result.errors).toHaveLength(1);
+    }
+    expect(
+      await db.contentReport.findMany({
+        where: {
+          interactionTargetId: {
+            in: [target.interactionTargetId, reactionTargetId],
+          },
+        },
+        orderBy: { id: 'asc' },
+      }),
+    ).toEqual(beforeRemoval);
   });
 
   it('keeps exact facets and stable ties across a search batch and on an empty deep page', async () => {
