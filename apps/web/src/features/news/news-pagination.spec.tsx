@@ -58,6 +58,20 @@ describe("NewsPagination", () => {
     expect(onLoadMore).toHaveBeenCalledOnce();
   });
 
+  it("updates the manual field when the active page changes externally", () => {
+    const props = {
+      mode: "PAGES" as const,
+      totalPages: 15,
+      canLoadMore: false,
+      onPageChange: vi.fn(),
+      onLoadMore: vi.fn(),
+    };
+    const { rerender } = render(<NewsPagination {...props} activePages={[1]} />);
+    rerender(<NewsPagination {...props} activePages={[7]} />);
+    expect(screen.getByLabelText("Номер сторінки")).toHaveValue(7);
+    expect(screen.getByRole("button", { name: "Сторінка 7" })).toHaveAttribute("aria-current", "page");
+  });
+
   it("hides every control when pagination is disabled", () => {
     const { container } = render(
       <NewsPagination

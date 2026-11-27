@@ -29,20 +29,20 @@ export function Breadcrumbs({
           <Link
             href="/"
             aria-label="DSS Universe"
-            className="flex items-center text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+            className="flex items-center text-link hover:underline focus-visible:outline-2 focus-visible:outline-ring"
           >
             <Home className="size-4" aria-hidden="true" />
           </Link>
         </li>
         {parts.map((part, index) => (
-          <li key={`${part.href}-${index}`} className="flex items-center gap-2">
+          <li key={`${part.href}-${index}`} className="flex min-w-0 items-center gap-2">
             <ChevronRight className="size-3.5 text-muted-foreground" aria-hidden="true" />
             {index === parts.length - 1 && (routeTrail || pathname === part.href) ? (
-              <span aria-current="page" className="font-medium text-foreground">
+              <span aria-current="page" className="min-w-0 break-words font-medium text-foreground">
                 {part.label}
               </span>
             ) : part.href ? (
-              <Link href={part.href} className="text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring">
+              <Link href={part.href} className="min-w-0 break-words text-link hover:underline focus-visible:outline-2 focus-visible:outline-ring">
                 {part.label}
               </Link>
             ) : (
