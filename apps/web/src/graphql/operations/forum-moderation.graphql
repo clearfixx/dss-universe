@@ -110,8 +110,12 @@ mutation PurgeForumPost($postId: ID!, $reason: String!) {
   }
 }
 
-mutation AddForumStaffNote($postId: ID!, $body: String!) {
-  addForumStaffNote(postId: $postId, body: $body) {
+mutation AddForumStaffNote(
+  $postId: ID!
+  $body: String!
+  $role: ForumStaffRole
+) {
+  addForumStaffNote(postId: $postId, body: $body, role: $role) {
     id
     authorId
     role

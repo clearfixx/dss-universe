@@ -39,6 +39,7 @@ import { ForumRatingsResolver } from './presentation/forum-ratings.resolver';
 import {
   ForumModeratorCardResolver,
   ForumPostReadResolver,
+  ForumPostRevisionReadResolver,
   ForumPostVoteReadResolver,
   ForumModerationActionReadResolver,
   ForumStatsResolver,
@@ -81,6 +82,7 @@ import {
     ForumTopicReadResolver,
     ForumModeratorCardResolver,
     ForumPostReadResolver,
+    ForumPostRevisionReadResolver,
     ForumPostVoteReadResolver,
     ForumModerationActionReadResolver,
     ForumStatsResolver,

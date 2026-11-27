@@ -17,7 +17,7 @@ import {
   type ForumStaffRole,
 } from '../domain/types/forum-topic.type';
 
-const StaffRoleEnum = Object.fromEntries(
+export const StaffRoleEnum = Object.fromEntries(
   FORUM_STAFF_ROLES.map((value) => [value, value]),
 ) as Record<ForumStaffRole, ForumStaffRole>;
 registerEnumType(StaffRoleEnum, { name: 'ForumStaffRole' });

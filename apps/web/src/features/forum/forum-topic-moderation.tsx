@@ -32,6 +32,7 @@ import {
   Trash2,
   Undo2,
 } from "lucide-react";
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 import {
@@ -334,6 +335,31 @@ export function ForumTopicModeration({
           </>
         ) : null}
       </div>
+      {abilities.moderate ? (
+        <nav
+          aria-label="Зона модерації"
+          className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-white/[0.07] pt-3 text-sm"
+        >
+          <Link
+            href="/community/moderation"
+            className="text-violet-300 hover:underline"
+          >
+            Зона модерації
+          </Link>
+          <Link
+            href="/community/moderation/trash"
+            className="text-violet-300 hover:underline"
+          >
+            Кошик
+          </Link>
+          <Link
+            href="/community/moderation/sanctions"
+            className="text-violet-300 hover:underline"
+          >
+            Санкції
+          </Link>
+        </nav>
+      ) : null}
     </section>
   );
 }

@@ -159,6 +159,7 @@ describe('Forum topic viewer abilities (e2e)', () => {
       close: false,
       reopen: false,
       reply: false,
+      staffRole: null,
     });
     await expect(abilities(topic, member)).resolves.toEqual({
       moderate: false,
@@ -169,6 +170,7 @@ describe('Forum topic viewer abilities (e2e)', () => {
       close: false,
       reopen: false,
       reply: true,
+      staffRole: null,
     });
     await expect(abilities(topic, author)).resolves.toMatchObject({
       moderate: false,
@@ -181,6 +183,7 @@ describe('Forum topic viewer abilities (e2e)', () => {
       purge: false,
       acceptAnswer: true,
       close: true,
+      staffRole: 'MODERATOR',
     });
     await expect(
       abilities(topic, otherCategoryModerator),
@@ -190,6 +193,7 @@ describe('Forum topic viewer abilities (e2e)', () => {
       purge: true,
       network: true,
       networkDelete: true,
+      staffRole: 'ADMINISTRATOR',
     });
 
     const closed = { ...topic, state: 'CLOSED', acceptedAnswerPostId: 'x' };

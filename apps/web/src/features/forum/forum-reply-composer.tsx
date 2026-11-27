@@ -36,11 +36,14 @@ export function ForumReplyComposer({
   topicId,
   path,
   lastPage,
+  allowsGatedContent = false,
 }: {
   topicId: string;
   path: string;
   /** Path of the last page, where the new reply appears. */
   lastPage: string;
+  /** The section lets posts hide content (Command Deck switch). */
+  allowsGatedContent?: boolean;
 }) {
   const router = useRouter();
   const [document, setDocument] = useState<EditorDocument>(() =>
@@ -108,6 +111,7 @@ export function ForumReplyComposer({
       <DssEditor
         key={version}
         profile="FORUM_REPLY"
+        permissions={allowsGatedContent ? ["CONTENT_GATE_CONFIGURE"] : []}
         initialDocument={document}
         onDocumentChange={setDocument}
         ariaLabel="Текст відповіді"
