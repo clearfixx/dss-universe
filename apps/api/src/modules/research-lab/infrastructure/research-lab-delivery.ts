@@ -319,7 +319,6 @@ export class ResearchLabDelivery {
     to: string,
   ) {
     const scope = await this.scope(viewerId);
-    if (!scope.facts.authenticated) return null;
     const revisions = await this.prisma.researchRevision.findMany({
       where: {
         pageId,
