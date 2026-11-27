@@ -22,6 +22,7 @@ import "server-only";
 import { cookies } from "next/headers";
 
 import {
+  AdminCommunityRulesDocument,
   CommandDeckCommunityHubDocument,
   CommandDeckModeratorsDocument,
   CommandDeckRankingDocument,
@@ -102,6 +103,16 @@ export async function loadSupermoderators() {
 export type Supermoderator = Awaited<
   ReturnType<typeof loadSupermoderators>
 >[number];
+
+/** Numbered community rules (moderation.rules.manage). */
+export async function loadCommunityRules() {
+  const result = await getClient().query({
+    query: AdminCommunityRulesDocument,
+    context: await authContext(),
+    fetchPolicy: "no-cache",
+  });
+  return result.data?.communityRules ?? [];
+}
 
 /** «Гарячі» settings and recent topics for the preview (P1 C04). */
 export async function loadRankingAdmin() {

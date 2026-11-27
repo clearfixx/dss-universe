@@ -332,6 +332,21 @@ input CommunityPointsPageInput {
   page: Int! = 1
 }
 
+type CommunityRule {
+  active: Boolean!
+
+  """Rule number, e.g. 2.3."""
+  code: String!
+  id: ID!
+  text: String!
+}
+
+input CommunityRuleInput {
+  active: Boolean!
+  code: String!
+  text: String!
+}
+
 input ConfirmTwoFactorInput {
   code: String!
 }
@@ -1677,6 +1692,7 @@ type Mutation {
   createComment(input: CreateCommentInput!): Comment!
   createCommunityEvent(input: CommunityEventInput!): CommunityEvent!
   createCommunityMission(input: CommunityMissionInput!): CommunityMission!
+  createCommunityRule(input: CommunityRuleInput!): CommunityRule!
   createContentGate(input: CreateContentGateInput!): ContentGateModel!
   createCustomTitle(input: CreateCustomTitleInput!): CustomTitle!
   createForum(input: ForumInput!): Forum!
@@ -1809,6 +1825,7 @@ type Mutation {
   updateCommunityEvent(id: ID!, input: CommunityEventInput!): CommunityEvent!
   updateCommunityMission(id: ID!, input: CommunityMissionInput!): CommunityMission!
   updateCommunityPointRule(input: UpdateCommunityPointRuleInput!): CommunityPointRule!
+  updateCommunityRule(id: ID!, input: CommunityRuleInput!): CommunityRule!
   updateCustomTitle(input: UpdateCustomTitleInput!): CustomTitle!
   updateCustomTitleSettings(input: UpdateCustomTitleSettingsInput!): CustomTitleSettings!
   updateForum(forumId: ID!, input: ForumInput!): Forum!
@@ -2261,6 +2278,7 @@ type Query {
   communityMissionsAdmin: [CommunityMission!]!
   communityPointRules: [CommunityPointRule!]!
   communityPointsHistory(pagination: CommunityPointsPageInput, userId: ID!): CommunityPointHistory!
+  communityRules: [CommunityRule!]!
   contentReports(pagination: ModerationPageInput, status: ContentReportStatus): ContentReportPage!
   customTitleSettings: CustomTitleSettings!
   customTitles: [CustomTitle!]!

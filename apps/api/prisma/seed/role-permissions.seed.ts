@@ -108,6 +108,7 @@ const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     Permission.ModerationSanctionsRevoke,
     Permission.ModerationSanctionsStaff,
     Permission.ModerationPolicyManage,
+    Permission.ModerationRulesManage,
     Permission.ForumStructureManage,
     Permission.ForumModeratorsAssign,
     Permission.ForumModerateAll,
