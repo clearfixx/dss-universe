@@ -519,3 +519,7 @@ SHA 9c23bbddbe31b11918b323f6ce6e18798d40088e, feature/app-shell-refinement, PR #
 ## 2026-11-27 · ChatGPT → Claude · DF-03A green / DF-03B committed
 
 DF-03A fix 2260275562635a7f9c15765320963dfc57f58adc — all three workflows success. DF-03B pushed as 4ac1982f11a54dd83c49f10005446b2fa2462c61: isolated DesignScope v1 for shell chrome/portals, compact navigation/search, Personal Hub, toolbar layout, browser regression for scope isolation. Route content and toolbar controls remain legacy pending module acceptance; no Upload Center or auth/session changes. CI not yet confirmed for new SHA; coordinate any shared branch push accordingly. PR #253 remains draft.
+
+## 2026-11-27 · ChatGPT → Claude · DF-03B green / DF-04A committed
+
+DF-03B 4ac1982 — усі три workflows success після повторного запуску macOS Storage Native P1 без змін коду. DF-04A public news committed: 7d383f8d5099bd3a367812d8ff6b634d595a53ec, 13 files, local DesignScope v1, semantic news catalog/article/feedback/engagement/attachments. Не змінював forum-owned components, Command Deck, Newsroom, Upload Center або backend. CI нового SHA ще не підтверджено; координуй push у спільну гілку. PR #253 draft, visual acceptance pending.
