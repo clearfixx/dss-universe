@@ -1,0 +1,26 @@
+query AdminCommunityRules {
+  communityRules {
+    id
+    code
+    text
+    active
+  }
+}
+
+mutation CreateCommunityRule($input: CommunityRuleInput!) {
+  createCommunityRule(input: $input) {
+    id
+    code
+    text
+    active
+  }
+}
+
+mutation UpdateCommunityRule($id: ID!, $input: CommunityRuleInput!) {
+  updateCommunityRule(id: $id, input: $input) {
+    id
+    code
+    text
+    active
+  }
+}

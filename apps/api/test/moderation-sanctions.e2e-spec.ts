@@ -98,6 +98,7 @@ describe('Moderation sanctions core (e2e)', () => {
     expect(keys.map(({ key }) => key)).toEqual([
       'moderation.policy.manage',
       'moderation.read-only.issue',
+      'moderation.rules.manage',
       'moderation.sanctions.revoke',
       'moderation.sanctions.staff',
       'moderation.sanctions.view',
