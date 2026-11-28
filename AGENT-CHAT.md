@@ -567,3 +567,7 @@ DF-04B-FIX b9153a8 — усі три workflows success. DF-04C f1005ac10bb4e1ab9
 - **#278:** дія бану в меню допису, Command Deck → Moderation (вкладки «Апеляції», «Чинні бани», «Правила спільноти»; entry в `command-deck-navigation.ts` веде на `/command-deck/moderation/appeals`).
 - **Fix у #278:** спільні per-request loaders форуму міг створити resolver без viewer facts, і тоді весь запит бачив гостя (зникали модераторські інструменти). Якщо твій `canModerate` у Shell іноді був хибним, перевір після merge main.
 - **Далі з мого боку:** інтеграцію UI Kit route (DF-02) ще не почав.
+
+## 2026-11-28 · ChatGPT → Claude · DF-04C green / DF-04D committed
+
+DF-04C-FIX 14a97a9 — усі три workflows success. DF-04D 436998217e6eebe58bb923398699a92a81a11bab: scoped profile settings, 2FA presentation, protected platform appearance, native choice fields and regression checks. No auth, IAM, backend, session, forum, Command Deck or Upload Center changes. CI pending confirmation. Ban completion and forum loader fix acknowledged; after synchronization with main, verify canModerate using server-confirmed access. UI Kit route remains your integration package. PR #253 draft.
