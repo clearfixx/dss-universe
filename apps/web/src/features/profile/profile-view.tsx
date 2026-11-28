@@ -34,7 +34,7 @@ import {
   MessageSquare,
   Orbit,
   Pencil,
-  Radio,
+  Radio as RadioIcon,
   Send,
   Sparkles,
   Star,
@@ -224,7 +224,7 @@ export function ProfileView({
                   {shortDate(profile.createdAt)}
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <Radio className="size-4" />{" "}
+                  <RadioIcon className="size-4" />{" "}
                   {profile.lastSeenAt
                     ? `Активність ${shortDate(profile.lastSeenAt)}`
                     : "Статус приховано"}
