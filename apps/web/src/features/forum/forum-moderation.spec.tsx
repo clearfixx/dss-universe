@@ -6,6 +6,7 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("./forum-actions", () => ({}));
 vi.mock("./forum-network-actions", () => ({}));
+vi.mock("@/features/command-deck/ban-admin-actions", () => ({}));
 
 import { postNumbersFrom, topicIdFrom } from "./forum-action-dialog";
 import { ForumPostActionBar } from "./forum-post-action-bar";

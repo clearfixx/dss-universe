@@ -296,6 +296,8 @@ describe('Forum UI read models (e2e)', () => {
           );
         },
       } as unknown as PrismaForumReadModels,
+      // Votes, cards and stats never ask for moderation facts.
+      { read: () => Promise.reject(new Error('viewer facts not expected')) },
     );
     const signedIn = { req: { user: { id: 'viewer' } as never } };
     const guest = { req: {} };

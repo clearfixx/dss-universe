@@ -23,6 +23,7 @@
  * ===============================================================
  */
 import {
+  Ban,
   Bookmark,
   CheckCircle2,
   Eye,
@@ -59,6 +60,7 @@ import {
   restrictForumPostAuthor,
   warnForumPostAuthor,
 } from "./forum-actions";
+import { banForumAuthor } from "@/features/command-deck/ban-admin-actions";
 import { useForumPostEdit } from "./forum-post-edit-scope";
 import { ForumPostNetworkDialog } from "./forum-post-network-dialog";
 import { targetForumReply } from "./forum-topic-controls";
@@ -72,6 +74,7 @@ type DialogKey =
   | "warn"
   | "restrict"
   | "purge"
+  | "ban"
   | "network";
 
 const plain =
@@ -98,6 +101,7 @@ export function ForumPostActionBar({
   isAccepted,
   path,
   canReply,
+  ban = null,
 }: {
   topicId: string;
   post: Readonly<{ id: string; number: number; state: string }>;
@@ -111,6 +115,12 @@ export function ForumPostActionBar({
   isAccepted: boolean;
   path: string;
   canReply: boolean;
+  /** Set when the viewer may ban this author permanently. */
+  ban?: Readonly<{
+    authorId: string;
+    authorName: string;
+    rules: ReadonlyArray<{ id: string; code: string; text: string }>;
+  }> | null;
 }) {
   const { canEdit, editing, setEditing } = useForumPostEdit();
   const [dialog, setDialog] = useState<DialogKey | null>(null);
@@ -120,7 +130,8 @@ export function ForumPostActionBar({
   const canAccept =
     abilities.acceptAnswer && visible && post.number > 1 && !isAccepted;
   const staffMenu = abilities.moderate && !purged;
-  const hasMenu = canAccept || staffMenu || (abilities.purge && !purged);
+  const hasMenu =
+    canAccept || staffMenu || (abilities.purge && !purged) || ban !== null;
 
   const dialogProps = (key: DialogKey) => ({
     open: dialog === key,
@@ -263,6 +274,17 @@ export function ForumPostActionBar({
                 )}
               </>
             ) : null}
+            {ban ? (
+              <>
+                <DropdownMenuSeparator />
+                {menuItem(
+                  "ban",
+                  <Ban aria-hidden="true" />,
+                  "Забанити автора назавжди",
+                  true,
+                )}
+              </>
+            ) : null}
             {abilities.purge && !purged ? (
               <>
                 <DropdownMenuSeparator />
@@ -388,6 +410,45 @@ export function ForumPostActionBar({
         ]}
         run={(values) => addForumStaffNote(post.id, values.body.trim(), path)}
       />
+      {ban ? (
+        <ForumActionDialog
+          {...dialogProps("ban")}
+          title={`Перманентний бан: ${ban.authorName}`}
+          description={
+            ban.rules.length
+              ? "Учасник втратить будь-який доступ, навіть читання. Зняти бан зможе лише адміністратор. Учасник побачить правило, коментар, ваше ім'я та цей допис і зможе подати одну апеляцію."
+              : "Спочатку додайте правила спільноти: Command Deck → Модерація → Правила спільноти."
+          }
+          confirmLabel="Забанити назавжди"
+          destructive
+          fields={[
+            {
+              name: "ruleId",
+              label: "Порушене правило",
+              kind: "select",
+              required: true,
+              options: ban.rules.map((rule) => ({
+                value: rule.id,
+                label: `${rule.code}. ${rule.text}`.slice(0, 120),
+              })),
+            },
+            {
+              name: "reason",
+              label: "Коментар (його побачить учасник)",
+              kind: "textarea",
+              required: true,
+            },
+          ]}
+          run={(values) =>
+            banForumAuthor({
+              subjectId: ban.authorId,
+              ruleId: values.ruleId,
+              comment: values.reason.trim(),
+              postId: post.id,
+            })
+          }
+        />
+      ) : null}
       <ForumActionDialog
         {...dialogProps("warn")}
         title="Попередження автору"

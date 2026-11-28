@@ -95,7 +95,7 @@ export const COMMAND_DECK_GROUPS: readonly CommandDeckGroup[] = [
       {
         label: "Moderation",
         icon: ShieldAlert,
-        href: "/command-deck/moderation/rules",
+        href: "/command-deck/moderation/appeals",
         matches: ["/command-deck/moderation"],
       },
       { label: "Support Center", icon: LifeBuoy },

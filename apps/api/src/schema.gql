@@ -23,6 +23,28 @@ input AccountBanContextInput {
   type: String!
 }
 
+type AccountBanList {
+  items: [AccountBanListItem!]!
+  total: Int!
+}
+
+type AccountBanListItem {
+  comment: String!
+  contextPath: String
+  id: ID!
+  issuedAt: DateTime!
+  issuedByName: String
+  issuerId: ID!
+  liftReason: String
+  liftedAt: DateTime
+  liftedById: ID
+  reference: String!
+  ruleCode: String!
+  ruleText: String!
+  subjectId: ID!
+  subjectName: String
+}
+
 """What a banned person sees about their own ban."""
 type AccountBanNotice {
   comment: String!
@@ -34,6 +56,12 @@ type AccountBanNotice {
   reference: String!
   ruleCode: String!
   ruleText: String!
+}
+
+type AccountBanRule {
+  code: String!
+  id: ID!
+  text: String!
 }
 
 type Achievement {
@@ -2348,6 +2376,10 @@ input PublishNewsInput {
 
 type Query {
   accountBanNotice(ticket: String!): AccountBanNotice!
+
+  """Rules in force; only for those who may ban accounts."""
+  accountBanRules: [AccountBanRule!]!
+  accountBans(limit: Int! = 20, page: Int! = 1): AccountBanList!
   achievementRules: [AchievementRule!]!
   achievements: [Achievement!]!
   achievementsAdmin: [Achievement!]!
