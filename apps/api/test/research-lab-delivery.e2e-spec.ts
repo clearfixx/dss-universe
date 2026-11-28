@@ -906,6 +906,24 @@ describe('Research Lab public delivery (GraphQL)', () => {
           ),
       };
     };
+    const pageVocabulary = async (pageId: string, token?: string) => {
+      const call = request(app.getHttpServer()).post('/api/graphql');
+      if (token) call.set('Authorization', 'Bearer ' + token);
+      const response = await call
+        .send({
+          query:
+            'query($id:ID!){researchPage(id:$id){tags{id} technologies{id}}}',
+          variables: { id: pageId },
+        })
+        .expect(200);
+      expect(payload(response).errors).toBeUndefined();
+      return payload<{
+        researchPage: {
+          tags: { id: string }[];
+          technologies: { id: string }[];
+        } | null;
+      }>(response).data.researchPage;
+    };
     const containers = async (token?: string) => {
       const call = request(app.getHttpServer()).post('/api/graphql');
       if (token) call.set('Authorization', 'Bearer ' + token);
@@ -949,6 +967,17 @@ describe('Research Lab public delivery (GraphQL)', () => {
     expect(await vocabularies(reader.tokens.accessToken)).toEqual({
       tags: [privateTag.id, publicTag.id],
       technologies: [privateTechnology.id, publicTechnology.id],
+    });
+    expect(await pageVocabulary(publicDraft.pageId)).toEqual({
+      tags: [{ id: publicTag.id }],
+      technologies: [{ id: publicTechnology.id }],
+    });
+    expect(await pageVocabulary(draft.pageId)).toBeNull();
+    expect(
+      await pageVocabulary(draft.pageId, reader.tokens.accessToken),
+    ).toEqual({
+      tags: [{ id: privateTag.id }],
+      technologies: [{ id: privateTechnology.id }],
     });
     const related = async (token?: string) => {
       const call = request(app.getHttpServer()).post('/api/graphql');
@@ -1093,6 +1122,9 @@ describe('Research Lab public delivery (GraphQL)', () => {
       tags: [publicTag.id],
       technologies: [publicTechnology.id],
     });
+    expect(
+      await pageVocabulary(draft.pageId, reader.tokens.accessToken),
+    ).toBeNull();
     expect((await revisions()).data).toEqual({
       researchRevisionHistory: [],
       researchRevisionDiff: null,
