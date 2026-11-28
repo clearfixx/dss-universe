@@ -21,8 +21,12 @@ import "server-only";
 
 import { cookies } from "next/headers";
 
+import { toForumError } from "@/features/forum/forum-errors";
+
 import {
   AdminAccountBansDocument,
+  AdminStaticPageDocument,
+  AdminStaticPagesDocument,
   AdminBanAppealsDocument,
   AdminCommunityRulesDocument,
   type BanAppealStatus,
@@ -136,6 +140,32 @@ export async function loadActiveBans(page: number) {
     fetchPolicy: "no-cache",
   });
   return result.data?.accountBans ?? { total: 0, items: [] };
+}
+
+/** Static pages (cms.pages.manage). */
+export async function loadStaticPages() {
+  const result = await getClient().query({
+    query: AdminStaticPagesDocument,
+    context: await authContext(),
+    fetchPolicy: "no-cache",
+  });
+  return result.data?.adminStaticPages ?? [];
+}
+
+/** Null when the page does not exist. */
+export async function loadStaticPage(id: string) {
+  try {
+    const result = await getClient().query({
+      query: AdminStaticPageDocument,
+      variables: { id },
+      context: await authContext(),
+      fetchPolicy: "no-cache",
+    });
+    return result.data?.adminStaticPage ?? null;
+  } catch (error) {
+    if (toForumError(error).code === "NOT_FOUND") return null;
+    throw error;
+  }
 }
 
 /** «Гарячі» settings and recent topics for the preview (P1 C04). */

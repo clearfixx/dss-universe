@@ -1,0 +1,51 @@
+fragment AdminStaticPageFields on AdminStaticPage {
+  id
+  slug
+  title
+  description
+  documentJson
+  revision
+  publishedAt
+  hasUnpublishedChanges
+  updatedAt
+}
+
+query AdminStaticPages {
+  adminStaticPages {
+    ...AdminStaticPageFields
+  }
+}
+
+query AdminStaticPage($id: ID!) {
+  adminStaticPage(id: $id) {
+    ...AdminStaticPageFields
+  }
+}
+
+mutation CreateStaticPage($input: StaticPageInput!) {
+  createStaticPage(input: $input) {
+    ...AdminStaticPageFields
+  }
+}
+
+mutation SaveStaticPage(
+  $id: ID!
+  $expectedRevision: Int!
+  $input: StaticPageInput!
+) {
+  saveStaticPage(id: $id, expectedRevision: $expectedRevision, input: $input) {
+    ...AdminStaticPageFields
+  }
+}
+
+mutation PublishStaticPage($id: ID!, $expectedRevision: Int!) {
+  publishStaticPage(id: $id, expectedRevision: $expectedRevision) {
+    ...AdminStaticPageFields
+  }
+}
+
+mutation UnpublishStaticPage($id: ID!) {
+  unpublishStaticPage(id: $id) {
+    ...AdminStaticPageFields
+  }
+}
