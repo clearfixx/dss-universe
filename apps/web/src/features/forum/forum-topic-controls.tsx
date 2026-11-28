@@ -14,6 +14,7 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
+import type { EditorNode } from "@dss/editor";
 import { Bell, BellRing } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 
@@ -27,7 +28,12 @@ import {
 } from "./forum-actions";
 
 export const FORUM_REPLY_EVENT = "dss:forum-reply";
-export type ForumReplyTarget = { number: number; quote: boolean };
+export type ForumReplyTarget = {
+  number: number;
+  quote: boolean;
+  /** What the editor receives: the nickname or the quoted post. */
+  block: EditorNode | null;
+};
 
 /** Follow a topic (new replies) or, with `forumId`, a section (new topics). */
 export function ForumFollowButton({

@@ -63,9 +63,10 @@ import {
   getEditorProfileDefinition,
   resolveEditorProfile,
 } from "@dss/editor";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 
 import { createEditorExtensions } from "./editor-extensions";
+import { isolateSelectedLines, wrapSelectionInCodeBlock } from "./editor-lines";
 import { EditorAiDialog, type EditorAiSelection } from "./editor-ai-dialog";
 import { EditorContentGateDialog } from "./editor-content-gate-dialog";
 import {
@@ -100,6 +101,8 @@ type DssEditorProps = {
   editable?: boolean;
   ariaLabel?: string;
   onDocumentChange?: (document: EditorDocument) => void;
+  /** Blocks to append; a new `key` appends again. */
+  insertion?: { key: number; blocks: EditorNode[] } | null;
   onRequestAction?: (request: DssEditorActionRequest) => void;
 };
 
@@ -111,6 +114,17 @@ const INTERNAL_DIALOG_TOOLS = new Set<DialogToolId>([
   "attachment",
   "contentGate",
   "aiAssist",
+]);
+
+/** Block tools: they must touch the selected lines, not the whole paragraph. */
+const LINE_TOOLS = new Set<EditorToolId>([
+  "alignLeft",
+  "alignCenter",
+  "heading",
+  "bulletList",
+  "orderedList",
+  "blockquote",
+  "codeBlock",
 ]);
 
 const TOOL_PRESENTATION: Record<
@@ -151,6 +165,7 @@ export function DssEditor({
   editable = true,
   ariaLabel = "DSS Editor",
   onDocumentChange,
+  insertion = null,
   onRequestAction,
 }: DssEditorProps) {
   const [activeDialog, setActiveDialog] = useState<DialogToolId | null>(null);
@@ -175,6 +190,37 @@ export function DssEditor({
       });
     },
   });
+  const inserted = useRef(0);
+  useEffect(() => {
+    if (!editor || !insertion || inserted.current === insertion.key) return;
+    inserted.current = insertion.key;
+    // A quote is followed by an empty line to answer on.
+    const blocks =
+      insertion.blocks.at(-1)?.type === "blockquote"
+        ? [...insertion.blocks, { type: "paragraph" }]
+        : insertion.blocks;
+    const { doc } = editor.state;
+    const blank =
+      doc.childCount === 1 &&
+      doc.firstChild?.type.name === "paragraph" &&
+      doc.firstChild.content.size === 0;
+    // An empty last line is filled instead of leaving a gap above the blocks.
+    const last = doc.lastChild;
+    const trailing =
+      last?.type.name === "paragraph" && last.content.size === 0
+        ? last.nodeSize
+        : 0;
+    editor
+      .chain()
+      .insertContentAt(
+        blank
+          ? { from: 0, to: doc.content.size }
+          : { from: doc.content.size - trailing, to: doc.content.size },
+        blocks,
+      )
+      .focus("end", { scrollIntoView: false })
+      .run();
+  }, [editor, insertion]);
   const selectedState = useEditorState({
     editor,
     selector: ({ editor: current }) => ({
@@ -336,6 +382,15 @@ export function DssEditor({
   };
   const runTool = (toolId: EditorToolId): void => {
     if (!editor) return;
+    if (LINE_TOOLS.has(toolId) && !state.codeBlock) {
+      if (toolId === "codeBlock") {
+        wrapSelectionInCodeBlock(editor);
+        return;
+      }
+      isolateSelectedLines(editor, {
+        everyLine: toolId === "bulletList" || toolId === "orderedList",
+      });
+    }
     const chain = editor.chain().focus();
     switch (toolId) {
       case "bold":

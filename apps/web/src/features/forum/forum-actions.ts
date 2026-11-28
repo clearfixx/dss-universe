@@ -27,6 +27,7 @@ import {
   AcceptForumAnswerDocument,
   GiveForumPostReputationDocument,
   ReputationJournalDocument,
+  ReverseReputationEntryDocument,
   AddForumStaffNoteDocument,
   ForumPostRevisionsDocument,
   ArchiveForumTopicDocument,
@@ -582,6 +583,20 @@ export async function getReputationJournal(userId: string, page = 1) {
     if (!result.data) throw new Error("Reputation journal is unavailable.");
     return result.data.reputationHistory;
   });
+}
+
+/** Cancels a reputation change; the API requires `reputation.reverse`. */
+export async function reverseReputationEntry(
+  entryId: string,
+  reason: string,
+  path: string,
+) {
+  return run(
+    ReverseReputationEntryDocument,
+    { input: { entryId, reason } },
+    (data) => data.reverseReputation,
+    path,
+  );
 }
 
 /** Edit history of a post: who and when; texts for the author and staff. */

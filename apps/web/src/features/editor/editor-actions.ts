@@ -10,6 +10,7 @@
  *
  * 🧠 Responsibilities:
  * • reads authentication only from the server-side session cookie;
+ * • searches the actor's media and mentionable members (the browser holds no token);
  * • creates a policy-bound upload session through GraphQL;
  * • sends multipart bytes to the Media intake endpoint;
  * • returns lifecycle state without exposing access tokens to the browser.
@@ -29,6 +30,9 @@ import {
   type ContentGateOperator,
   type ContentGateRequirementKind,
   type EditorAiCommand,
+  EditorMediaDocument,
+  EditorMentionSuggestionsDocument,
+  type MediaLibraryInput,
 } from "@/gql/graphql";
 import { getClient } from "@/lib/apollo/rsc-client";
 import { siteConfig } from "@/config/site.config";
@@ -65,6 +69,48 @@ export type EditorAiCommandSuggestion = {
   model: string;
   requiresConfirmation: boolean;
 };
+
+/** The actor's own READY media. The browser cannot read the session token. */
+export async function searchEditorMedia(input: MediaLibraryInput) {
+  const authorization = await sessionHeaders();
+  if (!authorization)
+    return { ok: false as const, error: "SIGNED_OUT" as const };
+  try {
+    const { data } = await getClient().query({
+      query: EditorMediaDocument,
+      variables: { input },
+      context: { headers: authorization },
+      fetchPolicy: "no-cache",
+    });
+    return { ok: true as const, items: data?.editorMedia.items ?? [] };
+  } catch {
+    return { ok: false as const, error: "UNAVAILABLE" as const };
+  }
+}
+
+export async function searchMentionMembers(search: string) {
+  const authorization = await sessionHeaders();
+  if (!authorization)
+    return { ok: false as const, error: "SIGNED_OUT" as const };
+  try {
+    const { data } = await getClient().query({
+      query: EditorMentionSuggestionsDocument,
+      variables: {
+        input: { page: 1, limit: 8, search, sort: "USERNAME_ASC" },
+      },
+      context: { headers: authorization },
+      fetchPolicy: "no-cache",
+    });
+    return { ok: true as const, items: data?.members.items ?? [] };
+  } catch {
+    return { ok: false as const, error: "UNAVAILABLE" as const };
+  }
+}
+
+async function sessionHeaders() {
+  const token = (await cookies()).get("dss_access_token")?.value;
+  return token ? { authorization: `Bearer ${token}` } : null;
+}
 
 export async function runEditorAiCommand(
   input: EditorAiCommandInput,

@@ -151,6 +151,7 @@ describe('Reputation from forum posts (e2e)', () => {
         `query History($userId: ID!) {
           reputationHistory(userId: $userId) {
             score
+            viewerCanReverse
             items { reason actor { username } source { type id deleted } }
           }
         }`,
@@ -161,6 +162,7 @@ describe('Reputation from forum posts (e2e)', () => {
     expect(before.data).toMatchObject({
       reputationHistory: {
         score: 0,
+        viewerCanReverse: false,
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- jest matcher
         items: expect.arrayContaining([
           expect.objectContaining({

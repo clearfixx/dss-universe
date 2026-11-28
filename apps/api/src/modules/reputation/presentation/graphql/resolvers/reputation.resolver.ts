@@ -44,11 +44,22 @@ export class ReputationResolver {
 
   @Query(() => ReputationHistoryModel)
   @UseGuards(JwtAuthGuard)
-  reputationHistory(
+  async reputationHistory(
+    @AuthUser() viewer: AuthenticatedUser,
     @Args('userId', { type: () => ID }) userId: string,
     @Args('pagination', { nullable: true }) pagination?: ReputationPageInput,
-  ): Promise<ReputationHistory> {
-    return this.reputation.history(userId, pagination?.page, pagination?.limit);
+  ): Promise<ReputationHistory & { viewerCanReverse: boolean }> {
+    const history = await this.reputation.history(
+      userId,
+      pagination?.page,
+      pagination?.limit,
+    );
+    return {
+      ...history,
+      viewerCanReverse: viewer.permissions.includes(
+        Permission.ReputationReverse,
+      ),
+    };
   }
 
   @Query(() => ReputationPolicyModel)

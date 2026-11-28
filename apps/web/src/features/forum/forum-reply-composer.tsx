@@ -9,7 +9,7 @@
  *
  * 🎯 Purpose:
  * Reply form under a topic: DSS Editor (forum reply profile), reply-to and
- * quote targets from post buttons, cooldown and read-only feedback.
+ * quotes from post buttons, cooldown and read-only feedback.
  *
  * ⚠️ Important:
  * The API enforces every rule (cooldown, read-only, closed topic, hidden
@@ -18,7 +18,11 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import { createEmptyEditorDocument, type EditorDocument } from "@dss/editor";
+import {
+  createEmptyEditorDocument,
+  type EditorDocument,
+  type EditorNode,
+} from "@dss/editor";
 import { Send, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
@@ -27,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { DssEditor } from "@/features/editor/dss-editor";
 
 import { createForumReply } from "./forum-actions";
+import { forumQuotedNumbers } from "./forum-quote-model";
 import {
   FORUM_REPLY_EVENT,
   type ForumReplyTarget,
@@ -50,13 +55,22 @@ export function ForumReplyComposer({
     createEmptyEditorDocument("FORUM_REPLY"),
   );
   const [version, setVersion] = useState(0);
-  const [target, setTarget] = useState<ForumReplyTarget | null>(null);
+  const [target, setTarget] = useState<number | null>(null);
+  const [insertion, setInsertion] = useState<{
+    key: number;
+    blocks: EditorNode[];
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
   useEffect(() => {
-    const listener = (event: Event) =>
-      setTarget((event as CustomEvent<ForumReplyTarget>).detail);
+    let key = 0;
+    const listener = (event: Event) => {
+      const { number, quote, block } = (event as CustomEvent<ForumReplyTarget>)
+        .detail;
+      if (!quote) setTarget(number);
+      if (block) setInsertion({ key: ++key, blocks: [block] });
+    };
     window.addEventListener(FORUM_REPLY_EVENT, listener);
     return () => window.removeEventListener(FORUM_REPLY_EVENT, listener);
   }, []);
@@ -68,8 +82,8 @@ export function ForumReplyComposer({
         {
           topicId,
           documentJson: JSON.stringify(document),
-          replyToNumber: target && !target.quote ? target.number : null,
-          quotedNumbers: target?.quote ? [target.number] : [],
+          replyToNumber: target,
+          quotedNumbers: forumQuotedNumbers(document),
         },
         path,
       );
@@ -80,6 +94,7 @@ export function ForumReplyComposer({
       setDocument(createEmptyEditorDocument("FORUM_REPLY"));
       setVersion((value) => value + 1);
       setTarget(null);
+      setInsertion(null);
       router.push(`${lastPage}#post-${result.data.number}`);
     });
   }
@@ -94,9 +109,9 @@ export function ForumReplyComposer({
         <h2 id="forum-reply-title" className="font-semibold">
           Ваша відповідь
         </h2>
-        {target ? (
+        {target !== null ? (
           <span className="inline-flex items-center gap-2 rounded-lg bg-violet-500/15 px-2.5 py-1 text-xs text-violet-200">
-            {target.quote ? "Цитата" : "Відповідь на"} #{target.number}
+            Відповідь на #{target}
             <button
               type="button"
               onClick={() => setTarget(null)}
@@ -114,6 +129,7 @@ export function ForumReplyComposer({
         permissions={allowsGatedContent ? ["CONTENT_GATE_CONFIGURE"] : []}
         initialDocument={document}
         onDocumentChange={setDocument}
+        insertion={insertion}
         ariaLabel="Текст відповіді"
       />
       <div className="mt-3 flex flex-wrap items-center gap-3">

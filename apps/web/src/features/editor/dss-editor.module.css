@@ -73,6 +73,36 @@
   font-weight: 650;
 }
 
+/* Tailwind preflight removes list markers and heading sizes. */
+.surface :global(.tiptap ul) {
+  list-style: disc;
+}
+
+.surface :global(.tiptap ol) {
+  list-style: decimal;
+}
+
+.surface :global(.tiptap h1) {
+  font-size: 1.6rem;
+}
+
+.surface :global(.tiptap h2) {
+  font-size: 1.4rem;
+}
+
+.surface :global(.tiptap h3) {
+  font-size: 1.2rem;
+}
+
+.surface :global(.tiptap h4) {
+  font-size: 1.05rem;
+}
+
+.surface :global(.tiptap [data-dss-mention]) {
+  color: #c4b5fd;
+  font-weight: 700;
+}
+
 .surface :global(.tiptap ul),
 .surface :global(.tiptap ol) {
   margin: 0.75rem 0;
@@ -84,6 +114,19 @@
   border-left: 3px solid #8b5cf6;
   padding-left: 1rem;
   color: #cbd5e1;
+}
+
+.surface :global(.tiptap blockquote[data-quote-author])::before {
+  display: block;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 600;
+  content: attr(data-quote-author) " #" attr(data-quote-number);
+}
+
+.surface :global(.tiptap blockquote[data-quote-author]) {
+  max-height: 18rem;
+  overflow-y: auto;
 }
 
 .surface :global(.tiptap code) {
