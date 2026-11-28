@@ -77,6 +77,9 @@ class ResearchPublishedPage {
   @Field() title!: string;
   @Field() summary!: string;
   @Field() documentJson!: string;
+  @Field(() => [ResearchTagEntry]) tags!: ResearchTagEntry[];
+  @Field(() => [ResearchTechnologyEntry])
+  technologies!: ResearchTechnologyEntry[];
 }
 @ObjectType()
 class ResearchHistoryEntry {

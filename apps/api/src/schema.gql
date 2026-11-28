@@ -2885,6 +2885,8 @@ type ResearchPublishedPage {
   slug: String!
   state: String!
   summary: String!
+  tags: [ResearchTagEntry!]!
+  technologies: [ResearchTechnologyEntry!]!
   title: String!
 }
 

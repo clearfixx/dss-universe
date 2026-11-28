@@ -214,6 +214,24 @@ export class ResearchLabDelivery {
         slug: true,
         state: true,
         publicationGeneration: true,
+        tags: {
+          select: { tag: { select: { id: true, name: true, slug: true } } },
+          orderBy: { tagId: 'asc' },
+        },
+        technologies: {
+          select: {
+            technology: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                description: true,
+                website: true,
+              },
+            },
+          },
+          orderBy: { technologyId: 'asc' },
+        },
         publishedRevision: {
           select: {
             id: true,
@@ -241,6 +259,8 @@ export class ResearchLabDelivery {
       title: revision.title,
       summary: revision.summary,
       documentJson: content.documentJson,
+      tags: page.tags.map((link) => link.tag),
+      technologies: page.technologies.map((link) => link.technology),
     };
   }
 
