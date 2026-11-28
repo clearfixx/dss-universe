@@ -412,6 +412,8 @@ model User {
   issuedAccountBans       AccountBan[]                 @relation("AccountBanIssuer")
   liftedAccountBans       AccountBan[]                 @relation("AccountBanLifter")
   decidedBanAppeals       BanAppeal[]                  @relation("BanAppealDecider")
+  createdStaticPages      StaticPage[]                 @relation("StaticPageCreator")
+  updatedStaticPages      StaticPage[]                 @relation("StaticPageEditor")
   wallPosts               UserWallPost[]               @relation("ProfileWallOwner")
   authoredWallPosts       UserWallPost[]               @relation("ProfileWallAuthor")
   notificationPreferences UserNotificationPreferences?
@@ -1521,6 +1523,29 @@ model BanAppealFile {
 
   @@index([banId, addedAt])
   @@map("ban_appeal_files")
+}
+
+model StaticPage {
+  id                   String    @id @default(uuid())
+  slug                 String    @unique
+  title                String
+  description          String    @default("")
+  document             Json
+  revision             Int       @default(1)
+  publishedTitle       String?
+  publishedDescription String?
+  publishedDocument    Json?
+  publishedRevision    Int?
+  publishedAt          DateTime?
+  createdById          String
+  updatedById          String
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @default(now()) @updatedAt
+
+  createdBy User @relation("StaticPageCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedBy User @relation("StaticPageEditor", fields: [updatedById], references: [id], onDelete: Restrict)
+
+  @@map("static_pages")
 }
 
 model CommunityRule {

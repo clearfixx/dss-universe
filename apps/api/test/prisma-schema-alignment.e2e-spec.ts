@@ -51,6 +51,7 @@ describe('Prisma and historical migration alignment (e2e)', () => {
       'reaction_aggregates',
       'reactions',
       'reputation_policy',
+      'static_pages',
       'user_title_selections',
     ].map((table_name) => ({
       table_name,

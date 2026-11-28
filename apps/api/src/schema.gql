@@ -161,6 +161,18 @@ type ActivityFeedVisit {
   visitedAt: String!
 }
 
+type AdminStaticPage {
+  description: String!
+  documentJson: String!
+  hasUnpublishedChanges: Boolean!
+  id: ID!
+  publishedAt: DateTime
+  revision: Int!
+  slug: String!
+  title: String!
+  updatedAt: DateTime!
+}
+
 type ApiInfo {
   name: String!
   status: String!
@@ -1817,6 +1829,7 @@ type Mutation {
   createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
   createResearchCategory(input: ResearchCreateCategoryInput!): ResearchCategoryEntry!
   createResearchDraft(input: ResearchDraftInput!): ResearchDraftReceipt!
+  createStaticPage(input: StaticPageInput!): AdminStaticPage!
   deactivateAccount(input: DeactivateAccountInput!): LogoutResultModel!
   decideBanAppeal(accept: Boolean!, appealId: ID!, reason: String!): BanAppeal!
   deleteCommunityEvent(id: ID!): Boolean!
@@ -1857,6 +1870,7 @@ type Mutation {
   moveForumTopic(targetForumId: ID!, topicId: ID!): ForumTopic!
   publishNews(input: PublishNewsInput!): NewsEditorialTransition!
   publishResearchRevision(input: ResearchDecisionInput!): ResearchRevisionReceipt!
+  publishStaticPage(expectedRevision: Int!, id: ID!): AdminStaticPage!
   purgeForumPost(postId: ID!, reason: String!): ForumPurgeResult!
   reactivateAccount(input: LoginInput!): AuthPayloadModel!
   recordForumTopicView(topicId: ID!): Boolean!
@@ -1912,6 +1926,7 @@ type Mutation {
   saveForumSettings(input: SaveForumSettingsInput!): [ForumCategory!]!
   saveNewsDraft(input: SaveNewsDraftInput!): NewsEditorialArticle!
   saveResearchDraft(input: ResearchSaveDraftInput!): ResearchDraftReceipt!
+  saveStaticPage(expectedRevision: Int!, id: ID!, input: StaticPageInput!): AdminStaticPage!
   scheduleNews(input: ScheduleNewsInput!): NewsEditorialTransition!
   selectCustomTitle(grantId: ID!): UserTitleGrant!
   selfPublishResearchDraft(input: ResearchSubmitInput!): ResearchRevisionReceipt!
@@ -1939,6 +1954,7 @@ type Mutation {
   unfollowForum(forumId: ID!): Boolean!
   unfollowUser(userId: ID!): UserSocialGraphSummary!
   unlinkNewsDiscussion(articleId: ID!): Boolean!
+  unpublishStaticPage(id: ID!): AdminStaticPage!
   unsubscribeForumTopic(topicId: ID!): Boolean!
   updateCommunityEvent(id: ID!, input: CommunityEventInput!): CommunityEvent!
   updateCommunityMission(id: ID!, input: CommunityMissionInput!): CommunityMission!
@@ -2388,6 +2404,8 @@ type Query {
   activeAccountBan(subjectId: ID!): AccountBan
   adminCommandDeckAccess: Boolean!
   adminPlatformAppearance: PlatformAppearance!
+  adminStaticPage(id: ID!): AdminStaticPage!
+  adminStaticPages: [AdminStaticPage!]!
   apiInfo: ApiInfo!
   banAppealFileAccess(appealId: ID!, fileId: ID!): BanAppealFileAccess!
   banAppealState(ticket: String!): BanAppealState!
@@ -2511,6 +2529,7 @@ type Query {
   previewEditorDocument(input: PreviewEditorDocumentInput!): EditorDocumentPreview!
   profileWall(pagination: UsersPageInput, profileOwnerId: ID!): ProfileWallPage!
   publicActivityFeed(input: ActivityFeedInput): ActivityFeedPage!
+  publishedStaticPages: [StaticPageAddress!]!
   quarantinedMedia(limit: Int! = 25): [MediaQuarantineItem!]!
   reactionSummary(interactionTargetId: ID!): ReactionSummary!
   reputationHistory(pagination: ReputationPageInput, userId: ID!): ReputationHistory!
@@ -2536,6 +2555,7 @@ type Query {
   researchTags: [ResearchTagEntry!]!
   researchTechnologies: [ResearchTechnologyEntry!]!
   search(page: Int! = 1, pageSize: Int! = 20, source: SharedSearchSource! = NEWS, term: String!): SearchPage!
+  staticPage(slug: String!): StaticPage
   user(id: ID!): User!
   userAchievementHistory(userId: ID!): [AchievementAward!]!
   userAchievements(userId: ID!): [AchievementAward!]!
@@ -3190,6 +3210,27 @@ type StaffSanctionJournal {
   limit: Int!
   page: Int!
   total: Int!
+}
+
+"""A published static page."""
+type StaticPage {
+  description: String!
+  documentJson: String!
+  publishedAt: DateTime!
+  slug: String!
+  title: String!
+}
+
+type StaticPageAddress {
+  publishedAt: DateTime!
+  slug: String!
+}
+
+input StaticPageInput {
+  description: String!
+  documentJson: String!
+  slug: String!
+  title: String!
 }
 
 type TwoFactorConfirmationModel {
