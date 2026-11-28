@@ -111,6 +111,42 @@ export class ResearchLabDelivery {
     });
   }
 
+  async tags(viewerId: string | null) {
+    const scope = await this.scope(viewerId);
+    return this.prisma.researchTag.findMany({
+      where: {
+        pages: {
+          some: {
+            page: { ...scope.where, state: 'ACTIVE' },
+          },
+        },
+      },
+      select: { id: true, name: true, slug: true },
+      orderBy: [{ name: 'asc' }, { id: 'asc' }],
+    });
+  }
+
+  async technologies(viewerId: string | null) {
+    const scope = await this.scope(viewerId);
+    return this.prisma.researchTechnology.findMany({
+      where: {
+        pages: {
+          some: {
+            page: { ...scope.where, state: 'ACTIVE' },
+          },
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        website: true,
+      },
+      orderBy: [{ name: 'asc' }, { id: 'asc' }],
+    });
+  }
+
   private async scope(viewerId: string | null) {
     const facts = await this.authority.viewerFacts(viewerId, new Date());
     const where: Prisma.ResearchPageWhereInput = {
