@@ -140,15 +140,15 @@ export function NewsAudience({
   return (
     <section
       aria-label="Перегляди й поширення"
-      className="space-y-4 rounded-2xl border border-white/10 bg-slate-950/60 p-5"
+      className="space-y-4 rounded-card border border-border bg-card p-5"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className="inline-flex items-center gap-2 text-sm text-slate-300">
-          <Eye className="size-4 text-cyan-300" />
+        <span className="inline-flex items-center gap-2 text-sm text-foreground">
+          <Eye className="size-4 text-link" />
           {viewCount.toLocaleString("uk-UA")} унікальних переглядів
         </span>
         {sharingEnabled ? (
-          <span className="inline-flex items-center gap-2 text-sm text-slate-400">
+          <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
             <Share2 className="size-4" /> {sharing.total} поширень
           </span>
         ) : null}
@@ -164,20 +164,20 @@ export function NewsAudience({
               disabled={pending}
               onClick={() => void share(channel)}
             >
-              {label} <span className="text-slate-500">{count(channel)}</span>
+              {label} <span className="text-muted-foreground">{count(channel)}</span>
             </Button>
           ))}
           <Button type="button" variant="outline" size="sm" onClick={copy}>
             <Copy /> Копіювати{" "}
-            <span className="text-slate-500">{count("COPY_LINK")}</span>
+            <span className="text-muted-foreground">{count("COPY_LINK")}</span>
           </Button>
           <Button type="button" variant="outline" size="sm" onClick={print}>
             <Printer /> Друк{" "}
-            <span className="text-slate-500">{count("PRINT")}</span>
+            <span className="text-muted-foreground">{count("PRINT")}</span>
           </Button>
         </div>
       ) : null}
-      {message ? <p className="text-xs text-amber-300">{message}</p> : null}
+      {message ? <p className="text-xs text-warning">{message}</p> : null}
     </section>
   );
 }

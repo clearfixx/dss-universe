@@ -16,15 +16,12 @@ vi.mock("@/features/activity/activity-data", () => ({
 vi.mock("@/components/shell/guest-landing", () => ({
   GuestLanding: () => createElement("div", null, "GUEST_LANDING"),
 }));
-vi.mock("@/components/shell/command-deck-overview", () => ({
-  CommandDeckOverview: () => createElement("div", null, "PERSONAL_DASHBOARD"),
+vi.mock("@/components/shell/mission-control-overview", () => ({
+  MissionControlOverview: () => createElement("div", null, "PERSONAL_DASHBOARD"),
 }));
 vi.mock("@/components/shell/session-application-shell", () => ({
   DssApplicationShell: ({ children }: { children: ReactNode }) =>
     createElement("main", null, children),
-}));
-vi.mock("@/components/states/async-states", () => ({
-  ErrorState: () => createElement("div", null, "SESSION_REQUIRED"),
 }));
 vi.mock("@/features/newsroom/news-editor-workspace", () => ({
   NewsEditorWorkspace: () => createElement("div", null, "EDITOR_WORKSPACE"),
@@ -64,7 +61,10 @@ describe("server-validated session route entry", () => {
 
     const html = renderToStaticMarkup(await NewNewsPage());
 
-    expect(html).toContain("SESSION_REQUIRED");
+    expect(mocks.viewer).toHaveBeenCalledOnce();
+    expect(html).toContain('role="alert"');
+    expect(html).toContain("Потрібна авторизація");
+    expect(html).toContain("Увійдіть, щоб створити новину.");
     expect(html).not.toContain("EDITOR_WORKSPACE");
   });
 
@@ -74,6 +74,8 @@ describe("server-validated session route entry", () => {
     const html = renderToStaticMarkup(await NewNewsPage());
 
     expect(html).toContain("EDITOR_WORKSPACE");
-    expect(html).not.toContain("SESSION_REQUIRED");
+    expect(mocks.viewer).toHaveBeenCalledOnce();
+    expect(html).not.toContain('role="alert"');
+    expect(html).not.toContain("Потрібна авторизація");
   });
 });

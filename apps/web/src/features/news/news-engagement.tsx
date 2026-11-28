@@ -125,7 +125,7 @@ export function NewsEngagement({
               aria-pressed={engagement.viewerReaction === "UPVOTE"}
               className={cn(
                 engagement.viewerReaction === "UPVOTE" &&
-                  "border-emerald-400 bg-emerald-400/15 text-emerald-300",
+                  "border-success bg-success/10 text-success",
               )}
               disabled={pending}
               onClick={() => vote("UPVOTE")}
@@ -141,7 +141,7 @@ export function NewsEngagement({
               {pending ? <LoaderCircle className="animate-spin" /> : null}
               <strong
                 className={
-                  engagement.score < 0 ? "text-rose-300" : "text-emerald-300"
+                  engagement.score < 0 ? "text-destructive" : "text-success"
                 }
               >
                 {engagement.score}
@@ -154,7 +154,7 @@ export function NewsEngagement({
               aria-pressed={engagement.viewerReaction === "DOWNVOTE"}
               className={cn(
                 engagement.viewerReaction === "DOWNVOTE" &&
-                  "border-rose-400 bg-rose-400/15 text-rose-300",
+                  "border-destructive bg-destructive/10 text-destructive",
               )}
               disabled={pending}
               onClick={() => vote("DOWNVOTE")}
@@ -171,14 +171,14 @@ export function NewsEngagement({
         >
           <Bookmark
             className={cn(
-              engagement.bookmarkedByViewer && "fill-cyan-300 text-cyan-300",
+              engagement.bookmarkedByViewer && "fill-current text-link",
             )}
           />
           {engagement.bookmarkedByViewer ? "У закладках" : "До закладок"}
         </Button>
       </div>
       {message ? (
-        <p role="alert" className="text-sm text-amber-300">
+        <p role="alert" className="text-sm text-warning">
           {message}
         </p>
       ) : null}
@@ -200,8 +200,8 @@ export function NewsEngagement({
                   className={cn(
                     "grid size-8 place-items-center rounded-full font-bold",
                     item.kind === "UPVOTE"
-                      ? "bg-emerald-400/15 text-emerald-300"
-                      : "bg-rose-400/15 text-rose-300",
+                      ? "bg-success/10 text-success"
+                      : "bg-destructive/10 text-destructive",
                   )}
                 >
                   {item.kind === "UPVOTE" ? "+" : "−"}
@@ -209,11 +209,11 @@ export function NewsEngagement({
                 <div className="min-w-0 flex-1">
                   <Link
                     href={`/profile/${item.actor.username}`}
-                    className="font-medium hover:text-cyan-300"
+                    className="font-medium hover:text-link"
                   >
                     {item.actor.displayName ?? item.actor.username}
                   </Link>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-muted-foreground">
                     {voteDateFormatter.format(new Date(String(item.updatedAt)))}
                   </p>
                 </div>

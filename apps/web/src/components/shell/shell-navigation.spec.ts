@@ -12,6 +12,7 @@ import {
   isShellVariant,
   moduleSidebarItems,
   navigationCurrent,
+  quickAddItems,
   routeMatches,
   trustedPageTitle,
   visibleModules,
@@ -186,4 +187,38 @@ describe("application shell navigation contracts", () => {
     })).toEqual([{ href: "/profile/b", label: "Поточна сторінка" }]);
   });
 
+});
+
+
+describe("contextual navigation session eligibility", () => {
+  it("hides protected community actions from guests", () => {
+    expect(moduleSidebarItems("/community", false, false).map((item) => item.href)).toEqual(["/community"]);
+  });
+  it("preserves both community actions for authenticated viewers", () => {
+    expect(moduleSidebarItems("/community", true, false).map((item) => item.href)).toEqual(["/community", "/community/forum/new", "/community/following"]);
+  });
+  it("does not select an inaccessible child or admin module", () => {
+    expect(currentSidebarHref("/community/following", false, false)).toBe("/community");
+    expect(currentSidebarHref("/command-deck", true, false)).toBeNull();
+  });
+});
+
+describe("Quick Add contract", () => {
+  it("exposes no creation actions to guests, even with an admin flag", () => {
+    expect(quickAddItems(false)).toEqual([]);
+    expect(quickAddItems(false, true)).toEqual([]);
+  });
+  it("exposes only registered creation actions to signed-in viewers", () => {
+    const expected = ["/community/forum/new", "/newsroom/new"];
+    expect(quickAddItems(true).map((item) => item.href)).toEqual(expected);
+    expect(quickAddItems(true, true).map((item) => item.href)).toEqual(expected);
+  });
+});
+
+ it("requires a session and explicit moderation grant for the moderation destination", () => {
+  const href = "/community/moderation";
+  expect(moduleSidebarItems("/community", true, false, true).map((item) => item.href)).toContain(href);
+  expect(moduleSidebarItems("/community", true, true, false).map((item) => item.href)).not.toContain(href);
+  expect(moduleSidebarItems("/community", false, true, true).map((item) => item.href)).not.toContain(href);
+  expect(currentSidebarHref(href, true, false, true)).toBe(href);
 });

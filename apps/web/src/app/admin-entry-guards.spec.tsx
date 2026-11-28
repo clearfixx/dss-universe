@@ -39,6 +39,7 @@ vi.mock("@/features/appearance/platform-appearance-form", () => ({
 }));
 
 import CommandDeckPage from "./command-deck/page";
+import UiKitPage from "./command-deck/design/ui-kit/page";
 import PlatformAppearancePage from "./settings/platform-appearance/page";
 
 beforeEach(() => {
@@ -58,6 +59,17 @@ describe("administrative route guards", () => {
     const html = renderToStaticMarkup(await CommandDeckPage());
     expect(html).toContain("ADMIN_DECK");
     expect(mocks.feed).toHaveBeenCalledOnce();
+  });
+
+  it("hides the UI Kit unless IAM allows Command Deck access", async () => {
+    mocks.access.mockResolvedValue(false);
+    await expect(UiKitPage()).rejects.toThrow("NEXT_NOT_FOUND");
+  });
+
+  it("renders the shared UI Kit showcase for an allowed administrator", async () => {
+    mocks.access.mockResolvedValue(true);
+    const html = renderToStaticMarkup(await UiKitPage());
+    expect(html).toContain("DSS UI Kit");
   });
 
   it("denies platform appearance when the backend refuses administrative access", async () => {

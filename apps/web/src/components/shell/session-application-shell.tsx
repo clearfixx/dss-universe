@@ -2,6 +2,7 @@ import type { PropsWithChildren, ReactNode } from "react";
 
 import { loadAdminCommandDeckAccess } from "@/features/auth/admin-access";
 import { loadSessionViewer } from "@/features/auth/session-data";
+import { loadForumModerationOverview } from "@/features/forum/forum-data";
 import { loadShellVariant } from "@/features/appearance/appearance-data";
 
 import {
@@ -32,15 +33,19 @@ export async function DssApplicationShell({
     loadSessionViewer(),
     loadShellVariant(),
   ]);
-  const canAccessAdminDeck = viewer
-    ? await loadAdminCommandDeckAccess()
-    : false;
+  const [canAccessAdminDeck, canModerate] = viewer
+    ? await Promise.all([
+        loadAdminCommandDeckAccess(),
+        loadForumModerationOverview().then((overview) => Boolean(overview && overview !== "DENIED")).catch(() => false),
+      ])
+    : [false, false];
 
   return (
     <DssApplicationShellClient
       viewer={viewer}
       variant={variant}
       canAccessAdminDeck={canAccessAdminDeck}
+      canModerate={canModerate}
       toolbar={toolbar}
       pageTitle={pageTitle}
       breadcrumbs={breadcrumbs}

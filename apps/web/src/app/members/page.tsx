@@ -13,7 +13,8 @@
  */
 
 import { DssApplicationShell } from "@/components/shell/session-application-shell";
-import { ErrorState } from "@/components/states/async-states";
+import { DesignScope } from "@/components/ui/design-scope";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/feedback";
 import { MembersDirectory } from "@/features/members/members-directory";
 import { loadMembersDirectory } from "@/features/profile/profile-data";
 import type { LeaderboardPeriod, MembersDirectorySort } from "@/gql/graphql";
@@ -65,10 +66,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
   if (!data) {
     return (
       <DssApplicationShell>
-        <ErrorState
-          title="Каталог учасників недоступний"
-          description="Увійдіть у DSS Universe або повторіть запит пізніше."
-        />
+        <DesignScope className="mx-auto max-w-6xl"><Alert variant="warning" role="alert"><AlertTitle>Каталог учасників недоступний</AlertTitle><AlertDescription>Увійдіть у DSS Universe або повторіть запит пізніше.</AlertDescription></Alert></DesignScope>
       </DssApplicationShell>
     );
   }

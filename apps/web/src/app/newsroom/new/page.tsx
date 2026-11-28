@@ -1,5 +1,6 @@
 import { DssApplicationShell } from "@/components/shell/session-application-shell";
-import { ErrorState } from "@/components/states/async-states";
+import { DesignScope } from "@/components/ui/design-scope";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/feedback";
 import { NewsEditorWorkspace } from "@/features/newsroom/news-editor-workspace";
 import { loadSessionViewer } from "@/features/auth/session-data";
 
@@ -12,10 +13,12 @@ export default async function NewNewsPage() {
       {authenticated ? (
         <NewsEditorWorkspace />
       ) : (
-        <ErrorState
-          title="Потрібна авторизація"
-          description="Увійдіть, щоб створити новину."
-        />
+        <DesignScope className="mx-auto max-w-6xl">
+          <Alert variant="warning" role="alert">
+            <AlertTitle>Потрібна авторизація</AlertTitle>
+            <AlertDescription>Увійдіть, щоб створити новину.</AlertDescription>
+          </Alert>
+        </DesignScope>
       )}
     </DssApplicationShell>
   );

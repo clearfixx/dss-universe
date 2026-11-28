@@ -6,6 +6,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import { DesignScope } from "@/components/ui/design-scope";
+import { NativeSelect } from "@/components/ui/choice-fields";
+import { Alert } from "@/components/ui/feedback";
+import { editorialStatus } from "./editorial-status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -148,22 +152,23 @@ export function NewsEditorWorkspace({
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
+      <DesignScope className="bg-transparent">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <Link
             href="/newsroom"
-            className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-cyan-300"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-link"
           >
             <ArrowLeft className="size-4" /> Newsroom
           </Link>
-          <h1 className="mt-3 text-3xl font-semibold">
+          <h1 className="mt-3 font-heading text-3xl font-semibold">
             {article ? "Редагування новини" : "Нова новина"}
           </h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {article ? (
-            <Badge variant="outline">
-              {status} · v{currentVersion}
+            <Badge variant={editorialStatus(status).variant}>
+              {editorialStatus(status).label} · v{currentVersion}
             </Badge>
           ) : (
             <Badge>Нова чернетка</Badge>
@@ -174,10 +179,12 @@ export function NewsEditorWorkspace({
           </Button>
         </div>
       </header>
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_21rem]">
-        <section aria-label="Редагування матеріалу" className="space-y-5 rounded-2xl border border-white/10 bg-slate-950/60 p-5 sm:p-7">
+      </DesignScope>
+      <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_21rem]">
+        <section aria-label="Редагування матеріалу" className="min-w-0 space-y-4 rounded-card border border-border bg-card p-4 sm:p-6">
+          <DesignScope className="space-y-4 bg-transparent">
           <div className="grid gap-4 md:grid-cols-2">
-            <label className="space-y-2 text-sm">
+            <label className="block min-w-0 space-y-2 text-sm font-medium">
               Заголовок
               <Input
                 value={title}
@@ -185,7 +192,7 @@ export function NewsEditorWorkspace({
                 disabled={!editable}
               />
             </label>
-            <label className="space-y-2 text-sm">
+            <label className="block min-w-0 space-y-2 text-sm font-medium">
               Slug
               <Input
                 value={slug}
@@ -194,7 +201,7 @@ export function NewsEditorWorkspace({
               />
             </label>
           </div>
-          <label className="block space-y-2 text-sm">
+          <label className="block min-w-0 space-y-2 text-sm font-medium">
             Короткий текст
             <Textarea
               value={shortText}
@@ -203,6 +210,7 @@ export function NewsEditorWorkspace({
               rows={4}
             />
           </label>
+          </DesignScope>
           <DssEditor
             profile="NEWS"
             permissions={["MEDIA_UPLOAD"]}
@@ -212,13 +220,14 @@ export function NewsEditorWorkspace({
             ariaLabel="Редактор повної новини"
           />
         </section>
-        <aside className="space-y-5">
-          <section className="space-y-4 rounded-2xl border border-white/10 bg-slate-950/60 p-5">
-            <h2 className="font-semibold">Параметри</h2>
-            <label className="block space-y-2 text-sm">
+        <aside className="min-w-0">
+          <DesignScope className="space-y-4 bg-transparent">
+          <section className="space-y-4 rounded-card border border-border bg-card p-5">
+            <h2 className="font-heading text-xl font-semibold">Параметри</h2>
+            <label className="block min-w-0 space-y-2 text-sm font-medium">
               Тип
-              <select
-                className="h-9 w-full rounded-md border border-white/10 bg-slate-950 px-3"
+              <NativeSelect
+                className="h-9 w-full"
                 value={postType}
                 onChange={(e) => setPostType(e.target.value as NewsPostType)}
                 disabled={!editable}
@@ -228,12 +237,12 @@ export function NewsEditorWorkspace({
                     <option key={value}>{value}</option>
                   ),
                 )}
-              </select>
+              </NativeSelect>
             </label>
-            <label className="block space-y-2 text-sm">
+            <label className="block min-w-0 space-y-2 text-sm font-medium">
               Видимість
-              <select
-                className="h-9 w-full rounded-md border border-white/10 bg-slate-950 px-3"
+              <NativeSelect
+                className="h-9 w-full"
                 value={visibility}
                 onChange={(e) =>
                   setVisibility(e.target.value as NewsVisibility)
@@ -242,9 +251,9 @@ export function NewsEditorWorkspace({
               >
                 <option>PUBLIC</option>
                 <option>MEMBERS</option>
-              </select>
+              </NativeSelect>
             </label>
-            <label className="block space-y-2 text-sm">
+            <label className="block min-w-0 space-y-2 text-sm font-medium">
               Мова
               <Input
                 value={language}
@@ -252,7 +261,7 @@ export function NewsEditorWorkspace({
                 disabled={!editable}
               />
             </label>
-            <label className="block space-y-2 text-sm">
+            <label className="block min-w-0 space-y-2 text-sm font-medium">
               Cover Media ID
               <Input
                 value={coverMediaId}
@@ -263,15 +272,17 @@ export function NewsEditorWorkspace({
             </label>
           </section>
           {article ? (
-            <section className="space-y-3 rounded-2xl border border-cyan-400/15 bg-cyan-400/5 p-5">
-              <h2 className="font-semibold">Редакційний workflow</h2>
+            <section className="space-y-3 rounded-card border border-border bg-card p-5">
+              <h2 className="font-heading text-xl font-semibold">Редакційний workflow</h2>
               <Textarea
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
+                aria-label="Причина або примітка"
                 placeholder="Причина або примітка"
               />
               <Input
                 type="datetime-local"
+                aria-label="Дата та час публікації"
                 value={scheduledFor}
                 onChange={(e) => setScheduledFor(e.target.value)}
               />
@@ -337,10 +348,11 @@ export function NewsEditorWorkspace({
             </section>
           ) : null}
           {article && status === "PUBLISHED" ? (
-            <section className="space-y-3 rounded-2xl border border-cyan-400/15 bg-cyan-400/5 p-5">
-              <h2 className="font-semibold">Закріплення</h2>
-              <select
-                className="h-9 w-full rounded-md border border-white/10 bg-slate-950 px-3"
+            <section className="space-y-3 rounded-card border border-border bg-card p-5">
+              <h2 className="font-heading text-xl font-semibold">Закріплення</h2>
+              <NativeSelect
+                className="h-9 w-full"
+                aria-label="Область закріплення"
                 value={pinScope}
                 onChange={(event) =>
                   setPinScope(event.target.value as NewsPinScope)
@@ -348,15 +360,16 @@ export function NewsEditorWorkspace({
               >
                 <option value="GLOBAL">У всіх новинах</option>
                 <option value="CATEGORY">У категорії</option>
-              </select>
+              </NativeSelect>
               {pinScope === "CATEGORY" ? (
                 <Input
                   value={pinCategoryId}
                   onChange={(event) => setPinCategoryId(event.target.value)}
+                  aria-label="UUID категорії"
                   placeholder="UUID категорії"
                 />
               ) : null}
-              <label className="block space-y-2 text-sm text-slate-300">
+              <label className="block space-y-2 text-sm text-foreground">
                 Закріпити до (необовʼязково)
                 <Input
                   type="datetime-local"
@@ -380,13 +393,9 @@ export function NewsEditorWorkspace({
             </section>
           ) : null}
           {message ? (
-            <p
-              role="status"
-              className="rounded-xl border border-amber-400/20 bg-amber-400/10 p-3 text-sm text-amber-200"
-            >
-              {message}
-            </p>
+            <Alert role="status">{message}</Alert>
           ) : null}
+          </DesignScope>
         </aside>
       </div>
     </div>

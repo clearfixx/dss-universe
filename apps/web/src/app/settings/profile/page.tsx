@@ -16,7 +16,8 @@ import Link from "next/link";
 
 import { DssApplicationShell } from "@/components/shell/session-application-shell";
 import { loadAdminShellVariant } from "@/features/appearance/appearance-data";
-import { ErrorState } from "@/components/states/async-states";
+import { DesignScope } from "@/components/ui/design-scope";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/feedback";
 import { loadProfileSettings } from "@/features/profile/profile-data";
 import { loadSessionViewer } from "@/features/auth/session-data";
 import { ProfileSettingsView } from "@/features/settings/profile-settings-view";
@@ -35,10 +36,7 @@ export default async function ProfileSettingsPage() {
   if (!settings) {
     return (
       <DssApplicationShell>
-        <ErrorState
-          title="Налаштування недоступні"
-          description="Увійдіть у DSS Universe, щоб керувати профілем."
-        />
+        <DesignScope className="mx-auto max-w-6xl"><Alert variant="warning" role="alert"><AlertTitle>Налаштування недоступні</AlertTitle><AlertDescription>Увійдіть у DSS Universe, щоб керувати профілем.</AlertDescription></Alert></DesignScope>
       </DssApplicationShell>
     );
   }
@@ -47,11 +45,11 @@ export default async function ProfileSettingsPage() {
     <DssApplicationShell>
       <ProfileSettingsView settings={settings} />
       {canManageAppearance && (
-        <div className="mt-8 rounded-xl border border-[color:var(--shell-divider)] bg-card p-5">
+        <DesignScope className="mx-auto mt-6 max-w-6xl"><div className="rounded-card border border-border bg-card p-5">
           <h2 className="font-semibold">Адміністрування зовнішнього вигляду</h2>
           <p className="mt-1 text-sm text-muted-foreground">Глобальні варіанти навігації для всієї платформи.</p>
-          <Link href="/settings/platform-appearance" className="mt-3 inline-block text-sm text-violet-300 underline-offset-4 hover:underline">Відкрити налаштування Shell</Link>
-        </div>
+          <Link href="/settings/platform-appearance" className="mt-3 inline-block text-sm text-link underline-offset-4 hover:underline">Відкрити налаштування Shell</Link>
+        </div></DesignScope>
       )}
     </DssApplicationShell>
   );

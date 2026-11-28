@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { DesignScope } from "@/components/ui/design-scope";
 import { DssApplicationShell } from "@/components/shell/session-application-shell";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -102,10 +103,11 @@ export default async function FullNewsRoute({ params }: Props) {
           __html: JSON.stringify(structuredData).replaceAll("<", "\\u003c"),
         }}
       />
-      <article className="mx-auto max-w-6xl space-y-8">
+      <DesignScope className="mx-auto max-w-6xl">
+      <article className="space-y-8">
         <Link
           href="/news"
-          className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-cyan-300"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-link"
         >
           <ArrowLeft className="size-4" />
           Усі новини
@@ -117,19 +119,19 @@ export default async function FullNewsRoute({ params }: Props) {
               <Badge variant="outline">{article.primaryCategory.name}</Badge>
             ) : null}
             {article.featured ? (
-              <Badge className="bg-amber-400 text-slate-950">Featured</Badge>
+              <Badge variant="warning">Featured</Badge>
             ) : null}
           </div>
-          <h1 className="max-w-5xl text-4xl font-semibold leading-tight tracking-tight sm:text-6xl">
+          <h1 className="max-w-5xl font-heading text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
             {article.title}
           </h1>
-          <p className="max-w-3xl text-xl leading-8 text-slate-400">
+          <p className="max-w-3xl text-lg leading-7 text-muted-foreground">
             {article.shortText}
           </p>
-          <div className="flex flex-wrap items-center gap-4 border-y border-white/10 py-4 text-sm text-slate-400">
+          <div className="flex flex-wrap items-center gap-4 border-y border-border py-4 text-sm text-muted-foreground">
             <Link
               href={`/profile/${article.author.username}`}
-              className="font-medium text-white hover:text-cyan-300"
+              className="font-medium text-foreground hover:text-link"
             >
               {article.author.displayName ?? article.author.username}
             </Link>
@@ -151,15 +153,12 @@ export default async function FullNewsRoute({ params }: Props) {
             initial={article.engagement}
           />
         </header>
-        <div className="relative aspect-[21/9] overflow-hidden rounded-3xl border border-cyan-400/15 bg-[radial-gradient(circle_at_50%_45%,rgba(34,211,238,.35),transparent_15%),radial-gradient(circle_at_35%_65%,rgba(124,58,237,.32),transparent_30%),linear-gradient(145deg,#09152c,#050713)]">
-          <div className="absolute inset-0 opacity-50 [background-image:radial-gradient(circle,rgba(255,255,255,.9)_0_1px,transparent_1px)] [background-size:37px_37px]" />
-        </div>
-        <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_18rem]">
-          <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-6 sm:p-10">
+        <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
+          <div className="rounded-card border border-border bg-card p-4 sm:p-8">
             <NewsDocument documentJson={article.documentJson} />
           </div>
           <aside className="space-y-6">
-            <section className="rounded-2xl border border-white/10 bg-slate-950/60 p-5">
+            <section className="rounded-card border border-border bg-card p-5">
               <h2 className="mb-3 font-semibold">Теги</h2>
               <div className="flex flex-wrap gap-2">
                 {article.tags.map((tag) => (
@@ -170,19 +169,19 @@ export default async function FullNewsRoute({ params }: Props) {
               </div>
             </section>
             {article.related.length ? (
-              <section className="rounded-2xl border border-white/10 bg-slate-950/60 p-5">
+              <section className="rounded-card border border-border bg-card p-5">
                 <h2 className="mb-4 font-semibold">Пов’язані сигнали</h2>
                 <div className="space-y-4">
                   {article.related.map((item) => (
                     <Link
                       key={item.id}
                       href={`/news/${item.language}/${item.slug}`}
-                      className="block border-b border-white/8 pb-4 last:border-0 last:pb-0"
+                      className="block border-b border-border pb-4 last:border-0 last:pb-0"
                     >
-                      <span className="text-xs uppercase tracking-wide text-cyan-400">
+                      <span className="text-xs uppercase tracking-wide text-brand-cyan">
                         {item.anchorText}
                       </span>
-                      <p className="mt-1 font-medium leading-5 hover:text-cyan-200">
+                      <p className="mt-1 font-medium leading-5 hover:text-link">
                         {item.title}
                       </p>
                     </Link>
@@ -217,14 +216,14 @@ export default async function FullNewsRoute({ params }: Props) {
         ) : null}
         <nav
           aria-label="Сусідні новини"
-          className="grid gap-4 border-t border-white/10 pt-8 md:grid-cols-2"
+          className="grid gap-4 border-t border-border pt-8 md:grid-cols-2"
         >
           {navigation.previous ? (
             <Link
               href={`/news/${navigation.previous.language}/${navigation.previous.slug}`}
-              className="rounded-2xl border border-white/10 p-5 transition hover:border-cyan-400/40"
+              className="rounded-card border border-border p-5 transition hover:border-ring"
             >
-              <span className="flex items-center gap-2 text-xs text-slate-500">
+              <span className="flex items-center gap-2 text-xs text-muted-foreground">
                 <ArrowLeft className="size-3" />
                 Попередня новина
               </span>
@@ -236,9 +235,9 @@ export default async function FullNewsRoute({ params }: Props) {
           {navigation.next ? (
             <Link
               href={`/news/${navigation.next.language}/${navigation.next.slug}`}
-              className="rounded-2xl border border-white/10 p-5 text-right transition hover:border-cyan-400/40"
+              className="rounded-card border border-border p-5 text-right transition hover:border-ring"
             >
-              <span className="flex items-center justify-end gap-2 text-xs text-slate-500">
+              <span className="flex items-center justify-end gap-2 text-xs text-muted-foreground">
                 Наступна новина
                 <ArrowRight className="size-3" />
               </span>
@@ -247,6 +246,7 @@ export default async function FullNewsRoute({ params }: Props) {
           ) : null}
         </nav>
       </article>
+      </DesignScope>
     </DssApplicationShell>
   );
 }

@@ -12,7 +12,7 @@
  * ===============================================================
  */
 
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import type { ProfileSettingsQuery } from "@/gql/graphql";
@@ -102,6 +102,17 @@ describe("ProfileSettingsView", () => {
       screen.getByRole("heading", { name: "Налаштування профілю" }),
     ).toBeInTheDocument();
     expect(screen.getByText("75%")).toBeInTheDocument();
+    expect(screen.getByRole("progressbar", { name: "Заповнення профілю" })).toHaveAttribute("aria-valuenow", "75");
+    expect(screen.getByRole("combobox", { name: "Видимість профілю" })).toHaveAttribute("data-slot", "native-select");
+    const location = screen.getByRole("switch", { name: "Показувати локацію" });
+    expect(location).toBeChecked();
+    fireEvent.click(location);
+    expect(location).not.toBeChecked();
+    const form = location.closest("form");
+    expect(form).not.toBeNull();
+    expect(new FormData(form!).has("showLocation")).toBe(false);
+    expect(new FormData(form!).get("profileVisibility")).toBe("PUBLIC");
+    expect(screen.getAllByRole("button", { name: "Прибрати" })[0]).toHaveAttribute("formnovalidate");
     expect(screen.getByDisplayValue("Astro DSS")).toBeInTheDocument();
     expect(screen.getByText("DSS Test Browser")).toBeInTheDocument();
     expect(screen.getByText("Поточна")).toBeInTheDocument();

@@ -15,7 +15,8 @@
 import type { Metadata } from "next";
 
 import { DssApplicationShell } from "@/components/shell/session-application-shell";
-import { ErrorState } from "@/components/states/async-states";
+import { DesignScope } from "@/components/ui/design-scope";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/feedback";
 import { loadPublicProfile } from "@/features/profile/profile-data";
 import { ProfileView } from "@/features/profile/profile-view";
 
@@ -40,10 +41,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   if (!data) {
     return (
       <DssApplicationShell>
-        <ErrorState
-          title="Профіль недоступний"
-          description="Перевірте ім’я користувача або налаштування приватності профілю."
-        />
+        <DesignScope className="mx-auto max-w-6xl"><Alert variant="warning" role="alert"><AlertTitle>Профіль недоступний</AlertTitle><AlertDescription>Перевірте ім’я користувача або налаштування приватності профілю.</AlertDescription></Alert></DesignScope>
       </DssApplicationShell>
     );
   }

@@ -121,6 +121,20 @@ jobs:
           path: apps/api/test-results/api-e2e.json
           if-no-files-found: ignore
 
+  api-watch-windows:
+    name: API watch restart (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: node --test scripts/api-dev-watch.test.mjs
+
   web-e2e:
     name: Web smoke test
     runs-on: ubuntu-latest

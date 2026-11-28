@@ -4,6 +4,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { NativeSelect } from "@/components/ui/choice-fields";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -36,7 +37,8 @@ export function NewsPagination({
     [activePages, totalPages],
   );
   const currentPage = normalizedActive.at(-1) ?? 1;
-  const [manualPage, setManualPage] = useState(String(currentPage));
+  const [manual, setManual] = useState({ page: currentPage, value: String(currentPage) });
+  const manualPage = manual.page === currentPage ? manual.value : String(currentPage);
   const showPages = mode === "PAGES" || mode === "BOTH";
   const showLoadMore = mode === "LOAD_MORE" || mode === "BOTH";
   const pageItems = useMemo(
@@ -48,14 +50,14 @@ export function NewsPagination({
 
   const go = (page: number) => {
     const bounded = Math.min(Math.max(Math.trunc(page), 1), totalPages);
-    setManualPage(String(bounded));
+    setManual({ page: currentPage, value: String(bounded) });
     onPageChange(bounded);
   };
 
   const submitManual = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const parsed = Number(manualPage);
-    if (Number.isFinite(parsed)) go(parsed);
+    if (manualPage.trim() && Number.isInteger(parsed)) go(parsed);
   };
 
   return (
@@ -101,7 +103,7 @@ export function NewsPagination({
                   data-active={normalizedActive.includes(item) || undefined}
                   className={cn(
                     normalizedActive.includes(item) &&
-                      "border-primary bg-primary/15 text-primary",
+                      "border-link bg-secondary text-link",
                   )}
                   onClick={() => go(item)}
                 >
@@ -122,11 +124,11 @@ export function NewsPagination({
 
           <label className="ml-auto flex items-center gap-2 text-sm">
             Перейти до
-            <select
+            <NativeSelect
               aria-label="Вибрати сторінку"
               value={currentPage}
               onChange={(event) => go(Number(event.target.value))}
-              className="h-8 rounded-lg border border-input bg-background px-2"
+              className="bg-background px-2"
             >
               {Array.from({ length: totalPages }, (_, index) => index + 1).map(
                 (page) => (
@@ -135,7 +137,7 @@ export function NewsPagination({
                   </option>
                 ),
               )}
-            </select>
+            </NativeSelect>
           </label>
 
           <form onSubmit={submitManual} className="flex items-center gap-1">
@@ -146,7 +148,7 @@ export function NewsPagination({
               value={manualPage}
               aria-label="Номер сторінки"
               className="w-20"
-              onChange={(event) => setManualPage(event.target.value)}
+              onChange={(event) => setManual({ page: currentPage, value: event.target.value })}
             />
             <Button type="submit" variant="secondary">
               Перейти

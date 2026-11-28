@@ -84,6 +84,7 @@ test("mobile navigation exposes expanded state and closes with Escape", async ({
   await page.keyboard.press("Escape");
   await expect(drawer).not.toBeVisible();
   await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  await expect(trigger).toBeFocused();
 
   await trigger.click();
   await expect(trigger).toHaveAttribute("aria-expanded", "true");
@@ -98,17 +99,17 @@ test("desktop Shell keeps its module launcher and contextual sidebar usable", as
 
     const header = page.locator("header").first();
     const launcher = header.getByRole("button", { name: "Модулі" });
-    // Mockup layout: a fixed left sidebar holds the logo and the module list;
-    // the active module expands only when it has more than one section.
+    // Desktop Sidebar is contextual; global modules belong to the navbar launcher.
     const aside = page.locator("aside").first();
-    const sidebar = aside.getByRole("navigation", { name: "Модулі DSS Universe" });
+    const sidebar = aside.getByRole("navigation", { name: "Розділи: Новини" });
 
     await expect(launcher).toBeVisible();
     await expect(launcher).toHaveAttribute("aria-expanded", "false");
-    await expect(sidebar.getByRole("link", { name: "Новини" })).toHaveAttribute(
+    await expect(sidebar.getByRole("link", { name: "Огляд" })).toHaveAttribute(
       "aria-current",
       "page",
     );
+    await expect(aside.getByRole("navigation", { name: "Модулі DSS Universe" })).toHaveCount(0);
     await expect(aside.getByRole("link", { name: "DSS Universe — головна" })).toBeVisible();
 
     const { scrollWidth, clientWidth } = await header.evaluate((element) => ({
@@ -118,12 +119,32 @@ test("desktop Shell keeps its module launcher and contextual sidebar usable", as
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
 
     await launcher.click();
-    const drawer = page.getByRole("dialog", { name: "Навігація DSS Universe" });
+    const drawer = page.getByRole("menu", { name: "Модулі DSS Universe" });
     await expect(drawer).toBeVisible();
-    // Role queries exclude inert background content while the dialog is open.
-    await expect(header.locator('button[aria-haspopup="dialog"]').filter({ hasText: "Модулі" })).toHaveAttribute("aria-expanded", "true");
+    await expect(header.locator('button[aria-haspopup="menu"]').filter({ hasText: "Модулі" })).toHaveAttribute("aria-expanded", "true");
     await page.keyboard.press("Escape");
     await expect(drawer).not.toBeVisible();
     await expect(launcher).toHaveAttribute("aria-expanded", "false");
+    await expect(launcher).toBeFocused();
   }
+});
+
+test("mobile search remains usable at 320px and supports keyboard dismissal", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 760 });
+  await page.goto("/news");
+  const trigger = page.getByRole("button", { name: "Відкрити пошук" });
+  await trigger.click();
+  const dialog = page.getByRole("dialog", { name: "Пошук у спільноті" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("searchbox")).toBeFocused();
+  await dialog.getByRole("searchbox").fill("Next.js");
+  await page.keyboard.press("Escape");
+  await expect(dialog).not.toBeVisible();
+  await expect(trigger).toBeFocused();
+  await page.keyboard.press("Control+k");
+  await expect(dialog.getByRole("searchbox")).toBeFocused();
+  await dialog.getByRole("searchbox").fill("Next.js");
+  await dialog.getByRole("button", { name: "Знайти" }).click();
+  await expect(page).toHaveURL(/community\/search\?q=Next.js/);
+  await expect(dialog).not.toBeVisible();
 });

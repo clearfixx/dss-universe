@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
 
+import { DesignScope } from "@/components/ui/design-scope";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/choice-fields";
+import { Alert } from "@/components/ui/feedback";
 import { DssApplicationShell } from "@/components/shell/session-application-shell";
 import { NewsCatalog } from "@/features/news/news-catalog";
 import { loadNewsCatalog } from "@/features/news/news-data";
@@ -50,17 +55,16 @@ export default async function NewsPage({ searchParams }: Props) {
 
   return (
     <DssApplicationShell>
-      <div className="mx-auto max-w-7xl space-y-8">
-        <header className="relative overflow-hidden rounded-3xl border border-cyan-400/15 bg-slate-950/70 px-6 py-10 sm:px-10">
-          <div className="absolute inset-0 opacity-50 [background-image:radial-gradient(circle_at_75%_30%,rgba(34,211,238,.28),transparent_22%),radial-gradient(circle_at_90%_80%,rgba(124,58,237,.25),transparent_30%)]" />
-          <div className="relative max-w-3xl space-y-4">
-            <p className="text-sm font-semibold uppercase tracking-[.25em] text-cyan-300">
+      <DesignScope className="mx-auto max-w-7xl space-y-6">
+        <header className="rounded-card border border-border bg-card p-5 sm:p-8">
+          <div className="max-w-3xl space-y-3">
+            <p className="text-xs font-medium text-brand-cyan">
               DSS News Signal
             </p>
-            <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+            <h1 className="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
               Новини всесвіту розробників
             </h1>
-            <p className="max-w-2xl text-lg leading-8 text-slate-400">
+            <p className="max-w-2xl text-base leading-7 sm:text-lg text-muted-foreground">
               Релізи, технології, дослідження й важливі події станції — у
               короткому та повному форматах.
             </p>
@@ -68,25 +72,28 @@ export default async function NewsPage({ searchParams }: Props) {
         </header>
 
         <form
-          className="grid gap-3 rounded-2xl border border-white/10 bg-slate-950/60 p-4 md:grid-cols-[1fr_12rem_10rem_auto]"
+          className="grid gap-3 rounded-card border border-border bg-card p-4 md:grid-cols-[1fr_12rem_10rem_auto]"
           action="/news"
         >
-          <input
+          <Input
             name="search"
+            aria-label="Пошук у новинах"
             defaultValue={params.search}
             placeholder="Пошук у новинах…"
-            className="h-10 rounded-xl border border-white/10 bg-white/[.04] px-3 outline-none focus:border-cyan-400"
+            className="h-10"
           />
-          <input
+          <Input
             name="category"
+            aria-label="Категорія"
             defaultValue={params.category}
             placeholder="Категорія"
-            className="h-10 rounded-xl border border-white/10 bg-white/[.04] px-3 outline-none focus:border-cyan-400"
+            className="h-10"
           />
-          <select
+          <NativeSelect
             name="type"
+            aria-label="Формат новини"
             defaultValue={postType ?? ""}
-            className="h-10 rounded-xl border border-white/10 bg-[#080d1c] px-3"
+            className="h-10"
           >
             <option value="">Усі формати</option>
             {postTypes.map((type) => (
@@ -94,22 +101,22 @@ export default async function NewsPage({ searchParams }: Props) {
                 {type}
               </option>
             ))}
-          </select>
-          <button className="h-10 rounded-xl bg-cyan-400 px-5 font-semibold text-slate-950 transition hover:bg-cyan-300">
+          </NativeSelect>
+          <Button type="submit" className="h-10 px-5">
             Знайти
-          </button>
+          </Button>
         </form>
 
         {data ? (
           <>
             <div className="flex items-end justify-between gap-4">
               <div>
-                <p className="text-sm text-slate-500">Отримано сигналів</p>
+                <p className="text-sm text-muted-foreground">Отримано сигналів</p>
                 <p className="text-2xl font-semibold">
                   {data.news.total + data.news.pinnedItems.length}
                 </p>
               </div>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 Сторінка {data.news.page} з {Math.max(data.news.totalPages, 1)}
               </p>
             </div>
@@ -124,14 +131,9 @@ export default async function NewsPage({ searchParams }: Props) {
             />
           </>
         ) : (
-          <div
-            role="alert"
-            className="rounded-2xl border border-rose-400/20 bg-rose-400/5 p-8 text-center text-rose-200"
-          >
-            Новинний канал тимчасово недоступний.
-          </div>
+          <Alert role="alert" variant="warning">Новинний канал тимчасово недоступний.</Alert>
         )}
-      </div>
+      </DesignScope>
     </DssApplicationShell>
   );
 }

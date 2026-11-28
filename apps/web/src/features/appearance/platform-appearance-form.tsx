@@ -3,6 +3,9 @@
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { DesignScope } from "@/components/ui/design-scope";
+import { Radio } from "@/components/ui/choice-fields";
+import { Alert, AlertDescription } from "@/components/ui/feedback";
 import { Button } from "@/components/ui/button";
 import {
   SHELL_VARIANTS,
@@ -46,9 +49,9 @@ export function PlatformAppearanceForm({ activeVariant }: { activeVariant: Shell
   }, [state.status, state.savedVariant, router]);
 
   return (
-    <section className="max-w-4xl space-y-6">
+    <DesignScope className="mx-auto max-w-4xl space-y-6">
       <header className="space-y-2">
-        <h1 className="text-2xl font-semibold text-foreground">Application Shell</h1>
+        <h1 className="font-heading text-3xl font-semibold text-foreground">Application Shell</h1>
         <p className="text-sm text-muted-foreground">
           Змініть глобальне розміщення навігації. Попередній перегляд не впливає на відвідувачів, поки ви не збережете зміни.
         </p>
@@ -59,18 +62,17 @@ export function PlatformAppearanceForm({ activeVariant }: { activeVariant: Shell
           {SHELL_VARIANTS.map((variant) => (
             <label
               key={variant}
-              className={`cursor-pointer rounded-xl border p-4 transition-colors ${selected === variant ? "border-violet-500/50 bg-violet-500/10" : "border-[color:var(--shell-divider)] bg-card hover:bg-muted/50"}`}
+              className={`cursor-pointer rounded-card border p-4 transition-colors focus-within:outline-2 focus-within:outline-ring ${selected === variant ? "border-primary bg-secondary" : "border-border bg-card hover:bg-muted/50"}`}
             >
-              <input
-                className="sr-only"
-                type="radio"
+              <Radio
+                className="mr-2 align-middle"
                 name="variant"
                 value={variant}
                 checked={selected === variant}
                 onChange={() => setSelected(variant)}
                 required
               />
-              <span className="block font-medium">{variants[variant].name}</span>
+              <span className="font-medium">{variants[variant].name}</span>
               <span className="mt-2 block text-xs leading-5 text-muted-foreground">
                 {variants[variant].description}
               </span>
@@ -78,20 +80,20 @@ export function PlatformAppearanceForm({ activeVariant }: { activeVariant: Shell
           ))}
         </fieldset>
 
-        <div className="rounded-xl border border-[color:var(--shell-divider)] bg-card p-4">
+        <div className="rounded-card border border-border bg-card p-4">
           <p className="mb-3 text-sm font-medium">Попередній перегляд: {variants[selected].name}</p>
-          <div className="flex items-center gap-2 overflow-hidden rounded-lg bg-[color:var(--shell-surface)] p-3">
+          <div className="flex flex-wrap items-center gap-2 rounded-lg bg-background p-3">
             <span className="shrink-0 text-xs font-semibold">DSS</span>
             {selected === "MODULE_LAUNCHER" ? (
-              <span className="rounded-md bg-violet-500/15 px-3 py-2 text-xs">Модулі ▾</span>
+              <span className="rounded-md bg-secondary px-3 py-2 text-xs">Модулі ▾</span>
             ) : (
               <>
-                <span className="rounded-md bg-violet-500/15 px-2 py-2 text-xs">Mission Control</span>
+                <span className="rounded-md bg-secondary px-2 py-2 text-xs">Mission Control</span>
                 <span className="hidden rounded-md px-2 py-2 text-xs sm:inline">Новини</span>
                 {selected === "HORIZONTAL_NAVIGATION" && (
                   <span className="hidden rounded-md px-2 py-2 text-xs md:inline">Учасники</span>
                 )}
-                <span className="ml-auto rounded-md border border-[color:var(--shell-divider)] px-2 py-2 text-xs">
+                <span className="ml-auto rounded-md border border-border px-2 py-2 text-xs">
                   Усі модулі ▾
                 </span>
               </>
@@ -112,11 +114,9 @@ export function PlatformAppearanceForm({ activeVariant }: { activeVariant: Shell
           </span>
         </div>
         {state.message && (
-          <p role="status" aria-live="polite" className={state.status === "error" ? "text-sm text-destructive" : "text-sm text-emerald-400"}>
-            {state.message}
-          </p>
+          <Alert variant={state.status === "error" ? "destructive" : "success"} role={state.status === "error" ? "alert" : "status"}><AlertDescription>{state.message}</AlertDescription></Alert>
         )}
       </form>
-    </section>
+    </DesignScope>
   );
 }

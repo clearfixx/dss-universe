@@ -18,14 +18,13 @@ vi.mock("next/link", () => ({
 import { Breadcrumbs, GlobalNavigation } from "./dss-application-shell";
 
 describe("global navigation accessibility", () => {
-  it("names icon-only links at intermediate desktop widths", () => {
+  it("names horizontal navigation links", () => {
     const html = renderToStaticMarkup(
       createElement(GlobalNavigation, {
         pathname: "/news/en/article",
         variant: "HORIZONTAL_NAVIGATION",
         hasSession: false,
         canAccessAdminDeck: false,
-        onOpenLauncher: () => {},
       }),
     );
 
@@ -36,20 +35,18 @@ describe("global navigation accessibility", () => {
     expect(html).not.toContain('href="/command-deck"');
   });
 
-  it("announces an open desktop module launcher", () => {
+  it("announces the desktop module menu", () => {
     const html = renderToStaticMarkup(
       createElement(GlobalNavigation, {
         pathname: "/news",
         variant: "MODULE_LAUNCHER",
         hasSession: false,
         canAccessAdminDeck: false,
-        onOpenLauncher: () => {},
-        launcherOpen: true,
       }),
     );
 
-    expect(html).toContain('aria-haspopup="dialog"');
-    expect(html).toContain('aria-expanded="true"');
+    expect(html).toContain('aria-haspopup="menu"');
+    expect(html).toContain('aria-expanded="false"');
   });
 
   it("names links for the hybrid featured navigation", () => {
@@ -59,11 +56,10 @@ describe("global navigation accessibility", () => {
         variant: "HYBRID",
         hasSession: true,
         canAccessAdminDeck: false,
-        onOpenLauncher: () => {},
       }),
     );
 
-    expect(html).toContain('aria-haspopup="dialog"');
+    expect(html).toContain('aria-haspopup="menu"');
     expect(html).toContain('aria-expanded="false"');
     expect(html).toContain('aria-label="Учасники"');
     expect(html).toContain('aria-current="page"');
@@ -140,4 +136,68 @@ describe("breadcrumb rendering", () => {
     expect(html).toContain('aria-label="DSS Universe"');
   });
 
+  it("accepts a non-link final crumb when verified against the active pathname", () => {
+    const html = renderToStaticMarkup(createElement(Breadcrumbs, {
+      pathname: "/community/moderation/trash",
+      pageTitle: { pathname: "/community/moderation/trash", title: "Кошик" },
+      trail: [
+        { href: "/community", label: "Спільнота" },
+        { label: "Модерація" },
+        { label: "Кошик" },
+      ],
+    }));
+    expect(html).toContain("Модерація");
+    expect(html).toContain("Кошик");
+    expect(html).toContain('aria-current="page"');
+    expect(html).not.toContain('href="/community/moderation/trash"');
+  });
+
+  it("rejects a non-link final crumb with stale route metadata", () => {
+    const html = renderToStaticMarkup(createElement(Breadcrumbs, {
+      pathname: "/community/moderation/sanctions",
+      pageTitle: { pathname: "/community/moderation/trash", title: "Кошик" },
+      trail: [{ label: "Кошик" }],
+    }));
+    expect(html).not.toContain("Кошик");
+    expect(html).toContain("Поточна сторінка");
+  });
+
+  it("rejects a route-owned trail from a different pathname", () => {
+    const html = renderToStaticMarkup(createElement(Breadcrumbs, {
+      pathname: "/community/forum/topics/t2",
+      trail: [{ href: "/community/forum/topics/t1", label: "Stale topic" }],
+    }));
+    expect(html).not.toContain("Stale topic");
+    expect(html).toContain("Поточна сторінка");
+  });
+});
+
+describe("navigation composition contract", () => {
+  for (const variant of ["MODULE_LAUNCHER", "HORIZONTAL_NAVIGATION", "HYBRID"] as const) {
+    it(`preserves launcher access for ${variant}`, () => {
+      const html = renderToStaticMarkup(createElement(GlobalNavigation, {
+        pathname: "/news",
+        variant,
+        hasSession: true,
+        canAccessAdminDeck: false,
+      }));
+      expect(html).toContain('aria-haspopup="menu"');
+      expect(html).not.toContain('href="/command-deck"');
+      expect(html.includes('href="/news"')).toBe(variant !== "MODULE_LAUNCHER");
+      expect(html.includes('href="/media"')).toBe(variant === "HORIZONTAL_NAVIGATION");
+    });
+  }
+
+  it("keeps future module labels non-navigable", () => {
+    const html = renderToStaticMarkup(createElement(GlobalNavigation, {
+      pathname: "/news",
+      variant: "HORIZONTAL_NAVIGATION",
+      hasSession: true,
+      canAccessAdminDeck: true,
+    }));
+    expect(html).toContain("Академія");
+    expect(html).toContain("(скоро)");
+    expect(html).not.toContain('href="/academy"');
+    expect(html).toContain('href="/command-deck"');
+  });
 });

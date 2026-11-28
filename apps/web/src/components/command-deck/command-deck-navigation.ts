@@ -34,6 +34,7 @@ import {
   Link2,
   Mail,
   MessagesSquare,
+  Palette,
   Rocket,
   Search,
   Server,
@@ -124,6 +125,7 @@ export const COMMAND_DECK_GROUPS: readonly CommandDeckGroup[] = [
       { label: "System", icon: Server },
       { label: "Maintenance", icon: Wrench },
       { label: "Settings", icon: Settings },
+      { label: "UI Kit", icon: Palette, href: "/command-deck/design/ui-kit" },
     ],
   },
 ];

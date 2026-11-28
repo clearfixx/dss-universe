@@ -86,6 +86,10 @@ describe("MembersDirectory", () => {
     expect(screen.getByText("Лідери спільноти")).toBeInTheDocument();
     expect(screen.getByText("1 250 очок")).toBeInTheDocument();
     expect(screen.getByText("Ваша позиція:")).toBeInTheDocument();
+    expect(screen.getByRole("table", { name: "Усі учасники" })).toHaveAttribute("data-slot", "table");
+    expect(screen.getByRole("combobox", { name: "Сортування учасників" })).toHaveAttribute("data-slot", "native-select");
+    expect(screen.getByRole("button", { name: "Назад" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Далі" })).toBeDisabled();
   });
 });
 
