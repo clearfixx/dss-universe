@@ -24,6 +24,7 @@ import {
   ProfileWallDocument,
   PublicProfileDocument,
   UserActivityDocument,
+  ViewerForumStatsDocument,
   type MembersDirectoryInput,
   type LeaderboardPeriod,
 } from "@/gql/graphql";
@@ -106,6 +107,51 @@ export async function loadPublicProfile(username: string) {
         ? gamificationResult.value.data
         : undefined,
   };
+}
+
+/**
+ * Level and XP of the signed-in viewer for the personal menu. Returns null when
+ * the projection is unavailable, so the menu can show an empty state instead.
+ */
+export async function loadViewerMenuProgress(userId: string) {
+  try {
+    const result = await getClient().query({
+      query: ProfileGamificationDocument,
+      variables: { userId },
+      context: await authorizationContext(),
+      fetchPolicy: "no-cache",
+    });
+    const level = result.data?.levelProgress;
+    if (!level) return null;
+    return {
+      currentLevel: level.currentLevel,
+      pointsIntoLevel: level.pointsIntoLevel,
+      pointsNeeded: level.pointsNeeded,
+      progressPercent: level.progressPercent,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Public forum standing of the signed-in viewer for the personal menu. */
+export async function loadViewerForumStats() {
+  try {
+    const result = await getClient().query({
+      query: ViewerForumStatsDocument,
+      context: await authorizationContext(),
+      fetchPolicy: "no-cache",
+    });
+    const stats = result.data?.viewerForumStats;
+    if (!stats) return null;
+    return {
+      postCount: stats.postCount,
+      reputation: stats.reputation,
+      level: stats.level,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function loadProfileSettings() {

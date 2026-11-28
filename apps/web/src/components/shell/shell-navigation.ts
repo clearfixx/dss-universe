@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BellRing,
+  Compass,
   LayoutDashboard,
   MessagesSquare,
   Newspaper,
@@ -49,6 +50,13 @@ export type ModuleNavigation = ModuleNavigationItem & {
  * Future Academy and AI routes must be added when their actual pages ship.
  */
 export const MODULE_NAVIGATION: readonly ModuleNavigation[] = [
+  {
+    href: "/",
+    label: "Mission Control",
+    icon: Compass,
+    requiresSession: true,
+    children: [],
+  },
   {
     href: "/command-deck",
     label: "Адмінпанель",
@@ -232,6 +240,7 @@ export function visibleModules(
  * "скоро" placeholders until their pages ship. They never become routes.
  */
 export const COMING_SOON_MODULES: readonly string[] = [
+  "Research Lab",
   "Академія",
   "Завантаження",
   "База знань",

@@ -17,13 +17,14 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import { Inject } from '@nestjs/common';
+import { Inject, UseGuards } from '@nestjs/common';
 import {
   Context,
   Field,
   Int,
   ObjectType,
   Parent,
+  Query,
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
@@ -32,6 +33,7 @@ import {
   FORUM_MEMBER_STATS,
   type ForumMemberStatsReader,
 } from '../contracts/forum-member-stats.contract';
+import { AuthUser, JwtAuthGuard, type AuthenticatedUser } from '@api/core/auth';
 import { PrismaForumReadModels } from '../infrastructure/prisma-forum-read-models';
 import { ForumMemberModel } from './forum-read-models.resolver';
 
@@ -57,6 +59,25 @@ export class ForumMemberStatsResolver {
     private readonly standings: ForumMemberStatsReader,
     private readonly reads: PrismaForumReadModels,
   ) {}
+
+  @Query(() => ForumMemberStatsModel, {
+    description:
+      'Public standing of the signed-in viewer: forum posts, reputation and level.',
+  })
+  @UseGuards(JwtAuthGuard)
+  async viewerForumStats(
+    @AuthUser() actor: AuthenticatedUser,
+  ): Promise<ForumMemberStatsModel> {
+    const [counts, standings] = await Promise.all([
+      this.reads.memberPostCounts([actor.id]),
+      this.standings.standings([actor.id]),
+    ]);
+    return {
+      postCount: counts.get(actor.id) ?? 0,
+      reputation: standings.get(actor.id)?.reputation ?? 0,
+      level: standings.get(actor.id)?.level ?? 0,
+    };
+  }
 
   @ResolveField(() => ForumMemberStatsModel)
   stats(

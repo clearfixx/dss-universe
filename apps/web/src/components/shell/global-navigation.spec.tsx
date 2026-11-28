@@ -15,55 +15,62 @@ vi.mock("next/link", () => ({
   }) => createElement("a", { href, ...props }, children),
 }));
 
-import { Breadcrumbs, GlobalNavigation } from "./dss-application-shell";
+import { Breadcrumbs } from "./dss-application-shell";
+import { ShellNavigationPanel } from "./shell-sidebar";
 
-describe("global navigation accessibility", () => {
-  it("names horizontal navigation links", () => {
+describe("sidebar navigation composition (variant B)", () => {
+  it("keeps the global modules in the fixed zone on every page", () => {
     const html = renderToStaticMarkup(
-      createElement(GlobalNavigation, {
+      createElement(ShellNavigationPanel, {
         pathname: "/news/en/article",
-        variant: "HORIZONTAL_NAVIGATION",
         hasSession: false,
         canAccessAdminDeck: false,
       }),
     );
 
+    expect(html).toContain('aria-label="Модулі DSS Universe"');
     expect(html).toContain('href="/news"');
-    expect(html).toContain('aria-label="Новини"');
-    expect(html).toContain('title="Новини"');
     expect(html).toContain('aria-current="location"');
+    expect(html).toContain('href="/community"');
     expect(html).not.toContain('href="/command-deck"');
+    expect(html).not.toContain('href="/members"');
   });
 
-  it("announces the desktop module menu", () => {
-    const html = renderToStaticMarkup(
-      createElement(GlobalNavigation, {
-        pathname: "/news",
-        variant: "MODULE_LAUNCHER",
-        hasSession: false,
-        canAccessAdminDeck: false,
-      }),
-    );
-
-    expect(html).toContain('aria-haspopup="menu"');
-    expect(html).toContain('aria-expanded="false"');
-  });
-
-  it("names links for the hybrid featured navigation", () => {
-    const html = renderToStaticMarkup(
-      createElement(GlobalNavigation, {
-        pathname: "/members",
-        variant: "HYBRID",
+  it("shows contextual sections only for modules with sub-sections", () => {
+    const community = renderToStaticMarkup(
+      createElement(ShellNavigationPanel, {
+        pathname: "/community/following",
         hasSession: true,
         canAccessAdminDeck: false,
       }),
     );
+    expect(community).toContain('aria-label="Розділи: Спільнота"');
+    expect(community).toContain('href="/community/forum/new"');
+    expect(community).toContain('aria-current="page"');
 
-    expect(html).toContain('aria-haspopup="menu"');
-    expect(html).toContain('aria-expanded="false"');
-    expect(html).toContain('aria-label="Учасники"');
-    expect(html).toContain('aria-current="page"');
-    expect(html).not.toContain('href="/command-deck"');
+    const media = renderToStaticMarkup(
+      createElement(ShellNavigationPanel, {
+        pathname: "/media",
+        hasSession: true,
+        canAccessAdminDeck: false,
+      }),
+    );
+    expect(media).not.toContain('aria-label="Розділи: Медіатека"');
+  });
+
+  it("lists future modules as non-navigable placeholders", () => {
+    const html = renderToStaticMarkup(
+      createElement(ShellNavigationPanel, {
+        pathname: "/news",
+        hasSession: true,
+        canAccessAdminDeck: true,
+      }),
+    );
+    expect(html).toContain("Research Lab");
+    expect(html).toContain("(скоро)");
+    expect(html).toContain('aria-disabled="true"');
+    expect(html).not.toContain('href="/academy"');
+    expect(html).toContain('href="/command-deck"');
   });
 });
 
@@ -169,35 +176,5 @@ describe("breadcrumb rendering", () => {
     }));
     expect(html).not.toContain("Stale topic");
     expect(html).toContain("Поточна сторінка");
-  });
-});
-
-describe("navigation composition contract", () => {
-  for (const variant of ["MODULE_LAUNCHER", "HORIZONTAL_NAVIGATION", "HYBRID"] as const) {
-    it(`preserves launcher access for ${variant}`, () => {
-      const html = renderToStaticMarkup(createElement(GlobalNavigation, {
-        pathname: "/news",
-        variant,
-        hasSession: true,
-        canAccessAdminDeck: false,
-      }));
-      expect(html).toContain('aria-haspopup="menu"');
-      expect(html).not.toContain('href="/command-deck"');
-      expect(html.includes('href="/news"')).toBe(variant !== "MODULE_LAUNCHER");
-      expect(html.includes('href="/media"')).toBe(variant === "HORIZONTAL_NAVIGATION");
-    });
-  }
-
-  it("keeps future module labels non-navigable", () => {
-    const html = renderToStaticMarkup(createElement(GlobalNavigation, {
-      pathname: "/news",
-      variant: "HORIZONTAL_NAVIGATION",
-      hasSession: true,
-      canAccessAdminDeck: true,
-    }));
-    expect(html).toContain("Академія");
-    expect(html).toContain("(скоро)");
-    expect(html).not.toContain('href="/academy"');
-    expect(html).toContain('href="/command-deck"');
   });
 });

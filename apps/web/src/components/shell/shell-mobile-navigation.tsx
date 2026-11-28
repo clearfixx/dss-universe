@@ -1,7 +1,7 @@
 "use client";
 
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { ModuleNavigation, SidebarNavigation } from "./shell-sidebar";
+import { ShellNavigationPanel } from "./shell-sidebar";
 
 export function ShellMobileNavigation({ open, setOpen, onRestoreFocus, pathname, hasSession, canAccessAdminDeck, canModerate = false }: { open: boolean; onRestoreFocus: () => void; setOpen: (open: boolean) => void; pathname: string; hasSession: boolean; canAccessAdminDeck: boolean; canModerate?: boolean }) {
   return (
@@ -22,9 +22,8 @@ export function ShellMobileNavigation({ open, setOpen, onRestoreFocus, pathname,
               Оберіть доступний розділ платформи.
             </SheetDescription>
           </SheetHeader>
-          <div className="max-h-[calc(100dvh-5rem)] space-y-4 overflow-y-auto px-3 py-4">
-            <ModuleNavigation pathname={pathname} hasSession={hasSession} canAccessAdminDeck={canAccessAdminDeck} onNavigate={() => setOpen(false)} />
-            <SidebarNavigation
+          <div className="max-h-[calc(100dvh-5rem)] overflow-y-auto px-3 py-4">
+            <ShellNavigationPanel
               pathname={pathname}
               hasSession={hasSession}
               canAccessAdminDeck={canAccessAdminDeck}
