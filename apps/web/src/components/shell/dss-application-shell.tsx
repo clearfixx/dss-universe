@@ -218,7 +218,7 @@ export function DssApplicationShell({
           <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-2">
             <ShellSearch />
             {hasSession ? <ShellQuickAdd canAccessAdminDeck={canAccessAdminDeck} /> : null}
-            <ShellUserMenu viewer={viewer} pathname={pathname} canAccessAdminDeck={canAccessAdminDeck} />
+            <ShellUserMenu viewer={viewer} pathname={pathname} canAccessAdminDeck={canAccessAdminDeck} canModerate={canModerate} />
           </div>
         </DesignScope>
 
