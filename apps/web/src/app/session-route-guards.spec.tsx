@@ -16,8 +16,8 @@ vi.mock("@/features/activity/activity-data", () => ({
 vi.mock("@/components/shell/guest-landing", () => ({
   GuestLanding: () => createElement("div", null, "GUEST_LANDING"),
 }));
-vi.mock("@/components/shell/command-deck-overview", () => ({
-  CommandDeckOverview: () => createElement("div", null, "PERSONAL_DASHBOARD"),
+vi.mock("@/components/shell/mission-control-overview", () => ({
+  MissionControlOverview: () => createElement("div", null, "PERSONAL_DASHBOARD"),
 }));
 vi.mock("@/components/shell/session-application-shell", () => ({
   DssApplicationShell: ({ children }: { children: ReactNode }) =>

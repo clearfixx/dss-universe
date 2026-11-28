@@ -1,4 +1,4 @@
-import { CommandDeckOverview } from "@/components/shell/command-deck-overview";
+import { MissionControlOverview } from "@/components/shell/mission-control-overview";
 import { DssApplicationShell } from "@/components/shell/session-application-shell";
 import { GuestLanding } from "@/components/shell/guest-landing";
 import { loadViewerActivityFeed } from "@/features/activity/activity-data";
@@ -17,7 +17,7 @@ export default async function HomePage() {
 
   return (
     <DssApplicationShell>
-      <CommandDeckOverview feed={feed} />
+      <MissionControlOverview feed={feed} />
     </DssApplicationShell>
   );
 }

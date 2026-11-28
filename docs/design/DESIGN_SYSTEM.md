@@ -61,3 +61,7 @@ Scope directory and public profile locally; use native filters and shared table 
 ### Settings preview (DF-04D)
 
 Apply isolated DesignScope to owner profile settings and protected platform appearance. Native selects, switches and radio controls retain browser submission and existing action contracts; completion progress announces its actual percentage. Use semantic success/warning/destructive feedback for session and two-factor states. The media removal submit bypasses the unrelated required media ID field; the existing server action remains authoritative. Preserve IAM guards, privacy fields, credential changes, 2FA secret/recovery-code lifecycle, and shell variant persistence. No Theme Engine, new navigation variants, Upload Center or backend changes.
+
+### Mission Control preview (DF-04E)
+
+The authenticated home route uses MissionControlOverview, distinct from administrative CommandDeckOverview. Module cards derive from the existing authenticated navigation registry with admin access disabled; administrative entry remains in the guarded global navigation. The activity feed keeps existing server loading, visit marker and module presenters. Distinguish unavailable from empty feeds, show actual counts, and do not label deterministic counts as an AI-generated briefing. DSS Intelligence is reserved for its real feature. Guest landing, Command Deck, Upload Center and backend stay unchanged.
