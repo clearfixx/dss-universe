@@ -207,6 +207,10 @@ describe('Research Lab public delivery (GraphQL)', () => {
         correlationId: randomUUID(),
       });
     }
+    await fixture.prisma.researchPage.updateMany({
+      where: { id: { in: [first.pageId, second.pageId] } },
+      data: { allowIndexing: false },
+    });
     await fixture.prisma.researchPage.update({
       where: { id: second.pageId },
       data: { visibility: 'MEMBERS' },
