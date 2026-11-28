@@ -3,7 +3,7 @@ import type { PropsWithChildren, ReactNode } from "react";
 import { loadAdminCommandDeckAccess } from "@/features/auth/admin-access";
 import { loadSessionViewer } from "@/features/auth/session-data";
 import { loadForumModerationOverview } from "@/features/forum/forum-data";
-import { loadViewerMenuProgress } from "@/features/profile/profile-data";
+import { loadViewerForumStats, loadViewerMenuProgress } from "@/features/profile/profile-data";
 import { loadViewerActivityFeed } from "@/features/activity/activity-data";
 import { loadShellVariant } from "@/features/appearance/appearance-data";
 
@@ -35,9 +35,9 @@ export async function DssApplicationShell({
     loadSessionViewer(),
     loadShellVariant(),
   ]);
-  const [viewerProgress, feed] = viewer
-    ? await Promise.all([loadViewerMenuProgress(viewer.id), loadViewerActivityFeed()])
-    : [null, null];
+  const [viewerProgress, viewerStats, feed] = viewer
+    ? await Promise.all([loadViewerMenuProgress(viewer.id), loadViewerForumStats(), loadViewerActivityFeed()])
+    : [null, null, null];
   const [canAccessAdminDeck, canModerate] = viewer
     ? await Promise.all([
         loadAdminCommandDeckAccess(),
@@ -52,6 +52,7 @@ export async function DssApplicationShell({
       canAccessAdminDeck={canAccessAdminDeck}
       canModerate={canModerate}
       viewerProgress={viewerProgress}
+      viewerStats={viewerStats}
       unreadCount={feed?.unreadCount ?? null}
       toolbar={toolbar}
       pageTitle={pageTitle}

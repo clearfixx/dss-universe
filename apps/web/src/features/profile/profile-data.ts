@@ -24,6 +24,7 @@ import {
   ProfileWallDocument,
   PublicProfileDocument,
   UserActivityDocument,
+  ViewerForumStatsDocument,
   type MembersDirectoryInput,
   type LeaderboardPeriod,
 } from "@/gql/graphql";
@@ -127,6 +128,26 @@ export async function loadViewerMenuProgress(userId: string) {
       pointsIntoLevel: level.pointsIntoLevel,
       pointsNeeded: level.pointsNeeded,
       progressPercent: level.progressPercent,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Public forum standing of the signed-in viewer for the personal menu. */
+export async function loadViewerForumStats() {
+  try {
+    const result = await getClient().query({
+      query: ViewerForumStatsDocument,
+      context: await authorizationContext(),
+      fetchPolicy: "no-cache",
+    });
+    const stats = result.data?.viewerForumStats;
+    if (!stats) return null;
+    return {
+      postCount: stats.postCount,
+      reputation: stats.reputation,
+      level: stats.level,
     };
   } catch {
     return null;

@@ -19,7 +19,10 @@ vi.mock("@/features/auth/admin-access", () => ({
   loadAdminCommandDeckAccess: mocks.admin,
 }));
 vi.mock("@/features/forum/forum-data", () => ({ loadForumModerationOverview: mocks.moderation }));
-vi.mock("@/features/profile/profile-data", () => ({ loadViewerMenuProgress: vi.fn().mockResolvedValue(null) }));
+vi.mock("@/features/profile/profile-data", () => ({
+  loadViewerMenuProgress: vi.fn().mockResolvedValue(null),
+  loadViewerForumStats: vi.fn().mockResolvedValue(null),
+}));
 vi.mock("@/features/activity/activity-data", () => ({ loadViewerActivityFeed: vi.fn().mockResolvedValue(null) }));
 vi.mock("./dss-application-shell", () => ({
   DssApplicationShell: ({

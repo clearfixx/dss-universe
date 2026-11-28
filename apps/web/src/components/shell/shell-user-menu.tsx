@@ -18,6 +18,12 @@ export type ViewerMenuProgress = {
   progressPercent: number;
 };
 
+export type ViewerMenuStats = {
+  postCount: number;
+  reputation: number;
+  level: number;
+};
+
 export function ShellQuickAdd({ canAccessAdminDeck }: { canAccessAdminDeck: boolean }) {
   const actions = quickAddItems(true, canAccessAdminDeck);
 
@@ -52,12 +58,14 @@ export function ShellUserMenu({
   canAccessAdminDeck,
   canModerate = false,
   progress = null,
+  stats = null,
 }: {
   viewer: SessionViewer | null;
   pathname: string;
   canAccessAdminDeck: boolean;
   canModerate?: boolean;
   progress?: ViewerMenuProgress | null;
+  stats?: ViewerMenuStats | null;
 }) {
   const [logoutOpen, setLogoutOpen] = useState(false);
 
@@ -138,11 +146,11 @@ export function ShellUserMenu({
             </div>
           </div>
 
-          {/* Key stats: the API has no per-viewer reputation, answers or streak yet */}
+          {/* Key stats: streak has no API source yet, so it stays an empty mark */}
           <div className="grid grid-cols-3 gap-2 border-y border-border px-4 py-4">
-            <Stat icon={<ShieldCheck />} label="репутація" />
-            <Stat icon={<Star />} label="відповіді" />
-            <Stat icon={<Flame />} label="дні підряд" />
+            <Stat icon={<ShieldCheck />} label="репутація" value={stats?.reputation ?? null} />
+            <Stat icon={<Star />} label="дописи" value={stats?.postCount ?? null} />
+            <Stat icon={<Flame />} label="дні підряд" value={null} />
           </div>
 
           {/* Quick links */}
@@ -243,11 +251,15 @@ export function ShellUserMenu({
 }
 
 /** A stat without data yet: the icon and label stay, the value is an empty mark. */
-function Stat({ icon, label }: { icon: ReactNode; label: string }) {
+function Stat({ icon, label, value }: { icon: ReactNode; label: string; value: number | null }) {
   return (
     <div className="flex flex-col items-center gap-1 text-center">
       <span className="flex items-center gap-1.5 text-primary [&_svg]:size-4" aria-hidden="true">{icon}</span>
-      <span className="text-lg font-semibold tabular-nums text-muted-foreground" aria-label={`${label}: даних ще немає`}>—</span>
+      {value === null ? (
+        <span className="text-lg font-semibold tabular-nums text-muted-foreground" aria-label={`${label}: даних ще немає`}>—</span>
+      ) : (
+        <span className="text-lg font-semibold tabular-nums text-foreground">{value.toLocaleString("uk-UA")}</span>
+      )}
       <span className="text-xs text-muted-foreground">{label}</span>
     </div>
   );

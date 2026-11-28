@@ -2398,6 +2398,11 @@ type Query {
   viewerCommentDrafts(limit: Int! = 20): [CommentDraft!]!
 
   """
+  Public standing of the signed-in viewer: forum posts, reputation and level.
+  """
+  viewerForumStats: ForumMemberStats!
+
+  """
   Signed-in viewer: own (AUTHORED) or followed (SUBSCRIBED) topics, or live topics of followed sections (FOLLOWED_SECTIONS, newest first), across visible forums.
   """
   viewerForumTopics(collection: ForumViewerCollection!, limit: Int! = 20, page: Int! = 1): ForumTopicPage!
