@@ -296,6 +296,50 @@ describe('Research Lab public delivery (GraphQL)', () => {
         )
       ).errors[0].extensions.code,
     ).toBe('BAD_USER_INPUT');
+    const reordered = [second.pageId, first.pageId];
+    const reorderManual =
+      'mutation($input:ResearchReorderContainerInput!){reorderResearchManual(input:$input){id}}';
+    const reorderCollection =
+      'mutation($input:ResearchReorderContainerInput!){reorderResearchCollection(input:$input){id}}';
+    const manualOrder = {
+      id: created.data.createResearchManual.id,
+      expectedPageIds: input.pageIds,
+      pageIds: reordered,
+    };
+    const collectionOrder = {
+      ...manualOrder,
+      id: collection.data.createResearchCollection.id,
+    };
+    expect((await send(reorderManual, manualOrder)).errors).toBeUndefined();
+    expect(
+      (await send(reorderCollection, collectionOrder)).errors,
+    ).toBeUndefined();
+    expect(
+      (await send(reorderManual, manualOrder)).errors[0].extensions.code,
+    ).toBe('CONFLICT');
+    expect(
+      (
+        await fixture.prisma.researchManualChapter.findMany({
+          where: { manualId: manualOrder.id },
+          orderBy: { position: 'asc' },
+          select: { pageId: true },
+        })
+      ).map((row) => row.pageId),
+    ).toEqual(reordered);
+    expect(
+      (
+        await fixture.prisma.researchCollectionItem.findMany({
+          where: { collectionId: collectionOrder.id },
+          orderBy: { position: 'asc' },
+          select: { pageId: true },
+        })
+      ).map((row) => row.pageId),
+    ).toEqual(reordered);
+    expect(
+      await fixture.prisma.auditRecord.count({
+        where: { targetType: 'ResearchManual', targetId: manualOrder.id },
+      }),
+    ).toBe(2);
   });
   it('removes the entire result and its count after an audience change', async () => {
     const id = randomUUID(),

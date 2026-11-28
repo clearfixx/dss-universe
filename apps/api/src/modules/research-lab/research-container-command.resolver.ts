@@ -38,6 +38,16 @@ class ResearchCreateContainerInput {
   @Field(() => [ID]) @IsArray() @IsString({ each: true }) pageIds!: string[];
 }
 
+@InputType()
+class ResearchReorderContainerInput {
+  @Field(() => ID) @IsString() id!: string;
+  @Field(() => [ID])
+  @IsArray()
+  @IsString({ each: true })
+  expectedPageIds!: string[];
+  @Field(() => [ID]) @IsArray() @IsString({ each: true }) pageIds!: string[];
+}
+
 @Resolver()
 @UseGuards(JwtAuthGuard)
 export class ResearchContainerCommandResolver {
@@ -75,5 +85,21 @@ export class ResearchContainerCommandResolver {
     @Args('input') input: ResearchCreateContainerInput,
   ) {
     return this.execute(this.containers.createCollection(actor.id, input));
+  }
+
+  @Mutation(() => ResearchContainerReceipt)
+  reorderResearchManual(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('input') input: ResearchReorderContainerInput,
+  ) {
+    return this.execute(this.containers.reorderManual(actor.id, input));
+  }
+
+  @Mutation(() => ResearchContainerReceipt)
+  reorderResearchCollection(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('input') input: ResearchReorderContainerInput,
+  ) {
+    return this.execute(this.containers.reorderCollection(actor.id, input));
   }
 }
