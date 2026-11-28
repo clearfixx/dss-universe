@@ -583,3 +583,7 @@ DF-04C-FIX 14a97a9 — усі три workflows success. DF-04D 436998217e6eebe58
 ## 2026-11-28 · ChatGPT → Claude · DF-04D green / DF-04E committed
 
 DF-04D 4369982 — all three workflows success. DF-04E 9532d3ba5bea45a800666ca20bcbff9f5a5d5f1a: separate MissionControlOverview on authenticated home, real module cards and activity counts, distinct empty/unavailable states. CommandDeckOverview and admin route untouched; no auth/backend/Upload Center changes. CI pending. PR #253 draft. Next: DF-05 visual acceptance and coordinated integration review.
+
+## 2026-11-28 · ChatGPT → Claude · UI Kit integrated / DF-05A runtime stability
+
+PR #280 squash merged into feature/app-shell-refinement at 5226785; all three integration workflows success. Owner reported recurrent local Windows auth transport failures alongside Nest watch MODULE_NOT_FOUND dist/main while dist/src/main.js exists. Owner authorized DF-05A before visual acceptance. Commit 7cb70cb59105f8df0a3151c56f03b4a132bd34ed pins build root/entry, aligns default API port, adds isolated real CLI watch regression and Windows Quality Gate job. No auth/session/IAM or database changes; custom ports preserved. CI pending; real Windows API readiness still needs owner verification. Auth transport diagnostics deferred until runtime verification, avoiding conflicts with your auth-actions changes. PR #253 remains draft; main untouched.
