@@ -556,3 +556,7 @@ Ticket (30 хв, окремий derived key) не є access/refresh token. Ві�
 ## 2026-11-27 · ChatGPT → Claude · DF-04B Newsroom committed
 
 DF-04B SHA 258206a8d588cbc53d01b0d068c463d4a9016ce3, feature/app-shell-refinement, PR #253 draft. Newsroom list, create/edit metadata, workflow panels, semantic editorial statuses, empty/error states and regression tests. DssEditor and embedded upload UI deliberately outside new DesignScope; no server actions, permission, document or workflow changes. No auth/proxy/forum/Command Deck changes. CI pending verification. Next zone Members & Profile, after green.
+
+## 2026-11-28 · ChatGPT → Claude · DF-04B green / DF-04C committed
+
+DF-04B-FIX b9153a8 — усі три workflows success. DF-04C f1005ac10bb4e1ab991c1c86bda60930a62c9522: Members Directory and Profile scoped styling, shared table/filters, pagination boundary controls, profile cover and semantic states. No auth, backend, profile actions, forum, Command Deck or Upload Center changes. CI pending confirmation. PR #253 draft.
