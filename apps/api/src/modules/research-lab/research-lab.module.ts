@@ -15,6 +15,8 @@ import { ResearchLabCommandResolver } from './research-lab-command.resolver';
 import { ResearchLabReadResolver } from './research-lab-read.resolver';
 import { ResearchCategoryCommandResolver } from './research-category-command.resolver';
 import { ResearchCategoryService } from './infrastructure/research-category.service';
+import { ResearchContainerCommandResolver } from './research-container-command.resolver';
+import { ResearchContainerService } from './infrastructure/research-container.service';
 import { ResearchLabDelivery } from './infrastructure/research-lab-delivery';
 import { RESEARCH_INTERACTION_DECISIONS } from './contracts/research-interaction-decisions';
 import { RESEARCH_SEARCH_SOURCE } from './contracts/research-search-source';
@@ -37,6 +39,8 @@ import { ResearchLabAuthorityAdapter } from './infrastructure/research-lab-autho
     ResearchLabCommandResolver,
     ResearchCategoryCommandResolver,
     ResearchCategoryService,
+    ResearchContainerCommandResolver,
+    ResearchContainerService,
     ResearchLabReadResolver,
     ResearchLabDelivery,
     ResearchLabService,

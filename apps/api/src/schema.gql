@@ -1816,7 +1816,9 @@ type Mutation {
   createNewsDraft(input: CreateNewsDraftInput!): NewsEditorialArticle!
   createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
   createResearchCategory(input: ResearchCreateCategoryInput!): ResearchCategoryEntry!
+  createResearchCollection(input: ResearchCreateContainerInput!): ResearchContainerReceipt!
   createResearchDraft(input: ResearchDraftInput!): ResearchDraftReceipt!
+  createResearchManual(input: ResearchCreateContainerInput!): ResearchContainerReceipt!
   deactivateAccount(input: DeactivateAccountInput!): LogoutResultModel!
   decideBanAppeal(accept: Boolean!, appealId: ID!, reason: String!): BanAppeal!
   deleteCommunityEvent(id: ID!): Boolean!
@@ -2726,12 +2728,26 @@ type ResearchContainerPage {
   title: String
 }
 
+type ResearchContainerReceipt {
+  id: ID!
+  language: String!
+  slug: String!
+}
+
 input ResearchCreateCategoryInput {
   description: String
   name: String!
   parentId: ID
   slug: String!
   sortOrder: Int
+}
+
+input ResearchCreateContainerInput {
+  description: String
+  language: String!
+  pageIds: [ID!]!
+  slug: String!
+  title: String!
 }
 
 input ResearchDecisionInput {

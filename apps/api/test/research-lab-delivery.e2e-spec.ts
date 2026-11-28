@@ -158,6 +158,141 @@ describe('Research Lab public delivery (GraphQL)', () => {
       }),
     ).toBeGreaterThanOrEqual(1);
   });
+  it('creates ordered containers without exposing restricted chapters', async () => {
+    const suffix = randomUUID();
+    const member = await app.get(AuthenticationPresentationService).register({
+      email: `research-container-${suffix}@dss.test`,
+      username: 'container-' + suffix,
+      displayName: 'Container editor',
+      password: 'research-fixture-123',
+    });
+    const permission = await fixture.prisma.permission.findUniqueOrThrow({
+      where: { key: Permission.ResearchLabOrganize },
+    });
+    await fixture.prisma.userPermission.create({
+      data: { userId: member.user.id, permissionId: permission.id },
+    });
+    await fixture.prisma.accessGroup.create({
+      data: {
+        key: 'guardian-' + suffix,
+        displayName: 'Research Guardian',
+        createdById: member.user.id,
+        capabilities: { create: { key: 'KNOWLEDGE_FORGE_GUARDIAN' } },
+        memberships: {
+          create: { subjectId: member.user.id, grantedById: member.user.id },
+        },
+      },
+    });
+    const service = app.get(ResearchLabService);
+    const first = await service.createDraft({
+      actorId: member.user.id,
+      title: 'Open chapter',
+      summary: '',
+      proposedSlug: 'open-' + suffix,
+      documentJson: JSON.stringify(createEmptyEditorDocument('WIKI')),
+    });
+    const second = await service.createDraft({
+      actorId: member.user.id,
+      title: 'Restricted chapter',
+      summary: '',
+      proposedSlug: 'restricted-' + suffix,
+      documentJson: JSON.stringify(createEmptyEditorDocument('WIKI')),
+    });
+    for (const draft of [first, second]) {
+      await service.selfPublishDraft({
+        ...draft,
+        actorId: member.user.id,
+        expectedVersion: draft.version,
+        editSummary: 'Published',
+        correlationId: randomUUID(),
+      });
+    }
+    await fixture.prisma.researchPage.update({
+      where: { id: second.pageId },
+      data: { visibility: 'MEMBERS' },
+    });
+    const send = async (query: string, input: Record<string, unknown>) =>
+      payload<{
+        createResearchManual: { id: string };
+        createResearchCollection: { id: string };
+      }>(
+        await request(app.getHttpServer())
+          .post('/api/graphql')
+          .set('Authorization', 'Bearer ' + member.tokens.accessToken)
+          .send({ query, variables: { input } })
+          .expect(200),
+      );
+    const input = {
+      language: 'uk',
+      slug: 'manual-' + suffix,
+      title: 'Manual',
+      pageIds: [first.pageId, second.pageId],
+    };
+    const created = await send(
+      'mutation($input:ResearchCreateContainerInput!){createResearchManual(input:$input){id}}',
+      input,
+    );
+    expect(created.errors).toBeUndefined();
+    expect(
+      (
+        await send(
+          'mutation($input:ResearchCreateContainerInput!){createResearchManual(input:$input){id}}',
+          input,
+        )
+      ).errors[0].extensions.code,
+    ).toBe('CONFLICT');
+    const collection = await send(
+      'mutation($input:ResearchCreateContainerInput!){createResearchCollection(input:$input){id}}',
+      { ...input, slug: 'collection-' + suffix },
+    );
+    expect(collection.errors).toBeUndefined();
+    const response = await request(app.getHttpServer())
+      .post('/api/graphql')
+      .send({
+        query:
+          'query{researchManuals{id chapters{page{id}}} researchCollections{id items{page{id}}}}',
+      })
+      .expect(200);
+    const data = payload<{
+      researchManuals: { id: string; chapters: { page: { id: string } }[] }[];
+      researchCollections: { id: string; items: { page: { id: string } }[] }[];
+    }>(response).data;
+    expect(
+      data.researchManuals.find(
+        (row) => row.id === created.data.createResearchManual.id,
+      )?.chapters,
+    ).toEqual([{ page: { id: first.pageId } }]);
+    expect(
+      data.researchCollections.find(
+        (row) => row.id === collection.data.createResearchCollection.id,
+      )?.items,
+    ).toEqual([{ page: { id: first.pageId } }]);
+    expect(
+      await fixture.prisma.auditRecord.count({
+        where: {
+          targetType: 'ResearchManual',
+          targetId: created.data.createResearchManual.id,
+        },
+      }),
+    ).toBe(1);
+    expect(
+      await fixture.prisma.outboxEvent.count({
+        where: { eventName: 'research-lab.collection.created.v1' },
+      }),
+    ).toBeGreaterThanOrEqual(1);
+    expect(
+      (
+        await send(
+          'mutation($input:ResearchCreateContainerInput!){createResearchManual(input:$input){id}}',
+          {
+            ...input,
+            slug: 'duplicates-' + suffix,
+            pageIds: [first.pageId, first.pageId],
+          },
+        )
+      ).errors[0].extensions.code,
+    ).toBe('BAD_USER_INPUT');
+  });
   it('removes the entire result and its count after an audience change', async () => {
     const id = randomUUID(),
       author = randomUUID(),
