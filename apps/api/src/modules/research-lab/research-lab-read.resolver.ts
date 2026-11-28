@@ -53,6 +53,20 @@ class ResearchCollectionEntry {
   @Field(() => [ResearchContainerItem]) items!: ResearchContainerItem[];
 }
 @ObjectType()
+class ResearchTagEntry {
+  @Field(() => ID) id!: string;
+  @Field() name!: string;
+  @Field() slug!: string;
+}
+@ObjectType()
+class ResearchTechnologyEntry {
+  @Field(() => ID) id!: string;
+  @Field() name!: string;
+  @Field() slug!: string;
+  @Field(() => String, { nullable: true }) description!: string | null;
+  @Field(() => String, { nullable: true }) website!: string | null;
+}
+@ObjectType()
 class ResearchPublishedPage {
   @Field(() => ID) id!: string;
   @Field() language!: string;
@@ -124,6 +138,14 @@ export class ResearchLabReadResolver {
         page: { ...page, title: page.publishedRevision?.title ?? null },
       })),
     }));
+  }
+  @Query(() => [ResearchTagEntry])
+  researchTags(@Context() ctx: RequestContext) {
+    return this.delivery.tags(ctx.req.user?.id ?? null);
+  }
+  @Query(() => [ResearchTechnologyEntry])
+  researchTechnologies(@Context() ctx: RequestContext) {
+    return this.delivery.technologies(ctx.req.user?.id ?? null);
   }
   @Query(() => ResearchPublishedPage, { nullable: true })
   researchPage(

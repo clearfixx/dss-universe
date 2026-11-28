@@ -596,6 +596,58 @@ describe('Research Lab public delivery (GraphQL)', () => {
         },
       },
     });
+    const publicTag = await db.researchTag.create({
+      data: {
+        name: 'Public ' + key,
+        slug: 'public-' + key,
+        pages: { create: { pageId: publicDraft.pageId } },
+      },
+    });
+    const privateTag = await db.researchTag.create({
+      data: {
+        name: 'Private ' + key,
+        slug: 'private-' + key,
+        pages: { create: { pageId: draft.pageId } },
+      },
+    });
+    const publicTechnology = await db.researchTechnology.create({
+      data: {
+        name: 'Public ' + key,
+        slug: 'public-' + key,
+        pages: { create: { pageId: publicDraft.pageId } },
+      },
+    });
+    const privateTechnology = await db.researchTechnology.create({
+      data: {
+        name: 'Private ' + key,
+        slug: 'private-' + key,
+        pages: { create: { pageId: draft.pageId } },
+      },
+    });
+    const vocabularies = async (token?: string) => {
+      const call = request(app.getHttpServer()).post('/api/graphql');
+      if (token) call.set('Authorization', 'Bearer ' + token);
+      const response = await call
+        .send({
+          query: 'query{researchTags{id} researchTechnologies{id}}',
+        })
+        .expect(200);
+      expect(payload(response).errors).toBeUndefined();
+      const data = payload<{
+        researchTags: { id: string }[];
+        researchTechnologies: { id: string }[];
+      }>(response).data;
+      return {
+        tags: data.researchTags
+          .map((row) => row.id)
+          .filter((id) => id === publicTag.id || id === privateTag.id),
+        technologies: data.researchTechnologies
+          .map((row) => row.id)
+          .filter(
+            (id) => id === publicTechnology.id || id === privateTechnology.id,
+          ),
+      };
+    };
     const containers = async (token?: string) => {
       const call = request(app.getHttpServer()).post('/api/graphql');
       if (token) call.set('Authorization', 'Bearer ' + token);
@@ -632,6 +684,14 @@ describe('Research Lab public delivery (GraphQL)', () => {
     };
     expect(await containers()).toEqual(publicOnly);
     expect(await containers(reader.tokens.accessToken)).toEqual(withGroup);
+    expect(await vocabularies()).toEqual({
+      tags: [publicTag.id],
+      technologies: [publicTechnology.id],
+    });
+    expect(await vocabularies(reader.tokens.accessToken)).toEqual({
+      tags: [privateTag.id, publicTag.id],
+      technologies: [privateTechnology.id, publicTechnology.id],
+    });
     const related = async (token?: string) => {
       const call = request(app.getHttpServer()).post('/api/graphql');
       if (token) call.set('Authorization', 'Bearer ' + token);
@@ -771,6 +831,10 @@ describe('Research Lab public delivery (GraphQL)', () => {
     expect(await related(reader.tokens.accessToken)).toEqual([]);
     expect(await related()).toEqual([]);
     expect(await containers(reader.tokens.accessToken)).toEqual(publicOnly);
+    expect(await vocabularies(reader.tokens.accessToken)).toEqual({
+      tags: [publicTag.id],
+      technologies: [publicTechnology.id],
+    });
     expect((await revisions()).data).toEqual({
       researchRevisionHistory: [],
       researchRevisionDiff: null,

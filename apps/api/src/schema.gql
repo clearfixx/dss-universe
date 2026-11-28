@@ -2531,6 +2531,8 @@ type Query {
   researchRevisionHistory(limit: Int! = 20, offset: Int! = 0, pageId: ID!): [ResearchHistoryEntry!]!
   researchRevisionReviewHistory(limit: Int! = 50, offset: Int! = 0, pageId: ID!, revisionId: ID!): [ResearchEditorialDecision!]!
   researchSitemap(after: ID, limit: Int! = 50): [ResearchPublicIndexEntry!]!
+  researchTags: [ResearchTagEntry!]!
+  researchTechnologies: [ResearchTechnologyEntry!]!
   search(page: Int! = 1, pageSize: Int! = 20, source: SharedSearchSource! = NEWS, term: String!): SearchPage!
   user(id: ID!): User!
   userAchievementHistory(userId: ID!): [AchievementAward!]!
@@ -2904,6 +2906,20 @@ input ResearchSubmitInput {
   editSummary: String!
   expectedVersion: Int!
   pageId: ID!
+}
+
+type ResearchTagEntry {
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+type ResearchTechnologyEntry {
+  description: String
+  id: ID!
+  name: String!
+  slug: String!
+  website: String
 }
 
 input ResetPasswordInput {
