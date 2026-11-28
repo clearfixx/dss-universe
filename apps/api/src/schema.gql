@@ -2481,6 +2481,7 @@ type Query {
   reactionSummary(interactionTargetId: ID!): ReactionSummary!
   reputationHistory(pagination: ReputationPageInput, userId: ID!): ReputationHistory!
   reputationPolicy: ReputationPolicy!
+  researchCategories: [ResearchCategoryEntry!]!
   researchEditPolicy(pageId: ID!): ResearchEditPolicy!
   researchInteractionSettings(pageId: ID!): ResearchInteractionSettings!
   researchOwnDraft(pageId: ID!): ResearchOwnDraft
@@ -2656,6 +2657,15 @@ input RequestPasswordRecoveryInput {
 type ResearchAudiencePolicy {
   groupKeys: [String!]!
   visibility: ResearchPageAudience!
+}
+
+type ResearchCategoryEntry {
+  description: String
+  id: ID!
+  name: String!
+  parentId: ID
+  slug: String!
+  sortOrder: Int!
 }
 
 input ResearchDecisionInput {

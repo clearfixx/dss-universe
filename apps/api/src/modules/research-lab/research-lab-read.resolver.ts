@@ -15,6 +15,15 @@ import { ResearchLabDelivery } from './infrastructure/research-lab-delivery';
 
 type RequestContext = { req: { user?: AuthenticatedUser } };
 @ObjectType()
+class ResearchCategoryEntry {
+  @Field(() => ID) id!: string;
+  @Field(() => ID, { nullable: true }) parentId!: string | null;
+  @Field() name!: string;
+  @Field() slug!: string;
+  @Field(() => String, { nullable: true }) description!: string | null;
+  @Field(() => Int) sortOrder!: number;
+}
+@ObjectType()
 class ResearchPublishedPage {
   @Field(() => ID) id!: string;
   @Field() language!: string;
@@ -61,6 +70,10 @@ class ResearchPublicIndexEntry {
 @UseGuards(OptionalViewerJwtGuard)
 export class ResearchLabReadResolver {
   constructor(private readonly delivery: ResearchLabDelivery) {}
+  @Query(() => [ResearchCategoryEntry])
+  researchCategories() {
+    return this.delivery.categories();
+  }
   @Query(() => ResearchPublishedPage, { nullable: true })
   researchPage(
     @Context() ctx: RequestContext,
