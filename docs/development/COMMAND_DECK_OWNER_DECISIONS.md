@@ -18,6 +18,8 @@ Track the remaining availability concern explicitly, without claiming resolution
 - Platform commands cannot ban, deactivate or remove ownership from that subject.
 - Only owner appoints, restricts or removes administrators.
 - Only owner accesses database tools, CMS Builder and module enable/disable controls.
+  Exception (owner, 2026-11-28): administrators also create and publish static
+  pages; see PHASE_20_STATIC_PAGES.md.
 - Administrators manage content and users; they cannot grant owner-only privileges.
 - An owner administrative session can lock/expire; this is not account blocking.
 
