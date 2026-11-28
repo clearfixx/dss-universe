@@ -85,7 +85,7 @@ export const COMMAND_DECK_GROUPS: readonly CommandDeckGroup[] = [
       { label: "Academy", icon: GraduationCap },
       { label: "Downloads", icon: Download },
       { label: "Media Platform", icon: ImageIcon },
-      { label: "CMS Builder", icon: FileStack },
+      { label: "CMS Builder", icon: FileStack, href: "/command-deck/pages" },
     ],
   },
   {
