@@ -1,6 +1,8 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import type { ViewerActivityFeedQuery } from "@/gql/graphql";
+
 import { MissionControlOverview } from "./mission-control-overview";
 
 vi.mock("@/features/activity/activity-visit-marker", () => ({
@@ -23,7 +25,15 @@ describe("MissionControlOverview", () => {
   });
 
   it("distinguishes an empty feed from an unavailable feed", () => {
-    render(<MissionControlOverview feed={{ items: [], total: 0, unreadCount: 0 } as NonNullable<Parameters<typeof MissionControlOverview>[0]["feed"]>} />);
+    const feed: ViewerActivityFeedQuery["viewerActivityFeed"] = {
+      items: [],
+      total: 0,
+      unreadCount: 0,
+      lastVisitedAt: null,
+      generatedAt: "2026-11-28T05:00:00.000Z",
+      recommendationMode: "DEFAULT",
+    };
+    render(<MissionControlOverview feed={feed} />);
     expect(screen.getByText("Подій поки немає")).toBeInTheDocument();
     expect(screen.getByText("Доступні події")).toBeInTheDocument();
     expect(screen.getAllByText("0")).toHaveLength(2);
