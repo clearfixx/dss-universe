@@ -35,6 +35,7 @@ import {
   type BanTransaction,
 } from '../contracts/ban-transaction.port';
 import { banReference } from '../domain/account-ban.rules';
+import { compareRuleCodes } from '../domain/community-rule.rules';
 import { ModerationSanctionError } from '../domain/errors/moderation-sanction.error';
 import {
   normalizeSanctionContext,
@@ -117,6 +118,39 @@ export class AccountBansService {
         'This ban was already lifted.',
       );
     return lifted;
+  }
+
+  /** Rules an administrator can ban for, in numeric order. */
+  async banRules(
+    actor: ModerationActor,
+  ): Promise<Array<{ id: string; code: string; text: string }>> {
+    this.require(actor);
+    const rows = await this.prisma.communityRule.findMany({
+      where: { active: true },
+      select: { id: true, code: true, text: true },
+    });
+    return rows.sort((a, b) => compareRuleCodes(a.code, b.code));
+  }
+
+  /** Bans in force, newest first. */
+  async inForceList(
+    actor: ModerationActor,
+    page: number,
+    limit: number,
+  ): Promise<{ items: AccountBanRecord[]; total: number }> {
+    this.require(actor);
+    const take = Math.min(Math.max(Math.trunc(limit), 1), 50);
+    const where = { liftedAt: null };
+    const [rows, total] = await Promise.all([
+      this.prisma.accountBan.findMany({
+        where,
+        orderBy: [{ issuedAt: 'desc' }, { id: 'asc' }],
+        skip: (Math.max(Math.trunc(page), 1) - 1) * take,
+        take,
+      }),
+      this.prisma.accountBan.count({ where }),
+    ]);
+    return { items: rows.map(accountBanRecord), total };
   }
 
   /** The ban in force for an account, if any. */

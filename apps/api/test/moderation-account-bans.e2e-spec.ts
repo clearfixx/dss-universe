@@ -146,6 +146,18 @@ describe('Permanent account bans (e2e)', () => {
     await expect(bans.issue(actor, command)).rejects.toMatchObject({
       code: 'INVALID_STATE',
     });
+    const listQuery =
+      '{ accountBanRules { id } accountBans(limit: 50) { items { reference subjectName issuedByName } } }';
+    const denied = await graphql(listQuery, {}, admin.tokens.accessToken);
+    expect(denied.errors?.[0].extensions?.code).toBe('FORBIDDEN');
+    expect((await bans.banRules(actor)).some(({ id }) => id === rule.id)).toBe(
+      true,
+    );
+    expect(
+      (await bans.inForceList(actor, 1, 50)).items.map(
+        ({ reference }) => reference,
+      ),
+    ).toContain(ban.reference);
 
     // The old session no longer works anywhere.
     const stale = await graphql(

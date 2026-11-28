@@ -22,6 +22,7 @@ import { CommandDeckFrame } from "@/components/command-deck/command-deck-frame";
 import { loadAdminCommandDeckAccess } from "@/features/auth/admin-access";
 import { loadCommunityRules } from "@/features/command-deck/command-deck-data";
 import { CommunityRulesManager } from "@/features/command-deck/community-rules-manager";
+import { ModerationTabs } from "@/features/command-deck/moderation-tabs";
 
 export const metadata: Metadata = {
   title: "Правила спільноти | Command Deck",
@@ -39,6 +40,7 @@ export default async function CommunityRulesPage() {
         { label: "Правила спільноти" },
       ]}
     >
+      <ModerationTabs active="rules" />
       <CommunityRulesManager rules={rules} />
     </CommandDeckFrame>
   );

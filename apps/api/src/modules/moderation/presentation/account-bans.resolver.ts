@@ -29,6 +29,7 @@ import {
   Field,
   ID,
   InputType,
+  Int,
   Mutation,
   ObjectType,
   Query,
@@ -111,6 +112,25 @@ class AccountBanNoticeModel {
   contextPath!: string | null;
 }
 
+@ObjectType('AccountBanRule')
+class AccountBanRuleModel {
+  @Field(() => ID) id!: string;
+  @Field() code!: string;
+  @Field() text!: string;
+}
+
+@ObjectType('AccountBanListItem')
+class AccountBanListItemModel extends AccountBanModel {
+  @Field(() => String, { nullable: true }) subjectName!: string | null;
+  @Field(() => String, { nullable: true }) issuedByName!: string | null;
+}
+
+@ObjectType('AccountBanList')
+class AccountBanListModel {
+  @Field(() => [AccountBanListItemModel]) items!: AccountBanListItemModel[];
+  @Field(() => Int) total!: number;
+}
+
 @Resolver()
 export class AccountBansResolver {
   constructor(
@@ -126,6 +146,44 @@ export class AccountBansResolver {
   ): Promise<AccountBanNoticeModel> {
     const ban = await this.execute(this.bans.notice(ticket));
     return this.notice(ban);
+  }
+
+  @Query(() => [AccountBanRuleModel], {
+    description: 'Rules in force; only for those who may ban accounts.',
+  })
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions(Permission.ModerationBansManage)
+  accountBanRules(@AuthUser() actor: AuthenticatedUser) {
+    return this.execute(this.bans.banRules(actor));
+  }
+
+  @Query(() => AccountBanListModel)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions(Permission.ModerationBansManage)
+  async accountBans(
+    @AuthUser() actor: AuthenticatedUser,
+    @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
+    @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
+  ): Promise<AccountBanListModel> {
+    const list = await this.execute(this.bans.inForceList(actor, page, limit));
+    const ids = list.items.flatMap((ban) => [ban.subjectId, ban.issuerId]);
+    const cards = new Map(
+      (this.members ? await this.members.cards([...new Set(ids)]) : []).map(
+        (card) => [card.id, card],
+      ),
+    );
+    const name = (id: string) => {
+      const card = cards.get(id);
+      return card?.displayName || card?.username || null;
+    };
+    return {
+      total: list.total,
+      items: list.items.map((ban) => ({
+        ...ban,
+        subjectName: name(ban.subjectId),
+        issuedByName: name(ban.issuerId),
+      })),
+    };
   }
 
   @Query(() => AccountBanModel, { nullable: true })
