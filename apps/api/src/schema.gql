@@ -1877,6 +1877,8 @@ type Mutation {
   removeViewerAvatar: Viewer!
   removeViewerCover: Viewer!
   reopenForumTopic(topicId: ID!): ForumTopic!
+  reorderResearchCollection(input: ResearchReorderContainerInput!): ResearchContainerReceipt!
+  reorderResearchManual(input: ResearchReorderContainerInput!): ResearchContainerReceipt!
   reportContent(input: ReportContentInput!): ContentReport!
   requestEmailVerification: LogoutResultModel!
   requestNewsChanges(input: NewsDecisionInput!): NewsEditorialTransition!
@@ -2891,6 +2893,12 @@ type ResearchRelatedPage {
   language: String!
   slug: String!
   title: String!
+}
+
+input ResearchReorderContainerInput {
+  expectedPageIds: [ID!]!
+  id: ID!
+  pageIds: [ID!]!
 }
 
 type ResearchReviewItem {
