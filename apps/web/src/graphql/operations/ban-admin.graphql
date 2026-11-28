@@ -1,0 +1,79 @@
+query AccountBanRules {
+  accountBanRules {
+    id
+    code
+    text
+  }
+}
+
+mutation IssueAccountBan($input: IssueAccountBanInput!) {
+  issueAccountBan(input: $input) {
+    id
+  }
+}
+
+mutation LiftAccountBan($banId: ID!, $reason: String!) {
+  liftAccountBan(banId: $banId, reason: $reason) {
+    id
+  }
+}
+
+query AdminAccountBans($page: Int!) {
+  accountBans(page: $page, limit: 20) {
+    total
+    items {
+      id
+      reference
+      subjectName
+      issuedByName
+      ruleCode
+      ruleText
+      comment
+      contextPath
+      issuedAt
+    }
+  }
+}
+
+query AdminBanAppeals($status: BanAppealStatus!, $page: Int!) {
+  banAppeals(status: $status, page: $page, limit: 20) {
+    total
+    items {
+      id
+      text
+      status
+      submittedAt
+      decidedAt
+      decisionReason
+      decidedByName
+      reference
+      subjectName
+      subjectUsername
+      issuedByName
+      bannedAt
+      ruleCode
+      ruleText
+      banComment
+      contextPath
+      files {
+        id
+        filename
+        size
+        status
+      }
+    }
+  }
+}
+
+query AdminBanAppealFileAccess($appealId: ID!, $fileId: ID!) {
+  banAppealFileAccess(appealId: $appealId, fileId: $fileId) {
+    url
+  }
+}
+
+mutation DecideBanAppeal($appealId: ID!, $accept: Boolean!, $reason: String!) {
+  decideBanAppeal(appealId: $appealId, accept: $accept, reason: $reason) {
+    id
+    status
+  }
+}

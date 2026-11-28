@@ -85,7 +85,10 @@ export function BanScreen({ data }: { data: BanScreenData }) {
         </h1>
         <p className="max-w-xl text-sm text-slate-200 sm:text-base">
           Нам прикро, що так сталося. Але своїми діями ви змусили нас так
-          вчинити 😞 Якщо ви вважаєте це помилкою, подайте апеляцію нижче.
+          вчинити 😞
+          {appeal
+            ? null
+            : " Якщо ви вважаєте це помилкою, подайте апеляцію нижче."}
         </p>
       </div>
 

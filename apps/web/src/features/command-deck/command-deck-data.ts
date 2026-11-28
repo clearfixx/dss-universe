@@ -22,7 +22,10 @@ import "server-only";
 import { cookies } from "next/headers";
 
 import {
+  AdminAccountBansDocument,
+  AdminBanAppealsDocument,
   AdminCommunityRulesDocument,
+  type BanAppealStatus,
   CommandDeckCommunityHubDocument,
   CommandDeckModeratorsDocument,
   CommandDeckRankingDocument,
@@ -112,6 +115,27 @@ export async function loadCommunityRules() {
     fetchPolicy: "no-cache",
   });
   return result.data?.communityRules ?? [];
+}
+
+/** Appeals of permanent bans (moderation.bans.manage). */
+export async function loadBanAppeals(status: BanAppealStatus, page: number) {
+  const result = await getClient().query({
+    query: AdminBanAppealsDocument,
+    variables: { status, page },
+    context: await authContext(),
+    fetchPolicy: "no-cache",
+  });
+  return result.data?.banAppeals ?? { total: 0, items: [] };
+}
+
+export async function loadActiveBans(page: number) {
+  const result = await getClient().query({
+    query: AdminAccountBansDocument,
+    variables: { page },
+    context: await authContext(),
+    fetchPolicy: "no-cache",
+  });
+  return result.data?.accountBans ?? { total: 0, items: [] };
 }
 
 /** «Гарячі» settings and recent topics for the preview (P1 C04). */

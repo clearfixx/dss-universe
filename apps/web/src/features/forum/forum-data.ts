@@ -23,6 +23,7 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 
 import {
+  AccountBanRulesDocument,
   CommunitySearchDocument,
   ForumCategoriesDocument,
   NewsDiscussionDocument,
@@ -363,5 +364,19 @@ export async function loadForumModerationOverview() {
       return "DENIED" as const;
     }
     throw error;
+  }
+}
+
+/** Rules in force for those who may ban accounts; null for everyone else. */
+export async function loadAccountBanRules() {
+  try {
+    const result = await getClient().query({
+      query: AccountBanRulesDocument,
+      context: await authContext(),
+      fetchPolicy: "no-cache",
+    });
+    return result.data?.accountBanRules ?? null;
+  } catch {
+    return null;
   }
 }

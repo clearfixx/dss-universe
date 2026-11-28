@@ -73,10 +73,13 @@ export function ForumPostCard({
   topicState,
   topicTitle,
   allowsGatedContent = false,
+  banRules = null,
 }: {
   topicState: string;
   topicTitle: string;
   allowsGatedContent?: boolean;
+  /** Rules to ban for; null unless the viewer may ban accounts. */
+  banRules?: ReadonlyArray<{ id: string; code: string; text: string }> | null;
   topicId: string;
   abilities: Readonly<{
     moderate: boolean;
@@ -374,6 +377,15 @@ export function ForumPostCard({
             isAccepted={accepted}
             path={path}
             canReply={canReply}
+            ban={
+              banRules && post.author && post.author.id !== viewerId
+                ? {
+                    authorId: post.author.id,
+                    authorName: forumMemberName(post.author),
+                    rules: banRules,
+                  }
+                : null
+            }
           />
         </div>
       </ForumPostEditScope>

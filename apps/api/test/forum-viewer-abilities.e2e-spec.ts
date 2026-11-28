@@ -24,7 +24,10 @@ import type { ForumViewerFacts } from '@api/modules/forum';
 import { PrismaForumReadModels } from '@api/modules/forum/infrastructure/prisma-forum-read-models';
 import { ForumStructureService } from '@api/modules/forum/infrastructure/prisma-forum-structure';
 import { ForumTopicsService } from '@api/modules/forum/infrastructure/prisma-forum-topics';
-import { ForumTopicReadResolver } from '@api/modules/forum/presentation/forum-read-models.resolver';
+import {
+  ForumPostReadResolver,
+  ForumTopicReadResolver,
+} from '@api/modules/forum/presentation/forum-read-models.resolver';
 import { createIsolatedApiSchemaFixture } from './helpers/migrated-api-schema.fixture';
 
 describe('Forum topic viewer abilities (e2e)', () => {
@@ -32,6 +35,7 @@ describe('Forum topic viewer abilities (e2e)', () => {
   let structure: ForumStructureService;
   let topics: ForumTopicsService;
   let resolver: ForumTopicReadResolver;
+  let postResolver: ForumPostReadResolver;
   const facts = new Map<string, Partial<ForumViewerFacts>>();
 
   beforeAll(async () => {
@@ -82,6 +86,11 @@ describe('Forum topic viewer abilities (e2e)', () => {
       { project: (documentJson) => Promise.resolve({ documentJson }) },
     );
     resolver = new ForumTopicReadResolver(
+      { cards: () => Promise.resolve([]) },
+      new PrismaForumReadModels(fixture.prisma),
+      viewers,
+    );
+    postResolver = new ForumPostReadResolver(
       { cards: () => Promise.resolve([]) },
       new PrismaForumReadModels(fixture.prisma),
       viewers,
@@ -195,6 +204,14 @@ describe('Forum topic viewer abilities (e2e)', () => {
       networkDelete: true,
       staffRole: 'ADMINISTRATOR',
     });
+
+    // One request, a post field first (as in the topic page query): every
+    // resolver shares the request loaders, so none may build them blind.
+    const shared = { req: { user: { id: admin } as never } };
+    await postResolver.author({ authorId: author } as never, shared);
+    await expect(
+      resolver.viewerAbilities(topic as never, shared),
+    ).resolves.toMatchObject({ moderate: true, staffRole: 'ADMINISTRATOR' });
 
     const closed = { ...topic, state: 'CLOSED', acceptedAnswerPostId: 'x' };
     await expect(abilities(closed, author)).resolves.toMatchObject({

@@ -34,6 +34,7 @@ import { DssApplicationShell } from "@/components/shell/session-application-shel
 import { loadSessionViewer } from "@/features/auth/session-data";
 import {
   FORUM_PAGE_SIZE,
+  loadAccountBanRules,
   loadForumCategories,
   loadForumThread,
   loadForumTopicPoll,
@@ -102,6 +103,8 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
   const pages = Math.max(1, Math.ceil(posts.total / FORUM_PAGE_SIZE));
   const readOnlyUntil = viewerState?.sanctions.readOnlyUntil;
   const abilities = topic.viewerAbilities;
+  // Only staff ask; the API answers administrators and refuses the rest.
+  const banRules = abilities.moderate ? await loadAccountBanRules() : null;
   const canWrite = abilities.reply && !readOnlyUntil;
   const acceptedHere = posts.items.find(
     (post) => post.id === topic.acceptedAnswerPostId,
@@ -313,6 +316,7 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
                 topicState={topic.state}
                 topicTitle={topic.title}
                 allowsGatedContent={forum?.allowsGatedContent ?? false}
+                banRules={banRules}
                 accepted={post.id === topic.acceptedAnswerPostId}
                 viewerId={viewer?.id ?? null}
                 canReply={canWrite}
