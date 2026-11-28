@@ -51,6 +51,66 @@ export class ResearchLabDelivery {
     });
   }
 
+  async manuals(viewerId: string | null) {
+    const scope = await this.scope(viewerId);
+    const where = { ...scope.where, state: 'ACTIVE' as const };
+    return this.prisma.researchManual.findMany({
+      where: { isActive: true, chapters: { some: { page: where } } },
+      select: {
+        id: true,
+        language: true,
+        slug: true,
+        title: true,
+        description: true,
+        chapters: {
+          where: { page: where },
+          orderBy: [{ position: 'asc' }, { pageId: 'asc' }],
+          select: {
+            position: true,
+            page: {
+              select: {
+                id: true,
+                slug: true,
+                publishedRevision: { select: { title: true } },
+              },
+            },
+          },
+        },
+      },
+      orderBy: [{ title: 'asc' }, { id: 'asc' }],
+    });
+  }
+
+  async collections(viewerId: string | null) {
+    const scope = await this.scope(viewerId);
+    const where = { ...scope.where, state: 'ACTIVE' as const };
+    return this.prisma.researchCollection.findMany({
+      where: { isActive: true, items: { some: { page: where } } },
+      select: {
+        id: true,
+        language: true,
+        slug: true,
+        title: true,
+        description: true,
+        items: {
+          where: { page: where },
+          orderBy: [{ position: 'asc' }, { pageId: 'asc' }],
+          select: {
+            position: true,
+            page: {
+              select: {
+                id: true,
+                slug: true,
+                publishedRevision: { select: { title: true } },
+              },
+            },
+          },
+        },
+      },
+      orderBy: [{ title: 'asc' }, { id: 'asc' }],
+    });
+  }
+
   private async scope(viewerId: string | null) {
     const facts = await this.authority.viewerFacts(viewerId, new Date());
     const where: Prisma.ResearchPageWhereInput = {

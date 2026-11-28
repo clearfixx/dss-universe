@@ -2482,8 +2482,10 @@ type Query {
   reputationHistory(pagination: ReputationPageInput, userId: ID!): ReputationHistory!
   reputationPolicy: ReputationPolicy!
   researchCategories: [ResearchCategoryEntry!]!
+  researchCollections: [ResearchCollectionEntry!]!
   researchEditPolicy(pageId: ID!): ResearchEditPolicy!
   researchInteractionSettings(pageId: ID!): ResearchInteractionSettings!
+  researchManuals: [ResearchManualEntry!]!
   researchOwnDraft(pageId: ID!): ResearchOwnDraft
   researchOwnDrafts(limit: Int! = 50, offset: Int! = 0): [ResearchOwnDraftItem!]!
   researchPage(id: ID!): ResearchPublishedPage
@@ -2668,6 +2670,26 @@ type ResearchCategoryEntry {
   sortOrder: Int!
 }
 
+type ResearchCollectionEntry {
+  description: String
+  id: ID!
+  items: [ResearchContainerItem!]!
+  language: String!
+  slug: String!
+  title: String!
+}
+
+type ResearchContainerItem {
+  page: ResearchContainerPage!
+  position: Int!
+}
+
+type ResearchContainerPage {
+  id: ID!
+  slug: String!
+  title: String
+}
+
 input ResearchDecisionInput {
   pageId: ID!
   reason: String
@@ -2731,6 +2753,15 @@ enum ResearchInteractionSetting {
 type ResearchInteractionSettings {
   allowComments: Boolean!
   allowRating: Boolean!
+}
+
+type ResearchManualEntry {
+  chapters: [ResearchContainerItem!]!
+  description: String
+  id: ID!
+  language: String!
+  slug: String!
+  title: String!
 }
 
 input ResearchLifecycleInput {
