@@ -26,6 +26,8 @@ import { ForumAccessPolicy } from './forum-access.policy';
 export type ForumActivityStats = Readonly<{
   topicCount: number;
   postCount: number;
+  /** Visible posts without the topic openers. */
+  replyCount: number;
   lastTopic: Readonly<{
     id: string;
     title: string;
@@ -38,12 +40,40 @@ export type ForumActivityStats = Readonly<{
 const EMPTY: ForumActivityStats = {
   topicCount: 0,
   postCount: 0,
+  replyCount: 0,
   lastTopic: null,
 };
 
 @Injectable()
 export class PrismaForumReadModels {
   constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Active moderator IDs per section: assignments to one forum, or (with
+   * `category`) to a whole category. Oldest assignment first.
+   */
+  async sectionModerators(
+    scope: 'forum' | 'category',
+    ids: readonly string[],
+  ): Promise<Map<string, string[]>> {
+    if (ids.length === 0) return new Map();
+    const rows = await this.prisma.forumModeratorAssignment.findMany({
+      where: {
+        revokedAt: null,
+        ...(scope === 'forum'
+          ? { forumId: { in: [...ids] } }
+          : { forumId: null, categoryId: { in: [...ids] } }),
+      },
+      orderBy: [{ assignedAt: 'asc' }, { id: 'asc' }],
+      select: { categoryId: true, forumId: true, moderatorId: true },
+    });
+    const result = new Map<string, string[]>();
+    for (const row of rows) {
+      const key = scope === 'forum' ? row.forumId! : row.categoryId;
+      result.set(key, [...(result.get(key) ?? []), row.moderatorId]);
+    }
+    return result;
+  }
 
   /** Active (not reversed) vote value of the viewer per post. */
   async viewerVotes(
@@ -101,6 +131,7 @@ export class PrismaForumReadModels {
         forumId: string;
         topics: bigint;
         posts: bigint;
+        replies: bigint;
         topicId: string | null;
         title: string | null;
         lastPostAt: Date | null;
@@ -121,7 +152,8 @@ export class PrismaForumReadModels {
       ),
       totals AS (
         SELECT vt."forumId", COUNT(*)::bigint AS "topics",
-          (SELECT COUNT(*) FROM visible_posts vp WHERE vp."forumId" = vt."forumId")::bigint AS "posts"
+          (SELECT COUNT(*) FROM visible_posts vp WHERE vp."forumId" = vt."forumId")::bigint AS "posts",
+          (SELECT COUNT(*) FROM visible_posts vp WHERE vp."forumId" = vt."forumId" AND vp."number" > 1)::bigint AS "replies"
         FROM visible_topics vt
         GROUP BY vt."forumId"
       ),
@@ -131,7 +163,7 @@ export class PrismaForumReadModels {
         FROM visible_posts vp
         ORDER BY vp."forumId", vp."createdAt" DESC, vp."topicId" DESC, vp."number" DESC
       )
-      SELECT totals."forumId", totals."topics", totals."posts",
+      SELECT totals."forumId", totals."topics", totals."posts", totals."replies",
         latest."topicId", latest."title", latest."lastPostAt", latest."lastPostNumber", latest."lastPostAuthorId"
       FROM totals LEFT JOIN latest ON latest."forumId" = totals."forumId"`;
     const totals = rows;
@@ -156,6 +188,7 @@ export class PrismaForumReadModels {
         ...EMPTY,
         topicCount: Number(row.topics),
         postCount: Number(row.posts),
+        replyCount: Number(row.replies),
       });
     }
     for (const row of latest) {

@@ -40,6 +40,7 @@ import {
   loadForumTopicPoll,
   loadForumTopicViewerState,
 } from "@/features/forum/forum-data";
+import { sectionPaths } from "@/features/forum/forum-tree-model";
 import { forumMemberName } from "@/features/forum/forum-format";
 import type { ForumReplySort } from "@/gql/graphql";
 import { ForumPoll } from "@/features/forum/forum-poll";
@@ -91,13 +92,12 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
     loadForumTopicPoll(topic.interactionTargetId),
     loadForumCategories(),
   ]);
-  const forums = categories.flatMap((category) =>
-    category.forums.flatMap((forum) => [
-      { ...forum, category: category.title },
-      ...forum.subforums.map((sub) => ({ ...sub, category: category.title })),
-    ]),
+  const location = sectionPaths(categories).find(
+    (item) => item.section.id === topic.forumId,
   );
-  const forum = forums.find((item) => item.id === topic.forumId);
+  const forum = location
+    ? { ...location.section, category: location.category.title }
+    : undefined;
 
   const path = topicPath(topic.id);
   const pages = Math.max(1, Math.ceil(posts.total / FORUM_PAGE_SIZE));
@@ -123,11 +123,17 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
       pageTitle={{ pathname: path, title: topic.title }}
       breadcrumbs={[
         { href: "/community", label: "Спільнота" },
-        { label: "Форум" },
-        ...(forum
+        ...(location
           ? [
-              { label: forum.category },
-              { href: `/community/forum/${forum.id}`, label: forum.title },
+              {
+                href: `/community?category=${location.category.id}`,
+                label: location.category.title,
+              },
+              ...[location.parent, location.section].flatMap((item) =>
+                item
+                  ? [{ href: `/community/forum/${item.id}`, label: item.title }]
+                  : [],
+              ),
             ]
           : []),
         { label: topic.title },
@@ -391,10 +397,12 @@ export default async function ForumTopicRoute({ params, searchParams }: Props) {
           <ForumTopicModeration
             topic={topic}
             abilities={abilities}
-            forums={forums.map((item) => ({
-              id: item.id,
-              title: item.title,
-              category: item.category,
+            forums={sectionPaths(categories).map((item) => ({
+              id: item.section.id,
+              title: item.parent
+                ? `${item.parent.title} › ${item.section.title}`
+                : item.section.title,
+              category: item.category.title,
             }))}
             path={path}
           />

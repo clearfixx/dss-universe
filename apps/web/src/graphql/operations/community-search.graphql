@@ -18,6 +18,7 @@ query CommunitySearch(
       title
       excerpt
       publishedAt
+      sectionId
     }
   }
   news: search(

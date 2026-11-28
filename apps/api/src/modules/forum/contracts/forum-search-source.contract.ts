@@ -23,6 +23,8 @@ export type ForumSearchHit = Readonly<{
   title: string;
   excerpt: string;
   publishedAt: Date;
+  /** Forum of the topic, so the client can show the way to it. */
+  sectionId?: string;
 }>;
 
 export interface ForumSearchSource {

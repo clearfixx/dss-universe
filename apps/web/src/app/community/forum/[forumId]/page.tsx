@@ -7,7 +7,7 @@
  *
  * 🎯 Purpose:
  * Forum section page after the owner mockup "Форум Next.js": header with
- * counters, section tabs, sort pills, pinned block, the topic table and
+ * counters and moderators, its subforums as their own block, section tabs, sort pills, pinned block, the topic table and
  * pagination; aside with the section description, status filters, tags
  * and related sections.
  *
@@ -48,7 +48,12 @@ import {
   loadForumTopics,
 } from "@/features/forum/forum-data";
 import { forumCount, forumPlural } from "@/features/forum/forum-format";
+import { sectionTotals } from "@/features/forum/forum-tree-model";
 import { ForumSectionIcon } from "@/features/forum/forum-section-icon";
+import {
+  ForumModeratorLine,
+  ForumSectionList,
+} from "@/features/forum/forum-section-list";
 import { ForumFollowButton } from "@/features/forum/forum-topic-controls";
 import type {
   ForumTopicFilter,
@@ -86,7 +91,7 @@ const FILTERS: ReadonlyArray<{
   { id: "MINE", label: "Мої теми", signedIn: true },
 ];
 const TOPICS = ["тема", "теми", "тем"] as const;
-const POSTS = ["допис", "дописи", "дописів"] as const;
+const REPLIES = ["відповідь", "відповіді", "відповідей"] as const;
 const MEMBERS = ["учасник", "учасники", "учасників"] as const;
 
 const pick = <T extends string>(
@@ -218,11 +223,10 @@ export default async function ForumSectionRoute({
     return qs ? `${path}?${qs}` : path;
   };
   const pages = Math.max(1, Math.ceil(list.total / FORUM_PAGE_SIZE));
-  const subforums = parent ? [] : "subforums" in forum ? forum.subforums : [];
+  const subforums = "subforums" in forum ? forum.subforums : [];
   const siblings = (parent ? parent.subforums : category.forums).filter(
     (item) => item.id !== forum.id,
   );
-  const activity = forum.activity;
   const pinned = list.items.filter((topic) => topic.pinned);
   const regular = list.items.filter((topic) => !topic.pinned);
   const activeTags = tags.filter((tag) => tag.active);
@@ -231,7 +235,10 @@ export default async function ForumSectionRoute({
     scope !== "ACTIVE" ||
     kind !== "ALL" ||
     Boolean(query.tag);
-  const facets = state?.forumTopicFacets ?? null;
+  // The counter switch also hides the numbers next to the filters.
+  const facets = forum.showCounts ? (state?.forumTopicFacets ?? null) : null;
+  // The same totals as the section's row on the hub: subforums included.
+  const totals = sectionTotals(forum, subforums);
   const statusCount: Record<ForumTopicFilter, number | null | undefined> = {
     ALL: facets?.total,
     UNSOLVED: facets?.unsolved,
@@ -270,7 +277,6 @@ export default async function ForumSectionRoute({
       pageTitle={{ pathname: path, title: forum.title }}
       breadcrumbs={[
         { href: "/community", label: "Спільнота" },
-        { href: "/community", label: "Форум" },
         { href: `/community?category=${category.id}`, label: category.title },
         ...(parent
           ? [{ href: `/community/forum/${parent.id}`, label: parent.title }]
@@ -280,6 +286,38 @@ export default async function ForumSectionRoute({
     >
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_19rem] 2xl:grid-cols-[minmax(0,1fr)_21rem]">
         <div className="min-w-0 space-y-4">
+          {parent ? (
+            <div className="space-y-2">
+              <Link
+                href={`/community/forum/${parent.id}`}
+                className="inline-flex items-center gap-1 text-sm text-violet-300 hover:text-violet-200"
+              >
+                <ChevronLeft className="size-4" aria-hidden="true" />
+                Підфорум розділу «{parent.title}»
+              </Link>
+              {parent.subforums.length > 1 ? (
+                <nav
+                  aria-label="Підфоруми розділу"
+                  className="flex flex-wrap gap-1.5"
+                >
+                  {parent.subforums.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={`/community/forum/${item.id}`}
+                      aria-current={item.id === forum.id ? "page" : undefined}
+                      className={`rounded-md border px-2.5 py-1 text-xs ${
+                        item.id === forum.id
+                          ? "border-violet-500 bg-violet-600 text-white"
+                          : "border-white/10 text-slate-300 hover:border-violet-400/50"
+                      }`}
+                    >
+                      {item.title}
+                    </Link>
+                  ))}
+                </nav>
+              ) : null}
+            </div>
+          ) : null}
           <header className="flex flex-wrap items-center gap-x-6 gap-y-3">
             <div className="flex min-w-0 flex-1 basis-80 items-center gap-4">
               <ForumSectionIcon slug={forum.slug} className="size-14" />
@@ -292,17 +330,22 @@ export default async function ForumSectionRoute({
                     {forum.description}
                   </p>
                 ) : null}
+                <ForumModeratorLine
+                  members={forum.moderators}
+                  className="mt-1.5"
+                />
               </div>
             </div>
             <dl className="flex gap-5">
-              {(
-                [
-                  [MessageSquareText, activity.topicCount, TOPICS],
-                  [FileText, activity.postCount, POSTS],
-                  ...(facets
-                    ? ([[Users, facets.participants, MEMBERS]] as const)
-                    : []),
-                ] as const
+              {(forum.showCounts
+                ? ([
+                    [MessageSquareText, totals.counts?.topics ?? 0, TOPICS],
+                    [FileText, totals.counts?.replies ?? 0, REPLIES],
+                    ...(facets
+                      ? ([[Users, facets.participants, MEMBERS]] as const)
+                      : []),
+                  ] as const)
+                : []
               ).map(([Icon, value, forms]) => (
                 <div key={forms[0]} className="flex items-center gap-2">
                   <Icon className="size-5 text-slate-400" aria-hidden="true" />
@@ -335,6 +378,25 @@ export default async function ForumSectionRoute({
             )}
           </header>
 
+          {subforums.length ? (
+            <section
+              aria-labelledby="subforums-title"
+              className="overflow-hidden rounded-xl border border-white/[0.07] bg-card"
+            >
+              <h2
+                id="subforums-title"
+                className="border-b border-violet-500/30 bg-violet-500/10 px-4 py-2.5 font-semibold"
+              >
+                Підфоруми
+              </h2>
+              <ForumSectionList sections={subforums} />
+            </section>
+          ) : null}
+
+          {subforums.length ? (
+            <h2 className="pt-1 text-lg font-semibold">Теми розділу</h2>
+          ) : null}
+
           <nav
             aria-label="Розділ"
             className="flex overflow-x-auto border-b border-white/[0.07]"
@@ -357,14 +419,6 @@ export default async function ForumSectionRoute({
                 {label}
               </a>
             ))}
-            {subforums.length ? (
-              <a
-                href="#subforums"
-                className={`${tabClass} text-slate-400 hover:text-white`}
-              >
-                Підрозділи ({subforums.length})
-              </a>
-            ) : null}
             <span className="ml-auto flex items-center pb-1.5 pl-3">
               <ForumFollowButton
                 forumId={forumId}
@@ -409,35 +463,6 @@ export default async function ForumSectionRoute({
               Архів
             </Link>
           </div>
-
-          {subforums.length ? (
-            <section
-              id="subforums"
-              aria-label="Підрозділи"
-              className="grid scroll-mt-24 gap-2 sm:grid-cols-2 2xl:grid-cols-3"
-            >
-              {subforums.map((sub) => (
-                <Link
-                  key={sub.id}
-                  href={`/community/forum/${sub.id}`}
-                  className="flex min-w-0 items-center gap-3 rounded-xl border border-white/[0.07] bg-card px-3 py-2.5 hover:border-violet-400/40"
-                >
-                  <ForumSectionIcon slug={sub.slug} className="size-9" />
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold">
-                      {sub.title}
-                    </span>
-                    <span className="block text-xs text-slate-400">
-                      {forumCount(sub.activity.topicCount)}{" "}
-                      {forumPlural(sub.activity.topicCount, TOPICS)} ·{" "}
-                      {forumCount(sub.activity.postCount)}{" "}
-                      {forumPlural(sub.activity.postCount, POSTS)}
-                    </span>
-                  </span>
-                </Link>
-              ))}
-            </section>
-          ) : null}
 
           {pinned.length ? (
             <section
@@ -651,7 +676,9 @@ export default async function ForumSectionRoute({
 
           {siblings.length ? (
             <section className="rounded-xl border border-white/[0.07] bg-card p-2">
-              <h2 className="px-2 pt-2 pb-1 font-semibold">Схожі розділи</h2>
+              <h2 className="px-2 pt-2 pb-1 font-semibold">
+                {parent ? "Інші підфоруми" : "Інші розділи категорії"}
+              </h2>
               <ul>
                 {siblings.slice(0, 4).map((item) => (
                   <li key={item.id}>

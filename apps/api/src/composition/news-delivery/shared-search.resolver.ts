@@ -42,6 +42,8 @@ class SearchHit {
   @Field() slug!: string;
   @Field() excerpt!: string;
   @Field() publishedAt!: Date;
+  @Field(() => ID, { nullable: true, description: 'Forum of a topic hit.' })
+  sectionId?: string;
 }
 @ObjectType()
 class SearchCategoryCount {

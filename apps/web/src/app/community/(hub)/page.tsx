@@ -7,8 +7,8 @@
  *
  * 🎯 Purpose:
  * Community Hub home after the owner mockup "Центр спільноти": hero with
- * counters, latest activity, questions that need help, the section browser
- * (category tabs) and, aside, followed topics, unanswered topics and tags.
+ * counters, latest activity, questions that need help, the section tree (one
+ * foldable block per category, owner 2026-11-28) and, aside, followed topics, unanswered topics and tags.
  *
  * ⚠️ Important:
  * Every block honours forum visibility (decided by the API). Mockup blocks
@@ -54,9 +54,11 @@ import {
   forumCount,
   forumPlural,
   forumUnreadCount,
-  forumWhen,
 } from "@/features/forum/forum-format";
-import { ForumSectionIcon } from "@/features/forum/forum-section-icon";
+import {
+  ForumModeratorLine,
+  ForumSectionList,
+} from "@/features/forum/forum-section-list";
 
 export const metadata: Metadata = {
   title: "Community Hub | DSS Universe",
@@ -84,21 +86,6 @@ type TopicRow = {
   lastPostAuthor?: Member;
 };
 
-type Activity = {
-  topicCount: number;
-  postCount: number;
-  lastActivity: {
-    topicId: string;
-    title: string;
-    lastPostAt: unknown;
-    lastPostNumber: number;
-    author: Member;
-  } | null;
-};
-
-const TOPICS = ["тема", "теми", "тем"] as const;
-const POSTS = ["допис", "дописи", "дописів"] as const;
-const FORUMS = ["форум", "форуми", "форумів"] as const;
 const MISSION_METRIC: Record<string, string> = {
   TOPICS: "Нові теми",
   REPLIES: "Відповіді",
@@ -235,108 +222,6 @@ function TopicLines({
   );
 }
 
-function SectionRow({
-  href,
-  slug,
-  title,
-  description,
-  forums,
-  activity,
-}: {
-  href: string;
-  slug: string;
-  title: string;
-  description?: string | null;
-  forums?: number;
-  activity: Activity;
-}) {
-  const last = activity.lastActivity;
-  return (
-    <li className="relative grid items-center gap-x-4 gap-y-2 border-b border-white/[0.06] px-4 py-3 last:border-b-0 hover:bg-white/[0.02] sm:grid-cols-[2.75rem_minmax(0,1fr)] lg:grid-cols-[2.75rem_minmax(0,1fr)_auto_minmax(0,13rem)_1rem]">
-      <ForumSectionIcon slug={slug} className="hidden size-11 sm:flex" />
-      <div className="min-w-0">
-        <Link
-          href={href}
-          className="font-semibold text-white after:absolute after:inset-0 hover:text-violet-200"
-        >
-          {title}
-        </Link>
-        {description ? (
-          <p className="truncate text-xs text-slate-400">{description}</p>
-        ) : null}
-      </div>
-      <dl className="flex gap-4 text-xs text-slate-300 sm:col-start-2 lg:col-start-auto lg:justify-end">
-        {forums ? (
-          <div className="flex items-center gap-1">
-            <dt className="sr-only">Форуми</dt>
-            <MessageSquare
-              className="size-3.5 text-slate-400"
-              aria-hidden="true"
-            />
-            <dd>
-              {forums} {forumPlural(forums, FORUMS)}
-            </dd>
-          </div>
-        ) : null}
-        <div>
-          <dt className="sr-only">Теми</dt>
-          <dd>
-            {forumCount(activity.topicCount)}{" "}
-            {forumPlural(activity.topicCount, TOPICS)}
-          </dd>
-        </div>
-        <div>
-          <dt className="sr-only">Дописи</dt>
-          <dd>
-            {forumCount(activity.postCount)}{" "}
-            {forumPlural(activity.postCount, POSTS)}
-          </dd>
-        </div>
-      </dl>
-      {last ? (
-        <Link
-          href={`/community/forum/topics/${last.topicId}#post-${last.lastPostNumber}`}
-          className="relative z-10 hidden min-w-0 items-center gap-2 lg:flex"
-        >
-          <ForumAvatar member={last.author} className="size-8 text-[11px]" />
-          <span className="min-w-0">
-            <span className="block truncate text-xs text-slate-200 hover:text-violet-200">
-              {last.title}
-            </span>
-            <span className="block text-[11px] text-slate-500">
-              {forumWhen(last.lastPostAt)}
-            </span>
-          </span>
-        </Link>
-      ) : (
-        <span className="hidden text-xs text-slate-500 lg:block">
-          Ще немає тем
-        </span>
-      )}
-      <ChevronRight
-        className="hidden size-4 text-slate-500 lg:block"
-        aria-hidden="true"
-      />
-    </li>
-  );
-}
-
-function merge(activities: readonly Activity[]): Activity {
-  const latest = activities
-    .map((item) => item.lastActivity)
-    .filter((item): item is NonNullable<Activity["lastActivity"]> => !!item)
-    .sort(
-      (a, b) =>
-        new Date(String(b.lastPostAt)).getTime() -
-        new Date(String(a.lastPostAt)).getTime(),
-    )[0];
-  return {
-    topicCount: activities.reduce((sum, item) => sum + item.topicCount, 0),
-    postCount: activities.reduce((sum, item) => sum + item.postCount, 0),
-    lastActivity: latest ?? null,
-  };
-}
-
 export default async function CommunityHubRoute({ searchParams }: Props) {
   const { category: categoryId } = await searchParams;
   const viewer = await loadSessionViewer();
@@ -380,20 +265,17 @@ export default async function CommunityHubRoute({ searchParams }: Props) {
     ["Тем", stats.topicCount, ListChecks],
     ["Розділи", stats.forumCount, Layers],
   ];
-  const tab = (active: boolean) =>
-    `relative inline-flex h-11 shrink-0 items-center px-3 text-sm transition ${
+  const chip = (active: boolean) =>
+    `inline-flex h-9 shrink-0 items-center rounded-lg px-3 text-sm transition ${
       active
-        ? "font-semibold text-white after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full after:bg-violet-500"
-        : "text-slate-400 hover:text-white"
+        ? "bg-violet-600 font-semibold text-white"
+        : "bg-white/[0.04] text-slate-300 hover:bg-white/[0.08] hover:text-white"
     }`;
 
   return (
     <DssApplicationShell
       pageTitle={{ pathname: "/community", title: "Community Hub" }}
-      breadcrumbs={[
-        { href: "/community", label: "Спільнота" },
-        { label: "Форум" },
-      ]}
+      breadcrumbs={[{ label: "Спільнота" }]}
     >
       <div className="space-y-5">
         <section className="py-1">
@@ -519,70 +401,68 @@ export default async function CommunityHubRoute({ searchParams }: Props) {
               </Panel>
             </div>
 
-            <section
-              aria-label="Розділи форуму"
-              className="overflow-hidden rounded-xl border border-white/[0.07] bg-card"
-            >
-              <nav
-                aria-label="Категорії"
-                className="flex overflow-x-auto border-b border-white/[0.07] px-2"
-              >
-                <Link
-                  href="/community"
-                  aria-current={current ? undefined : "page"}
-                  className={tab(!current)}
+            <section aria-label="Розділи форуму" className="space-y-3">
+              {categories.length > 1 ? (
+                <nav
+                  aria-label="Категорії"
+                  className="flex gap-2 overflow-x-auto pb-1"
                 >
-                  Усі розділи
-                </Link>
-                {categories.map((item) => (
                   <Link
-                    key={item.id}
-                    href={`/community?category=${item.id}`}
-                    aria-current={current?.id === item.id ? "page" : undefined}
-                    className={tab(current?.id === item.id)}
+                    href="/community"
+                    aria-current={current ? undefined : "page"}
+                    className={chip(!current)}
                   >
-                    {item.title}
+                    Усі категорії
                   </Link>
-                ))}
-              </nav>
+                  {categories.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={`/community?category=${item.id}`}
+                      aria-current={
+                        current?.id === item.id ? "page" : undefined
+                      }
+                      className={chip(current?.id === item.id)}
+                    >
+                      {item.title}
+                    </Link>
+                  ))}
+                </nav>
+              ) : null}
               {categories.length === 0 ? (
-                <p className="p-6 text-center text-sm text-slate-400">
+                <p className="rounded-xl border border-white/[0.07] bg-card p-6 text-center text-sm text-slate-400">
                   Розділів поки немає.
                 </p>
               ) : (
-                <ul>
-                  {current
-                    ? current.forums.map((forum) => (
-                        <SectionRow
-                          key={forum.id}
-                          href={`/community/forum/${forum.id}`}
-                          slug={forum.slug}
-                          title={forum.title}
-                          description={forum.description}
-                          forums={forum.subforums.length}
-                          activity={merge([
-                            forum.activity,
-                            ...forum.subforums.map((sub) => sub.activity),
-                          ])}
-                        />
-                      ))
-                    : categories.map((item) => (
-                        <SectionRow
-                          key={item.id}
-                          href={`/community?category=${item.id}`}
-                          slug={item.slug}
-                          title={item.title}
-                          description={item.description}
-                          forums={item.forums.length}
-                          activity={merge(
-                            item.forums.flatMap((forum) => [
-                              forum.activity,
-                              ...forum.subforums.map((sub) => sub.activity),
-                            ]),
-                          )}
-                        />
-                      ))}
-                </ul>
+                (current ? [current] : categories).map((category) => (
+                  <details
+                    key={category.id}
+                    open
+                    className="group/category overflow-hidden rounded-xl border border-white/[0.07] bg-card"
+                  >
+                    <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-1 border-b border-violet-500/30 bg-violet-500/10 px-4 py-3">
+                      <ChevronRight
+                        className="size-4 text-violet-300 transition group-open/category:rotate-90"
+                        aria-hidden="true"
+                      />
+                      <h2 className="font-semibold text-white">
+                        {category.title}
+                      </h2>
+                      <span className="text-xs text-slate-400">категорія</span>
+                      <ForumModeratorLine
+                        members={category.moderators}
+                        label="Модератори категорії"
+                        className="w-full sm:ml-auto sm:w-auto"
+                      />
+                    </summary>
+                    {category.forums.length ? (
+                      <ForumSectionList sections={category.forums} />
+                    ) : (
+                      <p className="p-4 text-sm text-slate-400">
+                        У цій категорії ще немає розділів.
+                      </p>
+                    )}
+                  </details>
+                ))
               )}
             </section>
             <div className="grid gap-4 lg:grid-cols-2">
