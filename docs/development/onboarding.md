@@ -47,7 +47,7 @@ pnpm install --frozen-lockfile
 
 ## Environment Files
 
-DSS Universe uses two local environment files.
+DSS Universe uses local environment files for Docker, API and Web.
 
 ### Root Environment
 
@@ -147,6 +147,14 @@ Expected result:
 ```
 
 ---
+
+### Custom development ports and API watch
+
+The default API port is 3001. For a custom port (for example 3201), set `PORT` in `apps/api/.env` and align `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_GRAPHQL_URL` in `apps/web/.env`. Align `WEB_ORIGINS` with the actual Web origin and keep the web listener configuration and email links consistent. Do not overwrite local environment files when changing branches.
+
+The canonical compiled API entry is `apps/api/dist/src/main.js`. Nest CLI uses the explicit build config and entry path, with non-incremental build metadata and a fixed project root. The isolated `node --test scripts/api-dev-watch.test.mjs` regression uses the installed CLI to verify initial launch and restart after a source edit, without touching the database. It does not replace a real API readiness check.
+
+Stop `pnpm dev` before switching branches or running a separate API build. If a previous watcher reports a missing entry, stop it, then restart `pnpm dev`; check the configured API port and query `apiInfo` via GraphQL before retrying login. Never reset the database for a missing compiled entry.
 
 ## Bootstrap Script
 

@@ -22,6 +22,11 @@ test("API production entry exists and parses after build", () => {
   const [runner, entry, ...extra] = manifest.scripts["start:prod"].split(" ");
   assert.equal(runner, "node");
   assert.deepEqual(extra, []);
+  const config = JSON.parse(readFileSync(resolve(api, "nest-cli.json"), "utf8"));
+  const tsconfig = JSON.parse(readFileSync(resolve(api, config.compilerOptions.tsConfigPath), "utf8"));
+  assert.equal(tsconfig.compilerOptions.rootDir, ".");
+  assert.equal(tsconfig.compilerOptions.incremental, false);
+  assert.equal(resolve(api, "dist", config.entryFile), resolve(api, entry));
   const built = resolve(api, `${entry}.js`);
   assert.ok(relative(api, built).startsWith(`dist${sep}`));
   assert.ok(statSync(built).isFile());
