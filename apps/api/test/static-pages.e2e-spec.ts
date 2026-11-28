@@ -21,6 +21,7 @@ import type { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { Permission } from './../src/core/authorization';
 import { PrismaService } from './../src/core/database';
+import { StorageService } from './../src/core/storage';
 import { AuthenticationPresentationService } from './../src/composition/identity/application/authentication-presentation.service';
 import { EDITOR_CODE_HIGHLIGHTER } from './../src/modules/editor/application/contracts/editor-code-highlighter.interface';
 import { StaticPagesService } from './../src/modules/static-pages/infrastructure/prisma-static-pages';
@@ -162,7 +163,58 @@ describe('Static pages (e2e)', () => {
       slug,
     );
 
+    // A file is served only while the published snapshot contains it.
+    const prisma = app.get(PrismaService);
+    const media = await prisma.media.create({
+      data: {
+        ownerId: actor.id,
+        kind: 'IMAGE',
+        status: 'READY',
+        visibility: 'PRIVATE',
+        bucket: 'media',
+        storageKey: `media/test/${suffix}.webp`,
+        originalFilename: 'map.webp',
+        mimeType: 'image/webp',
+        extension: 'webp',
+        size: 3,
+        checksum: 'abc',
+      },
+    });
+    await app.get(StorageService).saveObject(
+      {
+        storageProvider: media.storageProvider,
+        bucket: media.bucket,
+        storageKey: media.storageKey,
+      },
+      Buffer.from('img'),
+      'image/webp',
+    );
+    const withImage = JSON.stringify({
+      ...createEmptyEditorDocument('ADMIN'),
+      content: {
+        type: 'doc',
+        content: [
+          {
+            type: 'mediaReference',
+            attrs: { mediaId: media.id, alt: 'Map', caption: '' },
+          },
+        ],
+      },
+    });
+    const file = () =>
+      request(app.getHttpServer()).get(`/api/pages/${slug}/files/${media.id}`);
+    await pages.save(actor, created.id, 2, {
+      ...input,
+      documentJson: withImage,
+    });
+    await file().expect(404);
+    await pages.publish(actor, created.id, 3);
+    const served = await file().expect(200);
+    expect(served.headers['content-type']).toContain('image/webp');
+    expect(served.headers['x-content-type-options']).toBe('nosniff');
+
     await pages.unpublish(actor, created.id);
+    await file().expect(404);
     await expect(publicPage(slug)).resolves.toBeNull();
     await expect(pages.unpublish(actor, created.id)).rejects.toMatchObject({
       code: 'CONFLICT',
@@ -174,6 +226,8 @@ describe('Static pages (e2e)', () => {
     });
     expect(audit.map(({ action }) => action)).toEqual([
       'cms.page_created',
+      'cms.page_published',
+      'cms.page_saved',
       'cms.page_published',
       'cms.page_saved',
       'cms.page_published',

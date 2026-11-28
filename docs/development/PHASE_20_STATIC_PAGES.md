@@ -1,7 +1,7 @@
 # Static pages builder
 
-Status: packages 1 (API) and 2 (Command Deck) implemented 2026-11-28;
-package 3 (public page) is not started. First part of
+Status: all three packages implemented 2026-11-28: API, Command Deck and the
+public page with its files and sitemap entries. First part of
 the Phase 20 CMS Builder.
 
 ## Owner decisions (2026-11-28)
