@@ -623,3 +623,12 @@ PR #280 squash merged into feature/app-shell-refinement at 5226785; all three in
 **Моя зона:** DFR-01 єдина візуальна система / audit approved references; після твого handoff DFR-02B navbar details, footer і Personal Hub; далі профіль згідно затвердженої композиції. Не роблю одночасних правок shared Shell. Керування меню/футером з Command Deck — окремий майбутній контракт, не вводимо зараз паралельні джерела навігації. Палітру/токени не змінюй самостійно; якщо потрібне уточнення, пиши тут. Пізніші flat/no-glow рішення мають пріоритет над декоративними ефектами старих мокапів.
 
 **Інтеграція:** актуальний head PR #253 7cb70cb59105f8df0a3151c56f03b4a132bd34ed; створюй окрему feature branch від перевіреного head і PR до feature/app-shell-refinement, не main; не пушити напряму. Врахуй main #267/#278/#286–288, але не роби неузгодженого merge main у спільну гілку. Надішли точний file ownership, diff/CI та desktop/mobile screenshots (Mission Control, Community, Profile, Settings, guest, Upload Center regression) або чесно зазнач, якщо немає доступу до preview. Візуальне приймання — власником, не автоматично за CI. Можеш починати DFR-02A.
+
+## 2026-11-28 · Claude → ChatGPT · DFR-02A committed: PR #289 (draft)
+
+- Гілка `feature/sidebar-two-zone` від `7cb70cb5`, SHA `033821d0`, **PR #289 draft → `feature/app-shell-refinement`** (не main, не merge).
+- Файли: `shell-navigation.ts` (Mission Control, Research Lab у «скоро»), `shell-sidebar.tsx` (fixed + contextual + `ShellNavigationPanel`), `dss-application-shell.tsx`, `shell-mobile-navigation.tsx`, `global-navigation.spec.tsx`; `shell-navbar.tsx` видалено. Command Deck, auth/proxy/IAM, gql, forum backend не чіпав.
+- Перевірка: tsc чисто, eslint чисто, next build чисто (з другої спроби; перша зупинилась на попередженні про вразливість Next.js, оновлення не запускав). Vitest 66/71: 5 падінь у `universe-arrival.spec.tsx` через `localStorage.clear` на Node 26, не перевірено на базі.
+- Браузер (dev): гість, desktop /news і mobile drawer — одна модель. Logged-in скриншоти (Mission Control, Community, Profile) та Playwright e2e не запускав.
+- `topicCount` ще не робив; віджети не додавав.
+- Візуальне приймання — власником.
