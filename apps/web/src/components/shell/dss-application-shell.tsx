@@ -48,7 +48,8 @@ import { Logo } from "./shell-logo";
 import { ModuleNavigation, SidebarNavigation } from "./shell-sidebar";
 import { ShellSearch } from "./shell-search";
 import { ShellMobileNavigation } from "./shell-mobile-navigation";
-import { ShellQuickAdd, ShellUserMenu } from "./shell-user-menu";
+import { ShellQuickAdd, ShellUserMenu, type ViewerMenuProgress } from "./shell-user-menu";
+import { ShellHeaderActions } from "./shell-header-actions";
 
 export { Breadcrumbs, type TrustedBreadcrumb } from "./shell-breadcrumbs";
 
@@ -79,10 +80,14 @@ export function DssApplicationShell({
   toolbar,
   canAccessAdminDeck = false,
   canModerate = false,
+  viewerProgress = null,
+  unreadCount = null,
   pageTitle,
   breadcrumbs,
 }: PropsWithChildren<{
   viewer: SessionViewer | null;
+  viewerProgress?: ViewerMenuProgress | null;
+  unreadCount?: number | null;
   /**
    * Stored admin setting, kept for compatibility only. The navigation
    * composition is fixed by the owner decision of 2026-11-28 (variant B).
@@ -217,8 +222,9 @@ export function DssApplicationShell({
           </div>
           <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-2">
             <ShellSearch />
+            {hasSession ? <ShellHeaderActions unreadCount={unreadCount} /> : null}
             {hasSession ? <ShellQuickAdd canAccessAdminDeck={canAccessAdminDeck} /> : null}
-            <ShellUserMenu viewer={viewer} pathname={pathname} canAccessAdminDeck={canAccessAdminDeck} canModerate={canModerate} />
+            <ShellUserMenu viewer={viewer} pathname={pathname} canAccessAdminDeck={canAccessAdminDeck} canModerate={canModerate} progress={viewerProgress} />
           </div>
         </DesignScope>
 

@@ -108,6 +108,31 @@ export async function loadPublicProfile(username: string) {
   };
 }
 
+/**
+ * Level and XP of the signed-in viewer for the personal menu. Returns null when
+ * the projection is unavailable, so the menu can show an empty state instead.
+ */
+export async function loadViewerMenuProgress(userId: string) {
+  try {
+    const result = await getClient().query({
+      query: ProfileGamificationDocument,
+      variables: { userId },
+      context: await authorizationContext(),
+      fetchPolicy: "no-cache",
+    });
+    const level = result.data?.levelProgress;
+    if (!level) return null;
+    return {
+      currentLevel: level.currentLevel,
+      pointsIntoLevel: level.pointsIntoLevel,
+      pointsNeeded: level.pointsNeeded,
+      progressPercent: level.progressPercent,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function loadProfileSettings() {
   const result = await getClient().query({
     query: ProfileSettingsDocument,
