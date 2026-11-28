@@ -713,6 +713,9 @@ type Forum {
   gateViewRole: ForumAccessRole!
   id: ID!
   listed: Boolean!
+
+  """Moderators assigned to this forum itself."""
+  moderators: [ForumMember!]!
   parentId: ID
   pinnedLimit: Int
   position: Int!
@@ -767,6 +770,9 @@ enum ForumAccessSource {
 type ForumActivityStats {
   lastActivity: ForumLastActivity
   postCount: Int!
+
+  """Posts without the topic openers."""
+  replyCount: Int!
   topicCount: Int!
 }
 
@@ -778,6 +784,9 @@ type ForumCategory {
   description: String
   forums: [Forum!]!
   id: ID!
+
+  """Moderators assigned to the whole category."""
+  moderators: [ForumMember!]!
   position: Int!
   slug: String!
   title: String!
@@ -1151,6 +1160,9 @@ type ForumSubforum {
   gateViewRole: ForumAccessRole!
   id: ID!
   listed: Boolean!
+
+  """Moderators assigned to this forum itself."""
+  moderators: [ForumMember!]!
   parentId: ID
   pinnedLimit: Int
   position: Int!
@@ -3108,6 +3120,9 @@ type SearchHit {
   language: String!
   publishedAt: DateTime!
   revisionId: ID
+
+  """Forum of a topic hit."""
+  sectionId: ID
   slug: String!
   source: String!
   title: String!

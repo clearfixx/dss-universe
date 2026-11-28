@@ -181,6 +181,7 @@ describe('Forum UI read models (e2e)', () => {
     expect(stats.get(f.forumId)).toMatchObject({
       topicCount: 1,
       postCount: 2,
+      replyCount: 1,
       lastTopic: {
         id: first.id,
         title: 'First',
@@ -191,8 +192,38 @@ describe('Forum UI read models (e2e)', () => {
     expect(stats.get(empty.forumId)).toEqual({
       topicCount: 0,
       postCount: 0,
+      replyCount: 0,
       lastTopic: null,
     });
+  });
+
+  it('lists active moderators separately for a forum and its category', async () => {
+    const f = await forum();
+    const { categoryId } = await fixture.prisma.forum.findUniqueOrThrow({
+      where: { id: f.forumId },
+      select: { categoryId: true },
+    });
+    const admin = await user({
+      seesAllCategories: true,
+      canAssignModerators: true,
+    });
+    const own = await user();
+    const former = await user();
+    await structure.assignModerator(admin, categoryId, own, f.forumId);
+    const revoked = await structure.assignModerator(
+      admin,
+      categoryId,
+      former,
+      f.forumId,
+    );
+    await structure.revokeModerator(admin, revoked.id);
+
+    await expect(
+      reads.sectionModerators('forum', [f.forumId]),
+    ).resolves.toEqual(new Map([[f.forumId, [own]]]));
+    await expect(
+      reads.sectionModerators('category', [categoryId]),
+    ).resolves.toEqual(new Map([[categoryId, [f.moderator]]]));
   });
 
   it('returns only the viewer’s active votes and public member cards', async () => {

@@ -47,6 +47,7 @@ import type { ForumViewerFacts } from '../domain/types/forum-structure.type';
 import { canCloseTopic, canReopenTopic } from '../domain/forum-topic.rules';
 import { ForumPostVoteModel } from './forum-ratings.resolver';
 import {
+  ForumCategoryModel,
   ForumModel,
   ForumModeratorAssignmentModel,
   ForumSubforumModel,
@@ -87,6 +88,8 @@ class ForumLastActivityModel {
 class ForumActivityStatsModel {
   @Field(() => Int) topicCount!: number;
   @Field(() => Int) postCount!: number;
+  @Field(() => Int, { description: 'Posts without the topic openers.' })
+  replyCount!: number;
   @Field(() => ForumLastActivityModel, { nullable: true })
   lastActivity!: ForumLastActivityModel | null;
 }
@@ -139,6 +142,8 @@ type Loaders = {
   cards: DataLoader<string, ForumMemberCard | null>;
   votes: DataLoader<string, number | null>;
   stats: DataLoader<string, ForumActivityStats>;
+  forumModerators: DataLoader<string, string[]>;
+  categoryModerators: DataLoader<string, string[]>;
 };
 
 const perRequest = new WeakMap<object, Loaders>();
@@ -195,8 +200,21 @@ export class ForumReadLoaders {
           const stats = await this.reads.forumStats(forumIds);
           return forumIds.map(
             (id) =>
-              stats.get(id) ?? { topicCount: 0, postCount: 0, lastTopic: null },
+              stats.get(id) ?? {
+                topicCount: 0,
+                postCount: 0,
+                replyCount: 0,
+                lastTopic: null,
+              },
           );
+        }),
+        forumModerators: new DataLoader(async (ids) => {
+          const map = await this.reads.sectionModerators('forum', ids);
+          return ids.map((id) => map.get(id) ?? []);
+        }),
+        categoryModerators: new DataLoader(async (ids) => {
+          const map = await this.reads.sectionModerators('category', ids);
+          return ids.map((id) => map.get(id) ?? []);
         }),
       };
       perRequest.set(ctx.req, loaders);
@@ -223,6 +241,16 @@ abstract class ForumReadResolverBase {
     return id ? this.loaders.for(ctx).cards.load(id) : Promise.resolve(null);
   }
 
+  protected async moderatorCards(
+    ctx: RequestContext,
+    scope: 'forumModerators' | 'categoryModerators',
+    id: string,
+  ): Promise<ForumMemberCard[]> {
+    const ids = await this.loaders.for(ctx)[scope].load(id);
+    const cards = await Promise.all(ids.map((each) => this.card(ctx, each)));
+    return cards.filter((card): card is ForumMemberCard => card !== null);
+  }
+
   protected async stats(
     ctx: RequestContext,
     forumId: string,
@@ -231,6 +259,7 @@ abstract class ForumReadResolverBase {
     return {
       topicCount: stats.topicCount,
       postCount: stats.postCount,
+      replyCount: stats.replyCount,
       lastActivity: stats.lastTopic
         ? {
             topicId: stats.lastTopic.id,
@@ -456,6 +485,13 @@ export class ForumStatsResolver extends ForumReadResolverBase {
   activity(@Parent() forum: ForumModel, @Context() ctx: RequestContext) {
     return this.stats(ctx, forum.id);
   }
+
+  @ResolveField(() => [ForumMemberModel], {
+    description: 'Moderators assigned to this forum itself.',
+  })
+  moderators(@Parent() forum: ForumModel, @Context() ctx: RequestContext) {
+    return this.moderatorCards(ctx, 'forumModerators', forum.id);
+  }
 }
 
 @Resolver(() => ForumSubforumModel)
@@ -474,5 +510,36 @@ export class ForumSubforumStatsResolver extends ForumReadResolverBase {
     @Context() ctx: RequestContext,
   ) {
     return this.stats(ctx, forum.id);
+  }
+
+  @ResolveField(() => [ForumMemberModel], {
+    description: 'Moderators assigned to this forum itself.',
+  })
+  moderators(
+    @Parent() forum: ForumSubforumModel,
+    @Context() ctx: RequestContext,
+  ) {
+    return this.moderatorCards(ctx, 'forumModerators', forum.id);
+  }
+}
+
+@Resolver(() => ForumCategoryModel)
+export class ForumCategoryModeratorsResolver extends ForumReadResolverBase {
+  constructor(
+    @Inject(FORUM_MEMBER_CARDS) members: ForumMemberCardReader,
+    reads: PrismaForumReadModels,
+    @Inject(FORUM_VIEWER_FACTS) viewers: ForumViewerFactsReader,
+  ) {
+    super(members, reads, viewers);
+  }
+
+  @ResolveField(() => [ForumMemberModel], {
+    description: 'Moderators assigned to the whole category.',
+  })
+  moderators(
+    @Parent() category: ForumCategoryModel,
+    @Context() ctx: RequestContext,
+  ) {
+    return this.moderatorCards(ctx, 'categoryModerators', category.id);
   }
 }

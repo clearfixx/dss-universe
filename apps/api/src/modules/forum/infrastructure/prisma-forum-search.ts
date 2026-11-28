@@ -36,6 +36,7 @@ const EXCERPT_LENGTH = 200;
 
 type HitRow = {
   id: string;
+  forumId: string;
   title: string;
   createdAt: Date;
   excerpt: string | null;
@@ -132,7 +133,7 @@ export class PrismaForumSearch implements ForumSearchSource {
     const offset = (query.page - 1) * query.pageSize;
     // Sequential on purpose: statements of one transaction share its snapshot.
     const rows = await tx.$queryRaw<HitRow[]>`
-        SELECT t."id", t."title", t."createdAt", ex."plainText" AS "excerpt"
+        SELECT t."id", t."forumId", t."title", t."createdAt", ex."plainText" AS "excerpt"
         ${from}
         LEFT JOIN LATERAL (
           SELECT p."plainText" FROM "forum_posts" p
@@ -160,6 +161,7 @@ export class PrismaForumSearch implements ForumSearchSource {
       title: row.title,
       excerpt: this.excerpt(row.excerpt ?? '', term),
       publishedAt: row.createdAt,
+      sectionId: row.forumId,
     }));
     return {
       items,

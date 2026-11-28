@@ -43,6 +43,8 @@ import {
   type SearchTab,
 } from "@/features/forum/forum-search-model";
 import { ForumStatePanel } from "@/features/forum/forum-states";
+import { sectionPaths } from "@/features/forum/forum-tree-model";
+import { loadForumCategories } from "@/features/forum/forum-data";
 
 type Props = {
   searchParams: Promise<{ q?: string; tab?: string; page?: string }>;
@@ -87,6 +89,12 @@ export default async function CommunitySearchRoute({ searchParams }: Props) {
       )
     : null;
   const list = data ? (tab === "topics" ? data.topics : data.news) : null;
+  const sectionWay = new Map(
+    sectionPaths(data ? await loadForumCategories() : []).map((item) => [
+      item.section.id,
+      item.path,
+    ]),
+  );
   const pages = list
     ? Math.max(1, Math.ceil(list.total / COMMUNITY_SEARCH_PAGE_SIZE))
     : 1;
@@ -231,8 +239,12 @@ export default async function CommunitySearchRoute({ searchParams }: Props) {
                         </Link>
                         <Excerpt text={item.excerpt} term={term} />
                         <span className="mt-1.5 inline-block text-xs text-slate-500">
-                          {tab === "topics" ? "Форум" : "Новини"} ·{" "}
-                          {forumWhen(item.publishedAt)}
+                          {tab === "topics"
+                            ? ("sectionId" in item &&
+                                sectionWay.get(item.sectionId ?? "")) ||
+                              "Форум"
+                            : "Новини"}{" "}
+                          · {forumWhen(item.publishedAt)}
                         </span>
                       </div>
                     </li>

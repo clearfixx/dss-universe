@@ -218,7 +218,7 @@ export class ForumModel extends ForumSubforumModel {
 }
 
 @ObjectType('ForumCategory')
-class ForumCategoryModel {
+export class ForumCategoryModel {
   @Field(() => ID) id!: string;
   @Field() slug!: string;
   @Field() title!: string;

@@ -73,6 +73,7 @@ export default async function NewForumTopicRoute({ searchParams }: Props) {
         {
           id: item.id,
           title: item.title,
+          trail: [{ href: `/community/forum/${item.id}`, label: item.title }],
           category: category.title,
           categoryId: category.id,
           allowsGatedContent: item.allowsGatedContent,
@@ -82,6 +83,10 @@ export default async function NewForumTopicRoute({ searchParams }: Props) {
           .map((sub) => ({
             id: sub.id,
             title: `${item.title} › ${sub.title}`,
+            trail: [
+              { href: `/community/forum/${item.id}`, label: item.title },
+              { href: `/community/forum/${sub.id}`, label: sub.title },
+            ],
             category: category.title,
             categoryId: category.id,
             allowsGatedContent: sub.allowsGatedContent,
@@ -99,14 +104,13 @@ export default async function NewForumTopicRoute({ searchParams }: Props) {
       pageTitle={{ pathname: path, title: "Нова тема" }}
       breadcrumbs={[
         { href: "/community", label: "Спільнота" },
-        { href: "/community", label: "Форум" },
         ...(chosen
           ? [
               {
                 href: `/community?category=${chosen.categoryId}`,
                 label: chosen.category,
               },
-              { href: `/community/forum/${chosen.id}`, label: chosen.title },
+              ...chosen.trail,
             ]
           : []),
         { label: "Створити тему" },
