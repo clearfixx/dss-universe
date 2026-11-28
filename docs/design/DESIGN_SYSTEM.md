@@ -53,3 +53,7 @@ Reference images supplied in chat: product vision, navigation language, design s
 ### Newsroom preview (DF-04B)
 
 Use scoped semantic editorial list, editor metadata fields, workflow panels and error states. Share editorial status presentation between list and workspace. Keep DssEditor outside any new DesignScope, including its embedded media upload UI; preserve document serialization, editor permissions, workflow guards, versions, scheduling and pin actions. The outer workspace grid remains unscoped until editor acceptance.
+
+### Members and profile preview (DF-04C)
+
+Scope directory and public profile locally; use native filters and shared table primitives, preserve URL filters and ranking data. Boundary pagination controls are real disabled buttons. Preserve profile cover images, social actions, privacy filtering, server-defined title/achievement colors and existing three-column composition. Replace decorative gradients with flat tokens; omit unimplemented overflow actions and unverified shield decoration. Active profile section is announced with aria-pressed. Loading and route failures use scoped feedback primitives. No changes to profile actions, permissions, data loading or Upload Center.

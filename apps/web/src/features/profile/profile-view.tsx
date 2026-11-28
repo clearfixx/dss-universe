@@ -32,12 +32,10 @@ import {
   ImagePlus,
   MapPin,
   MessageSquare,
-  MoreHorizontal,
   Orbit,
   Pencil,
   Radio,
   Send,
-  ShieldCheck,
   Sparkles,
   Star,
   Trophy,
@@ -54,6 +52,9 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar";
+import { DesignScope } from "@/components/ui/design-scope";
+import { NativeSelect, Radio } from "@/components/ui/choice-fields";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -163,40 +164,37 @@ export function ProfileView({
   const showAbout = activeTab === "overview" || activeTab === "about";
 
   return (
-    <div className="mx-auto max-w-[1560px] space-y-5">
-      <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#09111f] shadow-2xl shadow-violet-950/20">
+    <DesignScope className="mx-auto max-w-[1560px] min-w-0 space-y-4">
+      <section className="overflow-hidden rounded-card border border-border bg-card">
         <div
-          className="relative min-h-52 overflow-hidden border-b border-white/10 bg-cover bg-center"
+          className="relative min-h-44 overflow-hidden border-b border-border bg-muted bg-cover bg-center sm:min-h-52"
           style={
             profile.coverUrl
               ? { backgroundImage: `url("${profile.coverUrl}")` }
               : undefined
           }
         >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_60%_20%,rgba(124,58,237,.52),transparent_25rem),radial-gradient(circle_at_85%_50%,rgba(37,99,235,.35),transparent_22rem),linear-gradient(120deg,#07111f,#0b1530_55%,#070b17)]" />
-          <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(circle_at_center,white_0,transparent_1px)] [background-size:42px_42px]" />
         </div>
 
         <div className="relative px-5 pb-5 sm:px-7">
           <div className="-mt-16 flex flex-col gap-5 lg:flex-row lg:items-end">
-            <Avatar className="size-32 ring-4 ring-[#09111f]">
+            <Avatar className="size-24 ring-4 ring-card sm:size-32">
               {profile.avatarUrl ? (
                 <AvatarImage src={profile.avatarUrl} alt={profile.username} />
               ) : null}
-              <AvatarFallback className="bg-violet-950 text-3xl text-violet-200">
+              <AvatarFallback className="bg-secondary text-3xl text-secondary-foreground">
                 {initials(profile)}
               </AvatarFallback>
               {profile.isOnline ? (
-                <AvatarBadge className="size-5 bg-emerald-400 ring-4 ring-[#09111f]" />
+                <AvatarBadge className="size-5 bg-success ring-4 ring-card" />
               ) : null}
             </Avatar>
 
             <div className="min-w-0 flex-1 pb-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-3xl font-bold">
+                <h1 className="break-words font-heading text-3xl font-semibold">
                   {profile.displayName || profile.username}
                 </h1>
-                <ShieldCheck className="size-5 text-violet-400" />
                 {selectedTitle ? (
                   <Badge
                     style={{
@@ -209,13 +207,13 @@ export function ProfileView({
                   </Badge>
                 ) : null}
                 {profile.isOnline ? (
-                  <Badge className="border-emerald-400/20 bg-emerald-400/10 text-emerald-300">
+                  <Badge className="border-success/20 bg-success/10 text-success">
                     Online
                   </Badge>
                 ) : null}
               </div>
-              <p className="mt-1 text-slate-400">@{profile.username}</p>
-              <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-400">
+              <p className="mt-1 text-muted-foreground">@{profile.username}</p>
+              <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
                 {profile.location ? (
                   <span className="flex items-center gap-1.5">
                     <MapPin className="size-4" /> {profile.location}
@@ -262,13 +260,10 @@ export function ProfileView({
               <Button variant="outline" disabled title="Phase 15">
                 <MessageSquare /> Повідомлення
               </Button>
-              <Button variant="ghost" size="icon" aria-label="Дії профілю">
-                <MoreHorizontal />
-              </Button>
             </div>
           </div>
 
-          <div className="mt-5 grid gap-3 border-t border-white/10 pt-5 sm:grid-cols-3">
+          <div className="mt-5 grid gap-3 border-t border-border pt-5 sm:grid-cols-3">
             <ProfileMetric
               label="Підписники"
               value={profile.followerCount.toLocaleString("uk-UA")}
@@ -288,15 +283,16 @@ export function ProfileView({
         </div>
       </section>
 
-      <nav className="flex gap-1 overflow-x-auto rounded-xl border border-white/10 bg-white/[0.025] p-1.5">
+      <nav aria-label="Розділи профілю" className="flex gap-1 overflow-x-auto rounded-card border border-border bg-card p-1.5">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             type="button"
             onClick={() => setActiveTab(id)}
+            aria-pressed={activeTab === id}
             className={cn(
-              "flex min-w-max items-center gap-2 rounded-lg px-4 py-2 text-sm text-slate-400 transition",
-              activeTab === id && "bg-violet-500/15 text-violet-200",
+              "flex min-w-max items-center gap-2 rounded-lg px-4 py-2 text-sm text-muted-foreground transition-colors focus-visible:outline-2 focus-visible:outline-ring",
+              activeTab === id && "bg-secondary text-link",
             )}
           >
             <Icon className="size-4" /> {label}
@@ -304,13 +300,13 @@ export function ProfileView({
         ))}
       </nav>
 
-      <div className="grid items-start gap-5 xl:grid-cols-[300px_minmax(0,1fr)_310px]">
-        <div className={cn("space-y-5", !showAbout && "hidden xl:block")}>
+      <div className="grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,260px)_minmax(0,1fr)_minmax(0,280px)]">
+        <div className={cn("min-w-0 space-y-4", !showAbout && "hidden xl:block")}>
           <AboutCard profile={profile} />
           <SocialLinksCard profile={profile} />
         </div>
 
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-4">
           {showWall ? (
             <>
               {isGuest ? null : (
@@ -322,10 +318,9 @@ export function ProfileView({
           {showActivity && activeTab !== "overview" ? (
             <ActivityFeed activity={activity} />
           ) : null}
-          {activeTab === "about" ? <AboutCard profile={profile} /> : null}
         </div>
 
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-4">
           <GamificationCard
             gamification={gamification}
             isOwner={isOwner}
@@ -335,10 +330,10 @@ export function ProfileView({
           <ProgressHistoryCard gamification={gamification} />
           {!isOwner && !isGuest ? <ReputationCard profile={profile} /> : null}
           <ContributionCard profile={profile} wall={wall} activity={activity} />
-          {showActivity ? <ActivityFeed activity={activity} compact /> : null}
+          {activeTab === "overview" ? <ActivityFeed activity={activity} compact /> : null}
         </div>
       </div>
-    </div>
+    </DesignScope>
   );
 }
 
@@ -354,20 +349,20 @@ function ProfileMetric({
   muted?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl bg-white/[0.025] px-4 py-3">
+    <div className="flex min-w-0 items-center gap-2 rounded-md bg-muted px-3 py-3">
       <span
         className={cn(
-          "grid size-10 place-items-center rounded-xl bg-violet-500/10 text-violet-300",
-          muted && "bg-white/5 text-slate-500",
+          "grid size-9 shrink-0 place-items-center rounded-md bg-secondary text-link",
+          muted && "bg-muted text-muted-foreground",
         )}
       >
         <Icon className="size-5" />
       </span>
       <div>
-        <p className="text-xs uppercase tracking-wide text-slate-500">
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">
           {label}
         </p>
-        <p className={cn("font-semibold", muted && "text-sm text-slate-400")}>
+        <p className={cn("font-semibold", muted && "text-sm text-muted-foreground")}>
           {value}
         </p>
       </div>
@@ -377,16 +372,16 @@ function ProfileMetric({
 
 function AboutCard({ profile }: { profile: Profile }) {
   return (
-    <Card className="bg-white/[0.03]">
+    <Card className="bg-card">
       <CardHeader>
         <CardTitle>Про користувача</CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
-        <p className="leading-6 text-slate-300">
+        <p className="leading-6 text-foreground">
           {profile.bio || "Користувач ще не додав біографію."}
         </p>
         <div>
-          <p className="mb-2 text-xs uppercase tracking-wider text-slate-500">
+          <p className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">
             Технології
           </p>
           <div className="flex flex-wrap gap-2">
@@ -397,17 +392,17 @@ function AboutCard({ profile }: { profile: Profile }) {
                 </Badge>
               ))
             ) : (
-              <span className="text-sm text-slate-500">Не вказані</span>
+              <span className="text-sm text-muted-foreground">Не вказані</span>
             )}
           </div>
         </div>
         <div>
-          <p className="mb-2 text-xs uppercase tracking-wider text-slate-500">
+          <p className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">
             Інтереси
           </p>
           <div className="flex flex-wrap gap-2">
             {profile.interests.map((interest) => (
-              <Badge key={interest} className="bg-cyan-400/10 text-cyan-200">
+              <Badge key={interest} className="bg-brand-cyan/10 text-brand-cyan">
                 {interest}
               </Badge>
             ))}
@@ -425,7 +420,7 @@ function SocialLinksCard({ profile }: { profile: Profile }) {
     return Globe2;
   };
   return (
-    <Card className="bg-white/[0.03]">
+    <Card className="bg-card">
       <CardHeader>
         <CardTitle>Соціальні посилання</CardTitle>
       </CardHeader>
@@ -438,13 +433,13 @@ function SocialLinksCard({ profile }: { profile: Profile }) {
               href={link.url}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-3 rounded-lg p-2 text-slate-300 transition hover:bg-white/5"
+              className="flex items-center gap-3 rounded-lg p-2 text-foreground transition hover:bg-muted"
             >
-              <Icon className="size-4 text-violet-300" />
+              <Icon className="size-4 text-link" />
               <span className="min-w-0 flex-1 truncate">
                 {link.label || link.platform}
               </span>
-              <ExternalLink className="size-3 text-slate-600" />
+              <ExternalLink className="size-3 text-muted-foreground" />
             </a>
           );
         })}
@@ -453,14 +448,14 @@ function SocialLinksCard({ profile }: { profile: Profile }) {
             href={profile.website}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-3 rounded-lg p-2 text-slate-300 transition hover:bg-white/5"
+            className="flex items-center gap-3 rounded-lg p-2 text-foreground transition hover:bg-muted"
           >
-            <Globe2 className="size-4 text-cyan-300" />
+            <Globe2 className="size-4 text-brand-cyan" />
             <span className="min-w-0 flex-1 truncate">{profile.website}</span>
           </a>
         ) : null}
         {!profile.website && profile.socialLinks.length === 0 ? (
-          <p className="text-sm text-slate-500">Посилання приховані.</p>
+          <p className="text-sm text-muted-foreground">Посилання приховані.</p>
         ) : null}
       </CardContent>
     </Card>
@@ -476,7 +471,7 @@ function WallComposer({
 }) {
   const action = createWallPost.bind(null, profile.id, profile.username);
   return (
-    <Card className="bg-white/[0.035]">
+    <Card className="bg-card">
       <CardContent>
         <form action={action} className="space-y-3">
           <div className="flex gap-3">
@@ -489,16 +484,16 @@ function WallComposer({
               name="body"
               maxLength={2000}
               placeholder={`Напишіть щось на стіні ${profile.displayName || profile.username}…`}
-              className="min-h-24 border-white/10 bg-black/20"
+              className="min-h-24"
             />
           </div>
-          <div className="flex items-center justify-between">
-            <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-500">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
               <ImagePlus className="size-4" />
               Media ID
-              <input
+              <Input
                 name="imageMediaId"
-                className="w-36 rounded-md border border-white/10 bg-black/20 px-2 py-1"
+                className="w-36"
                 placeholder="optional"
               />
             </label>
@@ -515,8 +510,8 @@ function WallComposer({
 function WallFeed({ wall, profile }: { wall: Wall; profile: Profile }) {
   if (!wall?.items.length) {
     return (
-      <Card className="border-dashed bg-white/[0.02]">
-        <CardContent className="py-10 text-center text-slate-500">
+      <Card className="border-dashed bg-card">
+        <CardContent className="py-10 text-center text-muted-foreground">
           На цій стіні ще немає записів.
         </CardContent>
       </Card>
@@ -525,7 +520,7 @@ function WallFeed({ wall, profile }: { wall: Wall; profile: Profile }) {
   return (
     <div className="space-y-4">
       {wall.items.map((post) => (
-        <Card key={post.id} className="bg-white/[0.035]">
+        <Card key={post.id} className="bg-card">
           <CardContent className="space-y-4">
             <div className="flex items-center gap-3">
               <Avatar>
@@ -544,31 +539,28 @@ function WallFeed({ wall, profile }: { wall: Wall; profile: Profile }) {
                     ? profile.displayName || profile.username
                     : "Учасник DSS"}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted-foreground">
                   {shortDate(post.createdAt)}
                 </p>
               </div>
-              <Button variant="ghost" size="icon" aria-label="Дії запису">
-                <MoreHorizontal />
-              </Button>
             </div>
             {post.isDeleted ? (
-              <div className="rounded-xl border border-dashed border-white/10 p-5 text-sm text-slate-500">
+              <div className="rounded-card border border-dashed border-border p-5 text-sm text-muted-foreground">
                 Цей запис видалено.
               </div>
             ) : (
               <>
                 {post.body ? (
-                  <p className="whitespace-pre-wrap leading-7 text-slate-200">
+                  <p className="whitespace-pre-wrap leading-7 text-foreground">
                     {post.body}
                   </p>
                 ) : null}
                 {post.imageMediaId ? (
-                  <div className="flex min-h-32 items-center justify-center rounded-xl border border-violet-400/15 bg-gradient-to-br from-violet-950/60 to-blue-950/40 text-violet-200">
+                  <div className="flex min-h-32 items-center justify-center rounded-card border border-border bg-muted text-link">
                     <FileImage className="mr-2 size-5" /> Вкладене зображення
                   </div>
                 ) : null}
-                <div className="flex gap-5 border-t border-white/10 pt-3 text-xs text-slate-500">
+                <div className="flex gap-5 border-t border-border pt-3 text-xs text-muted-foreground">
                   <span>Реакції та коментарі — shared Phase 9</span>
                 </div>
               </>
@@ -588,7 +580,7 @@ function ActivityFeed({
   compact?: boolean;
 }) {
   return (
-    <Card className="bg-white/[0.03]">
+    <Card className="bg-card">
       <CardHeader>
         <CardTitle>Остання активність</CardTitle>
       </CardHeader>
@@ -596,15 +588,15 @@ function ActivityFeed({
         {activity?.items.length ? (
           activity.items.slice(0, compact ? 5 : 12).map((entry) => (
             <div key={entry.id} className="flex gap-3">
-              <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-violet-500/10 text-violet-300">
+              <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-secondary text-link">
                 <Activity className="size-4" />
               </span>
               <div className="min-w-0">
-                <p className="text-sm text-slate-300">
+                <p className="text-sm text-foreground">
                   {(() => {
                     const shown = presentEntry(entry);
                     return shown.href ? (
-                      <Link href={shown.href} className="hover:text-violet-200">
+                      <Link href={shown.href} className="hover:text-link">
                         {shown.title}
                       </Link>
                     ) : (
@@ -612,14 +604,14 @@ function ActivityFeed({
                     );
                   })()}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-muted-foreground">
                   {entry.module} · {shortDate(entry.occurredAt)}
                 </p>
               </div>
             </div>
           ))
         ) : (
-          <p className="text-sm text-slate-500">Активності ще немає.</p>
+          <p className="text-sm text-muted-foreground">Активності ще немає.</p>
         )}
       </CardContent>
     </Card>
@@ -636,11 +628,11 @@ function ContributionCard({
   activity: ActivityPage;
 }) {
   return (
-    <Card className="bg-white/[0.03]">
+    <Card className="bg-card">
       <CardHeader>
         <CardTitle>Внесок у DSS</CardTitle>
       </CardHeader>
-      <CardContent className="grid grid-cols-2 gap-3">
+      <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
         <ProfileMetric
           label="Записи"
           value={(wall?.total ?? 0).toLocaleString("uk-UA")}
@@ -651,7 +643,7 @@ function ContributionCard({
           value={(activity?.total ?? 0).toLocaleString("uk-UA")}
           icon={Activity}
         />
-        <p className="col-span-2 text-xs text-slate-600">ID: {profile.id}</p>
+        <p className="text-xs sm:col-span-2 xl:col-span-1 2xl:col-span-2 text-xs text-muted-foreground">ID: {profile.id}</p>
       </CardContent>
     </Card>
   );
@@ -674,13 +666,13 @@ function GamificationCard({
   const progress = Math.min(100, Math.max(0, level?.progressPercent ?? 0));
 
   return (
-    <Card className="overflow-hidden border-violet-400/15 bg-gradient-to-br from-violet-950/35 to-blue-950/20">
+    <Card className="overflow-hidden border-border bg-card">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center gap-2">
-            <Trophy className="size-5 text-amber-300" /> Прогрес
+            <Trophy className="size-5 text-warning" /> Прогрес
           </span>
-          <Badge className="bg-violet-500/15 text-violet-200">
+          <Badge className="bg-secondary text-link">
             Рівень {level?.currentLevel ?? 0}
           </Badge>
         </CardTitle>
@@ -692,14 +684,14 @@ function GamificationCard({
               <p className="text-2xl font-bold">
                 {(level?.balance ?? 0).toLocaleString("uk-UA")}
               </p>
-              <p className="text-xs text-slate-500">Community Points</p>
+              <p className="text-xs text-muted-foreground">Community Points</p>
             </div>
-            <p className="text-sm font-medium text-emerald-300">
+            <p className="text-sm font-medium text-success">
               {gamification?.reputationHistory.score ?? 0} репутації
             </p>
           </div>
           <div
-            className="h-2 overflow-hidden rounded-full bg-white/5"
+            className="h-2 overflow-hidden rounded-full bg-muted"
             role="progressbar"
             aria-label="Прогрес поточного рівня"
             aria-valuemin={0}
@@ -707,11 +699,11 @@ function GamificationCard({
             aria-valuenow={Math.round(progress)}
           >
             <div
-              className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-400"
+              className="h-full rounded-full bg-primary"
               style={{ width: `${progress}%` }}
             />
           </div>
-          <div className="mt-2 flex justify-between text-xs text-slate-500">
+          <div className="mt-2 flex justify-between text-xs text-muted-foreground">
             <span>{Math.round(progress)}%</span>
             <span>
               {level?.nextLevel
@@ -722,7 +714,7 @@ function GamificationCard({
         </div>
 
         <div>
-          <p className="mb-2 flex items-center gap-2 text-xs uppercase tracking-wider text-slate-500">
+          <p className="mb-2 flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
             <Crown className="size-3.5" /> Звання
           </p>
           <div className="flex flex-wrap gap-2">
@@ -740,7 +732,7 @@ function GamificationCard({
                 </Badge>
               ))
             ) : (
-              <span className="text-sm text-slate-500">
+              <span className="text-sm text-muted-foreground">
                 Звання ще не отримані.
               </span>
             )}
@@ -750,20 +742,20 @@ function GamificationCard({
               action={selectViewerCustomTitle.bind(null, username)}
               className="mt-3 flex gap-2"
             >
-              <select
+              <NativeSelect
                 name="grantId"
                 defaultValue={
                   titles.find((grant) => grant.selected)?.id ?? titles[0]?.id
                 }
                 aria-label="Звання для відображення"
-                className="h-9 min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-950 px-3 text-sm"
+                className="h-9 min-w-0 flex-1"
               >
                 {titles.map((grant) => (
                   <option key={grant.id} value={grant.id}>
                     {grant.title.badge} {grant.title.name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
               <Button type="submit" size="sm" variant="outline">
                 Обрати
               </Button>
@@ -778,20 +770,20 @@ function GamificationCard({
 function ReputationCard({ profile }: { profile: Profile }) {
   const action = giveProfileReputation.bind(null, profile.id, profile.username);
   return (
-    <Card className="border-emerald-400/10 bg-white/[0.03]">
+    <Card className="border-success/10 bg-card">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Star className="size-5 text-emerald-300" /> Змінити репутацію
+          <Star className="size-5 text-success" /> Змінити репутацію
         </CardTitle>
       </CardHeader>
       <CardContent>
         <form action={action} className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
-            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-sm text-emerald-300 has-checked:ring-1 has-checked:ring-emerald-400">
-              <input type="radio" name="value" value="1" required /> +1
+            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-success/20 bg-success/5 px-3 py-2 text-sm text-success has-checked:ring-1 has-checked:ring-success">
+              <Radio name="value" value="1" required /> +1
             </label>
-            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-rose-400/20 bg-rose-400/5 px-3 py-2 text-sm text-rose-300 has-checked:ring-1 has-checked:ring-rose-400">
-              <input type="radio" name="value" value="-1" required /> −1
+            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-destructive has-checked:ring-1 has-checked:ring-destructive">
+              <Radio name="value" value="-1" required /> −1
             </label>
           </div>
           <Textarea
@@ -799,13 +791,14 @@ function ReputationCard({ profile }: { profile: Profile }) {
             minLength={3}
             maxLength={500}
             required
+            aria-label="Причина оцінки"
             placeholder="Опишіть причину оцінки…"
-            className="min-h-20 bg-black/20"
+            className="min-h-20"
           />
           <Button type="submit" className="w-full">
             Надіслати оцінку
           </Button>
-          <p className="text-xs leading-5 text-slate-500">
+          <p className="text-xs leading-5 text-muted-foreground">
             Одну оцінку конкретному користувачу можна залишити раз на 24 години.
             Автор і причина будуть видимі отримувачу.
           </p>
@@ -818,13 +811,13 @@ function ReputationCard({ profile }: { profile: Profile }) {
 function AchievementsCard({ gamification }: { gamification: Gamification }) {
   const awards = gamification?.userAchievements ?? [];
   return (
-    <Card className="bg-white/[0.03]">
+    <Card className="bg-card">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center gap-2">
-            <Award className="size-5 text-cyan-300" /> Досягнення
+            <Award className="size-5 text-brand-cyan" /> Досягнення
           </span>
-          <span className="text-sm font-normal text-slate-500">
+          <span className="text-sm font-normal text-muted-foreground">
             {awards.length}
           </span>
         </CardTitle>
@@ -836,23 +829,23 @@ function AchievementsCard({ gamification }: { gamification: Gamification }) {
               <div
                 key={award.id}
                 title={`${award.achievement.name}: ${award.reason}`}
-                className="group grid min-h-20 place-items-center rounded-xl border bg-black/15 p-2 text-center"
+                className="group grid min-h-20 place-items-center rounded-card border bg-muted p-2 text-center"
                 style={{
                   borderColor: `${award.achievement.color}4D`,
                   backgroundColor: `${award.achievement.color}0D`,
                 }}
               >
                 <span className="text-xl">{award.achievement.badge}</span>
-                <span className="line-clamp-2 text-[11px] text-slate-300">
+                <span className="line-clamp-2 text-[11px] text-foreground">
                   {award.achievement.name}
                 </span>
               </div>
             ))}
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed border-white/10 p-6 text-center">
-            <Star className="mx-auto size-6 text-slate-600" />
-            <p className="mt-2 text-sm text-slate-500">
+          <div className="rounded-card border border-dashed border-border p-6 text-center">
+            <Star className="mx-auto size-6 text-muted-foreground" />
+            <p className="mt-2 text-sm text-muted-foreground">
               Перші досягнення ще попереду.
             </p>
           </div>
@@ -868,10 +861,10 @@ function ProgressHistoryCard({ gamification }: { gamification: Gamification }) {
   if (!points.length && !reputation.length) return null;
 
   return (
-    <Card className="bg-white/[0.03]">
+    <Card className="bg-card">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Activity className="size-5 text-violet-300" /> Історія прогресу
+          <Activity className="size-5 text-link" /> Історія прогресу
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -881,28 +874,28 @@ function ProgressHistoryCard({ gamification }: { gamification: Gamification }) {
               className={cn(
                 "grid min-w-10 place-items-center rounded-lg px-2 py-1 text-xs font-bold",
                 entry.points >= 0
-                  ? "bg-cyan-400/10 text-cyan-300"
-                  : "bg-rose-400/10 text-rose-300",
+                  ? "bg-brand-cyan/10 text-brand-cyan"
+                  : "bg-destructive/10 text-destructive",
               )}
             >
               {entry.points > 0 ? "+" : ""}
               {entry.points}
             </span>
             <div className="min-w-0">
-              <p className="text-sm text-slate-300">{entry.reason}</p>
-              <p className="mt-1 text-xs text-slate-600">{entry.ruleKey}</p>
+              <p className="text-sm text-foreground">{entry.reason}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{entry.ruleKey}</p>
             </div>
           </div>
         ))}
         {reputation.slice(0, 3).map((entry) => (
           <div
             key={entry.id}
-            className="border-t border-white/[0.06] pt-3 text-sm"
+            className="border-t border-border pt-3 text-sm"
           >
-            <p className="text-slate-300">
+            <p className="text-foreground">
               <span
                 className={
-                  entry.value > 0 ? "text-emerald-300" : "text-rose-300"
+                  entry.value > 0 ? "text-success" : "text-destructive"
                 }
               >
                 {entry.value > 0 ? "+1" : "−1"}
@@ -912,7 +905,7 @@ function ProgressHistoryCard({ gamification }: { gamification: Gamification }) {
                 {entry.actor.displayName || `@${entry.actor.username}`}
               </strong>
             </p>
-            <p className="mt-1 text-xs leading-5 text-slate-500">
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
               {entry.reason}
             </p>
           </div>

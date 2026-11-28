@@ -44,6 +44,10 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar";
+import { DesignScope } from "@/components/ui/design-scope";
+import { Checkbox, NativeSelect } from "@/components/ui/choice-fields";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { EmptyState, EmptyStateDescription } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -129,14 +133,14 @@ export function MembersDirectory({ data, filters }: MembersDirectoryProps) {
                 ) : null}
                 <AvatarFallback>{initials(member)}</AvatarFallback>
                 {member.isOnline ? (
-                  <AvatarBadge className="bg-emerald-400" />
+                  <AvatarBadge className="bg-success" />
                 ) : null}
               </Avatar>
               <div>
-                <p className="font-medium text-white">
+                <p className="font-medium text-foreground">
                   {member.displayName || member.username}
                 </p>
-                <p className="text-xs text-slate-500">@{member.username}</p>
+                <p className="text-xs text-muted-foreground">@{member.username}</p>
               </div>
             </Link>
           );
@@ -158,9 +162,9 @@ export function MembersDirectory({ data, filters }: MembersDirectoryProps) {
         header: "Статус",
         cell: ({ getValue }) =>
           getValue() ? (
-            <span className="text-emerald-300">● Онлайн</span>
+            <span className="text-success">● Онлайн</span>
           ) : (
-            <span className="text-slate-500">Офлайн</span>
+            <span className="text-muted-foreground">Офлайн</span>
           ),
       }),
       column.accessor("createdAt", {
@@ -180,11 +184,11 @@ export function MembersDirectory({ data, filters }: MembersDirectoryProps) {
   });
 
   return (
-    <div className="mx-auto max-w-[1500px] space-y-6">
+    <DesignScope className="mx-auto max-w-[1500px] min-w-0 space-y-6">
       <header>
-        <Badge className="bg-blue-500/15 text-blue-200">Community</Badge>
-        <h1 className="mt-3 text-3xl font-bold">Учасники спільноти</h1>
-        <p className="mt-2 text-slate-400">
+        <Badge variant="info">Community</Badge>
+        <h1 className="mt-3 font-heading text-3xl font-semibold">Учасники спільноти</h1>
+        <p className="mt-2 text-muted-foreground">
           Досліджуйте DSS Universe та знаходьте однодумців.
         </p>
       </header>
@@ -212,13 +216,14 @@ export function MembersDirectory({ data, filters }: MembersDirectoryProps) {
         />
       </section>
 
-      <Card className="bg-white/[0.03]">
+      <Card className="bg-card">
         <CardContent>
-          <form className="grid gap-3 lg:grid-cols-[minmax(16rem,1fr)_auto_auto_auto_auto]">
+          <form className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-[minmax(12rem,1fr)_auto_auto_auto_auto]">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 name="search"
+                aria-label="Пошук користувачів"
                 defaultValue={filters.search}
                 placeholder="Пошук користувачів…"
                 className="pl-9"
@@ -226,24 +231,25 @@ export function MembersDirectory({ data, filters }: MembersDirectoryProps) {
             </div>
             <Input
               name="role"
+              aria-label="Роль"
               defaultValue={filters.role}
               placeholder="Роль"
               className="lg:w-36"
             />
-            <select
+            <NativeSelect
               name="sort"
+              aria-label="Сортування учасників"
               defaultValue={filters.sort || "NEWEST"}
-              className="h-9 rounded-lg border border-white/10 bg-slate-950 px-3 text-sm"
+              className="h-9 w-full"
             >
               <option value="NEWEST">Нові користувачі</option>
               <option value="OLDEST">Найдавніші</option>
               <option value="LAST_ACTIVE">За активністю</option>
               <option value="USERNAME_ASC">Ім’я А–Я</option>
               <option value="USERNAME_DESC">Ім’я Я–А</option>
-            </select>
-            <label className="flex h-9 items-center gap-2 rounded-lg border border-white/10 px-3 text-sm text-slate-300">
-              <input
-                type="checkbox"
+            </NativeSelect>
+            <label className="flex h-9 items-center gap-2 rounded-lg border border-border px-3 text-sm text-foreground">
+              <Checkbox
                 name="onlineOnly"
                 value="true"
                 defaultChecked={filters.onlineOnly}
@@ -259,14 +265,14 @@ export function MembersDirectory({ data, filters }: MembersDirectoryProps) {
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="flex items-center gap-2 font-semibold">
-              <Trophy className="size-5 text-amber-300" />
+              <Trophy className="size-5 text-warning" />
               Лідери спільноти
             </h2>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-muted-foreground">
               Рейтинг формується лише з Community Points.
             </p>
           </div>
-          <div className="flex rounded-lg border border-white/10 bg-black/20 p-1">
+          <div className="flex flex-wrap rounded-lg border border-border bg-muted p-1">
             {(["MONTH", "YEAR", "ALL_TIME"] as const).map((period) => (
               <Button
                 key={period}
@@ -276,7 +282,7 @@ export function MembersDirectory({ data, filters }: MembersDirectoryProps) {
                   data.leaderboard.period === period ? "secondary" : "ghost"
                 }
               >
-                <Link href={rankingHref(filters, period)}>
+                <Link href={rankingHref(filters, period)} aria-current={data.leaderboard.period === period ? "true" : undefined}>
                   {rankingLabels[period]}
                 </Link>
               </Button>
@@ -286,16 +292,16 @@ export function MembersDirectory({ data, filters }: MembersDirectoryProps) {
         <div className="grid gap-4 md:grid-cols-3">
           {data.leaderboard.items.map((member) => (
             <Link key={member.userId} href={`/profile/${member.username}`}>
-              <Card className="relative h-full overflow-hidden bg-gradient-to-br from-white/[0.055] to-violet-950/20 transition hover:-translate-y-0.5 hover:border-violet-400/30">
-                <span className="absolute right-3 top-3 grid size-8 place-items-center rounded-lg bg-amber-400/10 font-bold text-amber-300">
+              <Card className="relative h-full overflow-hidden bg-card transition-colors hover:border-ring">
+                <span className="absolute right-3 top-3 grid size-8 place-items-center rounded-lg bg-warning/10 font-bold text-warning">
                   {member.rank === 1 ? (
                     <Crown className="size-4" />
                   ) : (
                     member.rank
                   )}
                 </span>
-                <CardContent className="flex items-center gap-4 py-4">
-                  <Avatar className="size-16 ring-2 ring-violet-400/20">
+                <CardContent className="flex min-w-0 items-center gap-3 py-4 pr-12">
+                  <Avatar className="size-12">
                     {member.avatarUrl ? (
                       <AvatarImage
                         src={member.avatarUrl}
@@ -309,7 +315,7 @@ export function MembersDirectory({ data, filters }: MembersDirectoryProps) {
                       {member.displayName || member.username}
                     </p>
                     <p
-                      className="truncate text-sm text-violet-300"
+                      className="truncate text-sm text-link"
                       style={
                         member.selectedTitle
                           ? { color: member.selectedTitle.color }
@@ -320,7 +326,7 @@ export function MembersDirectory({ data, filters }: MembersDirectoryProps) {
                         ? `${member.selectedTitle.badge} ${member.selectedTitle.name}`
                         : `Рівень ${member.currentLevel}`}
                     </p>
-                    <p className="mt-1 flex items-center gap-1 text-sm font-semibold text-amber-200">
+                    <p className="mt-1 flex items-center gap-1 text-sm font-semibold text-warning">
                       <Sparkles className="size-3.5" />
                       {member.communityPoints.toLocaleString("uk-UA")} очок
                     </p>
@@ -330,18 +336,18 @@ export function MembersDirectory({ data, filters }: MembersDirectoryProps) {
             </Link>
           ))}
         </div>
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.025] px-4 py-3 text-sm">
-          <span className="flex items-center gap-2 text-slate-400">
-            <TrendingUp className="size-4 text-emerald-300" />
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-card border border-border bg-card px-4 py-3 text-sm">
+          <span className="flex items-center gap-2 text-muted-foreground">
+            <TrendingUp className="size-4 text-success" />
             Ваша позиція:{" "}
-            <strong className="text-white">
+            <strong className="text-foreground">
               {data.leaderboard.viewerRank
                 ? `#${data.leaderboard.viewerRank}`
                 : "—"}
             </strong>
           </span>
-          <span className="flex items-center gap-2 text-slate-400">
-            <Medal className="size-4 text-violet-300" />
+          <span className="flex items-center gap-2 text-muted-foreground">
+            <Medal className="size-4 text-link" />
             {(data.leaderboard.viewerCommunityPoints ?? 0).toLocaleString(
               "uk-UA",
             )}{" "}
@@ -350,82 +356,65 @@ export function MembersDirectory({ data, filters }: MembersDirectoryProps) {
         </div>
       </section>
 
-      <Card className="bg-white/[0.025]">
+      <Card className="bg-card">
         <CardHeader>
           <CardTitle>Усі учасники</CardTitle>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <table className="w-full min-w-[760px] text-left text-sm">
-            <thead className="border-b border-white/10 text-xs uppercase tracking-wider text-slate-500">
+        <CardContent className="min-w-0">
+          <Table aria-label="Усі учасники" className="min-w-[600px] text-left">
+            <TableHeader>
               {table.getHeaderGroups().map((group) => (
-                <tr key={group.id}>
+                <TableRow key={group.id}>
                   {group.headers.map((header) => (
-                    <th key={header.id} className="px-3 py-3 font-medium">
+                    <TableHead key={header.id}>
                       {flexRender(
                         header.column.columnDef.header,
                         header.getContext(),
                       )}
-                    </th>
+                    </TableHead>
                   ))}
-                </tr>
+                </TableRow>
               ))}
-            </thead>
-            <tbody>
+            </TableHeader>
+            <TableBody>
               {table.getRowModel().rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className="border-b border-white/[0.06] transition hover:bg-white/[0.025]"
-                >
+                <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-3 py-4">
+                    <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),
                       )}
-                    </td>
+                    </TableCell>
                   ))}
-                </tr>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
           {data.members.items.length === 0 ? (
-            <p className="py-12 text-center text-slate-500">
-              Користувачів за цими параметрами не знайдено.
-            </p>
+            <EmptyState className="mt-4"><EmptyStateDescription>Користувачів за цими параметрами не знайдено.</EmptyStateDescription></EmptyState>
           ) : null}
-          <div className="mt-5 flex items-center justify-between border-t border-white/10 pt-4">
-            <span className="text-xs text-slate-500">
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+            <span className="text-xs text-muted-foreground">
               Сторінка {data.members.page} з{" "}
               {Math.max(1, data.members.totalPages)}
             </span>
             <div className="flex gap-2">
-              <Button
-                asChild
-                size="sm"
-                variant="outline"
-                disabled={data.members.page <= 1}
-              >
-                <Link
-                  href={pageHref(filters, Math.max(1, data.members.page - 1))}
-                >
-                  <ChevronLeft /> Назад
-                </Link>
-              </Button>
-              <Button
-                asChild
-                size="sm"
-                variant="outline"
-                disabled={data.members.page >= data.members.totalPages}
-              >
-                <Link href={pageHref(filters, data.members.page + 1)}>
-                  Далі <ChevronRight />
-                </Link>
-              </Button>
+              {data.members.page <= 1 ? (
+                <Button size="sm" variant="outline" disabled><ChevronLeft /> Назад</Button>
+              ) : (
+                <Button asChild size="sm" variant="outline"><Link href={pageHref(filters, data.members.page - 1)}><ChevronLeft /> Назад</Link></Button>
+              )}
+              {data.members.page >= data.members.totalPages ? (
+                <Button size="sm" variant="outline" disabled>Далі <ChevronRight /></Button>
+              ) : (
+                <Button asChild size="sm" variant="outline"><Link href={pageHref(filters, data.members.page + 1)}>Далі <ChevronRight /></Link></Button>
+              )}
             </div>
           </div>
         </CardContent>
       </Card>
-    </div>
+    </DesignScope>
   );
 }
 
@@ -439,13 +428,13 @@ function Metric({
   value: number;
 }) {
   return (
-    <Card className="bg-white/[0.03]">
+    <Card className="bg-card">
       <CardContent className="flex items-center gap-4 py-3">
-        <span className="grid size-10 place-items-center rounded-xl bg-blue-500/10 text-blue-300">
+        <span className="grid size-10 place-items-center rounded-card bg-secondary text-link">
           <Icon className="size-5" />
         </span>
         <div>
-          <p className="text-xs text-slate-500">{label}</p>
+          <p className="text-xs text-muted-foreground">{label}</p>
           <p className="text-xl font-semibold">
             {value.toLocaleString("uk-UA")}
           </p>

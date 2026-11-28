@@ -202,6 +202,8 @@ describe("ProfileView", () => {
       screen.getByRole("heading", { name: "Astro DSS" }),
     ).toBeInTheDocument();
     expect(screen.getByText("Будую DSS Universe.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Огляд" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("navigation", { name: "Розділи профілю" }).closest('[data-dss-design="v1"]')).not.toBeNull();
     expect(screen.getByText("Перший запис у профілі.")).toBeInTheDocument();
     expect(screen.getByText("Рівень 8 · 1 250 очок")).toBeInTheDocument();
     expect(screen.getAllByText(/Архітектор знань/)).not.toHaveLength(0);
