@@ -2877,10 +2877,12 @@ type ResearchPublicIndexEntry {
 }
 
 type ResearchPublishedPage {
+  categories: [ResearchCategoryEntry!]!
   documentJson: String!
   generation: Int!
   id: ID!
   language: String!
+  primaryCategory: ResearchCategoryEntry
   revisionId: ID!
   slug: String!
   state: String!

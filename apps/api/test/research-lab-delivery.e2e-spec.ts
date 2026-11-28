@@ -795,6 +795,19 @@ describe('Research Lab public delivery (GraphQL)', () => {
         audienceGroups: { create: { groupKey: key } },
       },
     });
+    const inactiveParent = await db.researchCategory.create({
+      data: { slug: 'inactive-' + key, name: 'Inactive', isActive: false },
+    });
+    const hiddenChild = await db.researchCategory.create({
+      data: {
+        slug: 'hidden-' + key,
+        name: 'Hidden',
+        parentId: inactiveParent.id,
+      },
+    });
+    await db.researchPageCategory.create({
+      data: { pageId: draft.pageId, categoryId: hiddenChild.id },
+    });
     const now = Date.now();
     const membership = await db.accessGroupMembership.create({
       data: {
@@ -912,7 +925,7 @@ describe('Research Lab public delivery (GraphQL)', () => {
       const response = await call
         .send({
           query:
-            'query($id:ID!){researchPage(id:$id){tags{id} technologies{id}}}',
+            'query($id:ID!){researchPage(id:$id){tags{id} technologies{id} primaryCategory{id} categories{id}}}',
           variables: { id: pageId },
         })
         .expect(200);
@@ -921,6 +934,8 @@ describe('Research Lab public delivery (GraphQL)', () => {
         researchPage: {
           tags: { id: string }[];
           technologies: { id: string }[];
+          primaryCategory: { id: string } | null;
+          categories: { id: string }[];
         } | null;
       }>(response).data.researchPage;
     };
@@ -971,6 +986,8 @@ describe('Research Lab public delivery (GraphQL)', () => {
     expect(await pageVocabulary(publicDraft.pageId)).toEqual({
       tags: [{ id: publicTag.id }],
       technologies: [{ id: publicTechnology.id }],
+      primaryCategory: null,
+      categories: [],
     });
     expect(await pageVocabulary(draft.pageId)).toBeNull();
     expect(
@@ -978,6 +995,8 @@ describe('Research Lab public delivery (GraphQL)', () => {
     ).toEqual({
       tags: [{ id: privateTag.id }],
       technologies: [{ id: privateTechnology.id }],
+      primaryCategory: { id: category.id },
+      categories: [],
     });
     const related = async (token?: string) => {
       const call = request(app.getHttpServer()).post('/api/graphql');

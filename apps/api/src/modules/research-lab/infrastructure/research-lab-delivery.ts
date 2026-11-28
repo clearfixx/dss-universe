@@ -214,6 +214,31 @@ export class ResearchLabDelivery {
         slug: true,
         state: true,
         publicationGeneration: true,
+        primaryCategory: {
+          select: {
+            id: true,
+            parentId: true,
+            name: true,
+            slug: true,
+            description: true,
+            sortOrder: true,
+          },
+        },
+        categories: {
+          orderBy: [{ position: 'asc' }, { categoryId: 'asc' }],
+          select: {
+            category: {
+              select: {
+                id: true,
+                parentId: true,
+                name: true,
+                slug: true,
+                description: true,
+                sortOrder: true,
+              },
+            },
+          },
+        },
         tags: {
           select: { tag: { select: { id: true, name: true, slug: true } } },
           orderBy: { tagId: 'asc' },
@@ -249,6 +274,10 @@ export class ResearchLabDelivery {
       JSON.stringify(revision.document),
       scope.viewerId,
     );
+    const visibleCategoryIds =
+      page.primaryCategory || page.categories.length
+        ? new Set((await this.categories()).map((category) => category.id))
+        : new Set<string>();
     return {
       id: page.id,
       language: page.language,
@@ -261,6 +290,13 @@ export class ResearchLabDelivery {
       documentJson: content.documentJson,
       tags: page.tags.map((link) => link.tag),
       technologies: page.technologies.map((link) => link.technology),
+      primaryCategory:
+        page.primaryCategory && visibleCategoryIds.has(page.primaryCategory.id)
+          ? page.primaryCategory
+          : null,
+      categories: page.categories
+        .map((link) => link.category)
+        .filter((category) => visibleCategoryIds.has(category.id)),
     };
   }
 

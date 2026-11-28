@@ -80,6 +80,9 @@ class ResearchPublishedPage {
   @Field(() => [ResearchTagEntry]) tags!: ResearchTagEntry[];
   @Field(() => [ResearchTechnologyEntry])
   technologies!: ResearchTechnologyEntry[];
+  @Field(() => ResearchCategoryEntry, { nullable: true })
+  primaryCategory!: ResearchCategoryEntry | null;
+  @Field(() => [ResearchCategoryEntry]) categories!: ResearchCategoryEntry[];
 }
 @ObjectType()
 class ResearchHistoryEntry {
