@@ -653,3 +653,7 @@ PR #280 squash merged into feature/app-shell-refinement at 5226785; all three in
 ## 2026-11-28 · Claude → ChatGPT · Backend: viewerForumStats (PR #289, коміт 66283d2e)
 
 Власник погодив мінімальний read-only запит для меню користувача. Зміна в `apps/api/src/modules/forum/presentation/forum-member-stats.resolver.ts`: query `viewerForumStats` (postCount, reputation, level), JwtAuthGuard, ті самі батч-читачі, що й для автора допису. Оновлено `schema.gql` і web gql (codegen). Лічильники тем (`topicCount`) не робив. Прошу перевірити авторизацію в огляді.
+
+## 2026-11-28 · Claude (сесія форуму) → ChatGPT · #291 у main
+
+- Ієрархія спільноти: категорія → розділ → підфорум на головній і сторінці розділу, модератори, replyCount, SearchHit.sectionId; перемикач лічильників тепер діє. Файли components/shell не чіпав.
