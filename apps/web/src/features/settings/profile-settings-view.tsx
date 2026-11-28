@@ -26,6 +26,9 @@ import {
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { DesignScope } from "@/components/ui/design-scope";
+import { Label, NativeSelect, Switch as NativeSwitch } from "@/components/ui/choice-fields";
+import { Alert, AlertDescription } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -80,14 +83,14 @@ export function ProfileSettingsView({ settings }: { settings: Settings }) {
   } = settings;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <DesignScope className="mx-auto max-w-6xl min-w-0 space-y-6">
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <Badge className="bg-violet-500/15 text-violet-200">
+          <Badge variant="secondary">
             Account Settings
           </Badge>
-          <h1 className="mt-3 text-3xl font-bold">Налаштування профілю</h1>
-          <p className="mt-2 text-slate-400">
+          <h1 className="mt-3 font-heading text-3xl font-semibold">Налаштування профілю</h1>
+          <p className="mt-2 text-muted-foreground">
             Керуйте публічною інформацією, приватністю, сповіщеннями та сесіями.
           </p>
         </div>
@@ -96,25 +99,25 @@ export function ProfileSettingsView({ settings }: { settings: Settings }) {
         </Button>
       </header>
 
-      <Card className="border-violet-400/20 bg-gradient-to-r from-violet-950/50 to-blue-950/30">
+      <Card className="border-border bg-card">
         <CardContent className="flex flex-col gap-5 py-5 sm:flex-row sm:items-center">
-          <div className="grid size-16 place-items-center rounded-2xl bg-violet-500/15 text-2xl font-bold text-violet-200">
+          <div className="grid size-16 place-items-center rounded-card bg-secondary text-2xl font-bold text-secondary-foreground">
             {completion.percentage}%
           </div>
           <div className="flex-1">
             <div className="flex justify-between text-sm">
               <span className="font-medium">Заповнення профілю</span>
-              <span className="text-slate-400">
+              <span className="text-muted-foreground">
                 {completion.completedCount}/{completion.totalCount}
               </span>
             </div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-black/30">
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-label="Заповнення профілю" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100, Math.max(0, completion.percentage))}>
               <div
-                className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-400"
-                style={{ width: `${completion.percentage}%` }}
+                className="h-full rounded-full bg-primary"
+                style={{ width: `${Math.min(100, Math.max(0, completion.percentage))}%` }}
               />
             </div>
-            <p className="mt-2 text-xs text-slate-400">
+            <p className="mt-2 text-xs text-muted-foreground">
               {completion.isComplete
                 ? "Профіль повністю готовий."
                 : `Залишилось: ${completion.missingFields.join(", ")}`}
@@ -181,19 +184,19 @@ export function ProfileSettingsView({ settings }: { settings: Settings }) {
         <SettingsCard
           icon={Lock}
           title="Приватність"
-          description="Один policy boundary для профілю, присутності та соціальних даних."
+          description="Керуйте видимістю профілю, статусом та соціальними даними."
         >
           <form action={updatePrivacySettings} className="space-y-4">
             <Field label="Видимість профілю">
-              <select
+              <NativeSelect
                 name="profileVisibility"
                 defaultValue={privacy.profileVisibility}
-                className="h-9 w-full rounded-lg border border-white/10 bg-slate-950 px-3 text-sm"
+                className="h-9 w-full"
               >
                 <option value="PUBLIC">Публічний</option>
                 <option value="MEMBERS">Лише учасники</option>
                 <option value="PRIVATE">Приватний</option>
-              </select>
+              </NativeSelect>
             </Field>
             <div className="grid gap-2 sm:grid-cols-2">
               <Switch
@@ -218,7 +221,7 @@ export function ProfileSettingsView({ settings }: { settings: Settings }) {
               />
               <Switch
                 name="showOnlineStatus"
-                label="Online status"
+                label="Статус онлайн"
                 checked={privacy.showOnlineStatus}
               />
               <Switch
@@ -246,7 +249,7 @@ export function ProfileSettingsView({ settings }: { settings: Settings }) {
         <SettingsCard
           icon={Bell}
           title="Сповіщення"
-          description="Виберіть події та cadence без змішування з delivery layer."
+          description="Виберіть події та частоту отримання сповіщень."
         >
           <form action={updateNotificationSettings} className="space-y-4">
             <div className="grid gap-2 sm:grid-cols-2">
@@ -267,16 +270,16 @@ export function ProfileSettingsView({ settings }: { settings: Settings }) {
               label="Email-сповіщення"
               checked={notifications.emailEnabled}
             />
-            <Field label="Email digest">
-              <select
+            <Field label="Частота email-дайджесту">
+              <NativeSelect
                 name="digestFrequency"
                 defaultValue={notifications.digestFrequency}
-                className="h-9 w-full rounded-lg border border-white/10 bg-slate-950 px-3 text-sm"
+                className="h-9 w-full"
               >
                 <option value="OFF">Вимкнено</option>
                 <option value="DAILY">Щодня</option>
                 <option value="WEEKLY">Щотижня</option>
-              </select>
+              </NativeSelect>
             </Field>
             <Button type="submit">Зберегти сповіщення</Button>
           </form>
@@ -285,20 +288,20 @@ export function ProfileSettingsView({ settings }: { settings: Settings }) {
         <SettingsCard
           icon={Laptop}
           title="Активні сесії"
-          description="Пристрої з чинними refresh credentials."
+          description="Пристрої з активними сесіями вашого акаунта."
         >
           <div className="space-y-3">
             {sessions.map((session) => (
               <div
                 key={session.id}
-                className="flex items-center gap-3 rounded-xl border border-white/10 p-3"
+                className="flex flex-wrap items-center gap-3 rounded-card border border-border p-3"
               >
-                <Laptop className="size-5 text-cyan-300" />
+                <Laptop className="size-5 text-brand-cyan" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">
                     {session.userAgent || "Невідомий пристрій"}
                   </p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-muted-foreground">
                     {session.ipAddress || "IP приховано"} ·{" "}
                     {new Date(String(session.createdAt)).toLocaleDateString(
                       "uk-UA",
@@ -306,7 +309,7 @@ export function ProfileSettingsView({ settings }: { settings: Settings }) {
                   </p>
                 </div>
                 {session.current ? (
-                  <Badge className="bg-emerald-400/10 text-emerald-300">
+                  <Badge variant="success">
                     Поточна
                   </Badge>
                 ) : (
@@ -318,6 +321,7 @@ export function ProfileSettingsView({ settings }: { settings: Settings }) {
                 )}
               </div>
             ))}
+            {sessions.length === 0 ? <Alert><AlertDescription>Активних сесій немає.</AlertDescription></Alert> : null}
             <form action={revokeOtherSessions}>
               <Button type="submit" variant="outline">
                 Завершити всі інші
@@ -338,11 +342,13 @@ export function ProfileSettingsView({ settings }: { settings: Settings }) {
               <form
                 key={kind}
                 action={updateViewerMedia.bind(null, kind)}
-                className="flex gap-2"
+                className="flex flex-wrap items-center gap-2"
               >
                 <Input
                   name="mediaId"
+                  aria-label={kind === "avatar" ? "Media ID аватара" : "Media ID обкладинки"}
                   placeholder={`Media ID для ${kind}`}
+                  className="min-w-0 flex-1"
                   required
                 />
                 <Button type="submit" variant="outline">
@@ -352,6 +358,7 @@ export function ProfileSettingsView({ settings }: { settings: Settings }) {
                   type="submit"
                   variant="ghost"
                   formAction={removeViewerMedia.bind(null, kind)}
+                  formNoValidate
                 >
                   Прибрати
                 </Button>
@@ -365,14 +372,14 @@ export function ProfileSettingsView({ settings }: { settings: Settings }) {
         <SettingsCard
           icon={KeyRound}
           title="Безпека акаунта"
-          description={`Email: ${viewer.email}. Зміна credentials завершує активні сесії.`}
+          description={`Email: ${viewer.email}. Зміна облікових даних завершує активні сесії.`}
         >
           <div className="space-y-5">
             <TwoFactorSettings
               enabled={twoFactor.enabled}
               recoveryCodesRemaining={twoFactor.recoveryCodesRemaining}
             />
-            <div className="rounded-lg border border-white/10 p-3 text-sm">
+            <div className="rounded-lg border border-border p-3 text-sm">
               <p>
                 Email:{" "}
                 {viewer.emailVerifiedAt ? "підтверджено" : "не підтверджено"}
@@ -387,10 +394,10 @@ export function ProfileSettingsView({ settings }: { settings: Settings }) {
             </div>
             <form action={changeViewerEmail} className="space-y-3">
               <Field label="Новий email">
-                <Input name="email" type="email" required />
+                <Input name="email" type="email" autoComplete="email" required />
               </Field>
               <Field label="Поточний пароль">
-                <Input name="currentPassword" type="password" required />
+                <Input name="currentPassword" type="password" autoComplete="current-password" required />
               </Field>
               <Button type="submit" variant="outline">
                 Змінити email
@@ -398,14 +405,15 @@ export function ProfileSettingsView({ settings }: { settings: Settings }) {
             </form>
             <form
               action={changeViewerPassword}
-              className="space-y-3 border-t border-white/10 pt-5"
+              className="space-y-3 border-t border-border pt-5"
             >
               <Field label="Поточний пароль">
-                <Input name="currentPassword" type="password" required />
+                <Input name="currentPassword" type="password" autoComplete="current-password" required />
               </Field>
               <Field label="Новий пароль">
                 <Input
                   name="newPassword"
+                  autoComplete="new-password"
                   type="password"
                   minLength={8}
                   required
@@ -417,18 +425,20 @@ export function ProfileSettingsView({ settings }: { settings: Settings }) {
             </form>
             <form
               action={deactivateViewerAccount}
-              className="space-y-3 border-t border-red-400/15 pt-5"
+              className="space-y-3 border-t border-destructive/30 pt-5"
             >
-              <p className="text-sm font-medium text-red-300">
+              <p className="text-sm font-medium text-destructive">
                 Деактивація акаунта
               </p>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 Профіль зникне з публічних списків. Акаунт можна реактивувати
                 повторним входом.
               </p>
               <Input
                 name="password"
                 type="password"
+                aria-label="Пароль для деактивації"
+                autoComplete="current-password"
                 placeholder="Підтвердіть пароль"
                 required
               />
@@ -439,7 +449,7 @@ export function ProfileSettingsView({ settings }: { settings: Settings }) {
           </div>
         </SettingsCard>
       </div>
-    </div>
+    </DesignScope>
   );
 }
 
@@ -455,9 +465,9 @@ function SettingsCard({
   children: ReactNode;
 }) {
   return (
-    <Card className="bg-white/[0.03]">
+    <Card className="min-w-0 bg-card">
       <CardHeader>
-        <div className="mb-2 grid size-10 place-items-center rounded-xl bg-violet-500/10 text-violet-300">
+        <div className="mb-2 grid size-10 place-items-center rounded-card bg-secondary text-link">
           <Icon className="size-5" />
         </div>
         <CardTitle>{title}</CardTitle>
@@ -470,10 +480,10 @@ function SettingsCard({
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <label className="block space-y-2 text-sm text-slate-300">
+    <Label className="block min-w-0 space-y-2">
       <span>{label}</span>
       {children}
-    </label>
+    </Label>
   );
 }
 
@@ -489,13 +499,11 @@ function Switch({
   value?: string;
 }) {
   return (
-    <label className="flex items-center gap-3 rounded-lg border border-white/10 px-3 py-2 text-sm text-slate-300">
-      <input
-        type="checkbox"
+    <label className="flex min-h-10 items-center gap-3 rounded-md border border-border px-3 py-2 text-sm text-foreground">
+      <NativeSwitch
         name={name}
         value={value}
         defaultChecked={checked}
-        className="size-4 accent-violet-500"
       />
       {label}
     </label>

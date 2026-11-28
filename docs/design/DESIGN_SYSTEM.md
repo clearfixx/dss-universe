@@ -57,3 +57,7 @@ Use scoped semantic editorial list, editor metadata fields, workflow panels and 
 ### Members and profile preview (DF-04C)
 
 Scope directory and public profile locally; use native filters and shared table primitives, preserve URL filters and ranking data. Boundary pagination controls are real disabled buttons. Preserve profile cover images, social actions, privacy filtering, server-defined title/achievement colors and existing three-column composition. Replace decorative gradients with flat tokens; omit unimplemented overflow actions and unverified shield decoration. Active profile section is announced with aria-pressed. Loading and route failures use scoped feedback primitives. No changes to profile actions, permissions, data loading or Upload Center.
+
+### Settings preview (DF-04D)
+
+Apply isolated DesignScope to owner profile settings and protected platform appearance. Native selects, switches and radio controls retain browser submission and existing action contracts; completion progress announces its actual percentage. Use semantic success/warning/destructive feedback for session and two-factor states. The media removal submit bypasses the unrelated required media ID field; the existing server action remains authoritative. Preserve IAM guards, privacy fields, credential changes, 2FA secret/recovery-code lifecycle, and shell variant persistence. No Theme Engine, new navigation variants, Upload Center or backend changes.
