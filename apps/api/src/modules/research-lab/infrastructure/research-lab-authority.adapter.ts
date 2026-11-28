@@ -29,6 +29,12 @@ export class ResearchLabAuthorityAdapter implements ResearchLabAuthorityDecision
     return profile.permissions.includes(Permission.ResearchLabModerate);
   }
 
+  async canOrganize(subjectId: string, at: Date): Promise<boolean> {
+    if (!(await this.access.audience(subjectId, at))) return false;
+    const profile = await this.subjects.getAccessProfileByUserId(subjectId);
+    return profile.permissions.includes(Permission.ResearchLabOrganize);
+  }
+
   async viewerFacts(
     subjectId: string | null,
     at: Date,

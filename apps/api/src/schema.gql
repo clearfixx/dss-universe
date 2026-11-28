@@ -1787,6 +1787,7 @@ type Mutation {
   createModerationAnnotation(input: CreateModerationAnnotationInput!): ModerationAnnotation!
   createNewsDraft(input: CreateNewsDraftInput!): NewsEditorialArticle!
   createProfileWallPost(input: CreateWallPostInput!): ProfileWallPost!
+  createResearchCategory(input: ResearchCreateCategoryInput!): ResearchCategoryEntry!
   createResearchDraft(input: ResearchDraftInput!): ResearchDraftReceipt!
   deactivateAccount(input: DeactivateAccountInput!): LogoutResultModel!
   decideBanAppeal(accept: Boolean!, appealId: ID!, reason: String!): BanAppeal!
@@ -1926,6 +1927,7 @@ type Mutation {
   updateNewsSettings(input: UpdateNewsSettingsInput!): NewsSettings!
   updatePlatformAppearance(activeShellVariant: ShellVariant!): PlatformAppearance!
   updateReputationPolicy(input: UpdateReputationPolicyInput!): ReputationPolicy!
+  updateResearchCategory(input: ResearchUpdateCategoryInput!): ResearchCategoryEntry!
   updateViewerNotificationPreferences(input: UpdateNotificationPreferencesInput!): NotificationPreferences!
   updateViewerPrivacy(input: UpdateUserPrivacyInput!): UserPrivacySettings!
   updateViewerProfile(input: UpdateViewerProfileInput!): Viewer!
@@ -2692,6 +2694,14 @@ type ResearchContainerPage {
   title: String
 }
 
+input ResearchCreateCategoryInput {
+  description: String
+  name: String!
+  parentId: ID
+  slug: String!
+  sortOrder: Int
+}
+
 input ResearchDecisionInput {
   pageId: ID!
   reason: String
@@ -2888,6 +2898,16 @@ type ResearchTechnologyEntry {
   name: String!
   slug: String!
   website: String
+}
+
+input ResearchUpdateCategoryInput {
+  description: String
+  id: ID!
+  isActive: Boolean
+  name: String
+  parentId: ID
+  slug: String
+  sortOrder: Int
 }
 
 input ResetPasswordInput {

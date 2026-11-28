@@ -35,6 +35,7 @@ describe('Research Lab commands (e2e)', () => {
     const authority: ResearchLabAuthorityDecisions = {
       canModerate: (id) =>
         Promise.resolve(authenticated.has(id) && moderators.has(id)),
+      canOrganize: () => Promise.resolve(false),
       viewerFacts: (subjectId) =>
         Promise.resolve({
           authenticated: !!subjectId && authenticated.has(subjectId),
