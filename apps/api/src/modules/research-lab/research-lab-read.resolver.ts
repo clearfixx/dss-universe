@@ -24,6 +24,35 @@ class ResearchCategoryEntry {
   @Field(() => Int) sortOrder!: number;
 }
 @ObjectType()
+class ResearchContainerPage {
+  @Field(() => ID) id!: string;
+  @Field() slug!: string;
+  @Field(() => String, { nullable: true }) title!: string | null;
+}
+@ObjectType()
+class ResearchContainerItem {
+  @Field(() => Int) position!: number;
+  @Field(() => ResearchContainerPage) page!: ResearchContainerPage;
+}
+@ObjectType()
+class ResearchManualEntry {
+  @Field(() => ID) id!: string;
+  @Field() language!: string;
+  @Field() slug!: string;
+  @Field() title!: string;
+  @Field(() => String, { nullable: true }) description!: string | null;
+  @Field(() => [ResearchContainerItem]) chapters!: ResearchContainerItem[];
+}
+@ObjectType()
+class ResearchCollectionEntry {
+  @Field(() => ID) id!: string;
+  @Field() language!: string;
+  @Field() slug!: string;
+  @Field() title!: string;
+  @Field(() => String, { nullable: true }) description!: string | null;
+  @Field(() => [ResearchContainerItem]) items!: ResearchContainerItem[];
+}
+@ObjectType()
 class ResearchPublishedPage {
   @Field(() => ID) id!: string;
   @Field() language!: string;
@@ -73,6 +102,28 @@ export class ResearchLabReadResolver {
   @Query(() => [ResearchCategoryEntry])
   researchCategories() {
     return this.delivery.categories();
+  }
+  @Query(() => [ResearchManualEntry])
+  async researchManuals(@Context() ctx: RequestContext) {
+    const rows = await this.delivery.manuals(ctx.req.user?.id ?? null);
+    return rows.map((row) => ({
+      ...row,
+      chapters: row.chapters.map(({ page, position }) => ({
+        position,
+        page: { ...page, title: page.publishedRevision?.title ?? null },
+      })),
+    }));
+  }
+  @Query(() => [ResearchCollectionEntry])
+  async researchCollections(@Context() ctx: RequestContext) {
+    const rows = await this.delivery.collections(ctx.req.user?.id ?? null);
+    return rows.map((row) => ({
+      ...row,
+      items: row.items.map(({ page, position }) => ({
+        position,
+        page: { ...page, title: page.publishedRevision?.title ?? null },
+      })),
+    }));
   }
   @Query(() => ResearchPublishedPage, { nullable: true })
   researchPage(

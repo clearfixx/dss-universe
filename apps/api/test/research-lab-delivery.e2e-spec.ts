@@ -572,6 +572,66 @@ describe('Research Lab public delivery (GraphQL)', () => {
         anchorText: 'Linked group page',
       },
     });
+    const manual = await db.researchManual.create({
+      data: {
+        slug: 'manual-' + key,
+        title: 'Manual',
+        chapters: {
+          create: [
+            { pageId: publicDraft.pageId, position: 0 },
+            { pageId: draft.pageId, position: 1 },
+          ],
+        },
+      },
+    });
+    const collection = await db.researchCollection.create({
+      data: {
+        slug: 'collection-' + key,
+        title: 'Collection',
+        items: {
+          create: [
+            { pageId: publicDraft.pageId, position: 0 },
+            { pageId: draft.pageId, position: 1 },
+          ],
+        },
+      },
+    });
+    const containers = async (token?: string) => {
+      const call = request(app.getHttpServer()).post('/api/graphql');
+      if (token) call.set('Authorization', 'Bearer ' + token);
+      const response = await call
+        .send({
+          query:
+            'query{researchManuals{id chapters{position page{id}}} researchCollections{id items{position page{id}}}}',
+        })
+        .expect(200);
+      expect(payload(response).errors).toBeUndefined();
+      const data = payload<{
+        researchManuals: { id: string; chapters: { page: { id: string } }[] }[];
+        researchCollections: {
+          id: string;
+          items: { page: { id: string } }[];
+        }[];
+      }>(response).data;
+      return {
+        chapters: data.researchManuals
+          .find((row) => row.id === manual.id)
+          ?.chapters.map((row) => row.page.id),
+        items: data.researchCollections
+          .find((row) => row.id === collection.id)
+          ?.items.map((row) => row.page.id),
+      };
+    };
+    const publicOnly = {
+      chapters: [publicDraft.pageId],
+      items: [publicDraft.pageId],
+    };
+    const withGroup = {
+      chapters: [publicDraft.pageId, draft.pageId],
+      items: [publicDraft.pageId, draft.pageId],
+    };
+    expect(await containers()).toEqual(publicOnly);
+    expect(await containers(reader.tokens.accessToken)).toEqual(withGroup);
     const related = async (token?: string) => {
       const call = request(app.getHttpServer()).post('/api/graphql');
       if (token) call.set('Authorization', 'Bearer ' + token);
@@ -710,6 +770,7 @@ describe('Research Lab public delivery (GraphQL)', () => {
     expect(await search()).toEqual(empty);
     expect(await related(reader.tokens.accessToken)).toEqual([]);
     expect(await related()).toEqual([]);
+    expect(await containers(reader.tokens.accessToken)).toEqual(publicOnly);
     expect((await revisions()).data).toEqual({
       researchRevisionHistory: [],
       researchRevisionDiff: null,
