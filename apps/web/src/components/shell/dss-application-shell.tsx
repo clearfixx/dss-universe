@@ -20,17 +20,19 @@
  * 🚀 Build. Inspire. Grow.
  * ===============================================================
  */
-import { Menu } from "lucide-react";
+import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
   useState,
   useRef,
+  useSyncExternalStore,
   type PropsWithChildren,
   type ReactNode,
 } from "react";
 
 import { Button } from "@/components/ui/button";
 import { DesignScope } from "@/components/ui/design-scope";
+import { cn } from "@/lib/utils";
 import type { SessionViewer } from "@/features/auth/session-contract";
 
 import { isDrawerOpenForPath } from "./shell-drawer-state";
@@ -43,12 +45,32 @@ import {
 import { Breadcrumbs, type TrustedBreadcrumb } from "./shell-breadcrumbs";
 
 import { Logo } from "./shell-logo";
-import { ShellNavigationPanel } from "./shell-sidebar";
+import { ModuleNavigation, SidebarNavigation } from "./shell-sidebar";
 import { ShellSearch } from "./shell-search";
 import { ShellMobileNavigation } from "./shell-mobile-navigation";
 import { ShellQuickAdd, ShellUserMenu } from "./shell-user-menu";
 
 export { Breadcrumbs, type TrustedBreadcrumb } from "./shell-breadcrumbs";
+
+const SIDEBAR_STORAGE_KEY = "dss-shell-sidebar-collapsed";
+const SIDEBAR_CHANGE_EVENT = "dss-shell-sidebar-change";
+
+function subscribeSidebarCollapsed(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  window.addEventListener(SIDEBAR_CHANGE_EVENT, onChange);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(SIDEBAR_CHANGE_EVENT, onChange);
+  };
+}
+
+function readSidebarCollapsed(): boolean {
+  try {
+    return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
 
 export function DssApplicationShell({
   children,
@@ -93,6 +115,22 @@ export function DssApplicationShell({
   };
   const hasSession = Boolean(viewer);
 
+  // Desktop rail state is read from storage through useSyncExternalStore:
+  // the server renders expanded, the client restores the stored choice.
+  const sidebarCollapsed = useSyncExternalStore(
+    subscribeSidebarCollapsed,
+    readSidebarCollapsed,
+    () => false,
+  );
+  const toggleSidebar = () => {
+    try {
+      window.localStorage.setItem(SIDEBAR_STORAGE_KEY, sidebarCollapsed ? "0" : "1");
+    } catch {
+      /* Storage is optional; the rail still toggles for this page view. */
+    }
+    window.dispatchEvent(new Event(SIDEBAR_CHANGE_EVENT));
+  };
+
   return (
     <div data-shell-variant={variant ?? "MODULE_LAUNCHER"} className="min-h-screen bg-background text-foreground">
       <a
@@ -102,25 +140,53 @@ export function DssApplicationShell({
         Перейти до вмісту
       </a>
 
-      <DesignScope as="aside" className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)] lg:flex">
-        <div className="flex h-14 shrink-0 items-center px-4">
-          <Logo />
+      {/* Two independent regions: the fixed module zone never pushes the
+          contextual zone out of view; only the contextual zone scrolls. */}
+      <DesignScope
+        as="aside"
+        id="shell-sidebar"
+        className={cn(
+          "fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)] transition-[width] duration-200 lg:flex",
+          sidebarCollapsed ? "w-16" : "w-60",
+        )}
+      >
+        <div className={cn("flex h-14 shrink-0 items-center", sidebarCollapsed ? "justify-center" : "px-4")}>
+          <Logo compact={sidebarCollapsed} />
         </div>
-        <div className="flex-1 overflow-y-auto px-3 py-4 [scrollbar-width:thin] [scrollbar-color:var(--shell-divider)_transparent] hover:[scrollbar-color:var(--muted-foreground)_transparent]">
-          <ShellNavigationPanel
+        <div
+          className={cn(
+            "max-h-[50%] shrink-0 overflow-y-auto py-2 [scrollbar-width:thin] [scrollbar-color:var(--shell-divider)_transparent]",
+            sidebarCollapsed ? "px-2" : "px-3",
+          )}
+        >
+          <ModuleNavigation
             pathname={pathname}
             hasSession={hasSession}
             canAccessAdminDeck={canAccessAdminDeck}
-            canModerate={canModerate}
+            compact={sidebarCollapsed}
           />
         </div>
-        <div className="m-3 border-t border-[color:var(--shell-divider)] px-3 py-3 text-xs leading-5 text-muted-foreground">
-          <p className="font-semibold text-foreground">DSS Universe</p>
-          <p>Build. Inspire. Grow.</p>
-        </div>
+        {sidebarCollapsed ? (
+          <div className="flex-1" />
+        ) : (
+          <>
+            <div className="min-h-0 flex-1 overflow-y-auto border-t border-[color:var(--shell-divider)] px-3 py-4 [scrollbar-width:thin] [scrollbar-color:var(--shell-divider)_transparent] hover:[scrollbar-color:var(--muted-foreground)_transparent]">
+              <SidebarNavigation
+                pathname={pathname}
+                hasSession={hasSession}
+                canAccessAdminDeck={canAccessAdminDeck}
+                canModerate={canModerate}
+              />
+            </div>
+            <div className="m-3 shrink-0 border-t border-[color:var(--shell-divider)] px-3 py-3 text-xs leading-5 text-muted-foreground">
+              <p className="font-semibold text-foreground">DSS Universe</p>
+              <p>Build. Inspire. Grow.</p>
+            </div>
+          </>
+        )}
       </DesignScope>
 
-      <div className="lg:pl-60">
+      <div className={cn("transition-[padding] duration-200", sidebarCollapsed ? "lg:pl-16" : "lg:pl-60")}>
         <DesignScope as="header" className="sticky top-0 z-20 flex h-14 items-center gap-1 sm:gap-3 border-b border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)] px-2 sm:px-6">
           <Button
             variant="ghost"
@@ -133,6 +199,18 @@ export function DssApplicationShell({
             className="lg:hidden"
           >
             <Menu aria-hidden="true" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            type="button"
+            onClick={toggleSidebar}
+            aria-label={sidebarCollapsed ? "Розгорнути навігацію" : "Згорнути навігацію"}
+            aria-expanded={!sidebarCollapsed}
+            aria-controls="shell-sidebar"
+            className="hidden lg:inline-flex"
+          >
+            {sidebarCollapsed ? <PanelLeftOpen aria-hidden="true" /> : <PanelLeftClose aria-hidden="true" />}
           </Button>
           <div className="lg:hidden">
             <Logo compact />
