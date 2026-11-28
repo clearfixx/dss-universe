@@ -21,7 +21,16 @@ import type { TransactionClient } from '@api/core/database';
 export const STATIC_PAGE_MEDIA = Symbol('STATIC_PAGE_MEDIA');
 export const STATIC_PAGE_MEDIA_PURPOSE = 'static-page';
 
+export type StaticPageFile = Readonly<{
+  content: Buffer;
+  mimeType: string;
+  checksum: string;
+  filename: string;
+}>;
+
 export interface StaticPageMedia {
+  /** The bytes of a file this page references, if it is READY. */
+  open(pageId: string, mediaId: string): Promise<StaticPageFile | null>;
   referencedIds(pageId: string): Promise<string[]>;
   /** How many of these files the actor may not attach. */
   rejectedCount(actorId: string, mediaIds: readonly string[]): Promise<number>;

@@ -18,7 +18,9 @@ import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService, type TransactionClient } from '@api/core/database';
 import {
   MEDIA_ATTACHMENT_POLICY,
+  MEDIA_REFERENCED_FILES,
   type MediaAttachmentPolicy,
+  type MediaReferencedFiles,
 } from '@api/modules/media';
 import {
   STATIC_PAGE_MEDIA_PURPOSE,
@@ -38,7 +40,13 @@ export class StaticPageMediaAdapter implements StaticPageMedia {
     private readonly prisma: PrismaService,
     @Inject(MEDIA_ATTACHMENT_POLICY)
     private readonly policy: MediaAttachmentPolicy,
+    @Inject(MEDIA_REFERENCED_FILES)
+    private readonly files: MediaReferencedFiles,
   ) {}
+
+  open(pageId: string, mediaId: string) {
+    return this.files.open({ ...scope(pageId), mediaId });
+  }
 
   async referencedIds(pageId: string): Promise<string[]> {
     const rows = await this.prisma.mediaReference.findMany({

@@ -11,7 +11,10 @@
  * 🚀 Build. Share. Grow.
  * ===============================================================
  */
-import { MEDIA_APPEAL_SCREENSHOTS } from '@api/modules/media';
+import {
+  MEDIA_APPEAL_SCREENSHOTS,
+  MEDIA_REFERENCED_FILES,
+} from '@api/modules/media';
 import { MODULE_METADATA } from '@nestjs/common/constants';
 import type { PrismaService } from '@api/core/database';
 import {
@@ -191,6 +194,7 @@ describe('Published News attachment boundaries', () => {
       MEDIA_ATTACHMENT_POLICY,
       MEDIA_IMAGE_ELIGIBILITY,
       MEDIA_APPEAL_SCREENSHOTS,
+      MEDIA_REFERENCED_FILES,
     ]);
   });
 });

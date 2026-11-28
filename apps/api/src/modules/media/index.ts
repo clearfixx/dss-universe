@@ -51,3 +51,8 @@ export {
   MEDIA_APPEAL_SCREENSHOTS,
   type MediaAppealScreenshots,
 } from './contracts/appeal-screenshots.contract';
+export {
+  MEDIA_REFERENCED_FILES,
+  type MediaReferencedFiles,
+  type MediaReferencedFile,
+} from './contracts/referenced-files.contract';

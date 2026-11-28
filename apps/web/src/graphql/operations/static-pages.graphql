@@ -49,3 +49,20 @@ mutation UnpublishStaticPage($id: ID!) {
     ...AdminStaticPageFields
   }
 }
+
+query PublishedStaticPage($slug: String!) {
+  staticPage(slug: $slug) {
+    slug
+    title
+    description
+    documentJson
+    publishedAt
+  }
+}
+
+query PublishedStaticPages {
+  publishedStaticPages {
+    slug
+    publishedAt
+  }
+}

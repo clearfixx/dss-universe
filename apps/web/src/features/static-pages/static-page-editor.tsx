@@ -295,6 +295,14 @@ export function StaticPageEditor({
 
       <div className="flex flex-wrap justify-end gap-2">
         {state?.published ? (
+          <Link
+            href={`/pages/${slug}`}
+            className="mr-auto self-center text-sm text-violet-300 hover:underline"
+          >
+            Відкрити на сайті
+          </Link>
+        ) : null}
+        {state?.published ? (
           <Button
             type="button"
             variant="outline"

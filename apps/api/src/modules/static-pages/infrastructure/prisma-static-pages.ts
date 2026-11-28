@@ -35,6 +35,7 @@ import {
 } from '../domain/static-page.rules';
 import {
   STATIC_PAGE_MEDIA,
+  type StaticPageFile,
   type StaticPageMedia,
 } from './static-page-media.port';
 
@@ -206,6 +207,23 @@ export class StaticPagesService {
       documentJson: JSON.stringify(row.publishedDocument),
       publishedAt: row.publishedAt,
     };
+  }
+
+  /** A file of the published snapshot; drafts' files stay private. */
+  async publishedFile(
+    slug: string,
+    mediaId: string,
+  ): Promise<StaticPageFile | null> {
+    const row = await this.prisma.staticPage.findUnique({
+      where: { slug },
+      select: { id: true, publishedDocument: true, publishedAt: true },
+    });
+    if (
+      !row?.publishedAt ||
+      !this.mediaOf(row.publishedDocument).includes(mediaId)
+    )
+      return null;
+    return this.media.open(row.id, mediaId);
   }
 
   /** Addresses of published pages (sitemap). */

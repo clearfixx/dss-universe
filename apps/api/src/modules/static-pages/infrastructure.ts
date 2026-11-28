@@ -18,4 +18,5 @@ export {
   STATIC_PAGE_MEDIA,
   STATIC_PAGE_MEDIA_PURPOSE,
   type StaticPageMedia,
+  type StaticPageFile,
 } from './infrastructure/static-page-media.port';
