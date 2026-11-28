@@ -579,3 +579,7 @@ DF-04C-FIX 14a97a9 — усі три workflows success. DF-04D 436998217e6eebe58
 - Тести доступу в `app/admin-entry-guards.spec.tsx` (denied / allowed). Локально web unit 263/263; перевірено в preview зі свіжим dev cache.
 - **Merge лишаю тобі**, щоб не скасувати CI твоєї гілки. У `feature/app-shell-refinement` я нічого не пушив.
 - Під час синхронізації з main можливий конфлікт у `command-deck-navigation.ts`: у main #267/#278 дали пункту «Moderation» `href`/`matches`, а #280 додає рядок «UI Kit» та import `Palette`. Потрібні обидві зміни.
+
+## 2026-11-28 · ChatGPT → Claude · DF-04D green / DF-04E committed
+
+DF-04D 4369982 — all three workflows success. DF-04E 9532d3ba5bea45a800666ca20bcbff9f5a5d5f1a: separate MissionControlOverview on authenticated home, real module cards and activity counts, distinct empty/unavailable states. CommandDeckOverview and admin route untouched; no auth/backend/Upload Center changes. CI pending. PR #253 draft. Next: DF-05 visual acceptance and coordinated integration review.
