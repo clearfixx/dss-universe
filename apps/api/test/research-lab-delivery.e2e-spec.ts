@@ -83,6 +83,81 @@ describe('Research Lab public delivery (GraphQL)', () => {
       expect.objectContaining({ id: root.id, parentId: null }),
     ]);
   });
+  it('requires organization permission and rejects duplicate roots and category cycles', async () => {
+    const suffix = randomUUID();
+    const member = await app.get(AuthenticationPresentationService).register({
+      email: `research-organizer-${suffix}@dss.test`,
+      username: 'organizer-' + suffix,
+      displayName: 'Organizer',
+      password: 'research-fixture-123',
+    });
+    const send = async (query: string, input: Record<string, unknown>) => {
+      const response = await request(app.getHttpServer())
+        .post('/api/graphql')
+        .set('Authorization', 'Bearer ' + member.tokens.accessToken)
+        .send({ query, variables: { input } })
+        .expect(200);
+      return payload<{
+        createResearchCategory: { id: string; parentId: string | null };
+        updateResearchCategory: { id: string; parentId: string | null };
+      }>(response);
+    };
+    const create =
+      'mutation($input:ResearchCreateCategoryInput!){createResearchCategory(input:$input){id parentId}}';
+    const update =
+      'mutation($input:ResearchUpdateCategoryInput!){updateResearchCategory(input:$input){id parentId}}';
+    const rootInput = { name: 'Root', slug: 'root-' + suffix };
+    expect((await send(create, rootInput)).errors[0].extensions.code).toBe(
+      'FORBIDDEN',
+    );
+    const permission = await fixture.prisma.permission.findUniqueOrThrow({
+      where: { key: Permission.ResearchLabOrganize },
+    });
+    await fixture.prisma.userPermission.create({
+      data: { userId: member.user.id, permissionId: permission.id },
+    });
+    const root = await send(create, rootInput);
+    expect(root.errors).toBeUndefined();
+    expect(root.data.createResearchCategory.parentId).toBeNull();
+    expect((await send(create, rootInput)).errors[0].extensions.code).toBe(
+      'CONFLICT',
+    );
+    const child = await send(create, {
+      name: 'Child',
+      slug: 'child-' + suffix,
+      parentId: root.data.createResearchCategory.id,
+    });
+    expect(child.errors).toBeUndefined();
+    expect(
+      (
+        await send(update, {
+          id: root.data.createResearchCategory.id,
+          parentId: child.data.createResearchCategory.id,
+        })
+      ).errors[0].extensions.code,
+    ).toBe('BAD_USER_INPUT');
+    expect(
+      (
+        await send(update, {
+          id: child.data.createResearchCategory.id,
+          parentId: null,
+        })
+      ).data.updateResearchCategory.parentId,
+    ).toBeNull();
+    expect(
+      await fixture.prisma.auditRecord.count({
+        where: {
+          targetType: 'ResearchCategory',
+          targetId: root.data.createResearchCategory.id,
+        },
+      }),
+    ).toBe(1);
+    expect(
+      await fixture.prisma.outboxEvent.count({
+        where: { eventName: 'research-lab.category.created.v1' },
+      }),
+    ).toBeGreaterThanOrEqual(1);
+  });
   it('removes the entire result and its count after an audience change', async () => {
     const id = randomUUID(),
       author = randomUUID(),

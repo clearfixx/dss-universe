@@ -15,7 +15,7 @@ import { ResearchLabDelivery } from './infrastructure/research-lab-delivery';
 
 type RequestContext = { req: { user?: AuthenticatedUser } };
 @ObjectType()
-class ResearchCategoryEntry {
+export class ResearchCategoryEntry {
   @Field(() => ID) id!: string;
   @Field(() => ID, { nullable: true }) parentId!: string | null;
   @Field() name!: string;

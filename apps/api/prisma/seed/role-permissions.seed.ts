@@ -116,6 +116,8 @@ const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     Permission.ForumNetworkView,
     Permission.ForumNetworkDelete,
 
+    Permission.ResearchLabOrganize,
+
     Permission.NewsReview,
     Permission.NewsPublish,
     Permission.NewsTaxonomyManage,

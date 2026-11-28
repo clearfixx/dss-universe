@@ -242,6 +242,11 @@ export const PERMISSIONS = {
     label: 'Moderate Research Lab',
     description: 'Allows hiding Research Lab pages.',
   },
+  ResearchLabOrganize: {
+    key: 'research-lab.organize',
+    label: 'Organize Research Lab',
+    description: 'Allows managing Research Lab categories and navigation.',
+  },
   NewsReview: {
     key: 'news.review',
     label: 'Review News',
