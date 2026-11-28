@@ -9,7 +9,7 @@
  *
  * 🎯 Purpose:
  * Application shell in the owner's mockup layout: a fixed left sidebar
- * (logo and the active module's sections), a top bar with module tabs,
+ * (logo, global modules, the active module's sections), a slim top bar with
  * search and the user menu, and violet breadcrumbs with a home icon.
  *
  * ⚠️ Important:
@@ -36,8 +36,6 @@ import type { SessionViewer } from "@/features/auth/session-contract";
 import { isDrawerOpenForPath } from "./shell-drawer-state";
 
 import {
-  DEFAULT_SHELL_VARIANT,
-  moduleSidebarItems,
   type ShellVariant,
   type TrustedPageTitle,
 } from "./shell-navigation";
@@ -45,19 +43,17 @@ import {
 import { Breadcrumbs, type TrustedBreadcrumb } from "./shell-breadcrumbs";
 
 import { Logo } from "./shell-logo";
-import { GlobalNavigation } from "./shell-navbar";
-import { SidebarNavigation } from "./shell-sidebar";
+import { ShellNavigationPanel } from "./shell-sidebar";
 import { ShellSearch } from "./shell-search";
 import { ShellMobileNavigation } from "./shell-mobile-navigation";
 import { ShellQuickAdd, ShellUserMenu } from "./shell-user-menu";
 
 export { Breadcrumbs, type TrustedBreadcrumb } from "./shell-breadcrumbs";
-export { GlobalNavigation } from "./shell-navbar";
 
 export function DssApplicationShell({
   children,
   viewer,
-  variant = DEFAULT_SHELL_VARIANT,
+  variant,
   toolbar,
   canAccessAdminDeck = false,
   canModerate = false,
@@ -65,6 +61,10 @@ export function DssApplicationShell({
   breadcrumbs,
 }: PropsWithChildren<{
   viewer: SessionViewer | null;
+  /**
+   * Stored admin setting, kept for compatibility only. The navigation
+   * composition is fixed by the owner decision of 2026-11-28 (variant B).
+   */
   variant?: ShellVariant;
   toolbar?: ReactNode;
   canAccessAdminDeck?: boolean;
@@ -92,10 +92,9 @@ export function DssApplicationShell({
     if (drawerTrigger.current?.getClientRects().length) drawerTrigger.current.focus();
   };
   const hasSession = Boolean(viewer);
-  const hasSidebar = moduleSidebarItems(pathname, hasSession, canAccessAdminDeck, canModerate).length > 0;
 
   return (
-    <div data-shell-variant={variant} className="min-h-screen bg-background text-foreground">
+    <div data-shell-variant={variant ?? "MODULE_LAUNCHER"} className="min-h-screen bg-background text-foreground">
       <a
         href="#main-content"
         className="sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:not-sr-only focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
@@ -103,12 +102,12 @@ export function DssApplicationShell({
         Перейти до вмісту
       </a>
 
-      {hasSidebar && <DesignScope as="aside" className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)] lg:flex">
-        <div className="flex h-14 items-center px-4">
+      <DesignScope as="aside" className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)] lg:flex">
+        <div className="flex h-14 shrink-0 items-center px-4">
           <Logo />
         </div>
         <div className="flex-1 overflow-y-auto px-3 py-4">
-          <SidebarNavigation
+          <ShellNavigationPanel
             pathname={pathname}
             hasSession={hasSession}
             canAccessAdminDeck={canAccessAdminDeck}
@@ -119,9 +118,9 @@ export function DssApplicationShell({
           <p className="font-semibold text-foreground">DSS Universe</p>
           <p>Build. Inspire. Grow.</p>
         </div>
-      </DesignScope>}
+      </DesignScope>
 
-      <div className={hasSidebar ? "lg:pl-60" : undefined}>
+      <div className="lg:pl-60">
         <DesignScope as="header" className="sticky top-0 z-20 flex h-14 items-center gap-1 sm:gap-3 border-b border-[color:var(--shell-divider)] bg-[color:var(--shell-surface)] px-2 sm:px-6">
           <Button
             variant="ghost"
@@ -135,15 +134,9 @@ export function DssApplicationShell({
           >
             <Menu aria-hidden="true" />
           </Button>
-          <div className={hasSidebar ? "lg:hidden" : undefined}>
+          <div className="lg:hidden">
             <Logo compact />
           </div>
-          <GlobalNavigation
-            pathname={pathname}
-            variant={variant}
-            hasSession={hasSession}
-            canAccessAdminDeck={canAccessAdminDeck}
-          />
           <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-2">
             <ShellSearch />
             {hasSession ? <ShellQuickAdd canAccessAdminDeck={canAccessAdminDeck} /> : null}
