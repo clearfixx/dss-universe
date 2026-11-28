@@ -148,7 +148,7 @@ export class ForumReadLoaders {
   constructor(
     private readonly members: ForumMemberCardReader,
     private readonly reads: PrismaForumReadModels,
-    private readonly viewers?: ForumViewerFactsReader,
+    private readonly viewers: ForumViewerFactsReader,
   ) {}
 
   for(ctx: RequestContext): Loaders {
@@ -159,7 +159,7 @@ export class ForumReadLoaders {
       loaders = {
         moderation: () =>
           (moderation ??= (async () => {
-            if (!viewerId || !this.viewers) return null;
+            if (!viewerId) return null;
             const facts = await this.viewers.read(viewerId, new Date());
             if (facts.subjectId === null) return null;
             const [assigned, assignedForums] = await Promise.all([
@@ -205,12 +205,16 @@ export class ForumReadLoaders {
   }
 }
 
+/**
+ * The per-request loaders are shared by all resolvers: whichever runs first
+ * creates them, so every resolver must give them the viewer facts.
+ */
 abstract class ForumReadResolverBase {
   protected readonly loaders: ForumReadLoaders;
   constructor(
     members: ForumMemberCardReader,
     reads: PrismaForumReadModels,
-    viewers?: ForumViewerFactsReader,
+    viewers: ForumViewerFactsReader,
   ) {
     this.loaders = new ForumReadLoaders(members, reads, viewers);
   }
@@ -246,8 +250,9 @@ export class ForumModeratorCardResolver extends ForumReadResolverBase {
   constructor(
     @Inject(FORUM_MEMBER_CARDS) members: ForumMemberCardReader,
     reads: PrismaForumReadModels,
+    @Inject(FORUM_VIEWER_FACTS) viewers: ForumViewerFactsReader,
   ) {
-    super(members, reads);
+    super(members, reads, viewers);
   }
 
   @ResolveField(() => ForumMemberModel, { nullable: true })
@@ -354,8 +359,9 @@ export class ForumPostReadResolver extends ForumReadResolverBase {
   constructor(
     @Inject(FORUM_MEMBER_CARDS) members: ForumMemberCardReader,
     reads: PrismaForumReadModels,
+    @Inject(FORUM_VIEWER_FACTS) viewers: ForumViewerFactsReader,
   ) {
-    super(members, reads);
+    super(members, reads, viewers);
   }
 
   @ResolveField(() => ForumMemberModel, { nullable: true })
@@ -386,8 +392,9 @@ export class ForumPostRevisionReadResolver extends ForumReadResolverBase {
   constructor(
     @Inject(FORUM_MEMBER_CARDS) members: ForumMemberCardReader,
     reads: PrismaForumReadModels,
+    @Inject(FORUM_VIEWER_FACTS) viewers: ForumViewerFactsReader,
   ) {
-    super(members, reads);
+    super(members, reads, viewers);
   }
 
   @ResolveField(() => ForumMemberModel, { nullable: true })
@@ -404,8 +411,9 @@ export class ForumPostVoteReadResolver extends ForumReadResolverBase {
   constructor(
     @Inject(FORUM_MEMBER_CARDS) members: ForumMemberCardReader,
     reads: PrismaForumReadModels,
+    @Inject(FORUM_VIEWER_FACTS) viewers: ForumViewerFactsReader,
   ) {
-    super(members, reads);
+    super(members, reads, viewers);
   }
 
   @ResolveField(() => ForumMemberModel, { nullable: true })
@@ -420,8 +428,9 @@ export class ForumModerationActionReadResolver extends ForumReadResolverBase {
   constructor(
     @Inject(FORUM_MEMBER_CARDS) members: ForumMemberCardReader,
     reads: PrismaForumReadModels,
+    @Inject(FORUM_VIEWER_FACTS) viewers: ForumViewerFactsReader,
   ) {
-    super(members, reads);
+    super(members, reads, viewers);
   }
 
   @ResolveField(() => ForumMemberModel, { nullable: true })
@@ -438,8 +447,9 @@ export class ForumStatsResolver extends ForumReadResolverBase {
   constructor(
     @Inject(FORUM_MEMBER_CARDS) members: ForumMemberCardReader,
     reads: PrismaForumReadModels,
+    @Inject(FORUM_VIEWER_FACTS) viewers: ForumViewerFactsReader,
   ) {
-    super(members, reads);
+    super(members, reads, viewers);
   }
 
   @ResolveField(() => ForumActivityStatsModel)
@@ -453,8 +463,9 @@ export class ForumSubforumStatsResolver extends ForumReadResolverBase {
   constructor(
     @Inject(FORUM_MEMBER_CARDS) members: ForumMemberCardReader,
     reads: PrismaForumReadModels,
+    @Inject(FORUM_VIEWER_FACTS) viewers: ForumViewerFactsReader,
   ) {
-    super(members, reads);
+    super(members, reads, viewers);
   }
 
   @ResolveField(() => ForumActivityStatsModel)
