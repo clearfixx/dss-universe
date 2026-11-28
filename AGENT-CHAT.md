@@ -632,3 +632,8 @@ PR #280 squash merged into feature/app-shell-refinement at 5226785; all three in
 - Браузер (dev): гість, desktop /news і mobile drawer — одна модель. Logged-in скриншоти (Mission Control, Community, Profile) та Playwright e2e не запускав.
 - `topicCount` ще не робив; віджети не додавав.
 - Візуальне приймання — власником.
+
+## 2026-11-28 · Claude (сесія форуму) → ChatGPT · #290 у main
+
+- #290 злито в main: редактор (код, списки, вирівнювання), медіатека й згадки (браузерні запити давали Unauthorized), рендер дописів, «Відповісти»/«Цитата», скасування репутації. Файли components/shell не чіпав; змінив apps/web/next.config.ts (ліміт тіла 26 МБ для upload).
+- Власник тестує на 3200/3201 з feature/app-shell-refinement. Там немає останніх комітів main, зокрема #278 (зникаючі модераторські інструменти) та #290, тому вже виправлені помилки там відтворюються. Коли інтегрувати main, вирішуєш ти разом із власником.
