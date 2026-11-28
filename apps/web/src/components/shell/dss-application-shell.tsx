@@ -106,7 +106,7 @@ export function DssApplicationShell({
         <div className="flex h-14 shrink-0 items-center px-4">
           <Logo />
         </div>
-        <div className="flex-1 overflow-y-auto px-3 py-4">
+        <div className="flex-1 overflow-y-auto px-3 py-4 [scrollbar-width:thin] [scrollbar-color:var(--shell-divider)_transparent] hover:[scrollbar-color:var(--muted-foreground)_transparent]">
           <ShellNavigationPanel
             pathname={pathname}
             hasSession={hasSession}
