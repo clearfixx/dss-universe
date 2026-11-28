@@ -2755,6 +2755,12 @@ type ResearchInteractionSettings {
   allowRating: Boolean!
 }
 
+input ResearchLifecycleInput {
+  expectedPublicationGeneration: Int!
+  pageId: ID!
+  reason: String
+}
+
 type ResearchManualEntry {
   chapters: [ResearchContainerItem!]!
   description: String
@@ -2762,12 +2768,6 @@ type ResearchManualEntry {
   language: String!
   slug: String!
   title: String!
-}
-
-input ResearchLifecycleInput {
-  expectedPublicationGeneration: Int!
-  pageId: ID!
-  reason: String
 }
 
 type ResearchOwnDraft {
