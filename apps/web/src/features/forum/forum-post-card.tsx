@@ -23,6 +23,7 @@ import Link from "next/link";
 import type { ForumPostFieldsFragment } from "@/gql/graphql";
 
 import { ForumDocument } from "./forum-document";
+import { forumQuotedNumbers } from "./forum-quote-model";
 import { canEditForumPost, forumMemberName } from "./forum-format";
 import { ForumPostEditor } from "./forum-post-editor";
 import { ForumPostHistory } from "./forum-post-history";
@@ -129,6 +130,15 @@ export function ForumPostCard({
       path={path}
     />
   ) : null;
+
+  // Quotes written into the text show their own header; older posts only
+  // remember the numbers.
+  const embedded = post.documentJson
+    ? forumQuotedNumbers(JSON.parse(post.documentJson))
+    : [];
+  const quotedElsewhere = post.quotedNumbers.filter(
+    (number) => !embedded.includes(number),
+  );
 
   const canEdit =
     visible &&
@@ -271,10 +281,10 @@ export function ForumPostCard({
 
           {visible && post.documentJson ? (
             <>
-              {post.quotedNumbers.length ? (
+              {quotedElsewhere.length ? (
                 <p className="text-xs text-slate-500">
                   Цитує{" "}
-                  {post.quotedNumbers.map((number) => (
+                  {quotedElsewhere.map((number) => (
                     <a
                       key={number}
                       href={`#post-${number}`}
@@ -293,10 +303,16 @@ export function ForumPostCard({
                   staffRoles={staffTagRoles(abilities.staffRole)}
                   allowsGatedContent={allowsGatedContent}
                 >
-                  <ForumDocument documentJson={post.documentJson} />
+                  <ForumDocument
+                    documentJson={post.documentJson}
+                    files={post.attachments}
+                  />
                 </ForumPostEditor>
               ) : (
-                <ForumDocument documentJson={post.documentJson} />
+                <ForumDocument
+                  documentJson={post.documentJson}
+                  files={post.attachments}
+                />
               )}
             </>
           ) : (
@@ -328,7 +344,10 @@ export function ForumPostCard({
                       Показати зміст
                     </summary>
                     <div className="mt-3 rounded-lg border border-white/10 bg-slate-950/60 p-3">
-                      <ForumDocument documentJson={post.documentJson} />
+                      <ForumDocument
+                        documentJson={post.documentJson}
+                        files={post.attachments}
+                      />
                     </div>
                   </details>
                 ) : null}

@@ -117,6 +117,9 @@ export class ReputationHistoryModel {
 
   @Field(() => Int)
   score!: number;
+
+  @Field({ description: 'true when the viewer may cancel entries.' })
+  viewerCanReverse!: boolean;
 }
 
 @ObjectType('ReputationPolicy')

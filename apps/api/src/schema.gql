@@ -2671,6 +2671,9 @@ type ReputationHistory {
   score: Int!
   total: Int!
   totalPages: Int!
+
+  """true when the viewer may cancel entries."""
+  viewerCanReverse: Boolean!
 }
 
 input ReputationPageInput {

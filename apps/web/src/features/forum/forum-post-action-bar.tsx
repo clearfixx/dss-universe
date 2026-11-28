@@ -62,7 +62,9 @@ import {
 } from "./forum-actions";
 import { banForumAuthor } from "@/features/command-deck/ban-admin-actions";
 import { useForumPostEdit } from "./forum-post-edit-scope";
+import { forumMemberName } from "./forum-format";
 import { ForumPostNetworkDialog } from "./forum-post-network-dialog";
+import { forumQuoteNode, forumReplyMention } from "./forum-quote-model";
 import { targetForumReply } from "./forum-topic-controls";
 
 type DialogKey =
@@ -104,7 +106,17 @@ export function ForumPostActionBar({
   ban = null,
 }: {
   topicId: string;
-  post: Readonly<{ id: string; number: number; state: string }>;
+  post: Readonly<{
+    id: string;
+    number: number;
+    state: string;
+    documentJson?: string | null;
+    author?: {
+      id: string;
+      username: string;
+      displayName?: string | null;
+    } | null;
+  }>;
   abilities: Readonly<{
     moderate: boolean;
     purge: boolean;
@@ -169,7 +181,11 @@ export function ForumPostActionBar({
           className={plain}
           disabled={!canReply || !visible}
           onClick={() =>
-            targetForumReply({ number: post.number, quote: false })
+            targetForumReply({
+              number: post.number,
+              quote: false,
+              block: post.author ? forumReplyMention(post.author) : null,
+            })
           }
         >
           <Reply className="size-4" aria-hidden="true" />
@@ -178,8 +194,19 @@ export function ForumPostActionBar({
         <button
           type="button"
           className={plain}
-          disabled={!canReply || !visible}
-          onClick={() => targetForumReply({ number: post.number, quote: true })}
+          disabled={!canReply || !visible || !post.documentJson}
+          onClick={() =>
+            targetForumReply({
+              number: post.number,
+              quote: true,
+              block: forumQuoteNode({
+                postId: post.id,
+                number: post.number,
+                authorName: forumMemberName(post.author),
+                documentJson: post.documentJson ?? "",
+              }),
+            })
+          }
         >
           <Quote className="size-4" aria-hidden="true" />
           Цитата

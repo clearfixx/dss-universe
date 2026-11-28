@@ -10,7 +10,7 @@
  * insertions without coupling Tiptap extensions to GraphQL.
  *
  * 🧠 Responsibilities:
- * • loads only the current actor's READY media through editorMedia;
+ * • loads only the current actor's READY media through a server action;
  * • searches active, visible members for structured mention insertion;
  * • returns typed media or member selections to the editor surface;
  * • keeps loading, empty, error, and dismissal states accessible.
@@ -21,7 +21,6 @@
 
 "use client";
 
-import { useLazyQuery } from "@apollo/client/react";
 import {
   FileText,
   ImageIcon,
@@ -31,16 +30,16 @@ import {
   UserRound,
   Video,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-import {
-  EditorMediaDocument,
-  EditorMentionSuggestionsDocument,
-  type MediaKind,
-} from "@/gql/graphql";
+import type { MediaKind } from "@/gql/graphql";
 
 import styles from "./editor-resource-dialog.module.css";
-import { uploadEditorMedia } from "./editor-actions";
+import {
+  searchEditorMedia,
+  searchMentionMembers,
+  uploadEditorMedia,
+} from "./editor-actions";
 
 export type EditorMediaSelection = {
   id: string;
@@ -53,6 +52,52 @@ export type EditorMentionSelection = {
   username: string;
   displayName: string | null;
 };
+
+type MediaItem = {
+  id: string;
+  kind: MediaKind;
+  originalFilename: string;
+  mimeType: string;
+};
+
+type MemberExtras = { avatarUrl?: string | null; isOnline: boolean };
+
+type SearchResult<T> =
+  | { ok: true; items: T[] }
+  | { ok: false; error: "SIGNED_OUT" | "UNAVAILABLE" };
+
+/** Runs a search server action; only the newest answer is shown. */
+function useServerSearch<T>(unavailable: string) {
+  const latest = useRef(0);
+  const [state, setState] = useState<{
+    items?: T[];
+    loading: boolean;
+    error?: string;
+  }>({ loading: false });
+  const run = useCallback(
+    (request: () => Promise<SearchResult<T>>): void => {
+      const ticket = ++latest.current;
+      setState((current) => ({ items: current.items, loading: true }));
+      const settle = (result: SearchResult<T>): void => {
+        if (ticket !== latest.current) return;
+        setState(
+          result.ok
+            ? { items: result.items, loading: false }
+            : {
+                loading: false,
+                error:
+                  result.error === "SIGNED_OUT"
+                    ? "Сесія закінчилась. Увійдіть знову."
+                    : unavailable,
+              },
+        );
+      };
+      request().then(settle, () => settle({ ok: false, error: "UNAVAILABLE" }));
+    },
+    [unavailable],
+  );
+  return { ...state, run };
+}
 
 type MediaDialogProps = {
   mode: "image" | "video" | "attachment";
@@ -69,23 +114,21 @@ export function EditorMediaDialog({
   const [uploading, setUploading] = useState(false);
   const [uploadNotice, setUploadNotice] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [load, { data, loading, error }] = useLazyQuery(EditorMediaDocument, {
-    fetchPolicy: "network-only",
-  });
+  const { items, loading, error, run } = useServerSearch<MediaItem>(
+    "Не вдалося завантажити медіатеку.",
+  );
   const kind =
     mode === "image" ? "IMAGE" : mode === "video" ? "VIDEO" : undefined;
 
-  const refresh = (): void => {
-    void load({
-      variables: {
-        input: {
-          first: 24,
-          ...(kind ? { kind } : {}),
-          ...(search.trim() ? { search: search.trim() } : {}),
-        },
-      },
-    });
-  };
+  const load = useCallback((): void => {
+    run(() =>
+      searchEditorMedia({
+        first: 24,
+        ...(kind ? { kind } : {}),
+        ...(search.trim() ? { search: search.trim() } : {}),
+      }),
+    );
+  }, [kind, run, search]);
 
   const upload = async (file: File): Promise<void> => {
     if (mode === "video") return;
@@ -110,22 +153,9 @@ export function EditorMediaDialog({
   };
 
   useEffect(() => {
-    const timer = window.setTimeout(
-      () => {
-        void load({
-          variables: {
-            input: {
-              first: 24,
-              ...(kind ? { kind } : {}),
-              ...(search.trim() ? { search: search.trim() } : {}),
-            },
-          },
-        });
-      },
-      search ? 250 : 0,
-    );
+    const timer = window.setTimeout(load, search ? 250 : 0);
     return () => window.clearTimeout(timer);
-  }, [kind, load, search]);
+  }, [load, search]);
 
   return (
     <DialogShell
@@ -158,18 +188,18 @@ export function EditorMediaDialog({
             Video upload policy is not enabled yet.
           </span>
         )}
-        <button type="button" className={styles.refresh} onClick={refresh}>
+        <button type="button" className={styles.refresh} onClick={load}>
           <RefreshCw aria-hidden="true" size={15} /> Refresh
         </button>
       </div>
       {uploadNotice ? <p className={styles.notice}>{uploadNotice}</p> : null}
       {uploadError ? <p className={styles.error}>{uploadError}</p> : null}
-      <ResourceState loading={loading} error={error?.message} />
-      {!loading && !error && data?.editorMedia.items.length === 0 ? (
+      <ResourceState loading={loading} error={error} />
+      {!loading && !error && items?.length === 0 ? (
         <p className={styles.empty}>No READY media matches this search.</p>
       ) : null}
       <div className={styles.grid}>
-        {data?.editorMedia.items.map((item) => {
+        {items?.map((item) => {
           const Icon =
             item.kind === "IMAGE"
               ? ImageIcon
@@ -208,25 +238,26 @@ export function EditorMentionDialog({
   onSelect: (selection: EditorMentionSelection) => void;
 }) {
   const [search, setSearch] = useState("");
-  const [load, { data, loading, error }] = useLazyQuery(
-    EditorMentionSuggestionsDocument,
-    { fetchPolicy: "network-only" },
+  const {
+    items: found,
+    loading,
+    error,
+    run,
+  } = useServerSearch<EditorMentionSelection & MemberExtras>(
+    "Пошук учасників тимчасово недоступний.",
   );
 
   useEffect(() => {
     const query = search.trim();
     if (query.length < 2) return;
-    const timer = window.setTimeout(() => {
-      void load({
-        variables: {
-          input: { page: 1, limit: 8, search: query, sort: "USERNAME_ASC" },
-        },
-      });
-    }, 250);
+    const timer = window.setTimeout(
+      () => run(() => searchMentionMembers(query)),
+      250,
+    );
     return () => window.clearTimeout(timer);
-  }, [load, search]);
+  }, [run, search]);
 
-  const items = search.trim().length >= 2 ? data?.members.items : undefined;
+  const items = search.trim().length >= 2 ? found : undefined;
   return (
     <DialogShell title="Mention a member" onClose={onClose}>
       <SearchField
@@ -238,7 +269,7 @@ export function EditorMentionDialog({
       {search.trim().length < 2 ? (
         <p className={styles.empty}>Enter at least two characters.</p>
       ) : (
-        <ResourceState loading={loading} error={error?.message} />
+        <ResourceState loading={loading} error={error} />
       )}
       {!loading && !error && items?.length === 0 ? (
         <p className={styles.empty}>No visible members found.</p>

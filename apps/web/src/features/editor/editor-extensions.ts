@@ -12,11 +12,55 @@
  * ===============================================================
  */
 
-import { Node, mergeAttributes, type Extensions } from "@tiptap/core";
+import {
+  Extension,
+  Node,
+  mergeAttributes,
+  type Extensions,
+} from "@tiptap/core";
 import TextAlign from "@tiptap/extension-text-align";
 import StarterKit from "@tiptap/starter-kit";
 import type { EditorProfile } from "@dss/editor";
 import { getEditorProfileDefinition } from "@dss/editor";
+
+/** Whose post a forum quote copies; ordinary quotes leave these empty. */
+const QuoteSource = Extension.create({
+  name: "dssQuoteSource",
+  addGlobalAttributes: () => [
+    {
+      types: ["blockquote"],
+      attributes: {
+        quotePostId: {
+          default: null,
+          parseHTML: (element: HTMLElement) =>
+            element.getAttribute("data-quote-post"),
+          renderHTML: (attributes: Record<string, unknown>) =>
+            attributes.quotePostId
+              ? { "data-quote-post": String(attributes.quotePostId) }
+              : {},
+        },
+        quoteNumber: {
+          default: null,
+          parseHTML: (element: HTMLElement) =>
+            Number(element.getAttribute("data-quote-number")) || null,
+          renderHTML: (attributes: Record<string, unknown>) =>
+            attributes.quoteNumber
+              ? { "data-quote-number": String(attributes.quoteNumber) }
+              : {},
+        },
+        quoteAuthor: {
+          default: null,
+          parseHTML: (element: HTMLElement) =>
+            element.getAttribute("data-quote-author"),
+          renderHTML: (attributes: Record<string, unknown>) =>
+            attributes.quoteAuthor
+              ? { "data-quote-author": String(attributes.quoteAuthor) }
+              : {},
+        },
+      },
+    },
+  ],
+});
 
 const MentionNode = Node.create({
   name: "mention",
@@ -91,7 +135,15 @@ const CodeBlockNode = Node.create({
   code: true,
   defining: true,
   addAttributes: () => ({ language: { default: "plaintext" } }),
-  parseHTML: () => [{ tag: "pre" }],
+  addCommands() {
+    return {
+      toggleCodeBlock:
+        () =>
+        ({ commands }) =>
+          commands.toggleNode(this.name, "paragraph"),
+    };
+  },
+  parseHTML: () => [{ tag: "pre", preserveWhitespace: "full" as const }],
   renderHTML: ({ HTMLAttributes }) => [
     "pre",
     { "data-language": HTMLAttributes.language },
@@ -278,6 +330,7 @@ export function createEditorExtensions(profile: EditorProfile): Extensions {
       defaultAlignment: "left",
     }),
     CodeBlockNode,
+    QuoteSource,
     MentionNode,
     MediaReferenceNode,
     AttachmentNode,

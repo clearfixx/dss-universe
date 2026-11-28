@@ -12,7 +12,6 @@
  * ===============================================================
  */
 
-import { MockedProvider } from "@apollo/client/testing/react";
 import {
   cleanup,
   fireEvent,
@@ -23,58 +22,51 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
-  EditorMediaDocument,
-  EditorMentionSuggestionsDocument,
-} from "@/gql/graphql";
-
-import {
   EditorMediaDialog,
   EditorMentionDialog,
 } from "./editor-resource-dialog";
-import { uploadEditorMedia } from "./editor-actions";
+import {
+  searchEditorMedia,
+  searchMentionMembers,
+  uploadEditorMedia,
+} from "./editor-actions";
 
 vi.mock("./editor-actions", () => ({
+  searchEditorMedia: vi.fn(),
+  searchMentionMembers: vi.fn(),
   uploadEditorMedia: vi.fn(),
 }));
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  vi.resetAllMocks();
+});
 
 describe("DSS Editor resource dialogs", () => {
   it("loads actor-scoped READY images and returns a Media Reference selection", async () => {
+    vi.mocked(searchEditorMedia).mockResolvedValue({
+      ok: true,
+      items: [
+        {
+          id: "media-1",
+          kind: "IMAGE",
+          originalFilename: "nebula.png",
+          mimeType: "image/png",
+          width: 1280,
+          height: 720,
+        },
+      ],
+    });
     const select = vi.fn();
     render(
-      <MockedProvider
-        mocks={[
-          {
-            request: {
-              query: EditorMediaDocument,
-              variables: { input: { first: 24, kind: "IMAGE" } },
-            },
-            result: {
-              data: {
-                editorMedia: {
-                  items: [
-                    {
-                      id: "media-1",
-                      kind: "IMAGE",
-                      originalFilename: "nebula.png",
-                      mimeType: "image/png",
-                      width: 1280,
-                      height: 720,
-                    },
-                  ],
-                  pageInfo: { hasNextPage: false, endCursor: null },
-                },
-              },
-            },
-          },
-        ]}
-      >
-        <EditorMediaDialog mode="image" onClose={vi.fn()} onSelect={select} />
-      </MockedProvider>,
+      <EditorMediaDialog mode="image" onClose={vi.fn()} onSelect={select} />,
     );
 
     expect(await screen.findByText("nebula.png")).toBeInTheDocument();
+    expect(searchEditorMedia).toHaveBeenCalledWith({
+      first: 24,
+      kind: "IMAGE",
+    });
     fireEvent.click(screen.getByText("nebula.png"));
     expect(select).toHaveBeenCalledWith({
       id: "media-1",
@@ -83,53 +75,26 @@ describe("DSS Editor resource dialogs", () => {
     });
   });
 
+  it("explains an ended session instead of showing a raw API error", async () => {
+    vi.mocked(searchEditorMedia).mockResolvedValue({
+      ok: false,
+      error: "SIGNED_OUT",
+    });
+    render(
+      <EditorMediaDialog mode="image" onClose={vi.fn()} onSelect={vi.fn()} />,
+    );
+    expect(await screen.findByText(/Сесія закінчилась/)).toBeInTheDocument();
+  });
+
   it("sends a new image through the Media upload server action", async () => {
+    vi.mocked(searchEditorMedia).mockResolvedValue({ ok: true, items: [] });
     vi.mocked(uploadEditorMedia).mockResolvedValue({
       sessionId: "session-1",
       filename: "new-nebula.png",
       status: "COMPLETED",
     });
     const { container } = render(
-      <MockedProvider
-        mocks={[
-          {
-            request: {
-              query: EditorMediaDocument,
-              variables: { input: { first: 24, kind: "IMAGE" } },
-            },
-            result: {
-              data: {
-                editorMedia: {
-                  items: [],
-                  pageInfo: { hasNextPage: false, endCursor: null },
-                },
-              },
-            },
-          },
-          {
-            request: {
-              query: EditorMediaDocument,
-              variables: {
-                input: {
-                  first: 24,
-                  kind: "IMAGE",
-                  search: "new-nebula.png",
-                },
-              },
-            },
-            result: {
-              data: {
-                editorMedia: {
-                  items: [],
-                  pageInfo: { hasNextPage: false, endCursor: null },
-                },
-              },
-            },
-          },
-        ]}
-      >
-        <EditorMediaDialog mode="image" onClose={vi.fn()} onSelect={vi.fn()} />
-      </MockedProvider>,
+      <EditorMediaDialog mode="image" onClose={vi.fn()} onSelect={vi.fn()} />,
     );
 
     const file = new File(["png"], "new-nebula.png", { type: "image/png" });
@@ -150,60 +115,27 @@ describe("DSS Editor resource dialogs", () => {
   });
 
   it("debounces member search and returns a structured mention selection", async () => {
-    const select = vi.fn();
-    render(
-      <MockedProvider
-        mocks={[
-          {
-            request: {
-              query: EditorMentionSuggestionsDocument,
-              variables: {
-                input: {
-                  page: 1,
-                  limit: 8,
-                  search: "al",
-                  sort: "USERNAME_ASC",
-                },
-              },
-            },
-            result: {
-              data: {
-                members: {
-                  items: [
-                    {
-                      id: "user-1",
-                      username: "alex",
-                      displayName: "Alex Frost",
-                      avatarUrl: null,
-                      isOnline: true,
-                    },
-                  ],
-                  total: 1,
-                },
-              },
-            },
-          },
-        ]}
-      >
-        <EditorMentionDialog onClose={vi.fn()} onSelect={select} />
-      </MockedProvider>,
-    );
-
-    fireEvent.change(
-      screen.getByLabelText("Search by username or display name"),
-      {
-        target: { value: "al" },
-      },
-    );
-    await waitFor(() => expect(screen.getByText("@alex")).toBeInTheDocument());
-    fireEvent.click(screen.getByText("@alex"));
-    expect(select).toHaveBeenCalledWith({
+    const member = {
       id: "user-1",
       username: "alex",
       displayName: "Alex Frost",
       avatarUrl: null,
       isOnline: true,
+    };
+    vi.mocked(searchMentionMembers).mockResolvedValue({
+      ok: true,
+      items: [member],
     });
+    const select = vi.fn();
+    render(<EditorMentionDialog onClose={vi.fn()} onSelect={select} />);
+
+    fireEvent.change(
+      screen.getByLabelText("Search by username or display name"),
+      { target: { value: "al" } },
+    );
+    await waitFor(() => expect(screen.getByText("@alex")).toBeInTheDocument());
+    fireEvent.click(screen.getByText("@alex"));
+    expect(select).toHaveBeenCalledWith(member);
   });
 });
 
