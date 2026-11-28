@@ -182,6 +182,11 @@ export const PERMISSIONS = {
     label: 'Manage sanction policy',
     description: 'Allows changing warning lifetime and escalation thresholds.',
   },
+  CmsPagesManage: {
+    key: 'cms.pages.manage',
+    label: 'Manage static pages',
+    description: 'Allows creating, editing and publishing static pages.',
+  },
   ModerationBansManage: {
     key: 'moderation.bans.manage',
     label: 'Manage permanent bans',

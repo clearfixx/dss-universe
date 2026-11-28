@@ -54,6 +54,7 @@ describe('Research Lab commands (e2e)', () => {
       }),
       normalizeForumTopic: jest.fn(),
       normalizeForumReply: jest.fn(),
+      normalizeStaticPage: jest.fn(),
     };
     service = new ResearchLabService(
       fixture.prisma,

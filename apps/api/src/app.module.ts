@@ -72,6 +72,8 @@ import { ObservabilityModule } from '@api/core/observability';
 import { HealthModule } from '@api/health';
 
 import { AppController } from './app.controller';
+import { StaticPagesIntegrationModule } from './composition/static-pages/static-pages-integration.module';
+import { StaticPagesModule } from './modules/static-pages';
 import { ModerationBansIntegrationModule } from './composition/moderation-bans/moderation-bans-integration.module';
 import { IdentityCompositionModule } from './composition/identity/identity-composition.module';
 import { UsersProfileIntegrationModule } from './composition/users-profiles/users-profile-integration.module';
@@ -129,6 +131,8 @@ import { UsersModule } from './modules/users/users.module';
     UsersModule,
     IdentityCompositionModule,
     ModerationBansIntegrationModule,
+    StaticPagesIntegrationModule,
+    StaticPagesModule,
     UsersProfileIntegrationModule,
     AccessGroupIntegrationModule,
     IamTransactionCompositionModule,

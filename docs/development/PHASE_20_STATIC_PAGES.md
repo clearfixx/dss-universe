@@ -1,6 +1,7 @@
 # Static pages builder
 
-Status: design recorded 2026-11-28; implementation not started. First part of
+Status: package 1 (API) implemented 2026-11-28; packages 2 and 3 are not
+started. First part of
 the Phase 20 CMS Builder.
 
 ## Owner decisions (2026-11-28)

@@ -43,6 +43,9 @@ export class EditorDocumentNormalizerService implements EditorDocumentNormalizer
   normalizeForumTopic(documentJson: string): ValidatedEditorDocument {
     return this.editor.normalize(documentJson, 'FORUM_TOPIC');
   }
+  normalizeStaticPage(documentJson: string): ValidatedEditorDocument {
+    return this.editor.normalize(documentJson, 'ADMIN');
+  }
   normalizeForumReply(documentJson: string): ValidatedEditorDocument {
     return this.editor.normalize(documentJson, 'FORUM_REPLY');
   }

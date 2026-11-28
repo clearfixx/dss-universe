@@ -24,5 +24,6 @@ export interface EditorDocumentNormalizer {
   normalizeWiki(documentJson: string): ValidatedEditorDocument;
   normalizeForumTopic(documentJson: string): ValidatedEditorDocument;
   normalizeForumReply(documentJson: string): ValidatedEditorDocument;
+  normalizeStaticPage(documentJson: string): ValidatedEditorDocument;
 }
 export const EDITOR_DOCUMENT_NORMALIZER = Symbol('EDITOR_DOCUMENT_NORMALIZER');
